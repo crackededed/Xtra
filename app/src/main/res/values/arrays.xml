@@ -3,7 +3,15 @@
     <string-array name="streamProxyEntries">
         <item>@string/streamProxyEntries1</item>
         <item>@string/streamProxyEntries2</item>
+        <item>@string/streamProxyEntries3</item>
         <item>@string/disabled</item>
+    </string-array>
+
+    <string-array name="streamProxyValues">
+        <item>0</item>
+        <item>1</item>
+        <item>3</item>
+        <item>2</item>
     </string-array>
 
     <string-array name="skipVideoTokenEntries">

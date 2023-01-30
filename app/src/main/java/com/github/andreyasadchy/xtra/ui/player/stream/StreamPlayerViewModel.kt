@@ -192,6 +192,9 @@ class StreamPlayerViewModel @Inject constructor(
                                 useProxy = 2
                             }
                         }
+                        3 -> {
+                            httpDataSourceFactory.setDefaultRequestProperties(hashMapOf("X-Forwarded-For" to "::1"))
+                        }
                     }
                     mediaSource = hlsMediaSourceFactory.createMediaSource(
                         MediaItem.Builder().setUri(result.first).setLiveConfiguration(MediaItem.LiveConfiguration.Builder().apply {

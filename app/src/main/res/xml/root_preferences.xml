@@ -397,7 +397,7 @@
     <ListPreference
         android:defaultValue="1"
         android:entries="@array/streamProxyEntries"
-        android:entryValues="@array/miscValues"
+        android:entryValues="@array/streamProxyValues"
         android:key="player_proxy"
         android:summary="%s"
         android:title="@string/stream_proxy"

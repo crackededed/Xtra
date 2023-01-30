@@ -546,6 +546,7 @@
     <string name="stream_proxy_url_desc">\"$channel\" はチャンネルログインに置き換えられます</string>
     <string name="streamProxyEntries1">カスタムURL</string>
     <string name="streamProxyEntries2">TTV.LOL</string>
+    <string name="streamProxyEntries3">Spoof X-Forwarded-For</string>
     <string name="proxy_error">プロキシエラー</string>
     <string name="show_subtitles_button">字幕ボタンの表示</string>
     <string name="show_subtitles">字幕の表示</string>

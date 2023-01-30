@@ -546,6 +546,7 @@
     <string name="stream_proxy_url_desc">\"$channel\" will be replaced with channel login</string>
     <string name="streamProxyEntries1">Custom url</string>
     <string name="streamProxyEntries2">TTV.LOL</string>
+    <string name="streamProxyEntries3">Spoof X-Forwarded-For</string>
     <string name="proxy_error">Proxy error</string>
     <string name="show_subtitles_button">Show subtitles button</string>
     <string name="show_subtitles">Show subtitles</string>
