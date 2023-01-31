@@ -14,15 +14,14 @@ import com.github.andreyasadchy.xtra.ui.player.PlayerMode.AUDIO_ONLY
 import com.github.andreyasadchy.xtra.ui.player.PlayerMode.NORMAL
 import com.github.andreyasadchy.xtra.ui.player.stream.StreamPlayerViewModel
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.prefs
+import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Timeline
 import com.google.android.exoplayer2.Tracks
 import com.google.android.exoplayer2.source.hls.HlsManifest
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
+import com.google.android.exoplayer2.trackselection.TrackSelectionOverride
 import java.util.*
 import java.util.regex.Pattern
 
-private const val VIDEO_RENDERER = 0
 
 abstract class HlsPlayerViewModel(
     context: Application,
@@ -32,93 +31,80 @@ abstract class HlsPlayerViewModel(
     protected val helper = PlayerHelper()
     val loaded: LiveData<Boolean>
         get() = helper.loaded
-    lateinit var qualities: List<String>
-        private set
+    var usingPlaylist = true
     override lateinit var follow: FollowLiveData
 
-    override fun changeQuality(index: Int) {
-        qualityIndex = index
-    }
-
     protected fun setVideoQuality(index: Int) {
-        val quality = if (index == 0) {
-            trackSelector.setParameters(trackSelector.buildUponParameters().clearSelectionOverrides())
-            "Auto"
-        } else {
-            updateVideoQuality()
-            qualities[index]
-        }
-        val context = getApplication<Application>()
-        if (context.prefs().getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") {
-            context.prefs().edit { putString(C.PLAYER_QUALITY, quality) }
-        }
         val mode = _playerMode.value
         if (mode != NORMAL) {
             _playerMode.value = NORMAL
             if (mode == AUDIO_ONLY) {
                 stopBackgroundAudio()
-                restartPlayer()
-                _currentPlayer.value = player
+                releasePlayer()
+                initializePlayer()
+                play()
             } else {
                 restartPlayer()
             }
         }
+        val quality = if (index == 0 && usingPlaylist) {
+            player?.let { player ->
+                player.trackSelectionParameters = player.trackSelectionParameters
+                    .buildUpon()
+                    .clearOverridesOfType(com.google.android.exoplayer2.C.TRACK_TYPE_VIDEO)
+                    .build()
+            }
+            "Auto"
+        } else {
+            updateVideoQuality()
+            qualities?.getOrNull(index)
+        }
+        if (prefs.getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") {
+            quality?.let { prefs.edit { putString(C.PLAYER_QUALITY, it) } }
+        }
     }
 
     private fun updateVideoQuality() {
-        trackSelector.currentMappedTrackInfo?.let { //TODO
-            trackSelector.parameters = trackSelector.buildUponParameters()
-                    .setSelectionOverride(VIDEO_RENDERER, it.getTrackGroups(VIDEO_RENDERER), DefaultTrackSelector.SelectionOverride(0, qualityIndex - 1))
-                    .build()
+        if (usingPlaylist) {
+            player?.let { player ->
+                if (!player.currentTracks.isEmpty) {
+                    player.currentTracks.groups.find { it.type == com.google.android.exoplayer2.C.TRACK_TYPE_VIDEO }?.let {
+                        if (it.length >= qualityIndex - 1) {
+                            player.trackSelectionParameters = player.trackSelectionParameters
+                                .buildUpon()
+                                .setOverrideForType(TrackSelectionOverride(it.mediaTrackGroup, qualityIndex - 1))
+                                .build()
+                        }
+                    }
+                }
+            }
+        } else {
+            helper.urls.values.elementAtOrNull(qualityIndex - 1)?.let { url ->
+                player?.currentPosition?.let { playbackPosition = it }
+                mediaItem = MediaItem.fromUri(url)
+                initializePlayer()
+                play()
+                player?.seekTo(playbackPosition)
+            }
         }
     }
 
     override fun onTracksChanged(tracks: Tracks) {
         super.onTracksChanged(tracks)
-        if (trackSelector.currentMappedTrackInfo != null) {
+        if (!tracks.isEmpty) {
             if (helper.loaded.value != true) {
-                val context = getApplication<Application>()
-                val defaultQuality = context.prefs().getString(C.PLAYER_DEFAULTQUALITY, "saved")
-                val savedQuality = context.prefs().getString(C.PLAYER_QUALITY, "720p60")
-                val index = when (defaultQuality) {
-                    "Auto" -> 0
-                    "Source" -> if (helper.urls.size >= 2) 1 else 0
-                    "saved" -> {
-                        if (savedQuality == "Auto") {
-                            0
-                        } else {
-                            qualities.indexOf(savedQuality).let { if (it != -1) it else 0 }
-                        }
-                    }
-                    else -> {
-                        var index = 0
-                        if (defaultQuality != null) {
-                            for (i in qualities.withIndex()) {
-                                val comp = i.value.take(4).filter { it.isDigit() }
-                                if (comp != "") {
-                                    if (defaultQuality.toInt() >= comp.toInt()) {
-                                        index = i.index
-                                        break
-                                    }
-                                }
-                            }
-                        }
-                        index
-                    }
-                }
-                qualityIndex = index
                 helper.loaded.value = true
             }
-            if (qualityIndex != 0) {
+            if (qualityIndex != 0 && usingPlaylist) {
                 updateVideoQuality()
             }
         }
     }
 
     override fun onTimelineChanged(timeline: Timeline, reason: Int) {
-        val manifest = player.currentManifest
+        val manifest = player?.currentManifest
         if (helper.urls.isEmpty() && manifest is HlsManifest) {
-            manifest.masterPlaylist.let {
+            manifest.multivariantPlaylist.let {
                 val context = getApplication<Application>()
                 val tags = it.tags
                 val urls = LinkedHashMap<String, String>(tags.size)
@@ -134,8 +120,12 @@ abstract class HlsPlayerViewModel(
                     }
                 }
                 helper.urls = urls.apply {
-                    remove(audioOnly)?.let { url ->
-                        put(audioOnly, url) //move audio option to bottom
+                    if (containsKey(audioOnly)) {
+                        remove(audioOnly)?.let { url ->
+                            put(audioOnly, url) //move audio option to bottom
+                        }
+                    } else {
+                        put(audioOnly, "")
                     }
                 }
                 qualities = LinkedList(urls.keys).apply {
@@ -144,6 +134,7 @@ abstract class HlsPlayerViewModel(
                         add(context.getString(R.string.chat_only))
                     }
                 }
+                setQualityIndex()
             }
         }
     }
@@ -154,19 +145,10 @@ abstract class HlsPlayerViewModel(
         }
     }
 
-    override fun onPause() {
-        if (playerMode.value == NORMAL) {
-            helper.loaded.value = false
-            super.onPause()
-        } else if (playerMode.value == AUDIO_ONLY) {
-            showAudioNotification()
-        }
-    }
-
     override fun onCleared() {
-        super.onCleared()
         if (playerMode.value == AUDIO_ONLY && isResumed) {
             stopBackgroundAudio()
         }
+        super.onCleared()
     }
 }

@@ -1,6 +1,5 @@
 package com.github.andreyasadchy.xtra.ui.main
 
-import android.app.ActivityManager
 import android.app.PictureInPictureParams
 import android.content.*
 import android.content.pm.PackageManager
@@ -267,36 +266,13 @@ class MainActivity : AppCompatActivity(), GamesFragment.OnGameSelectedListener, 
         }
     }
 
-    private fun isBackgroundRunning(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return false
-        } else {
-            val am = getSystemService(ACTIVITY_SERVICE) as ActivityManager
-            val runningProcesses = am.runningAppProcesses
-            for (processInfo in runningProcesses) {
-                if (processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
-                    for (activeProcess in processInfo.pkgList) {
-                        if (activeProcess == packageName) {
-                            //If your app is the process in foreground, then it's not in running in background
-                            return false
-                        }
-                    }
-                }
-            }
-            return true
-        }
-    }
-
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         playerFragment?.let {
-            if (isBackgroundRunning() || it.enterPictureInPicture()) {
-                it.setUserLeaveHint()
+            if (it.enterPictureInPicture()) {
+                it.setPauseHandled()
                 if (prefs.getString(C.PLAYER_BACKGROUND_PLAYBACK, "0") == "0") {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
-                        if (!it.enterPictureInPicture()) {
-                            it.maximize()
-                        }
                         // player dialog
                         (it.childFragmentManager.findFragmentByTag("closeOnPip") as? BottomSheetDialogFragment?)?.dismiss()
                         // player chat message dialog
@@ -317,7 +293,7 @@ class MainActivity : AppCompatActivity(), GamesFragment.OnGameSelectedListener, 
                         }
                     }
                 } else {
-                    if (prefs.getString(C.PLAYER_BACKGROUND_PLAYBACK, "0") == "1" && !it.isPaused()) {
+                    if (prefs.getString(C.PLAYER_BACKGROUND_PLAYBACK, "0") == "1" && it.isPlaying()) {
                         (it as? StreamPlayerFragment)?.startAudioOnly() ?: (it as? VideoPlayerFragment)?.startAudioOnly() ?: (it as? OfflinePlayerFragment)?.startAudioOnly()
                     }
                 }

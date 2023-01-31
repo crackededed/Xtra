@@ -3,13 +3,13 @@ buildscript {
     ext.kotlin_version = '1.7.21'
     ext.paging = '2.1.2'
     ext.lifecycle = '2.5.1'
-    ext.room = '2.4.3'
+    ext.room = '2.5.0'
     ext.exoplayer = '2.18.2'
     ext.dagger = '2.44.2'
     ext.retrofit = '2.9.0'
     ext.glide = '4.14.2'
     ext.fetch = '3.1.6'
-    ext.apollo_ver = '3.7.3'
+    ext.apollo_ver = '3.7.4'
     ext.coil = '2.2.2'
     repositories {
         google()
@@ -17,7 +17,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.1'
+        classpath 'com.android.tools.build:gradle:7.4.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "com.google.dagger:hilt-android-gradle-plugin:$dagger"
         // NOTE: Do not place your application dependencies here; they belong

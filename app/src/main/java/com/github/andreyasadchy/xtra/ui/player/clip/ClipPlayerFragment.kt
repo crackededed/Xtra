@@ -10,13 +10,11 @@ import com.github.andreyasadchy.xtra.model.ui.Clip
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.chat.ChatFragment
 import com.github.andreyasadchy.xtra.ui.chat.ChatReplayPlayerFragment
-import com.github.andreyasadchy.xtra.ui.common.RadioButtonDialogFragment
 import com.github.andreyasadchy.xtra.ui.download.ClipDownloadDialog
 import com.github.andreyasadchy.xtra.ui.download.HasDownloadDialog
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.player.BasePlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.PlayerSettingsDialog
-import com.github.andreyasadchy.xtra.ui.player.PlayerVolumeDialog
 import com.github.andreyasadchy.xtra.util.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_player_clip.*
@@ -24,7 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 
 @AndroidEntryPoint
-class ClipPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayPlayerFragment, RadioButtonDialogFragment.OnSortOptionChanged, PlayerSettingsDialog.PlayerSettingsListener, PlayerVolumeDialog.PlayerVolumeListener {
+class ClipPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayPlayerFragment {
 //    override fun play(obj: Parcelable) {
 //        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 //    }
@@ -60,9 +58,6 @@ class ClipPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayPl
         if (childFragmentManager.findFragmentById(R.id.chatFragmentContainer) == null) {
             childFragmentManager.beginTransaction().replace(R.id.chatFragmentContainer, ChatFragment.newInstance(channelId, channelLogin, clip.videoId, clip.vodOffset?.toDouble())).commit()
         }
-        if (clip.videoId.isNullOrBlank()) {
-            watchVideo.gone()
-        }
     }
 
     override fun initialize() {
@@ -74,27 +69,28 @@ class ClipPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayPl
         viewModel.loaded.observe(this) {
             settings.enable()
             download.enable()
-            (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setQualities(viewModel.qualities.keys.toList(), viewModel.qualityIndex)
+            (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setQuality(viewModel.qualities?.getOrNull(viewModel.qualityIndex))
         }
         if (prefs.getBoolean(C.PLAYER_SETTINGS, true)) {
             settings.visible()
-            settings.setOnClickListener {
-                FragmentUtils.showRadioButtonDialogFragment(childFragmentManager, viewModel.qualities.keys, viewModel.qualityIndex)
-            }
+            settings.setOnClickListener { showQualityDialog() }
         }
         if (prefs.getBoolean(C.PLAYER_MENU, true)) {
             playerMenu.visible()
             playerMenu.setOnClickListener {
-                FragmentUtils.showPlayerSettingsDialog(childFragmentManager, viewModel.qualities.keys, viewModel.qualityIndex, viewModel.currentPlayer.value!!.playbackParameters.speed)
+                FragmentUtils.showPlayerSettingsDialog(
+                    fragmentManager = childFragmentManager,
+                    quality = if (viewModel.loaded.value == true) viewModel.qualities?.getOrNull(viewModel.qualityIndex) else null,
+                    speed = SPEED_LABELS.getOrNull(SPEEDS.indexOf(viewModel.player?.playbackParameters?.speed))?.let { requireContext().getString(it) }
+                )
             }
         }
         if (prefs.getBoolean(C.PLAYER_DOWNLOAD, false)) {
             download.visible()
-            download.setOnClickListener {
-                showDownloadDialog()
-            }
+            download.setOnClickListener { showDownloadDialog() }
         }
         if (!clip.videoId.isNullOrBlank()) {
+            watchVideo.visible()
             watchVideo.setOnClickListener {
                 (requireActivity() as MainActivity).startVideo(Video(
                     id = clip.videoId,
@@ -104,7 +100,7 @@ class ClipPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayPl
                     profileImageUrl = clip.profileImageUrl,
                     animatedPreviewURL = clip.videoAnimatedPreviewURL
                 ), (if (clip.vodOffset != null) {
-                    (clip.vodOffset?.toDouble() ?: 0.0) * 1000.0 + viewModel.player.currentPosition
+                    ((clip.vodOffset?.toDouble() ?: 0.0) * 1000.0) + (viewModel.player?.currentPosition ?: 0)
                 } else {
                     0.0
                 }))
@@ -112,34 +108,10 @@ class ClipPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayPl
         }
     }
 
-    override fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: Int?) {
-        viewModel.changeQuality(index)
-    }
-
-    override fun onChangeQuality(index: Int) {
-        viewModel.changeQuality(index)
-    }
-
-    override fun onChangeSpeed(speed: Float) {
-        viewModel.setSpeed(speed)
-    }
-
-    override fun changeVolume(volume: Float) {
-        viewModel.setVolume(volume)
-    }
-
     override fun showDownloadDialog() {
         if (DownloadUtils.hasStoragePermission(requireActivity())) {
-            ClipDownloadDialog.newInstance(clip, viewModel.qualities).show(childFragmentManager, null)
+            ClipDownloadDialog.newInstance(clip, viewModel.qualityMap).show(childFragmentManager, null)
         }
-    }
-
-    override fun onMovedToForeground() {
-        viewModel.onResume()
-    }
-
-    override fun onMovedToBackground() {
-        viewModel.onPause()
     }
 
     override fun onNetworkRestored() {
@@ -155,7 +127,7 @@ class ClipPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayPl
     }
 
     override fun getCurrentPosition(): Double {
-        return runBlocking(Dispatchers.Main) { viewModel.currentPlayer.value!!.currentPosition / 1000.0 }
+        return runBlocking(Dispatchers.Main) { (viewModel.player?.currentPosition ?: 0) / 1000.0 }
     }
 
     companion object {

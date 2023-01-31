@@ -23,7 +23,6 @@ import com.github.andreyasadchy.xtra.model.gql.stream.ViewersDataResponse
 import com.github.andreyasadchy.xtra.model.gql.tag.*
 import com.github.andreyasadchy.xtra.model.gql.video.VideoGamesDataResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoMessagesDataResponse
-import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
@@ -58,38 +57,31 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
         return graphQL.getPlaybackAccessToken(clientId, headers, json)
     }
 
-    suspend fun loadClipUrls(clientId: String?, slug: String?, skipAccessToken: Int, thumbnailUrl: String?): Map<String, String> = withContext(Dispatchers.IO) {
-        if (skipAccessToken <= 1 && !thumbnailUrl.isNullOrBlank()) {
-            TwitchApiHelper.getClipUrlMapFromPreview(thumbnailUrl)
-        } else {
-            val json = JsonObject().apply {
-                addProperty("operationName", "VideoAccessToken_Clip")
-                add("variables", JsonObject().apply {
-                    addProperty("slug", slug)
+    suspend fun loadClipUrls(clientId: String?, slug: String?): Map<String, String>? = withContext(Dispatchers.IO) {
+        val json = JsonObject().apply {
+            addProperty("operationName", "VideoAccessToken_Clip")
+            add("variables", JsonObject().apply {
+                addProperty("slug", slug)
+            })
+            add("extensions", JsonObject().apply {
+                add("persistedQuery", JsonObject().apply {
+                    addProperty("version", 1)
+                    addProperty("sha256Hash", "36b89d2507fce29e5ca551df756d27c1cfe079e2609642b4390aa4c35796eb11")
                 })
-                add("extensions", JsonObject().apply {
-                    add("persistedQuery", JsonObject().apply {
-                        addProperty("version", 1)
-                        addProperty("sha256Hash", "36b89d2507fce29e5ca551df756d27c1cfe079e2609642b4390aa4c35796eb11")
-                    })
-                })
-            }
-            val response = graphQL.getClipUrls(clientId, json)
-            response.body()?.data?.withIndex()?.associateBy({
-                if (!it.value.quality.isNullOrBlank()) {
-                    if ((it.value.frameRate ?: 0) < 60) {
-                        "${it.value.quality}p"
-                    } else {
-                        "${it.value.quality}p${it.value.frameRate}"
-                    }
-                } else {
-                    it.index.toString()
-                }
-            }, { it.value.url }) ?:
-            if (skipAccessToken == 2 && !thumbnailUrl.isNullOrBlank()) {
-                TwitchApiHelper.getClipUrlMapFromPreview(thumbnailUrl)
-            } else mapOf()
+            })
         }
+        val response = graphQL.getClipUrls(clientId, json)
+        response.body()?.data?.withIndex()?.associateBy({
+            if (!it.value.quality.isNullOrBlank()) {
+                if ((it.value.frameRate ?: 0) < 60) {
+                    "${it.value.quality}p"
+                } else {
+                    "${it.value.quality}p${it.value.frameRate}"
+                }
+            } else {
+                it.index.toString()
+            }
+        }, { it.value.url })
     }
 
     suspend fun loadClipData(clientId: String?, slug: String?): ClipDataResponse {

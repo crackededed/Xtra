@@ -49,17 +49,18 @@ class VideoDownloadViewModel @Inject constructor(
                             val playlist = response.body()!!.string()
                             val qualities = "NAME=\"(.*)\"".toRegex().findAll(playlist).map { it.groupValues[1] }.toMutableList()
                             val urls = "https://.*\\.m3u8".toRegex().findAll(playlist).map(MatchResult::value).toMutableList()
-                            val audioIndex = qualities.indexOfFirst { it.equals("Audio Only", true) }
-                            qualities.removeAt(audioIndex)
-                            qualities.add(getApplication<Application>().getString(R.string.audio_only))
-                            urls.add(urls.removeAt(audioIndex))
-                            qualities.zip(urls).toMap()
+                            qualities.zip(urls).toMap(mutableMapOf())
                         } else {
                             if (skipAccessToken == 2 && !video.animatedPreviewURL.isNullOrBlank()) {
                                 TwitchApiHelper.getVideoUrlMapFromPreview(video.animatedPreviewURL, video.type)
                             } else {
                                 throw IllegalAccessException()
                             }
+                        }
+                    }.apply {
+                        entries.find { it.key.startsWith("audio", true) }?.let {
+                            remove(it.key)
+                            put(getApplication<Application>().getString(R.string.audio_only), it.value)
                         }
                     }
                     val mediaPlaylist = URL(map.values.elementAt(0)).openStream().use {

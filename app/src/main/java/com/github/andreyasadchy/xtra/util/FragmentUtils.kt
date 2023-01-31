@@ -46,17 +46,12 @@ object FragmentUtils {
             .show()
     }
 
-    fun showPlayerSettingsDialog(fragmentManager: FragmentManager, qualities: Collection<CharSequence>?, quality: Int, speed: Float, vodGames: Boolean = false) {
-        PlayerSettingsDialog.newInstance(
-            qualities,
-            quality,
-            speed,
-            vodGames
-        ).show(fragmentManager, "closeOnPip")
+    fun showPlayerSettingsDialog(fragmentManager: FragmentManager, quality: String?, speed: String? = null, vodGames: Boolean = false) {
+        PlayerSettingsDialog.newInstance(quality, speed, vodGames).show(fragmentManager, "closeOnPip")
     }
 
-    fun showPlayerVolumeDialog(fragmentManager: FragmentManager) {
-        PlayerVolumeDialog.newInstance().show(fragmentManager, "closeOnPip")
+    fun showPlayerVolumeDialog(fragmentManager: FragmentManager, volume: Float?) {
+        PlayerVolumeDialog.newInstance(volume).show(fragmentManager, "closeOnPip")
     }
 
     fun showPlayerGamesDialog(fragmentManager: FragmentManager, gamesList: List<Game>) {

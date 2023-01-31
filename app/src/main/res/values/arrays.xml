@@ -168,9 +168,12 @@
         <item>@string/saved_value</item>
         <item>@string/auto</item>
         <item>@string/source</item>
-        <item>@string/playerQualityEntries3</item>
-        <item>@string/playerQualityEntries2</item>
-        <item>@string/playerQualityEntries1</item>
+        <item>1080p60</item>
+        <item>1080p</item>
+        <item>720p60</item>
+        <item>720p</item>
+        <item>480p</item>
+        <item>360p</item>
         <item>160p</item>
     </string-array>
 
@@ -178,6 +181,9 @@
         <item>saved</item>
         <item>Auto</item>
         <item>Source</item>
+        <item>1080p60</item>
+        <item>1080</item>
+        <item>720p60</item>
         <item>720</item>
         <item>480</item>
         <item>360</item>

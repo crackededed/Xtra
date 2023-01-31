@@ -186,9 +186,6 @@
     <string name="quality">Quality</string>
     <string name="speed1">Normal</string>
     <string name="saved_value">Saved value</string>
-    <string name="playerQualityEntries1">360p or lower</string>
-    <string name="playerQualityEntries2">480p or lower</string>
-    <string name="playerQualityEntries3">720p or lower</string>
     <string name="player_volumebutton">Show volume button</string>
     <string name="video_type_archive">Past broadcast</string>
     <string name="video_type_highlight">Highlight</string>

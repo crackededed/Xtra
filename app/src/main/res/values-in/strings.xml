@@ -164,9 +164,6 @@
     <string name="quality">Kualitas</string>
     <string name="speed1">Normal</string>
     <string name="saved_value">Simpan nilai</string>
-    <string name="playerQualityEntries1">360p atau lebih rendah</string>
-    <string name="playerQualityEntries2">480p atau lebih rendah</string>
-    <string name="playerQualityEntries3">720p atau lebih rendah</string>
     <string name="player_volumebutton">Tampilkan tombol volume</string>
     <string name="video_type_archive">Siaran terakhir</string>
     <string name="video_type_highlight">Sorotan</string>

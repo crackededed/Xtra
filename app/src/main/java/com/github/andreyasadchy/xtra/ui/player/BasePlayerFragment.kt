@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.model.Account
 import com.github.andreyasadchy.xtra.ui.common.BaseNetworkFragment
+import com.github.andreyasadchy.xtra.ui.common.RadioButtonDialogFragment
 import com.github.andreyasadchy.xtra.ui.common.follow.FollowFragment
 import com.github.andreyasadchy.xtra.ui.common.follow.FollowViewModel
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
@@ -40,7 +41,14 @@ import kotlinx.coroutines.launch
 
 
 @Suppress("PLUGIN_WARNING")
-abstract class BasePlayerFragment : BaseNetworkFragment(), LifecycleListener, SlidingLayout.Listener, FollowFragment, SleepTimerDialog.OnSleepTimerStartedListener {
+abstract class BasePlayerFragment : BaseNetworkFragment(), LifecycleListener, SlidingLayout.Listener, FollowFragment, SleepTimerDialog.OnSleepTimerStartedListener, RadioButtonDialogFragment.OnSortOptionChanged, PlayerVolumeDialog.PlayerVolumeListener {
+
+    companion object {
+        val SPEEDS = listOf(0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f)
+        val SPEED_LABELS = listOf(R.string.speed0_25, R.string.speed0_5, R.string.speed0_75, R.string.speed1, R.string.speed1_25, R.string.speed1_5, R.string.speed1_75, R.string.speed2)
+        private const val REQUEST_CODE_QUALITY = 0
+        private const val REQUEST_CODE_SPEED = 1
+    }
 
     lateinit var slidingLayout: SlidingLayout
     private lateinit var playerView: CustomPlayerView
@@ -136,6 +144,9 @@ abstract class BasePlayerFragment : BaseNetworkFragment(), LifecycleListener, Sl
             if (this !is StreamPlayerFragment) {
                 view.findViewById<ImageButton>(R.id.playerDownload).disable()
             }
+            if (this !is ClipPlayerFragment) {
+                view.findViewById<ImageButton>(R.id.playerMode).disable()
+            }
         }
         if (prefs.getBoolean(C.PLAYER_DOUBLETAP, true) && !disableChat) {
             playerView.setOnDoubleTapListener {
@@ -229,8 +240,8 @@ abstract class BasePlayerFragment : BaseNetworkFragment(), LifecycleListener, Sl
     override fun initialize() {
         val activity = requireActivity() as MainActivity
         val view = requireView()
-        viewModel.currentPlayer.observe(viewLifecycleOwner) {
-            playerView.player = it
+        viewModel.playerUpdated.observe(viewLifecycleOwner) {
+            playerView.player = viewModel.player
         }
         viewModel.playerMode.observe(viewLifecycleOwner) {
             if (it == PlayerMode.NORMAL) {
@@ -336,6 +347,32 @@ abstract class BasePlayerFragment : BaseNetworkFragment(), LifecycleListener, Sl
         viewModel.setTimer(durationMs)
     }
 
+    override fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: Int?) {
+        when (requestCode) {
+            REQUEST_CODE_QUALITY -> {
+                if ((viewModel as? HlsPlayerViewModel)?.usingPlaylist == false && index == 0) {
+                    // TODO
+                } else {
+                    viewModel.changeQuality(index)
+                    (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setQuality(viewModel.qualities?.getOrNull(index))
+                }
+            }
+            REQUEST_CODE_SPEED -> {
+                SPEEDS.getOrNull(index)?.let {
+                    viewModel.player?.setPlaybackSpeed(it)
+                    prefs.edit { putFloat(C.PLAYER_SPEED, it) }
+                }
+                SPEED_LABELS.getOrNull(index)?.let {
+                    (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setSpeed(requireContext().getString(it))
+                }
+            }
+        }
+    }
+
+    override fun changeVolume(volume: Float) {
+        viewModel.player?.volume = volume
+    }
+
     //    abstract fun play(obj: Parcelable) //TODO instead maybe add livedata in mainactivity and observe it
 
     fun isSleepTimerActive(): Boolean {
@@ -352,8 +389,20 @@ abstract class BasePlayerFragment : BaseNetworkFragment(), LifecycleListener, Sl
         SleepTimerDialog.show(childFragmentManager, viewModel.timerTimeLeft)
     }
 
+    fun showQualityDialog() {
+        viewModel.qualities?.let {
+            FragmentUtils.showRadioButtonDialogFragment(childFragmentManager, it, viewModel.qualityIndex, REQUEST_CODE_QUALITY)
+        }
+    }
+
+    fun showSpeedDialog() {
+        viewModel.player?.playbackParameters?.speed?.let {
+            FragmentUtils.showRadioButtonDialogFragment(requireContext(), childFragmentManager, SPEED_LABELS, SPEEDS.indexOf(it), REQUEST_CODE_SPEED)
+        }
+    }
+
     fun showVolumeDialog() {
-        FragmentUtils.showPlayerVolumeDialog(childFragmentManager)
+        FragmentUtils.showPlayerVolumeDialog(childFragmentManager, viewModel.player?.volume)
     }
 
     fun minimize() {
@@ -510,16 +559,16 @@ abstract class BasePlayerFragment : BaseNetworkFragment(), LifecycleListener, Sl
         }
     }
 
-    fun setUserLeaveHint() {
-        viewModel.userLeaveHint = true
+    fun setPauseHandled() {
+        viewModel.pauseHandled = true
     }
 
-    fun isPaused(): Boolean {
-        return viewModel.isPaused()
+    fun isPlaying(): Boolean {
+        return viewModel.player?.isPlaying == true
     }
 
     fun setSubtitles(available: Boolean? = null, enabled: Boolean? = null) {
-        if (available ?: (viewModel.subtitlesAvailable.value == true) && prefs.getBoolean(C.PLAYER_SUBTITLES, true)) {
+        if (available ?: (viewModel.subtitlesAvailable.value == true) && prefs.getBoolean(C.PLAYER_SUBTITLES, false)) {
             subtitlesToggle.visible()
             if (enabled ?: viewModel.subtitlesEnabled()) {
                 subtitlesToggle.setImageResource(R.drawable.exo_ic_subtitle_on)
@@ -540,5 +589,13 @@ abstract class BasePlayerFragment : BaseNetworkFragment(), LifecycleListener, Sl
     fun toggleSubtitles(enabled: Boolean) {
         setSubtitles(enabled = enabled)
         viewModel.toggleSubtitles(enabled)
+    }
+
+    override fun onMovedToForeground() {
+        viewModel.onResume()
+    }
+
+    override fun onMovedToBackground() {
+        viewModel.onPause()
     }
 }

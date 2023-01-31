@@ -11,7 +11,6 @@ import com.github.andreyasadchy.xtra.repository.ApiRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.ui.common.BaseViewModel
 import com.github.andreyasadchy.xtra.ui.player.ChatReplayManager
-import com.github.andreyasadchy.xtra.ui.player.stream.stream_id
 import com.github.andreyasadchy.xtra.ui.view.chat.ChatView
 import com.github.andreyasadchy.xtra.ui.view.chat.MAX_ADAPTER_COUNT
 import com.github.andreyasadchy.xtra.util.SingleLiveEvent
@@ -84,6 +83,7 @@ class ChatViewModel @Inject constructor(
     var raidNewId = true
     var raidClosed = false
     val viewerCount = MutableLiveData<Int?>()
+    var streamId: String? = null
 
     private val _chatMessages by lazy {
         MutableLiveData<MutableList<ChatMessage>>().apply { value = Collections.synchronizedList(ArrayList(MAX_ADAPTER_COUNT + 1)) }
@@ -105,7 +105,7 @@ class ChatViewModel @Inject constructor(
 
     fun startLive(useSSl: Boolean, usePubSub: Boolean, account: Account, isLoggedIn: Boolean, helixClientId: String?, gqlClientId: String?, gqlClientId2: String?, channelId: String?, channelLogin: String?, channelName: String?, streamId: String?, emoteQuality: String, animateGifs: Boolean, showUserNotice: Boolean, showClearMsg: Boolean, showClearChat: Boolean, collectPoints: Boolean, notifyPoints: Boolean, showRaids: Boolean, autoSwitchRaids: Boolean, enableRecentMsg: Boolean? = false, recentMsgLimit: String? = null, useApiCommands: Boolean) {
         if (chat == null && channelLogin != null) {
-            stream_id = streamId
+            this.streamId = streamId
             this.showRaids = showRaids
             raidAutoSwitch = autoSwitchRaids
             chat = LiveChatController(
@@ -546,9 +546,9 @@ class ChatViewModel @Inject constructor(
         }
 
         override fun onMinuteWatched() {
-            if (!stream_id.isNullOrBlank()) {
+            if (!streamId.isNullOrBlank()) {
                 viewModelScope.launch {
-                    repository.loadMinuteWatched(account.id, stream_id, channelId, channelLogin)
+                    repository.loadMinuteWatched(account.id, streamId, channelId, channelLogin)
                 }
             }
         }

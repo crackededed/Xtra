@@ -1,60 +1,38 @@
 package com.github.andreyasadchy.xtra.ui.player
 
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.edit
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.model.Account
 import com.github.andreyasadchy.xtra.ui.chat.ChatFragment
 import com.github.andreyasadchy.xtra.ui.common.ExpandingBottomSheetDialogFragment
-import com.github.andreyasadchy.xtra.ui.common.RadioButtonDialogFragment
 import com.github.andreyasadchy.xtra.ui.download.HasDownloadDialog
 import com.github.andreyasadchy.xtra.ui.player.clip.ClipPlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.stream.StreamPlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.video.VideoPlayerFragment
-import com.github.andreyasadchy.xtra.util.*
+import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.gone
+import com.github.andreyasadchy.xtra.util.prefs
+import com.github.andreyasadchy.xtra.util.visible
 import kotlinx.android.synthetic.main.player_settings.*
 
-class PlayerSettingsDialog : ExpandingBottomSheetDialogFragment(), RadioButtonDialogFragment.OnSortOptionChanged {
-
-    interface PlayerSettingsListener {
-        fun onChangeQuality(index: Int)
-        fun onChangeSpeed(speed: Float)
-    }
+class PlayerSettingsDialog : ExpandingBottomSheetDialogFragment() {
 
     companion object {
 
-        private val SPEEDS = listOf(0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f)
-        private val SPEED_LABELS = listOf(R.string.speed0_25, R.string.speed0_5, R.string.speed0_75, R.string.speed1, R.string.speed1_25, R.string.speed1_5, R.string.speed1_75, R.string.speed2)
-        private const val QUALITIES = "qualities"
-        private const val QUALITY_INDEX = "quality"
+        private const val QUALITY = "quality"
         private const val SPEED = "speed"
         private const val VOD_GAMES = "vod_games"
 
-        private const val REQUEST_CODE_QUALITY = 0
-        private const val REQUEST_CODE_SPEED = 1
-
-        fun newInstance(qualities: Collection<CharSequence>?, qualityIndex: Int, speed: Float, vodGames: Boolean): PlayerSettingsDialog {
+        fun newInstance(quality: String?, speed: String?, vodGames: Boolean): PlayerSettingsDialog {
             return PlayerSettingsDialog().apply {
-                arguments = bundleOf(QUALITIES to qualities?.let { ArrayList(it) }, QUALITY_INDEX to qualityIndex, SPEED to speed, VOD_GAMES to vodGames)
+                arguments = bundleOf(QUALITY to quality, SPEED to speed, VOD_GAMES to vodGames)
             }
         }
-    }
-
-    private lateinit var listener: PlayerSettingsListener
-
-    private lateinit var qualities: List<CharSequence>
-    private var qualityIndex = 0
-    private var speedIndex = 0
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        listener = parentFragment as PlayerSettingsListener
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -67,14 +45,15 @@ class PlayerSettingsDialog : ExpandingBottomSheetDialogFragment(), RadioButtonDi
         if (parentFragment !is StreamPlayerFragment && requireContext().prefs().getBoolean(C.PLAYER_MENU_SPEED, true)) {
             menuSpeed.visible()
             menuSpeed.setOnClickListener {
-                FragmentUtils.showRadioButtonDialogFragment(requireContext(), childFragmentManager, SPEED_LABELS, speedIndex, REQUEST_CODE_SPEED)
+                (parentFragment as? BasePlayerFragment)?.showSpeedDialog()
+                dismiss()
             }
-            setSelectedSpeed(SPEEDS.indexOf(arguments.getFloat(SPEED)))
+            setSpeed(arguments.getString(SPEED))
         }
         if (requireContext().prefs().getBoolean(C.PLAYER_MENU_QUALITY, false)) {
             menuQuality.visible()
             menuQuality.setOnClickListener { dismiss() }
-            setQualities(arguments.getCharSequenceArrayList(QUALITIES), arguments.getInt(QUALITY_INDEX))
+            setQuality(arguments.getString(QUALITY))
         }
         if (parentFragment is StreamPlayerFragment) {
             if (requireContext().prefs().getBoolean(C.PLAYER_MENU_VIEWER_LIST, true)) {
@@ -145,12 +124,6 @@ class PlayerSettingsDialog : ExpandingBottomSheetDialogFragment(), RadioButtonDi
             }
             if (requireContext().prefs().getBoolean(C.PLAYER_MENU_BOOKMARK, true)) {
                 (parentFragment as? VideoPlayerFragment)?.checkBookmark()
-                (parentFragment as? VideoPlayerFragment)?.isBookmarked()
-                menuBookmark.visible()
-                menuBookmark.setOnClickListener {
-                    (parentFragment as? VideoPlayerFragment)?.saveBookmark()
-                    dismiss()
-                }
             }
         }
         if (parentFragment is HasDownloadDialog && requireContext().prefs().getBoolean(C.PLAYER_MENU_DOWNLOAD, true)) {
@@ -192,28 +165,22 @@ class PlayerSettingsDialog : ExpandingBottomSheetDialogFragment(), RadioButtonDi
         }
     }
 
-    override fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: Int?) {
-        when (requestCode) {
-            REQUEST_CODE_QUALITY -> {
-                listener.onChangeQuality(index)
-                setSelectedQuality(index)
-            }
-            REQUEST_CODE_SPEED -> {
-                listener.onChangeSpeed(SPEEDS[index])
-                setSelectedSpeed(index)
-                requireContext().prefs().edit { putFloat(C.PLAYER_SPEED, SPEEDS[index]) }
+    fun setQuality(text: String?) {
+        if (!text.isNullOrBlank() && menuQuality.isVisible) {
+            qualityValue.visible()
+            qualityValue.text = text
+            menuQuality.setOnClickListener {
+                (parentFragment as? BasePlayerFragment)?.showQualityDialog()
+                dismiss()
             }
         }
     }
 
-    private fun setSelectedQuality(index: Int) {
-        qualityValue.text = if (qualities.lastIndex >= index) qualities[index] else null
-        qualityIndex = index
-    }
-
-    private fun setSelectedSpeed(index: Int) {
-        speedValue.text = if (SPEED_LABELS.lastIndex >= index) getString(SPEED_LABELS[index]) else null
-        speedIndex = index
+    fun setSpeed(text: String?) {
+        if (!text.isNullOrBlank() && menuSpeed.isVisible) {
+            speedValue.visible()
+            speedValue.text = text
+        }
     }
 
     fun setVodGames() {
@@ -227,21 +194,11 @@ class PlayerSettingsDialog : ExpandingBottomSheetDialogFragment(), RadioButtonDi
     }
 
     fun setBookmarkText(isBookmarked: Boolean) {
-        if (isBookmarked) {
-            menuBookmark.text = requireContext().getString(R.string.remove_bookmark)
-        } else {
-            menuBookmark.text = requireContext().getString(R.string.add_bookmark)
-        }
-    }
-
-    fun setQualities(list: List<CharSequence>?, index: Int) {
-        if (!list.isNullOrEmpty() && menuQuality.isVisible) {
-            qualities = list
-            qualityValue.visible()
-            setSelectedQuality(index)
-            menuQuality.setOnClickListener {
-                FragmentUtils.showRadioButtonDialogFragment(childFragmentManager, qualities, qualityIndex, REQUEST_CODE_QUALITY)
-            }
+        menuBookmark.visible()
+        menuBookmark.text = requireContext().getString(if (isBookmarked) R.string.remove_bookmark else R.string.add_bookmark)
+        menuBookmark.setOnClickListener {
+            (parentFragment as? VideoPlayerFragment)?.saveBookmark()
+            dismiss()
         }
     }
 

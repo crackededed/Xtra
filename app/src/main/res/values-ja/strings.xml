@@ -166,9 +166,6 @@
     <string name="quality">画質</string>
     <string name="speed1">標準</string>
     <string name="saved_value">保存した値</string>
-    <string name="playerQualityEntries1">360p以下</string>
-    <string name="playerQualityEntries2">480p以下</string>
-    <string name="playerQualityEntries3">720p以下</string>
     <string name="player_volumebutton">音量ボタンの表示</string>
     <string name="video_type_archive">過去の配信</string>
     <string name="video_type_highlight">ハイライト</string>

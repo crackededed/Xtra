@@ -6,21 +6,22 @@ import android.widget.ImageButton
 import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
 import com.github.andreyasadchy.xtra.R
-import com.github.andreyasadchy.xtra.model.Account
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.chat.ChatFragment
 import com.github.andreyasadchy.xtra.ui.chat.ChatReplayPlayerFragment
-import com.github.andreyasadchy.xtra.ui.common.RadioButtonDialogFragment
 import com.github.andreyasadchy.xtra.ui.download.HasDownloadDialog
 import com.github.andreyasadchy.xtra.ui.download.VideoDownloadDialog
-import com.github.andreyasadchy.xtra.ui.player.*
+import com.github.andreyasadchy.xtra.ui.player.BasePlayerFragment
+import com.github.andreyasadchy.xtra.ui.player.PlayerGamesDialog
+import com.github.andreyasadchy.xtra.ui.player.PlayerMode
+import com.github.andreyasadchy.xtra.ui.player.PlayerSettingsDialog
 import com.github.andreyasadchy.xtra.util.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 
 @AndroidEntryPoint
-class VideoPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayPlayerFragment, RadioButtonDialogFragment.OnSortOptionChanged, PlayerSettingsDialog.PlayerSettingsListener, PlayerVolumeDialog.PlayerVolumeListener, PlayerGamesDialog.PlayerSeekListener {
+class VideoPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayPlayerFragment, PlayerGamesDialog.PlayerSeekListener {
 //    override fun play(obj: Parcelable) {
 //        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 //    }
@@ -70,33 +71,37 @@ class VideoPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayP
             if (it) {
                 settings.enable()
                 download.enable()
-                (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setQualities(viewModel.qualities, viewModel.qualityIndex)
+                mode.enable()
+                (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setQuality(viewModel.qualities?.getOrNull(viewModel.qualityIndex))
             } else {
-                download.disable()
                 settings.disable()
+                download.disable()
+                mode.disable()
             }
         }
-        checkBookmark()
-        viewModel.bookmarkItem.observe(viewLifecycleOwner) {
-            (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setBookmarkText(it != null)
+        if (requireContext().prefs().getBoolean(C.PLAYER_MENU_BOOKMARK, true)) {
+            viewModel.bookmarkItem.observe(viewLifecycleOwner) {
+                (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setBookmarkText(it != null)
+            }
         }
         if (prefs.getBoolean(C.PLAYER_SETTINGS, true)) {
             settings.visible()
-            settings.setOnClickListener {
-                FragmentUtils.showRadioButtonDialogFragment(childFragmentManager, viewModel.qualities, viewModel.qualityIndex)
-            }
+            settings.setOnClickListener { showQualityDialog() }
         }
         if (prefs.getBoolean(C.PLAYER_MENU, true)) {
             playerMenu.visible()
             playerMenu.setOnClickListener {
-                FragmentUtils.showPlayerSettingsDialog(childFragmentManager, if (viewModel.loaded.value == true) viewModel.qualities else null, viewModel.qualityIndex, viewModel.currentPlayer.value!!.playbackParameters.speed, !viewModel.gamesList.value.isNullOrEmpty())
+                FragmentUtils.showPlayerSettingsDialog(
+                    fragmentManager = childFragmentManager,
+                    quality = if (viewModel.loaded.value == true) viewModel.qualities?.getOrNull(viewModel.qualityIndex) else null,
+                    speed = SPEED_LABELS.getOrNull(SPEEDS.indexOf(viewModel.player?.playbackParameters?.speed))?.let { requireContext().getString(it) },
+                    vodGames = !viewModel.gamesList.value.isNullOrEmpty()
+                )
             }
         }
         if (prefs.getBoolean(C.PLAYER_DOWNLOAD, false)) {
             download.visible()
-            download.setOnClickListener {
-                showDownloadDialog()
-            }
+            download.setOnClickListener { showDownloadDialog() }
         }
         if (prefs.getBoolean(C.PLAYER_GAMESBUTTON, true) || prefs.getBoolean(C.PLAYER_MENU_GAMES, false) && !video.id.isNullOrBlank()) {
             viewModel.loadGamesList(prefs.getString(C.GQL_CLIENT_ID, "kimne78kx3ncx6brgo4mv6wki5h1ko"), video.id)
@@ -114,9 +119,9 @@ class VideoPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayP
             mode.visible()
             mode.setOnClickListener {
                 if (viewModel.playerMode.value != PlayerMode.AUDIO_ONLY) {
-                    startAudioOnly()
+                    viewModel.qualities?.lastIndex?.let { viewModel.changeQuality(it) }
                 } else {
-                    viewModel.onResume()
+                    viewModel.changeQuality(viewModel.previousQuality)
                 }
             }
         }
@@ -130,32 +135,12 @@ class VideoPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayP
         viewModel.checkBookmark()
     }
 
-    fun isBookmarked() {
-        (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setBookmarkText(viewModel.bookmarkItem.value != null)
-    }
-
     fun saveBookmark() {
-        viewModel.saveBookmark(requireContext(), prefs.getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"), Account.get(requireContext()).helixToken, prefs.getString(C.GQL_CLIENT_ID, "kimne78kx3ncx6brgo4mv6wki5h1ko"))
-    }
-
-    override fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: Int?) {
-        viewModel.changeQuality(index)
-    }
-
-    override fun onChangeQuality(index: Int) {
-        viewModel.changeQuality(index)
-    }
-
-    override fun onChangeSpeed(speed: Float) {
-        viewModel.setSpeed(speed)
-    }
-
-    override fun changeVolume(volume: Float) {
-        viewModel.setVolume(volume)
+        viewModel.saveBookmark()
     }
 
     override fun seek(position: Long) {
-        viewModel.seek(position)
+        viewModel.player?.seekTo(position)
     }
 
     override fun showDownloadDialog() {
@@ -164,29 +149,20 @@ class VideoPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayP
         }
     }
 
-    override fun onMovedToForeground() {
-        viewModel.onResume()
-    }
-
-    override fun onMovedToBackground() {
-        viewModel.onPause()
-    }
-
     override fun onNetworkRestored() {
         if (isResumed) {
-            viewModel.onResume()
+            viewModel.resumePlayer()
         }
     }
 
     override fun onNetworkLost() {
         if (isResumed) {
-            setUserLeaveHint()
-            viewModel.onPause()
+            viewModel.stopPlayer()
         }
     }
 
     override fun getCurrentPosition(): Double {
-        return runBlocking(Dispatchers.Main) { viewModel.currentPlayer.value!!.currentPosition / 1000.0 }
+        return runBlocking(Dispatchers.Main) { (viewModel.player?.currentPosition ?: 0) / 1000.0 }
     }
 
     fun startAudioOnly() {

@@ -7,20 +7,17 @@ import android.widget.LinearLayout
 import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
 import com.github.andreyasadchy.xtra.R
-import com.github.andreyasadchy.xtra.model.Account
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.ui.chat.ChatFragment
-import com.github.andreyasadchy.xtra.ui.common.RadioButtonDialogFragment
 import com.github.andreyasadchy.xtra.ui.player.BasePlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.PlayerMode
 import com.github.andreyasadchy.xtra.ui.player.PlayerSettingsDialog
-import com.github.andreyasadchy.xtra.ui.player.PlayerVolumeDialog
 import com.github.andreyasadchy.xtra.util.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.player_stream.*
 
 @AndroidEntryPoint
-class StreamPlayerFragment : BasePlayerFragment(), RadioButtonDialogFragment.OnSortOptionChanged, PlayerSettingsDialog.PlayerSettingsListener, PlayerVolumeDialog.PlayerVolumeListener {
+class StreamPlayerFragment : BasePlayerFragment() {
 
     override val viewModel: StreamPlayerViewModel by viewModels()
     lateinit var chatFragment: ChatFragment
@@ -63,27 +60,7 @@ class StreamPlayerFragment : BasePlayerFragment(), RadioButtonDialogFragment.OnS
     }
 
     override fun initialize() {
-        val account = Account.get(requireContext())
-        val disableChat = prefs.getBoolean(C.CHAT_DISABLE, false)
-        val usePubSub = prefs.getBoolean(C.CHAT_PUBSUB_ENABLED, true)
-        val collectPoints = prefs.getBoolean(C.CHAT_POINTS_COLLECT, true)
-        val updateStream = disableChat || !usePubSub || (!disableChat && usePubSub && collectPoints && !account.id.isNullOrBlank() && !account.gqlToken.isNullOrBlank())
-        viewModel.startStream(
-            account = account,
-            includeToken = prefs.getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, false),
-            helixClientId = prefs.getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"),
-            gqlClientId = prefs.getString(C.GQL_CLIENT_ID, "kimne78kx3ncx6brgo4mv6wki5h1ko"),
-            stream = stream,
-            useProxy = prefs.getString(C.PLAYER_PROXY, "1")?.toIntOrNull() ?: 1,
-            proxyUrl = prefs.getString(C.PLAYER_PROXY_URL, "https://api.ttv.lol/playlist/\$channel.m3u8?allow_source=true&allow_audio_only=true&fast_bread=true"),
-            randomDeviceId = prefs.getBoolean(C.TOKEN_RANDOM_DEVICEID, true),
-            xDeviceId = prefs.getString(C.TOKEN_XDEVICEID, "twitch-web-wall-mason"),
-            playerType = prefs.getString(C.TOKEN_PLAYERTYPE, "site"),
-            minSpeed = prefs.getString(C.PLAYER_LIVE_MIN_SPEED, ""),
-            maxSpeed = prefs.getString(C.PLAYER_LIVE_MAX_SPEED, ""),
-            targetOffset = prefs.getString(C.PLAYER_LIVE_TARGET_OFFSET, "5000"),
-            updateStream = updateStream
-        )
+        viewModel.startStream(stream)
         super.initialize()
         val settings = requireView().findViewById<ImageButton>(R.id.playerSettings)
         val playerMenu = requireView().findViewById<ImageButton>(R.id.playerMenu)
@@ -93,48 +70,48 @@ class StreamPlayerFragment : BasePlayerFragment(), RadioButtonDialogFragment.OnS
         viewModel.loaded.observe(viewLifecycleOwner) {
             if (it) {
                 settings.enable()
-                (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setQualities(viewModel.qualities, viewModel.qualityIndex)
+                mode.enable()
+                (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setQuality(viewModel.qualities?.getOrNull(viewModel.qualityIndex))
             } else {
                 settings.disable()
+                mode.disable()
             }
         }
         viewModel.stream.observe(viewLifecycleOwner) {
-            if (disableChat || !usePubSub || viewers.text.isNullOrBlank()) {
+            chatFragment.updateStreamId(it?.id)
+            if (prefs.getBoolean(C.CHAT_DISABLE, false) || !prefs.getBoolean(C.CHAT_PUBSUB_ENABLED, true) || viewers.text.isNullOrBlank()) {
                 updateViewerCount(it?.viewerCount)
             }
         }
         if (prefs.getBoolean(C.PLAYER_SETTINGS, true)) {
             settings.visible()
-            settings.setOnClickListener {
-                FragmentUtils.showRadioButtonDialogFragment(childFragmentManager, viewModel.qualities, viewModel.qualityIndex)
-            }
+            settings.setOnClickListener { showQualityDialog() }
         }
         if (prefs.getBoolean(C.PLAYER_MENU, true)) {
             playerMenu.visible()
             playerMenu.setOnClickListener {
-                FragmentUtils.showPlayerSettingsDialog(childFragmentManager, if (viewModel.loaded.value == true) viewModel.qualities else null, viewModel.qualityIndex, viewModel.currentPlayer.value!!.playbackParameters.speed)
+                FragmentUtils.showPlayerSettingsDialog(
+                    fragmentManager = childFragmentManager,
+                    quality = if (viewModel.loaded.value == true) viewModel.qualities?.getOrNull(viewModel.qualityIndex) else null
+                )
             }
         }
         if (prefs.getBoolean(C.PLAYER_RESTART, true)) {
             restart.visible()
-            restart.setOnClickListener {
-                restartPlayer()
-            }
+            restart.setOnClickListener { restartPlayer() }
         }
         if (prefs.getBoolean(C.PLAYER_MODE, false)) {
             mode.visible()
             mode.setOnClickListener {
                 if (viewModel.playerMode.value != PlayerMode.AUDIO_ONLY) {
-                    startAudioOnly()
+                    viewModel.qualities?.lastIndex?.minus(1)?.let { viewModel.changeQuality(it) }
                 } else {
-                    viewModel.onResume()
+                    viewModel.changeQuality(viewModel.previousQuality)
                 }
             }
         }
         if (prefs.getBoolean(C.PLAYER_VIEWERLIST, false)) {
-            viewersLayout.setOnClickListener {
-                openViewerList()
-            }
+            viewersLayout.setOnClickListener { openViewerList() }
         }
     }
 
@@ -158,10 +135,6 @@ class StreamPlayerFragment : BasePlayerFragment(), RadioButtonDialogFragment.OnS
         stream.channelLogin?.let { login -> FragmentUtils.showPlayerViewerListDialog(childFragmentManager, login, viewModel.repository) }
     }
 
-    override fun changeVolume(volume: Float) {
-        viewModel.setVolume(volume)
-    }
-
     fun hideEmotesMenu() = chatFragment.hideEmotesMenu()
 
     override fun onMinimize() {
@@ -179,30 +152,9 @@ class StreamPlayerFragment : BasePlayerFragment(), RadioButtonDialogFragment.OnS
 //        draggableView?.maximize()
 //    }
 
-    override fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: Int?) {
-        viewModel.changeQuality(index)
-//            if (index >= viewModel.helper.urls.value!!.lastIndex) {
-//                TODO hide player
-//            }
-    }
-
-    override fun onChangeQuality(index: Int) {
-        viewModel.changeQuality(index)
-    }
-
-    override fun onChangeSpeed(speed: Float) {}
-
-    override fun onMovedToForeground() {
-        viewModel.onResume()
-    }
-
-    override fun onMovedToBackground() {
-        viewModel.onPause()
-    }
-
     override fun onNetworkRestored() {
         if (isResumed) {
-            viewModel.onResume()
+            viewModel.resumePlayer()
         }
     }
 

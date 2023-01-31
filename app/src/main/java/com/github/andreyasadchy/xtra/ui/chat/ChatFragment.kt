@@ -139,6 +139,10 @@ class ChatFragment : BaseNetworkFragment(), LifecycleListener, MessageClickedDia
         viewModel.reloadEmotes(helixClientId, helixToken, gqlClientId, channelId, channelLogin, emoteQuality, animateGifs)
     }
 
+    fun updateStreamId(id: String?) {
+        viewModel.streamId = id
+    }
+
     private fun onRaidUpdate(raid: Raid) {
         if (viewModel.raidClosed && viewModel.raidNewId) {
             viewModel.raidAutoSwitch = requireContext().prefs().getBoolean(C.CHAT_RAIDS_AUTO_SWITCH, true)

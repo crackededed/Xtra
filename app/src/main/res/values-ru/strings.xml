@@ -166,9 +166,6 @@
     <string name="quality">Качество</string>
     <string name="speed1">Обычная</string>
     <string name="saved_value">Сохранённое значение</string>
-    <string name="playerQualityEntries1">360p или ниже</string>
-    <string name="playerQualityEntries2">480p или ниже</string>
-    <string name="playerQualityEntries3">720p или ниже</string>
     <string name="player_volumebutton">Кнопка громкости</string>
     <string name="video_type_archive">Прошедшая трансляция</string>
     <string name="video_type_highlight">Яркий момент</string>

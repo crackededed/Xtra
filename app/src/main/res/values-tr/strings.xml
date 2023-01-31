@@ -166,9 +166,6 @@
     <string name="quality">Kalite</string>
     <string name="speed1">Normal</string>
     <string name="saved_value">Kaydedilen değer</string>
-    <string name="playerQualityEntries1">360p veya daha düşük</string>
-    <string name="playerQualityEntries2">480p veya daha düşük</string>
-    <string name="playerQualityEntries3">720p veya daha düşük</string>
     <string name="player_volumebutton">Ses düğmesini göster</string>
     <string name="video_type_archive">Geçmiş yayın</string>
     <string name="video_type_highlight">Vurgu</string>

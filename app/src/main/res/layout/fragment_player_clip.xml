@@ -38,7 +38,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="@string/watch_video"
-            android:textAllCaps="true"/>
+            android:textAllCaps="true"
+            android:visibility="gone" />
 
     </LinearLayout>
 

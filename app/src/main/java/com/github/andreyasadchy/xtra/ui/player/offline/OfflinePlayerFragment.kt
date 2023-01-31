@@ -6,18 +6,15 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.model.offline.OfflineVideo
-import com.github.andreyasadchy.xtra.ui.common.RadioButtonDialogFragment
 import com.github.andreyasadchy.xtra.ui.player.BasePlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.PlayerMode
-import com.github.andreyasadchy.xtra.ui.player.PlayerSettingsDialog
-import com.github.andreyasadchy.xtra.ui.player.PlayerVolumeDialog
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.FragmentUtils
 import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class OfflinePlayerFragment : BasePlayerFragment(), RadioButtonDialogFragment.OnSortOptionChanged, PlayerSettingsDialog.PlayerSettingsListener, PlayerVolumeDialog.PlayerVolumeListener {
+class OfflinePlayerFragment : BasePlayerFragment() {
 //    override fun play(obj: Parcelable) {
 //        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 //    }
@@ -57,23 +54,25 @@ class OfflinePlayerFragment : BasePlayerFragment(), RadioButtonDialogFragment.On
         val mode = requireView().findViewById<ImageButton>(R.id.playerMode)
         if (prefs.getBoolean(C.PLAYER_SETTINGS, true)) {
             settings.visible()
-            settings.setOnClickListener {
-                FragmentUtils.showRadioButtonDialogFragment(childFragmentManager, viewModel.qualities, viewModel.qualityIndex)
-            }
+            settings.setOnClickListener { showQualityDialog() }
         }
         if (prefs.getBoolean(C.PLAYER_MENU, true)) {
             playerMenu.visible()
             playerMenu.setOnClickListener {
-                FragmentUtils.showPlayerSettingsDialog(childFragmentManager, viewModel.qualities, viewModel.qualityIndex, viewModel.currentPlayer.value!!.playbackParameters.speed)
+                FragmentUtils.showPlayerSettingsDialog(
+                    fragmentManager = childFragmentManager,
+                    quality = viewModel.qualities?.getOrNull(viewModel.qualityIndex),
+                    speed = SPEED_LABELS.getOrNull(SPEEDS.indexOf(viewModel.player?.playbackParameters?.speed))?.let { requireContext().getString(it) }
+                )
             }
         }
         if (prefs.getBoolean(C.PLAYER_MODE, false)) {
             mode.visible()
             mode.setOnClickListener {
                 if (viewModel.playerMode.value != PlayerMode.AUDIO_ONLY) {
-                    startAudioOnly()
+                    viewModel.qualities?.lastIndex?.let { viewModel.changeQuality(it) }
                 } else {
-                    viewModel.onResume()
+                    viewModel.changeQuality(viewModel.previousQuality)
                 }
             }
         }
@@ -81,30 +80,6 @@ class OfflinePlayerFragment : BasePlayerFragment(), RadioButtonDialogFragment.On
 
     override fun onNetworkRestored() {
         //do nothing
-    }
-
-    override fun onMovedToForeground() {
-        viewModel.onResume()
-    }
-
-    override fun onMovedToBackground() {
-        viewModel.onPause()
-    }
-
-    override fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: Int?) {
-        viewModel.changeQuality(index)
-    }
-
-    override fun onChangeQuality(index: Int) {
-        viewModel.changeQuality(index)
-    }
-
-    override fun onChangeSpeed(speed: Float) {
-        viewModel.setSpeed(speed)
-    }
-
-    override fun changeVolume(volume: Float) {
-        viewModel.setVolume(volume)
     }
 
     fun startAudioOnly() {
