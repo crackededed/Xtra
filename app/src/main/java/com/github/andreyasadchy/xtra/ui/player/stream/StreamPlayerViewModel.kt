@@ -189,13 +189,13 @@ class StreamPlayerViewModel @Inject constructor(
                                 useProxy = 2
                             }
                         }
-                        3 -> {
-                            httpDataSourceFactory.setDefaultRequestProperties(hashMapOf("X-Forwarded-For" to "::1"))
-                        }
                     }
                     mediaSourceFactory = HlsMediaSource.Factory(DefaultDataSource.Factory(context, DefaultHttpDataSource.Factory().apply {
                         if (result.second == 1) {
                             setDefaultRequestProperties(hashMapOf("X-Donate-To" to "https://ttv.lol/donate"))
+                        }
+                        if (useProxy == 3) {
+                            setDefaultRequestProperties(hashMapOf("X-Forwarded-For" to "::1"))
                         }
                     })).apply {
                         setPlaylistParserFactory(DefaultHlsPlaylistParserFactory())
