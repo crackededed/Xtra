@@ -41,6 +41,7 @@
                 <data android:host="twitch.tv" />
             </intent-filter>
         </activity>
+        <activity android:name=".ui.settings.OpenSourceLicensesActivity"/>
         <activity android:name=".ui.settings.SettingsActivity"/>
         <activity
             android:name=".ui.login.LoginActivity"
