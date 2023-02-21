@@ -5,6 +5,7 @@ plugins {
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
     id("com.apollographql.apollo3").version("$apollo_ver")
+    id("com.mikepenz.aboutlibraries.plugin")
 }
 
 android {
@@ -124,6 +125,8 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
+
+    implementation "com.mikepenz:aboutlibraries:10.5.2"
 }
 
 apollo {

@@ -238,6 +238,8 @@
     <string name="show_clearchat">Show timeouts and bans</string>
     <string name="player_gamesbutton">Show games button on vods</string>
     <string name="copy_fullmsg">Copy full message</string>
+    <string name="settings_other">OTHER</string>
+    <string name="open_source_licences">Open source licenses</string>
     <string name="settings_debug">DEBUG</string>
     <string name="show_copy_fullmsg">Copy full IRC messages</string>
     <string name="chat_disconnect">Disconnecting from %1$s - %2$s</string>

@@ -16,6 +16,7 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.ui.Utils
 import com.github.andreyasadchy.xtra.ui.settings.api.DragListFragment
 import com.github.andreyasadchy.xtra.util.*
+import com.mikepenz.aboutlibraries.LibsBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_settings.*
 
@@ -206,6 +207,14 @@ class SettingsActivity : AppCompatActivity() {
 
             findPreference<Preference>("admin_settings")?.setOnPreferenceClickListener {
                 startActivity(Intent().setComponent(ComponentName("com.android.settings", "com.android.settings.DeviceAdminSettings")))
+                true
+            }
+
+            findPreference<Preference>("open_source_licenses_settings")?.setOnPreferenceClickListener {
+                LibsBuilder()
+                    .withActivityTitle(getString(R.string.open_source_licences))
+                    .withSearchEnabled(true)
+                    .start(requireActivity())
                 true
             }
         }

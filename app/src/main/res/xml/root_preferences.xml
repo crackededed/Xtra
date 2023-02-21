@@ -453,6 +453,13 @@
         app:min="1"
         app:showSeekBarValue="true" />
 
+    <PreferenceCategory android:title="@string/settings_other" app:iconSpaceReserved="false"/>
+
+    <Preference
+        android:key="open_source_licenses_settings"
+        android:title="@string/open_source_licences"
+        app:iconSpaceReserved="false" />
+
     <PreferenceCategory android:title="@string/settings_debug" app:iconSpaceReserved="false"/>
     <SwitchPreferenceCompat
         android:defaultValue="false"
