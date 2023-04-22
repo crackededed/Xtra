@@ -54,6 +54,7 @@ abstract class HlsPlayerViewModel(
                 releasePlayer()
                 initializePlayer()
                 play()
+                player?.seekTo(playbackPosition)
             } else {
                 restartPlayer()
             }

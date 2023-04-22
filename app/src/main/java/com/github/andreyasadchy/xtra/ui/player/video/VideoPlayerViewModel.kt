@@ -148,9 +148,6 @@ class VideoPlayerViewModel @Inject constructor(
                         player?.currentPosition?.let { playbackPosition = it }
                     }
                     setVideoQuality(index)
-                    if (audioOnly) {
-                        player?.seekTo(playbackPosition)
-                    }
                 }
                 index == qualities.lastIndex -> startAudioOnly(quality = previousQuality)
             }
