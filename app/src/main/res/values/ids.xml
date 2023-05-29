@@ -3,10 +3,13 @@
     <item name="slidingLayout" type="id" />
     <item name="topRightPanel" type="id" />
     <item name="topLeftPanel" type="id" />
+    <item name="topLeftChannelSubPanel" type="id" />
     <item name="botRightPanel" type="id" />
     <item name="botLeftPanel" type="id" />
     <item name="playerMinimize" type="id" />
     <item name="playerChannel" type="id" />
+    <item name="playerTitle" type="id" />
+    <item name="playerCategory" type="id" />
     <item name="playerDownload" type="id" />
     <item name="playerFollow" type="id" />
     <item name="playerSleepTimer" type="id" />

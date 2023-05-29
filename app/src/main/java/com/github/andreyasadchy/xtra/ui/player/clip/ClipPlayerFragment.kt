@@ -129,6 +129,18 @@ class ClipPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayPl
                 }
             }
         }
+        if (prefs.getBoolean(C.PLAYER_TITLE, true)) {
+            requireView().findViewById<TextView>(R.id.playerTitle)?.apply {
+                visible()
+                text = clip.title
+            }
+        }
+        if (prefs.getBoolean(C.PLAYER_CATEGORY, true)) {
+            requireView().findViewById<TextView>(R.id.playerCategory)?.apply {
+                visible()
+                text = clip.gameName
+            }
+        }
         val activity = requireActivity() as MainActivity
         val account = Account.get(activity)
         val setting = prefs.getString(C.UI_FOLLOW_BUTTON, "0")?.toInt() ?: 0

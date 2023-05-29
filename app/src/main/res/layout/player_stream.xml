@@ -13,9 +13,17 @@
         <ImageButton
             style="@style/PlayerMinimize"
             tools:visibility="visible" />
-        <TextView
-            style="@style/PlayerChannel"
-            tools:visibility="visible" />
+        <LinearLayout style="@style/PlayerTopLeftChannelSubPanel">
+            <TextView
+                style="@style/PlayerChannel"
+                tools:visibility="visible" />
+            <TextView
+                style="@style/PlayerTitle"
+                tools:visibility="visible" />
+            <TextView
+                style="@style/PlayerCategory"
+                tools:visibility="visible" />
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout style="@style/PlayerTopRightPanel">

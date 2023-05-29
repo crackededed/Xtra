@@ -45,7 +45,12 @@ class StreamPlayerViewModel @Inject constructor(
 
     fun loadStream(context: Context, stream: Stream) {
         val account = Account.get(context)
-        if (context.prefs().getBoolean(C.CHAT_DISABLE, false) || !context.prefs().getBoolean(C.CHAT_PUBSUB_ENABLED, true) || (context.prefs().getBoolean(C.CHAT_POINTS_COLLECT, true) && !account.id.isNullOrBlank() && !account.gqlToken.isNullOrBlank())) {
+        // TODO: should we remove this 'if'? otherwise viewerCount isn't updated though it's presented
+        if (context.prefs().getBoolean(C.CHAT_DISABLE, false) ||
+                !context.prefs().getBoolean(C.CHAT_PUBSUB_ENABLED, true) ||
+                context.prefs().getBoolean(C.PLAYER_TITLE, true) ||
+                context.prefs().getBoolean(C.PLAYER_CATEGORY, true) ||
+                (context.prefs().getBoolean(C.CHAT_POINTS_COLLECT, true) && !account.id.isNullOrBlank() && !account.gqlToken.isNullOrBlank())) {
             viewModelScope.launch {
                 while (isActive) {
                     try {
@@ -61,10 +66,13 @@ class StreamPlayerViewModel @Inject constructor(
                                     id = it?.id
                                 }
                                 viewerCount = it?.viewerCount
+                                title = it?.title
+                                gameName = it?.gameName
+                                gameId = it?.gameId
                             }
                         }
                         _stream.postValue(s)
-                        delay(300000L)
+                        delay(60000L)
                     } catch (e: Exception) {
                         delay(60000L)
                     }

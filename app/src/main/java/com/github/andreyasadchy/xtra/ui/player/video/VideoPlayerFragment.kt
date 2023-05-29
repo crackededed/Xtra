@@ -136,6 +136,18 @@ class VideoPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayP
                 }
             }
         }
+        if (prefs.getBoolean(C.PLAYER_TITLE, true)) {
+            requireView().findViewById<TextView>(R.id.playerTitle)?.apply {
+                visible()
+                text = video.title
+            }
+        }
+        if (prefs.getBoolean(C.PLAYER_CATEGORY, true)) {
+            requireView().findViewById<TextView>(R.id.playerTitle)?.apply {
+                visible()
+                text = video.gameName
+            }
+        }
         val activity = requireActivity() as MainActivity
         val account = Account.get(activity)
         val setting = prefs.getString(C.UI_FOLLOW_BUTTON, "0")?.toInt() ?: 0

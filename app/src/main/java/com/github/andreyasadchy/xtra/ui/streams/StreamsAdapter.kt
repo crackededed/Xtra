@@ -95,18 +95,22 @@ class StreamsAdapter(
                     } else {
                         username.gone()
                     }
-                    if (item.title != null && item.title != "")  {
-                        title.visible()
-                        title.text = item.title.trim()
-                    } else {
-                        title.gone()
+                    item.title.let {
+                        if (!it.isNullOrBlank()) {
+                            title.visible()
+                            title.text = it.trim()
+                        } else {
+                            title.gone()
+                        }
                     }
-                    if (item.gameName != null)  {
-                        gameName.visible()
-                        gameName.text = item.gameName
-                        gameName.setOnClickListener(gameListener)
-                    } else {
-                        gameName.gone()
+                    item.gameName.let {
+                        if (!it.isNullOrBlank()) {
+                            gameName.visible()
+                            gameName.text = it
+                            gameName.setOnClickListener(gameListener)
+                        } else {
+                            gameName.gone()
+                        }
                     }
                     if (item.thumbnailUrl != null) {
                         thumbnail.visible()

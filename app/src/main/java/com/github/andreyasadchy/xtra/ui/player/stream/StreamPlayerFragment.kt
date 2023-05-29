@@ -90,6 +90,12 @@ class StreamPlayerFragment : BasePlayerFragment() {
             if (prefs.getBoolean(C.CHAT_DISABLE, false) || !prefs.getBoolean(C.CHAT_PUBSUB_ENABLED, true) || requireView().findViewById<TextView>(R.id.viewers)?.text.isNullOrBlank()) {
                 updateViewerCount(it?.viewerCount)
             }
+            if (prefs.getBoolean(C.PLAYER_TITLE, true)) {
+                requireView().findViewById<TextView>(R.id.playerTitle)?.text = it?.title
+            }
+            if (prefs.getBoolean(C.PLAYER_CATEGORY, true)) {
+                requireView().findViewById<TextView>(R.id.playerCategory)?.text = it?.gameName
+            }
         }
         if (prefs.getBoolean(C.PLAYER_MENU, true)) {
             requireView().findViewById<ImageButton>(R.id.playerMenu)?.apply {
@@ -131,6 +137,18 @@ class StreamPlayerFragment : BasePlayerFragment() {
                     ))
                     slidingLayout.minimize()
                 }
+            }
+        }
+        if (prefs.getBoolean(C.PLAYER_TITLE, true)) {
+            requireView().findViewById<TextView>(R.id.playerTitle)?.apply {
+                visible()
+                text = stream.title
+            }
+        }
+        if (prefs.getBoolean(C.PLAYER_CATEGORY, true)) {
+            requireView().findViewById<TextView>(R.id.playerCategory)?.apply {
+                visible()
+                text = stream.gameName
             }
         }
         val activity = requireActivity() as MainActivity

@@ -76,6 +76,18 @@ class OfflinePlayerFragment : BasePlayerFragment() {
                 }
             }
         }
+        if (prefs.getBoolean(C.PLAYER_TITLE, true)) {
+            requireView().findViewById<TextView>(R.id.playerTitle)?.apply {
+                visible()
+                text = video.name
+            }
+        }
+        if (prefs.getBoolean(C.PLAYER_CATEGORY, true)) {
+            requireView().findViewById<TextView>(R.id.playerCategory)?.apply {
+                visible()
+                text = video.gameName
+            }
+        }
     }
 
     override fun startPlayer() {
