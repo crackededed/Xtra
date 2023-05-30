@@ -96,6 +96,7 @@ class ChatFragment : BaseNetworkFragment(), LifecycleListener, MessageClickedDia
                 viewModel.raid.observe(viewLifecycleOwner) { onRaidUpdate(it) }
                 viewModel.raidClicked.observe(viewLifecycleOwner) { onRaidClicked() }
                 viewModel.viewerCount.observe(viewLifecycleOwner) { (parentFragment as? StreamPlayerFragment)?.updateViewerCount(it) }
+                viewModel.title.observe(viewLifecycleOwner) { (parentFragment as? StreamPlayerFragment)?.updateTitle(it) }
             }
         }
     }

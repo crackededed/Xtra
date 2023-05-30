@@ -321,6 +321,31 @@ class StreamPlayerFragment : BasePlayerFragment() {
         }
     }
 
+    fun updateTitle(data: Pair<String?, String?>?) {
+        if (data != null) {
+            val title = data.first
+            val game = data.second
+            requireView().findViewById<TextView>(R.id.playerTitle)?.apply {
+                if (!title.isNullOrBlank() && prefs.getBoolean(C.PLAYER_TITLE, true)) {
+                    text = title.trim()
+                    visible()
+                } else {
+                    text = null
+                    gone()
+                }
+            }
+            requireView().findViewById<TextView>(R.id.playerCategory)?.apply {
+                if (!game.isNullOrBlank() && prefs.getBoolean(C.PLAYER_CATEGORY, true)) {
+                    text = game
+                    visible()
+                } else {
+                    text = null
+                    gone()
+                }
+            }
+        }
+    }
+
     fun restartPlayer() {
         if (viewModel.playerMode != PlayerMode.DISABLED) {
             loadStream(stream)

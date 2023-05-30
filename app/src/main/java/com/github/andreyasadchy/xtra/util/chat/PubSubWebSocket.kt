@@ -6,7 +6,11 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
-import okhttp3.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -49,6 +53,7 @@ class PubSubWebSocket(
             put("data", JSONObject().apply {
                 put("topics", JSONArray().apply {
                     put("video-playback-by-id.$channelId")
+                    put("broadcast-settings-update.$channelId")
                     put("community-points-channel-v1.$channelId")
                     if (showRaids) {
                         put("raid.$channelId")
@@ -148,6 +153,7 @@ class PubSubWebSocket(
                         val messageType = message?.optString("type")
                         when {
                             (topic?.startsWith("video-playback-by-id") == true) -> listener.onPlaybackMessage(text)
+                            (topic?.startsWith("broadcast-settings-update") == true) && (messageType?.startsWith("broadcast_settings_update") == true) -> listener.onTitleUpdate(text)
                             (topic?.startsWith("community-points-channel") == true) && (messageType?.startsWith("reward-redeemed") == true) -> listener.onRewardMessage(text)
                             topic?.startsWith("community-points-user") == true -> {
                                 when {
@@ -180,6 +186,7 @@ class PubSubWebSocket(
 
     interface OnMessageReceivedListener {
         fun onPlaybackMessage(text: String)
+        fun onTitleUpdate(text: String)
         fun onRewardMessage(text: String)
         fun onPointsEarned(text: String)
         fun onClaimAvailable()

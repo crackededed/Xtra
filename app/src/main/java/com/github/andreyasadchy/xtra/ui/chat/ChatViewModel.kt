@@ -88,6 +88,7 @@ class ChatViewModel @Inject constructor(
     var raidNewId = true
     var raidClosed = false
     val viewerCount = MutableLiveData<Int?>()
+    val title = MutableLiveData<Pair<String?, String?>>()
     var streamId: String? = null
     private val rewardList = mutableListOf<Pair<LiveChatMessage?, PubSubPointReward?>>()
 
@@ -604,6 +605,10 @@ class ChatViewModel @Inject constructor(
                 }
             }
             viewerCount.postValue(viewers)
+        }
+
+        override fun onTitleUpdate(title: String?, game: String?) {
+            this@ChatViewModel.title.postValue(Pair(title, game))
         }
 
         override fun onRewardMessage(message: ChatMessage) {

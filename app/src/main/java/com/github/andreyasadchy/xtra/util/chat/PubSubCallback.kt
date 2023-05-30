@@ -5,6 +5,7 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 
 interface PubSubCallback {
     fun onPlaybackMessage(live: Boolean?, viewers: Int?)
+    fun onTitleUpdate(title: String?, game: String?)
     fun onRewardMessage(message: ChatMessage)
     fun onPointsEarned(message: PointsEarned)
     fun onClaimAvailable()
