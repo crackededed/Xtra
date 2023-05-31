@@ -648,6 +648,8 @@ abstract class BasePlayerFragment : BaseNetworkFragment(), LifecycleListener, Sl
                 setOnClickListener { showChat() }
             }
         }
+        chatLayout.hideKeyboard()
+        chatLayout.clearFocus()
         chatLayout.gone()
         prefs.edit { putBoolean(C.KEY_CHAT_OPENED, false) }
         slidingLayout.maximizedSecondViewVisibility = View.GONE
