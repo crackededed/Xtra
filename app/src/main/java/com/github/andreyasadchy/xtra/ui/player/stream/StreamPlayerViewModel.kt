@@ -45,7 +45,6 @@ class StreamPlayerViewModel @Inject constructor(
 
     fun loadStream(context: Context, stream: Stream) {
         val account = Account.get(context)
-        // TODO: should we remove this 'if'? otherwise viewerCount isn't updated though it's presented
         if (context.prefs().getBoolean(C.CHAT_DISABLE, false) ||
                 !context.prefs().getBoolean(C.CHAT_PUBSUB_ENABLED, true) ||
                 context.prefs().getBoolean(C.PLAYER_TITLE, true) ||
