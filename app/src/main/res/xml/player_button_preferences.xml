@@ -15,6 +15,18 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
+        android:key="player_title"
+        android:title="@string/show_title"
+        app:iconSpaceReserved="false"/>
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_category"
+        android:title="@string/show_category"
+        app:iconSpaceReserved="false"/>
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
         android:key="player_minimize"
         android:title="@string/player_minimize"
         android:icon="@drawable/baseline_expand_more_black_24" />

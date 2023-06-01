@@ -23,10 +23,11 @@ class PubSubListenerImpl(
         val data = if (text.isNotBlank()) JSONObject(text).optJSONObject("data") else null
         val message = data?.optString("message")?.let { if (it.isNotBlank() && !data.isNull("message")) JSONObject(it) else null }
         if (message != null) {
-            callback.onTitleUpdate(
+            callback.onTitleUpdate(BroadcastSettings(
                 title = message.optString("status"),
-                game = message.optString("game"),
-            )
+                gameId = message.optInt("game_id").toString(),
+                gameName = message.optString("game"),
+            ))
         }
     }
 

@@ -12,16 +12,20 @@
     <LinearLayout style="@style/PlayerTopLeftPanel">
         <ImageButton
             style="@style/PlayerMinimize"
+            android:layout_marginEnd="5dp"
             tools:visibility="visible" />
         <LinearLayout style="@style/PlayerTopLeftChannelSubPanel">
             <TextView
                 style="@style/PlayerChannel"
+                android:layout_marginBottom="1dp"
                 tools:visibility="visible" />
             <TextView
                 style="@style/PlayerTitle"
+                android:layout_marginBottom="1dp"
                 tools:visibility="visible" />
             <TextView
                 style="@style/PlayerCategory"
+                android:layout_marginBottom="1dp"
                 tools:visibility="visible" />
         </LinearLayout>
     </LinearLayout>

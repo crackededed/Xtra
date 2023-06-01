@@ -5,13 +5,18 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 
 interface PubSubCallback {
     fun onPlaybackMessage(live: Boolean?, viewers: Int?)
-    fun onTitleUpdate(title: String?, game: String?)
+    fun onTitleUpdate(message: BroadcastSettings)
     fun onRewardMessage(message: ChatMessage)
     fun onPointsEarned(message: PointsEarned)
     fun onClaimAvailable()
     fun onMinuteWatched()
     fun onRaidUpdate(message: Raid)
 }
+
+data class BroadcastSettings(
+    val title: String? = null,
+    val gameId: String? = null,
+    val gameName: String? = null)
 
 data class PointsEarned(
     val pointsGained: Int? = null,

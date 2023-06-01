@@ -252,40 +252,36 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable {
                     requireArguments().putString(C.STREAM_ID, it)
                 }
             }
-            stream?.title.let {
-                if (!it.isNullOrBlank()) {
-                    streamLayout.visible()
-                    title.visible()
-                    title.text = it.trim()
-                } else {
-                    title.gone()
-                }
+            if (!stream?.title.isNullOrBlank()) {
+                streamLayout.visible()
+                title.visible()
+                title.text = stream?.title?.trim()
+            } else {
+                title.gone()
             }
-            stream?.gameName.let { streamGameName ->
-                if (!streamGameName.isNullOrBlank()) {
-                    streamLayout.visible()
-                    gameName.visible()
-                    gameName.text = streamGameName
-                    stream?.gameId?.let { gameId ->
-                        gameName.setOnClickListener {
-                            findNavController().navigate(
-                                if (requireContext().prefs().getBoolean(C.UI_GAMEPAGER, true)) {
-                                    GamePagerFragmentDirections.actionGlobalGamePagerFragment(
-                                        gameId = gameId,
-                                        gameName = streamGameName
-                                    )
-                                } else {
-                                    GameMediaFragmentDirections.actionGlobalGameMediaFragment(
-                                        gameId = gameId,
-                                        gameName = streamGameName
-                                    )
-                                }
-                            )
-                        }
+            if (!stream?.gameName.isNullOrBlank()) {
+                streamLayout.visible()
+                gameName.visible()
+                gameName.text = stream?.gameName
+                stream?.gameId?.let { id ->
+                    gameName.setOnClickListener {
+                        findNavController().navigate(
+                            if (requireContext().prefs().getBoolean(C.UI_GAMEPAGER, true)) {
+                                GamePagerFragmentDirections.actionGlobalGamePagerFragment(
+                                    gameId = id,
+                                    gameName = stream.gameName
+                                )
+                            } else {
+                                GameMediaFragmentDirections.actionGlobalGameMediaFragment(
+                                    gameId = id,
+                                    gameName = stream.gameName
+                                )
+                            }
+                        )
                     }
-                } else {
-                    gameName.gone()
                 }
+            } else {
+                gameName.gone()
             }
             if (stream?.viewerCount != null) {
                 streamLayout.visible()

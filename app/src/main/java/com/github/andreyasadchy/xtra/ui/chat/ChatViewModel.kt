@@ -25,6 +25,7 @@ import com.github.andreyasadchy.xtra.ui.player.ChatReplayManager
 import com.github.andreyasadchy.xtra.ui.view.chat.ChatView
 import com.github.andreyasadchy.xtra.util.SingleLiveEvent
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
+import com.github.andreyasadchy.xtra.util.chat.BroadcastSettings
 import com.github.andreyasadchy.xtra.util.chat.ChatCallback
 import com.github.andreyasadchy.xtra.util.chat.ChatReadIRC
 import com.github.andreyasadchy.xtra.util.chat.ChatReadWebSocket
@@ -88,7 +89,7 @@ class ChatViewModel @Inject constructor(
     var raidNewId = true
     var raidClosed = false
     val viewerCount = MutableLiveData<Int?>()
-    val title = MutableLiveData<Pair<String?, String?>>()
+    val title = MutableLiveData<BroadcastSettings?>()
     var streamId: String? = null
     private val rewardList = mutableListOf<Pair<LiveChatMessage?, PubSubPointReward?>>()
 
@@ -607,8 +608,8 @@ class ChatViewModel @Inject constructor(
             viewerCount.postValue(viewers)
         }
 
-        override fun onTitleUpdate(title: String?, game: String?) {
-            this@ChatViewModel.title.postValue(Pair(title, game))
+        override fun onTitleUpdate(message: BroadcastSettings) {
+            this@ChatViewModel.title.postValue(message)
         }
 
         override fun onRewardMessage(message: ChatMessage) {

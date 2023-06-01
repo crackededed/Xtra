@@ -15,6 +15,8 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentPlayerOfflineBinding
 import com.github.andreyasadchy.xtra.model.offline.OfflineVideo
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
+import com.github.andreyasadchy.xtra.ui.games.GameMediaFragmentDirections
+import com.github.andreyasadchy.xtra.ui.games.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.player.BasePlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.PlaybackService
 import com.github.andreyasadchy.xtra.util.C
@@ -76,16 +78,32 @@ class OfflinePlayerFragment : BasePlayerFragment() {
                 }
             }
         }
-        if (prefs.getBoolean(C.PLAYER_TITLE, true)) {
+        if (!video.name.isNullOrBlank() && prefs.getBoolean(C.PLAYER_TITLE, true)) {
             requireView().findViewById<TextView>(R.id.playerTitle)?.apply {
                 visible()
                 text = video.name
             }
         }
-        if (prefs.getBoolean(C.PLAYER_CATEGORY, true)) {
+        if (!video.gameName.isNullOrBlank() && prefs.getBoolean(C.PLAYER_CATEGORY, true)) {
             requireView().findViewById<TextView>(R.id.playerCategory)?.apply {
                 visible()
                 text = video.gameName
+                setOnClickListener {
+                    findNavController().navigate(
+                        if (prefs.getBoolean(C.UI_GAMEPAGER, true)) {
+                            GamePagerFragmentDirections.actionGlobalGamePagerFragment(
+                                gameId = video.gameId,
+                                gameName = video.gameName
+                            )
+                        } else {
+                            GameMediaFragmentDirections.actionGlobalGameMediaFragment(
+                                gameId = video.gameId,
+                                gameName = video.gameName
+                            )
+                        }
+                    )
+                    slidingLayout.minimize()
+                }
             }
         }
     }

@@ -22,6 +22,8 @@ import com.github.andreyasadchy.xtra.ui.chat.ChatFragment
 import com.github.andreyasadchy.xtra.ui.chat.ChatReplayPlayerFragment
 import com.github.andreyasadchy.xtra.ui.download.ClipDownloadDialog
 import com.github.andreyasadchy.xtra.ui.download.HasDownloadDialog
+import com.github.andreyasadchy.xtra.ui.games.GameMediaFragmentDirections
+import com.github.andreyasadchy.xtra.ui.games.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.player.BasePlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.PlaybackService
@@ -129,16 +131,32 @@ class ClipPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayPl
                 }
             }
         }
-        if (prefs.getBoolean(C.PLAYER_TITLE, true)) {
+        if (!clip.title.isNullOrBlank() && prefs.getBoolean(C.PLAYER_TITLE, true)) {
             requireView().findViewById<TextView>(R.id.playerTitle)?.apply {
                 visible()
                 text = clip.title
             }
         }
-        if (prefs.getBoolean(C.PLAYER_CATEGORY, true)) {
+        if (!clip.gameName.isNullOrBlank() && prefs.getBoolean(C.PLAYER_CATEGORY, true)) {
             requireView().findViewById<TextView>(R.id.playerCategory)?.apply {
                 visible()
                 text = clip.gameName
+                setOnClickListener {
+                    findNavController().navigate(
+                        if (prefs.getBoolean(C.UI_GAMEPAGER, true)) {
+                            GamePagerFragmentDirections.actionGlobalGamePagerFragment(
+                                gameId = clip.gameId,
+                                gameName = clip.gameName
+                            )
+                        } else {
+                            GameMediaFragmentDirections.actionGlobalGameMediaFragment(
+                                gameId = clip.gameId,
+                                gameName = clip.gameName
+                            )
+                        }
+                    )
+                    slidingLayout.minimize()
+                }
             }
         }
         val activity = requireActivity() as MainActivity

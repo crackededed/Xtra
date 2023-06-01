@@ -45,11 +45,7 @@ class StreamPlayerViewModel @Inject constructor(
 
     fun loadStream(context: Context, stream: Stream) {
         val account = Account.get(context)
-        if (context.prefs().getBoolean(C.CHAT_DISABLE, false) ||
-                !context.prefs().getBoolean(C.CHAT_PUBSUB_ENABLED, true) ||
-                context.prefs().getBoolean(C.PLAYER_TITLE, true) ||
-                context.prefs().getBoolean(C.PLAYER_CATEGORY, true) ||
-                (context.prefs().getBoolean(C.CHAT_POINTS_COLLECT, true) && !account.id.isNullOrBlank() && !account.gqlToken.isNullOrBlank())) {
+        if (context.prefs().getBoolean(C.CHAT_DISABLE, false) || !context.prefs().getBoolean(C.CHAT_PUBSUB_ENABLED, true) || (context.prefs().getBoolean(C.CHAT_POINTS_COLLECT, true) && !account.id.isNullOrBlank() && !account.gqlToken.isNullOrBlank())) {
             viewModelScope.launch {
                 while (isActive) {
                     try {
@@ -64,14 +60,14 @@ class StreamPlayerViewModel @Inject constructor(
                                 if (!it?.id.isNullOrBlank()) {
                                     id = it?.id
                                 }
-                                viewerCount = it?.viewerCount
-                                title = it?.title
-                                gameName = it?.gameName
                                 gameId = it?.gameId
+                                gameName = it?.gameName
+                                title = it?.title
+                                viewerCount = it?.viewerCount
                             }
                         }
                         _stream.postValue(s)
-                        delay(60000L)
+                        delay(300000L)
                     } catch (e: Exception) {
                         delay(60000L)
                     }
