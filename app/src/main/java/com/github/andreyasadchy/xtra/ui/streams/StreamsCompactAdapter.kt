@@ -76,7 +76,10 @@ class StreamsCompactAdapter(
                         )
                     }
                     root.setOnClickListener {
-                        (fragment.activity as MainActivity).startStream(item)
+                        (fragment.activity as MainActivity).startStream(item.copy(
+                            gameId = args?.gameId,
+                            gameName = args?.gameName,
+                        ))
                     }
                     if (item.channelLogo != null)  {
                         userImage.visible()
