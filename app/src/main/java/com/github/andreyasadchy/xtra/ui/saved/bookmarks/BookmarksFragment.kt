@@ -19,6 +19,7 @@ import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.download.VideoDownloadDialog
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -45,7 +46,7 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable {
                     context = requireContext(),
                     helixClientId = requireContext().prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"),
                     helixToken = Account.get(requireContext()).helixToken,
-                    gqlClientId = requireContext().prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp"),
+                    gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
                     videoId = it
                 )
             }, {
@@ -96,7 +97,7 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable {
                 viewModel.updateUsers(
                     helixClientId = requireContext().prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"),
                     helixToken = Account.get(requireContext()).helixToken,
-                    gqlClientId = requireContext().prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp"),
+                    gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
                 )
             }
             if (!Account.get(requireContext()).helixToken.isNullOrBlank()) {

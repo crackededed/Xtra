@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.webkit.CookieManager
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.EditText
@@ -16,6 +17,8 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
+import com.acsbendi.requestinspectorwebview.RequestInspectorWebViewClient
+import com.acsbendi.requestinspectorwebview.WebViewRequest
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.ActivityLoginBinding
 import com.github.andreyasadchy.xtra.model.Account
@@ -54,7 +57,11 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
         val helixClientId = prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi")
-        val gqlClientId = prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")
+        val gqlClientId = if (prefs().getBoolean(C.DEBUG_WEBVIEW_INTEGRITY, false)) {
+            prefs().getString(C.GQL_CLIENT_ID, "kimne78kx3ncx6brgo4mv6wki5h1ko")
+        } else {
+            prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")
+        }
         val account = Account.get(this)
         if (account !is NotLoggedIn) {
             TwitchApiHelper.checkedValidation = false
@@ -189,7 +196,34 @@ class LoginActivity : AppCompatActivity() {
                     loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
                 }
             }
-            if (apiSetting == 1) getGqlAuthUrl(gqlClientId, gqlRedirect) else loadUrl(helixAuthUrl)
+            if (apiSetting == 1) {
+                if (prefs().getBoolean(C.DEBUG_WEBVIEW_INTEGRITY, false)) {
+                    readHeaders()
+                    loadUrl("https://www.twitch.tv/login")
+                }
+                getGqlAuthUrl(gqlClientId, gqlRedirect)
+            } else loadUrl(helixAuthUrl)
+        }
+    }
+
+    private fun readHeaders() {
+        binding.webView.webViewClient = object : RequestInspectorWebViewClient(binding.webView) {
+            override fun shouldInterceptRequest(view: WebView, webViewRequest: WebViewRequest): WebResourceResponse? {
+                val token = webViewRequest.headers["authorization"]?.takeUnless { it == "undefined" }?.removePrefix("OAuth ")
+                if (!token.isNullOrBlank()) {
+                    val clientId = webViewRequest.headers["client-id"]
+                    val integrityToken = webViewRequest.headers["client-integrity"]
+                    val deviceId = webViewRequest.headers["x-device-id"]
+                    prefs().edit {
+                        putString(C.GQL_CLIENT_ID, clientId ?: "kimne78kx3ncx6brgo4mv6wki5h1ko")
+                        putString(C.INTEGRITY_TOKEN, integrityToken)
+                        putLong(C.INTEGRITY_EXPIRATION, System.currentTimeMillis() + 57600000)
+                        putString(C.DEVICE_ID, deviceId)
+                    }
+                    loginIfValidUrl("token=${token}&", "", null, null, clientId, 1)
+                }
+                return super.shouldInterceptRequest(view, webViewRequest)
+            }
         }
     }
 
@@ -225,7 +259,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun loginIfValidUrl(url: String, helixAuthUrl: String, helixClientId: String?, gqlRedirect: String?, gqlClientId: String?, apiSetting: Int): Boolean {
         with(binding) {
-            return if (((apiSetting == 0 && tokens.count() == 1) || apiSetting == 1) && url == gqlRedirect) {
+            return if (((apiSetting == 0 && tokens.count() == 1) || apiSetting == 1) && url == gqlRedirect && !prefs().getBoolean(C.DEBUG_WEBVIEW_INTEGRITY, false)) {
                 lifecycleScope.launch {
                     try {
                         val response = repository.getToken("client_id=${gqlClientId}&device_code=${deviceCode}&grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code".toRequestBody())
@@ -290,11 +324,20 @@ class LoginActivity : AppCompatActivity() {
                                     gqlToken = null
                                     webViewContainer.visible()
                                     progressBar.gone()
-                                    if ((prefs().getString(C.API_LOGIN, "0")?.toInt() ?: 0) == 1) getGqlAuthUrl(gqlClientId, gqlRedirect) else webView.loadUrl(helixAuthUrl)
+                                    if ((prefs().getString(C.API_LOGIN, "0")?.toInt() ?: 0) == 1) {
+                                        if (prefs().getBoolean(C.DEBUG_WEBVIEW_INTEGRITY, false)) {
+                                            readHeaders()
+                                            webView.loadUrl("https://www.twitch.tv/login")
+                                        }
+                                        getGqlAuthUrl(gqlClientId, gqlRedirect)
+                                    } else webView.loadUrl(helixAuthUrl)
                                 }
                             }
                             if (apiSetting == 0 && tokens.count() == 1) {
-                                getGqlAuthUrl(gqlClientId, gqlRedirect)
+                                if (prefs().getBoolean(C.DEBUG_WEBVIEW_INTEGRITY, false)) {
+                                    readHeaders()
+                                    webView.loadUrl("https://www.twitch.tv/login")
+                                } else getGqlAuthUrl(gqlClientId, gqlRedirect)
                             }
                         }
                     }
@@ -304,6 +347,11 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        binding.webView.loadUrl("about:blank")
+        super.onDestroy()
     }
 
     private fun clearCookies() {

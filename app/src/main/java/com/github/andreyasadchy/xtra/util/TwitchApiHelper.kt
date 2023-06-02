@@ -292,6 +292,38 @@ object TwitchApiHelper {
         return if (hasDecimal) "${truncated / 10.0}$suffix" else "${truncated / 10}$suffix"
     }
 
+    fun getGQLHeaders(context: Context): Map<String, String> {
+        return mutableMapOf<String, String>().apply {
+            if (context.prefs().getBoolean(C.DEBUG_WEBVIEW_INTEGRITY, false)) {
+                context.prefs().getString(C.GQL_CLIENT_ID, "kimne78kx3ncx6brgo4mv6wki5h1ko")?.let {
+                    if (it.isNotBlank()) {
+                        put("Client-ID", it)
+                    }
+                }
+                context.prefs().getString(C.INTEGRITY_TOKEN, null)?.let {
+                    if (it.isNotBlank()) {
+                        put("Client-Integrity", it)
+                    }
+                }
+                context.prefs().getString(C.DEVICE_ID, null)?.let {
+                    if (it.isNotBlank()) {
+                        put("X-Device-Id", it)
+                    }
+                }
+            } else {
+                context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")?.let {
+                    if (it.isNotBlank()) {
+                        put("Client-ID", it)
+                    }
+                }
+            }
+        }
+    }
+
+    fun isIntegrityTokenExpired(context: Context): Boolean {
+        return System.currentTimeMillis() >= context.prefs().getLong(C.INTEGRITY_EXPIRATION, 0)
+    }
+
     val gamesApiDefaults: ArrayList<Pair<Long?, String?>?> = arrayListOf(Pair(0, C.GQL_QUERY), Pair(1, C.GQL), Pair(2, C.HELIX))
     val streamsApiDefaults: ArrayList<Pair<Long?, String?>?> = arrayListOf(Pair(0, C.GQL_QUERY), Pair(1, C.GQL), Pair(2, C.HELIX))
     val gameStreamsApiDefaults: ArrayList<Pair<Long?, String?>?> = arrayListOf(Pair(0, C.GQL_QUERY), Pair(1, C.GQL), Pair(2, C.HELIX))

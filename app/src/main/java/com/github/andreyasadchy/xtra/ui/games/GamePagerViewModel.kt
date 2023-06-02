@@ -37,10 +37,10 @@ class GamePagerViewModel @Inject constructor(
                 try {
                     val setting = context.prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toInt() ?: 0
                     val account = Account.get(context)
-                    val gqlClientId = context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")
+                    val gqlHeaders = TwitchApiHelper.getGQLHeaders(context)
                     val isFollowing = if (setting == 0 && !account.gqlToken.isNullOrBlank()) {
                         gameName?.let {
-                            repository.loadGameFollowing(gqlClientId, account.gqlToken, gameName)
+                            repository.loadGameFollowing(gqlHeaders, account.gqlToken, gameName)
                         } == true
                     } else {
                         gameId?.let {
@@ -60,17 +60,17 @@ class GamePagerViewModel @Inject constructor(
             val setting = context.prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toInt() ?: 0
             val account = Account.get(context)
             val helixClientId = context.prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi")
-            val gqlClientId = context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")
+            val gqlHeaders = TwitchApiHelper.getGQLHeaders(context)
             try {
                 if (setting == 0 && !account.gqlToken.isNullOrBlank()) {
-                    val errorMessage = repository.followGame(gqlClientId, account.gqlToken, gameId)
+                    val errorMessage = repository.followGame(gqlHeaders, account.gqlToken, gameId)
                     follow.postValue(Pair(true, errorMessage))
                 } else {
                     if (gameId != null) {
                         try {
                             Glide.with(context)
                                 .asBitmap()
-                                .load(TwitchApiHelper.getTemplateUrl(repository.loadGameBoxArt(gameId, helixClientId, account.helixToken, gqlClientId), "game"))
+                                .load(TwitchApiHelper.getTemplateUrl(repository.loadGameBoxArt(gameId, helixClientId, account.helixToken, gqlHeaders), "game"))
                                 .into(object: CustomTarget<Bitmap>() {
                                     override fun onLoadCleared(placeholder: Drawable?) {
 
@@ -98,10 +98,10 @@ class GamePagerViewModel @Inject constructor(
         GlobalScope.launch {
             val setting = context.prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toInt() ?: 0
             val account = Account.get(context)
-            val gqlClientId = context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")
+            val gqlHeaders = TwitchApiHelper.getGQLHeaders(context)
             try {
                 if (setting == 0 && !account.gqlToken.isNullOrBlank()) {
-                    val errorMessage = repository.unfollowGame(gqlClientId, account.gqlToken, gameId)
+                    val errorMessage = repository.unfollowGame(gqlHeaders, account.gqlToken, gameId)
                     follow.postValue(Pair(false, errorMessage))
                 } else {
                     if (gameId != null) {
@@ -125,7 +125,7 @@ class GamePagerViewModel @Inject constructor(
                             gameId = gameId,
                             helixClientId = context.prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"),
                             helixToken = Account.get(context).helixToken,
-                            gqlClientId = context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")
+                            gqlHeaders = TwitchApiHelper.getGQLHeaders(context)
                         )
                         try {
                             Glide.with(context)

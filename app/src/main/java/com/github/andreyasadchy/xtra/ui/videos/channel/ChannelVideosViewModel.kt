@@ -79,7 +79,7 @@ class ChannelVideosViewModel @Inject constructor(
                     helixBroadcastTypes = broadcastType,
                     helixSort = sort,
                     helixApi = helix,
-                    gqlClientId = context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp"),
+                    gqlHeaders = TwitchApiHelper.getGQLHeaders(context),
                     gqlQueryType = when (broadcastType) {
                         BroadcastTypeEnum.ARCHIVE -> BroadcastType.ARCHIVE
                         BroadcastTypeEnum.HIGHLIGHT -> BroadcastType.HIGHLIGHT

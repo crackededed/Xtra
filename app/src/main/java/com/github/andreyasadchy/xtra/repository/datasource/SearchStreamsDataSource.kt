@@ -16,7 +16,7 @@ class SearchStreamsDataSource(
     private val helixClientId: String?,
     private val helixToken: String?,
     private val helixApi: HelixApi,
-    private val gqlClientId: String?,
+    private val gqlHeaders: Map<String, String>,
     private val apolloClient: ApolloClient,
     private val apiPref: ArrayList<Pair<Long?, String?>?>?) : PagingSource<Int, Stream>() {
     private var api: String? = null
@@ -83,7 +83,7 @@ class SearchStreamsDataSource(
     }
 
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): List<Stream> {
-        val get1 = apolloClient.newBuilder().apply { gqlClientId?.let { addHttpHeader("Client-ID", it) } }.build().query(SearchStreamsQuery(
+        val get1 = apolloClient.newBuilder().apply { gqlHeaders.entries.forEach { addHttpHeader(it.key, it.value) } }.build().query(SearchStreamsQuery(
             query = query,
             first = Optional.Present(params.loadSize),
             after = Optional.Present(offset)

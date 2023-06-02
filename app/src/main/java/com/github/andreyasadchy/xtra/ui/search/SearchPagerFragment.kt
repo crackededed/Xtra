@@ -17,8 +17,7 @@ import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.common.AlertDialogFragment
 import com.github.andreyasadchy.xtra.ui.common.BaseNetworkFragment
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
-import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.prefs
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.reduceDragSensitivity
 import com.github.andreyasadchy.xtra.util.showKeyboard
 import com.github.andreyasadchy.xtra.util.visible
@@ -128,7 +127,7 @@ class SearchPagerFragment : BaseNetworkFragment(), UserResultDialog.OnUserResult
             userResult = Pair(checkedId, result)
             when (resultCode) {
                 UserResultDialog.RESULT_POSITIVE -> {
-                    viewModel.loadUserResult(requireContext().prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp"), checkedId, result)
+                    viewModel.loadUserResult(TwitchApiHelper.getGQLHeaders(requireContext()), checkedId, result)
                     viewModel.userResult.observe(viewLifecycleOwner) {
                         if (it != null) {
                             if (!it.first.isNullOrBlank()) {

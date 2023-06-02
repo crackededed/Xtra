@@ -34,6 +34,7 @@ import com.github.andreyasadchy.xtra.ui.player.PlayerGamesDialog
 import com.github.andreyasadchy.xtra.ui.player.PlayerSettingsDialog
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.FragmentUtils
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.disable
 import com.github.andreyasadchy.xtra.util.enable
 import com.github.andreyasadchy.xtra.util.prefs
@@ -213,7 +214,7 @@ class VideoPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayP
             viewModel.isFollowingChannel(requireContext(), video.channelId, video.channelLogin)
         }
         if ((prefs.getBoolean(C.PLAYER_GAMESBUTTON, true) || prefs.getBoolean(C.PLAYER_MENU_GAMES, false)) && !video.id.isNullOrBlank()) {
-            viewModel.loadGamesList(prefs.getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp"), video.id)
+            viewModel.loadGamesList(TwitchApiHelper.getGQLHeaders(requireContext()), video.id)
         }
     }
 
@@ -231,7 +232,7 @@ class VideoPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayP
             )), Bundle.EMPTY)
         } else {
             viewModel.load(
-                gqlClientId = prefs.getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp"),
+                gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
                 gqlToken = if (prefs.getBoolean(C.TOKEN_INCLUDE_TOKEN_VIDEO, true)) Account.get(requireContext()).gqlToken else null,
                 videoId = video.id,
                 playerType = prefs.getString(C.TOKEN_PLAYERTYPE_VIDEO, "channel_home_live")

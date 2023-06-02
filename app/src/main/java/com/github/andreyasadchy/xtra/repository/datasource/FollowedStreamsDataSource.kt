@@ -20,7 +20,7 @@ class FollowedStreamsDataSource(
     private val helixClientId: String?,
     private val helixToken: String?,
     private val helixApi: HelixApi,
-    private val gqlClientId: String?,
+    private val gqlHeaders: Map<String, String>,
     private val gqlToken: String?,
     private val gqlApi: GraphQLRepository,
     private val apolloClient: ApolloClient,
@@ -137,7 +137,7 @@ class FollowedStreamsDataSource(
 
     private suspend fun gqlQueryLoad(): List<Stream> {
         val get1 = apolloClient.newBuilder().apply {
-            gqlClientId?.let { addHttpHeader("Client-ID", it) }
+            gqlHeaders.entries.forEach { addHttpHeader(it.key, it.value) }
             gqlToken?.let { addHttpHeader("Authorization", TwitchApiHelper.addTokenPrefixGQL(it)) }
         }.build().query(UserFollowedStreamsQuery(
             first = Optional.Present(100),
@@ -168,7 +168,7 @@ class FollowedStreamsDataSource(
     }
 
     private suspend fun gqlLoad(): List<Stream> {
-        val get = gqlApi.loadFollowedStreams(gqlClientId, gqlToken, 100, offset)
+        val get = gqlApi.loadFollowedStreams(gqlHeaders, gqlToken, 100, offset)
         offset = get.cursor
         nextPage = get.hasNextPage ?: true
         return get.data
@@ -177,7 +177,7 @@ class FollowedStreamsDataSource(
     private suspend fun gqlQueryLocal(ids: List<String>): List<Stream> {
         val streams = mutableListOf<Stream>()
         for (localIds in ids.chunked(100)) {
-            val get = apolloClient.newBuilder().apply { gqlClientId?.let { addHttpHeader("Client-ID", it) } }.build().query(UsersStreamQuery(Optional.Present(localIds))).execute().data?.users
+            val get = apolloClient.newBuilder().apply { gqlHeaders.entries.forEach { addHttpHeader(it.key, it.value) } }.build().query(UsersStreamQuery(Optional.Present(localIds))).execute().data?.users
             if (get != null) {
                 for (i in get) {
                     if (i?.stream?.viewersCount != null) {

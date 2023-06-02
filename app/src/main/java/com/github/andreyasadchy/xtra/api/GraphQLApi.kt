@@ -32,158 +32,158 @@ import retrofit2.http.POST
 interface GraphQLApi {
 
     @POST(".")
-    suspend fun getPlaybackAccessToken(@Header("Client-ID") clientId: String?, @HeaderMap headers: Map<String, String>, @Body json: JsonObject): PlaybackAccessTokenResponse
+    suspend fun getPlaybackAccessToken(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): PlaybackAccessTokenResponse
 
     @POST(".")
-    suspend fun getClipUrls(@Header("Client-ID") clientId: String?, @Body json: JsonObject): Response<ClipUrlsResponse>
+    suspend fun getClipUrls(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<ClipUrlsResponse>
 
     @POST(".")
-    suspend fun getClipData(@Header("Client-ID") clientId: String?, @Body json: JsonObject): ClipDataResponse
+    suspend fun getClipData(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): ClipDataResponse
 
     @POST(".")
-    suspend fun getClipVideo(@Header("Client-ID") clientId: String?, @Body json: JsonObject): ClipVideoResponse
+    suspend fun getClipVideo(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): ClipVideoResponse
 
     @POST(".")
-    suspend fun getTopGames(@Header("Client-ID") clientId: String?, @Body json: JsonObject): GameDataResponse
+    suspend fun getTopGames(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): GameDataResponse
 
     @POST(".")
-    suspend fun getTopStreams(@Header("Client-ID") clientId: String?, @Body json: JsonObject): StreamsDataResponse
+    suspend fun getTopStreams(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): StreamsDataResponse
 
     @POST(".")
-    suspend fun getGameStreams(@Header("Client-ID") clientId: String?, @Body json: JsonObject): GameStreamsDataResponse
+    suspend fun getGameStreams(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): GameStreamsDataResponse
 
     @POST(".")
-    suspend fun getGameVideos(@Header("Client-ID") clientId: String?, @Body json: JsonObject): GameVideosDataResponse
+    suspend fun getGameVideos(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): GameVideosDataResponse
 
     @POST(".")
-    suspend fun getGameClips(@Header("Client-ID") clientId: String?, @Body json: JsonObject): GameClipsDataResponse
+    suspend fun getGameClips(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): GameClipsDataResponse
 
     @POST(".")
-    suspend fun getChannelVideos(@Header("Client-ID") clientId: String?, @Body json: JsonObject): ChannelVideosDataResponse
+    suspend fun getChannelVideos(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): ChannelVideosDataResponse
 
     @POST(".")
-    suspend fun getChannelClips(@Header("Client-ID") clientId: String?, @Body json: JsonObject): ChannelClipsDataResponse
+    suspend fun getChannelClips(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): ChannelClipsDataResponse
 
     @POST(".")
-    suspend fun getSearchChannels(@Header("Client-ID") clientId: String?, @Body json: JsonObject): SearchChannelDataResponse
+    suspend fun getSearchChannels(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): SearchChannelDataResponse
 
     @POST(".")
-    suspend fun getSearchGames(@Header("Client-ID") clientId: String?, @Body json: JsonObject): SearchGameDataResponse
+    suspend fun getSearchGames(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): SearchGameDataResponse
 
     @POST(".")
-    suspend fun getSearchVideos(@Header("Client-ID") clientId: String?, @Body json: JsonObject): SearchVideosDataResponse
+    suspend fun getSearchVideos(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): SearchVideosDataResponse
 
     @POST(".")
-    suspend fun getFreeformTags(@Header("Client-ID") clientId: String?, @Body json: JsonObject): FreeformTagDataResponse
+    suspend fun getFreeformTags(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): FreeformTagDataResponse
 
     @POST(".")
-    suspend fun getGameTags(@Header("Client-ID") clientId: String?, @Body json: JsonObject): TagGameDataResponse
+    suspend fun getGameTags(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): TagGameDataResponse
 
     @POST(".")
-    suspend fun getChatBadges(@Header("Client-ID") clientId: String?, @Body json: JsonObject): ChatBadgesDataResponse
+    suspend fun getChatBadges(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): ChatBadgesDataResponse
 
     @POST(".")
-    suspend fun getGlobalCheerEmotes(@Header("Client-ID") clientId: String?, @Body json: JsonObject): GlobalCheerEmotesDataResponse
+    suspend fun getGlobalCheerEmotes(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): GlobalCheerEmotesDataResponse
 
     @POST(".")
-    suspend fun getChannelCheerEmotes(@Header("Client-ID") clientId: String?, @Body json: JsonObject): ChannelCheerEmotesDataResponse
+    suspend fun getChannelCheerEmotes(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): ChannelCheerEmotesDataResponse
 
     @POST(".")
-    suspend fun getVideoMessages(@Header("Client-ID") clientId: String?, @Body json: JsonObject): VideoMessagesDataResponse
+    suspend fun getVideoMessages(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): VideoMessagesDataResponse
 
     @POST(".")
-    suspend fun getVideoGames(@Header("Client-ID") clientId: String?, @Body json: JsonObject): VideoGamesDataResponse
+    suspend fun getVideoGames(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): VideoGamesDataResponse
 
     @POST(".")
-    suspend fun getChannelViewerList(@Header("Client-ID") clientId: String?, @Body json: JsonObject): ChannelViewerListDataResponse
+    suspend fun getChannelViewerList(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): ChannelViewerListDataResponse
 
     @POST(".")
-    suspend fun getViewerCount(@Header("Client-ID") clientId: String?, @Body json: JsonObject): ViewersDataResponse
+    suspend fun getViewerCount(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): ViewersDataResponse
 
     @POST(".")
-    suspend fun getEmoteCard(@Header("Client-ID") clientId: String?, @Body json: JsonObject): EmoteCardResponse
+    suspend fun getEmoteCard(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): EmoteCardResponse
 
     @POST(".")
-    suspend fun getChannelPanel(@Header("Client-ID") clientId: String?, @Body json: JsonObject): Response<ResponseBody>
+    suspend fun getChannelPanel(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<ResponseBody>
 
     @POST(".")
-    suspend fun getFollowedStreams(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): FollowedStreamsDataResponse
+    suspend fun getFollowedStreams(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowedStreamsDataResponse
 
     @POST(".")
-    suspend fun getFollowedVideos(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): FollowedVideosDataResponse
+    suspend fun getFollowedVideos(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowedVideosDataResponse
 
     @POST(".")
-    suspend fun getFollowedChannels(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): FollowedChannelsDataResponse
+    suspend fun getFollowedChannels(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowedChannelsDataResponse
 
     @POST(".")
-    suspend fun getFollowedGames(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): FollowedGamesDataResponse
+    suspend fun getFollowedGames(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowedGamesDataResponse
 
     @POST(".")
-    suspend fun getFollowUser(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): FollowDataResponse
+    suspend fun getFollowUser(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowDataResponse
 
     @POST(".")
-    suspend fun getUnfollowUser(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): FollowDataResponse
+    suspend fun getUnfollowUser(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowDataResponse
 
     @POST(".")
-    suspend fun getFollowGame(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): FollowDataResponse
+    suspend fun getFollowGame(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowDataResponse
 
     @POST(".")
-    suspend fun getUnfollowGame(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): FollowDataResponse
+    suspend fun getUnfollowGame(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowDataResponse
 
     @POST(".")
-    suspend fun getFollowingUser(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): FollowingUserDataResponse
+    suspend fun getFollowingUser(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowingUserDataResponse
 
     @POST(".")
-    suspend fun getFollowingGame(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): FollowingGameDataResponse
+    suspend fun getFollowingGame(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowingGameDataResponse
 
     @POST(".")
-    suspend fun getChannelPointsContext(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): ChannelPointsContextDataResponse
+    suspend fun getChannelPointsContext(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): ChannelPointsContextDataResponse
 
     @POST(".")
-    suspend fun getClaimPoints(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject)
+    suspend fun getClaimPoints(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject)
 
     @POST(".")
-    suspend fun getJoinRaid(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject)
+    suspend fun getJoinRaid(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject)
 
     @POST(".")
-    suspend fun getUserEmotes(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): UserEmotesDataResponse
+    suspend fun getUserEmotes(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): UserEmotesDataResponse
 
     @POST(".")
-    suspend fun sendAnnouncement(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun sendAnnouncement(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun banUser(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun banUser(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun unbanUser(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun unbanUser(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun updateChatColor(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun updateChatColor(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun createStreamMarker(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun createStreamMarker(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun getModerators(@Header("Client-ID") clientId: String?, @Body json: JsonObject): Response<ModeratorsDataResponse>
+    suspend fun getModerators(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<ModeratorsDataResponse>
 
     @POST(".")
-    suspend fun addModerator(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun addModerator(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun removeModerator(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun removeModerator(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun startRaid(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun startRaid(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun cancelRaid(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun cancelRaid(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun getVips(@Header("Client-ID") clientId: String?, @Body json: JsonObject): Response<VipsDataResponse>
+    suspend fun getVips(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<VipsDataResponse>
 
     @POST(".")
-    suspend fun addVip(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun addVip(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun removeVip(@Header("Client-ID") clientId: String?, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun removeVip(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
 }

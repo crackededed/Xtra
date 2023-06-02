@@ -66,7 +66,7 @@ class FollowedChannelsViewModel @Inject constructor(
                 helixClientId = context.prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"),
                 helixToken = Account.get(context).helixToken,
                 helixApi = helix,
-                gqlClientId = context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp"),
+                gqlHeaders = TwitchApiHelper.getGQLHeaders(context),
                 gqlToken = Account.get(context).gqlToken,
                 gqlApi = graphQLRepository,
                 apolloClient = apolloClient,

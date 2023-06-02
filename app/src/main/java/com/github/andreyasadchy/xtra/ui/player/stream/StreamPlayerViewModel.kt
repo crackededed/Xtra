@@ -11,6 +11,7 @@ import com.github.andreyasadchy.xtra.repository.LocalFollowChannelRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.ui.player.PlayerViewModel
 import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -33,10 +34,10 @@ class StreamPlayerViewModel @Inject constructor(
     var useProxy: Int? = null
     var playingAds = false
 
-    fun load(gqlClientId: String?, gqlToken: String?, channelLogin: String, proxyUrl: String?, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?) {
+    fun load(gqlHeaders: Map<String, String>, gqlToken: String?, channelLogin: String, proxyUrl: String?, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?) {
         viewModelScope.launch {
             try {
-                playerRepository.loadStreamPlaylistUrl(gqlClientId, gqlToken, channelLogin, useProxy, proxyUrl, randomDeviceId, xDeviceId, playerType)
+                playerRepository.loadStreamPlaylistUrl(gqlHeaders, gqlToken, channelLogin, useProxy, proxyUrl, randomDeviceId, xDeviceId, playerType)
             } catch (e: Exception) {
                 null
             }.let { result.postValue(it) }
@@ -54,7 +55,7 @@ class StreamPlayerViewModel @Inject constructor(
                             channelLogin = stream.channelLogin,
                             helixClientId = context.prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"),
                             helixToken = account.helixToken,
-                            gqlClientId = context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")
+                            gqlHeaders = TwitchApiHelper.getGQLHeaders(context)
                         ).let {
                             _stream.value?.apply {
                                 if (!it?.id.isNullOrBlank()) {

@@ -20,6 +20,7 @@ import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.FetchProvider
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
 import com.iheartradio.m3u8.*
 import com.iheartradio.m3u8.data.MediaPlaylist
@@ -181,7 +182,7 @@ class DownloadService : IntentService(TAG) {
                         }
                     } else {
                         val response = playerRepository.loadVideoPlaylist(
-                            gqlClientId = applicationContext.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp"),
+                            gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext),
                             gqlToken = if (applicationContext.prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_VIDEO, true)) Account.get(applicationContext).gqlToken else null,
                             videoId = request.videoId!!,
                             playerType = applicationContext.prefs().getString(C.TOKEN_PLAYERTYPE_VIDEO, "channel_home_live")

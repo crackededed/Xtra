@@ -17,7 +17,7 @@ class GamesDataSource(
     private val helixClientId: String?,
     private val helixToken: String?,
     private val helixApi: HelixApi,
-    private val gqlClientId: String?,
+    private val gqlHeaders: Map<String, String>,
     private val tags: List<String>?,
     private val gqlApi: GraphQLRepository,
     private val apolloClient: ApolloClient,
@@ -81,7 +81,7 @@ class GamesDataSource(
     }
 
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): List<Game> {
-        val get1 = apolloClient.newBuilder().apply { gqlClientId?.let { addHttpHeader("Client-ID", it) } }.build().query(TopGamesQuery(
+        val get1 = apolloClient.newBuilder().apply { gqlHeaders.entries.forEach { addHttpHeader(it.key, it.value) } }.build().query(TopGamesQuery(
             tags = Optional.Present(tags),
             first = Optional.Present(params.loadSize),
             after = Optional.Present(offset)
@@ -111,7 +111,7 @@ class GamesDataSource(
     }
 
     private suspend fun gqlLoad(params: LoadParams<Int>): List<Game> {
-        val get = gqlApi.loadTopGames(gqlClientId, tags, params.loadSize, offset)
+        val get = gqlApi.loadTopGames(gqlHeaders, tags, params.loadSize, offset)
         offset = get.cursor
         nextPage = get.hasNextPage ?: true
         return get.data

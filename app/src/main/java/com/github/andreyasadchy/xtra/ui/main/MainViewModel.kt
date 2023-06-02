@@ -82,29 +82,29 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun loadVideo(videoId: String?, helixClientId: String? = null, helixToken: String? = null, gqlClientId: String? = null) {
+    fun loadVideo(videoId: String?, helixClientId: String? = null, helixToken: String? = null, gqlHeaders: Map<String, String>) {
         _video.value = null
         viewModelScope.launch {
             try {
-                repository.loadVideo(videoId, helixClientId, helixToken, gqlClientId)?.let { _video.postValue(it) }
+                repository.loadVideo(videoId, helixClientId, helixToken, gqlHeaders)?.let { _video.postValue(it) }
             } catch (e: Exception) {}
         }
     }
 
-    fun loadClip(clipId: String?, helixClientId: String? = null, helixToken: String? = null, gqlClientId: String? = null) {
+    fun loadClip(clipId: String?, helixClientId: String? = null, helixToken: String? = null, gqlHeaders: Map<String, String>) {
         _clip.value = null
         viewModelScope.launch {
             try {
-                repository.loadClip(clipId, helixClientId, helixToken, gqlClientId)?.let { _clip.postValue(it) }
+                repository.loadClip(clipId, helixClientId, helixToken, gqlHeaders)?.let { _clip.postValue(it) }
             } catch (e: Exception) {}
         }
     }
 
-    fun loadUser(login: String? = null, helixClientId: String? = null, helixToken: String? = null, gqlClientId: String? = null) {
+    fun loadUser(login: String? = null, helixClientId: String? = null, helixToken: String? = null, gqlHeaders: Map<String, String>) {
         _user.value = null
         viewModelScope.launch {
             try {
-                repository.loadCheckUser(channelLogin = login, helixClientId = helixClientId, helixToken = helixToken, gqlClientId = gqlClientId)?.let { _user.postValue(it) }
+                repository.loadCheckUser(channelLogin = login, helixClientId = helixClientId, helixToken = helixToken, gqlHeaders = gqlHeaders)?.let { _user.postValue(it) }
             } catch (e: Exception) {}
         }
     }
@@ -147,13 +147,5 @@ class MainViewModel @Inject constructor(
             }
         }
         TwitchApiHelper.checkedValidation = true
-    }
-
-    fun revoke(clientId: String, token: String) {
-        viewModelScope.launch {
-            try {
-                authRepository.revoke(clientId, token)
-            } catch (e: Exception) {}
-        }
     }
 }

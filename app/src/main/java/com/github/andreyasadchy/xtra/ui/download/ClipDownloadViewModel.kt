@@ -30,7 +30,7 @@ class ClipDownloadViewModel @Inject constructor(
 
     private lateinit var clip: Clip
 
-    fun init(clientId: String?, clip: Clip, qualities: Map<String, String>?, skipAccessToken: Int) {
+    fun init(gqlHeaders: Map<String, String>, clip: Clip, qualities: Map<String, String>?, skipAccessToken: Int) {
         if (!this::clip.isInitialized) {
             this.clip = clip
             if (qualities.isNullOrEmpty()) {
@@ -40,7 +40,7 @@ class ClipDownloadViewModel @Inject constructor(
                             TwitchApiHelper.getClipUrlMapFromPreview(clip.thumbnailUrl)
                         } else {
                             graphQLRepository.loadClipUrls(
-                                clientId = clientId,
+                                headers = gqlHeaders,
                                 slug = clip.id
                             ) ?: if (skipAccessToken == 2 && !clip.thumbnailUrl.isNullOrBlank()) {
                                 TwitchApiHelper.getClipUrlMapFromPreview(clip.thumbnailUrl)

@@ -21,7 +21,7 @@ class ChannelClipsDataSource(
     private val started_at: String?,
     private val ended_at: String?,
     private val helixApi: HelixApi,
-    private val gqlClientId: String?,
+    private val gqlHeaders: Map<String, String>,
     private val gqlQueryPeriod: ClipsPeriod?,
     private val gqlPeriod: String?,
     private val gqlApi: GraphQLRepository,
@@ -109,7 +109,7 @@ class ChannelClipsDataSource(
     }
 
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): List<Clip> {
-        val get1 = apolloClient.newBuilder().apply { gqlClientId?.let { addHttpHeader("Client-ID", it) } }.build().query(UserClipsQuery(
+        val get1 = apolloClient.newBuilder().apply { gqlHeaders.entries.forEach { addHttpHeader(it.key, it.value) } }.build().query(UserClipsQuery(
             id = if (!channelId.isNullOrBlank()) Optional.Present(channelId) else Optional.Absent,
             login = if (channelId.isNullOrBlank() && !channelLogin.isNullOrBlank()) Optional.Present(channelLogin) else Optional.Absent,
             sort = Optional.Present(gqlQueryPeriod),
@@ -143,7 +143,7 @@ class ChannelClipsDataSource(
     }
 
     private suspend fun gqlLoad(params: LoadParams<Int>): List<Clip> {
-        val get = gqlApi.loadChannelClips(gqlClientId, channelLogin, gqlPeriod, params.loadSize, offset)
+        val get = gqlApi.loadChannelClips(gqlHeaders, channelLogin, gqlPeriod, params.loadSize, offset)
         offset = get.cursor
         nextPage = get.hasNextPage ?: true
         return get.data

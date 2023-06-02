@@ -17,7 +17,9 @@ sealed class Account(val id: String?,
         fun get(context: Context): Account {
             return account ?: with(context.prefs()) {
                 val helixToken = getString(C.TOKEN, null).takeUnless { it.isNullOrBlank() }
-                val gqlToken = getString(C.GQL_TOKEN2, null).takeUnless { it.isNullOrBlank() }
+                val gqlToken = getString(
+                    if (getBoolean(C.DEBUG_WEBVIEW_INTEGRITY, false)) C.GQL_TOKEN else C.GQL_TOKEN2,
+                    null).takeUnless { it.isNullOrBlank() }
                 if (!helixToken.isNullOrBlank() || !gqlToken.isNullOrBlank()) {
                     val id = getString(C.USER_ID, null).takeUnless { it.isNullOrBlank() }
                     val name = getString(C.USERNAME, null).takeUnless { it.isNullOrBlank() }
@@ -39,11 +41,14 @@ sealed class Account(val id: String?,
                     putString(C.USER_ID, account.id)
                     putString(C.USERNAME, account.login)
                     putString(C.TOKEN, account.helixToken)
-                    putString(C.GQL_TOKEN2, account.gqlToken)
+                    putString(
+                        if (context.prefs().getBoolean(C.DEBUG_WEBVIEW_INTEGRITY, false)) C.GQL_TOKEN else C.GQL_TOKEN2,
+                        account.gqlToken)
                 } else {
                     putString(C.USER_ID, null)
                     putString(C.USERNAME, null)
                     putString(C.TOKEN, null)
+                    putString(C.GQL_TOKEN, null)
                     putString(C.GQL_TOKEN2, null)
                 }
             }

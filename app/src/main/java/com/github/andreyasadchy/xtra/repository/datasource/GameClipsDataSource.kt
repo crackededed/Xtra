@@ -22,7 +22,7 @@ class GameClipsDataSource(
     private val started_at: String?,
     private val ended_at: String?,
     private val helixApi: HelixApi,
-    private val gqlClientId: String?,
+    private val gqlHeaders: Map<String, String>,
     private val gqlQueryLanguages: List<Language>?,
     private val gqlQueryPeriod: ClipsPeriod?,
     private val gqlPeriod: String?,
@@ -107,7 +107,7 @@ class GameClipsDataSource(
     }
 
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): List<Clip> {
-        val get1 = apolloClient.newBuilder().apply { gqlClientId?.let { addHttpHeader("Client-ID", it) } }.build().query(GameClipsQuery(
+        val get1 = apolloClient.newBuilder().apply { gqlHeaders.entries.forEach { addHttpHeader(it.key, it.value) } }.build().query(GameClipsQuery(
             id = if (!gameId.isNullOrBlank()) Optional.Present(gameId) else Optional.Absent,
             name = if (gameId.isNullOrBlank() && !gameName.isNullOrBlank()) Optional.Present(gameName) else Optional.Absent,
             languages = Optional.Present(gqlQueryLanguages),
@@ -140,7 +140,7 @@ class GameClipsDataSource(
     }
 
     private suspend fun gqlLoad(params: LoadParams<Int>): List<Clip> {
-        val get = gqlApi.loadGameClips(gqlClientId, gameName, gqlPeriod, params.loadSize, offset)
+        val get = gqlApi.loadGameClips(gqlHeaders, gameName, gqlPeriod, params.loadSize, offset)
         offset = get.cursor
         nextPage = get.hasNextPage ?: true
         return get.data

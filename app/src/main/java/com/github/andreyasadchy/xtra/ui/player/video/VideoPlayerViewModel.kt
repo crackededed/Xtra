@@ -21,6 +21,7 @@ import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.ui.player.PlayerViewModel
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.DownloadUtils
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.GlobalScope
@@ -41,10 +42,10 @@ class VideoPlayerViewModel @Inject constructor(
     val gamesList = MutableLiveData<List<Game>>()
     var shouldRetry = true
 
-    fun load(gqlClientId: String?, gqlToken: String?, videoId: String?, playerType: String?) {
+    fun load(gqlHeaders: Map<String, String>, gqlToken: String?, videoId: String?, playerType: String?) {
         viewModelScope.launch {
             try {
-                playerRepository.loadVideoPlaylistUrl(gqlClientId, gqlToken, videoId, playerType)
+                playerRepository.loadVideoPlaylistUrl(gqlHeaders, gqlToken, videoId, playerType)
             } catch (e: Exception) {
                 null
             }.let { result.postValue(it) }
@@ -55,11 +56,11 @@ class VideoPlayerViewModel @Inject constructor(
         playerRepository.saveVideoPosition(VideoPosition(id, position))
     }
 
-    fun loadGamesList(clientId: String?, videoId: String?) {
+    fun loadGamesList(gqlHeaders: Map<String, String>, videoId: String?) {
         if (!gamesList.isInitialized) {
             viewModelScope.launch {
                 try {
-                    val get = repository.loadVideoGames(clientId, videoId)
+                    val get = repository.loadVideoGames(gqlHeaders, videoId)
                     gamesList.postValue(get)
                 } catch (e: Exception) {
                 }
@@ -114,7 +115,7 @@ class VideoPlayerViewModel @Inject constructor(
 
                     }
                 }
-                val userTypes = video.channelId?.let { repository.loadUserTypes(listOf(it), context.prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"), Account.get(context).helixToken, context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")) }?.first()
+                val userTypes = video.channelId?.let { repository.loadUserTypes(listOf(it), context.prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"), Account.get(context).helixToken, TwitchApiHelper.getGQLHeaders(context)) }?.first()
                 val downloadedThumbnail = video.id?.let { File(context.filesDir.toString() + File.separator + "thumbnails" + File.separator + "${it}.png").absolutePath }
                 val downloadedLogo = video.channelId?.let { File(context.filesDir.toString() + File.separator + "profile_pics" + File.separator + "${it}.png").absolutePath }
                 bookmarksRepository.saveBookmark(Bookmark(

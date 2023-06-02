@@ -17,7 +17,7 @@ class SearchChannelsDataSource(
     private val helixClientId: String?,
     private val helixToken: String?,
     private val helixApi: HelixApi,
-    private val gqlClientId: String?,
+    private val gqlHeaders: Map<String, String>,
     private val gqlApi: GraphQLRepository,
     private val apolloClient: ApolloClient,
     private val apiPref: ArrayList<Pair<Long?, String?>?>?) : PagingSource<Int, User>() {
@@ -81,7 +81,7 @@ class SearchChannelsDataSource(
     }
 
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): List<User> {
-        val get1 = apolloClient.newBuilder().apply { gqlClientId?.let { addHttpHeader("Client-ID", it) } }.build().query(SearchChannelsQuery(
+        val get1 = apolloClient.newBuilder().apply { gqlHeaders.entries.forEach { addHttpHeader(it.key, it.value) } }.build().query(SearchChannelsQuery(
             query = query,
             first = Optional.Present(params.loadSize),
             after = Optional.Present(offset)
@@ -106,7 +106,7 @@ class SearchChannelsDataSource(
     }
 
     private suspend fun gqlLoad(): List<User> {
-        val get = gqlApi.loadSearchChannels(gqlClientId, query, offset)
+        val get = gqlApi.loadSearchChannels(gqlHeaders, query, offset)
         offset = get.cursor
         return get.data
     }

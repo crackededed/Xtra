@@ -179,7 +179,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable {
         get() = childFragmentManager.findFragmentByTag("f${binding.pagerLayout.viewPager.currentItem}")
 
     override fun initialize() {
-        viewModel.loadStream(requireContext().prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"), Account.get(requireContext()).helixToken, requireContext().prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp"))
+        viewModel.loadStream(requireContext().prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"), Account.get(requireContext()).helixToken, TwitchApiHelper.getGQLHeaders(requireContext()))
         viewModel.stream.observe(viewLifecycleOwner) { stream ->
             updateStreamLayout(stream)
             if (stream?.user != null) {
@@ -363,7 +363,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable {
     }
 
     override fun onNetworkRestored() {
-        viewModel.retry(requireContext().prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"), Account.get(requireContext()).helixToken, requireContext().prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp"))
+        viewModel.retry(requireContext().prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"), Account.get(requireContext()).helixToken, TwitchApiHelper.getGQLHeaders(requireContext()))
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

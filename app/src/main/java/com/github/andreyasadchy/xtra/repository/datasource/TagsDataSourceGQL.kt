@@ -6,7 +6,7 @@ import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 
 class TagsDataSourceGQL(
-    private val clientId: String?,
+    private val gqlHeaders: Map<String, String>,
     private val getGameTags: Boolean,
     private val query: String,
     private val api: GraphQLRepository) : PagingSource<Int, Tag>() {
@@ -14,9 +14,9 @@ class TagsDataSourceGQL(
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Tag> {
         return try {
             val response = if (query.isBlank()) listOf() else if (getGameTags) {
-                api.loadGameTags(clientId, query, 100).data
+                api.loadGameTags(gqlHeaders, query, 100).data
             } else {
-                api.loadFreeformTags(clientId, query, 100).data
+                api.loadFreeformTags(gqlHeaders, query, 100).data
             }
             LoadResult.Page(
                 data = response,

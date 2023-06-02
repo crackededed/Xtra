@@ -37,14 +37,14 @@ class VideoDownloadViewModel @Inject constructor(
     val videoInfo: LiveData<VideoDownloadInfo?>
         get() = _videoInfo
 
-    fun setVideo(gqlClientId: String?, gqlToken: String?, video: Video, playerType: String?, skipAccessToken: Int) {
+    fun setVideo(gqlHeaders: Map<String, String>, gqlToken: String?, video: Video, playerType: String?, skipAccessToken: Int) {
         if (_videoInfo.value == null) {
             viewModelScope.launch(Dispatchers.IO) {
                 try {
                     val map = if (skipAccessToken <= 1 && !video.animatedPreviewURL.isNullOrBlank()) {
                         TwitchApiHelper.getVideoUrlMapFromPreview(video.animatedPreviewURL, video.type)
                     } else {
-                        val response = playerRepository.loadVideoPlaylist(gqlClientId, gqlToken, video.id, playerType)
+                        val response = playerRepository.loadVideoPlaylist(gqlHeaders, gqlToken, video.id, playerType)
                         if (response.isSuccessful) {
                             val playlist = response.body()!!.string()
                             val qualities = "NAME=\"(.*)\"".toRegex().findAll(playlist).map { it.groupValues[1] }.toMutableList()

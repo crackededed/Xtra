@@ -12,6 +12,9 @@ object C {
     const val TAGS = "tags"
     const val GQL_TOKEN = "gql_token"
     const val GQL_TOKEN2 = "gql_token2"
+    const val INTEGRITY_TOKEN = "integrity_token"
+    const val INTEGRITY_EXPIRATION = "integrity_expiration"
+    const val DEVICE_ID = "device_id"
     const val TOKEN = "token"
     const val USERNAME = "username"
     const val USER_ID = "user_id"
@@ -185,4 +188,5 @@ object C {
     const val DEBUG_SECONDVIEW = "debug_secondview"
     const val DEBUG_API_COMMANDS = "debug_api_commands"
     const val DEBUG_PLAYER_MENU_PLAYLIST_TAGS = "debug_player_menu_playlist_tags"
+    const val DEBUG_WEBVIEW_INTEGRITY = "debug_webview_integrity"
 }

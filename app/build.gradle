@@ -25,7 +25,7 @@ android {
         minSdk 21
         targetSdk 33
         versionCode 121
-        versionName "2.18.5"
+        versionName "2.19.0"
         resourceConfigurations += ["ar", "de", "en", "es", "fr", "in", "ja", "pt-rBR", "ru", "tr"]
     }
 
@@ -81,7 +81,7 @@ dependencies {
     implementation 'androidx.fragment:fragment-ktx:1.5.7'
     implementation "androidx.navigation:navigation-fragment-ktx:$navigation"
     implementation "androidx.navigation:navigation-ui-ktx:$navigation"
-    implementation 'androidx.webkit:webkit:1.6.1'
+    implementation 'androidx.webkit:webkit:1.7.0'
 
     //Misc
     implementation "com.squareup.retrofit2:retrofit:$retrofit"
@@ -89,6 +89,8 @@ dependencies {
     implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.11'
 
     implementation "com.apollographql.apollo3:apollo-runtime:$apollo_ver"
+
+    implementation 'com.github.acsbendi:Android-Request-Inspector-WebView:1.0.3'
 
     implementation "androidx.tonyodev.fetch2:xfetch2:$fetch"
     implementation "androidx.tonyodev.fetch2okhttp:xfetch2okhttp:$fetch"

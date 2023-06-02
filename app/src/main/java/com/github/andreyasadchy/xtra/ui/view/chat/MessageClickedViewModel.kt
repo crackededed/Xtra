@@ -15,12 +15,12 @@ class MessageClickedViewModel @Inject constructor(private val repository: ApiRep
     private val user = MutableLiveData<User?>()
     private var isLoading = false
 
-    fun loadUser(channelId: String, targetId: String? = null, helixClientId: String? = null, helixToken: String? = null, gqlClientId: String? = null): MutableLiveData<User?> {
+    fun loadUser(channelId: String, targetId: String? = null, helixClientId: String? = null, helixToken: String? = null, gqlHeaders: Map<String, String>): MutableLiveData<User?> {
         if (user.value == null && !isLoading) {
             isLoading = true
             viewModelScope.launch {
                 try {
-                    val u = repository.loadUserMessageClicked(channelId = channelId, targetId = targetId, helixClientId = helixClientId, helixToken = helixToken, gqlClientId = gqlClientId)
+                    val u = repository.loadUserMessageClicked(channelId = channelId, targetId = targetId, helixClientId = helixClientId, helixToken = helixToken, gqlHeaders = gqlHeaders)
                     user.postValue(u)
                 } catch (e: Exception) {
                 } finally {

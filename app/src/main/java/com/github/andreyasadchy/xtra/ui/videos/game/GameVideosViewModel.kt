@@ -80,7 +80,7 @@ class GameVideosViewModel @Inject constructor(
                     helixLanguage = language?.lowercase(),
                     helixSort = sort,
                     helixApi = helix,
-                    gqlClientId = context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp"),
+                    gqlHeaders = TwitchApiHelper.getGQLHeaders(context),
                     gqlQueryLanguages = if (language != null) {
                         listOf(language)
                     } else null,

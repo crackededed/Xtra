@@ -48,7 +48,7 @@ class BookmarksViewModel @Inject internal constructor(
         }
     }
 
-    fun updateUsers(helixClientId: String? = null, helixToken: String? = null, gqlClientId: String? = null) {
+    fun updateUsers(helixClientId: String? = null, helixToken: String? = null, gqlHeaders: Map<String, String>) {
         if (!updatedUsers) {
             updatedUsers = true
             viewModelScope.launch {
@@ -56,7 +56,7 @@ class BookmarksViewModel @Inject internal constructor(
                     val allIds = bookmarksRepository.loadBookmarks().mapNotNull { bookmark -> bookmark.userId.takeUnless { it == null || ignoredUsers.value?.contains(VodBookmarkIgnoredUser(it)) == true } }
                     if (allIds.isNotEmpty()) {
                         for (ids in allIds.chunked(100)) {
-                            val users = repository.loadUserTypes(ids, helixClientId, helixToken, gqlClientId)
+                            val users = repository.loadUserTypes(ids, helixClientId, helixToken, gqlHeaders)
                             if (users != null) {
                                 for (user in users) {
                                     val bookmarks = user.channelId?.let { bookmarksRepository.getBookmarksByUserId(it) }
@@ -80,10 +80,10 @@ class BookmarksViewModel @Inject internal constructor(
         }
     }
 
-    fun updateVideo(context: Context, helixClientId: String? = null, helixToken: String? = null, gqlClientId: String? = null, videoId: String? = null) {
+    fun updateVideo(context: Context, helixClientId: String? = null, helixToken: String? = null, gqlHeaders: Map<String, String>, videoId: String? = null) {
         viewModelScope.launch {
             try {
-                val video = videoId?.let { repository.loadVideo(it, helixClientId, helixToken, gqlClientId) }
+                val video = videoId?.let { repository.loadVideo(it, helixClientId, helixToken, gqlHeaders) }
                 val bookmark = videoId?.let { bookmarksRepository.getBookmarkByVideoId(it) }
                 if (video != null && bookmark != null) {
                     if (!video.id.isNullOrBlank()) {

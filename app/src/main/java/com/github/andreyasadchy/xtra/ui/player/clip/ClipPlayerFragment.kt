@@ -212,7 +212,7 @@ class ClipPlayerFragment : BasePlayerFragment(), HasDownloadDialog, ChatReplayPl
         clip.let { clip ->
             val skipAccessToken = prefs.getString(C.TOKEN_SKIP_CLIP_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2
             if (skipAccessToken >= 2 || clip.thumbnailUrl.isNullOrBlank()) {
-                viewModel.load(prefs.getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp"), clip.id)
+                viewModel.load(TwitchApiHelper.getGQLHeaders(requireContext()), clip.id)
                 viewModel.result.observe(viewLifecycleOwner) { map ->
                     val urls = map ?: if (skipAccessToken == 2 && !clip.thumbnailUrl.isNullOrBlank()) { TwitchApiHelper.getClipUrlMapFromPreview(clip.thumbnailUrl) } else mapOf()
                     player?.sendCustomCommand(SessionCommand(PlaybackService.START_CLIP, bundleOf(

@@ -208,7 +208,7 @@ class StreamPlayerFragment : BasePlayerFragment() {
         player?.prepare()
         try {
             stream.channelLogin?.let { viewModel.load(
-                gqlClientId = prefs.getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp"),
+                gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
                 gqlToken = if (prefs.getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, false)) Account.get(requireContext()).gqlToken else null,
                 channelLogin = it,
                 proxyUrl = prefs.getString(C.PLAYER_PROXY_URL, "https://api.ttv.lol/playlist/\$channel.m3u8?allow_source=true&allow_audio_only=true&fast_bread=true"),

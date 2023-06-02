@@ -62,27 +62,7 @@ class PlaybackService : MediaSessionService() {
     lateinit var offlineRepository: OfflineRepository
 
     private var mediaSession: MediaSession? = null
-    private var item: Parcelable? = null
-    private var mediaItem: MediaItem? = null
     private var playerMode = PlayerMode.NORMAL
-
-    private var usingPlaylist = false
-    private var usingAutoQuality = false
-    private var usingChatOnlyQuality = false
-
-    private var urls: Map<String, String> = emptyMap()
-    private var qualities: List<String> = emptyList()
-    private var qualityIndex = 0
-    private val qualityUrlIndex: Int
-        get() = if (usingAutoQuality) qualityIndex - 1 else qualityIndex
-    private var previousIndex = 0
-    private val previousUrlIndex: Int
-        get() = if (usingAutoQuality) previousIndex - 1 else previousIndex
-    private val audioIndex: Int
-        get() = if (usingChatOnlyQuality) qualities.lastIndex - 1 else qualities.lastIndex
-    private val audioUrlIndex: Int
-        get() = urls.size - 1
-
     private var dynamicsProcessing: DynamicsProcessing? = null
 
     override fun onCreate() {
@@ -98,6 +78,105 @@ class PlaybackService : MediaSessionService() {
             setSeekBackIncrementMs(prefs.getString(C.PLAYER_REWIND, "10000")?.toLongOrNull() ?: 10000)
             setSeekForwardIncrementMs(prefs.getString(C.PLAYER_FORWARD, "10000")?.toLongOrNull() ?: 10000)
         }.build().apply {
+            if (item != null) {
+                (urls.values.elementAtOrNull(qualityUrlIndex) ?: urls.values.elementAtOrNull(previousUrlIndex) ?: urls.values.firstOrNull())?.let { url ->
+                    when (item) {
+                        is Stream -> {
+                            (item as Stream).let { item ->
+                                HlsMediaSource.Factory(DefaultDataSource.Factory(this@PlaybackService, DefaultHttpDataSource.Factory().apply {
+                                    headers?.let {
+                                        setDefaultRequestProperties(it)
+                                    }
+                                })).apply {
+                                    setPlaylistParserFactory(DefaultHlsPlaylistParserFactory())
+                                    setPlaylistTrackerFactory(DefaultHlsPlaylistTracker.FACTORY)
+                                    setLoadErrorHandlingPolicy(DefaultLoadErrorHandlingPolicy(6))
+                                    if (prefs.getBoolean(C.PLAYER_SUBTITLES, false) || prefs.getBoolean(C.PLAYER_MENU_SUBTITLES, false)) {
+                                        setAllowChunklessPreparation(false)
+                                    }
+                                }.createMediaSource(MediaItem.Builder().apply {
+                                    setUri(url)
+                                    setMimeType(MimeTypes.APPLICATION_M3U8)
+                                    setLiveConfiguration(MediaItem.LiveConfiguration.Builder().apply {
+                                        prefs.getString(C.PLAYER_LIVE_MIN_SPEED, "")?.toFloatOrNull()?.let { setMinPlaybackSpeed(it) }
+                                        prefs.getString(C.PLAYER_LIVE_MAX_SPEED, "")?.toFloatOrNull()?.let { setMaxPlaybackSpeed(it) }
+                                        prefs.getString(C.PLAYER_LIVE_TARGET_OFFSET, "5000")?.toLongOrNull()?.let { setTargetOffsetMs(it) }
+                                    }.build())
+                                    setMediaMetadata(MediaMetadata.Builder()
+                                        .setTitle(item.title)
+                                        .setArtist(item.channelName)
+                                        .setArtworkUri(item.channelLogo?.toUri())
+                                        .build())
+                                }.build()).let { setMediaSource(it) }
+                                volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
+                                setPlaybackSpeed(1f)
+                                prepare()
+                                playWhenReady = true
+                                setVideoQuality()
+                            }
+                        }
+                        is Video -> {
+                            (item as Video).let { item ->
+                                HlsMediaSource.Factory(DefaultDataSource.Factory(this@PlaybackService, DefaultHttpDataSource.Factory())).apply {
+                                    setPlaylistParserFactory(DefaultHlsPlaylistParserFactory())
+                                    if (usingPlaylist && (prefs.getBoolean(C.PLAYER_SUBTITLES, false) || prefs.getBoolean(C.PLAYER_MENU_SUBTITLES, false))) {
+                                        setAllowChunklessPreparation(false)
+                                    }
+                                }.createMediaSource(MediaItem.Builder()
+                                    .setUri(url)
+                                    .setMediaMetadata(MediaMetadata.Builder()
+                                        .setTitle(item.title)
+                                        .setArtist(item.channelName)
+                                        .setArtworkUri(item.channelLogo?.toUri())
+                                        .build())
+                                    .build()
+                                ).let { setMediaSource(it) }
+                                volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
+                                setPlaybackSpeed(prefs().getFloat(C.PLAYER_SPEED, 1f))
+                                prepare()
+                                playWhenReady = true
+                                seekTo(playbackPosition)
+                                setVideoQuality()
+                            }
+                        }
+                        is Clip -> {
+                            (item as Clip).let { item ->
+                                setMediaItem(MediaItem.Builder()
+                                    .setUri(url)
+                                    .setMediaMetadata(MediaMetadata.Builder()
+                                        .setTitle(item.title)
+                                        .setArtist(item.channelName)
+                                        .setArtworkUri(item.channelLogo?.toUri())
+                                        .build())
+                                    .build())
+                                volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
+                                setPlaybackSpeed(prefs().getFloat(C.PLAYER_SPEED, 1f))
+                                prepare()
+                                playWhenReady = true
+                                seekTo(playbackPosition)
+                                setVideoQuality()
+                            }
+                        }
+                        is OfflineVideo -> {
+                            (item as OfflineVideo).let { item ->
+                                setMediaItem(MediaItem.Builder()
+                                    .setUri(url)
+                                    .setMediaMetadata(MediaMetadata.Builder()
+                                        .setTitle(item.name)
+                                        .setArtist(item.channelName)
+                                        .build())
+                                    .build())
+                                volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
+                                setPlaybackSpeed(prefs().getFloat(C.PLAYER_SPEED, 1f))
+                                prepare()
+                                playWhenReady = true
+                                seekTo(playbackPosition)
+                                setVideoQuality()
+                            }
+                        }
+                    }
+                }
+            }
             reinitializeDynamicsProcessing(audioSessionId)
             addListener(object : Player.Listener {
                 override fun onTracksChanged(tracks: Tracks) {
@@ -203,7 +282,8 @@ class PlaybackService : MediaSessionService() {
                                 } else {
                                     @Suppress("DEPRECATION") customCommand.customExtras.getSerializable(HEADERS) as? HashMap<String, String>
                                 }
-                                this@PlaybackService.item = item
+                                Companion.item = item
+                                Companion.headers = headers
                                 HlsMediaSource.Factory(DefaultDataSource.Factory(this@PlaybackService, DefaultHttpDataSource.Factory().apply {
                                     if (headers != null) {
                                         setDefaultRequestProperties(headers)
@@ -265,8 +345,8 @@ class PlaybackService : MediaSessionService() {
                                     }
                                 }?.let { url ->
                                     usingAutoQuality = true
-                                    this@PlaybackService.usingPlaylist = usingPlaylist
-                                    this@PlaybackService.item = item
+                                    Companion.usingPlaylist = usingPlaylist
+                                    Companion.item = item
                                     HlsMediaSource.Factory(DefaultDataSource.Factory(this@PlaybackService, DefaultHttpDataSource.Factory())).apply {
                                         setPlaylistParserFactory(DefaultHlsPlaylistParserFactory())
                                         if (usingPlaylist && (prefs.getBoolean(C.PLAYER_SUBTITLES, false) || prefs.getBoolean(C.PLAYER_MENU_SUBTITLES, false))) {
@@ -299,7 +379,7 @@ class PlaybackService : MediaSessionService() {
                                 customCommand.customExtras.getStringArray(URLS_KEYS)?.let { keys ->
                                     customCommand.customExtras.getStringArray(URLS_VALUES)?.let { values ->
                                         val map = keys.zip(values).toMap(mutableMapOf())
-                                        this@PlaybackService.item = item
+                                        Companion.item = item
                                         urls = map.apply {
                                             put(getString(R.string.audio_only), "")
                                         }
@@ -330,7 +410,7 @@ class PlaybackService : MediaSessionService() {
                             } else {
                                 @Suppress("DEPRECATION") customCommand.customExtras.getParcelable(ITEM)
                             }?.let { item ->
-                                this@PlaybackService.item = item
+                                Companion.item = item
                                 urls = mapOf(
                                     getString(R.string.source) to item.url,
                                     getString(R.string.audio_only) to ""
@@ -374,12 +454,16 @@ class PlaybackService : MediaSessionService() {
                         }
                         MOVE_BACKGROUND -> {
                             if (prefs.getString(C.PLAYER_BACKGROUND_PLAYBACK, "0") == "2") {
+                                savePosition()
+                                playbackPosition = session.player.currentPosition
                                 session.player.stop()
                             } else {
                                 if (playerMode == PlayerMode.NORMAL) {
                                     if (session.player.isPlaying) {
                                         startAudioOnly()
                                     } else {
+                                        savePosition()
+                                        playbackPosition = session.player.currentPosition
                                         session.player.stop()
                                     }
                                 }
@@ -391,7 +475,7 @@ class PlaybackService : MediaSessionService() {
                                 session.player.prepare()
                             } else if (playerMode == PlayerMode.AUDIO_ONLY) {
                                 if (qualityIndex != audioIndex) {
-                                    changeQuality(qualityIndex)
+                                    setVideoQuality()
                                 }
                             }
                             Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundleOf(RESULT to playerMode)))
@@ -471,9 +555,13 @@ class PlaybackService : MediaSessionService() {
     }
 
     private fun changeQuality(index: Int) {
+        previousIndex = qualityIndex
+        qualityIndex = index
+        setVideoQuality()
+    }
+
+    private fun setVideoQuality() {
         mediaSession?.player?.let { player ->
-            previousIndex = qualityIndex
-            qualityIndex = index
             val mode = playerMode
             if (mode != PlayerMode.NORMAL) {
                 playerMode = PlayerMode.NORMAL
@@ -653,6 +741,8 @@ class PlaybackService : MediaSessionService() {
         savePosition()
         item = null
         mediaItem = null
+        headers = null
+        playbackPosition = 0
         playerMode = PlayerMode.NORMAL
         usingPlaylist = false
         usingAutoQuality = false
@@ -705,6 +795,28 @@ class PlaybackService : MediaSessionService() {
     }
 
     companion object {
+        private var item: Parcelable? = null
+        private var mediaItem: MediaItem? = null
+        private var headers: HashMap<String, String>? = null
+        private var playbackPosition: Long = 0
+
+        private var usingPlaylist = false
+        private var usingAutoQuality = false
+        private var usingChatOnlyQuality = false
+
+        private var urls: Map<String, String> = emptyMap()
+        private var qualities: List<String> = emptyList()
+        private var qualityIndex = 0
+        private val qualityUrlIndex: Int
+            get() = if (usingAutoQuality) qualityIndex - 1 else qualityIndex
+        private var previousIndex = 0
+        private val previousUrlIndex: Int
+            get() = if (usingAutoQuality) previousIndex - 1 else previousIndex
+        private val audioIndex: Int
+            get() = if (usingChatOnlyQuality) qualities.lastIndex - 1 else qualities.lastIndex
+        private val audioUrlIndex: Int
+            get() = urls.size - 1
+
         const val START_STREAM = "startStream"
         const val START_VIDEO = "startVideo"
         const val START_CLIP = "startClip"

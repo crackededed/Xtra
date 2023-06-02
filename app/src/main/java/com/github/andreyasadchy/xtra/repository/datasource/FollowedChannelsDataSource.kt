@@ -37,7 +37,7 @@ class FollowedChannelsDataSource(
     private val helixClientId: String?,
     private val helixToken: String?,
     private val helixApi: HelixApi,
-    private val gqlClientId: String?,
+    private val gqlHeaders: Map<String, String>,
     private val gqlToken: String?,
     private val gqlApi: GraphQLRepository,
     private val apolloClient: ApolloClient,
@@ -107,7 +107,7 @@ class FollowedChannelsDataSource(
                     }
                     if (allIds.isNotEmpty()) {
                         for (ids in allIds.chunked(100)) {
-                            val get = apolloClient.newBuilder().apply { gqlClientId?.let { addHttpHeader("Client-ID", it) } }.build().query(UsersLastBroadcastQuery(Optional.Present(ids))).execute().data?.users
+                            val get = apolloClient.newBuilder().apply { gqlHeaders.entries.forEach { addHttpHeader(it.key, it.value) } }.build().query(UsersLastBroadcastQuery(Optional.Present(ids))).execute().data?.users
                             if (get != null) {
                                 for (user in get) {
                                     val item = list.find { it.channelId == user?.id }
@@ -172,7 +172,7 @@ class FollowedChannelsDataSource(
 
     private suspend fun gqlQueryLoad(): List<User> {
         val get1 = apolloClient.newBuilder().apply {
-            gqlClientId?.let { addHttpHeader("Client-ID", it) }
+            gqlHeaders.entries.forEach { addHttpHeader(it.key, it.value) }
             gqlToken?.let { addHttpHeader("Authorization", TwitchApiHelper.addTokenPrefixGQL(it)) }
         }.build().query(UserFollowedUsersQuery(
             first = Optional.Present(100),
@@ -196,7 +196,7 @@ class FollowedChannelsDataSource(
     }
 
     private suspend fun gqlLoad(): List<User> {
-        val get = gqlApi.loadFollowedChannels(gqlClientId, gqlToken, 100, offset)
+        val get = gqlApi.loadFollowedChannels(gqlHeaders, gqlToken, 100, offset)
         offset = get.cursor
         nextPage = get.hasNextPage ?: true
         return get.data
@@ -219,7 +219,7 @@ class FollowedChannelsDataSource(
         }
         if (allIds.isNotEmpty()) {
             for (ids in allIds.chunked(100)) {
-                val get = apolloClient.newBuilder().apply { gqlClientId?.let { addHttpHeader("Client-ID", it) } }.build().query(UsersLastBroadcastQuery(Optional.Present(ids))).execute().data?.users
+                val get = apolloClient.newBuilder().apply { gqlHeaders.entries.forEach { addHttpHeader(it.key, it.value) } }.build().query(UsersLastBroadcastQuery(Optional.Present(ids))).execute().data?.users
                 if (get != null) {
                     for (user in get) {
                         val item = list.find { it.channelId == user?.id }

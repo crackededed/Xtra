@@ -3,14 +3,20 @@ package com.github.andreyasadchy.xtra.ui.player
 import com.github.andreyasadchy.xtra.model.chat.VideoChatMessage
 import com.github.andreyasadchy.xtra.repository.ApiRepository
 import com.github.andreyasadchy.xtra.util.chat.OnChatMessageReceivedListener
-import kotlinx.coroutines.*
-import java.util.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import java.util.LinkedList
+import java.util.Timer
 import javax.inject.Inject
 import kotlin.concurrent.fixedRateTimer
 import kotlin.math.max
 
 class ChatReplayManager @Inject constructor(
-    private val clientId: String?,
+    private val gqlHeaders: Map<String, String>,
     private val repository: ApiRepository,
     private val videoId: String,
     private val startTime: Double,
@@ -51,7 +57,7 @@ class ChatReplayManager @Inject constructor(
         offsetJob = coroutineScope.launch(Dispatchers.IO) {
             try {
                 isLoading = true
-                val log = repository.loadVideoMessages(gqlClientId = clientId, videoId = videoId, offset = offset.toInt())
+                val log = repository.loadVideoMessages(gqlHeaders = gqlHeaders, videoId = videoId, offset = offset.toInt())
                 isLoading = false
                 list.addAll(log.data)
                 cursor = if (log.hasNextPage != false) log.cursor else null
@@ -90,7 +96,7 @@ class ChatReplayManager @Inject constructor(
             nextJob = coroutineScope.launch(Dispatchers.IO) {
                 try {
                     isLoading = true
-                    val log = repository.loadVideoMessages(gqlClientId = clientId, videoId = videoId, cursor = c)
+                    val log = repository.loadVideoMessages(gqlHeaders = gqlHeaders, videoId = videoId, cursor = c)
                     list.addAll(log.data)
                     cursor = if (log.hasNextPage != false) log.cursor else null
                 } catch (e: Exception) {

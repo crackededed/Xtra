@@ -16,6 +16,7 @@ import com.github.andreyasadchy.xtra.repository.ApiRepository
 import com.github.andreyasadchy.xtra.repository.LocalFollowChannelRepository
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.DownloadUtils
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -69,11 +70,11 @@ abstract class PlayerViewModel(
                     val setting = context.prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toInt() ?: 0
                     val account = Account.get(context)
                     val helixClientId = context.prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi")
-                    val gqlClientId = context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")
+                    val gqlHeaders = TwitchApiHelper.getGQLHeaders(context)
                     val isFollowing = if (setting == 0 && !account.gqlToken.isNullOrBlank()) {
                         if ((!helixClientId.isNullOrBlank() && !account.helixToken.isNullOrBlank() && !account.id.isNullOrBlank() && !channelId.isNullOrBlank() && account.id != channelId) ||
                             (!account.login.isNullOrBlank() && !channelLogin.isNullOrBlank() && account.login != channelLogin)) {
-                            repository.loadUserFollowing(helixClientId, account.helixToken, channelId, account.id, gqlClientId, account.gqlToken, channelLogin)
+                            repository.loadUserFollowing(helixClientId, account.helixToken, channelId, account.id, gqlHeaders, account.gqlToken, channelLogin)
                         } else false
                     } else {
                         channelId?.let {
@@ -92,10 +93,10 @@ abstract class PlayerViewModel(
         GlobalScope.launch {
             val setting = context.prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toInt() ?: 0
             val account = Account.get(context)
-            val gqlClientId = context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")
+            val gqlHeaders = TwitchApiHelper.getGQLHeaders(context)
             try {
                 if (setting == 0 && !account.gqlToken.isNullOrBlank()) {
-                    val errorMessage = repository.followUser(gqlClientId, account.gqlToken, userId)
+                    val errorMessage = repository.followUser(gqlHeaders, account.gqlToken, userId)
                     follow.postValue(Pair(true, errorMessage))
                 } else {
                     if (userId != null) {
@@ -130,10 +131,10 @@ abstract class PlayerViewModel(
         GlobalScope.launch {
             val setting = context.prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toInt() ?: 0
             val account = Account.get(context)
-            val gqlClientId = context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")
+            val gqlHeaders = TwitchApiHelper.getGQLHeaders(context)
             try {
                 if (setting == 0 && !account.gqlToken.isNullOrBlank()) {
-                    val errorMessage = repository.unfollowUser(gqlClientId, account.gqlToken, userId)
+                    val errorMessage = repository.unfollowUser(gqlHeaders, account.gqlToken, userId)
                     follow.postValue(Pair(false, errorMessage))
                 } else {
                     if (userId != null) {

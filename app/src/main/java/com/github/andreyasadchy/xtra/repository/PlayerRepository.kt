@@ -21,7 +21,6 @@ import com.github.andreyasadchy.xtra.model.chat.RecentMessagesResponse
 import com.github.andreyasadchy.xtra.model.chat.StvChannelResponse
 import com.github.andreyasadchy.xtra.model.chat.StvGlobalResponse
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -43,7 +42,7 @@ class PlayerRepository @Inject constructor(
     private val videoPositions: VideoPositionsDao,
     private val ttvLolApi: TTVLolApi) {
 
-    suspend fun loadStreamPlaylistUrl(gqlClientId: String?, gqlToken: String?, channelLogin: String, useProxy: Int?, proxyUrl: String?, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?): Pair<Uri, Int> = withContext(Dispatchers.IO) {
+    suspend fun loadStreamPlaylistUrl(gqlHeaders: Map<String, String>, gqlToken: String?, channelLogin: String, useProxy: Int?, proxyUrl: String?, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?): Pair<Uri, Int> = withContext(Dispatchers.IO) {
         when {
             useProxy == 0 && !proxyUrl.isNullOrBlank() -> {
                 proxyUrl.replace("\$channel", channelLogin).toUri() to 0
@@ -58,10 +57,10 @@ class PlayerRepository @Inject constructor(
                 ) to 1
             }
             else -> {
-                val accessTokenHeaders = getPlaybackAccessTokenHeaders(gqlToken, randomDeviceId, xDeviceId)
+                val accessTokenHeaders = getPlaybackAccessTokenHeaders(gqlHeaders, randomDeviceId, xDeviceId)
                 val accessToken = graphQL.loadPlaybackAccessToken(
-                    clientId = gqlClientId,
                     headers = accessTokenHeaders,
+                    token = gqlToken,
                     login = channelLogin,
                     playerType = playerType
                 ).streamToken
@@ -78,8 +77,8 @@ class PlayerRepository @Inject constructor(
         }
     }
 
-    suspend fun loadVideoPlaylistUrl(gqlClientId: String?, gqlToken: String?, videoId: String?, playerType: String?): Uri = withContext(Dispatchers.IO) {
-        val accessToken = loadVideoPlaybackAccessToken(gqlClientId, gqlToken, videoId, playerType)
+    suspend fun loadVideoPlaylistUrl(gqlHeaders: Map<String, String>, gqlToken: String?, videoId: String?, playerType: String?): Uri = withContext(Dispatchers.IO) {
+        val accessToken = loadVideoPlaybackAccessToken(gqlHeaders, gqlToken, videoId, playerType)
         buildUrl(
             "https://usher.ttvnw.net/vod/$videoId.m3u8?",
             "allow_source", "true",
@@ -90,8 +89,8 @@ class PlayerRepository @Inject constructor(
         )
     }
 
-    suspend fun loadVideoPlaylist(gqlClientId: String?, gqlToken: String?, videoId: String?, playerType: String?): Response<ResponseBody> = withContext(Dispatchers.IO) {
-        val accessToken = loadVideoPlaybackAccessToken(gqlClientId, gqlToken, videoId, playerType)
+    suspend fun loadVideoPlaylist(gqlHeaders: Map<String, String>, gqlToken: String?, videoId: String?, playerType: String?): Response<ResponseBody> = withContext(Dispatchers.IO) {
+        val accessToken = loadVideoPlaybackAccessToken(gqlHeaders, gqlToken, videoId, playerType)
         val playlistQueryOptions = HashMap<String, String>().apply {
             put("allow_source", "true")
             put("allow_audio_only", "true")
@@ -102,24 +101,27 @@ class PlayerRepository @Inject constructor(
         usher.getVideoPlaylist(videoId, playlistQueryOptions)
     }
 
-    private suspend fun loadVideoPlaybackAccessToken(gqlClientId: String?, gqlToken: String?, videoId: String?, playerType: String?): PlaybackAccessToken? {
-        val accessTokenHeaders = getPlaybackAccessTokenHeaders(gqlToken = gqlToken, randomDeviceId = true)
+    private suspend fun loadVideoPlaybackAccessToken(gqlHeaders: Map<String, String>, gqlToken: String?, videoId: String?, playerType: String?): PlaybackAccessToken? {
+        val accessTokenHeaders = getPlaybackAccessTokenHeaders(gqlHeaders = gqlHeaders, randomDeviceId = true)
         return graphQL.loadPlaybackAccessToken(
-            clientId = gqlClientId,
             headers = accessTokenHeaders,
+            token = gqlToken,
             vodId = videoId,
             playerType = playerType
         ).videoToken
     }
 
-    private fun getPlaybackAccessTokenHeaders(gqlToken: String?, randomDeviceId: Boolean?, xDeviceId: String? = null): MutableMap<String, String> {
-        return HashMap<String, String>().apply {
-            gqlToken?.let { put("Authorization", TwitchApiHelper.addTokenPrefixGQL(it)) }
-            if (randomDeviceId != false) {
-                val randomId = UUID.randomUUID().toString().replace("-", "").substring(0, 32) //X-Device-Id or Device-ID removes "commercial break in progress" (length 16 or 32)
-                put("X-Device-Id", randomId)
-            } else {
-                xDeviceId?.let { put("X-Device-Id", it) }
+    private fun getPlaybackAccessTokenHeaders(gqlHeaders: Map<String, String>, randomDeviceId: Boolean?, xDeviceId: String? = null): Map<String, String> {
+        return if (XtraApp.INSTANCE.applicationContext.prefs().getBoolean(C.DEBUG_WEBVIEW_INTEGRITY, false)) {
+            gqlHeaders
+        } else {
+            gqlHeaders.toMutableMap().apply {
+                if (randomDeviceId != false) {
+                    val randomId = UUID.randomUUID().toString().replace("-", "").substring(0, 32) //X-Device-Id or Device-ID removes "commercial break in progress" (length 16 or 32)
+                    put("X-Device-Id", randomId)
+                } else {
+                    xDeviceId?.let { put("X-Device-Id", it) }
+                }
             }
         }
     }

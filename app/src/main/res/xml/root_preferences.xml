@@ -495,4 +495,15 @@
         android:title="@string/show_playlist_tags"
         app:iconSpaceReserved="false"/>
 
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="debug_webview_integrity"
+        android:title="@string/get_webview_integrity"
+        app:iconSpaceReserved="false"/>
+
+    <Preference
+        android:key="debug_get_integrity_token"
+        android:title="@string/get_integrity_token"
+        app:iconSpaceReserved="false" />
+
 </androidx.preference.PreferenceScreen>

@@ -15,7 +15,7 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 
 class FollowedGamesDataSource(
     private val localFollowsGame: LocalFollowGameRepository,
-    private val gqlClientId: String?,
+    private val gqlHeaders: Map<String, String>,
     private val gqlToken: String?,
     private val gqlApi: GraphQLRepository,
     private val apolloClient: ApolloClient,
@@ -76,7 +76,7 @@ class FollowedGamesDataSource(
 
     private suspend fun gqlQueryLoad(): List<Game> {
         val get1 = apolloClient.newBuilder().apply {
-            gqlClientId?.let { addHttpHeader("Client-ID", it) }
+            gqlHeaders.entries.forEach { addHttpHeader(it.key, it.value) }
             gqlToken?.let { addHttpHeader("Authorization", TwitchApiHelper.addTokenPrefixGQL(it)) }
         }.build().query(UserFollowedGamesQuery(
             first = Optional.Present(100)
@@ -104,7 +104,7 @@ class FollowedGamesDataSource(
     }
 
     private suspend fun gqlLoad(): List<Game> {
-        val get = gqlApi.loadFollowedGames(gqlClientId, gqlToken, 100)
+        val get = gqlApi.loadFollowedGames(gqlHeaders, gqlToken, 100)
         return get.data
     }
 

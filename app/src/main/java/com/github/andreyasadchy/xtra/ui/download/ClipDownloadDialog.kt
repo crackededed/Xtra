@@ -46,7 +46,7 @@ class ClipDownloadDialog : BaseDownloadDialog() {
         super.onActivityCreated(savedInstanceState)
         with(requireArguments()) {
             viewModel.init(
-                clientId = requireContext().prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp"),
+                gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
                 clip = getParcelable(KEY_CLIP)!!,
                 qualities = getSerializable(KEY_QUALITIES) as Map<String, String>?,
                 skipAccessToken = requireContext().prefs().getString(C.TOKEN_SKIP_CLIP_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2

@@ -16,16 +16,16 @@ class SearchPagerViewModel @Inject constructor(
     val userResult = MutableLiveData<Pair<String?, String?>?>()
     private var isLoading = false
 
-    fun loadUserResult(clientId: String?, checkedId: Int, result: String) {
+    fun loadUserResult(gqlHeaders: Map<String, String>, checkedId: Int, result: String) {
         if (!isLoading) {
             isLoading = true
             userResult.value = null
             viewModelScope.launch {
                 try {
                     val get = if (checkedId == 0) {
-                        repository.loadUserResult(channelId = result, gqlClientId = clientId)
+                        repository.loadUserResult(channelId = result, gqlHeaders = gqlHeaders)
                     } else {
-                        repository.loadUserResult(channelLogin = result, gqlClientId = clientId)
+                        repository.loadUserResult(channelLogin = result, gqlHeaders = gqlHeaders)
                     }
                     userResult.postValue(get)
                 } catch (e: Exception) {

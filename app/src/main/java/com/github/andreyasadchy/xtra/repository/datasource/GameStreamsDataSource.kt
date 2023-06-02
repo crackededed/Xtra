@@ -20,7 +20,7 @@ class GameStreamsDataSource(
     private val helixClientId: String?,
     private val helixToken: String?,
     private val helixApi: HelixApi,
-    private val gqlClientId: String?,
+    private val gqlHeaders: Map<String, String>,
     private val gqlQuerySort: StreamSort?,
     private val gqlSort: StreamSortEnum?,
     private val tags: List<String>?,
@@ -102,7 +102,7 @@ class GameStreamsDataSource(
     }
 
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): List<Stream> {
-        val get1 = apolloClient.newBuilder().apply { gqlClientId?.let { addHttpHeader("Client-ID", it) } }.build().query(GameStreamsQuery(
+        val get1 = apolloClient.newBuilder().apply { gqlHeaders.entries.forEach { addHttpHeader(it.key, it.value) } }.build().query(GameStreamsQuery(
             id = if (!gameId.isNullOrBlank()) Optional.Present(gameId) else Optional.Absent,
             name = if (gameId.isNullOrBlank() && !gameName.isNullOrBlank()) Optional.Present(gameName) else Optional.Absent,
             sort = Optional.Present(gqlQuerySort),
@@ -133,7 +133,7 @@ class GameStreamsDataSource(
     }
 
     private suspend fun gqlLoad(params: LoadParams<Int>): List<Stream> {
-        val get = gqlApi.loadGameStreams(gqlClientId, gameName, gqlSort?.value, tags, params.loadSize, offset)
+        val get = gqlApi.loadGameStreams(gqlHeaders, gameName, gqlSort?.value, tags, params.loadSize, offset)
         offset = get.cursor
         nextPage = get.hasNextPage ?: true
         return get.data

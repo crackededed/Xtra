@@ -13,7 +13,7 @@ import com.github.andreyasadchy.xtra.util.C
 
 class SearchVideosDataSource(
     private val query: String,
-    private val gqlClientId: String?,
+    private val gqlHeaders: Map<String, String>,
     private val gqlApi: GraphQLRepository,
     private val apolloClient: ApolloClient,
     private val apiPref: ArrayList<Pair<Long?, String?>?>?) : PagingSource<Int, Video>() {
@@ -54,7 +54,7 @@ class SearchVideosDataSource(
     }
 
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): List<Video> {
-        val get1 = apolloClient.newBuilder().apply { gqlClientId?.let { addHttpHeader("Client-ID", it) } }.build().query(SearchVideosQuery(
+        val get1 = apolloClient.newBuilder().apply { gqlHeaders.entries.forEach { addHttpHeader(it.key, it.value) } }.build().query(SearchVideosQuery(
             query = query,
             first = Optional.Present(params.loadSize),
             after = Optional.Present(offset)
@@ -93,7 +93,7 @@ class SearchVideosDataSource(
     }
 
     private suspend fun gqlLoad(): List<Video> {
-        val get = gqlApi.loadSearchVideos(gqlClientId, query, offset)
+        val get = gqlApi.loadSearchVideos(gqlHeaders, query, offset)
         offset = get.cursor
         return get.data
     }
