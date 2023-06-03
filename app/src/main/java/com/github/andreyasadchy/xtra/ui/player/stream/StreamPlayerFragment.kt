@@ -93,7 +93,9 @@ class StreamPlayerFragment : BasePlayerFragment() {
             if (prefs.getBoolean(C.CHAT_DISABLE, false) || !prefs.getBoolean(C.CHAT_PUBSUB_ENABLED, true) || requireView().findViewById<TextView>(R.id.viewers)?.text.isNullOrBlank()) {
                 updateViewerCount(it?.viewerCount)
             }
-            if (prefs.getBoolean(C.CHAT_DISABLE, false) || !prefs.getBoolean(C.CHAT_PUBSUB_ENABLED, true)) {
+            if (prefs.getBoolean(C.CHAT_DISABLE, false) || !prefs.getBoolean(C.CHAT_PUBSUB_ENABLED, true) ||
+                    requireView().findViewById<TextView>(R.id.playerTitle)?.text.isNullOrBlank() ||
+                    requireView().findViewById<TextView>(R.id.playerCategory)?.text.isNullOrBlank()) {
                 updateTitle(BroadcastSettings(it?.title, it?.gameId, it?.gameName))
             }
         }

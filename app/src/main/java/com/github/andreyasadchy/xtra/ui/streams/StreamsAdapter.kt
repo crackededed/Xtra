@@ -80,8 +80,8 @@ class StreamsAdapter(
                     }
                     root.setOnClickListener {
                         (fragment.activity as MainActivity).startStream(item.copy(
-                            gameId = args?.gameId,
-                            gameName = args?.gameName,
+                            gameId = item.gameId ?: args?.gameId,
+                            gameName = item.gameName ?: args?.gameName,
                         ))
                     }
                     if (item.channelLogo != null)  {

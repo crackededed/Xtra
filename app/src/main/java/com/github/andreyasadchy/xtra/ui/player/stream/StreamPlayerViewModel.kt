@@ -46,7 +46,9 @@ class StreamPlayerViewModel @Inject constructor(
 
     fun loadStream(context: Context, stream: Stream) {
         val account = Account.get(context)
-        if (context.prefs().getBoolean(C.CHAT_DISABLE, false) || !context.prefs().getBoolean(C.CHAT_PUBSUB_ENABLED, true) || (context.prefs().getBoolean(C.CHAT_POINTS_COLLECT, true) && !account.id.isNullOrBlank() && !account.gqlToken.isNullOrBlank())) {
+        val loadStreamInfoIndefinitely = context.prefs().getBoolean(C.CHAT_DISABLE, false) || !context.prefs().getBoolean(C.CHAT_PUBSUB_ENABLED, true) || (context.prefs().getBoolean(C.CHAT_POINTS_COLLECT, true) && !account.id.isNullOrBlank() && !account.gqlToken.isNullOrBlank())
+        val loadStreamInfoAtLeastOnce = loadStreamInfoIndefinitely || stream.viewerCount == null || stream.title.isNullOrBlank() || stream.gameName.isNullOrBlank()
+        if (loadStreamInfoAtLeastOnce) {
             viewModelScope.launch {
                 while (isActive) {
                     try {
@@ -68,6 +70,11 @@ class StreamPlayerViewModel @Inject constructor(
                             }
                         }
                         _stream.postValue(s)
+
+                        if (!loadStreamInfoIndefinitely) {
+                            break
+                        }
+
                         delay(300000L)
                     } catch (e: Exception) {
                         delay(60000L)
