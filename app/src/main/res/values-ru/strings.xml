@@ -570,4 +570,6 @@
     <string name="get_integrity_token">Получить новый токен целостности</string>
     <string name="show_title">Показать название</string>
     <string name="show_category">Показать категорию</string>
+    <string name="get_all_headers">Получить все заголовки</string>
+    <string name="gql_headers">GQL заголовки</string>
 </resources>

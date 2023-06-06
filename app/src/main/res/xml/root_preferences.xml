@@ -497,12 +497,23 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="false"
-        android:key="debug_webview_integrity"
+        android:key="use_webview_integrity"
         android:title="@string/get_webview_integrity"
         app:iconSpaceReserved="false"/>
 
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="get_all_gql_headers"
+        android:title="@string/get_all_headers"
+        app:iconSpaceReserved="false"/>
+
+    <EditTextPreference
+        android:key="gql_headers"
+        android:title="@string/gql_headers"
+        app:iconSpaceReserved="false" />
+
     <Preference
-        android:key="debug_get_integrity_token"
+        android:key="get_integrity_token"
         android:title="@string/get_integrity_token"
         app:iconSpaceReserved="false" />
 

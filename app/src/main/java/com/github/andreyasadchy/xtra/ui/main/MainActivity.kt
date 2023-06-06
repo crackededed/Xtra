@@ -115,6 +115,15 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
                 putBoolean(C.FIRST_LAUNCH3, false)
             }
         }
+        if (prefs.getBoolean(C.FIRST_LAUNCH5, true)) {
+            prefs.edit {
+                if (prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp") == "kd1unb4b3q4t58fwlpcbzcbnm76a8fp" && prefs().getString(C.GQL_TOKEN2, null).isNullOrBlank()) {
+                    putString(C.GQL_CLIENT_ID2, "ue6666qo983tsx6so1t0vnawi233wa")
+                    putString(C.GQL_REDIRECT2, "https://www.twitch.tv/settings/connections")
+                }
+                putBoolean(C.FIRST_LAUNCH5, false)
+            }
+        }
         applyTheme()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -126,14 +135,9 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
             it.getContentIfNotHandled()?.let { online ->
                 if (online) {
                     if (prefs.getBoolean(C.VALIDATE_TOKENS, true)) {
-                        viewModel.validate(prefs.getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"),
-                            if (prefs().getBoolean(C.DEBUG_WEBVIEW_INTEGRITY, false)) {
-                                prefs.getString(C.GQL_CLIENT_ID, "kimne78kx3ncx6brgo4mv6wki5h1ko")
-                            } else {
-                                prefs.getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")
-                            }, this)
+                        viewModel.validate(prefs.getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"), TwitchApiHelper.getGQLHeaders(this, true), this)
                     }
-                    if (prefs().getBoolean(C.DEBUG_WEBVIEW_INTEGRITY, false) && TwitchApiHelper.isIntegrityTokenExpired(this)) {
+                    if (prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, false) && TwitchApiHelper.isIntegrityTokenExpired(this)) {
                         IntegrityDialog.show(supportFragmentManager)
                     }
                 }

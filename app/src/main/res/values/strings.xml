@@ -589,4 +589,6 @@
     <string name="get_integrity_token">Get new integrity token</string>
     <string name="show_title">Show title</string>
     <string name="show_category">Show category</string>
+    <string name="get_all_headers">Get all headers</string>
+    <string name="gql_headers">GQL headers</string>
 </resources>

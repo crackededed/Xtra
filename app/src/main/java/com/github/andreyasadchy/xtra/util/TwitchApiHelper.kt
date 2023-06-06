@@ -19,6 +19,7 @@ import com.github.andreyasadchy.xtra.util.chat.PubSubListenerImpl
 import com.github.andreyasadchy.xtra.util.chat.PubSubWebSocket
 import kotlinx.coroutines.CoroutineScope
 import okhttp3.OkHttpClient
+import org.json.JSONObject
 import java.lang.Integer.parseInt
 import java.lang.Long.parseLong
 import java.text.ParseException
@@ -292,28 +293,30 @@ object TwitchApiHelper {
         return if (hasDecimal) "${truncated / 10.0}$suffix" else "${truncated / 10}$suffix"
     }
 
-    fun getGQLHeaders(context: Context): Map<String, String> {
+    fun getGQLHeaders(context: Context, includeToken: Boolean = false): Map<String, String> {
         return mutableMapOf<String, String>().apply {
-            if (context.prefs().getBoolean(C.DEBUG_WEBVIEW_INTEGRITY, false)) {
-                context.prefs().getString(C.GQL_CLIENT_ID, "kimne78kx3ncx6brgo4mv6wki5h1ko")?.let {
-                    if (it.isNotBlank()) {
-                        put("Client-ID", it)
-                    }
-                }
-                context.prefs().getString(C.INTEGRITY_TOKEN, null)?.let {
-                    if (it.isNotBlank()) {
-                        put("Client-Integrity", it)
-                    }
-                }
-                context.prefs().getString(C.DEVICE_ID, null)?.let {
-                    if (it.isNotBlank()) {
-                        put("X-Device-Id", it)
+            if (context.prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, false)) {
+                context.prefs().getString(C.GQL_HEADERS, null)?.let {
+                    try {
+                        val json = JSONObject(it)
+                        json.keys().forEach { key ->
+                            put(key.lowercase(), json.optString(key))
+                        }
+                    } catch (e: Exception) {
+
                     }
                 }
             } else {
                 context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")?.let {
                     if (it.isNotBlank()) {
-                        put("Client-ID", it)
+                        put(C.HEADER_CLIENT_ID, it)
+                    }
+                }
+                if (includeToken) {
+                    context.prefs().getString(C.GQL_TOKEN2, null)?.let {
+                        if (it.isNotBlank()) {
+                            put(C.HEADER_TOKEN, addTokenPrefixGQL(it))
+                        }
                     }
                 }
             }

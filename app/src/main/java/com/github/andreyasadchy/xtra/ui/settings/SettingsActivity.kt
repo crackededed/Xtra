@@ -223,7 +223,7 @@ class SettingsActivity : AppCompatActivity() {
                 true
             }
 
-            findPreference<Preference>("debug_get_integrity_token")?.setOnPreferenceClickListener {
+            findPreference<Preference>("get_integrity_token")?.setOnPreferenceClickListener {
                 IntegrityDialog.show(childFragmentManager)
                 true
             }

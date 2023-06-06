@@ -11,7 +11,6 @@ import androidx.paging.cachedIn
 import com.apollographql.apollo3.ApolloClient
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.XtraApp
-import com.github.andreyasadchy.xtra.model.Account
 import com.github.andreyasadchy.xtra.model.offline.SortChannel
 import com.github.andreyasadchy.xtra.model.ui.BroadcastTypeEnum
 import com.github.andreyasadchy.xtra.model.ui.VideoPeriodEnum
@@ -63,8 +62,7 @@ class FollowedVideosViewModel @Inject constructor(
         ) {
             with(filter) {
                 FollowedVideosDataSource(
-                    gqlHeaders = TwitchApiHelper.getGQLHeaders(context),
-                    gqlToken = Account.get(context).gqlToken,
+                    gqlHeaders = TwitchApiHelper.getGQLHeaders(context, true),
                     gqlQueryType = when (broadcastType) {
                         BroadcastTypeEnum.ARCHIVE -> BroadcastType.ARCHIVE
                         BroadcastTypeEnum.HIGHLIGHT -> BroadcastType.HIGHLIGHT

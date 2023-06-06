@@ -11,12 +11,10 @@ import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.LocalFollowGameRepository
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 
 class FollowedGamesDataSource(
     private val localFollowsGame: LocalFollowGameRepository,
     private val gqlHeaders: Map<String, String>,
-    private val gqlToken: String?,
     private val gqlApi: GraphQLRepository,
     private val apolloClient: ApolloClient,
     private val apiPref: ArrayList<Pair<Long?, String?>?>) : PagingSource<Int, Game>() {
@@ -30,15 +28,15 @@ class FollowedGamesDataSource(
                 }
                 val remote = try {
                     when (apiPref.elementAt(0)?.second) {
-                        C.GQL_QUERY -> if (!gqlToken.isNullOrBlank()) gqlQueryLoad() else throw Exception()
-                        C.GQL -> if (!gqlToken.isNullOrBlank()) gqlLoad() else throw Exception()
+                        C.GQL_QUERY -> if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) gqlQueryLoad() else throw Exception()
+                        C.GQL -> if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) gqlLoad() else throw Exception()
                         else -> throw Exception()
                     }
                 } catch (e: Exception) {
                     try {
                         when (apiPref.elementAt(1)?.second) {
-                            C.GQL_QUERY -> if (!gqlToken.isNullOrBlank()) gqlQueryLoad() else throw Exception()
-                            C.GQL -> if (!gqlToken.isNullOrBlank()) gqlLoad() else throw Exception()
+                            C.GQL_QUERY -> if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) gqlQueryLoad() else throw Exception()
+                            C.GQL -> if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) gqlLoad() else throw Exception()
                             else -> throw Exception()
                         }
                     } catch (e: Exception) {
@@ -77,7 +75,6 @@ class FollowedGamesDataSource(
     private suspend fun gqlQueryLoad(): List<Game> {
         val get1 = apolloClient.newBuilder().apply {
             gqlHeaders.entries.forEach { addHttpHeader(it.key, it.value) }
-            gqlToken?.let { addHttpHeader("Authorization", TwitchApiHelper.addTokenPrefixGQL(it)) }
         }.build().query(UserFollowedGamesQuery(
             first = Optional.Present(100)
         )).execute().data!!.user!!.followedGames!!
@@ -104,7 +101,7 @@ class FollowedGamesDataSource(
     }
 
     private suspend fun gqlLoad(): List<Game> {
-        val get = gqlApi.loadFollowedGames(gqlHeaders, gqlToken, 100)
+        val get = gqlApi.loadFollowedGames(gqlHeaders, 100)
         return get.data
     }
 

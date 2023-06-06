@@ -5,6 +5,7 @@ import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.webkit.CookieManager
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import androidx.appcompat.app.AlertDialog
@@ -14,9 +15,10 @@ import androidx.fragment.app.FragmentManager
 import com.acsbendi.requestinspectorwebview.RequestInspectorWebViewClient
 import com.acsbendi.requestinspectorwebview.WebViewRequest
 import com.github.andreyasadchy.xtra.databinding.DialogIntegrityBinding
-import com.github.andreyasadchy.xtra.model.Account
 import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
+import org.json.JSONObject
 
 class IntegrityDialog : DialogFragment() {
 
@@ -30,24 +32,33 @@ class IntegrityDialog : DialogFragment() {
         val builder = AlertDialog.Builder(context)
                 .setView(binding.root)
         CookieManager.getInstance().removeAllCookies(null)
-        val token = Account.get(context).gqlToken
+        val token = TwitchApiHelper.getGQLHeaders(context, true)[C.HEADER_TOKEN]?.removePrefix("OAuth ")
         if (!token.isNullOrBlank()) {
             CookieManager.getInstance().setCookie("https://www.twitch.tv", "auth-token=$token")
         }
         with(binding.webView) {
             settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+            settings.loadWithOverviewMode = true
+            settings.useWideViewPort = true
+            settings.builtInZoomControls = true
+            settings.displayZoomControls = false
+            webChromeClient = WebChromeClient()
             webViewClient = object : RequestInspectorWebViewClient(binding.webView) {
 
                 override fun shouldInterceptRequest(view: WebView, webViewRequest: WebViewRequest): WebResourceResponse? {
-                    val integrityToken = webViewRequest.headers["client-integrity"]
-                    if (!integrityToken.isNullOrBlank()) {
-                        val clientId = webViewRequest.headers["client-id"]
-                        val deviceId = webViewRequest.headers["x-device-id"]
+                    if (!webViewRequest.headers["client-integrity"].isNullOrBlank()) {
                         context.prefs().edit {
-                            putString(C.GQL_CLIENT_ID, clientId ?: "kimne78kx3ncx6brgo4mv6wki5h1ko")
-                            putString(C.INTEGRITY_TOKEN, integrityToken)
                             putLong(C.INTEGRITY_EXPIRATION, System.currentTimeMillis() + 57600000)
-                            putString(C.DEVICE_ID, deviceId)
+                            putString(C.GQL_HEADERS, JSONObject(
+                                if (context.prefs().getBoolean(C.GET_ALL_GQL_HEADERS, false)) {
+                                    webViewRequest.headers
+                                } else {
+                                    webViewRequest.headers.filterKeys {
+                                        it == C.HEADER_TOKEN || it == C.HEADER_CLIENT_ID || it == "client-integrity" || it == "x-device-id"
+                                    }
+                                }
+                            ).toString())
                         }
                         dismiss()
                     }

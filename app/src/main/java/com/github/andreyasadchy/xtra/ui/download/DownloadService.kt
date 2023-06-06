@@ -12,7 +12,6 @@ import androidx.annotation.StringRes
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.github.andreyasadchy.xtra.R
-import com.github.andreyasadchy.xtra.model.Account
 import com.github.andreyasadchy.xtra.model.offline.OfflineVideo
 import com.github.andreyasadchy.xtra.model.offline.Request
 import com.github.andreyasadchy.xtra.repository.OfflineRepository
@@ -182,8 +181,7 @@ class DownloadService : IntentService(TAG) {
                         }
                     } else {
                         val response = playerRepository.loadVideoPlaylist(
-                            gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext),
-                            gqlToken = if (applicationContext.prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_VIDEO, true)) Account.get(applicationContext).gqlToken else null,
+                            gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext, applicationContext.prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_VIDEO, true)),
                             videoId = request.videoId!!,
                             playerType = applicationContext.prefs().getString(C.TOKEN_PLAYERTYPE_VIDEO, "channel_home_live")
                         )

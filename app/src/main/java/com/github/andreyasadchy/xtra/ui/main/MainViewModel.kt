@@ -18,6 +18,7 @@ import com.github.andreyasadchy.xtra.repository.ApiRepository
 import com.github.andreyasadchy.xtra.repository.AuthRepository
 import com.github.andreyasadchy.xtra.repository.OfflineRepository
 import com.github.andreyasadchy.xtra.ui.login.LoginActivity
+import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.Event
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.nullIfEmpty
@@ -109,7 +110,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun validate(helixClientId: String?, gqlClientId: String?, activity: Activity) {
+    fun validate(helixClientId: String?, gqlHeaders: Map<String, String>, activity: Activity) {
         val account = Account.get(activity)
         if (account is NotValidated) {
             viewModelScope.launch {
@@ -118,23 +119,24 @@ class MainViewModel @Inject constructor(
                         val response = authRepository.validate(TwitchApiHelper.addTokenPrefixHelix(account.helixToken))
                         if (!response?.clientId.isNullOrBlank() && response?.clientId == helixClientId) {
                             if ((!response?.userId.isNullOrBlank() && response?.userId != account.id) || (!response?.login.isNullOrBlank() && response?.login != account.login)) {
-                                Account.set(activity, LoggedIn(response?.userId?.nullIfEmpty() ?: account.id, response?.login?.nullIfEmpty() ?: account.login, account.helixToken, account.gqlToken))
+                                Account.set(activity, LoggedIn(response?.userId?.nullIfEmpty() ?: account.id, response?.login?.nullIfEmpty() ?: account.login, account.helixToken))
                             }
                         } else {
                             throw IllegalStateException("401")
                         }
                     }
-                    if (!account.gqlToken.isNullOrBlank()) {
-                        val response = authRepository.validate(TwitchApiHelper.addTokenPrefixGQL(account.gqlToken))
-                        if (!response?.clientId.isNullOrBlank() && response?.clientId == gqlClientId) {
+                    val gqlToken = gqlHeaders[C.HEADER_TOKEN]
+                    if (!gqlToken.isNullOrBlank()) {
+                        val response = authRepository.validate(gqlToken)
+                        if (!response?.clientId.isNullOrBlank() && response?.clientId == gqlHeaders[C.HEADER_CLIENT_ID]) {
                             if ((!response?.userId.isNullOrBlank() && response?.userId != account.id) || (!response?.login.isNullOrBlank() && response?.login != account.login)) {
-                                Account.set(activity, LoggedIn(response?.userId?.nullIfEmpty() ?: account.id, response?.login?.nullIfEmpty() ?: account.login, account.helixToken, account.gqlToken))
+                                Account.set(activity, LoggedIn(response?.userId?.nullIfEmpty() ?: account.id, response?.login?.nullIfEmpty() ?: account.login, account.helixToken))
                             }
                         } else {
                             throw IllegalStateException("401")
                         }
                     }
-                    if (!account.helixToken.isNullOrBlank() || !account.gqlToken.isNullOrBlank()) {
+                    if (!account.helixToken.isNullOrBlank() || !gqlToken.isNullOrBlank()) {
                         Account.validated()
                     }
                 } catch (e: Exception) {

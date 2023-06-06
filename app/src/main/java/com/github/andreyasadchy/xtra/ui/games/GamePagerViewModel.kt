@@ -36,11 +36,10 @@ class GamePagerViewModel @Inject constructor(
             viewModelScope.launch {
                 try {
                     val setting = context.prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toInt() ?: 0
-                    val account = Account.get(context)
-                    val gqlHeaders = TwitchApiHelper.getGQLHeaders(context)
-                    val isFollowing = if (setting == 0 && !account.gqlToken.isNullOrBlank()) {
+                    val gqlHeaders = TwitchApiHelper.getGQLHeaders(context, true)
+                    val isFollowing = if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                         gameName?.let {
-                            repository.loadGameFollowing(gqlHeaders, account.gqlToken, gameName)
+                            repository.loadGameFollowing(gqlHeaders, gameName)
                         } == true
                     } else {
                         gameId?.let {
@@ -60,10 +59,10 @@ class GamePagerViewModel @Inject constructor(
             val setting = context.prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toInt() ?: 0
             val account = Account.get(context)
             val helixClientId = context.prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi")
-            val gqlHeaders = TwitchApiHelper.getGQLHeaders(context)
+            val gqlHeaders = TwitchApiHelper.getGQLHeaders(context, true)
             try {
-                if (setting == 0 && !account.gqlToken.isNullOrBlank()) {
-                    val errorMessage = repository.followGame(gqlHeaders, account.gqlToken, gameId)
+                if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                    val errorMessage = repository.followGame(gqlHeaders, gameId)
                     follow.postValue(Pair(true, errorMessage))
                 } else {
                     if (gameId != null) {
@@ -97,11 +96,10 @@ class GamePagerViewModel @Inject constructor(
     fun deleteFollowGame(context: Context, gameId: String?) {
         GlobalScope.launch {
             val setting = context.prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toInt() ?: 0
-            val account = Account.get(context)
-            val gqlHeaders = TwitchApiHelper.getGQLHeaders(context)
+            val gqlHeaders = TwitchApiHelper.getGQLHeaders(context, true)
             try {
-                if (setting == 0 && !account.gqlToken.isNullOrBlank()) {
-                    val errorMessage = repository.unfollowGame(gqlHeaders, account.gqlToken, gameId)
+                if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                    val errorMessage = repository.unfollowGame(gqlHeaders, gameId)
                     follow.postValue(Pair(false, errorMessage))
                 } else {
                     if (gameId != null) {

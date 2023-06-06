@@ -26,6 +26,7 @@ import com.github.andreyasadchy.xtra.ui.settings.SettingsActivity
 import com.github.andreyasadchy.xtra.ui.streams.followed.FollowedStreamsFragment
 import com.github.andreyasadchy.xtra.ui.videos.followed.FollowedVideosFragment
 import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.nullIfEmpty
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.visible
@@ -73,7 +74,7 @@ class FollowMediaFragment : MediaFragment(), Scrollable {
             }
             spinner.visible()
             spinner.adapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item,
-                if (!Account.get(requireContext()).gqlToken.isNullOrBlank()) {
+                if (!TwitchApiHelper.getGQLHeaders(requireContext(), true)[C.HEADER_TOKEN].isNullOrBlank()) {
                     resources.getStringArray(R.array.spinnerFollowedEntries)
                 } else {
                     resources.getStringArray(R.array.spinnerFollowedEntriesNotLoggedIn)
@@ -98,7 +99,7 @@ class FollowMediaFragment : MediaFragment(), Scrollable {
 
     override fun onSpinnerItemSelected(position: Int): Fragment {
         with(binding) {
-            val loggedIn = !Account.get(requireContext()).gqlToken.isNullOrBlank()
+            val loggedIn = !TwitchApiHelper.getGQLHeaders(requireContext(), true)[C.HEADER_TOKEN].isNullOrBlank()
             if (firstLaunch) {
                 val defaultItem = requireContext().prefs().getString(C.UI_FOLLOW_DEFAULT_PAGE, "0")?.toIntOrNull() ?: 0
                 spinner.setSelection(

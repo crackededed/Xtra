@@ -76,7 +76,7 @@ class FollowPagerFragment : Fragment(), Scrollable {
             }
         }
         with(binding.pagerLayout) {
-            val loggedIn = !Account.get(requireContext()).gqlToken.isNullOrBlank()
+            val loggedIn = !TwitchApiHelper.getGQLHeaders(requireContext(), true)[C.HEADER_TOKEN].isNullOrBlank()
             val adapter = FollowPagerAdapter(this@FollowPagerFragment, loggedIn)
             viewPager.adapter = adapter
             if (firstLaunch) {

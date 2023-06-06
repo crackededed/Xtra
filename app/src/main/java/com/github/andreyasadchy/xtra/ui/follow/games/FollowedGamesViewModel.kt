@@ -7,7 +7,6 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import com.apollographql.apollo3.ApolloClient
-import com.github.andreyasadchy.xtra.model.Account
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.LocalFollowGameRepository
 import com.github.andreyasadchy.xtra.repository.datasource.FollowedGamesDataSource
@@ -30,8 +29,7 @@ class FollowedGamesViewModel @Inject constructor(
     ) {
         FollowedGamesDataSource(
             localFollowsGame = localFollowsGame,
-            gqlHeaders = TwitchApiHelper.getGQLHeaders(context),
-            gqlToken = Account.get(context).gqlToken,
+            gqlHeaders = TwitchApiHelper.getGQLHeaders(context, true),
             gqlApi = graphQLRepository,
             apolloClient = apolloClient,
             apiPref = TwitchApiHelper.listFromPrefs(context.prefs().getString(C.API_PREF_FOLLOWED_GAMES, ""), TwitchApiHelper.followedGamesApiDefaults))

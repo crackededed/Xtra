@@ -16,6 +16,7 @@ import com.github.andreyasadchy.xtra.ui.player.clip.ClipPlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.stream.StreamPlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.video.VideoPlayerFragment
 import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.visible
@@ -75,7 +76,7 @@ class PlayerSettingsDialog : ExpandingBottomSheetDialogFragment() {
                     }
                 }
                 if (!requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)) {
-                    val isLoggedIn = !Account.get(requireContext()).login.isNullOrBlank() && (!Account.get(requireContext()).gqlToken.isNullOrBlank() || !Account.get(requireContext()).helixToken.isNullOrBlank())
+                    val isLoggedIn = !Account.get(requireContext()).login.isNullOrBlank() && (!TwitchApiHelper.getGQLHeaders(requireContext(), true)[C.HEADER_TOKEN].isNullOrBlank() || !Account.get(requireContext()).helixToken.isNullOrBlank())
                     if (isLoggedIn && requireContext().prefs().getBoolean(C.PLAYER_MENU_CHAT_BAR, true)) {
                         menuChatBar.visible()
                         if (requireContext().prefs().getBoolean(C.KEY_CHAT_BAR_VISIBLE, true)) {

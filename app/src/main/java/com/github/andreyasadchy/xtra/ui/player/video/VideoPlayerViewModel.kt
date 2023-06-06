@@ -42,10 +42,10 @@ class VideoPlayerViewModel @Inject constructor(
     val gamesList = MutableLiveData<List<Game>>()
     var shouldRetry = true
 
-    fun load(gqlHeaders: Map<String, String>, gqlToken: String?, videoId: String?, playerType: String?) {
+    fun load(gqlHeaders: Map<String, String>, videoId: String?, playerType: String?) {
         viewModelScope.launch {
             try {
-                playerRepository.loadVideoPlaylistUrl(gqlHeaders, gqlToken, videoId, playerType)
+                playerRepository.loadVideoPlaylistUrl(gqlHeaders, videoId, playerType)
             } catch (e: Exception) {
                 null
             }.let { result.postValue(it) }

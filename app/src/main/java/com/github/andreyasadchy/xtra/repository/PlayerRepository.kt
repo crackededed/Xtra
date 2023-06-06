@@ -42,7 +42,7 @@ class PlayerRepository @Inject constructor(
     private val videoPositions: VideoPositionsDao,
     private val ttvLolApi: TTVLolApi) {
 
-    suspend fun loadStreamPlaylistUrl(gqlHeaders: Map<String, String>, gqlToken: String?, channelLogin: String, useProxy: Int?, proxyUrl: String?, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?): Pair<Uri, Int> = withContext(Dispatchers.IO) {
+    suspend fun loadStreamPlaylistUrl(gqlHeaders: Map<String, String>, channelLogin: String, useProxy: Int?, proxyUrl: String?, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?): Pair<Uri, Int> = withContext(Dispatchers.IO) {
         when {
             useProxy == 0 && !proxyUrl.isNullOrBlank() -> {
                 proxyUrl.replace("\$channel", channelLogin).toUri() to 0
@@ -60,7 +60,6 @@ class PlayerRepository @Inject constructor(
                 val accessTokenHeaders = getPlaybackAccessTokenHeaders(gqlHeaders, randomDeviceId, xDeviceId)
                 val accessToken = graphQL.loadPlaybackAccessToken(
                     headers = accessTokenHeaders,
-                    token = gqlToken,
                     login = channelLogin,
                     playerType = playerType
                 ).streamToken
@@ -77,8 +76,8 @@ class PlayerRepository @Inject constructor(
         }
     }
 
-    suspend fun loadVideoPlaylistUrl(gqlHeaders: Map<String, String>, gqlToken: String?, videoId: String?, playerType: String?): Uri = withContext(Dispatchers.IO) {
-        val accessToken = loadVideoPlaybackAccessToken(gqlHeaders, gqlToken, videoId, playerType)
+    suspend fun loadVideoPlaylistUrl(gqlHeaders: Map<String, String>, videoId: String?, playerType: String?): Uri = withContext(Dispatchers.IO) {
+        val accessToken = loadVideoPlaybackAccessToken(gqlHeaders, videoId, playerType)
         buildUrl(
             "https://usher.ttvnw.net/vod/$videoId.m3u8?",
             "allow_source", "true",
@@ -89,8 +88,8 @@ class PlayerRepository @Inject constructor(
         )
     }
 
-    suspend fun loadVideoPlaylist(gqlHeaders: Map<String, String>, gqlToken: String?, videoId: String?, playerType: String?): Response<ResponseBody> = withContext(Dispatchers.IO) {
-        val accessToken = loadVideoPlaybackAccessToken(gqlHeaders, gqlToken, videoId, playerType)
+    suspend fun loadVideoPlaylist(gqlHeaders: Map<String, String>, videoId: String?, playerType: String?): Response<ResponseBody> = withContext(Dispatchers.IO) {
+        val accessToken = loadVideoPlaybackAccessToken(gqlHeaders, videoId, playerType)
         val playlistQueryOptions = HashMap<String, String>().apply {
             put("allow_source", "true")
             put("allow_audio_only", "true")
@@ -101,18 +100,17 @@ class PlayerRepository @Inject constructor(
         usher.getVideoPlaylist(videoId, playlistQueryOptions)
     }
 
-    private suspend fun loadVideoPlaybackAccessToken(gqlHeaders: Map<String, String>, gqlToken: String?, videoId: String?, playerType: String?): PlaybackAccessToken? {
+    private suspend fun loadVideoPlaybackAccessToken(gqlHeaders: Map<String, String>, videoId: String?, playerType: String?): PlaybackAccessToken? {
         val accessTokenHeaders = getPlaybackAccessTokenHeaders(gqlHeaders = gqlHeaders, randomDeviceId = true)
         return graphQL.loadPlaybackAccessToken(
             headers = accessTokenHeaders,
-            token = gqlToken,
             vodId = videoId,
             playerType = playerType
         ).videoToken
     }
 
     private fun getPlaybackAccessTokenHeaders(gqlHeaders: Map<String, String>, randomDeviceId: Boolean?, xDeviceId: String? = null): Map<String, String> {
-        return if (XtraApp.INSTANCE.applicationContext.prefs().getBoolean(C.DEBUG_WEBVIEW_INTEGRITY, false)) {
+        return if (XtraApp.INSTANCE.applicationContext.prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, false)) {
             gqlHeaders
         } else {
             gqlHeaders.toMutableMap().apply {

@@ -302,7 +302,7 @@ abstract class BasePlayerFragment : BaseNetworkFragment(), LifecycleListener, Sl
             }
         }
         if (this is StreamPlayerFragment) {
-            if (!Account.get(activity).login.isNullOrBlank() && (!Account.get(activity).gqlToken.isNullOrBlank() || !Account.get(activity).helixToken.isNullOrBlank())) {
+            if (!Account.get(activity).login.isNullOrBlank() && (!TwitchApiHelper.getGQLHeaders(activity, true)[C.HEADER_TOKEN].isNullOrBlank() || !Account.get(activity).helixToken.isNullOrBlank())) {
                 if (prefs.getBoolean(C.PLAYER_CHATBARTOGGLE, false) && !prefs.getBoolean(C.CHAT_DISABLE, false)) {
                     view.findViewById<ImageButton>(R.id.playerChatBarToggle)?.apply {
                         visible()

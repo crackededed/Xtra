@@ -564,10 +564,12 @@
     <string name="api_gql_redirect2">GQL redirect url 2</string>
     <string name="disable_background_video">Desactivar la renderización de vídeo en segundo plano</string>
     <string name="use_background_audio_track">Cambiar a sólo audio en segundo plano</string>
-    <string name="show_audio_compressor_button">Show audio compressor button</string>
-    <string name="use_websocket">Connect using WebSocket</string>
+    <string name="show_audio_compressor_button">Mostrar botón de compresión de audio</string>
+    <string name="use_websocket">Conexión mediante WebSocket</string>
     <string name="get_webview_integrity">Get integrity token using WebView</string>
     <string name="get_integrity_token">Get new integrity token</string>
     <string name="show_title">Show title</string>
     <string name="show_category">Show category</string>
+    <string name="get_all_headers">Get all headers</string>
+    <string name="gql_headers">GQL headers</string>
 </resources>

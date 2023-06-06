@@ -35,7 +35,6 @@ import com.github.andreyasadchy.xtra.model.gql.tag.FreeformTagDataResponse
 import com.github.andreyasadchy.xtra.model.gql.tag.TagGameDataResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoGamesDataResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoMessagesDataResponse
-import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
@@ -51,7 +50,7 @@ private const val TAG = "GraphQLRepository"
 @Singleton
 class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
 
-    suspend fun loadPlaybackAccessToken(headers: Map<String, String>, token: String?, login: String? = null, vodId: String? = null, playerType: String?): PlaybackAccessTokenResponse {
+    suspend fun loadPlaybackAccessToken(headers: Map<String, String>, login: String? = null, vodId: String? = null, playerType: String?): PlaybackAccessTokenResponse {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -68,7 +67,7 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 addProperty("playerType", playerType)
             })
         }
-        return graphQL.getPlaybackAccessToken(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.getPlaybackAccessToken(headers, json)
     }
 
     suspend fun loadClipUrls(headers: Map<String, String>, slug: String?): Map<String, String>? = withContext(Dispatchers.IO) {
@@ -580,7 +579,7 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
         return graphQL.getChannelPanel(headers, json)
     }
 
-    suspend fun loadFollowedStreams(headers: Map<String, String>, token: String?, limit: Int?, cursor: String?): FollowedStreamsDataResponse {
+    suspend fun loadFollowedStreams(headers: Map<String, String>, limit: Int?, cursor: String?): FollowedStreamsDataResponse {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -594,10 +593,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 addProperty("limit", limit)
             })
         }
-        return graphQL.getFollowedStreams(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.getFollowedStreams(headers, json)
     }
 
-    suspend fun loadFollowedVideos(headers: Map<String, String>, token: String?, limit: Int?, cursor: String?): FollowedVideosDataResponse {
+    suspend fun loadFollowedVideos(headers: Map<String, String>, limit: Int?, cursor: String?): FollowedVideosDataResponse {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -611,10 +610,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 addProperty("limit", limit)
             })
         }
-        return graphQL.getFollowedVideos(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.getFollowedVideos(headers, json)
     }
 
-    suspend fun loadFollowedChannels(headers: Map<String, String>, token: String?, limit: Int?, cursor: String?): FollowedChannelsDataResponse {
+    suspend fun loadFollowedChannels(headers: Map<String, String>, limit: Int?, cursor: String?): FollowedChannelsDataResponse {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -629,10 +628,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 addProperty("order", "DESC")
             })
         }
-        return graphQL.getFollowedChannels(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.getFollowedChannels(headers, json)
     }
 
-    suspend fun loadFollowedGames(headers: Map<String, String>, token: String?, limit: Int?): FollowedGamesDataResponse {
+    suspend fun loadFollowedGames(headers: Map<String, String>, limit: Int?): FollowedGamesDataResponse {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -646,10 +645,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 addProperty("type", "ALL")
             })
         }
-        return graphQL.getFollowedGames(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.getFollowedGames(headers, json)
     }
 
-    suspend fun loadFollowUser(headers: Map<String, String>, token: String?, userId: String?): FollowDataResponse {
+    suspend fun loadFollowUser(headers: Map<String, String>, userId: String?): FollowDataResponse {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -665,10 +664,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.getFollowUser(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.getFollowUser(headers, json)
     }
 
-    suspend fun loadUnfollowUser(headers: Map<String, String>, token: String?, userId: String?): FollowDataResponse {
+    suspend fun loadUnfollowUser(headers: Map<String, String>, userId: String?): FollowDataResponse {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -683,10 +682,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.getUnfollowUser(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.getUnfollowUser(headers, json)
     }
 
-    suspend fun loadFollowGame(headers: Map<String, String>, token: String?, gameId: String?): FollowDataResponse {
+    suspend fun loadFollowGame(headers: Map<String, String>, gameId: String?): FollowDataResponse {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -701,10 +700,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.getFollowGame(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.getFollowGame(headers, json)
     }
 
-    suspend fun loadUnfollowGame(headers: Map<String, String>, token: String?, gameId: String?): FollowDataResponse {
+    suspend fun loadUnfollowGame(headers: Map<String, String>, gameId: String?): FollowDataResponse {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -719,10 +718,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.getUnfollowGame(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.getUnfollowGame(headers, json)
     }
 
-    suspend fun loadFollowingUser(headers: Map<String, String>, token: String?, userLogin: String?): FollowingUserDataResponse {
+    suspend fun loadFollowingUser(headers: Map<String, String>, userLogin: String?): FollowingUserDataResponse {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -735,10 +734,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 addProperty("channelLogin", userLogin)
             })
         }
-        return graphQL.getFollowingUser(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.getFollowingUser(headers, json)
     }
 
-    suspend fun loadFollowingGame(headers: Map<String, String>, token: String?, gameName: String?): FollowingGameDataResponse {
+    suspend fun loadFollowingGame(headers: Map<String, String>, gameName: String?): FollowingGameDataResponse {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -751,10 +750,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 addProperty("name", gameName)
             })
         }
-        return graphQL.getFollowingGame(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.getFollowingGame(headers, json)
     }
 
-    suspend fun loadChannelPointsContext(headers: Map<String, String>, token: String?, channelLogin: String?): ChannelPointsContextDataResponse {
+    suspend fun loadChannelPointsContext(headers: Map<String, String>, channelLogin: String?): ChannelPointsContextDataResponse {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -767,10 +766,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 addProperty("channelLogin", channelLogin)
             })
         }
-        return graphQL.getChannelPointsContext(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.getChannelPointsContext(headers, json)
     }
 
-    suspend fun loadClaimPoints(headers: Map<String, String>, token: String?, channelId: String?, claimId: String?) {
+    suspend fun loadClaimPoints(headers: Map<String, String>, channelId: String?, claimId: String?) {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -786,10 +785,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.getClaimPoints(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.getClaimPoints(headers, json)
     }
 
-    suspend fun loadJoinRaid(headers: Map<String, String>, token: String?, raidId: String?) {
+    suspend fun loadJoinRaid(headers: Map<String, String>, raidId: String?) {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -804,10 +803,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.getJoinRaid(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.getJoinRaid(headers, json)
     }
 
-    suspend fun loadUserEmotes(headers: Map<String, String>, token: String?, channelId: String?): UserEmotesDataResponse {
+    suspend fun loadUserEmotes(headers: Map<String, String>, channelId: String?): UserEmotesDataResponse {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -821,10 +820,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 addProperty("withOwner", true)
             })
         }
-        return graphQL.getUserEmotes(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.getUserEmotes(headers, json)
     }
 
-    suspend fun sendAnnouncement(headers: Map<String, String>, token: String?, channelId: String?, message: String?, color: String?): Response<JsonElement> {
+    suspend fun sendAnnouncement(headers: Map<String, String>, channelId: String?, message: String?, color: String?): Response<JsonElement> {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -841,10 +840,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.sendAnnouncement(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.sendAnnouncement(headers, json)
     }
 
-    suspend fun banUser(headers: Map<String, String>, token: String?, channelId: String?, targetLogin: String?, duration: String?, reason: String?): Response<JsonElement> {
+    suspend fun banUser(headers: Map<String, String>, channelId: String?, targetLogin: String?, duration: String?, reason: String?): Response<JsonElement> {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -862,10 +861,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.banUser(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.banUser(headers, json)
     }
 
-    suspend fun unbanUser(headers: Map<String, String>, token: String?, channelId: String?, targetLogin: String?): Response<JsonElement> {
+    suspend fun unbanUser(headers: Map<String, String>, channelId: String?, targetLogin: String?): Response<JsonElement> {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -881,10 +880,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.unbanUser(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.unbanUser(headers, json)
     }
 
-    suspend fun updateChatColor(headers: Map<String, String>, token: String?, color: String?): Response<JsonElement> {
+    suspend fun updateChatColor(headers: Map<String, String>, color: String?): Response<JsonElement> {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -899,10 +898,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.updateChatColor(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.updateChatColor(headers, json)
     }
 
-    suspend fun createStreamMarker(headers: Map<String, String>, token: String?, channelLogin: String?): Response<JsonElement> {
+    suspend fun createStreamMarker(headers: Map<String, String>, channelLogin: String?): Response<JsonElement> {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -915,7 +914,7 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 addProperty("channelLogin", channelLogin)
             })
         }
-        return graphQL.createStreamMarker(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.createStreamMarker(headers, json)
     }
 
     suspend fun getModerators(headers: Map<String, String>, channelLogin: String?): Response<ModeratorsDataResponse> {
@@ -934,7 +933,7 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
         return graphQL.getModerators(headers, json)
     }
 
-    suspend fun addModerator(headers: Map<String, String>, token: String?, channelId: String?, targetLogin: String?): Response<JsonElement> {
+    suspend fun addModerator(headers: Map<String, String>, channelId: String?, targetLogin: String?): Response<JsonElement> {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -950,10 +949,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.addModerator(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.addModerator(headers, json)
     }
 
-    suspend fun removeModerator(headers: Map<String, String>, token: String?, channelId: String?, targetLogin: String?): Response<JsonElement> {
+    suspend fun removeModerator(headers: Map<String, String>, channelId: String?, targetLogin: String?): Response<JsonElement> {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -969,10 +968,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.removeModerator(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.removeModerator(headers, json)
     }
 
-    suspend fun startRaid(headers: Map<String, String>, token: String?, channelId: String?, targetId: String?): Response<JsonElement> {
+    suspend fun startRaid(headers: Map<String, String>, channelId: String?, targetId: String?): Response<JsonElement> {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -988,10 +987,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.startRaid(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.startRaid(headers, json)
     }
 
-    suspend fun cancelRaid(headers: Map<String, String>, token: String?, channelId: String?): Response<JsonElement> {
+    suspend fun cancelRaid(headers: Map<String, String>, channelId: String?): Response<JsonElement> {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -1006,7 +1005,7 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.cancelRaid(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.cancelRaid(headers, json)
     }
 
     suspend fun getVips(headers: Map<String, String>, channelLogin: String?): Response<VipsDataResponse> {
@@ -1025,7 +1024,7 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
         return graphQL.getVips(headers, json)
     }
 
-    suspend fun addVip(headers: Map<String, String>, token: String?, channelId: String?, targetLogin: String?): Response<JsonElement> {
+    suspend fun addVip(headers: Map<String, String>, channelId: String?, targetLogin: String?): Response<JsonElement> {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -1041,10 +1040,10 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.addVip(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.addVip(headers, json)
     }
 
-    suspend fun removeVip(headers: Map<String, String>, token: String?, channelId: String?, targetLogin: String?): Response<JsonElement> {
+    suspend fun removeVip(headers: Map<String, String>, channelId: String?, targetLogin: String?): Response<JsonElement> {
         val json = JsonObject().apply {
             add("extensions", JsonObject().apply {
                 add("persistedQuery", JsonObject().apply {
@@ -1060,6 +1059,6 @@ class GraphQLRepository @Inject constructor(private val graphQL: GraphQLApi) {
                 })
             })
         }
-        return graphQL.removeVip(headers, token?.let { TwitchApiHelper.addTokenPrefixGQL(it) }, json)
+        return graphQL.removeVip(headers, json)
     }
 }

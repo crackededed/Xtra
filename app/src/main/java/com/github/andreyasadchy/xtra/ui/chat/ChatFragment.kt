@@ -51,7 +51,7 @@ class ChatFragment : BaseNetworkFragment(), LifecycleListener, MessageClickedDia
             val channelId = args.getString(KEY_CHANNEL_ID)
             val isLive = args.getBoolean(KEY_IS_LIVE)
             val account = Account.get(requireContext())
-            val isLoggedIn = !account.login.isNullOrBlank() && (!account.gqlToken.isNullOrBlank() || !account.helixToken.isNullOrBlank())
+            val isLoggedIn = !account.login.isNullOrBlank() && (!TwitchApiHelper.getGQLHeaders(requireContext(), true)[C.HEADER_TOKEN].isNullOrBlank() || !account.helixToken.isNullOrBlank())
             val enableChat = when {
                 requireContext().prefs().getBoolean(C.CHAT_DISABLE, false) -> false
                 isLive -> {
@@ -108,13 +108,13 @@ class ChatFragment : BaseNetworkFragment(), LifecycleListener, MessageClickedDia
         val channelName = args.getString(KEY_CHANNEL_NAME)
         val streamId = args.getString(KEY_STREAM_ID)
         val account = Account.get(requireContext())
-        val isLoggedIn = !account.login.isNullOrBlank() && (!account.gqlToken.isNullOrBlank() || !account.helixToken.isNullOrBlank())
+        val isLoggedIn = !account.login.isNullOrBlank() && (!TwitchApiHelper.getGQLHeaders(requireContext(), true)[C.HEADER_TOKEN].isNullOrBlank() || !account.helixToken.isNullOrBlank())
         val messageLimit = requireContext().prefs().getInt(C.CHAT_LIMIT, 600)
         val useChatWebSocket = requireContext().prefs().getBoolean(C.CHAT_USE_WEBSOCKET, false)
         val useSSL = requireContext().prefs().getBoolean(C.CHAT_USE_SSL, true)
         val usePubSub = requireContext().prefs().getBoolean(C.CHAT_PUBSUB_ENABLED, true)
         val helixClientId = requireContext().prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi")
-        val gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext())
+        val gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), true)
         val emoteQuality =  requireContext().prefs().getString(C.CHAT_IMAGE_QUALITY, "4") ?: "4"
         val animateGifs =  requireContext().prefs().getBoolean(C.ANIMATED_EMOTES, true)
         val showUserNotice = requireContext().prefs().getBoolean(C.CHAT_SHOW_USERNOTICE, true)

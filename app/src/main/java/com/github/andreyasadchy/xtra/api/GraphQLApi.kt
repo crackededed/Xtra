@@ -24,7 +24,6 @@ import com.google.gson.JsonObject
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
-import retrofit2.http.Header
 import retrofit2.http.HeaderMap
 import retrofit2.http.POST
 
@@ -32,7 +31,7 @@ import retrofit2.http.POST
 interface GraphQLApi {
 
     @POST(".")
-    suspend fun getPlaybackAccessToken(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): PlaybackAccessTokenResponse
+    suspend fun getPlaybackAccessToken(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): PlaybackAccessTokenResponse
 
     @POST(".")
     suspend fun getClipUrls(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<ClipUrlsResponse>
@@ -107,83 +106,83 @@ interface GraphQLApi {
     suspend fun getChannelPanel(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<ResponseBody>
 
     @POST(".")
-    suspend fun getFollowedStreams(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowedStreamsDataResponse
+    suspend fun getFollowedStreams(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): FollowedStreamsDataResponse
 
     @POST(".")
-    suspend fun getFollowedVideos(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowedVideosDataResponse
+    suspend fun getFollowedVideos(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): FollowedVideosDataResponse
 
     @POST(".")
-    suspend fun getFollowedChannels(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowedChannelsDataResponse
+    suspend fun getFollowedChannels(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): FollowedChannelsDataResponse
 
     @POST(".")
-    suspend fun getFollowedGames(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowedGamesDataResponse
+    suspend fun getFollowedGames(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): FollowedGamesDataResponse
 
     @POST(".")
-    suspend fun getFollowUser(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowDataResponse
+    suspend fun getFollowUser(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): FollowDataResponse
 
     @POST(".")
-    suspend fun getUnfollowUser(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowDataResponse
+    suspend fun getUnfollowUser(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): FollowDataResponse
 
     @POST(".")
-    suspend fun getFollowGame(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowDataResponse
+    suspend fun getFollowGame(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): FollowDataResponse
 
     @POST(".")
-    suspend fun getUnfollowGame(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowDataResponse
+    suspend fun getUnfollowGame(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): FollowDataResponse
 
     @POST(".")
-    suspend fun getFollowingUser(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowingUserDataResponse
+    suspend fun getFollowingUser(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): FollowingUserDataResponse
 
     @POST(".")
-    suspend fun getFollowingGame(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): FollowingGameDataResponse
+    suspend fun getFollowingGame(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): FollowingGameDataResponse
 
     @POST(".")
-    suspend fun getChannelPointsContext(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): ChannelPointsContextDataResponse
+    suspend fun getChannelPointsContext(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): ChannelPointsContextDataResponse
 
     @POST(".")
-    suspend fun getClaimPoints(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject)
+    suspend fun getClaimPoints(@HeaderMap headers: Map<String, String>, @Body json: JsonObject)
 
     @POST(".")
-    suspend fun getJoinRaid(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject)
+    suspend fun getJoinRaid(@HeaderMap headers: Map<String, String>, @Body json: JsonObject)
 
     @POST(".")
-    suspend fun getUserEmotes(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): UserEmotesDataResponse
+    suspend fun getUserEmotes(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): UserEmotesDataResponse
 
     @POST(".")
-    suspend fun sendAnnouncement(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun sendAnnouncement(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun banUser(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun banUser(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun unbanUser(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun unbanUser(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun updateChatColor(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun updateChatColor(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun createStreamMarker(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun createStreamMarker(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
     suspend fun getModerators(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<ModeratorsDataResponse>
 
     @POST(".")
-    suspend fun addModerator(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun addModerator(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun removeModerator(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun removeModerator(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun startRaid(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun startRaid(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun cancelRaid(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun cancelRaid(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
     suspend fun getVips(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<VipsDataResponse>
 
     @POST(".")
-    suspend fun addVip(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun addVip(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<JsonElement>
 
     @POST(".")
-    suspend fun removeVip(@HeaderMap headers: Map<String, String>, @Header("Authorization") token: String?, @Body json: JsonObject): Response<JsonElement>
+    suspend fun removeVip(@HeaderMap headers: Map<String, String>, @Body json: JsonObject): Response<JsonElement>
 }

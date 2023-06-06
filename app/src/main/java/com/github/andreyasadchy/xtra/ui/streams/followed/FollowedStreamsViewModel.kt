@@ -40,8 +40,7 @@ class FollowedStreamsViewModel @Inject constructor(
             helixClientId = context.prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"),
             helixToken = Account.get(context).helixToken,
             helixApi = helix,
-            gqlHeaders = TwitchApiHelper.getGQLHeaders(context),
-            gqlToken = Account.get(context).gqlToken,
+            gqlHeaders = TwitchApiHelper.getGQLHeaders(context, true),
             gqlApi = graphQLRepository,
             apolloClient = apolloClient,
             apiPref = TwitchApiHelper.listFromPrefs(context.prefs().getString(C.API_PREF_FOLLOWED_STREAMS, ""), TwitchApiHelper.followedStreamsApiDefaults))
