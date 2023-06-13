@@ -28,7 +28,8 @@ import com.github.andreyasadchy.xtra.util.visible
 class VideosAdapter(
     private val fragment: Fragment,
     private val showDownloadDialog: (Video) -> Unit,
-    private val saveBookmark: (Video) -> Unit) : BaseVideosAdapter<Video, VideosAdapter.PagingViewHolder>(
+    private val saveBookmark: (Video) -> Unit,
+    private val hideGame: Boolean = false) : BaseVideosAdapter<Video, VideosAdapter.PagingViewHolder>(
     object : DiffUtil.ItemCallback<Video>() {
         override fun areItemsTheSame(oldItem: Video, newItem: Video): Boolean =
             oldItem.id == newItem.id
@@ -42,7 +43,7 @@ class VideosAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PagingViewHolder {
         val binding = FragmentVideosListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return PagingViewHolder(binding, fragment)
+        return PagingViewHolder(binding, fragment, hideGame)
     }
 
     override fun onBindViewHolder(holder: PagingViewHolder, position: Int) {
@@ -51,7 +52,8 @@ class VideosAdapter(
 
     inner class PagingViewHolder(
         private val binding: FragmentVideosListItemBinding,
-        private val fragment: Fragment): RecyclerView.ViewHolder(binding.root) {
+        private val fragment: Fragment,
+        private val hideGame: Boolean): RecyclerView.ViewHolder(binding.root) {
         fun bind(item: Video?) {
             with(binding) {
                 if (item != null) {
@@ -144,7 +146,7 @@ class VideosAdapter(
                     } else {
                         title.gone()
                     }
-                    if (item.gameName != null)  {
+                    if (!hideGame && item.gameName != null)  {
                         gameName.visible()
                         gameName.text = item.gameName
                         gameName.setOnClickListener(gameListener)

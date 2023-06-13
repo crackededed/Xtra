@@ -43,9 +43,9 @@ class StreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.OnFil
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         pagingAdapter = if (requireContext().prefs().getString(C.COMPACT_STREAMS, "disabled") == "all") {
-            StreamsCompactAdapter(this, args)
+            StreamsCompactAdapter(this, args, args.gameId != null || args.gameName != null)
         } else {
-            StreamsAdapter(this, args)
+            StreamsAdapter(this, args, args.gameId != null || args.gameName != null)
         }
         setAdapter(binding.recyclerViewLayout.recyclerView, pagingAdapter)
     }

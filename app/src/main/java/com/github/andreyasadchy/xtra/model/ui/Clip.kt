@@ -11,7 +11,7 @@ data class Clip(
         override val channelId: String? = null,
         override val channelName: String? = null,
         val videoId: String? = null,
-        override val gameId: String? = null,
+        override var gameId: String? = null,
         override val title: String? = null,
         val viewCount: Int? = null,
         override val uploadDate: String? = null,

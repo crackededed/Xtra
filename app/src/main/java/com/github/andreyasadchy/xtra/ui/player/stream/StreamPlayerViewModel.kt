@@ -46,42 +46,49 @@ class StreamPlayerViewModel @Inject constructor(
 
     fun loadStream(context: Context, stream: Stream) {
         val account = Account.get(context)
-        val loadStreamInfoIndefinitely = context.prefs().getBoolean(C.CHAT_DISABLE, false) || !context.prefs().getBoolean(C.CHAT_PUBSUB_ENABLED, true) || (context.prefs().getBoolean(C.CHAT_POINTS_COLLECT, true) && !account.id.isNullOrBlank() && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank())
-        val loadStreamInfoAtLeastOnce = loadStreamInfoIndefinitely || stream.viewerCount == null || stream.title.isNullOrBlank() || stream.gameName.isNullOrBlank()
         val gqlHeaders = TwitchApiHelper.getGQLHeaders(context, true)
-        if (loadStreamInfoAtLeastOnce) {
+        if (context.prefs().getBoolean(C.CHAT_DISABLE, false) || !context.prefs().getBoolean(C.CHAT_PUBSUB_ENABLED, true) || (context.prefs().getBoolean(C.CHAT_POINTS_COLLECT, true) && !account.id.isNullOrBlank() && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank())) {
             viewModelScope.launch {
                 while (isActive) {
                     try {
-                        val s = repository.loadStream(
-                            channelId = stream.channelId,
-                            channelLogin = stream.channelLogin,
-                            helixClientId = context.prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"),
-                            helixToken = account.helixToken,
-                            gqlHeaders = gqlHeaders
-                        ).let {
-                            _stream.value?.apply {
-                                if (!it?.id.isNullOrBlank()) {
-                                    id = it?.id
-                                }
-                                gameId = it?.gameId
-                                gameName = it?.gameName
-                                title = it?.title
-                                viewerCount = it?.viewerCount
-                            }
-                        }
-                        _stream.postValue(s)
-
-                        if (!loadStreamInfoIndefinitely) {
-                            break
-                        }
-
+                        updateStream(context, stream)
                         delay(300000L)
                     } catch (e: Exception) {
                         delay(60000L)
                     }
                 }
             }
+        } else if (stream.viewerCount == null) {
+            viewModelScope.launch {
+                try {
+                    updateStream(context, stream)
+                } catch (e: Exception) {
+
+                }
+            }
         }
+    }
+
+    private suspend fun updateStream(context: Context, stream: Stream) {
+        val account = Account.get(context)
+        val gqlHeaders = TwitchApiHelper.getGQLHeaders(context, true)
+        val s = repository.loadStream(
+            channelId = stream.channelId,
+            channelLogin = stream.channelLogin,
+            helixClientId = context.prefs().getString(C.HELIX_CLIENT_ID, "ilfexgv3nnljz3isbm257gzwrzr7bi"),
+            helixToken = account.helixToken,
+            gqlHeaders = gqlHeaders
+        ).let {
+            _stream.value?.apply {
+                if (!it?.id.isNullOrBlank()) {
+                    id = it?.id
+                }
+                gameId = it?.gameId
+                gameName = it?.gameName
+                title = it?.title
+                viewerCount = it?.viewerCount
+            }
+        }
+        _stream.postValue(s)
     }
 }

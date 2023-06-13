@@ -28,7 +28,8 @@ import com.github.andreyasadchy.xtra.util.visible
 
 class StreamsAdapter(
     private val fragment: Fragment,
-    private val args: GamePagerFragmentArgs? = null) : PagingDataAdapter<Stream, StreamsAdapter.PagingViewHolder>(
+    private val args: GamePagerFragmentArgs? = null,
+    private val hideGame: Boolean = false) : PagingDataAdapter<Stream, StreamsAdapter.PagingViewHolder>(
     object : DiffUtil.ItemCallback<Stream>() {
         override fun areItemsTheSame(oldItem: Stream, newItem: Stream): Boolean =
             oldItem.id == newItem.id
@@ -41,7 +42,7 @@ class StreamsAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PagingViewHolder {
         val binding = FragmentStreamsListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return PagingViewHolder(binding, fragment, args)
+        return PagingViewHolder(binding, fragment, args, hideGame)
     }
 
     override fun onBindViewHolder(holder: PagingViewHolder, position: Int) {
@@ -51,7 +52,8 @@ class StreamsAdapter(
     inner class PagingViewHolder(
         private val binding: FragmentStreamsListItemBinding,
         private val fragment: Fragment,
-        private val args: GamePagerFragmentArgs?): RecyclerView.ViewHolder(binding.root) {
+        private val args: GamePagerFragmentArgs?,
+        private val hideGame: Boolean): RecyclerView.ViewHolder(binding.root) {
         fun bind(item: Stream?) {
             with(binding) {
                 if (item != null) {
@@ -79,10 +81,7 @@ class StreamsAdapter(
                         )
                     }
                     root.setOnClickListener {
-                        (fragment.activity as MainActivity).startStream(item.copy(
-                            gameId = item.gameId ?: args?.gameId,
-                            gameName = item.gameName ?: args?.gameName,
-                        ))
+                        (fragment.activity as MainActivity).startStream(item)
                     }
                     if (item.channelLogo != null)  {
                         userImage.visible()
@@ -98,22 +97,18 @@ class StreamsAdapter(
                     } else {
                         username.gone()
                     }
-                    item.title.let {
-                        if (!it.isNullOrBlank()) {
-                            title.visible()
-                            title.text = it.trim()
-                        } else {
-                            title.gone()
-                        }
+                    if (item.title != null && item.title != "")  {
+                        title.visible()
+                        title.text = item.title?.trim()
+                    } else {
+                        title.gone()
                     }
-                    item.gameName.let {
-                        if (!it.isNullOrBlank()) {
-                            gameName.visible()
-                            gameName.text = it
-                            gameName.setOnClickListener(gameListener)
-                        } else {
-                            gameName.gone()
-                        }
+                    if (!hideGame && item.gameName != null)  {
+                        gameName.visible()
+                        gameName.text = item.gameName
+                        gameName.setOnClickListener(gameListener)
+                    } else {
+                        gameName.gone()
                     }
                     if (item.thumbnailUrl != null) {
                         thumbnail.visible()

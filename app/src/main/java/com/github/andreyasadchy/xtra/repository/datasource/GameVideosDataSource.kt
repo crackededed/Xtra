@@ -145,6 +145,8 @@ class GameVideosDataSource(
                 viewCount = i?.node?.viewCount,
                 uploadDate = i?.node?.createdAt?.toString(),
                 duration = i?.node?.lengthSeconds?.toString(),
+                gameId = gameId,
+                gameName = gameName,
                 thumbnailUrl = i?.node?.previewThumbnailURL,
                 profileImageUrl = i?.node?.owner?.profileImageURL,
                 tags = tags,
@@ -160,7 +162,10 @@ class GameVideosDataSource(
         val get = gqlApi.loadGameVideos(gqlHeaders, gameName, gqlType, gqlSort, params.loadSize, offset)
         offset = get.cursor
         nextPage = get.hasNextPage ?: true
-        return get.data
+        return get.data.onEach {
+            it.gameId = gameId
+            it.gameName = gameName
+        }
     }
 
     override fun getRefreshKey(state: PagingState<Int, Video>): Int? {

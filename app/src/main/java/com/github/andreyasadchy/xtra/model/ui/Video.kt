@@ -18,8 +18,8 @@ data class Video(
     override val type: String? = null,
     val duration: String? = null,
 
-    override val gameId: String? = null,
-    override val gameName: String? = null,
+    override var gameId: String? = null,
+    override var gameName: String? = null,
     var profileImageUrl: String? = null,
     val tags: List<Tag>? = null,
     val animatedPreviewURL: String? = null) : Parcelable, Downloadable {

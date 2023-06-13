@@ -118,6 +118,8 @@ class GameStreamsDataSource(
                 channelId = i?.node?.broadcaster?.id,
                 channelLogin = i?.node?.broadcaster?.login,
                 channelName = i?.node?.broadcaster?.displayName,
+                gameId = gameId,
+                gameName = gameName,
                 type = i?.node?.type,
                 title = i?.node?.broadcaster?.broadcastSettings?.title,
                 viewerCount = i?.node?.viewersCount,
@@ -136,7 +138,10 @@ class GameStreamsDataSource(
         val get = gqlApi.loadGameStreams(gqlHeaders, gameName, gqlSort?.value, tags, params.loadSize, offset)
         offset = get.cursor
         nextPage = get.hasNextPage ?: true
-        return get.data
+        return get.data.onEach {
+            it.gameId = gameId
+            it.gameName = gameName
+        }
     }
 
     override fun getRefreshKey(state: PagingState<Int, Stream>): Int? {

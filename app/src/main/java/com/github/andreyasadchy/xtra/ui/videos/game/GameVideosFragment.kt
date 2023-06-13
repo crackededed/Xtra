@@ -48,7 +48,7 @@ class GameVideosFragment : BaseVideosFragment(), Scrollable, VideosSortDialog.On
         }, {
             lastSelectedItem = it
             viewModel.saveBookmark(requireContext(), it)
-        })
+        }, true)
         setAdapter(binding.recyclerViewLayout.recyclerView, pagingAdapter)
     }
 

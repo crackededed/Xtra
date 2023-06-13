@@ -51,7 +51,7 @@ class ClipsFragment : BaseClipsFragment(), Scrollable, VideosSortDialog.OnFilter
         pagingAdapter = if (args.channelId != null || args.channelLogin != null) {
             ChannelClipsAdapter(this, showDialog)
         } else {
-            ClipsAdapter(this, showDialog)
+            ClipsAdapter(this, showDialog, args.gameId != null || args.gameName != null)
         }
         setAdapter(binding.recyclerViewLayout.recyclerView, pagingAdapter)
     }
