@@ -500,18 +500,21 @@ class PlaybackService : MediaSessionService() {
                         }
                         MOVE_BACKGROUND -> {
                             val pipMode = customCommand.customExtras.getBoolean(PIP_MODE)
-                            if (prefs.getString(C.PLAYER_BACKGROUND_PLAYBACK, "0") == "2") {
-                                savePosition()
-                                playbackPosition = session.player.currentPosition
-                                session.player.stop()
-                            } else {
-                                if (playerMode == PlayerMode.NORMAL) {
-                                    if (!pipMode && session.player.playbackState != Player.STATE_ENDED && session.player.playbackState != Player.STATE_IDLE && session.player.playWhenReady) {
-                                        startAudioOnly()
-                                    } else {
-                                        savePosition()
-                                        playbackPosition = session.player.currentPosition
-                                        session.player.stop()
+                            when (prefs.getString(C.PLAYER_BACKGROUND_PLAYBACK, "0")) {
+                                "0", "2" -> {
+                                    savePosition()
+                                    playbackPosition = session.player.currentPosition
+                                    session.player.stop()
+                                }
+                                else -> {
+                                    if (playerMode == PlayerMode.NORMAL) {
+                                        if (!pipMode && session.player.playbackState != Player.STATE_ENDED && session.player.playbackState != Player.STATE_IDLE && session.player.playWhenReady) {
+                                            startAudioOnly()
+                                        } else {
+                                            savePosition()
+                                            playbackPosition = session.player.currentPosition
+                                            session.player.stop()
+                                        }
                                     }
                                 }
                             }

@@ -365,6 +365,11 @@ abstract class BasePlayerFragment : BaseNetworkFragment(), LifecycleListener, Sl
         (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.dismiss()
     }
 
+    override fun onStop() {
+        super.onStop()
+        onMovedToBackground()
+    }
+
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
         if (isInPictureInPictureMode) {
             viewModel.pipMode = true
