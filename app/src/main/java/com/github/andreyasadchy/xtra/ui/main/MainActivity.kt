@@ -163,6 +163,7 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
 
     override fun onDestroy() {
         unregisterReceiver(networkReceiver)
+        playerFragment?.onClose()
         super.onDestroy()
     }
 
