@@ -135,6 +135,7 @@ object C {
     const val PROXY_PORT = "proxy_port"
     const val PROXY_USER = "proxy_user"
     const val PROXY_PASSWORD = "proxy_password"
+    const val PLAYER_SHOW_UPTIME = "player_show_uptime"
     const val ANIMATED_EMOTES = "animatedGifEmotes"
     const val CHAT_IMAGE_LIBRARY = "chat_image_library"
     const val CHAT_IMAGE_QUALITY = "chat_image_quality"

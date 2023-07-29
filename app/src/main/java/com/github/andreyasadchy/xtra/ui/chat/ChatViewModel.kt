@@ -94,6 +94,7 @@ class ChatViewModel @Inject constructor(
     var raidClosed = false
     val viewerCount = MutableLiveData<Int?>()
     val title = MutableLiveData<BroadcastSettings?>()
+    val streamLiveChanged = MutableLiveData<Pair<Boolean, Long?>>()
     var streamId: String? = null
     private val rewardList = mutableListOf<Pair<LiveChatMessage?, PubSubPointReward?>>()
 
@@ -623,13 +624,14 @@ class ChatViewModel @Inject constructor(
             }
         }
 
-        override fun onPlaybackMessage(live: Boolean?, viewers: Int?) {
+        override fun onPlaybackMessage(live: Boolean?, serverTimeSec: Long?, viewers: Int?) {
             live?.let {
                 if (it) {
                     _command.postValue(Command(duration = channelLogin, type = "stream_live"))
                 } else {
                     _command.postValue(Command(duration = channelLogin, type = "stream_offline"))
                 }
+                streamLiveChanged.postValue(Pair(it, serverTimeSec))
             }
             viewerCount.postValue(viewers)
         }

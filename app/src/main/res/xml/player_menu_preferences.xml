@@ -91,4 +91,10 @@
         android:title="@string/disconnect_chat"
         app:iconSpaceReserved="false"/>
 
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_menu_show_uptime"
+        android:title="@string/show_uptime"
+        app:iconSpaceReserved="false"/>
+
 </androidx.preference.PreferenceScreen>

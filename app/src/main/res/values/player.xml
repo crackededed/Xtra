@@ -310,10 +310,18 @@
         <item name="android:visibility">gone</item>
     </style>
 
-    <style name="PlayerViewers" parent="PlayerImage">
-        <item name="android:layout_width">30dp</item>
-        <item name="android:layout_height">30dp</item>
-        <item name="android:src">@drawable/baseline_person_black_36</item>
+    <style name="PlayerViewers" parent="PlayerText">
+        <item name="android:drawableStart">@drawable/baseline_person_black_24</item>
+        <item name="drawableTint">@android:color/white</item>
+        <item name="android:drawablePadding">3dp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="PlayerUptime" parent="PlayerText">
+        <item name="android:drawableStart">@drawable/baseline_circle_24</item>
+        <item name="android:drawableTint">@color/liveStreamRed</item>
+        <item name="android:drawablePadding">3dp</item>
+        <item name="android:gravity">center</item>
         <item name="android:visibility">gone</item>
     </style>
 

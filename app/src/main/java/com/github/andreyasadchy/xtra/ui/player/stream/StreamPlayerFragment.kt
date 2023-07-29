@@ -2,18 +2,22 @@ package com.github.andreyasadchy.xtra.ui.player.stream
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.graphics.PorterDuff
+import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Chronometer
 import android.widget.HorizontalScrollView
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.os.bundleOf
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.viewModels
@@ -50,6 +54,7 @@ import com.google.common.util.concurrent.MoreExecutors
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.TimeZone
 
 @AndroidEntryPoint
 class StreamPlayerFragment : BasePlayerFragment() {
@@ -122,8 +127,22 @@ class StreamPlayerFragment : BasePlayerFragment() {
             }
         }
         if (prefs.getBoolean(C.PLAYER_VIEWERLIST, false)) {
-            requireView().findViewById<LinearLayout>(R.id.viewersLayout)?.apply {
+            requireView().findViewById<TextView>(R.id.viewers)?.apply {
                 setOnClickListener { openViewerList() }
+            }
+        }
+        if (prefs.getBoolean(C.PLAYER_SHOW_UPTIME, true)) {
+            requireView().findViewById<Chronometer>(R.id.playerUptime)?.apply {
+                visible()
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                    compoundDrawablesRelative[0]?.apply {
+                        val tintedDrawable = DrawableCompat.wrap(this)
+                        DrawableCompat.setTint(tintedDrawable, ContextCompat.getColor(requireContext(), R.color.liveStreamRed))
+                        DrawableCompat.setTintMode(tintedDrawable, PorterDuff.Mode.SRC_ATOP)
+                        setCompoundDrawablesRelative(tintedDrawable, null, null, null)
+                    }
+                }
+                updateUptime(stream.startedAt)
             }
         }
         if (prefs.getBoolean(C.PLAYER_CHANNEL, true)) {
@@ -348,15 +367,15 @@ class StreamPlayerFragment : BasePlayerFragment() {
 
     fun updateViewerCount(viewerCount: Int?) {
         val viewers = requireView().findViewById<TextView>(R.id.viewers)
-        val viewerIcon = requireView().findViewById<ImageView>(R.id.viewerIcon)
         if (viewerCount != null) {
             viewers?.text = TwitchApiHelper.formatCount(requireContext(), viewerCount)
             if (prefs.getBoolean(C.PLAYER_VIEWERICON, true)) {
-                viewerIcon?.visible()
+                viewers?.setCompoundDrawablesWithIntrinsicBounds(R.drawable.baseline_person_black_24, 0, 0, 0)
             }
+            viewers?.visible()
         } else {
             viewers?.text = null
-            viewerIcon?.gone()
+            viewers?.gone()
         }
     }
 
@@ -394,6 +413,28 @@ class StreamPlayerFragment : BasePlayerFragment() {
                 } else {
                     text = null
                     gone()
+                }
+            }
+        }
+    }
+
+    fun updateUptime(uptimeStr: String?) {
+        updateUptime(uptimeStr?.let {
+            TwitchApiHelper.parseIso8601Date(uptimeStr)?.let { startedAtMs ->
+                TimeZone.getDefault().getOffset(System.currentTimeMillis()) + startedAtMs
+            }
+        })
+    }
+
+    fun updateUptime(uptimeMs: Long?) {
+        if (prefs.getBoolean(C.PLAYER_SHOW_UPTIME, true)) {
+            requireView().findViewById<Chronometer>(R.id.playerUptime)?.apply {
+                stop()
+                uptimeMs?.let {
+                    base = SystemClock.elapsedRealtime() +
+                            uptimeMs -
+                            System.currentTimeMillis()
+                    start()
                 }
             }
         }

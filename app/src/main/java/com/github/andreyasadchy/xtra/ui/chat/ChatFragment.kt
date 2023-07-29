@@ -101,6 +101,7 @@ class ChatFragment : BaseNetworkFragment(), LifecycleListener, MessageClickedDia
                 viewModel.pointsEarned.observe(viewLifecycleOwner) { postPointsEarned(it) }
                 viewModel.raid.observe(viewLifecycleOwner) { onRaidUpdate(it) }
                 viewModel.raidClicked.observe(viewLifecycleOwner) { onRaidClicked() }
+                viewModel.streamLiveChanged.observe(viewLifecycleOwner) { onStreamLiveChanged(it.first, it.second) }
                 viewModel.viewerCount.observe(viewLifecycleOwner) { (parentFragment as? StreamPlayerFragment)?.updateViewerCount(it) }
                 viewModel.title.observe(viewLifecycleOwner) { (parentFragment as? StreamPlayerFragment)?.updateTitle(it) }
             }
@@ -258,6 +259,13 @@ class ChatFragment : BaseNetworkFragment(), LifecycleListener, MessageClickedDia
                 profileImageUrl = it.targetProfileImage,
             ))
         }
+    }
+
+    private fun onStreamLiveChanged(isLive: Boolean, serverTimeSec: Long?) {
+        if (isLive) {
+            (requireActivity() as MainActivity).restartStream()
+        }
+        (parentFragment as? StreamPlayerFragment)?.updateUptime(if (isLive) serverTimeSec?.times(1000) else null)
     }
 
     fun hideKeyboard() {
