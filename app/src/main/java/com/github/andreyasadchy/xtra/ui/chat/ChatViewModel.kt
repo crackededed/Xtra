@@ -459,7 +459,7 @@ class ChatViewModel @Inject constructor(
         private val helixClientId: String?,
         private val gqlHeaders: Map<String, String>,
         private val channelId: String?,
-        private val channelLogin: String,
+        val channelLogin: String,
         channelName: String?,
         private val animateGifs: Boolean,
         private val showUserNotice: Boolean,

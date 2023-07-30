@@ -27,6 +27,12 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
+        android:key="player_show_uptime"
+        android:title="@string/show_uptime"
+        app:iconSpaceReserved="false"/>
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
         android:key="player_minimize"
         android:title="@string/player_minimize"
         android:icon="@drawable/baseline_expand_more_black_24" />

@@ -71,19 +71,43 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="10dp">
+        android:gravity="center"
+        android:layout_marginBottom="8dp">
 
-        <Chronometer
+        <LinearLayout
             android:id="@+id/playerUptime"
-            style="@style/PlayerUptime"
-            android:layout_margin="2dp"
-            tools:visibility="visible"/>
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_marginHorizontal="2dp"
+            android:gravity="center"
+            android:visibility="gone"
+            tools:visibility="visible">
 
-        <TextView
-            android:id="@+id/viewers"
-            style="@style/PlayerViewers"
-            android:layout_margin="2dp"
-            tools:text="13.3K" />
+            <ImageView
+                android:id="@+id/playerUptimeIcon"
+                style="@style/PlayerUptimeIcon"/>
+
+            <Chronometer
+                android:id="@+id/playerUptimeText"
+                style="@style/PlayerText"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/playerViewers"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_marginHorizontal="2dp"
+            android:gravity="center">
+            <ImageView
+                android:id="@+id/playerViewersIcon"
+                style="@style/PlayerViewersIcon"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/playerViewersText"
+                style="@style/PlayerText"
+                tools:text="13.3K" />
+        </LinearLayout>
     </LinearLayout>
 
 

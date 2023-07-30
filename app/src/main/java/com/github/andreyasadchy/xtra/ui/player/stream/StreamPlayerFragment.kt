@@ -2,8 +2,6 @@ package com.github.andreyasadchy.xtra.ui.player.stream
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.graphics.PorterDuff
-import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
@@ -13,11 +11,11 @@ import android.view.ViewGroup
 import android.widget.Chronometer
 import android.widget.HorizontalScrollView
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.os.bundleOf
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.viewModels
@@ -64,6 +62,7 @@ class StreamPlayerFragment : BasePlayerFragment() {
     override val viewModel: StreamPlayerViewModel by viewModels()
     lateinit var chatFragment: ChatFragment
     private lateinit var stream: Stream
+    val channelLogin get() = stream.channelLogin
 
     override val controllerAutoShow: Boolean = false
 
@@ -95,7 +94,7 @@ class StreamPlayerFragment : BasePlayerFragment() {
         }
         viewModel.stream.observe(viewLifecycleOwner) {
             chatFragment.updateStreamId(it?.id)
-            if (prefs.getBoolean(C.CHAT_DISABLE, false) || !prefs.getBoolean(C.CHAT_PUBSUB_ENABLED, true) || requireView().findViewById<TextView>(R.id.viewers)?.text.isNullOrBlank()) {
+            if (prefs.getBoolean(C.CHAT_DISABLE, false) || !prefs.getBoolean(C.CHAT_PUBSUB_ENABLED, true) || requireView().findViewById<TextView>(R.id.playerViewersText)?.text.isNullOrBlank()) {
                 updateViewerCount(it?.viewerCount)
             }
             if (prefs.getBoolean(C.CHAT_DISABLE, false) || !prefs.getBoolean(C.CHAT_PUBSUB_ENABLED, true) ||
@@ -127,21 +126,13 @@ class StreamPlayerFragment : BasePlayerFragment() {
             }
         }
         if (prefs.getBoolean(C.PLAYER_VIEWERLIST, false)) {
-            requireView().findViewById<TextView>(R.id.viewers)?.apply {
+            requireView().findViewById<LinearLayout>(R.id.playerViewers)?.apply {
                 setOnClickListener { openViewerList() }
             }
         }
         if (prefs.getBoolean(C.PLAYER_SHOW_UPTIME, true)) {
-            requireView().findViewById<Chronometer>(R.id.playerUptime)?.apply {
+            requireView().findViewById<LinearLayout>(R.id.playerUptime)?.apply {
                 visible()
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                    compoundDrawablesRelative[0]?.apply {
-                        val tintedDrawable = DrawableCompat.wrap(this)
-                        DrawableCompat.setTint(tintedDrawable, ContextCompat.getColor(requireContext(), R.color.liveStreamRed))
-                        DrawableCompat.setTintMode(tintedDrawable, PorterDuff.Mode.SRC_ATOP)
-                        setCompoundDrawablesRelative(tintedDrawable, null, null, null)
-                    }
-                }
                 updateUptime(stream.startedAt)
             }
         }
@@ -366,16 +357,16 @@ class StreamPlayerFragment : BasePlayerFragment() {
     }
 
     fun updateViewerCount(viewerCount: Int?) {
-        val viewers = requireView().findViewById<TextView>(R.id.viewers)
+        val viewers = requireView().findViewById<TextView>(R.id.playerViewersText)
+        val viewerIcon = requireView().findViewById<ImageView>(R.id.playerViewersIcon)
         if (viewerCount != null) {
             viewers?.text = TwitchApiHelper.formatCount(requireContext(), viewerCount)
             if (prefs.getBoolean(C.PLAYER_VIEWERICON, true)) {
-                viewers?.setCompoundDrawablesWithIntrinsicBounds(R.drawable.baseline_person_black_24, 0, 0, 0)
+                viewerIcon?.visible()
             }
-            viewers?.visible()
         } else {
             viewers?.text = null
-            viewers?.gone()
+            viewerIcon?.gone()
         }
     }
 
@@ -428,12 +419,10 @@ class StreamPlayerFragment : BasePlayerFragment() {
 
     fun updateUptime(uptimeMs: Long?) {
         if (prefs.getBoolean(C.PLAYER_SHOW_UPTIME, true)) {
-            requireView().findViewById<Chronometer>(R.id.playerUptime)?.apply {
+            requireView().findViewById<Chronometer>(R.id.playerUptimeText)?.apply {
                 stop()
                 uptimeMs?.let {
-                    base = SystemClock.elapsedRealtime() +
-                            uptimeMs -
-                            System.currentTimeMillis()
+                    base = SystemClock.elapsedRealtime() + uptimeMs - System.currentTimeMillis()
                     start()
                 }
             }

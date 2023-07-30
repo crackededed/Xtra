@@ -262,10 +262,16 @@ class ChatFragment : BaseNetworkFragment(), LifecycleListener, MessageClickedDia
     }
 
     private fun onStreamLiveChanged(isLive: Boolean, serverTimeSec: Long?) {
-        if (isLive) {
-            (requireActivity() as MainActivity).restartStream()
+        (viewModel.chat as? ChatViewModel.LiveChatController)?.channelLogin?.let { channelLogin ->
+            (parentFragment as? StreamPlayerFragment)?.let { parentFragment ->
+                if (parentFragment.channelLogin == channelLogin) {
+                    if (isLive) {
+                        (requireActivity() as MainActivity).restartStream()
+                    }
+                    parentFragment.updateUptime(if (isLive) serverTimeSec?.times(1000) else null)
+                }
+            }
         }
-        (parentFragment as? StreamPlayerFragment)?.updateUptime(if (isLive) serverTimeSec?.times(1000) else null)
     }
 
     fun hideKeyboard() {
