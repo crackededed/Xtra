@@ -154,7 +154,6 @@
     <string name="player_chatbartoggle">Mostrar la entrada del chat</string>
     <string name="player_chattoggle">Botón para alternar el chat</string>
     <string name="player_fullscreen">Mostrar el botón de pantalla completa</string>
-    <string name="player_viewericon">Mostrar el icono junto al recuento de vistas</string>
     <string name="player_pause">Mostrar el botón de pausa en los eventos en vivo</string>
     <string name="settings_ui">INTERFAZ</string>
     <string name="settings_chat">CHAT</string>
@@ -583,7 +582,8 @@
     <string name="proxy_user">Nombre de usuario</string>
     <string name="proxy_password">Contraseña</string>
     <string name="proxy_settings">Configuración del proxy HTTP</string>
-    <string name="stop_download">Stop download</string>
-    <string name="resume_download">Resume download</string>
-    <string name="use_workmanager_downloads">Use WorkManager for downloads</string>
+    <string name="stop_download">Detener descarga</string>
+    <string name="resume_download">Reanudar descarga</string>
+    <string name="use_workmanager_downloads">Usar WorkManager para descargas</string>
+    <string name="show_view_count_icon">Show view count and uptime icons</string>
 </resources>

@@ -154,7 +154,6 @@
     <string name="player_chatbartoggle">チャット入力の切り替えを表示</string>
     <string name="player_chattoggle">チャットの表示切り替えボタン</string>
     <string name="player_fullscreen">フルスクリーン表示ボタン</string>
-    <string name="player_viewericon">視聴者数の横にアイコンを表示</string>
     <string name="player_pause">ライブ配信の一時停止ボタンを表示</string>
     <string name="settings_ui">画面</string>
     <string name="settings_chat">チャット</string>
@@ -586,4 +585,5 @@
     <string name="stop_download">Stop download</string>
     <string name="resume_download">Resume download</string>
     <string name="use_workmanager_downloads">Use WorkManager for downloads</string>
+    <string name="show_view_count_icon">Show view count and uptime icons</string>
 </resources>

@@ -33,6 +33,12 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
+        android:key="player_viewericon"
+        android:title="@string/show_view_count_icon"
+        app:iconSpaceReserved="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
         android:key="player_minimize"
         android:title="@string/player_minimize"
         android:icon="@drawable/baseline_expand_more_black_24" />
@@ -138,12 +144,6 @@
         android:key="player_fullscreen"
         android:title="@string/player_fullscreen"
         android:icon="@drawable/baseline_fullscreen_black_24" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="true"
-        android:key="player_viewericon"
-        android:title="@string/player_viewericon"
-        android:icon="@drawable/baseline_person_black_24" />
 
     <SwitchPreferenceCompat
         android:defaultValue="false"

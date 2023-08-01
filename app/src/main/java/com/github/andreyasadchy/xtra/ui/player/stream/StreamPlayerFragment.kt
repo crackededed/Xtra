@@ -62,7 +62,6 @@ class StreamPlayerFragment : BasePlayerFragment() {
     override val viewModel: StreamPlayerViewModel by viewModels()
     lateinit var chatFragment: ChatFragment
     private lateinit var stream: Stream
-    val channelLogin get() = stream.channelLogin
 
     override val controllerAutoShow: Boolean = false
 
@@ -130,12 +129,6 @@ class StreamPlayerFragment : BasePlayerFragment() {
                 setOnClickListener { openViewerList() }
             }
         }
-        if (prefs.getBoolean(C.PLAYER_SHOW_UPTIME, true)) {
-            requireView().findViewById<LinearLayout>(R.id.playerUptime)?.apply {
-                visible()
-                updateUptime(stream.startedAt)
-            }
-        }
         if (prefs.getBoolean(C.PLAYER_CHANNEL, true)) {
             requireView().findViewById<TextView>(R.id.playerChannel)?.apply {
                 visible()
@@ -148,6 +141,13 @@ class StreamPlayerFragment : BasePlayerFragment() {
                         channelLogo = stream.channelLogo
                     ))
                     slidingLayout.minimize()
+                }
+            }
+        }
+        if (prefs.getBoolean(C.PLAYER_SHOW_UPTIME, true)) {
+            stream.startedAt?.let {
+                TwitchApiHelper.parseIso8601Date(it)?.let { startedAtMs ->
+                    updateUptime(TimeZone.getDefault().getOffset(System.currentTimeMillis()) + startedAtMs)
                 }
             }
         }
@@ -370,6 +370,39 @@ class StreamPlayerFragment : BasePlayerFragment() {
         }
     }
 
+    fun updateLive(live: Boolean?, uptimeMs: Long?, channelLogin: String?) {
+        if (channelLogin == stream.channelLogin) {
+            live?.let {
+                if (live) {
+                    restartPlayer()
+                }
+                updateUptime(uptimeMs)
+            }
+        }
+    }
+
+    private fun updateUptime(uptimeMs: Long?) {
+        val layout = requireView().findViewById<LinearLayout>(R.id.playerUptime)
+        val uptime = requireView().findViewById<Chronometer>(R.id.playerUptimeText)
+        uptime?.stop()
+        if (uptimeMs != null && prefs.getBoolean(C.PLAYER_SHOW_UPTIME, true)) {
+            layout?.visible()
+            uptime?.apply {
+                base = SystemClock.elapsedRealtime() + uptimeMs - System.currentTimeMillis()
+                start()
+            }
+            requireView().findViewById<ImageView>(R.id.playerUptimeIcon)?.apply {
+                if (prefs.getBoolean(C.PLAYER_VIEWERICON, true)) {
+                    visible()
+                } else {
+                    gone()
+                }
+            }
+        } else {
+            layout?.gone()
+        }
+    }
+
     fun updateTitle(data: BroadcastSettings?) {
         if (data != null) {
             requireView().findViewById<TextView>(R.id.playerTitle)?.apply {
@@ -404,26 +437,6 @@ class StreamPlayerFragment : BasePlayerFragment() {
                 } else {
                     text = null
                     gone()
-                }
-            }
-        }
-    }
-
-    fun updateUptime(uptimeStr: String?) {
-        updateUptime(uptimeStr?.let {
-            TwitchApiHelper.parseIso8601Date(uptimeStr)?.let { startedAtMs ->
-                TimeZone.getDefault().getOffset(System.currentTimeMillis()) + startedAtMs
-            }
-        })
-    }
-
-    fun updateUptime(uptimeMs: Long?) {
-        if (prefs.getBoolean(C.PLAYER_SHOW_UPTIME, true)) {
-            requireView().findViewById<Chronometer>(R.id.playerUptimeText)?.apply {
-                stop()
-                uptimeMs?.let {
-                    base = SystemClock.elapsedRealtime() + uptimeMs - System.currentTimeMillis()
-                    start()
                 }
             }
         }

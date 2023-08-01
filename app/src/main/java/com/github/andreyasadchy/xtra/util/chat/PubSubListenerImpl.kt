@@ -13,9 +13,9 @@ class PubSubListenerImpl(
         val message = data?.optString("message")?.let { if (it.isNotBlank() && !data.isNull("message")) JSONObject(it) else null }
         val messageType = message?.optString("type")
         when {
-            messageType?.startsWith("viewcount") == true -> callback.onPlaybackMessage(viewers = if (!message.isNull("viewers")) message.optInt("viewers") else null)
-            messageType?.startsWith("stream-up") == true -> callback.onPlaybackMessage(true, if (!message.isNull("server_time")) message.optLong("server_time") else null)
-            messageType?.startsWith("stream-down") == true -> callback.onPlaybackMessage(false)
+            messageType?.startsWith("viewcount") == true -> callback.onPlaybackMessage(PlaybackMessage(viewers = if (!message.isNull("viewers")) message.optInt("viewers") else null))
+            messageType?.startsWith("stream-up") == true -> callback.onPlaybackMessage(PlaybackMessage(true, if (!message.isNull("server_time")) message.optLong("server_time") else null))
+            messageType?.startsWith("stream-down") == true -> callback.onPlaybackMessage(PlaybackMessage(false))
         }
     }
 

@@ -312,10 +312,6 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
         startPlayer(StreamPlayerFragment.newInstance(stream))
     }
 
-    fun restartStream() {
-        (playerFragment as? StreamPlayerFragment)?.restartPlayer()
-    }
-
     fun startVideo(video: Video, offset: Double?) {
         startPlayer(VideoPlayerFragment.newInstance(video, offset))
     }

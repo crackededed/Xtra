@@ -71,33 +71,35 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:gravity="center"
         android:layout_marginBottom="8dp">
 
         <LinearLayout
             android:id="@+id/playerUptime"
-            android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            android:layout_marginHorizontal="2dp"
-            android:gravity="center"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
             android:visibility="gone"
             tools:visibility="visible">
 
             <ImageView
                 android:id="@+id/playerUptimeIcon"
-                style="@style/PlayerUptimeIcon"/>
+                style="@style/PlayerUptimeIcon"
+                android:layout_marginTop="9dp"
+                android:layout_marginEnd="4dp"
+                tools:visibility="visible" />
 
             <Chronometer
                 android:id="@+id/playerUptimeText"
-                style="@style/PlayerText"/>
+                style="@style/PlayerText"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="7dp" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/playerViewers"
-            android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            android:layout_marginHorizontal="2dp"
-            android:gravity="center">
+            android:layout_height="wrap_content">
+
             <ImageView
                 android:id="@+id/playerViewersIcon"
                 style="@style/PlayerViewersIcon"
@@ -106,6 +108,8 @@
             <TextView
                 android:id="@+id/playerViewersText"
                 style="@style/PlayerText"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="7dp"
                 tools:text="13.3K" />
         </LinearLayout>
     </LinearLayout>

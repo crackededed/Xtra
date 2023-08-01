@@ -318,12 +318,11 @@
     </style>
 
     <style name="PlayerUptimeIcon" parent="PlayerImage">
-        <item name="android:gravity">center</item>
         <item name="android:layout_width">12dp</item>
         <item name="android:layout_height">12dp</item>
-        <item name="android:layout_marginRight">2dp</item>
         <item name="android:src">@drawable/baseline_circle_24</item>
-        <item name="android:tint">@color/liveStreamRed</item>
+        <item name="tint">@color/liveStreamRed</item>
+        <item name="android:visibility">gone</item>
     </style>
 
 </resources>

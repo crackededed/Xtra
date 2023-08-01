@@ -154,7 +154,6 @@
     <string name="player_chatbartoggle">Sohbet girişi geçişini göster</string>
     <string name="player_chattoggle">Sohbet geçiş düğmesini göster</string>
     <string name="player_fullscreen">Tam ekran düğmesini göster</string>
-    <string name="player_viewericon">Görüntülenme sayısının yanındaki simgeyi göster</string>
     <string name="player_pause">Canlı yayınlarda duraklatma düğmesini göster</string>
     <string name="settings_ui">ARAYÜZ</string>
     <string name="settings_chat">SOHBET</string>
@@ -586,4 +585,5 @@
     <string name="stop_download">Stop download</string>
     <string name="resume_download">Resume download</string>
     <string name="use_workmanager_downloads">Use WorkManager for downloads</string>
+    <string name="show_view_count_icon">Show view count and uptime icons</string>
 </resources>

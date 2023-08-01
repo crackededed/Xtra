@@ -4,7 +4,7 @@ import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 
 interface PubSubCallback {
-    fun onPlaybackMessage(live: Boolean? = null, serverTime: Long? = null, viewers: Int? = null)
+    fun onPlaybackMessage(message: PlaybackMessage)
     fun onTitleUpdate(message: BroadcastSettings)
     fun onRewardMessage(message: ChatMessage)
     fun onPointsEarned(message: PointsEarned)
@@ -12,6 +12,11 @@ interface PubSubCallback {
     fun onMinuteWatched()
     fun onRaidUpdate(message: Raid)
 }
+
+data class PlaybackMessage(
+    val live: Boolean? = null,
+    val serverTime: Long? = null,
+    val viewers: Int? = null)
 
 data class BroadcastSettings(
     val title: String? = null,

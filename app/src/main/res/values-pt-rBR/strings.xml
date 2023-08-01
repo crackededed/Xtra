@@ -154,7 +154,6 @@
     <string name="player_chatbartoggle">Mostrar botão alterar entrada de chat</string>
     <string name="player_chattoggle">Mostrar botão de alterar chat</string>
     <string name="player_fullscreen">Mostrar botão de tela cheia</string>
-    <string name="player_viewericon">Mostrar ícone ao lado da número de visualizações</string>
     <string name="player_pause">Mostrar botão de pausa em livestreams</string>
     <string name="settings_ui">UI</string>
     <string name="settings_chat">CHAT</string>
@@ -586,4 +585,5 @@
     <string name="stop_download">Stop download</string>
     <string name="resume_download">Resume download</string>
     <string name="use_workmanager_downloads">Use WorkManager for downloads</string>
+    <string name="show_view_count_icon">Show view count and uptime icons</string>
 </resources>

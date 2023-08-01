@@ -152,7 +152,6 @@
     <string name="player_chatbartoggle">Show chat input toggle</string>
     <string name="player_chattoggle">Show chat toggle button</string>
     <string name="player_fullscreen">Tampilkan tombol layar penuh</string>
-    <string name="player_viewericon">Tampilkan ikon di sebelah jumlah penonton</string>
     <string name="player_pause">Tampilkan tombol jeda di livestream</string>
     <string name="settings_ui">ANTARMUKA</string>
     <string name="settings_chat">CHAT</string>
@@ -586,4 +585,5 @@
     <string name="stop_download">Stop download</string>
     <string name="resume_download">Resume download</string>
     <string name="use_workmanager_downloads">Use WorkManager for downloads</string>
+    <string name="show_view_count_icon">Show view count and uptime icons</string>
 </resources>
