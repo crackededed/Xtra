@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="games">Jogos</string>
-    <string name="popular">Popular</string>
+    <string name="popular">Populares</string>
     <string name="following">Seguindo</string>
     <string name="downloads">Baixados</string>
     <string name="connection_error">Erro ao conectar o servidor. Por favor, tente de novo.</string>
@@ -16,7 +16,7 @@
     <string name="apply">Aplicar</string>
     <string name="sort_and_period">Ordenar por: %1$s. Período: %2$s</string>
     <string name="trending">Tendências</string>
-    <string name="live">Live</string>
+    <string name="live">Transmissões</string>
     <string name="videos">Vídeos</string>
     <string name="clips">Clipes</string>
     <string name="scroll_down">Role para baixo</string>
@@ -27,7 +27,7 @@
     <string name="select_quality">Selecionar qualidade</string>
     <string name="download">Baixar</string>
     <string name="downloading">Baixando</string>
-    <string name="downloaded">Baixado com sucesso</string>
+    <string name="downloaded">Baixado</string>
     <string name="uploaded_date">%s enviado</string>
     <string name="downloaded_date">%s baixado</string>
     <string name="welcome">Bem-vindo</string>
@@ -52,10 +52,10 @@
     <string name="storage_permission_message">A permissão de armazenamento é necessária para baixar vídeos.</string>
     <string name="permission_denied">Permissões necessárias foram negadas</string>
     <string name="nothing_here">Nada aqui</string>
-    <string name="watch_live">Assistir live</string>
+    <string name="watch_live">Assistir transmissão</string>
     <string name="watch_rerun">Assistir rerun</string>
-    <string name="open_player">Abrir player</string>
-    <string name="error_stream">Erro ao carregar stream</string>
+    <string name="open_player">Abrir reprodutor</string>
+    <string name="error_stream">Erro ao carregar transmissão</string>
     <string name="dark">Escuro</string>
     <string name="amoled">Preto</string>
     <string name="light">Claro</string>
@@ -79,7 +79,7 @@
     <string name="chat_replay_unavailable">O replay do chat não está disponível</string>
     <string name="video_subscribers_only">Este vídeo só está disponível para assinantes</string>
     <string name="player_error">Erro no player. Repetindo</string>
-    <string name="picture_in_picture">Picture-in-Picture</string>
+    <string name="picture_in_picture">Imagem na imagem (PiP)</string>
     <string name="adblock_not_working">A TTV.LOL está offline. Desativar o bloqueador de anúncios para ver transmissão enquanto isso</string>
     <string name="source_vod_start">Início: %s</string>
     <string name="source_vod_end">Fim: %s</string>
@@ -98,7 +98,7 @@
     <string name="recent_emotes">Recente</string>
     <string name="notification_playback_channel_title">Reproduzir</string>
     <string name="channels">Canais</string>
-    <string name="watch_video">Assista vídeo completo</string>
+    <string name="watch_video">Assistir vídeo completo</string>
     <string name="animated_emotes">Emotes animados</string>
     <string name="sleep_timer">Temporizador de sono</string>
     <string name="start">Iníciar</string>
@@ -142,9 +142,9 @@
     <string name="show_scrolltop">Mostrar o scroll para o botão início</string>
     <string name="bold_usernames">Nomes de usuário em negrito</string>
     <string name="randomcolor">Cor aleatória para usuários sem cor</string>
-    <string name="zerowidth">Emotes de largura zero</string>
+    <string name="zerowidth">Emotes com largura zero</string>
     <string name="message_limit">Limite de mensagens</string>
-    <string name="player_defaultquality">Qualidade padrão do jogador</string>
+    <string name="player_defaultquality">Qualidade padrão do reprodutor</string>
     <string name="player_doubletap">Toque duas vezes para alterar o chat</string>
     <string name="player_minimize">Mostrar botão de minimizar</string>
     <string name="player_channel">Mostrar o nome do canal</string>
@@ -154,10 +154,10 @@
     <string name="player_chatbartoggle">Mostrar botão alterar entrada de chat</string>
     <string name="player_chattoggle">Mostrar botão de alterar chat</string>
     <string name="player_fullscreen">Mostrar botão de tela cheia</string>
-    <string name="player_pause">Mostrar botão de pausa em livestreams</string>
-    <string name="settings_ui">UI</string>
-    <string name="settings_chat">CHAT</string>
-    <string name="settings_player">PLAYER</string>
+    <string name="player_pause">Mostrar botão de pausa em transmissões ao vivo</string>
+    <string name="settings_ui">Interface</string>
+    <string name="settings_chat">Chat</string>
+    <string name="settings_player">Reprodutor</string>
     <string name="token_random_deviceid">ID aleatório do dispositivo </string>
     <string name="api_helix">ID do cliente Helix</string>
     <string name="api_gql">ID do cliente GQL</string>
@@ -176,7 +176,7 @@
     <string name="room_followers">Seguidores</string>
     <string name="room_followers_min">%s seguidores</string>
     <string name="room_unique">Único</string>
-    <string name="room_slow">%s de lentidão</string>
+    <string name="room_slow">%s de lentidão no chat</string>
     <string name="room_subs">Subs</string>
     <string name="chat_join">Conectado a %s</string>
     <string name="copy_clip">Copiar para área de transferência</string>
@@ -207,7 +207,7 @@
     <string name="user_global_mod">Mod global</string>
     <string name="uptime">%s de atividade</string>
     <string name="select_language">Selecione o idioma</string>
-    <string name="show_tags">Mostrar tags</string>
+    <string name="show_tags">Mostrar etiqueta</string>
     <string name="recentMsg_enable">Carregar mensagens recentes</string>
     <string name="recentMsg_limit">Limite de mensagens recentes</string>
     <string name="last_broadcast_date">Última transmissão %s</string>
@@ -362,12 +362,12 @@
     <string name="irc_notice_usage_timeout">Usage: \"/timeout &lt;username&gt; [duration][time unit] [reason]\" - Temporarily prevent a user from chatting. Duration (optional, default=10 minutes) must be a positive integer; time unit (optional, default=s) must be one of s, m, h, d, w; maximum duration is 2 weeks. Combinations like 1d2h are also allowed. Reason is optional and will be shown to the target user and other moderators. Use \"/untimeout\" to remove a timeout.</string>
     <string name="irc_notice_usage_unban">Usage: \"/unban &lt;username&gt;\" - Removes a ban on a user.</string>
     <string name="irc_notice_usage_unhost">Usage: \"/unhost\" - Stop hosting another channel.</string>
-    <string name="irc_notice_usage_unmod">Use: \"/unmod &lt;username&gt;\" - Retira o status de moderador de um usuário. Use \"/mods\" para listar os moderadores deste canal.</string>
+    <string name="irc_notice_usage_unmod">Use: \"/unmod &lt;username&gt;\" -Para retira o status de moderador de um usuário. Use \"/mods\" para listar os moderadores deste canal.</string>
     <string name="irc_notice_usage_unraid">Use: \"/unraid\" - Cancelar a Raid.</string>
-    <string name="irc_notice_usage_untimeout">Use: \"/untimeout &lt;username&gt;\" - Remove timeout de usuário.  em um usuário.</string>
-    <string name="irc_notice_usage_unvip">Use: \"/unvip &lt;username&gt;\" - Retira o status VIP de um usuário. Use \"/vips\" para listar os VIPs deste canal.</string>
-    <string name="irc_notice_usage_user">Use: \"/user &lt;username&gt;\" - Exibe informações sobre um usuário específico neste canal.</string>
-    <string name="irc_notice_usage_vip">Use: \"/vip &lt;username&gt;\" - Dar status VIP a um usuário. Use \"/vips\" para listar os VIPs deste canal.</string>
+    <string name="irc_notice_usage_untimeout">Use: \"/untimeout &lt;username&gt;\" - Para remove timeout de usuário.  em um usuário.</string>
+    <string name="irc_notice_usage_unvip">Use: \"/unvip &lt;username&gt;\" - Para retira o status VIP de um usuário. Use \"/vips\" para listar os VIPs deste canal.</string>
+    <string name="irc_notice_usage_user">Use: \"/user &lt;username&gt;\" - Para exibe informações sobre um usuário específico neste canal.</string>
+    <string name="irc_notice_usage_vip">Use: \"/vip &lt;username&gt;\" - Para dar status VIP a um usuário. Use \"/vips\" para listar os VIPs deste canal.</string>
     <string name="irc_notice_usage_vips">Use: \"/vips\" - Para listar os VIPs deste canal.</string>
     <string name="irc_notice_usage_whisper">Use: \"/w &lt;username&gt; &lt;message&gt;\"</string>
     <string name="irc_notice_vip_success">Você adicionou %s como vip deste canal.</string>
@@ -387,7 +387,7 @@
     <string name="user_count">%s usuários no chat</string>
     <string name="position">Posição: %s</string>
     <string name="player_viewerlist">Abrir a lista de visualizadores com o número de visualizações</string>
-    <string name="use_followpager">Use o layout de abas para a página seguinte</string>
+    <string name="use_followpager">Usar o layout da aba seguindo</string>
     <string name="default_follow_tab">Aba padrão de seguindo</string>
     <string name="sleep_timer_lock">Tela de bloqueio</string>
     <string name="sleep_timer_lock_permissions">Tela de bloqueio (requer permissões de administrador)</string>
@@ -408,8 +408,8 @@
     <string name="api_helix_redirect">URL de redirecionamento Helix</string>
     <string name="api_gql_redirect">URL de redirecionamento GQL</string>
     <string name="api_settings">Configurações de API</string>
-    <string name="streams">Streams</string>
-    <string name="game_streams">Streams de jogos</string>
+    <string name="streams">Transmissões</string>
+    <string name="game_streams">Transmissões de jogos</string>
     <string name="game_videos">Vídeos de jogos</string>
     <string name="game_clips">Clipes de jogos</string>
     <string name="channel_videos">Vídeos do canal</string>
@@ -425,17 +425,17 @@
     <string name="cleared">Limpo</string>
     <string name="irc_msgid_highlighted_message">Mensagem destacada</string>
     <string name="irc_msgid_announcement">Anúncio</string>
-    <string name="debug_secondview">Aplicativo movivel para PIP</string>
+    <string name="debug_secondview">Usar aplicativo no modo PiP</string>
     <string name="add_bookmark">Adicionar ao marcardores</string>
     <string name="show_vod_time_left">Mostrar tempo marcado deixado em vods</string>
     <string name="vod_time_left">Auto excluído em %s</string>
     <string name="vod_ignore_user">Ignore a exclusão automática para este usuário</string>
     <string name="bookmarks">Marcadores</string>
-    <string name="use_savedpager">Use o layout de abas para a página salvo</string>
-    <string name="default_saved_tab">Aba padrão de salvo </string>
+    <string name="use_savedpager">Usar o layout aba baixado</string>
+    <string name="default_saved_tab">Aba padrão de Baixado </string>
     <string name="vod_remove_ignore">Remover da lista de ignorados</string>
     <string name="remove_bookmark">Remover marcador</string>
-    <string name="saved">Salvo</string>
+    <string name="saved">Baixado</string>
     <string name="refresh">Atualizar</string>
     <string name="image_library">Biblioteca de imagens</string>
     <string name="imageLibraryEntries1">Coil</string>
@@ -491,8 +491,8 @@
     <string name="user_redeemed">%1$s resgatou %2$s</string>
     <string name="enable_pubsub">Ativar PubSub</string>
     <string name="bookmark">Marcador</string>
-    <string name="dark_theme_on">Tema escuro ligado</string>
-    <string name="dark_theme_off">Tema escuro desligado</string>
+    <string name="dark_theme_on">Quando o tema escuro estiver ativado usar tema</string>
+    <string name="dark_theme_off">Quando o tema escuro estiver desativado usar tema</string>
     <string name="follow_system_theme">Mudar com base no tema do dispositivo</string>
     <string name="pixels">%d pixels</string>
     <string name="image_quality">Qualidade da imagem</string>
@@ -502,7 +502,7 @@
     <string name="save_default">Salvar como padrão</string>
     <string name="viewers_high">Telespectadores (alto para baixo)</string>
     <string name="viewers_low">Telespectadores (baixo para alto)</string>
-    <string name="tags">Tags</string>
+    <string name="tags">Etiqueta</string>
     <string name="show_player_mode">Mostrar botão somente áudio</string>
     <string name="search_videos">Pesquisar vídeos</string>
     <string name="points_earned">%d pontos de canal recebidos</string>
@@ -537,7 +537,7 @@
     <string name="stream_offline">%s está offline agora</string>
     <string name="keep_screen_on_when_paused">Manter a tela ligada quando o vídeo é pausado</string>
     <string name="stream_proxy">Proxy de transmissão</string>
-    <string name="stream_proxy_url">Proxyu url personalizado</string>
+    <string name="stream_proxy_url">Proxy url personalizado</string>
     <string name="stream_proxy_url_desc">\"$channel\" será substituído pelo login do canal</string>
     <string name="streamProxyEntries1">Url personalizado</string>
     <string name="streamProxyEntries2">TTV.LOL</string>
@@ -557,9 +557,9 @@
     <string name="hide_ads">Ocultar segmentos de anúncio</string>
     <string name="waiting_ads">Aguardando o anúncios terminar</string>
     <string name="show_playlist_tags">Mostrar tags de lista de reprodução de mídia</string>
-    <string name="show_media_playlist_tags">Show media playlist tags</string>
+    <string name="show_media_playlist_tags">Mostrar etiqueta de mídia na lista de reprodução</string>
     <string name="show_multivariant_playlist_tags">Mostrar tags de lista de reprodução multivariada</string>
-    <string name="use_gamepager">Usar o layout de abas para a página do jogo</string>
+    <string name="use_gamepager">Usar o layout da abas jogos</string>
     <string name="api_gql_redirect2">GQL redirect url 2</string>
     <string name="disable_background_video">Desative a renderização de vídeo em segundo plano</string>
     <string name="use_background_audio_track">Alternar para somente áudio em segundo plano</string>
@@ -573,7 +573,7 @@
     <string name="gql_headers">GQL headers</string>
     <string name="use_integrity">Usar token de integridade</string>
     <string name="use_audio_focus">Pausar quando outros aplicativos reproduzirem áudio</string>
-    <string name="handle_audio_becoming_noisy">Pause when headphones are disconnected</string>
+    <string name="handle_audio_becoming_noisy">Pausar quando os fones de ouvido estiverem desconectados</string>
     <string name="proxy_playback_access_token">Proxy no Token de acesso de reprodução</string>
     <string name="proxy_multivariant_playlist">Proxy na lista de reprodução multivariada</string>
     <string name="proxy_media_playlist">Proxy na lista de reprodução de mídia se forem detectados anúncios</string>
@@ -582,8 +582,8 @@
     <string name="proxy_user">Usuário</string>
     <string name="proxy_password">Senha</string>
     <string name="proxy_settings">Configurações de proxy HTTP</string>
-    <string name="stop_download">Stop download</string>
-    <string name="resume_download">Resume download</string>
-    <string name="use_workmanager_downloads">Use WorkManager for downloads</string>
-    <string name="show_view_count_icon">Show view count and uptime icons</string>
+    <string name="stop_download">Parar download</string>
+    <string name="resume_download">Retomar download</string>
+    <string name="use_workmanager_downloads">Usar WorkManager para downloads</string>
+    <string name="show_view_count_icon">Mostrar contagem de visualizações e ícones de tempo de atividade</string>
 </resources>
