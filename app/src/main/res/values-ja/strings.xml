@@ -581,9 +581,9 @@
     <string name="proxy_user">ユーザー名</string>
     <string name="proxy_password">パスワード</string>
     <string name="proxy_settings">HTTPプロキシ設定</string>
-    <string name="stop_download">Stop download</string>
-    <string name="resume_download">Resume download</string>
-    <string name="use_workmanager_downloads">Use WorkManager for downloads</string>
-    <string name="show_view_count_icon">Show view count and uptime icons</string>
-    <string name="playback_speeds">Playback speeds</string>
+    <string name="stop_download">ダウンロード停止</string>
+    <string name="resume_download">ダウンロード再開</string>
+    <string name="use_workmanager_downloads">ダウンロードにWorkManagerを使用する</string>
+    <string name="show_view_count_icon">視聴回数と経過時間のアイコンを表示する</string>
+    <string name="playback_speeds">再生速度</string>
 </resources>
