@@ -217,7 +217,7 @@
     <string name="user_staff">工作人員</string>
     <string name="user_admin">管理員</string>
     <string name="user_global_mod">全球模式</string>
-    <string name="uptime">%s 上線時間時間</string>
+    <string name="uptime">%s 上線時間</string>
     <string name="select_language">選擇語言</string>
     <string name="show_tags">顯示標籤</string>
     <string name="recentMsg_enable">載入最近的訊息</string>
