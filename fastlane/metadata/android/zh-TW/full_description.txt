@@ -1,6 +1,6 @@
 <i>Xtra for Twitch</i> 是一個 <a href='https://en.wikipedia.org/wiki/Twitch_(service)' target='_blank'>Twitch</a> 客戶端，專注於提供在行動裝置上的最佳觀看與聊天體驗。:
 
-* 透過 BetterTTV 和 FrankerFaceZ 插件支援流行表情
+* 透過 BetterTTV 和 FrankerFaceZ 插件支援流行表情符號
 * 觀看帶有聊天室重播的 VOD 與剪輯
 * 下載 VOD 以離線觀看
 * 通過子母畫面模式在應用程式外繼續觀看
