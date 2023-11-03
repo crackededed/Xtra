@@ -51,7 +51,7 @@
     <string name="storage_permission_title">此應用程式需要儲存空間權限</string>
     <string name="storage_permission_message">下載影片需要儲存空間權限。</string>
     <string name="permission_denied">所需的權限被拒絕</string>
-    <string name="nothing_here">這裡沒有任何</string>
+    <string name="nothing_here">這裡什麼都沒有</string>
     <string name="watch_live">觀看實況</string>
     <string name="watch_rerun">觀看重播</string>
     <string name="open_player">開啟播放器</string>
