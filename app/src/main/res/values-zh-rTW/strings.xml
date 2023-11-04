@@ -385,7 +385,7 @@
     <string name="broadcaster">實況主</string>
     <string name="user_count">%s 使用者在聊天室</string>
     <string name="position">位置：%s</string>
-    <string name="player_viewerlist">從觀看次數中開始觀眾清單</string>
+    <string name="player_viewerlist">從觀看次數中開啟觀眾清單</string>
     <string name="use_followpager">對於追隨頁面使用分頁布局</string>
     <string name="default_follow_tab">預設的追隨分頁</string>
     <string name="sleep_timer_lock">之後鎖定畫面</string>
