@@ -510,7 +510,7 @@
     <string name="connect_chat">連接聊天室</string>
     <string name="raid_text">與 %2$d 觀眾揪團至 %1$s</string>
     <string name="show_raids">顯示揪團</string>
-    <string name="auto_switch_raids">自動地在揪團上切換流</string>
+    <string name="auto_switch_raids">自動地在揪團上切換串流</string>
     <string name="search_streams">搜尋串流</string>
     <string name="reload_emotes">重新載入表情符號</string>
     <string name="api_current_login">目前的登入</string>
