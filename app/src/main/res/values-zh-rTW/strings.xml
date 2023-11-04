@@ -135,7 +135,7 @@
     <string name="navigationBarColor">導覽列顏色</string>
     <string name="rounduserimage">圓形個人檔案圖片</string>
     <string name="truncated_view_counts">簡易的觀看數量</string>
-    <string name="broadcastersCount">在遊戲顯示實況者數量</string>
+    <string name="broadcastersCount">在遊戲項目上顯示實況者數量</string>
     <string name="startonfollowed">開始於追隨中頁面</string>
     <string name="when_logged_in">登入時</string>
     <string name="show_follow_button">顯示追隨按鈕</string>
