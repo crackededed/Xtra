@@ -422,7 +422,7 @@
     <string name="save_video_positions">儲存已觀看的影片位置</string>
     <string name="clear_video_positions">清除影片位置</string>
     <string name="cleared">已清除</string>
-    <string name="irc_msgid_highlighted_message">突顯的訊息</string>
+    <string name="irc_msgid_highlighted_message">醒目的訊息</string>
     <string name="irc_msgid_announcement">公告</string>
     <string name="debug_secondview">在應用程式子母畫面中可動的</string>
     <string name="add_bookmark">加入書籤</string>
