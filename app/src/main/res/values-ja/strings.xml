@@ -5,7 +5,7 @@
     <string name="following">フォロー中</string>
     <string name="downloads">ダウンロード</string>
     <string name="connection_error">サーバーに接続できませんでした。もう一度お試しください</string>
-    <string name="sort">並び替え</string>
+    <string name="sort">並べ替え</string>
     <string name="upload_date">アップロード日</string>
     <string name="today">今日</string>
     <string name="this_week">今週</string>
