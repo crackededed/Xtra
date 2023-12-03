@@ -1,8 +1,8 @@
-﻿<i>Xtra for Twitch</i> モバイルデバイスでのベストな視聴やチャット体験を提供することに重点を置いた <a href='https://ja.wikipedia.org/wiki/Twitch' target='_blank'>Twitch</a> クライアント:
+<i>Xtra for Twitch</i> は、モバイルデバイスで最高の視聴とチャット体験を提供することに焦点を当てた <a href='https://ja.wikipedia.org/wiki/Twitch' target='_blank'>Twitch</a> クライアントです:
 
-* BetterTTVやFrankerFaceZプラグインによる人気スタンプをサポート
-* VODやクリップをチャットリプレイと共に視聴
-* VODをダウンロードしてオフラインで視聴
-* ピクチャーインピクチャーモードでアプリ外での視聴を継続
-* スリープタイマーでストリームを自動で停止
-* 3種類のカラーテーマで見た目のカスタマイズが可能
+• 人気のスタンプを BetterTTV と FrankerFaceZ プラグインでサポート
+• チャットのリプレイ付きで VOD とクリップを視聴
+• VOD をダウンロードしてオフラインで視聴
+• アプリ外でもピクチャーインピクチャーモードで視聴を継続
+• スリープタイマーで配信を自動停止
+• 3種類のカラーテーマでカスタマイズ可能なインターフェース
