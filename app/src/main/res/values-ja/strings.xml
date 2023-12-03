@@ -80,7 +80,6 @@
     <string name="video_subscribers_only">この動画は、サブスクライバーのみ視聴可能です</string>
     <string name="player_error">プレーヤーエラーです。再試行しています</string>
     <string name="picture_in_picture">ピクチャー イン ピクチャー</string>
-    <string name="adblock_not_working">TTV.LOL はオフラインです。配信を視聴するには、広告ブロックを無効にしてください。</string>
     <string name="source_vod_start">開始: %s</string>
     <string name="source_vod_end">終了: %s</string>
     <string name="stream_ended">配信は終了しました</string>
@@ -115,6 +114,7 @@
     <string name="browser_workaround">システムブラウザーはサポートされていません。回避策については、下のボタンをクリックしてください。</string>
     <string name="error">エラー: %s</string>
     <string name="to_enter_url">URL を入力</string>
+    <string name="enter_url">URL を入力</string>
     <string name="invalid_url">無効な URL</string>
     <string name="sort_and_order">並び替え: %1$s 順序: %2$s</string>
     <string name="time_followed">フォロー日</string>
