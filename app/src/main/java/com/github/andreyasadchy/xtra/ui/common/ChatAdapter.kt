@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.Animatable
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -18,6 +19,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.appcompat.widget.TooltipCompat
 import androidx.core.text.getSpans
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
@@ -576,6 +578,11 @@ class ChatAdapter(
             textView.apply {
                 text = formattedMessage
                 movementMethod = LinkMovementMethod.getInstance()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    tooltipText = originalMessage
+                } else {
+                    TooltipCompat.setTooltipText(this, originalMessage);
+                }
                 setOnClickListener { messageClickListener?.invoke(originalMessage, formattedMessage, userId, channelId, fullMsg) }
             }
         }
