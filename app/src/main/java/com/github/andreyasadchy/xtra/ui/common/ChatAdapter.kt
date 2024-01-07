@@ -581,7 +581,7 @@ class ChatAdapter(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     tooltipText = originalMessage
                 } else {
-                    TooltipCompat.setTooltipText(this, originalMessage);
+                    TooltipCompat.setTooltipText(this, originalMessage)
                 }
                 setOnClickListener { messageClickListener?.invoke(originalMessage, formattedMessage, userId, channelId, fullMsg) }
             }
