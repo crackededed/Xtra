@@ -119,7 +119,7 @@
     <string name="sort_and_order">Сортировка: %1$s. Порядок: %2$s</string>
     <string name="time_followed">Дата подписки</string>
     <string name="alphabetically">По алфавиту</string>
-    <string name="last_broadcast">Последняя трансляция</string>
+    <string name="last_broadcast">Последний эфир</string>
     <string name="order">Порядок</string>
     <string name="descending">По убыванию</string>
     <string name="ascending">По возрастанию</string>
@@ -208,7 +208,7 @@
     <string name="recentMsg_limit">Максимум последних сообщений</string>
     <string name="last_broadcast_date">Последняя трансляция %s</string>
     <string name="followed_at">Слежение с %s</string>
-    <string name="show_usernotice">Пользовательские уведомления (подписки, рейды)</string>
+    <string name="show_usernotice">Уведомления от пользователей (подписки, рейды)</string>
     <string name="show_clearmsg">Показать удаления отдельных сообщений</string>
     <string name="show_clearchat">Показать отстранения и блокировки</string>
     <string name="player_gamesbutton">Кнопка игры в записях</string>
@@ -404,7 +404,7 @@
     <string name="api_helix_redirect">Ссылка перенаправления для Helix</string>
     <string name="api_gql_redirect">Ссылка перенаправления для GQL</string>
     <string name="api_settings">Настройки API</string>
-    <string name="streams">Трансляции</string>
+    <string name="streams">Эфир</string>
     <string name="game_streams">Игровые трансляции</string>
     <string name="game_videos">Игровое видео</string>
     <string name="game_clips">Игровые клипы</string>
@@ -416,21 +416,21 @@
     <string name="followed_videos">Отслеживаемое видео</string>
     <string name="followed_channels">Отслеживаемые каналы</string>
     <string name="followed_games">Отслеживаемые игры</string>
-    <string name="save_video_positions">Сохранять позиции просмотренных видео</string>
+    <string name="save_video_positions">Сохранять позиции просмотра в видео</string>
     <string name="clear_video_positions">Очистить позиции видео</string>
     <string name="cleared">Очищено</string>
     <string name="irc_msgid_highlighted_message">Выделенное сообщение</string>
     <string name="irc_msgid_announcement">Объявление</string>
 	<string name="debug_secondview">Подвижная картинка-в-картинке</string>
-    <string name="add_bookmark">Добавить закладку</string>
-    <string name="show_vod_time_left">Оставшееся время в видеозаписи из закладки</string>
+    <string name="add_bookmark">Добавить в закладки</string>
+    <string name="show_vod_time_left">Остав. время в видео из закладок</string>
     <string name="vod_time_left">Автоматически удалено в %s</string>
     <string name="vod_ignore_user">Игнорировать автоудаление для этого пользователя</string>
     <string name="bookmarks">Закладки</string>
     <string name="use_savedpager">Вкладки на странице сохранений</string>
     <string name="default_saved_tab">Стандарт. вкладка сохранений</string>
     <string name="vod_remove_ignore">Удалить из списка игнорируемых</string>
-    <string name="remove_bookmark">Удалить закладку</string>
+    <string name="remove_bookmark">Убрать из закладок</string>
     <string name="saved">Сохранения</string>
     <string name="refresh">Обновить</string>
     <string name="image_library">Библиотека изображений</string>
@@ -554,12 +554,12 @@
     <string name="show_multivariant_playlist_tags">Показать многовариантные метки плейлиста</string>
     <string name="use_gamepager">Вкладки на странице игр</string>
     <string name="api_gql_redirect2">Адрес 2 для переправления GQL</string>
-    <string name="disable_background_video">Не рисовать видео в фоновом режиме</string>
-    <string name="use_background_audio_track">Играть только аудиодорожку в фоновом режиме</string>
+    <string name="disable_background_video">Не рисовать видео в фон. режиме</string>
+    <string name="use_background_audio_track">Играть только аудиодорожку в фон. режиме</string>
     <string name="show_audio_compressor_button">Кнопка компрессора звука</string>
     <string name="use_websocket">Соединять через WebSocket</string>
-    <string name="get_webview_integrity">Получать токен целостности с помощью WebView</string>
-    <string name="get_integrity_token">Получать новый токен целостности</string>
+    <string name="get_webview_integrity">Получать токен целостности через WebView</string>
+    <string name="get_integrity_token">Получить новый токен целостности</string>
     <string name="show_title">Показать название</string>
     <string name="show_category">Показать категорию</string>
     <string name="get_all_headers">Получать все заголовки</string>
@@ -593,5 +593,5 @@
     <string name="edge_to_edge">По краям</string>
     <string name="appbar_lift">Поднять панель приложения при прокрутке</string>
     <string name="bottom_nav_color">Цвет нижней навигации</string>
-    <string name="dynamic_amoled">Dynamic black</string>
+    <string name="dynamic_amoled">Динамическая чёрная</string>
 </resources>
