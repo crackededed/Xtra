@@ -138,11 +138,11 @@
     <string name="show_follow_button">Кнопка «Отслеживать»</string>
     <string name="show_scrolltop">Кнопка прокрутки до верха</string>
     <string name="bold_usernames">Жирный шрифт имён участников</string>
-    <string name="randomcolor">Случ. окрас участников без цвета</string>
+    <string name="randomcolor">Случайная окраска участников без цвета</string>
     <string name="zerowidth">Смайлы нулевой ширины</string>
     <string name="message_limit">Ограничение сообщений</string>
     <string name="player_defaultquality">Качество видео по умолчанию</string>
-    <string name="player_doubletap">Двойное касание переключает чат</string>
+    <string name="player_doubletap">Вызывать чат двойным касанием</string>
     <string name="player_minimize">Кнопка сворачивания</string>
     <string name="player_channel">Показать название канала</string>
     <string name="player_download">Кнопка скачивания</string>
@@ -174,7 +174,7 @@
     <string name="room_unique">Уник. сообщ.</string>
     <string name="room_slow">Медл. режим %s</string>
     <string name="room_subs">Подписчики</string>
-    <string name="chat_join">Подключён к %s</string>
+    <string name="chat_join">Выполнено подключение к %s</string>
     <string name="copy_clip">Копировать в буфер обмена</string>
     <string name="chat_clear">Чат был очищен модератором</string>
     <string name="chat_timeout">%1$s отстранён от чата на %2$s</string>
@@ -384,7 +384,7 @@
     <string name="position">Позиция: %s</string>
     <string name="player_viewerlist">Открывать список зрителей из счётчика просмотров</string>
     <string name="use_followpager">Вкладки на странице отслеживания</string>
-    <string name="default_follow_tab">Стандарт. вкладка отслеживания</string>
+    <string name="default_follow_tab">Стандартная вкладка отслеживания</string>
     <string name="sleep_timer_lock">Блокировать экран</string>
     <string name="sleep_timer_lock_permissions">Блокировать экран (нужны права админа)</string>
     <string name="admin_settings">Вкл/откл права администратора устройства в приложении</string>
@@ -421,14 +421,14 @@
     <string name="cleared">Очищено</string>
     <string name="irc_msgid_highlighted_message">Выделенное сообщение</string>
     <string name="irc_msgid_announcement">Объявление</string>
-	<string name="debug_secondview">Подвижная картинка-в-картинке</string>
+	<string name="debug_secondview">Разрешить перемещение картинки-в-картинке</string>
     <string name="add_bookmark">Добавить в закладки</string>
-    <string name="show_vod_time_left">Остав. время в видео из закладок</string>
+    <string name="show_vod_time_left">Показывать оставшееся время в видео из закладок</string>
     <string name="vod_time_left">Автоматически удалено в %s</string>
     <string name="vod_ignore_user">Игнорировать автоудаление для этого пользователя</string>
     <string name="bookmarks">Закладки</string>
     <string name="use_savedpager">Вкладки на странице сохранений</string>
-    <string name="default_saved_tab">Стандарт. вкладка сохранений</string>
+    <string name="default_saved_tab">Стандартная вкладка сохранений</string>
     <string name="vod_remove_ignore">Удалить из списка игнорируемых</string>
     <string name="remove_bookmark">Убрать из закладок</string>
     <string name="saved">Сохранения</string>
@@ -479,7 +479,7 @@
     <string name="include_gql_token">Включить токен GQL</string>
     <string name="sub_only_summary">Только для содержимого подписчиков</string>
     <string name="follow_button">Кнопка отслеживания</string>
-	<string name="follow_account">Отслеживать через уч. запись Твича</string>
+	<string name="follow_account">Следить через учётную запись Твича</string>
     <string name="follow_local">Отслеживать локально</string>
     <string name="hide">Скрыть</string>
     <string name="chat_ssl">Подключение через SSL</string>
@@ -501,13 +501,13 @@
     <string name="tags">Метки</string>
     <string name="show_player_mode">Кнопка режима «только звук»</string>
     <string name="search_videos">Поиск видео</string>
-    <string name="points_earned">Баллов канала получено: %d</string>
-    <string name="points_notify">Уведомлять о получении баллов канала</string>
+    <string name="points_earned">Собраны баллы канала: %d</string>
+    <string name="points_notify">Уведомлять о сборе баллов канала</string>
     <string name="points_collect">Автосбор баллов канала</string>
     <string name="connect_chat">Подключиться к чату</string>
     <string name="raid_text">Происходит рейд %1$s с %2$d зрителями</string>
     <string name="show_raids">Показать рейды и хосты</string>
-    <string name="auto_switch_raids">Автосмена стрима при рейде</string>
+    <string name="auto_switch_raids">Автосмена трансляции при рейде</string>
     <string name="search_streams">Поиск трансляций</string>
     <string name="reload_emotes">Перезагрузить смайлы</string>
     <string name="api_current_login">Текущий логин</string>
@@ -536,7 +536,7 @@
     <string name="stream_proxy_url">Собственный адрес прокси</string>
     <string name="stream_proxy_url_desc">\"$channel\" заменится логином канала</string>
     <string name="proxy_error">Ошибка прокси</string>
-    <string name="show_subtitles_button">Показывать кнопку субтитров</string>
+    <string name="show_subtitles_button">Кнопка субтитров</string>
     <string name="show_subtitles">Показать субтитры</string>
     <string name="hide_subtitles">Скрыть субтитры</string>
     <string name="toggle_subtitles">Переключить субтитры</string>
@@ -554,8 +554,8 @@
     <string name="show_multivariant_playlist_tags">Показать многовариантные метки плейлиста</string>
     <string name="use_gamepager">Вкладки на странице игр</string>
     <string name="api_gql_redirect2">Адрес 2 для переправления GQL</string>
-    <string name="disable_background_video">Не рисовать видео в фон. режиме</string>
-    <string name="use_background_audio_track">Играть только аудиодорожку в фон. режиме</string>
+    <string name="disable_background_video">Не рисовать видео в фоновом режиме</string>
+    <string name="use_background_audio_track">Играть только дорожку аудио в фоновом режиме</string>
     <string name="show_audio_compressor_button">Кнопка компрессора звука</string>
     <string name="use_websocket">Соединять через WebSocket</string>
     <string name="get_webview_integrity">Получать токен целостности через WebView</string>
@@ -594,5 +594,5 @@
     <string name="appbar_lift">Поднять панель приложения при прокрутке</string>
     <string name="bottom_nav_color">Цвет нижней навигации</string>
     <string name="dynamic_amoled">Динамическая чёрная</string>
-    <string name="material_3">Material 3 theme</string>
+    <string name="material_3">Тема Material 3</string>
 </resources>
