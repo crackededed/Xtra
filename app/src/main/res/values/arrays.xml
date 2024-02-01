@@ -209,6 +209,7 @@
         <item>@string/lang_ar</item>
         <item>@string/lang_ja</item>
         <item>@string/lang_zh_tw</item>
+        <item>@string/lang_zh_cn</item>
     </string-array>
 
     <string-array name="language">

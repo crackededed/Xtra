@@ -1,0 +1,8 @@
+<i>Xtra for Twitch</i> 是一个 <a href='https://en.wikipedia.org/wiki/Twitch_(service)' target='_blank'>Twitch</a> 客户端，专注于提供在移动设备上的最佳观看与聊天体验。:
+
+* 通过 BetterTTV 和 FrankerFaceZ 插件提供流行表情符号的支持
+* 观看带有聊天室重播的 VOD 与剪辑
+* 下载 VOD 以离线观看
+* 通过画中画模式在应用程序外继续观看
+* 睡眠定时器以自动地停止串流
+* 具有三个不同颜色主题的可自定义界面

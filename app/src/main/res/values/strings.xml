@@ -13,6 +13,7 @@
     <string name="lang_ar" translatable="false">العربية</string>
     <string name="lang_ja" translatable="false">日本語</string>
     <string name="lang_zh_tw" translatable="false">中文（繁體）</string>
+    <string name="lang_zh_cn" translatable="false">中文（简体）</string>
     <string name="games">Games</string>
     <string name="popular">Popular</string>
     <string name="following">Following</string>
