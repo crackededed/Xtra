@@ -225,6 +225,7 @@
         <item>ar</item>
         <item>ja</item>
         <item>zh-TW</item>
+        <item>zh-CN</item>
     </string-array>
 
     <string-array name="cutoutmodeEntries">
