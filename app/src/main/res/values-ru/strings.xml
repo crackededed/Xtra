@@ -77,7 +77,7 @@
     <string name="no">Нет</string>
     <string name="search">Поиск</string>
     <string name="chat_replay_unavailable">Повтор чата недоступен</string>
-    <string name="video_subscribers_only">Видео доступно только для подписчиков</string>
+    <string name="video_subscribers_only">Видео только для подписчиков</string>
     <string name="player_error">Ошибка воспроизведения. Переподключение</string>
     <string name="picture_in_picture">Картинка в картинке</string>
     <string name="source_vod_start">Начало: %s</string>
@@ -383,7 +383,7 @@
     <string name="user_count">%s участников в чате</string>
     <string name="position">Позиция: %s</string>
     <string name="player_viewerlist">Открывать список зрителей из счётчика просмотров</string>
-    <string name="use_followpager">Вкладки на странице отслеживания</string>
+    <string name="use_followpager">Использовать вкладки на странице отслеживания</string>
     <string name="default_follow_tab">Стандартная вкладка отслеживания</string>
     <string name="sleep_timer_lock">Блокировать экран</string>
     <string name="sleep_timer_lock_permissions">Блокировать экран (нужны права админа)</string>
@@ -424,12 +424,12 @@
 	<string name="debug_secondview">Разрешить перемещение картинки-в-картинке</string>
     <string name="add_bookmark">Добавить в закладки</string>
     <string name="show_vod_time_left">Показывать оставшееся время в видео из закладок</string>
-    <string name="vod_time_left">Автоматически удалено в %s</string>
-    <string name="vod_ignore_user">Игнорировать автоудаление для этого пользователя</string>
+    <string name="vod_time_left">Автоудаление через %s</string>
+    <string name="vod_ignore_user">Пропуск автоудаления для этого пользователя</string>
     <string name="bookmarks">Закладки</string>
     <string name="use_savedpager">Вкладки на странице сохранений</string>
     <string name="default_saved_tab">Стандартная вкладка сохранений</string>
-    <string name="vod_remove_ignore">Удалить из списка игнорируемых</string>
+    <string name="vod_remove_ignore">Убрать из списка игнорируемых</string>
     <string name="remove_bookmark">Убрать из закладок</string>
     <string name="saved">Сохранения</string>
     <string name="refresh">Обновить</string>
@@ -455,7 +455,7 @@
     <string name="player_buffer_rebuffer_summary">Стандартная длительность медиа, которая должна быть буферизована для возобновления воспроизведения после повторной буферизации, миллисекунды</string>
     <string name="buffer_settings">Настройки буфера</string>
     <string name="player_buttons">Кнопки проигрывателя</string>
-    <string name="keep_chat_open">Связь с чатом в фоновом режиме</string>
+    <string name="keep_chat_open">Поддерживать связь с чатом в фоновом режиме</string>
     <string name="save_sort_channel">Запомнить сортировку для этого канала</string>
     <string name="save_sort_game">Запомнить варианты выбора для этой игры</string>
     <string name="show_chat">Показать чат</string>
@@ -506,7 +506,7 @@
     <string name="points_collect">Автосбор баллов канала</string>
     <string name="connect_chat">Подключиться к чату</string>
     <string name="raid_text">Происходит рейд %1$s с %2$d зрителями</string>
-    <string name="show_raids">Показать рейды и хосты</string>
+    <string name="show_raids">Показывать рейды и хосты</string>
     <string name="auto_switch_raids">Автосмена трансляции при рейде</string>
     <string name="search_streams">Поиск трансляций</string>
     <string name="reload_emotes">Перезагрузить смайлы</string>
@@ -589,12 +589,12 @@
     <string name="search_user">Получить пользователя по ИД/логину</string>
     <string name="dynamic_dark">Динамическая тёмная</string>
     <string name="dynamic_light">Динамическая светлая</string>
-    <string name="rounded_corners">Скруглённые углы</string>
-    <string name="edge_to_edge">По краям</string>
+    <string name="rounded_corners">Скруглять углы</string>
+    <string name="edge_to_edge">На весь экран</string>
     <string name="appbar_lift">Поднять панель приложения при прокрутке</string>
     <string name="bottom_nav_color">Цвет нижней навигации</string>
     <string name="dynamic_amoled">Динамическая чёрная</string>
     <string name="material_3">Тема Material 3</string>
-    <string name="use_api_chat_messages">Send chat messages using api</string>
-    <string name="use_eventsub_chat">EventSub chat</string>
+    <string name="use_api_chat_messages">Отправлять сообщения чата по API</string>
+    <string name="use_eventsub_chat">Чат EventSub</string>
 </resources>
