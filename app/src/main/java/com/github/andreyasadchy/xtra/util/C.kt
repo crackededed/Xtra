@@ -152,6 +152,7 @@ object C {
     const val CHAT_IMAGE_LIBRARY = "chat_image_library"
     const val CHAT_IMAGE_QUALITY = "chat_image_quality"
     const val CHAT_RANDOMCOLOR = "chat_randomcolor"
+    const val CHAT_THEME_ADAPTED_USERNAME_COLOR = "chat_theme_adapted_username_color"
     const val CHAT_BOLDNAMES = "chat_boldnames"
     const val CHAT_LIMIT = "chat_limit"
     const val CHAT_ZEROWIDTH = "chat_zerowidth"

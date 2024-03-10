@@ -184,6 +184,13 @@
         app:singleLineTitle="false" />
 
     <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="chat_theme_adapted_username_color"
+        android:title="@string/theme_adapted_username_color"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="animatedGifEmotes"
         android:title="@string/animated_emotes"

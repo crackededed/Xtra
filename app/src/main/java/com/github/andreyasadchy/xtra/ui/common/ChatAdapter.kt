@@ -20,6 +20,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.widget.TooltipCompat
+import androidx.core.graphics.ColorUtils
 import androidx.core.text.getSpans
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
@@ -42,12 +43,22 @@ import com.github.andreyasadchy.xtra.ui.view.chat.CenteredImageSpan
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import java.util.Random
 import kotlin.collections.set
+import kotlin.math.floor
+import kotlin.math.pow
+
+private const val RED_HUE_DEGREES = 0f
+private const val GREEN_HUE_DEGREES = 120f
+private const val BLUE_HUE_DEGREES = 240f
+private const val PI_DEGREES = 180f
+private const val TWO_PI_DEGREES = 360f
 
 class ChatAdapter(
     private val fragment: Fragment,
     private val emoteSize: Int,
     private val badgeSize: Int,
     private val randomColor: Boolean,
+    private val isLightTheme: Boolean,
+    private val useThemeAdaptedUsernameColor: Boolean,
     private val boldNames: Boolean,
     private val emoteQuality: String,
     private val animateGifs: Boolean,
@@ -210,7 +221,7 @@ class ChatAdapter(
         if (chatMessage.message != null) {
             builder.append(chatMessage.message)
         }
-        val color = if (chatMessage is PubSubPointReward) null else
+        var color = if (chatMessage is PubSubPointReward) null else
             chatMessage.color.let { userColor ->
                 if (userColor == null) {
                     userColors[userName] ?: getRandomColor().also { if (userName != null) userColors[userName] = it }
@@ -219,6 +230,9 @@ class ChatAdapter(
                 }
             }
         if (color != null && userName != null) {
+            if (useThemeAdaptedUsernameColor) {
+                color = adaptUsernameColor(color)
+            }
             builder.setSpan(ForegroundColorSpan(color), imageIndex, userNameEndIndex, SPAN_EXCLUSIVE_EXCLUSIVE)
             builder.setSpan(StyleSpan(if (boldNames) Typeface.BOLD else Typeface.NORMAL), imageIndex, userNameEndIndex, SPAN_EXCLUSIVE_EXCLUSIVE)
         }
@@ -570,6 +584,28 @@ class ChatAdapter(
             }
         }
         return width to height
+    }
+
+    private fun adaptUsernameColor(color: Int): Int {
+        val colorArray = FloatArray(3)
+        ColorUtils.colorToHSL(color, colorArray)
+        if (isLightTheme) {
+            val luminanceMax = 0.75f -
+                    maxOf(1f - ((colorArray[0] - GREEN_HUE_DEGREES) / 100f).pow(2f), RED_HUE_DEGREES) * 0.4f
+            colorArray[2] = minOf(colorArray[2], luminanceMax)
+        } else {
+            val distToRed = RED_HUE_DEGREES - colorArray[0]
+            val distToBlue = BLUE_HUE_DEGREES - colorArray[0]
+            val normDistanceToRed = distToRed - TWO_PI_DEGREES * floor((distToRed + PI_DEGREES) / TWO_PI_DEGREES)
+            val normDistanceToBlue = distToBlue - TWO_PI_DEGREES * floor((distToBlue + PI_DEGREES) / TWO_PI_DEGREES)
+
+            val luminanceMin = 0.3f +
+                    maxOf((1f - (normDistanceToBlue / 40f).pow(2f)) * 0.35f, RED_HUE_DEGREES) +
+                    maxOf((1f - (normDistanceToRed / 40f).pow(2f)) * 0.1f, RED_HUE_DEGREES)
+            colorArray[2] = maxOf(colorArray[2], luminanceMin)
+        }
+
+        return ColorUtils.HSLToColor(colorArray)
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
