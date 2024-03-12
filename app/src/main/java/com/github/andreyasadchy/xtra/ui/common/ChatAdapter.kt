@@ -152,7 +152,7 @@ class ChatAdapter(
         val timestamp = liveMessage?.timestamp?.let { TwitchApiHelper.getTimestamp(it, timestampFormat) } ?: pointReward?.timestamp?.let { TwitchApiHelper.getTimestamp(it, timestampFormat) }
         if (enableTimestamps && timestamp != null) {
             builder.append("$timestamp ")
-            builder.setSpan(ForegroundColorSpan(Color.parseColor("#999999")), imageIndex, imageIndex + timestamp.length, SPAN_INCLUSIVE_INCLUSIVE)
+            builder.setSpan(ForegroundColorSpan(getSavedColor("#999999")), imageIndex, imageIndex + timestamp.length, SPAN_INCLUSIVE_INCLUSIVE)
             imageIndex += timestamp.length + 1
         }
         chatMessage.badges?.forEach { chatBadge ->
@@ -212,7 +212,7 @@ class ChatAdapter(
                 imageIndex += pointReward?.rewardCost?.toString()?.length ?: 0
                 originalMessage = "$userName: ${chatMessage.message}"
                 userNameWithPostfixLength = imageIndex
-                builder.setSpan(ForegroundColorSpan(Color.parseColor("#999999")), 0, imageIndex, SPAN_INCLUSIVE_INCLUSIVE)
+                builder.setSpan(ForegroundColorSpan(getSavedColor("#999999")), 0, imageIndex, SPAN_INCLUSIVE_INCLUSIVE)
             } else {
                 originalMessage = "${chatMessage.message}"
                 userNameWithPostfixLength = 0
@@ -221,18 +221,22 @@ class ChatAdapter(
         if (chatMessage.message != null) {
             builder.append(chatMessage.message)
         }
-        var color = if (chatMessage is PubSubPointReward) null else
+        val color = if (chatMessage is PubSubPointReward) null else {
             chatMessage.color.let { userColor ->
                 if (userColor == null) {
-                    userColors[userName] ?: getRandomColor().also { if (userName != null) userColors[userName] = it }
+                    userColors[userName] ?: getRandomColor().let { newColor ->
+                        if (useThemeAdaptedUsernameColor) {
+                            adaptUsernameColor(newColor)
+                        } else {
+                            newColor
+                        }.also { if (userName != null) userColors[userName] = it }
+                    }
                 } else {
-                    savedColors[userColor] ?: Color.parseColor(userColor).also { savedColors[userColor] = it }
+                    getSavedColor(userColor)
                 }
             }
+        }
         if (color != null && userName != null) {
-            if (useThemeAdaptedUsernameColor) {
-                color = adaptUsernameColor(color)
-            }
             builder.setSpan(ForegroundColorSpan(color), imageIndex, userNameEndIndex, SPAN_EXCLUSIVE_EXCLUSIVE)
             builder.setSpan(StyleSpan(if (boldNames) Typeface.BOLD else Typeface.NORMAL), imageIndex, userNameEndIndex, SPAN_EXCLUSIVE_EXCLUSIVE)
         }
@@ -296,8 +300,8 @@ class ChatAdapter(
                     } else null
                     if (cheerEmote != null) {
                         emote = cheerEmote
-                        if (emote.color != null) {
-                            builder.setSpan(ForegroundColorSpan(Color.parseColor(emote.color)), builderIndex + bitsName.length, endIndex, SPAN_INCLUSIVE_INCLUSIVE)
+                        emote.color?.let {
+                            builder.setSpan(ForegroundColorSpan(getSavedColor(it)), builderIndex + bitsName.length, endIndex, SPAN_INCLUSIVE_INCLUSIVE)
                         }
                     }
                 }
@@ -557,6 +561,15 @@ class ChatAdapter(
         }
         super.onDetachedFromRecyclerView(recyclerView)
     }
+
+    private fun getSavedColor(color: String): Int =
+        savedColors[color] ?: Color.parseColor(color).let { newColor ->
+            if (useThemeAdaptedUsernameColor) {
+                adaptUsernameColor(newColor)
+            } else {
+                newColor
+            }.also { savedColors[color] = it }
+        }
 
     private fun getRandomColor(): Int =
         if (randomColor) {
