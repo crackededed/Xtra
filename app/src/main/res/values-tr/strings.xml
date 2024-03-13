@@ -1,19 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Xtra</string>
-    <string name="notification_downloads_channel_id" translatable="false">xtra_downloads_channel</string>
-    <string name="lang_de" translatable="false">Deutsch</string>
-    <string name="lang_en" translatable="false">English</string>
-    <string name="lang_es" translatable="false">Español</string>
-    <string name="lang_fr" translatable="false">Français</string>
-    <string name="lang_in" translatable="false">Indonesia</string>
-    <string name="lang_pt_br" translatable="false">Português - Brasil</string>
-    <string name="lang_tr" translatable="false">Türkçe</string>
-    <string name="lang_ru" translatable="false">Русский</string>
-    <string name="lang_ar" translatable="false">العربية</string>
-    <string name="lang_ja" translatable="false">日本語</string>
-    <string name="lang_zh_tw" translatable="false">中文（繁體）</string>
-    <string name="lang_zh_cn" translatable="false">中文（简体）</string>
     <string name="games">Oyunlar</string>
     <string name="popular">Popüler</string>
     <string name="following">Takip ediliyor</string>
@@ -624,4 +610,5 @@
     <string name="move_to_shared_storage">Paylaşılan depolama alanına taşı</string>
     <string name="move_to_app_storage">Uygulama depolama alanına taşı</string>
     <string name="download_moving">Taşınma</string>
+    <string name="theme_adapted_username_color">Readable colors based on the app theme</string>
 </resources>
