@@ -96,7 +96,7 @@ class ChatView : ConstraintLayout {
                 badgeSize = context.convertDpToPixels(18.5f),
                 randomColor = context.prefs().getBoolean(C.CHAT_RANDOMCOLOR, true),
                 isLightTheme = context.isLightTheme,
-                useThemeAdaptedUsernameColor = context.prefs().getBoolean(C.CHAT_THEME_ADAPTED_USERNAME_COLOR, false),
+                useThemeAdaptedUsernameColor = context.prefs().getBoolean(C.CHAT_THEME_ADAPTED_USERNAME_COLOR, true),
                 boldNames = context.prefs().getBoolean(C.CHAT_BOLDNAMES, false),
                 emoteQuality = context.prefs().getString(C.CHAT_IMAGE_QUALITY, "4") ?: "4",
                 animateGifs = context.prefs().getBoolean(C.ANIMATED_EMOTES, true),
