@@ -610,5 +610,5 @@
     <string name="move_to_shared_storage">Move to shared storage</string>
     <string name="move_to_app_storage">Move to app storage</string>
     <string name="download_moving">Moving</string>
-    <string name="theme_adapted_username_color">Adapt username color to the app theme</string>
+    <string name="theme_adapted_username_color">Readable colors based on the app theme</string>
 </resources>
