@@ -1,0 +1,8 @@
+<i>Xtra per Twitch</i> è un client <a href='https://it.wikipedia.org/wiki/Twitch' target='_blank'>Twitch</a> che offre un'esperienza di visualizzazione e chat ottimizzata per i dispositivi mobili:
+
+* Supporto per le emote popolari con i plugin BetterTTV e FrankerFaceZ
+* Guarda VODs e clip con la riproduzione del chat
+* Scarica VODs per guardarli offline
+* Continua a guardare fuori dall'applicazione con la modalità Picture-in-Picture
+* Timer di spegnimento per fermare lo streaming automaticamente
+* Interfaccia personalizzabile con 3 temi di colore diversi
