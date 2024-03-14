@@ -208,6 +208,7 @@
         <item>@string/lang_es</item>
         <item>@string/lang_fr</item>
         <item>@string/lang_in</item>
+        <item>@string/lang_it</item>
         <item>@string/lang_pt_br</item>
         <item>@string/lang_tr</item>
         <item>@string/lang_ru</item>
@@ -224,6 +225,7 @@
         <item>es</item>
         <item>fr</item>
         <item>in</item>
+        <item>it</item>
         <item>pt-BR</item>
         <item>tr</item>
         <item>ru</item>
