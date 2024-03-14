@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="views">
+        <item quantity="one">%s visualizzazione</item>
+        <item quantity="other">@string/views</item>
+    </plurals>
+    <plurals name="viewers">
+        <item quantity="one">%s spettatore</item>
+        <item quantity="other">@string/viewers_count</item>
+    </plurals>
+    <plurals name="hours">
+        <item quantity="one">%d ora</item>
+        <item quantity="other">%d ore</item>
+    </plurals>
+    <plurals name="minutes">
+        <item quantity="one">%d minuto</item>
+        <item quantity="other">%d minuti</item>
+    </plurals>
+    <plurals name="broadcasters">
+        <item quantity="one">%d emittente</item>
+        <item quantity="other">%d emittenti</item>
+    </plurals>
+</resources>
