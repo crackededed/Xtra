@@ -612,4 +612,6 @@
     <string name="download_moving">Moving</string>
     <string name="theme_adapted_username_color">Адаптировать цвета в зависимости от темы</string>
     <string name="download_deleting">Deleting</string>
+    <string name="new_version_available">Новая версия Xtra %s доступна</string>
+    <string name="couldnt_check_latest_version">Ошибка: Невозможно проверить последнюю версию приложения</string>
 </resources>

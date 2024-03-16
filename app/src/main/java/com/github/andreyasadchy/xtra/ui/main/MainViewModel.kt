@@ -3,10 +3,12 @@ package com.github.andreyasadchy.xtra.ui.main
 import android.app.Activity
 import android.app.Application
 import android.content.Intent
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.andreyasadchy.xtra.BuildConfig
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.model.Account
 import com.github.andreyasadchy.xtra.model.LoggedIn
@@ -24,17 +26,25 @@ import com.github.andreyasadchy.xtra.util.SingleLiveEvent
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.nullIfEmpty
 import com.github.andreyasadchy.xtra.util.toast
+import com.google.gson.JsonParser
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import retrofit2.HttpException
 import javax.inject.Inject
+
+private const val TAG = "ChatViewModel"
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     application: Application,
     private val repository: ApiRepository,
     private val authRepository: AuthRepository,
-    private val offlineRepository: OfflineRepository) : ViewModel() {
+    private val offlineRepository: OfflineRepository,
+    private val okHttpClient: OkHttpClient) : ViewModel() {
 
     private val _integrity by lazy { SingleLiveEvent<Boolean>() }
     val integrity: LiveData<Boolean>
@@ -59,9 +69,19 @@ class MainViewModel @Inject constructor(
     private val _user = MutableLiveData<User?>()
     val user: MutableLiveData<User?>
         get() = _user
+    private val _latestVersion = MutableLiveData<String?>()
+    val latestVersion: MutableLiveData<String?>
+        get() = _latestVersion
 
     init {
         offlineRepository.resumeDownloads(application)
+        viewModelScope.launch {
+            if (BuildConfig.BUILD_TYPE == "release") {
+                _latestVersion.value = withContext(Dispatchers.IO) {
+                    getLatestVersion()
+                }
+            }
+        }
     }
 
     fun onMaximize() {
@@ -166,5 +186,24 @@ class MainViewModel @Inject constructor(
             }
         }
         TwitchApiHelper.checkedValidation = true
+    }
+
+    private fun getLatestVersion() = try {
+        val request = Request.Builder()
+            .url("https://f-droid.org/api/v1/packages/com.github.andreyasadchy.xtra")
+            .build()
+        okHttpClient.newCall(request).execute().use { response ->
+            val jsonResponse =
+                JsonParser.parseString(response.body.string()).asJsonObject
+            val suggestedVersionCode =
+                jsonResponse.getAsJsonPrimitive("suggestedVersionCode").asInt
+            jsonResponse.getAsJsonArray("packages")
+                .filter { it.asJsonObject.get("versionCode").asInt == suggestedVersionCode }
+                .map { it.asJsonObject.get("versionName").asString }
+                .firstOrNull()
+        }
+    } catch (e: Exception) {
+        Log.e(TAG, "Couldn't fetch the latest app version", e)
+        null
     }
 }

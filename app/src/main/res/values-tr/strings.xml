@@ -612,4 +612,6 @@
     <string name="download_moving">Taşınma</string>
     <string name="theme_adapted_username_color">Uygulama temasına göre okunabilir renkler</string>
     <string name="download_deleting">Siliniyor</string>
+    <string name="new_version_available">Newer Xtra app version %s available</string>
+    <string name="couldnt_check_latest_version">Error: Couldn\'t check the latest app version</string>
 </resources>

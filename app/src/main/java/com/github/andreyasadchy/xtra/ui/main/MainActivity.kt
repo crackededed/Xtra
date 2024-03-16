@@ -14,6 +14,7 @@ import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -35,6 +36,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.setupWithNavController
 import androidx.preference.PreferenceManager
+import com.github.andreyasadchy.xtra.BuildConfig
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.ActivityMainBinding
 import com.github.andreyasadchy.xtra.model.Account
@@ -67,6 +69,9 @@ import com.github.andreyasadchy.xtra.util.shortToast
 import com.github.andreyasadchy.xtra.util.toast
 import com.google.android.material.color.MaterialColors
 import dagger.hilt.android.AndroidEntryPoint
+
+private val VERSION_REGEX = Regex("""^(\d+).(\d+).(\d+).*$""")
+private const val TAG = "MainActivity"
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
@@ -214,6 +219,19 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
             }
         }
         registerReceiver(networkReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
+        viewModel.latestVersion.observe(this) {
+            try {
+                it?.let { compareVersionToCurrent(it) }
+                    ?.also { compareResult ->
+                        if (compareResult < 0) {
+                            shortToast(getString(R.string.new_version_available, it))
+                        }
+                    } ?: shortToast(R.string.couldnt_check_latest_version)
+            } catch (e: Exception) {
+                Log.e(TAG, "Couldn't compare version $it", e)
+                shortToast(R.string.couldnt_check_latest_version)
+            }
+        }
         restorePlayerFragment()
         handleIntent(intent)
     }
@@ -539,5 +557,21 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
                 }
             }
         }
+    }
+
+    private fun compareVersionToCurrent(latestVersion: String): Int {
+        val latestVersionValues = VERSION_REGEX.find(latestVersion)?.groupValues?.subList(1, 4) ?:
+            throw IllegalArgumentException("Latest version has wrong format: $latestVersion")
+        val currentVersionValues = VERSION_REGEX.find(BuildConfig.VERSION_NAME)?.groupValues?.subList(1, 4) ?:
+            throw IllegalArgumentException("Current version has wrong format: ${BuildConfig.VERSION_NAME}")
+
+        latestVersionValues
+            .mapIndexed { i, v -> currentVersionValues[i].toInt().compareTo(v.toInt()) }
+            .forEach { vCompared ->
+                if (vCompared != 0) {
+                    return vCompared
+                }
+            }
+        return 0
     }
 }
