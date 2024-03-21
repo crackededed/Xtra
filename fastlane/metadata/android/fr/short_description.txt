@@ -1,1 +1,1 @@
-est un lecteur et navigateur pour Twitch
+un lecteur et navigateur pour Twitch
