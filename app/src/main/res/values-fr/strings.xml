@@ -14,7 +14,7 @@
     <string name="view_count">Nombre de vues</string>
     <string name="period">Période</string>
     <string name="apply">Appliquer</string>
-    <string name="sort_and_period">Trier par: %1$s. Periode: %2$s</string>
+    <string name="sort_and_period">Trier par : %1$s. Période : %2$s</string>
     <string name="trending">Tendances</string>
     <string name="live">En direct</string>
     <string name="videos">Vidéos</string>
@@ -35,9 +35,9 @@
     <string name="log_out">Se déconnecter</string>
     <string name="skip">Passer</string>
     <string name="specify_time">Spécifiez l\'heure</string>
-    <string name="from">De:</string>
-    <string name="to">À:</string>
-    <string name="duration">Durée: %s</string>
+    <string name="from">De :</string>
+    <string name="to">À :</string>
+    <string name="duration">Durée : %s</string>
     <string name="invalid_time">Heure invalide</string>
     <string name="from_is_greater">L\'heure De doit être inférieure à l\'heure À</string>
     <string name="to_is_lesser">L\'heure À doit être supérieure à l\'heure De</string>
@@ -70,7 +70,7 @@
     <string name="rewind">Retour en arrière</string>
     <string name="forward">Avance rapide</string>
     <string name="seconds_full">%s secondes</string>
-    <string name="unfollow_channel">Ne plus suivre %s?</string>
+    <string name="unfollow_channel">Ne plus suivre %s ?</string>
     <string name="now_following">Vous suivez maintenant %s</string>
     <string name="unfollowed">Vous ne suivez plus %s</string>
     <string name="yes">Oui</string>
@@ -80,13 +80,13 @@
     <string name="video_subscribers_only">Cette vidéo n\'est disponible que pour les abonnés</string>
     <string name="player_error">Erreur de lecteur. Nouvelle tentative</string>
     <string name="picture_in_picture">Incrustation d\'image (PiP)</string>
-    <string name="source_vod_start">Début: %s</string>
-    <string name="source_vod_end">Fin: %s</string>
+    <string name="source_vod_start">Début : %s</string>
+    <string name="source_vod_end">Fin : %s</string>
     <string name="stream_ended">Le stream est terminé</string>
     <string name="viewers_count">%s spectateurs</string>
     <string name="views">%s vues</string>
     <string name="download_pending">En attente</string>
-    <string name="downloading_progress">Téléchargement en cours: %d%%</string>
+    <string name="downloading_progress">Téléchargement en cours : %d%%</string>
     <string name="pause">Pause</string>
     <string name="resume">Reprendre</string>
     <string name="error_loading_user">Erreur lors du chargement du profil utilisateur</string>
@@ -112,11 +112,11 @@
     <string name="login_problem_solution">Vous pouvez vous connecter à l\'aide d\'un navigateur externe. Après avoir appuyé sur "Autoriser", une page d\'erreur devrait apparaître. Copiez l\'URL, revenez ici et cliquez sur le bouton "Enter URL". Collez l\'URL et cliquez sur "Connexion".</string>
     <string name="no_browser_found">Aucun navigateur internet trouvé</string>
     <string name="browser_workaround">Le navigateur de votre système n\'est plus pris en charge. Veuillez cliquer sur le bouton ci-dessous pour une solution de contournement</string>
-    <string name="error">Erreur: %s</string>
+    <string name="error">Erreur : %s</string>
     <string name="to_enter_url">Entrer l\'URL</string>
     <string name="enter_url">Entrer l\'URL</string>
     <string name="invalid_url">URL invalide</string>
-    <string name="sort_and_order">Trier par: %1$s. Ordre: %2$s</string>
+    <string name="sort_and_order">Trier par : %1$s. Ordre : %2$s</string>
     <string name="time_followed">Temps de suivi</string>
     <string name="alphabetically">Alphabétiquement</string>
     <string name="last_broadcast">Dernière diffusion</string>
@@ -279,7 +279,7 @@
     <string name="irc_notice_host_receive_no_count">%s vous héberge maintenant.</string>
     <string name="irc_notice_host_target_went_offline">%s est hors ligne. Sortie du mode hôte.</string>
     <string name="irc_notice_hosts_remaining">%s commandes hôtes restantes cette demi-heure.</string>
-    <string name="irc_notice_invalid_user">Nom d\'utilisateur invalide: %s</string>
+    <string name="irc_notice_invalid_user">Nom d\'utilisateur invalide : %s</string>
     <string name="irc_notice_mod_success">Vous avez ajouté %s en tant que modérateur de cette chaîne.</string>
     <string name="irc_notice_msg_banned">Vous êtes définitivement interdit de parler dans %s.</string>
     <string name="irc_notice_msg_bad_characters">Votre message n\'a pas été envoyé car il contient trop de caractères non traitables. Si vous pensez qu\'il s\'agit d\'une erreur, veuillez reformuler et réessayer.</string>
@@ -287,7 +287,7 @@
     <string name="irc_notice_msg_channel_suspended">Cette chaîne n\'existe pas ou a été suspendue.</string>
     <string name="irc_notice_msg_duplicate">Votre message n\'a pas été envoyé car il est identique au précédent que vous avez envoyé, il y a moins de 30 secondes.</string>
     <string name="irc_notice_msg_emoteonly">Cette salle est en mode emote uniquement. Vous pouvez trouver vos émoticônes actuellement disponibles en utilisant le smiley dans la zone de texte du chat.</string>
-    <string name="irc_notice_msg_followersonly">Cette salon est en mode réservé aux abonnés de %1$s. Suivez %2$s pour rejoindre la communauté !</string>
+    <string name="irc_notice_msg_followersonly">Cette salle est en mode réservé aux abonnés de %1$s. Suivez %2$s pour rejoindre la communauté !</string>
     <string name="irc_notice_msg_followersonly_followed">Cette salle est en mode réservé aux abonnés de %1$s. Vous suivez depuis %2$s. Continuez à suivre pour discuter !</string>
     <string name="irc_notice_msg_followersonly_zero">Cette salle est en mode abonnés uniquement. Suivez %s pour rejoindre la communauté !</string>
     <string name="irc_notice_msg_r9k">Cette salle est en mode chat unique et le message que vous avez tenté d\'envoyer n\'est pas unique.</string>
@@ -350,7 +350,7 @@
     <string name="irc_notice_usage_mods">Utilisation : \"/mods\" - Répertorie les modérateurs de cette chaîne.</string>
     <string name="irc_notice_usage_r9k_off">Utilisation : \"/uniquechatoff\" - Désactive le mode de chat unique.</string>
     <string name="irc_notice_usage_r9k_on">Utilisation : \"/uniquechat\" - Active le mode de chat unique. Utilisez \"/uniquechatoff\" pour désactiver.</string>
-    <string name="irc_notice_usage_raid">Utilisation : \"/raid &lt;canal&gt;\" - Raid une autre chaîne. Utilisez \"/unraid\" pour annuler le Raid.</string>
+    <string name="irc_notice_usage_raid">Utilisation : \"/raid &lt;chaîne&gt;\" - Raid une autre chaîne. Utilisez \"/unraid\" pour annuler le Raid.</string>
     <string name="irc_notice_usage_slow_off">Utilisation : \"/slowoff\" - Désactive le mode lent.</string>
     <string name="irc_notice_usage_slow_on">Utilisation : \"/slow [duration]\" - Active le mode lent (limite la fréquence à laquelle les utilisateurs peuvent envoyer des messages). La durée (facultative, par défaut=%s) doit être un nombre positif de secondes. Utilisez \"/slowoff\" pour désactiver.</string>
     <string name="irc_notice_usage_subs_off">Utilisation : \"/subscribersoff\" - Désactive le mode réservé aux abonnés.</string>
