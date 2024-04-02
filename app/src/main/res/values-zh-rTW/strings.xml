@@ -597,7 +597,7 @@
     <string name="material_3">Material 3 主題</string>
     <string name="use_api_chat_messages">使用 API 發送聊天訊息</string>
     <string name="use_eventsub_chat">EventSub chat</string>
-    <string name="notification_permission_title">此 應用程式需要通知權限</string>
+    <string name="notification_permission_title">此應用程式需要通知權限</string>
     <string name="notification_permission_message">需要通知權限以顯示下載進度。</string>
     <string name="select_directory">選擇目錄</string>
     <string name="shared_storage">分享的儲存區</string>
