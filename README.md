@@ -1,6 +1,6 @@
 # Xtra for Twitch
 
-<img src="https://github.com/AndreyAsadchy/Xtra/blob/197ba90cac879abd2a5645393ce361847f12fa0b/app/src/main/ic_launcher-web.png" align="left" width="100"/>
+<img src="https://github.com/crackededed/Xtra/blob/2ef31be1f6f455c60989219cf635cc13517f3570/app/src/main/ic_launcher-web.png" align="left" width="100"/>
 
 Xtra is a Twitch player and browser for Android.
 
