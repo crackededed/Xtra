@@ -612,9 +612,9 @@
     <string name="download_moving">Перемещение</string>
     <string name="theme_adapted_username_color">Адаптировать цвета в зависимости от темы</string>
     <string name="download_deleting">Удаление</string>
-    <string name="download_vod_to_file">Download videos to single files</string>
-    <string name="convert_vod_to_file">Convert to a file</string>
-    <string name="download_converting">Converting</string>
-    <string name="convert_message">Convert this video to a single file?</string>
-    <string name="convert">Convert</string>
+    <string name="download_vod_to_file">Скачивать видео в единственные файлы</string>
+    <string name="convert_vod_to_file">Преобразовать в файл</string>
+    <string name="download_converting">Преобразуется</string>
+    <string name="convert_message">Преобразовать это видео в один файл?</string>
+    <string name="convert">Преобразовать</string>
 </resources>
