@@ -579,7 +579,7 @@
     <string name="resume_download">Reprendre le téléchargement</string>
     <string name="use_workmanager_downloads">Utiliser WorkManager pour les téléchargements</string>
     <string name="show_view_count_icon">Afficher le nombre de vues et les icônes de durée du direct</string>
-    <string name="playback_speeds">Durées de lecture</string>
+    <string name="playback_speeds">Vitesses de lecture</string>
     <string name="use_custom_proxy">Utiliser un proxy personnalisé</string>
     <string name="use_custom_proxy_desc">Nécessite une URL qui renvoie une playlist</string>
     <string name="stream_headers">En-têtes de requête du stream</string>
