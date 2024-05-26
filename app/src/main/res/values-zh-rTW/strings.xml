@@ -489,7 +489,7 @@
     <string name="bookmark">書籤</string>
     <string name="dark_theme_on">深色主題開啟</string>
     <string name="dark_theme_off">深色主題關閉</string>
-    <string name="follow_system_theme">變更根據裝置主題</string>
+    <string name="follow_system_theme">根據裝置主題變更</string>
     <string name="pixels">%d 像素</string>
     <string name="image_quality">圖片品質</string>
     <string name="ignore_cutouts">忽略螢幕缺口</string>
@@ -554,7 +554,7 @@
     <string name="show_multivariant_playlist_tags">顯示多變數播放清單標籤</string>
     <string name="use_gamepager">對於遊戲頁面使用分頁布局</string>
     <string name="api_gql_redirect2">GQL 重定向 URL 2</string>
-    <string name="disable_background_video">禁止影片在後台渲染</string>
+    <string name="disable_background_video">禁止影片在背景渲染</string>
     <string name="use_background_audio_track">在背景切換到僅音訊軌道</string>
     <string name="show_audio_compressor_button">顯示音訊壓縮器按鈕</string>
     <string name="use_websocket">使用 WebSocket 連接</string>
@@ -612,13 +612,13 @@
     <string name="download_moving">正在移動</string>
     <string name="theme_adapted_username_color">基於應用程式主題的可讀顏色</string>
     <string name="download_deleting">正在刪除</string>
-    <string name="download_vod_to_file">Download videos to single files</string>
-    <string name="convert_vod_to_file">Convert to a file</string>
-    <string name="download_converting">Converting</string>
-    <string name="convert_message">Convert this video to a single file?</string>
-    <string name="convert">Convert</string>
-    <string name="download_chat">Download chat replay</string>
-    <string name="download_chat_emotes">Download emotes and badges</string>
-    <string name="chat_downloading_progress">Chat: %d%%</string>
-    <string name="change_chat_file">Change chat file</string>
+    <string name="download_vod_to_file">下載影片為單一檔案</string>
+    <string name="convert_vod_to_file">轉換為檔案</string>
+    <string name="download_converting">正在轉換</string>
+    <string name="convert_message">是否轉換此影片為單一檔案？</string>
+    <string name="convert">轉換</string>
+    <string name="download_chat">下載聊天室重播</string>
+    <string name="download_chat_emotes">下載表情符號與徽章</string>
+    <string name="chat_downloading_progress">聊天：%d%%</string>
+    <string name="change_chat_file">變更聊天檔案</string>
 </resources>
