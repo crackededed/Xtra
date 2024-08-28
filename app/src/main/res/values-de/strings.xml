@@ -229,7 +229,7 @@
     <string name="irc_notice_already_subs_off">Dieser Raum ist nicht im Nur-Abonnenten-Modus.</string>
     <string name="irc_notice_already_subs_on">Dieser Raum ist bereits im Nur-Abonnenten-Modus.</string>
     <string name="irc_notice_autohost_receive">%1$s hostet Sie jetzt automatisch für bis zu %2$s Zuschauer.</string>
-    <string name="irc_notice_bad_ban_admin">Sie können den Admin %s nicht sperren. Bitte senden Sie eine E-Mail an support@twitch.tv, wenn ein Admin beleidigendes Verhalten an den Tag legt.</string>
+    <string name="irc_notice_bad_ban_admin">Sie können den Admin %s nicht sperren. Bitte senden Sie eine E-Mail an support@twitch.tv, wenn ein Admin beleidigend ist.</string>
     <string name="irc_notice_bad_ban_anon">Sie können anonyme Benutzer nicht sperren.</string>
     <string name="irc_notice_bad_ban_broadcaster">Sie können den Broadcaster nicht sperren.</string>
     <string name="irc_notice_bad_ban_mod">Sie können Moderator %s nicht sperren, es sei denn, Sie sind der Eigentümer dieses Kanals.</string>
@@ -246,7 +246,7 @@
     <string name="irc_notice_bad_mod_banned">%s ist in diesem Kanal gesperrt. Sie müssen die Sperre dieses Benutzers aufheben, bevor Sie ihm den Mod-Status erteilen.</string>
     <string name="irc_notice_bad_mod_mod">%s ist bereits Moderator dieses Kanals.</string>
     <string name="irc_notice_bad_slow_duration">Sie können die Verzögerung nicht auf mehr als %s Sekunden einstellen.</string>
-    <string name="irc_notice_bad_timeout_admin">Sie können Admin %s nicht aussetzen. Bitte senden Sie eine E-Mail an support@twitch.tv, wenn ein Admin Sie beleidigt.</string>
+    <string name="irc_notice_bad_timeout_admin">Sie können Admin %s nicht aussetzen. Bitte senden Sie eine E-Mail an support@twitch.tv, wenn ein Admin beleidigend ist.</string>
     <string name="irc_notice_bad_timeout_anon">Sie können anonyme Benutzer nicht aussetzen.</string>
     <string name="irc_notice_bad_timeout_broadcaster">Sie können den Broadcaster nicht aussetzen.</string>
     <string name="irc_notice_bad_timeout_duration">Die Zeitüberschreitung eines Benutzers kann nicht länger als %s betragen.</string>
@@ -293,8 +293,8 @@
     <string name="irc_notice_msg_ratelimit">Ihre Nachricht wurde nicht gesendet, da Sie Nachrichten zu schnell senden.</string>
     <string name="irc_notice_msg_rejected">Hey! Deine Nachricht wird von Mods geprüft und wurde nicht gesendet.</string>
     <string name="irc_notice_msg_rejected_mandatory">Ihre Nachricht wurde aufgrund von Konflikten mit den Moderationseinstellungen des Kanals nicht gepostet.</string>
-    <string name="irc_notice_msg_slowmode">Dieser Raum ist im langsamen Modus und Sie senden Nachrichten zu schnell. Sie können in %s Sekunden wieder sprechen.</string>
-    <string name="irc_notice_msg_subsonly">Dieser Raum ist im Nur-Abonnenten-Modus. Um zu sprechen, erwerben Sie ein Kanalabonnement unter https://www.twitch.tv/products/%s/ticket?ref=subscriber_only_mode_chat.</string>
+    <string name="irc_notice_msg_slowmode">Dieser Raum ist im langsamen Modus und Sie senden Nachrichten zu schnell. Sie können in %s Sekunden wieder chatten.</string>
+    <string name="irc_notice_msg_subsonly">Dieser Raum ist im Nur-Abonnenten-Modus. Um zu chatten, erwerben Sie ein Kanalabonnement unter https://www.twitch.tv/products/%s/ticket?ref=subscriber_only_mode_chat.</string>
     <string name="irc_notice_msg_suspended">Sie sind nicht berechtigt, diese Aktion auszuführen.</string>
     <string name="irc_notice_msg_timedout">Ihre Zeit ist um %s Sekunden abgelaufen.</string>
     <string name="irc_notice_msg_verified_email">Um in diesem Raum zu chatten, ist ein verifiziertes Konto erforderlich. Bitte verifizieren Sie Ihr Konto unter https://www.twitch.tv/settings/security.</string>
@@ -373,7 +373,7 @@
     <string name="irc_notice_whisper_invalid_self">Sie können nicht mit sich selbst flüstern.</string>
     <string name="irc_notice_whisper_limit_per_min">Sie senden Flüsternachrichten zu schnell. Versuchen Sie es in einer Minute erneut.</string>
     <string name="irc_notice_whisper_limit_per_sec">Sie senden Flüsternachrichten zu schnell. Versuchen Sie es in einer Sekunde noch einmal.</string>
-    <string name="irc_notice_whisper_restricted">Ihre Einstellungen verhindern, dass Sie diesen Flüsterton senden.</string>
+    <string name="irc_notice_whisper_restricted">Ihre Einstellungen verhindern, dass Sie diese Flüsternachricht senden können.</string>
     <string name="irc_notice_whisper_restricted_recipient">Die Einstellungen dieses Benutzers verhindern, dass er diesen Flüsterton empfängt.</string>
     <string name="moderators">Moderatoren</string>
     <string name="vips">VIPs</string>
