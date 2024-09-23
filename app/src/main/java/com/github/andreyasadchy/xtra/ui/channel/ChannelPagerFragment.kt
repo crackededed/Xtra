@@ -165,6 +165,10 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                         }
                         true
                     }
+                    R.id.share -> {
+                        context?.let { FragmentUtils.shareLink(it, "https://twitch.tv/${args.channelId}", args.channelName) }
+                        true
+                    }
                     R.id.download -> {
                         viewModel.stream.value?.let { DownloadDialog.newInstance(it).show(childFragmentManager, null) }
                         true

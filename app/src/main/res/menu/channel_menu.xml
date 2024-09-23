@@ -23,6 +23,9 @@
         android:id="@+id/login"
         android:title="@string/log_in" />
     <item
+            android:id="@+id/share"
+            android:title="@string/share"/>
+    <item
         android:id="@+id/download"
         android:title="@string/download" />
 </menu>

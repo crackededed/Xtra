@@ -23,6 +23,7 @@ import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.loadImage
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.visible
+import com.github.andreyasadchy.xtra.util.FragmentUtils
 
 class ChannelClipsAdapter(
     private val fragment: Fragment,
@@ -116,6 +117,7 @@ class ChannelClipsAdapter(
                             setOnMenuItemClickListener {
                                 when(it.itemId) {
                                     R.id.download -> showDownloadDialog(item)
+                                    R.id.share -> FragmentUtils.shareLink(context, "https://twitch.tv/${item.channelLogin}/clip/${item.id}", item.title)
                                     else -> menu.close()
                                 }
                                 true

@@ -7,4 +7,7 @@
         android:id="@+id/bookmark"
         android:title="@string/add_bookmark"
         android:visible="false" />
+    <item
+        android:id="@+id/share"
+        android:title="@string/share" />
 </menu>

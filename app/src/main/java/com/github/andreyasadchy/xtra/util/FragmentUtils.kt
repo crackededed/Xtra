@@ -1,6 +1,7 @@
 package com.github.andreyasadchy.xtra.util
 
 import android.content.Context
+import android.content.Intent
 import androidx.fragment.app.FragmentManager
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.model.ui.Game
@@ -58,5 +59,18 @@ object FragmentUtils {
 
     fun showPlayerViewerListDialog(fragmentManager: FragmentManager, login: String) {
         PlayerViewerListDialog.newInstance(login).show(fragmentManager, "closeOnPip")
+    }
+
+    fun shareLink(context: Context, url: String, title: String?) {
+        val sendIntent: Intent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, url)
+            title?.let {
+                putExtra(Intent.EXTRA_TITLE, title)
+            }
+            type = "text/plain"
+        }
+
+        context.startActivity(Intent.createChooser(sendIntent, null))
     }
 }

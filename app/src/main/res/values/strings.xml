@@ -648,4 +648,5 @@
     <string name="text_size">Text size</string>
     <string name="backup_settings">Backup settings and data</string>
     <string name="restore_settings">Restore settings and data</string>
+    <string name="share">Share</string>
 </resources>
