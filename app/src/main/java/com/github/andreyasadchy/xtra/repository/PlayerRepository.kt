@@ -58,7 +58,11 @@ class PlayerRepository @Inject constructor(
     }
 
     suspend fun loadStreamPlaylistUrl(gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, supportedCodecs: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): String = withContext(Dispatchers.IO) {
-        val accessToken = loadStreamPlaybackAccessToken(gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity)?.data?.streamPlaybackAccessToken
+        var accessToken = loadStreamPlaybackAccessToken(gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity)?.data?.streamPlaybackAccessToken
+        // request an anonymous access token if the user is restricted
+        if (accessToken?.value?.contains("\"forbidden\":true") == true) {
+            accessToken = loadStreamPlaybackAccessToken(gqlHeaders.filterNot { it.key == C.HEADER_TOKEN }, channelLogin, randomDeviceId, xDeviceId, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity)?.data?.streamPlaybackAccessToken
+        }
         buildUrl(
             "https://usher.ttvnw.net/api/channel/hls/$channelLogin.m3u8?",
             "allow_source", "true",
