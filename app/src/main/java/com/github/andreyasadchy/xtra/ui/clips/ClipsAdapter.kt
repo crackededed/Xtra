@@ -19,6 +19,7 @@ import com.github.andreyasadchy.xtra.ui.games.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.games.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.FragmentUtils
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.loadImage
@@ -139,6 +140,7 @@ class ClipsAdapter(
                             setOnMenuItemClickListener {
                                 when(it.itemId) {
                                     R.id.download -> showDownloadDialog(item)
+                                    R.id.share -> FragmentUtils.shareLink(context, "https://twitch.tv/${item.channelLogin}/clip/${item.id}", item.title)
                                     else -> menu.close()
                                 }
                                 true
