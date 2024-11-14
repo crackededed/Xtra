@@ -646,11 +646,11 @@
     <string name="notification_live_channel_title">Live-Benachrichtigungen</string>
     <string name="live_notification">%s ist Live</string>
     <string name="live_notifications">Live-Benachrichtigungen</string>
-    <string name="sleep_timer_lock_screen">Lock screen after sleep timer is done</string>
-    <string name="sleep_timer_time_picker">Use Material time picker for sleep timer</string>
-    <string name="stop_sleep_timer_message">Stop sleep timer?</string>
-    <string name="enable_notifications">Turn on notifications</string>
-    <string name="disable_notifications">Turn off notifications</string>
-    <string name="enabled_notifications">Enabled notifications</string>
-    <string name="disabled_notifications">Disabled notifications</string>
+    <string name="sleep_timer_lock_screen">Bildschirm sperren, nachdem der Sleep-Timer abgelaufen ist</string>
+    <string name="sleep_timer_time_picker">Verwenden Sie den Material-Zeitwähler für den Sleep-Timer</string>
+    <string name="stop_sleep_timer_message">Sleep-Timer stoppen?</string>
+    <string name="enable_notifications">Benachrichtigungen aktivieren</string>
+    <string name="disable_notifications">Benachrichtigungen deaktivieren</string>
+    <string name="enabled_notifications">Aktivierte Benachrichtigungen</string>
+    <string name="disabled_notifications">Deaktivierte Benachrichtigungen</string>
 </resources>
