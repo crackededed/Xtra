@@ -653,10 +653,10 @@
     <string name="disable_notifications">Benachrichtigungen deaktivieren</string>
     <string name="enabled_notifications">Aktivierte Benachrichtigungen</string>
     <string name="disabled_notifications">Deaktivierte Benachrichtigungen</string>
-    <string name="name_display">Username display</string>
-    <string name="name_display_summary">Shown name when display name is different from login</string>
-    <string name="name_display_entry1">Show display name and login</string>
-    <string name="name_display_entry2">Show display name only</string>
-    <string name="name_display_entry3">Show login only</string>
-    <string name="show_system_message_emotes">Show emotes on system messages</string>
+    <string name="name_display">Anzeige des Benutzernamens</string>
+    <string name="name_display_summary">Angezeigter Name, wenn Anzeigename vom Anmeldenamen abweicht</string>
+    <string name="name_display_entry1">Anzeigename und Login anzeigen</string>
+    <string name="name_display_entry2">Nur Anzeigenamen anzeigen</string>
+    <string name="name_display_entry3">Nur Anmeldung anzeigen</string>
+    <string name="show_system_message_emotes">Emotes in Systemnachrichten anzeigen</string>
 </resources>
