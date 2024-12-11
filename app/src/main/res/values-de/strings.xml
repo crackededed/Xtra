@@ -659,15 +659,15 @@
     <string name="name_display_entry2">Nur Anzeigenamen anzeigen</string>
     <string name="name_display_entry3">Nur Anmeldung anzeigen</string>
     <string name="show_system_message_emotes">Emotes in Systemnachrichten anzeigen</string>
-    <string name="replying_to_message">Replying to %1$s\: %2$s</string>
-    <string name="channel_stv_emote">Channel 7TV emote</string>
-    <string name="channel_bttv_emote">Channel BTTV emote</string>
-    <string name="channel_ffz_emote">Channel FFZ emote</string>
-    <string name="global_stv_emote">Global 7TV emote</string>
-    <string name="global_bttv_emote">Global BTTV emote</string>
-    <string name="global_ffz_emote">Global FFZ emote</string>
-    <string name="channel_sub_emote">%1$s tier %2$s sub emote</string>
-    <string name="channel_follower_emote">%s follower emote</string>
-    <string name="bits_reward_emote">%d bits reward</string>
-    <string name="show_name_paints">Show 7TV name paints</string>
+    <string name="replying_to_message">Antwort an %1$s\: %2$s</string>
+    <string name="channel_stv_emote">Kanal 7TV-Emote</string>
+    <string name="channel_bttv_emote">Kanal BTTV-Emote</string>
+    <string name="channel_ffz_emote">Kanal FFZ-Emote</string>
+    <string name="global_stv_emote">Globales 7TV-Emote</string>
+    <string name="global_bttv_emote">Globales BTTV-Emote</string>
+    <string name="global_ffz_emote">Globales FFZ-Emote</string>
+    <string name="channel_sub_emote">%1$s Stufe %2$s Sub-Emote</string>
+    <string name="channel_follower_emote">%s Follower-Emote</string>
+    <string name="bits_reward_emote">%d Bits Belohnung</string>
+    <string name="show_name_paints">7TV Namensfarben anzeigen</string>
 </resources>
