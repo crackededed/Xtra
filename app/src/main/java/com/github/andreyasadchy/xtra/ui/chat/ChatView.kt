@@ -60,7 +60,7 @@ import java.util.regex.Pattern
 import kotlin.math.max
 
 private const val HIDE_POLL_TIMEOUT_MS = 2 * 60 * 1000L
-private const val HIDE_PREDICTION_TIMEOUT_MS = /*1 * 60*/10 * 1000L
+private const val HIDE_PREDICTION_TIMEOUT_MS = 2 * 10 * 1000L
 
 private const val USER_SYMBOL = "\uD83E\uDDCD"
 private const val WINNING_SYMBOL = "\uD83C\uDFC6"
@@ -391,7 +391,7 @@ class ChatView : ConstraintLayout {
                     R.string.poll_text,
                     poll.title,
                     poll.choices?.joinToString("") {
-                        "\n%s%d%% (%d$USER_SYMBOL): %s".format(
+                        "\n%s%d%% (%d): %s".format(
                             if (poll.status == ChannelPoll.Status.COMPLETED && winningTotal == it.votes?.total) WINNING_SYMBOL else "",
                             it.votes?.total?.times(100)?.div(max(total, 1)) ?: 0,
                             it.votes?.total ?: 0,
