@@ -400,6 +400,20 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
+        android:key="chat_polls_show"
+        android:title="@string/show_polls"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="chat_predictions_show"
+        android:title="@string/show_predictions"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
         android:key="chat_show_paints"
         android:title="@string/show_name_paints"
         app:iconSpaceReserved="false"

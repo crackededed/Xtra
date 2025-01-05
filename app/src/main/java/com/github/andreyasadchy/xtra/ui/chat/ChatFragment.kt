@@ -12,6 +12,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentChatBinding
+import com.github.andreyasadchy.xtra.model.chat.ChannelPoll
+import com.github.andreyasadchy.xtra.model.chat.ChannelPrediction
 import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.model.chat.Raid
 import com.github.andreyasadchy.xtra.model.ui.Stream
@@ -100,6 +102,16 @@ class ChatFragment : BaseNetworkFragment(), LifecycleListener, MessageClickedDia
 
                         override fun onRaidClose() {
                             viewModel.raidClosed = true
+                        }
+
+                        override fun onPollClose(isManual: Boolean) {
+                            viewModel.closedPollId = if (isManual) viewModel.poll.value?.pollId else null
+                            viewModel.poll.value = null
+                        }
+
+                        override fun onPredictionClose(isManual: Boolean) {
+                            viewModel.closedPredictionId = if (isManual) viewModel.prediction.value?.id else null
+                            viewModel.prediction.value = null
                         }
                     })
                     if (isLoggedIn) {
@@ -299,6 +311,24 @@ class ChatFragment : BaseNetworkFragment(), LifecycleListener, MessageClickedDia
                     }
                     viewLifecycleOwner.lifecycleScope.launch {
                         repeatOnLifecycle(Lifecycle.State.STARTED) {
+                            viewModel.poll.collectLatest {
+                                if (it != null) {
+                                    onPollUpdate(it)
+                                }
+                            }
+                        }
+                    }
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        repeatOnLifecycle(Lifecycle.State.STARTED) {
+                            viewModel.prediction.collectLatest {
+                                if (it != null) {
+                                    onPredictionUpdate(it)
+                                }
+                            }
+                        }
+                    }
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        repeatOnLifecycle(Lifecycle.State.STARTED) {
                             viewModel.playbackMessage.collectLatest {
                                 if (it != null) {
                                     if (it.live != null) {
@@ -462,6 +492,18 @@ class ChatFragment : BaseNetworkFragment(), LifecycleListener, MessageClickedDia
             } else {
                 binding.chatView.notifyRaid(raid)
             }
+        }
+    }
+
+    private fun onPollUpdate(poll: ChannelPoll) {
+        if (viewModel.closedPollId != poll.pollId) {
+            binding.chatView.notifyPoll(poll)
+        }
+    }
+
+    private fun onPredictionUpdate(prediction: ChannelPrediction) {
+        if (viewModel.closedPredictionId != prediction.id) {
+            binding.chatView.notifyPrediction(prediction)
         }
     }
 

@@ -292,4 +292,125 @@
             tools:visibility="visible" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/pollLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="4dp"
+        android:background="?attr/chatStatus"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/raidLayout"
+        tools:visibility="visible">
+
+        <LinearLayout
+            android:id="@+id/pollLinearLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_margin="4dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/pollClose"
+            app:layout_constraintTop_toTopOf="parent">
+            <TextView
+                android:id="@+id/pollText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:layout_marginEnd="4dp"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                tools:text="@string/poll_text" />
+
+            <Chronometer
+                android:id="@+id/pollLeftTimeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_marginTop="5dp"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:visibility="gone"
+                android:format="@string/poll_remaining_text"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/pollClose"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_margin="4dp"
+            android:src="@drawable/baseline_close_black_36"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="?attr/colorControlNormal" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/predictionLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="4dp"
+        android:background="?attr/chatStatus"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/pollLayout"
+        tools:visibility="visible">
+
+        <LinearLayout
+            android:id="@+id/predictionLinearLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_margin="4dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/predictionClose"
+            app:layout_constraintTop_toTopOf="parent">
+            <TextView
+                android:id="@+id/predictionText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:layout_marginEnd="4dp"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                tools:text="@string/prediction_text" />
+
+            <TextView
+                android:id="@+id/predictionFinishedText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_marginTop="5dp"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:visibility="gone"
+                android:text="@string/prediction_finished_text"
+                tools:visibility="visible" />
+
+            <Chronometer
+                android:id="@+id/predictionLeftTimeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_marginTop="5dp"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:visibility="gone"
+                android:format="@string/prediction_remaining_text"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/predictionClose"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_margin="4dp"
+            android:src="@drawable/baseline_close_black_36"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="?attr/colorControlNormal" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

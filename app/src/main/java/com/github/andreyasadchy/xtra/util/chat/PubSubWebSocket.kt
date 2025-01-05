@@ -21,6 +21,8 @@ class PubSubWebSocket(
     private val collectPoints: Boolean,
     private val notifyPoints: Boolean,
     private val showRaids: Boolean,
+    private val showPolls: Boolean,
+    private val showPredictions: Boolean,
     private val client: OkHttpClient,
     private val coroutineScope: CoroutineScope,
     private val onPlaybackMessage: (JSONObject) -> Unit,
@@ -30,6 +32,8 @@ class PubSubWebSocket(
     private val onClaimAvailable: () -> Unit,
     private val onMinuteWatched: () -> Unit,
     private val onRaidUpdate: (JSONObject, Boolean) -> Unit,
+    private val onPollUpdate: (JSONObject) -> Unit,
+    private val onPredictionUpdate: (JSONObject) -> Unit,
 ) {
     private var socket: WebSocket? = null
     private var isActive = false
@@ -72,6 +76,12 @@ class PubSubWebSocket(
                         if (collectPoints) {
                             put("community-points-user-v1.$userId")
                         }
+                    }
+                    if (showPolls) {
+                        put("polls.$channelId")
+                    }
+                    if (showPredictions) {
+                        put("predictions-channel-v1.$channelId")
                     }
                 })
                 if (!userId.isNullOrBlank() && !gqlToken.isNullOrBlank() && collectPoints) {
@@ -182,6 +192,21 @@ class PubSubWebSocket(
                                     when {
                                         messageType.startsWith("raid_update") -> onRaidUpdate(message, false)
                                         messageType.startsWith("raid_go") -> onRaidUpdate(message, true)
+                                    }
+                                }
+                                topic.startsWith("poll") && showPolls -> {
+                                    when {
+                                        messageType.startsWith("POLL_CREATE") -> onPollUpdate(message.getJSONObject("data"))
+                                        messageType.startsWith("POLL_UPDATE") -> onPollUpdate(message.getJSONObject("data"))
+                                        messageType.startsWith("POLL_COMPLETE") -> onPollUpdate(message.getJSONObject("data"))
+                                        messageType.startsWith("POLL_ARCHIVE") -> onPollUpdate(message.getJSONObject("data"))
+                                        messageType.startsWith("POLL_TERMINATE") -> onPollUpdate(message.getJSONObject("data"))
+                                    }
+                                }
+                                topic.startsWith("predictions-channel-v1") && showPredictions -> {
+                                    when {
+                                        messageType.startsWith("event-created") -> onPredictionUpdate(message.getJSONObject("data"))
+                                        messageType.startsWith("event-updated") -> onPredictionUpdate(message.getJSONObject("data"))
                                     }
                                 }
                             }

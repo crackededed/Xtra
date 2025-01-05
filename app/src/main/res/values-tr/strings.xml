@@ -672,4 +672,13 @@
     <string name="show_stv_personal_emotes">Show 7TV personal emotes</string>
     <string name="stv_live_updates">7TV live emote updates</string>
     <string name="personal_stv_emote">Personal 7TV emote</string>
+    <string name="show_polls">Show polls</string>
+    <string name="poll_text">Current poll \'%s\':%s</string>
+    <string name="poll_remaining_text">Remaining %s</string>
+    <string name="show_predictions">Show predictions</string>
+    <string name="prediction_text">Current prediction \'%s\':%s</string>
+    <string name="prediction_remaining_text">Remaining %s</string>
+    <string name="prediction_closed_text">Closed</string>
+    <string name="prediction_canceled_text">Canceled</string>
+    <string name="prediction_finished_text">Finished</string>
 </resources>

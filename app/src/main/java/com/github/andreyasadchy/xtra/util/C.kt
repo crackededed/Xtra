@@ -189,6 +189,8 @@ object C {
     const val CHAT_POINTS_NOTIFY = "chat_points_notify"
     const val CHAT_RAIDS_SHOW = "chat_raids_show"
     const val CHAT_RAIDS_AUTO_SWITCH = "chat_raids_auto_switch"
+    const val CHAT_POLLS_SHOW = "chat_polls_show"
+    const val CHAT_PREDICTIONS_SHOW = "chat_predictions_show"
     const val CHAT_SYSTEM_MESSAGE_EMOTES = "chat_system_message_emotes"
     const val CHAT_SHOW_PAINTS = "chat_show_paints"
     const val CHAT_SHOW_STV_BADGES = "chat_show_stv_badges"

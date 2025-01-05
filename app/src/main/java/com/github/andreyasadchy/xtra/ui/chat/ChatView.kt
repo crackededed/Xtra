@@ -1,6 +1,7 @@
 package com.github.andreyasadchy.xtra.ui.chat
 
 import android.content.Context
+import android.os.SystemClock
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -18,6 +19,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
+import androidx.core.view.postDelayed
 import androidx.core.widget.TextViewCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -27,6 +29,8 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.ViewChatBinding
+import com.github.andreyasadchy.xtra.model.chat.ChannelPoll
+import com.github.andreyasadchy.xtra.model.chat.ChannelPrediction
 import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.chat.Chatter
 import com.github.andreyasadchy.xtra.model.chat.CheerEmote
@@ -55,12 +59,21 @@ import kotlinx.android.extensions.LayoutContainer
 import java.util.regex.Pattern
 import kotlin.math.max
 
+private const val HIDE_POLL_TIMEOUT_MS = 2 * 60 * 1000L
+private const val HIDE_PREDICTION_TIMEOUT_MS = /*1 * 60*/10 * 1000L
+
+private const val USER_SYMBOL = "\uD83E\uDDCD"
+private const val WINNING_SYMBOL = "\uD83C\uDFC6"
+private const val TOKEN_SYMBOL = "\uD83E\uDE99"
+
 class ChatView : ConstraintLayout {
 
     interface ChatViewCallback {
         fun send(message: CharSequence, replyId: String?)
         fun onRaidClicked(raid: Raid)
         fun onRaidClose()
+        fun onPollClose(isManual: Boolean)
+        fun onPredictionClose(isManual: Boolean)
     }
 
     private var _binding: ViewChatBinding? = null
@@ -80,6 +93,9 @@ class ChatView : ConstraintLayout {
     private var messagingEnabled = false
 
     private var callback: ChatViewCallback? = null
+
+    private var hidePollRunnable: Runnable? = null
+    private var hidePredictionRunnable: Runnable? = null
 
     private val backPressedCallback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
@@ -176,6 +192,12 @@ class ChatView : ConstraintLayout {
                     scrollToLastPosition()
                     it.toggleVisibility()
                 }
+            }
+            pollClose.setOnClickListener {
+                hidePoll(true)
+            }
+            predictionClose.setOnClickListener {
+                hidePrediction(true)
             }
         }
     }
@@ -343,6 +365,135 @@ class ChatView : ConstraintLayout {
             raidClose.gone()
         }
         callback?.onRaidClose()
+    }
+
+    fun notifyPoll(poll: ChannelPoll) {
+        with(binding) {
+            if (poll.status == ChannelPoll.Status.ACTIVE || poll.status == ChannelPoll.Status.COMPLETED) {
+                pollLayout.visible()
+                val remainingDurationMilliseconds = poll.remainingDurationMilliseconds ?: 0
+                if (remainingDurationMilliseconds > 0) {
+                    removeHidePollCallback()
+                    pollLeftTimeText.base = SystemClock.elapsedRealtime() + remainingDurationMilliseconds
+                    pollLeftTimeText.start()
+                    pollLeftTimeText.visible()
+                } else {
+                    finishPoll()
+                }
+                pollLeftTimeText.setOnChronometerTickListener {
+                    if (pollLeftTimeText.base < SystemClock.elapsedRealtime()) {
+                        finishPoll()
+                    }
+                }
+                val winningTotal = poll.choices?.maxOfOrNull { it.votes?.total ?: 0 }
+                val total = poll.votes?.total ?: 0
+                pollText.text = context.getString(
+                    R.string.poll_text,
+                    poll.title,
+                    poll.choices?.joinToString("") {
+                        "\n%s%d%% (%d$USER_SYMBOL): %s".format(
+                            if (poll.status == ChannelPoll.Status.COMPLETED && winningTotal == it.votes?.total) WINNING_SYMBOL else "",
+                            it.votes?.total?.times(100)?.div(max(total, 1)) ?: 0,
+                            it.votes?.total ?: 0,
+                            it.title,
+                        )
+                    }
+                )
+            } else {
+                hidePoll()
+            }
+        }
+    }
+
+    private fun hidePoll(isManual: Boolean = false) {
+        with(binding) {
+            pollLayout.gone()
+            pollLeftTimeText.stop()
+            removeHidePollCallback()
+        }
+        callback?.onPollClose(isManual)
+    }
+
+    private fun finishPoll() {
+        with(binding) {
+            pollLeftTimeText.gone()
+            pollLeftTimeText.stop()
+            removeHidePollCallback()
+            hidePollRunnable = postDelayed(HIDE_POLL_TIMEOUT_MS) { hidePoll() }
+        }
+    }
+
+    private fun removeHidePollCallback() {
+        hidePollRunnable?.let {
+            removeCallbacks(it)
+            hidePollRunnable = null
+        }
+    }
+
+    fun notifyPrediction(prediction: ChannelPrediction) {
+        with(binding) {
+            predictionLayout.visible()
+            if (prediction.status == ChannelPrediction.Status.ACTIVE) {
+                removeHidePredictionCallback()
+                val remainingMs = (prediction.createdAt?.plus(prediction.predictionWindowSeconds?.times(1000) ?: 0) ?: 0) - System.currentTimeMillis()
+                predictionLeftTimeText.base = SystemClock.elapsedRealtime() + remainingMs
+                predictionLeftTimeText.start()
+                predictionLeftTimeText.visible()
+                predictionFinishedText.gone()
+            } else {
+                finishPrediction()
+            }
+            predictionLeftTimeText.setOnChronometerTickListener {
+                if (predictionLeftTimeText.base < SystemClock.elapsedRealtime()) {
+                    finishPrediction()
+                }
+            }
+            predictionFinishedText.text = context.getString(when (prediction.status) {
+                ChannelPrediction.Status.CANCELED, ChannelPrediction.Status.CANCEL_PENDING -> R.string.prediction_canceled_text
+                ChannelPrediction.Status.RESOLVED, ChannelPrediction.Status.RESOLVE_PENDING -> R.string.prediction_finished_text
+                else -> R.string.prediction_closed_text
+            })
+            val totalPoints = prediction.outcomes?.sumOf { it.totalPoints ?: 0 } ?: 0
+            predictionText.text = context.getString(
+                R.string.prediction_text,
+                prediction.title,
+                prediction.outcomes?.joinToString("") {
+                    "\n%s%d%% (%d$TOKEN_SYMBOL, %d$USER_SYMBOL): %s".format(
+                        if (prediction.status == ChannelPrediction.Status.RESOLVED && prediction.winningOutcomeId == it.id) WINNING_SYMBOL else "",
+                        it.totalPoints?.times(100)?.div(max(totalPoints, 1)) ?: 0,
+                        it.totalPoints ?: 0,
+                        it.totalUsers ?: 0,
+                        it.title,
+                    )
+                }
+            )
+        }
+    }
+
+    private fun hidePrediction(isManual: Boolean = false) {
+        with(binding) {
+            predictionLayout.gone()
+            predictionLeftTimeText.stop()
+            removeHidePredictionCallback()
+        }
+        callback?.onPredictionClose(isManual)
+    }
+
+    private fun finishPrediction() {
+        with(binding) {
+            predictionLeftTimeText.gone()
+            predictionLeftTimeText.stop()
+            predictionFinishedText.visible()
+            removeHidePredictionCallback()
+            hidePredictionRunnable = postDelayed(HIDE_PREDICTION_TIMEOUT_MS) { hidePrediction() }
+        }
+    }
+
+    private fun removeHidePredictionCallback() {
+        hidePredictionRunnable?.let {
+            removeCallbacks(it)
+            hidePredictionRunnable = null
+        }
     }
 
     fun scrollToLastPosition() {

@@ -13,6 +13,8 @@ import androidx.lifecycle.viewModelScope
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.model.chat.Badge
 import com.github.andreyasadchy.xtra.model.chat.ChannelPointReward
+import com.github.andreyasadchy.xtra.model.chat.ChannelPoll
+import com.github.andreyasadchy.xtra.model.chat.ChannelPrediction
 import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.chat.Chatter
 import com.github.andreyasadchy.xtra.model.chat.CheerEmote
@@ -116,6 +118,10 @@ class ChatViewModel @Inject constructor(
     val raid = MutableStateFlow<Raid?>(null)
     val raidClicked = MutableStateFlow<Raid?>(null)
     var raidClosed = false
+    val poll = MutableStateFlow<ChannelPoll?>(null)
+    var closedPollId: String? = null
+    val prediction = MutableStateFlow<ChannelPrediction?>(null)
+    var closedPredictionId: String? = null
     private val _streamInfo = MutableStateFlow<PubSubUtils.StreamInfo?>(null)
     val streamInfo: StateFlow<PubSubUtils.StreamInfo?> = _streamInfo
     private val _playbackMessage = MutableStateFlow<PubSubUtils.PlaybackMessage?>(null)
@@ -704,6 +710,8 @@ class ChatViewModel @Inject constructor(
                 collectPoints = collectPoints,
                 notifyPoints = applicationContext.prefs().getBoolean(C.CHAT_POINTS_NOTIFY, false),
                 showRaids = applicationContext.prefs().getBoolean(C.CHAT_RAIDS_SHOW, true),
+                showPolls = applicationContext.prefs().getBoolean(C.CHAT_POLLS_SHOW, true),
+                showPredictions = applicationContext.prefs().getBoolean(C.CHAT_PREDICTIONS_SHOW, true),
                 client = okHttpClient,
                 coroutineScope = viewModelScope,
                 onPlaybackMessage = { message ->
@@ -781,6 +789,12 @@ class ChatViewModel @Inject constructor(
                         }
                         raid.value = it
                     }
+                },
+                onPollUpdate = { message ->
+                    PubSubUtils.onPollUpdate(message)?.let { poll.value = it }
+                },
+                onPredictionUpdate = { message ->
+                    PubSubUtils.onPredictionUpdate(message)?.let { prediction.value = it }
                 },
             ).apply { connect() }
         }
