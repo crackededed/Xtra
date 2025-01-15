@@ -62,9 +62,9 @@ import kotlin.math.max
 private const val HIDE_POLL_TIMEOUT_MS = 2 * 60 * 1000L
 private const val HIDE_PREDICTION_TIMEOUT_MS = 2 * 10 * 1000L
 
-private const val USER_SYMBOL = "\uD83E\uDDCD"
+private const val USER_SYMBOL = "\uD83D\uDC65"
 private const val WINNING_SYMBOL = "\uD83C\uDFC6"
-private const val TOKEN_SYMBOL = "\uD83E\uDE99"
+private const val TOKEN_SYMBOL = "\uD83D\uDC8E"
 
 class ChatView : ConstraintLayout {
 
@@ -369,7 +369,9 @@ class ChatView : ConstraintLayout {
 
     fun notifyPoll(poll: ChannelPoll) {
         with(binding) {
-            if (poll.status == ChannelPoll.Status.ACTIVE || poll.status == ChannelPoll.Status.COMPLETED) {
+            if (poll.status == ChannelPoll.Status.ACTIVE ||
+                    poll.status == ChannelPoll.Status.COMPLETED ||
+                    poll.status == ChannelPoll.Status.TERMINATED) {
                 pollLayout.visible()
                 val remainingDurationMilliseconds = poll.remainingDurationMilliseconds ?: 0
                 if (remainingDurationMilliseconds > 0) {
@@ -392,7 +394,7 @@ class ChatView : ConstraintLayout {
                     poll.title,
                     poll.choices?.joinToString("") {
                         "\n%s%d%% (%d): %s".format(
-                            if (poll.status == ChannelPoll.Status.COMPLETED && winningTotal == it.votes?.total) WINNING_SYMBOL else "",
+                            if (poll.status != ChannelPoll.Status.ACTIVE && winningTotal == it.votes?.total) WINNING_SYMBOL else "",
                             it.votes?.total?.times(100)?.div(max(total, 1)) ?: 0,
                             it.votes?.total ?: 0,
                             it.title,

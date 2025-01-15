@@ -93,43 +93,43 @@ object PubSubUtils {
                 startedAt = if (!poll.isNull("started_at")) poll.optString("started_at").takeIf { it.isNotBlank() }?.let { parseIso8601DateUTC(it) } else null,
                 endedAt = if (!poll.isNull("ended_at")) poll.optString("ended_at").takeIf { it.isNotBlank() }?.let { parseIso8601DateUTC(it) } else null,
                 endedBy = if (!poll.isNull("owned_by")) poll.optString("owned_by").takeIf { it.isNotBlank() } else null,
-                durationSeconds = if (!poll.isNull("owned_by")) poll.optLong("owned_by") else null,
-                settings = if (!poll.isNull("settings")) poll.optJSONObject("settings")?.let { settings ->
+                durationSeconds = if (!poll.isNull("durationSeconds")) poll.optLong("durationSeconds") else null,
+                settings = poll.optJSONObject("settings")?.let { settings ->
                     ChannelPoll.PollSettings(
-                        multiChoice = if (!settings.isNull("multi_choice")) settings.optJSONObject("multi_choice")?.let {
+                        multiChoice = settings.optJSONObject("multi_choice")?.let {
                             ChannelPoll.PollSettings.Setting(
                                 isEnabled = it.optBoolean("is_enabled"),
                                 cost = if (!it.isNull("cost")) it.optLong("cost") else null,
                             )
-                        } else null,
-                        subscriberOnly = if (!settings.isNull("subscriber_only")) settings.optJSONObject("subscriber_only")?.let {
+                        },
+                        subscriberOnly = settings.optJSONObject("subscriber_only")?.let {
                             ChannelPoll.PollSettings.Setting(
                                 isEnabled = it.optBoolean("is_enabled"),
                                 cost = if (!it.isNull("cost")) it.optLong("cost") else null,
                             )
-                        } else null,
-                        subscriberMultiplier = if (!settings.isNull("subscriber_multiplier")) settings.optJSONObject("subscriber_multiplier")?.let {
+                        },
+                        subscriberMultiplier = settings.optJSONObject("subscriber_multiplier")?.let {
                             ChannelPoll.PollSettings.Setting(
                                 isEnabled = it.optBoolean("is_enabled"),
                                 cost = if (!it.isNull("cost")) it.optLong("cost") else null,
                             )
-                        } else null,
-                        bitsVotes = if (!settings.isNull("bits_votes")) settings.optJSONObject("bits_votes")?.let {
+                        },
+                        bitsVotes = settings.optJSONObject("bits_votes")?.let {
                             ChannelPoll.PollSettings.Setting(
                                 isEnabled = it.optBoolean("is_enabled"),
                                 cost = if (!it.isNull("cost")) it.optLong("cost") else null,
                             )
-                        } else null,
-                        channelPointsVotes = if (!settings.isNull("channel_points_votes")) settings.optJSONObject("channel_points_votes")?.let {
+                        },
+                        channelPointsVotes = settings.optJSONObject("channel_points_votes")?.let {
                             ChannelPoll.PollSettings.Setting(
                                 isEnabled = it.optBoolean("is_enabled"),
                                 cost = if (!it.isNull("cost")) it.optLong("cost") else null,
                             )
-                        } else null,
+                        },
                     )
-                } else null,
+                },
                 status = if (!poll.isNull("status")) poll.optString("status").takeIf { it.isNotBlank() }?.let { safeValueOf<ChannelPoll.Status>(it) } else null,
-                choices = if (!poll.isNull("choices")) poll.optJSONArray("choices")?.let { choicesJSONArray ->
+                choices = poll.optJSONArray("choices")?.let { choicesJSONArray ->
                     val choices = mutableListOf<ChannelPoll.PollChoice>()
                     for (i in 0 until choicesJSONArray.length()) {
                         val choice = choicesJSONArray.getJSONObject(i)
@@ -137,66 +137,66 @@ object PubSubUtils {
                             ChannelPoll.PollChoice(
                                 choiceId = if (!choice.isNull("status")) choice.optString("status").takeIf { it.isNotBlank() } else null,
                                 title = if (!choice.isNull("title")) choice.optString("title").takeIf { it.isNotBlank() } else null,
-                                votes = if (!choice.isNull("votes")) choice.optJSONObject("votes")?.let {
+                                votes = choice.optJSONObject("votes")?.let {
                                     ChannelPoll.Votes(
                                         total = if (!it.isNull("total")) it.optLong("total") else null,
                                         bits = if (!it.isNull("bits")) it.optLong("bits") else null,
                                         channelPoints = if (!it.isNull("channel_points")) it.optLong("channel_points") else null,
                                         base = if (!it.isNull("base")) it.optLong("base") else null,
                                     )
-                                } else null,
-                                tokens = if (!choice.isNull("tokens")) choice.optJSONObject("tokens")?.let {
+                                },
+                                tokens = choice.optJSONObject("tokens")?.let {
                                     ChannelPoll.Tokens(
                                         bits = if (!it.isNull("bits")) it.optLong("bits") else null,
                                         channelPoints = if (!it.isNull("channel_points")) it.optLong("channel_points") else null,
                                     )
-                                } else null,
+                                },
                                 totalVoters = if (!choice.isNull("total_voters")) choice.optInt("total_voters") else null,
                             )
                         )
                     }
                     choices
-                } else null,
-                votes = if (!poll.isNull("votes")) poll.optJSONObject("votes")?.let {
+                },
+                votes = poll.optJSONObject("votes")?.let {
                     ChannelPoll.Votes(
                         total = if (!it.isNull("total")) it.optLong("total") else null,
                         bits = if (!it.isNull("bits")) it.optLong("bits") else null,
                         channelPoints = if (!it.isNull("channel_points")) it.optLong("channel_points") else null,
                         base = if (!it.isNull("base")) it.optLong("base") else null,
                     )
-                } else null,
-                tokens = if (!poll.isNull("tokens")) poll.optJSONObject("tokens")?.let {
+                },
+                tokens = poll.optJSONObject("tokens")?.let {
                     ChannelPoll.Tokens(
                         bits = if (!it.isNull("bits")) it.optLong("bits") else null,
                         channelPoints = if (!it.isNull("channel_points")) it.optLong("channel_points") else null,
                     )
-                } else null,
+                },
                 totalVoters = if (!poll.isNull("total_voters")) poll.optInt("total_voters") else null,
                 remainingDurationMilliseconds = if (!poll.isNull("remaining_duration_milliseconds")) poll.optLong("remaining_duration_milliseconds") else null,
-                topContributor = if (!poll.isNull("top_contributor")) poll.optJSONObject("top_contributor")?.let {
+                topContributor = poll.optJSONObject("top_contributor")?.let {
                     ChannelPoll.Contributor(
                         userId = if (!it.isNull("user_id")) it.optString("user_id").takeIf { it.isNotBlank() } else null,
                         displayName = if (!it.isNull("display_name")) it.optString("display_name").takeIf { it.isNotBlank() } else null,
                         bitsContributed = if (!it.isNull("bits_contributed")) it.optLong("bits_contributed") else null,
                         channelPointsContributed = if (!it.isNull("channel_points_contributed")) it.optLong("channel_points_contributed") else null,
                     )
-                } else null,
-                topBitsContributor = if (!poll.isNull("top_bits_contributor")) poll.optJSONObject("top_bits_contributor")?.let {
+                },
+                topBitsContributor = poll.optJSONObject("top_bits_contributor")?.let {
                     ChannelPoll.Contributor(
                         userId = if (!it.isNull("user_id")) it.optString("user_id").takeIf { it.isNotBlank() } else null,
                         displayName = if (!it.isNull("display_name")) it.optString("display_name").takeIf { it.isNotBlank() } else null,
                         bitsContributed = if (!it.isNull("bits_contributed")) it.optLong("bits_contributed") else null,
                         channelPointsContributed = if (!it.isNull("channel_points_contributed")) it.optLong("channel_points_contributed") else null,
                     )
-                } else null,
-                topChannelPointsContributor = if (!poll.isNull("top_channel_points_contributor")) poll.optJSONObject("top_channel_points_contributor")?.let {
+                },
+                topChannelPointsContributor = poll.optJSONObject("top_channel_points_contributor")?.let {
                     ChannelPoll.Contributor(
                         userId = if (!it.isNull("user_id")) it.optString("user_id").takeIf { it.isNotBlank() } else null,
                         displayName = if (!it.isNull("display_name")) it.optString("display_name").takeIf { it.isNotBlank() } else null,
                         bitsContributed = if (!it.isNull("bits_contributed")) it.optLong("bits_contributed") else null,
                         channelPointsContributed = if (!it.isNull("channel_points_contributed")) it.optLong("channel_points_contributed") else null,
                     )
-                } else null,
+                },
             )
         } else null
     }
@@ -208,39 +208,39 @@ object PubSubUtils {
                 id = if (!prediction.isNull("id")) prediction.optString("id").takeIf { it.isNotBlank() } else null,
                 channelId = if (!prediction.isNull("channel_id")) prediction.optString("channel_id").takeIf { it.isNotBlank() } else null,
                 createdAt = if (!prediction.isNull("created_at")) prediction.optString("created_at").takeIf { it.isNotBlank() }?.let { parseIso8601DateUTC(it) } else null,
-                createdBy = if (!prediction.isNull("created_by")) prediction.optJSONObject("created_by")?.let { by ->
+                createdBy = prediction.optJSONObject("created_by")?.let { by ->
                     ChannelPrediction.PredictionTrigger(
                         type = if (!by.isNull("type")) by.optString("type").takeIf { it.isNotBlank() } else null,
                         userId = if (!by.isNull("user_id")) by.optString("user_id").takeIf { it.isNotBlank() } else null,
                         userDisplayName = if (!by.isNull("user_display_name")) by.optString("user_display_name").takeIf { it.isNotBlank() } else null,
                         extensionClientId = if (!by.isNull("extension_client_id")) by.optString("extension_client_id").takeIf { it.isNotBlank() } else null,
                     )
-                } else null,
+                },
                 endedAt = if (!prediction.isNull("ended_at")) prediction.optString("ended_at").takeIf { it.isNotBlank() }?.let { parseIso8601DateUTC(it) } else null,
-                endedBy = if (!prediction.isNull("ended_by")) prediction.optJSONObject("ended_by")?.let { by ->
+                endedBy = prediction.optJSONObject("ended_by")?.let { by ->
                     ChannelPrediction.PredictionTrigger(
                         type = if (!by.isNull("type")) by.optString("type").takeIf { it.isNotBlank() } else null,
                         userId = if (!by.isNull("user_id")) by.optString("user_id").takeIf { it.isNotBlank() } else null,
                         userDisplayName = if (!by.isNull("user_display_name")) by.optString("user_display_name").takeIf { it.isNotBlank() } else null,
                         extensionClientId = if (!by.isNull("extension_client_id")) by.optString("extension_client_id").takeIf { it.isNotBlank() } else null,
                     )
-                } else null,
+                },
                 lockedAt = if (!prediction.isNull("locked_at")) prediction.optString("locked_at").takeIf { it.isNotBlank() }?.let { parseIso8601DateUTC(it) } else null,
-                lockedBy = if (!prediction.isNull("locked_by")) prediction.optJSONObject("locked_by")?.let { by ->
+                lockedBy = prediction.optJSONObject("locked_by")?.let { by ->
                     ChannelPrediction.PredictionTrigger(
                         type = if (!by.isNull("type")) by.optString("type").takeIf { it.isNotBlank() } else null,
                         userId = if (!by.isNull("user_id")) by.optString("user_id").takeIf { it.isNotBlank() } else null,
                         userDisplayName = if (!by.isNull("user_display_name")) by.optString("user_display_name").takeIf { it.isNotBlank() } else null,
                         extensionClientId = if (!by.isNull("extension_client_id")) by.optString("extension_client_id").takeIf { it.isNotBlank() } else null,
                     )
-                } else null,
-                outcomes = if (!prediction.isNull("outcomes")) prediction.optJSONArray("outcomes")?.let { outcomesJSONArray ->
+                },
+                outcomes = prediction.optJSONArray("outcomes")?.let { outcomesJSONArray ->
                     val outcomes = mutableListOf<ChannelPrediction.PredictionOutcome>()
                     for (i in 0 until outcomesJSONArray.length()) {
                         val outcome = outcomesJSONArray.getJSONObject(i)
 
                         val topPredictors = mutableListOf<ChannelPrediction.Prediction>()
-                        if (!outcome.isNull("top_predictors")) outcome.optJSONArray("top_predictors")?.let { topPredictorsJSONArray ->
+                        outcome.optJSONArray("top_predictors")?.let { topPredictorsJSONArray ->
                             for (j in 0 until topPredictorsJSONArray.length()) {
                                 val topPredictor = topPredictorsJSONArray.getJSONObject(i)
                                 topPredictors.add(ChannelPrediction.Prediction(
@@ -252,13 +252,13 @@ object PubSubUtils {
                                     predictedAt = if (!topPredictor.isNull("predicted_at")) topPredictor.optString("predicted_at").takeIf { it.isNotBlank() }?.let { parseIso8601DateUTC(it) } else null,
                                     updatedAt = if (!topPredictor.isNull("updated_at")) topPredictor.optString("updated_at").takeIf { it.isNotBlank() }?.let { parseIso8601DateUTC(it) } else null,
                                     userId = if (!topPredictor.isNull("user_id")) topPredictor.optString("user_id").takeIf { it.isNotBlank() } else null,
-                                    result = if (!topPredictor.isNull("result")) topPredictor.optJSONObject("result")?.let { result ->
+                                    result =  topPredictor.optJSONObject("result")?.let { result ->
                                         ChannelPrediction.PredictionResult(
                                             type = if (!result.isNull("type")) result.optString("type").takeIf { it.isNotBlank() } else null,
                                             pointsWon = if (!result.isNull("points_won")) result.optInt("points_won") else null,
                                             isAcknowledged = result.optBoolean("is_acknowledged"),
                                         )
-                                    } else null,
+                                    },
                                     userDisplayName = if (!topPredictor.isNull("user_display_name")) topPredictor.optString("user_display_name").takeIf { it.isNotBlank() } else null,
                                 ))
                             }
@@ -272,17 +272,17 @@ object PubSubUtils {
                                 totalPoints = if (!outcome.isNull("total_points")) outcome.optInt("total_points") else null,
                                 totalUsers = if (!outcome.isNull("total_points")) outcome.optInt("total_users") else null,
                                 topPredictors = topPredictors,
-                                badge = if (!outcome.isNull("badge")) outcome.optJSONObject("badge")?.let { badge ->
+                                badge = outcome.optJSONObject("badge")?.let { badge ->
                                     Badge(
                                         version = badge.optString("version"),
                                         setId = badge.optString("set_id"),
                                     )
-                                } else null,
+                                },
                             )
                         )
                     }
                     outcomes
-                } else null,
+                },
                 predictionWindowSeconds = if (!prediction.isNull("prediction_window_seconds")) prediction.optInt("prediction_window_seconds") else null,
                 status = if (!prediction.isNull("status")) prediction.optString("status").takeIf { it.isNotBlank() }?.let { safeValueOf<ChannelPrediction.Status>(it) } else null,
                 title = if (!prediction.isNull("title")) prediction.optString("title").takeIf { it.isNotBlank() } else null,

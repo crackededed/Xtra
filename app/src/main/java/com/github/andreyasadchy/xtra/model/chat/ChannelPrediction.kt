@@ -49,7 +49,7 @@ class ChannelPrediction(
 
     class PredictionResult(
         /**
-         * The result type (e.g., "WIN", "LOSE")
+         * The result type (e.g., "WIN", "LOSE", "REFUND")
          */
         val type: String?,
         val pointsWon: Int?,

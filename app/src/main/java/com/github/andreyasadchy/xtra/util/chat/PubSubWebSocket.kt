@@ -1,5 +1,6 @@
 package com.github.andreyasadchy.xtra.util.chat
 
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
@@ -195,19 +196,10 @@ class PubSubWebSocket(
                                     }
                                 }
                                 topic.startsWith("poll") && showPolls -> {
-                                    when {
-                                        messageType.startsWith("POLL_CREATE") -> onPollUpdate(message.getJSONObject("data"))
-                                        messageType.startsWith("POLL_UPDATE") -> onPollUpdate(message.getJSONObject("data"))
-                                        messageType.startsWith("POLL_COMPLETE") -> onPollUpdate(message.getJSONObject("data"))
-                                        messageType.startsWith("POLL_ARCHIVE") -> onPollUpdate(message.getJSONObject("data"))
-                                        messageType.startsWith("POLL_TERMINATE") -> onPollUpdate(message.getJSONObject("data"))
-                                    }
+                                    onPollUpdate(message.getJSONObject("data"))
                                 }
                                 topic.startsWith("predictions-channel-v1") && showPredictions -> {
-                                    when {
-                                        messageType.startsWith("event-created") -> onPredictionUpdate(message.getJSONObject("data"))
-                                        messageType.startsWith("event-updated") -> onPredictionUpdate(message.getJSONObject("data"))
-                                    }
+                                    onPredictionUpdate(message.getJSONObject("data"))
                                 }
                             }
                         }
