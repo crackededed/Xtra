@@ -60,7 +60,7 @@ import java.util.regex.Pattern
 import kotlin.math.max
 
 private const val HIDE_POLL_TIMEOUT_MS = 2 * 60 * 1000L
-private const val HIDE_PREDICTION_TIMEOUT_MS = 2 * 10 * 1000L
+private const val HIDE_PREDICTION_TIMEOUT_MS = 2 * 60 * 1000L
 
 private const val USER_SYMBOL = "\uD83D\uDC65"
 private const val WINNING_SYMBOL = "\uD83C\uDFC6"
