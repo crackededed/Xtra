@@ -1,6 +1,5 @@
 package com.github.andreyasadchy.xtra.util.chat
 
-import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
@@ -73,16 +72,16 @@ class PubSubWebSocket(
                     if (showRaids) {
                         put("raid.$channelId")
                     }
-                    if (!userId.isNullOrBlank() && !gqlToken.isNullOrBlank()) {
-                        if (collectPoints) {
-                            put("community-points-user-v1.$userId")
-                        }
-                    }
                     if (showPolls) {
                         put("polls.$channelId")
                     }
                     if (showPredictions) {
                         put("predictions-channel-v1.$channelId")
+                    }
+                    if (!userId.isNullOrBlank() && !gqlToken.isNullOrBlank()) {
+                        if (collectPoints) {
+                            put("community-points-user-v1.$userId")
+                        }
                     }
                 })
                 if (!userId.isNullOrBlank() && !gqlToken.isNullOrBlank() && collectPoints) {
@@ -195,12 +194,8 @@ class PubSubWebSocket(
                                         messageType.startsWith("raid_go") -> onRaidUpdate(message, true)
                                     }
                                 }
-                                topic.startsWith("poll") && showPolls -> {
-                                    onPollUpdate(message.getJSONObject("data"))
-                                }
-                                topic.startsWith("predictions-channel-v1") && showPredictions -> {
-                                    onPredictionUpdate(message.getJSONObject("data"))
-                                }
+                                topic.startsWith("polls") && showPolls -> onPollUpdate(message)
+                                topic.startsWith("predictions-channel") && showPredictions -> onPredictionUpdate(message)
                             }
                         }
                     }

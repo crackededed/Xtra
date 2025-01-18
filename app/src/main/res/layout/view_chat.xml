@@ -299,6 +299,7 @@
         android:layout_marginStart="4dp"
         android:layout_marginTop="4dp"
         android:layout_marginEnd="4dp"
+        android:layout_marginBottom="4dp"
         android:background="?attr/chatStatus"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
@@ -307,33 +308,49 @@
         tools:visibility="visible">
 
         <TextView
-            android:id="@+id/pollText"
+            android:id="@+id/pollTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:layout_marginTop="5dp"
             android:layout_marginEnd="4dp"
+            android:layout_marginBottom="5dp"
             android:textAppearance="?attr/textAppearanceTitleMedium"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="@id/pollLeftTimeText"
+            app:layout_constraintBottom_toTopOf="@id/pollChoices"
             app:layout_constraintEnd_toStartOf="@id/pollClose"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintVertical_bias="0.0"
-            tools:text="@string/poll_text" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="@string/poll_title" />
 
-        <Chronometer
-            android:id="@+id/pollLeftTimeText"
+        <TextView
+            android:id="@+id/pollChoices"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
+            android:layout_marginStart="8dp"
             android:layout_marginTop="5dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginBottom="5dp"
             android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:visibility="gone"
-            android:format="@string/poll_remaining_text"
-            app:layout_constraintTop_toBottomOf="@id/pollText"
+            app:layout_constraintBottom_toTopOf="@id/pollStatus"
+            app:layout_constraintEnd_toStartOf="@id/pollClose"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/pollTitle"
+            tools:text="50% (20): title\n50% (20): title" />
+
+        <TextView
+            android:id="@+id/pollStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginBottom="5dp"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/pollClose"
             app:layout_constraintStart_toStartOf="parent"
-            tools:visibility="visible" />
+            app:layout_constraintTop_toBottomOf="@id/pollChoices"
+            tools:text="@string/remaining_time" />
 
         <ImageView
             android:id="@+id/pollClose"
@@ -353,6 +370,7 @@
         android:layout_marginStart="4dp"
         android:layout_marginTop="4dp"
         android:layout_marginEnd="4dp"
+        android:layout_marginBottom="4dp"
         android:background="?attr/chatStatus"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
@@ -361,48 +379,49 @@
         tools:visibility="visible">
 
         <TextView
-            android:id="@+id/predictionText"
+            android:id="@+id/predictionTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:layout_marginTop="5dp"
             android:layout_marginEnd="4dp"
+            android:layout_marginBottom="5dp"
             android:textAppearance="?attr/textAppearanceTitleMedium"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="@id/predictionLeftTimeText"
+            app:layout_constraintBottom_toTopOf="@id/predictionOutcomes"
             app:layout_constraintEnd_toStartOf="@id/predictionClose"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintVertical_bias="0.0"
-            tools:text="@string/prediction_text" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="@string/prediction_title" />
 
         <TextView
-            android:id="@+id/predictionFinishedText"
+            android:id="@+id/predictionOutcomes"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
+            android:layout_marginStart="8dp"
             android:layout_marginTop="5dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginBottom="5dp"
             android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:visibility="gone"
-            android:text="@string/prediction_finished_text"
-            app:layout_constraintTop_toBottomOf="@id/predictionText"
-            app:layout_constraintBottom_toTopOf="@id/predictionLeftTimeText"
+            app:layout_constraintBottom_toTopOf="@id/predictionStatus"
             app:layout_constraintEnd_toStartOf="@id/predictionClose"
             app:layout_constraintStart_toStartOf="parent"
-            tools:visibility="visible" />
+            app:layout_constraintTop_toBottomOf="@id/predictionTitle"
+            tools:text="50% (20💎, 20👥): title\n50% (20💎, 20👥): title" />
 
-        <Chronometer
-            android:id="@+id/predictionLeftTimeText"
+        <TextView
+            android:id="@+id/predictionStatus"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
+            android:layout_marginStart="8dp"
             android:layout_marginTop="5dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginBottom="5dp"
             android:textAppearance="?attr/textAppearanceTitleMedium"
-            android:visibility="gone"
-            android:format="@string/prediction_remaining_text"
-            app:layout_constraintTop_toBottomOf="@id/predictionFinishedText"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/predictionClose"
             app:layout_constraintStart_toStartOf="parent"
-            tools:visibility="visible" />
+            app:layout_constraintTop_toBottomOf="@id/predictionOutcomes"
+            tools:text="@string/remaining_time" />
 
         <ImageView
             android:id="@+id/predictionClose"

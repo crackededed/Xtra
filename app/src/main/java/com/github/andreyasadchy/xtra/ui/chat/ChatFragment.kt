@@ -12,8 +12,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentChatBinding
-import com.github.andreyasadchy.xtra.model.chat.ChannelPoll
-import com.github.andreyasadchy.xtra.model.chat.ChannelPrediction
 import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.model.chat.Raid
 import com.github.andreyasadchy.xtra.model.ui.Stream
@@ -104,14 +102,24 @@ class ChatFragment : BaseNetworkFragment(), LifecycleListener, MessageClickedDia
                             viewModel.raidClosed = true
                         }
 
-                        override fun onPollClose(isManual: Boolean) {
-                            viewModel.closedPollId = if (isManual) viewModel.poll.value?.pollId else null
-                            viewModel.poll.value = null
+                        override fun onPollClose(timeout: Boolean) {
+                            viewModel.pollSecondsLeft.value = null
+                            viewModel.pollTimer?.cancel()
+                            if (timeout) {
+                                viewModel.startPollTimeout { chatView.hidePoll(true) }
+                            } else {
+                                viewModel.pollClosed = true
+                            }
                         }
 
-                        override fun onPredictionClose(isManual: Boolean) {
-                            viewModel.closedPredictionId = if (isManual) viewModel.prediction.value?.id else null
-                            viewModel.prediction.value = null
+                        override fun onPredictionClose(timeout: Boolean) {
+                            viewModel.predictionSecondsLeft.value = null
+                            viewModel.predictionTimer?.cancel()
+                            if (timeout) {
+                                viewModel.startPredictionTimeout { chatView.hidePrediction(true) }
+                            } else {
+                                viewModel.predictionClosed = true
+                            }
                         }
                     })
                     if (isLoggedIn) {
@@ -311,9 +319,44 @@ class ChatFragment : BaseNetworkFragment(), LifecycleListener, MessageClickedDia
                     }
                     viewLifecycleOwner.lifecycleScope.launch {
                         repeatOnLifecycle(Lifecycle.State.STARTED) {
+                            viewModel.hidePoll.collectLatest {
+                                if (it) {
+                                    chatView.hidePoll()
+                                    viewModel.hidePoll.value = false
+                                }
+                            }
+                        }
+                    }
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        repeatOnLifecycle(Lifecycle.State.STARTED) {
                             viewModel.poll.collectLatest {
                                 if (it != null) {
-                                    onPollUpdate(it)
+                                    if (!viewModel.pollClosed) {
+                                        chatView.notifyPoll(it)
+                                    }
+                                    viewModel.poll.value = null
+                                }
+                            }
+                        }
+                    }
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        repeatOnLifecycle(Lifecycle.State.STARTED) {
+                            viewModel.pollSecondsLeft.collectLatest {
+                                if (it != null) {
+                                    chatView.updatePollStatus(it)
+                                    if (it <= 0) {
+                                        viewModel.pollSecondsLeft.value = null
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        repeatOnLifecycle(Lifecycle.State.STARTED) {
+                            viewModel.hidePrediction.collectLatest {
+                                if (it) {
+                                    chatView.hidePrediction()
+                                    viewModel.hidePrediction.value = false
                                 }
                             }
                         }
@@ -322,7 +365,22 @@ class ChatFragment : BaseNetworkFragment(), LifecycleListener, MessageClickedDia
                         repeatOnLifecycle(Lifecycle.State.STARTED) {
                             viewModel.prediction.collectLatest {
                                 if (it != null) {
-                                    onPredictionUpdate(it)
+                                    if (!viewModel.predictionClosed) {
+                                        chatView.notifyPrediction(it)
+                                    }
+                                    viewModel.prediction.value = null
+                                }
+                            }
+                        }
+                    }
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        repeatOnLifecycle(Lifecycle.State.STARTED) {
+                            viewModel.predictionSecondsLeft.collectLatest {
+                                if (it != null) {
+                                    chatView.updatePredictionStatus(it)
+                                    if (it <= 0) {
+                                        viewModel.predictionSecondsLeft.value = null
+                                    }
                                 }
                             }
                         }
@@ -492,18 +550,6 @@ class ChatFragment : BaseNetworkFragment(), LifecycleListener, MessageClickedDia
             } else {
                 binding.chatView.notifyRaid(raid)
             }
-        }
-    }
-
-    private fun onPollUpdate(poll: ChannelPoll) {
-        if (viewModel.closedPollId != poll.pollId) {
-            binding.chatView.notifyPoll(poll)
-        }
-    }
-
-    private fun onPredictionUpdate(prediction: ChannelPrediction) {
-        if (viewModel.closedPredictionId != prediction.id) {
-            binding.chatView.notifyPrediction(prediction)
         }
     }
 
