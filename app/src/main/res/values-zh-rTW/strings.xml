@@ -646,8 +646,8 @@
     <string name="stop_sleep_timer_message">停止睡眠計時器？</string>
     <string name="enable_notifications">開啟通知</string>
     <string name="disable_notifications">關閉通知</string>
-    <string name="enabled_notifications">啟用通知</string>
-    <string name="disabled_notifications">禁用通知</string>
+    <string name="enabled_notifications">已啟用通知</string>
+    <string name="disabled_notifications">已禁用通知</string>
     <string name="name_display">使用者名稱顯示</string>
     <string name="name_display_summary">當顯示名稱不同於登入名稱時顯示的名稱</string>
     <string name="name_display_entry1">展示顯示名稱與登入名稱</string>
