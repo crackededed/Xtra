@@ -90,7 +90,7 @@
     <string name="pause">Pausar</string>
     <string name="resume">Retomar</string>
     <string name="error_loading_user">Erro ao carregar o perfil do usuário</string>
-    <string name="reply">Replay</string>
+    <string name="reply">Responder</string>
     <string name="copy_message">Copiar mensagem</string>
     <string name="view_profile">Ver perfil</string>
     <string name="chat">Chat</string>
