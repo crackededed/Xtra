@@ -671,7 +671,7 @@
     <string name="live_min_speed_summary">串流實況最小速度（浮點數）</string>
     <string name="live_max_speed">實況最大速度</string>
     <string name="live_max_speed_summary">串流實況最大速度（浮點數）</string>
-    <string name="live_target_offset_summary">Offset from the live edge in milliseconds</string>
+    <string name="live_target_offset_summary">實況偏移量（毫秒）</string>
     <string name="hide_stream_previews">隱藏串流預覽</string>
     <string name="player_settings">播放器</string>
     <string name="save_video_positions">儲存觀看影片的位置</string>
