@@ -679,6 +679,6 @@
     <string name="delete_video_positions_message">Möchten Sie wirklich alle gespeicherten Videopositionen löschen?</string>
     <string name="enabled_setting">Aktiviert</string>
     <string name="disabled_setting">Deaktiviert</string>
-    <string name="use_webp_images">Use WEBP images</string>
-    <string name="use_background_audio">Play audio in the background</string>
+    <string name="use_webp_images">Verwende WEBP-Bilder</string>
+    <string name="use_background_audio">Audio im Hintergrund abspielen</string>
 </resources>
