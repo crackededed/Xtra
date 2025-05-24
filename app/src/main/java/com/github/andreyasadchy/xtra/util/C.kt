@@ -81,6 +81,7 @@ object C {
     const val UI_TAGS = "ui_tags"
     const val UI_SCROLLTOP = "ui_scrolltop"
     const val UI_BOOKMARK_TIME_LEFT = "ui_bookmark_time_left"
+    const val UI_DEFAULT_PAGE = "ui_default_page"
     const val UI_NAME_DISPLAY = "ui_name_display"
     const val UI_THEME_ROUNDED_CORNERS = "ui_theme_rounded_corners"
     const val UI_THEME_FOLLOW_SYSTEM = "ui_theme_follow_system"

@@ -33,6 +33,16 @@
 
     <ListPreference
         android:defaultValue="1"
+        android:entries="@array/pageEntries"
+        android:entryValues="@array/miscValues"
+        android:key="ui_default_page"
+        android:summary="%s"
+        android:title="@string/default_page"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <ListPreference
+        android:defaultValue="1"
         android:entries="@array/followedEntries"
         android:entryValues="@array/miscValues"
         android:key="ui_startonfollowed"
