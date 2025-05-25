@@ -686,5 +686,5 @@
     <string name="avoid_rounded_corners">Избегать скруглённые углы экрана</string>
     <string name="api_web_gql_token">Токен веб GQL</string>
     <string name="use_new_pubsub">Использовать новый адрес PubSub</string>
-    <string name="default_page">Dafault page</string>
+    <string name="default_page">Default page</string>
 </resources>

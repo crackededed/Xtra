@@ -34,7 +34,7 @@
     <ListPreference
         android:defaultValue="1"
         android:entries="@array/pageEntries"
-        android:entryValues="@array/miscValues"
+        android:entryValues="@array/pageValues"
         android:key="ui_default_page"
         android:summary="%s"
         android:title="@string/default_page"

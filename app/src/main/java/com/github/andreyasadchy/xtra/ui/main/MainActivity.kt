@@ -722,29 +722,24 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
         navController = (supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment).navController
         navController.setGraph(navController.navInflater.inflate(R.navigation.nav_graph).also {
             val startOnFollowed = prefs.getString(C.UI_STARTONFOLLOWED, "1")?.toIntOrNull() ?: 1
-            val defaultPage = prefs.getString(C.UI_DEFAULT_PAGE, "1")?.toIntOrNull() ?: 1
-            if (defaultPage == 0) {
-                it.setStartDestination(R.id.gamesFragment)
-            } else if (defaultPage == 2 && startOnFollowed != 2) {
-                if (prefs.getBoolean(C.UI_FOLLOWPAGER, true)) {
-                    it.setStartDestination(R.id.followPagerFragment)
-                } else {
-                    it.setStartDestination(R.id.followMediaFragment)
-                }
-            } else if (defaultPage == 3) {
-                if (prefs.getBoolean(C.UI_SAVEDPAGER, true)) {
-                    it.setStartDestination(R.id.savedPagerFragment)
-                } else {
-                    it.setStartDestination(R.id.savedMediaFragment)
-                }
-            }
             val isLoggedIn = !TwitchApiHelper.getGQLHeaders(this, true)[C.HEADER_TOKEN].isNullOrBlank() ||
                     !TwitchApiHelper.getHelixHeaders(this)[C.HEADER_TOKEN].isNullOrBlank()
-            if ((isLoggedIn && startOnFollowed < 2) || (!isLoggedIn && startOnFollowed == 0)) {
-                if (prefs.getBoolean(C.UI_FOLLOWPAGER, true)) {
-                    it.setStartDestination(R.id.followPagerFragment)
-                } else {
-                    it.setStartDestination(R.id.followMediaFragment)
+            val defaultPage = prefs.getString(C.UI_DEFAULT_PAGE, "1")?.toIntOrNull() ?: 1
+            when {
+                (isLoggedIn && startOnFollowed < 2) || (!isLoggedIn && startOnFollowed == 0) || defaultPage == 2 -> {
+                    if (prefs.getBoolean(C.UI_FOLLOWPAGER, true)) {
+                        it.setStartDestination(R.id.followPagerFragment)
+                    } else {
+                        it.setStartDestination(R.id.followMediaFragment)
+                    }
+                }
+                defaultPage == 0 -> it.setStartDestination(R.id.rootGamesFragment)
+                defaultPage == 3 -> {
+                    if (prefs.getBoolean(C.UI_SAVEDPAGER, true)) {
+                        it.setStartDestination(R.id.savedPagerFragment)
+                    } else {
+                        it.setStartDestination(R.id.savedMediaFragment)
+                    }
                 }
             }
         }, null)

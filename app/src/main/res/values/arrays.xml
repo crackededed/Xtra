@@ -243,7 +243,6 @@
         <item>0</item>
         <item>1</item>
         <item>2</item>
-        <item>3</item>
     </string-array>
 
     <string-array name="followedEntries">
@@ -257,6 +256,13 @@
         <item>@string/popular</item>
         <item>@string/following</item>
         <item>@string/saved</item>
+    </string-array>
+
+    <string-array name="pageValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
     </string-array>
 
     <string-array name="chatFirstMsgEntries">
