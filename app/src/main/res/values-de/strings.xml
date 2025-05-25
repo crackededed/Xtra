@@ -681,10 +681,10 @@
     <string name="disabled_setting">Deaktiviert</string>
     <string name="use_webp_images">Verwende WEBP-Bilder</string>
     <string name="use_background_audio">Audio im Hintergrund abspielen</string>
-    <string name="use_cronet_downloads">Use Cronet for downloads</string>
-    <string name="use_cronet">Use Cronet network library</string>
-    <string name="avoid_rounded_corners">Avoid rounded screen corners</string>
-    <string name="api_web_gql_token">Web GQL token</string>
-    <string name="use_new_pubsub">Use new PubSub url</string>
+    <string name="use_cronet_downloads">Verwende Cronet für Downloads</string>
+    <string name="use_cronet">Verwende die Cronet-Netzwerkbibliothek</string>
+    <string name="avoid_rounded_corners">Vermeide abgerundete Bildschirmecken</string>
+    <string name="api_web_gql_token">Web-GQL-Token</string>
+    <string name="use_new_pubsub">Neue PubSub-URL verwenden</string>
     <string name="default_page">Dafault page</string>
 </resources>
