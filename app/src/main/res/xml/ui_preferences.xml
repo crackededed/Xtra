@@ -161,4 +161,32 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="ui_remove_games"
+        android:title="@string/remove_games_page"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="ui_remove_popular"
+        android:title="@string/remove_popular_page"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="ui_remove_following"
+        android:title="@string/remove_following_page"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="ui_remove_saved"
+        android:title="@string/remove_saved_page"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
 </androidx.preference.PreferenceScreen>
