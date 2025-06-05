@@ -21,6 +21,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.view.Menu
+import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.activity.result.ActivityResultLauncher
@@ -747,17 +748,32 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
             if (!prefs.getBoolean(C.UI_THEME_BOTTOM_NAV_COLOR, true) && prefs.getBoolean(C.UI_THEME_MATERIAL3, true)) {
                 setBackgroundColor(MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurface))
             }
-            menu.add(Menu.NONE, R.id.rootGamesFragment, Menu.NONE, R.string.games).setIcon(R.drawable.ic_games_black_24dp)
-            menu.add(Menu.NONE, R.id.rootTopFragment, Menu.NONE, R.string.popular).setIcon(R.drawable.ic_trending_up_black_24dp)
-            if (prefs.getBoolean(C.UI_FOLLOWPAGER, true)) {
-                menu.add(Menu.NONE, R.id.followPagerFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
-            } else {
-                menu.add(Menu.NONE, R.id.followMediaFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
+            var gamesRemoved = prefs.getBoolean(C.UI_REMOVE_GAMES, false)
+            if (!gamesRemoved) {
+                menu.add(Menu.NONE, R.id.rootGamesFragment, Menu.NONE, R.string.games).setIcon(R.drawable.ic_games_black_24dp)
             }
-            if (prefs.getBoolean(C.UI_SAVEDPAGER, true)) {
-                menu.add(Menu.NONE, R.id.savedPagerFragment, Menu.NONE, R.string.saved).setIcon(R.drawable.ic_file_download_black_24dp)
-            } else {
-                menu.add(Menu.NONE, R.id.savedMediaFragment, Menu.NONE, R.string.saved).setIcon(R.drawable.ic_file_download_black_24dp)
+            var popularRemoved = prefs.getBoolean(C.UI_REMOVE_POPULAR, false)
+            if (!popularRemoved) {
+                menu.add(Menu.NONE, R.id.rootTopFragment, Menu.NONE, R.string.popular).setIcon(R.drawable.ic_trending_up_black_24dp)
+            }
+            var followingRemoved = prefs.getBoolean(C.UI_REMOVE_FOLLOWING, false)
+            if (!followingRemoved) {
+                if (prefs.getBoolean(C.UI_FOLLOWPAGER, true)) {
+                    menu.add(Menu.NONE, R.id.followPagerFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
+                } else {
+                    menu.add(Menu.NONE, R.id.followMediaFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
+                }
+            }
+            var savedRemoved = prefs.getBoolean(C.UI_REMOVE_SAVED, false)
+            if (!savedRemoved) {
+                if (prefs.getBoolean(C.UI_SAVEDPAGER, true)) {
+                    menu.add(Menu.NONE, R.id.savedPagerFragment, Menu.NONE, R.string.saved).setIcon(R.drawable.ic_file_download_black_24dp)
+                } else {
+                    menu.add(Menu.NONE, R.id.savedMediaFragment, Menu.NONE, R.string.saved).setIcon(R.drawable.ic_file_download_black_24dp)
+                }
+            }
+            if (gamesRemoved && popularRemoved && followingRemoved && savedRemoved) {
+                binding.navBar.visibility = View.GONE
             }
             setupWithNavController(navController)
             setOnItemSelectedListener {
