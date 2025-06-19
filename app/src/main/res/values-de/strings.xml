@@ -684,9 +684,9 @@
     <string name="avoid_rounded_corners">Vermeide abgerundete Bildschirmecken</string>
     <string name="api_web_gql_token">Web-GQL-Token</string>
     <string name="use_new_pubsub">Neue PubSub-URL verwenden</string>
-    <string name="default_page">Default page</string>
-    <string name="chat_size_modifier">Size modifier</string>
-    <string name="chat_emote_size">Emote size</string>
-    <string name="chat_badge_size">Badge size</string>
-    <string name="overlay_emotes">Overlay emotes</string>
+    <string name="default_page">Standardseite</string>
+    <string name="chat_size_modifier">Größenmodifikator</string>
+    <string name="chat_emote_size">Emote-Größe</string>
+    <string name="chat_badge_size">Abzeichengröße</string>
+    <string name="overlay_emotes">Emotes überlagern</string>
 </resources>
