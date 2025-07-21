@@ -7,6 +7,7 @@ import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.type.ClipsPeriod
 import com.github.andreyasadchy.xtra.util.C
+import kotlin.math.max
 
 class ChannelClipsDataSource(
     private val channelId: String?,
@@ -21,7 +22,7 @@ class ChannelClipsDataSource(
     private val helixRepository: HelixRepository,
     private val enableIntegrity: Boolean,
     private val apiPref: List<String>,
-    private val useCronet: Boolean,
+    private val networkLibrary: String?,
 ) : PagingSource<Int, Clip>() {
     private var api: String? = null
     private var offset: String? = null
@@ -61,7 +62,7 @@ class ChannelClipsDataSource(
     }
 
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): LoadResult<Int, Clip> {
-        val response = graphQLRepository.loadQueryUserClips(useCronet, gqlHeaders, channelId, channelLogin.takeIf { channelId.isNullOrBlank() }, gqlQueryPeriod, params.loadSize, offset)
+        val response = graphQLRepository.loadQueryUserClips(networkLibrary, gqlHeaders, channelId, channelLogin.takeIf { channelId.isNullOrBlank() }, gqlQueryPeriod, params.loadSize, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }
@@ -75,7 +76,11 @@ class ChannelClipsDataSource(
                     channelLogin = data.login,
                     channelName = data.displayName,
                     videoId = it.video?.id,
-                    vodOffset = it.videoOffsetSeconds,
+                    vodOffset = if (it.videoOffsetSeconds != null && it.durationSeconds != null) {
+                        max(it.videoOffsetSeconds - it.durationSeconds, 0) // api is returning wrong offset
+                    } else {
+                        it.videoOffsetSeconds
+                    },
                     gameId = it.game?.id,
                     gameSlug = it.game?.slug,
                     gameName = it.game?.displayName,
@@ -101,7 +106,7 @@ class ChannelClipsDataSource(
     }
 
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, Clip> {
-        val response = graphQLRepository.loadChannelClips(useCronet, gqlHeaders, channelLogin, gqlPeriod, params.loadSize, offset)
+        val response = graphQLRepository.loadChannelClips(networkLibrary, gqlHeaders, channelLogin, gqlPeriod, params.loadSize, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }
@@ -138,7 +143,7 @@ class ChannelClipsDataSource(
 
     private suspend fun helixLoad(params: LoadParams<Int>): LoadResult<Int, Clip> {
         val response = helixRepository.getClips(
-            useCronet = useCronet,
+            networkLibrary = networkLibrary,
             headers = helixHeaders,
             channelId = channelId,
             startedAt = startedAt,
@@ -148,7 +153,7 @@ class ChannelClipsDataSource(
         )
         val games = response.data.mapNotNull { it.gameId }.let {
             helixRepository.getGames(
-                useCronet = useCronet,
+                networkLibrary = networkLibrary,
                 headers = helixHeaders,
                 ids = it,
             ).data
@@ -160,7 +165,11 @@ class ChannelClipsDataSource(
                 channelLogin = channelLogin,
                 channelName = it.channelName,
                 videoId = it.videoId,
-                vodOffset = it.vodOffset,
+                vodOffset = if (it.vodOffset != null && it.duration != null) {
+                    max(it.vodOffset - it.duration.toInt(), 0)
+                } else {
+                    it.vodOffset
+                },
                 gameId = it.gameId,
                 gameName = it.gameId?.let { id ->
                     games.find { game -> game.id == id }?.name

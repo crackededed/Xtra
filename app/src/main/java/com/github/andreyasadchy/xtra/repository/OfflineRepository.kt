@@ -35,6 +35,10 @@ class OfflineRepository @Inject constructor(
         videosDao.getByUserId(id)
     }
 
+    suspend fun getPlaylists() = withContext(Dispatchers.IO) {
+        videosDao.getPlaylists()
+    }
+
     suspend fun saveVideo(video: OfflineVideo) = withContext(Dispatchers.IO) {
         videosDao.insert(video)
     }

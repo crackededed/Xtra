@@ -2,9 +2,11 @@ package com.github.andreyasadchy.xtra.ui.chat
 
 import android.graphics.drawable.Animatable
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.LayerDrawable
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+import android.text.TextUtils
 import android.text.method.LinkMovementMethod
 import android.text.style.ImageSpan
 import android.util.Patterns
@@ -59,11 +61,12 @@ class MessageClickedChatAdapter(
     private val fragment: Fragment,
     private val backgroundColor: Int,
     private val imageLibrary: String?,
+    private val messageTextSize: Float,
     private val emoteSize: Int,
     private val badgeSize: Int,
     private val emoteQuality: String,
     private val animateGifs: Boolean,
-    private val enableZeroWidth: Boolean,
+    private val enableOverlayEmotes: Boolean,
     messages: List<ChatMessage>?,
     private val userColors: HashMap<String, Int>,
     private val savedColors: HashMap<String, Int>,
@@ -86,7 +89,8 @@ class MessageClickedChatAdapter(
     var messages: MutableList<ChatMessage>? =
         if (!userId.isNullOrBlank() || !userLogin.isNullOrBlank()) {
             messages?.filter {
-                (!userId.isNullOrBlank() && it.userId == userId) || (!userLogin.isNullOrBlank() && it.userLogin == userLogin)
+                (!userId.isNullOrBlank() && (it.userId == userId || it.replyParent?.userId == userId)) ||
+                        (!userLogin.isNullOrBlank() && (it.userLogin == userLogin || it.replyParent?.userLogin == userLogin))
             }?.toMutableList()
         } else {
             null
@@ -114,13 +118,12 @@ class MessageClickedChatAdapter(
         val chatMessage = messages?.get(position) ?: return
         val pair = ChatAdapterUtils.prepareChatMessage(
             chatMessage, holder.textView, enableTimestamps, timestampFormat, firstMsgVisibility, firstChatMsg, redeemedChatMsg, redeemedNoMsg,
-            rewardChatMsg, true, replyMessage, { replyClick(chatMessage) },
-            { url, name, source, format, isAnimated, emoteId -> imageClick(url, name, source, format, isAnimated, emoteId) },
+            rewardChatMsg, replyMessage, { url, name, source, format, isAnimated, emoteId -> imageClick(url, name, source, format, isAnimated, emoteId) },
             useRandomColors, random, useReadableColors, isLightTheme, nameDisplay, useBoldNames, showNamePaints, namePaints, paintUsers,
             showStvBadges, stvBadges, stvBadgeUsers, showPersonalEmotes, personalEmoteSets, personalEmoteSetUsers, showSystemMessageEmotes,
-            loggedInUser, chatUrl, getEmoteBytes, userColors, savedColors, localTwitchEmotes, globalStvEmotes, channelStvEmotes, globalBttvEmotes,
-            channelBttvEmotes, globalFfzEmotes, channelFfzEmotes, globalBadges, channelBadges, cheerEmotes, savedLocalTwitchEmotes, savedLocalBadges,
-            savedLocalCheerEmotes, savedLocalEmotes
+            enableOverlayEmotes, loggedInUser, chatUrl, getEmoteBytes, userColors, savedColors, localTwitchEmotes, globalStvEmotes, channelStvEmotes,
+            globalBttvEmotes, channelBttvEmotes, globalFfzEmotes, channelFfzEmotes, globalBadges, channelBadges, cheerEmotes, savedLocalTwitchEmotes,
+            savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes
         )
         if (chatMessage == selectedMessage) {
             holder.textView.setBackgroundResource(R.color.chatMessageSelected)
@@ -128,7 +131,7 @@ class MessageClickedChatAdapter(
         holder.bind(chatMessage, pair.first)
         ChatAdapterUtils.loadImages(
             fragment, holder.textView, { holder.bind(chatMessage, it) }, pair.second, pair.third, backgroundColor, imageLibrary, pair.first, emoteSize,
-            badgeSize, emoteQuality, animateGifs, enableZeroWidth
+            badgeSize, emoteQuality, animateGifs, enableOverlayEmotes
         )
     }
 
@@ -165,7 +168,15 @@ class MessageClickedChatAdapter(
         if (animateGifs) {
             (holder.textView.text as? Spannable)?.let { view ->
                 view.getSpans<ImageSpan>().forEach {
-                    (it.drawable as? Animatable)?.start()
+                    (it.drawable as? Animatable)?.start() ?:
+                    (it.drawable as? LayerDrawable)?.let {
+                        val lastIndex = it.numberOfLayers - 1
+                        if (lastIndex > -1) {
+                            for (i in 0..lastIndex) {
+                                (it.getDrawable(i) as? Animatable)?.start()
+                            }
+                        }
+                    }
                 }
                 view.getSpans<NamePaintImageSpan>().forEach {
                     (it.drawable as? Animatable)?.start()
@@ -179,7 +190,15 @@ class MessageClickedChatAdapter(
         if (animateGifs) {
             (holder.textView.text as? Spannable)?.let { view ->
                 view.getSpans<ImageSpan>().forEach {
-                    (it.drawable as? Animatable)?.stop()
+                    (it.drawable as? Animatable)?.stop() ?:
+                    (it.drawable as? LayerDrawable)?.let {
+                        val lastIndex = it.numberOfLayers - 1
+                        if (lastIndex > -1) {
+                            for (i in 0..lastIndex) {
+                                (it.getDrawable(i) as? Animatable)?.stop()
+                            }
+                        }
+                    }
                 }
                 view.getSpans<NamePaintImageSpan>().forEach {
                     (it.drawable as? Animatable)?.stop()
@@ -194,7 +213,15 @@ class MessageClickedChatAdapter(
             for (i in 0 until childCount) {
                 ((recyclerView.getChildAt(i) as TextView).text as? Spannable)?.let { view ->
                     view.getSpans<ImageSpan>().forEach {
-                        (it.drawable as? Animatable)?.stop()
+                        (it.drawable as? Animatable)?.stop() ?:
+                        (it.drawable as? LayerDrawable)?.let {
+                            val lastIndex = it.numberOfLayers - 1
+                            if (lastIndex > -1) {
+                                for (i in 0..lastIndex) {
+                                    (it.getDrawable(i) as? Animatable)?.stop()
+                                }
+                            }
+                        }
                     }
                     view.getSpans<NamePaintImageSpan>().forEach {
                         (it.drawable as? Animatable)?.stop()
@@ -212,17 +239,30 @@ class MessageClickedChatAdapter(
         fun bind(chatMessage: ChatMessage, formattedMessage: SpannableStringBuilder) {
             textView.apply {
                 text = formattedMessage
-                movementMethod = LinkMovementMethod.getInstance()
-                TooltipCompat.setTooltipText(this, chatMessage.message ?: chatMessage.systemMsg)
-                setOnClickListener {
-                    if (selectionStart == -1 && selectionEnd == -1 && chatMessage != selectedMessage) {
-                        messageClickListener?.invoke(chatMessage, selectedMessage)
-                        selectedMessage = chatMessage
-                        setBackgroundResource(R.color.chatMessageSelected)
-                        (text as? Spannable)?.let { view ->
-                            view.getSpans<NamePaintImageSpan>().forEach {
-                                it.backgroundColor = (background as? ColorDrawable)?.color
-                                view.setSpan(it, view.getSpanStart(it), view.getSpanEnd(it), SPAN_EXCLUSIVE_EXCLUSIVE)
+                textSize = messageTextSize
+                if (chatMessage.isReply) {
+                    movementMethod = null
+                    maxLines = 2
+                    ellipsize = TextUtils.TruncateAt.END
+                    TooltipCompat.setTooltipText(this, chatMessage.replyParent?.message ?: chatMessage.replyParent?.systemMsg)
+                    setOnClickListener {
+                        chatMessage.replyParent?.let { replyClick(it) }
+                    }
+                } else {
+                    movementMethod = LinkMovementMethod.getInstance()
+                    maxLines = Int.MAX_VALUE
+                    ellipsize = null
+                    TooltipCompat.setTooltipText(this, chatMessage.message ?: chatMessage.systemMsg)
+                    setOnClickListener {
+                        if (selectionStart == -1 && selectionEnd == -1 && chatMessage != selectedMessage) {
+                            messageClickListener?.invoke(chatMessage, selectedMessage)
+                            selectedMessage = chatMessage
+                            setBackgroundResource(R.color.chatMessageSelected)
+                            (text as? Spannable)?.let { view ->
+                                view.getSpans<NamePaintImageSpan>().forEach {
+                                    it.backgroundColor = (background as? ColorDrawable)?.color
+                                    view.setSpan(it, view.getSpanStart(it), view.getSpanEnd(it), SPAN_EXCLUSIVE_EXCLUSIVE)
+                                }
                             }
                         }
                     }

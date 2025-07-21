@@ -46,7 +46,7 @@ class LiveNotificationWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         val streams = shownNotifications.getNewStreams(
             notificationUsersRepository = notificationUsersRepository,
-            useCronet = context.prefs().getBoolean(C.USE_CRONET, false),
+            networkLibrary = context.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
             gqlHeaders = TwitchApiHelper.getGQLHeaders(context, true),
             graphQLRepository = graphQLRepository,
             helixHeaders = TwitchApiHelper.getHelixHeaders(context),

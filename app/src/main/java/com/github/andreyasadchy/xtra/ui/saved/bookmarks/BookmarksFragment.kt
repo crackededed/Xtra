@@ -60,7 +60,7 @@ class BookmarksFragment : PagedListFragment(), Scrollable {
             viewModel.updateVideo(
                 requireContext().filesDir.path,
                 it,
-                requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                 TwitchApiHelper.getGQLHeaders(requireContext()),
                 TwitchApiHelper.getHelixHeaders(requireContext()),
                 requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
@@ -138,7 +138,7 @@ class BookmarksFragment : PagedListFragment(), Scrollable {
                 }
             }
             viewModel.updateUsers(
-                requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                 TwitchApiHelper.getGQLHeaders(requireContext()),
                 TwitchApiHelper.getHelixHeaders(requireContext()),
                 requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
@@ -146,7 +146,7 @@ class BookmarksFragment : PagedListFragment(), Scrollable {
         }
         val helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext())
         if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-            viewModel.updateVideos(requireContext().filesDir.path, requireContext().prefs().getBoolean(C.USE_CRONET, false), helixHeaders)
+            viewModel.updateVideos(requireContext().filesDir.path, requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"), helixHeaders)
         }
     }
 
@@ -163,7 +163,7 @@ class BookmarksFragment : PagedListFragment(), Scrollable {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     when (callback) {
                         "users" -> viewModel.updateUsers(
-                            requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                            requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                             TwitchApiHelper.getGQLHeaders(requireContext()),
                             TwitchApiHelper.getHelixHeaders(requireContext()),
                             requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),

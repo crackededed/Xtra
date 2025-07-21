@@ -53,7 +53,7 @@ class TopStreamsViewModel @Inject constructor(
                 helixRepository = helixRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                 apiPref = applicationContext.prefs().getString(C.API_PREFS_STREAMS, null)?.split(',') ?: TwitchApiHelper.streamsApiDefaults,
-                useCronet = applicationContext.prefs().getBoolean(C.USE_CRONET, false),
+                networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
             )
         }.flow
     }.cachedIn(viewModelScope)

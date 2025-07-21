@@ -136,7 +136,6 @@
     <string name="show_scrolltop">Кнопка прокрутки до верха</string>
     <string name="bold_usernames">Жирный шрифт имён участников</string>
     <string name="randomcolor">Случайная окраска участников без цвета</string>
-    <string name="zerowidth">Смайлы нулевой ширины</string>
     <string name="message_limit">Ограничение сообщений</string>
     <string name="player_defaultquality">Качество видео по умолчанию</string>
     <string name="player_doubletap">Вызывать чат двойным касанием</string>
@@ -449,7 +448,6 @@
     <string name="dark_theme_on">Если тёмная тема включена</string>
     <string name="dark_theme_off">Если тёмная тема отключена</string>
     <string name="follow_system_theme">Следовать теме устройства</string>
-    <string name="pixels">%d пкс</string>
     <string name="image_quality">Качество изображений</string>
     <string name="lang_auto">Системный</string>
     <string name="save_default">Сохранить по умолчанию</string>
@@ -463,7 +461,7 @@
     <string name="connect_chat">Подключиться к чату</string>
     <string name="raid_text">Происходит рейд %1$s с %2$d зрителями</string>
     <string name="show_raids">Показывать рейды и хосты</string>
-    <string name="auto_switch_raids">Автосмена трансляции при рейде</string>
+    <string name="auto_switch_raids">Автоматически переключать трансляции при рейде</string>
     <string name="search_streams">Поиск трансляций</string>
     <string name="reload_emotes">Перезагрузить смайлы</string>
     <string name="api_current_login">Текущий логин</string>
@@ -553,7 +551,7 @@
     <string name="move_to_shared_storage">Перенести в общее хранилище</string>
     <string name="move_to_app_storage">Перенести в хранилище приложения</string>
     <string name="download_moving">Перемещение: %d%%</string>
-    <string name="theme_adapted_username_color">Адаптировать цвета в зависимости от темы</string>
+    <string name="theme_adapted_username_color">Адаптировать цвета под тему</string>
     <string name="download_deleting">Удаление: %d%%</string>
     <string name="download_vod_to_file">Скачивать видео в единственные файлы</string>
     <string name="convert_vod_to_file">Преобразовать в файл</string>
@@ -577,7 +575,7 @@
     <string name="download_start_wait_summary">Число минут перед началом стрима</string>
     <string name="download_end_wait">Время ожидания после стрима</string>
     <string name="download_end_wait_summary">Число минут до начала следующего стрима после завершения предыдущего</string>
-    <string name="draw_behind_cutouts">Отрисовка под вырезом в дисплее</string>
+    <string name="draw_behind_cutouts">Выводить под вырезом в дисплее</string>
     <string name="text_size">Размер текста</string>
     <string name="backup_settings">Резервное копирование настроек и данных</string>
     <string name="restore_settings">Восстановить настройки и данные</string>
@@ -591,9 +589,9 @@
     <string name="auto_check_updates">Проверять обновления при запуске</string>
     <string name="update_check_frequency">Частота проверки обновления</string>
     <string name="update_check_frequency_summary">Каждые %s дн.</string>
-    <string name="notification_live_channel_title">Уведомления об эфире</string>
+    <string name="notification_live_channel_title">Уведомления о выходе в эфир</string>
     <string name="live_notification">%s в эфире</string>
-    <string name="live_notifications">Уведомления об эфире</string>
+    <string name="live_notifications">Уведомлять о выходе в эфир</string>
     <string name="sleep_timer_lock_screen">Блокировка экрана по окончании таймера сна</string>
     <string name="sleep_timer_time_picker">Использовать пикер времени из Material для таймера сна</string>
     <string name="stop_sleep_timer_message">Остановить таймер сна?</string>
@@ -679,14 +677,17 @@
     <string name="delete_video_positions_message">Уверены, что хотите удалить все сохранённые позиции в видео?</string>
     <string name="enabled_setting">Включено</string>
     <string name="disabled_setting">Отключено</string>
-    <string name="use_webp_images">Использовать картинки в WEBP</string>
+    <string name="use_webp_images">Использовать картинки WEBP</string>
     <string name="use_background_audio">Проигрывать звук в фоне</string>
-    <string name="use_cronet_downloads">Использовать Cronet для загрузок</string>
-    <string name="use_cronet">Использовать сетевую библиотеку Cronet</string>
     <string name="avoid_rounded_corners">Избегать скруглённые углы экрана</string>
     <string name="api_web_gql_token">Токен веб GQL</string>
     <string name="use_new_pubsub">Использовать новый адрес PubSub</string>
-    <string name="default_page">Default page</string>
+    <string name="default_page">Стандартная страница</string>
+    <string name="chat_size_modifier">Модификатор размера</string>
+    <string name="chat_emote_size">Размер смайлов</string>
+    <string name="chat_badge_size">Размер значков</string>
+    <string name="overlay_emotes">Наложение смайлов</string>
+    <string name="network_library">Сетевая библиотека</string>
     <string name="remove_games_page">Remove Games page</string>
     <string name="remove_popular_page">Remove Popular page</string>
     <string name="remove_following_page">Remove Following page</string>

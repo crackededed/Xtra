@@ -18,13 +18,13 @@ class SearchPagerViewModel @Inject constructor(
     val userResult = MutableStateFlow<Pair<String?, String?>?>(null)
     private var isLoading = false
 
-    fun loadUserResult(checkedId: Int, result: String, useCronet: Boolean, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
+    fun loadUserResult(checkedId: Int, result: String, networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
         if (userResult.value == null && !isLoading) {
             isLoading = true
             viewModelScope.launch {
                 try {
                     userResult.value = if (checkedId == 0) {
-                        val response = graphQLRepository.loadQueryUserResultID(useCronet, gqlHeaders, result)
+                        val response = graphQLRepository.loadQueryUserResultID(networkLibrary, gqlHeaders, result)
                         if (enableIntegrity && integrity.value == null) {
                             response.errors?.find { it.message == "failed integrity check" }?.let {
                                 integrity.value = "refresh"
@@ -41,7 +41,7 @@ class SearchPagerViewModel @Inject constructor(
                             }
                         }
                     } else {
-                        val response = graphQLRepository.loadQueryUserResultLogin(useCronet, gqlHeaders, result)
+                        val response = graphQLRepository.loadQueryUserResultLogin(networkLibrary, gqlHeaders, result)
                         if (enableIntegrity && integrity.value == null) {
                             response.errors?.find { it.message == "failed integrity check" }?.let {
                                 integrity.value = "refresh"

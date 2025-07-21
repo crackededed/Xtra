@@ -8,6 +8,7 @@ import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.type.ClipsPeriod
 import com.github.andreyasadchy.xtra.type.Language
 import com.github.andreyasadchy.xtra.util.C
+import kotlin.math.max
 
 class GameClipsDataSource(
     private val gameId: String?,
@@ -24,7 +25,7 @@ class GameClipsDataSource(
     private val helixRepository: HelixRepository,
     private val enableIntegrity: Boolean,
     private val apiPref: List<String>,
-    private val useCronet: Boolean,
+    private val networkLibrary: String?,
 ) : PagingSource<Int, Clip>() {
     private var api: String? = null
     private var offset: String? = null
@@ -65,7 +66,7 @@ class GameClipsDataSource(
 
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): LoadResult<Int, Clip> {
         val response = graphQLRepository.loadQueryGameClips(
-            useCronet = useCronet,
+            networkLibrary = networkLibrary,
             headers = gqlHeaders,
             id = gameId,
             slug = gameSlug.takeIf { gameId.isNullOrBlank() },
@@ -88,7 +89,11 @@ class GameClipsDataSource(
                     channelLogin = it.broadcaster?.login,
                     channelName = it.broadcaster?.displayName,
                     videoId = it.video?.id,
-                    vodOffset = it.videoOffsetSeconds,
+                    vodOffset = if (it.videoOffsetSeconds != null && it.durationSeconds != null) {
+                        max(it.videoOffsetSeconds - it.durationSeconds, 0)
+                    } else {
+                        it.videoOffsetSeconds
+                    },
                     gameId = gameId,
                     gameSlug = gameSlug,
                     gameName = gameName,
@@ -114,7 +119,7 @@ class GameClipsDataSource(
     }
 
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, Clip> {
-        val response = graphQLRepository.loadGameClips(useCronet, gqlHeaders, gameSlug, gqlPeriod, params.loadSize, offset)
+        val response = graphQLRepository.loadGameClips(networkLibrary, gqlHeaders, gameSlug, gqlPeriod, params.loadSize, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }
@@ -152,7 +157,7 @@ class GameClipsDataSource(
 
     private suspend fun helixLoad(params: LoadParams<Int>): LoadResult<Int, Clip> {
         val response = helixRepository.getClips(
-            useCronet = useCronet,
+            networkLibrary = networkLibrary,
             headers = helixHeaders,
             gameId = gameId,
             startedAt = startedAt,
@@ -162,7 +167,7 @@ class GameClipsDataSource(
         )
         val users = response.data.mapNotNull { it.channelId }.let {
             helixRepository.getUsers(
-                useCronet = useCronet,
+                networkLibrary = networkLibrary,
                 headers = helixHeaders,
                 ids = it,
             ).data
@@ -177,7 +182,11 @@ class GameClipsDataSource(
                 channelLogin = user?.channelLogin,
                 channelName = it.channelName,
                 videoId = it.videoId,
-                vodOffset = it.vodOffset,
+                vodOffset = if (it.vodOffset != null && it.duration != null) {
+                    max(it.vodOffset - it.duration.toInt(), 0)
+                } else {
+                    it.vodOffset
+                },
                 gameId = gameId,
                 gameSlug = gameSlug,
                 gameName = gameName,

@@ -1,7 +1,9 @@
 package com.github.andreyasadchy.xtra.di
 
 import android.app.Application
+import android.net.http.HttpEngine
 import android.os.Build
+import android.os.ext.SdkExtensions
 import android.util.Log
 import androidx.annotation.OptIn
 import com.github.andreyasadchy.xtra.BuildConfig
@@ -31,6 +33,22 @@ import javax.net.ssl.SSLContext
 @Module
 @InstallIn(SingletonComponent::class)
 class XtraModule {
+
+    @Singleton
+    @Provides
+    fun providesHttpEngine(application: Application): HttpEngine? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7) {
+            HttpEngine.Builder(application).apply {
+                addQuicHint("gql.twitch.tv", 443, 443)
+                addQuicHint("www.twitch.tv", 443, 443)
+                addQuicHint("7tv.io", 443, 443)
+                addQuicHint("cdn.7tv.app", 443, 443)
+                addQuicHint("api.betterttv.net", 443, 443)
+            }.build()
+        } else {
+            null
+        }
+    }
 
     @Singleton
     @Provides

@@ -3,9 +3,9 @@ package com.github.andreyasadchy.xtra.ui.saved.downloads
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.util.JsonReader
 import androidx.core.net.toUri
-import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -28,7 +28,6 @@ import okio.buffer
 import okio.sink
 import okio.source
 import java.io.File
-import java.io.FileFilter
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import javax.inject.Inject
@@ -177,65 +176,84 @@ class DownloadsViewModel @Inject internal constructor(
                     status = OfflineVideo.STATUS_CONVERTING
                 })
                 if (videoUrl.toUri().scheme == ContentResolver.SCHEME_CONTENT) {
-                    val oldPlaylistFile = DocumentFile.fromSingleUri(applicationContext, videoUrl.toUri())
-                    if (oldPlaylistFile != null) {
-                        val oldDirectory = DocumentFile.fromTreeUri(applicationContext, videoUrl.substringBefore("/document/").toUri())
-                        val oldVideoDirectory = oldDirectory?.findFile(videoUrl.substringAfter("/document/").substringBeforeLast("%2F").substringAfterLast("%2F").substringAfterLast("%3A"))
-                        if (oldVideoDirectory != null) {
-                            val oldPlaylist = applicationContext.contentResolver.openInputStream(oldPlaylistFile.uri)!!.use {
+                    val oldVideoDirectoryUri = videoUrl.substringBeforeLast("%2F")
+                    val oldDirectoryUri = oldVideoDirectoryUri.substringBeforeLast("%2F", oldVideoDirectoryUri.substringBeforeLast("%3A") + "%3A")
+                    val oldPlaylist = applicationContext.contentResolver.openInputStream(videoUrl.toUri())!!.use {
+                        PlaylistUtils.parseMediaPlaylist(it)
+                    }
+                    val videoFileName = "${video.videoId ?: ""}${video.quality ?: ""}${video.downloadDate}.${oldPlaylist.segments.first().uri.substringAfterLast(".")}"
+                    val newVideoFileUri = oldDirectoryUri + (if (!oldDirectoryUri.endsWith("%3A")) "%2F" else "") + videoFileName
+                    val tracksToDelete = mutableListOf<String>()
+                    oldPlaylist.segments.forEach { tracksToDelete.add(it.uri.substringAfterLast("%2F").substringAfterLast("/")) }
+                    val playlists = repository.getPlaylists().mapNotNull { video ->
+                        video.url?.takeIf {
+                            it.toUri().scheme == ContentResolver.SCHEME_CONTENT
+                                    && it.substringBeforeLast("%2F") == oldVideoDirectoryUri
+                                    && it != videoUrl
+                        }
+                    }
+                    playlists.forEach { uri ->
+                        try {
+                            val p = applicationContext.contentResolver.openInputStream(uri.toUri())!!.use {
                                 PlaylistUtils.parseMediaPlaylist(it)
                             }
-                            val videoFileName = "${video.videoId ?: ""}${video.quality ?: ""}${video.downloadDate}.${oldPlaylist.segments.first().uri.substringAfterLast(".")}"
-                            val newVideoFile = oldDirectory.findFile(videoFileName) ?: oldDirectory.createFile("", videoFileName)
-                            if (newVideoFile != null) {
-                                val tracksToDelete = mutableListOf<String>()
-                                oldPlaylist.segments.forEach { tracksToDelete.add(it.uri.substringAfterLast("%2F").substringAfterLast("/")) }
-                                val playlists = oldVideoDirectory.listFiles().filter { it.name?.endsWith(".m3u8") == true && it.uri != oldPlaylistFile.uri }
-                                playlists.forEach { file ->
-                                    val p = applicationContext.contentResolver.openInputStream(file.uri)!!.use {
-                                        PlaylistUtils.parseMediaPlaylist(it)
-                                    }
-                                    p.segments.forEach { tracksToDelete.remove(it.uri.substringAfterLast("%2F").substringAfterLast("/")) }
-                                }
-                                if (oldPlaylist.initSegmentUri != null && newVideoFile.length() == 0L) {
-                                    val oldFile = oldVideoDirectory.findFile(oldPlaylist.initSegmentUri.substringAfterLast("%2F").substringAfterLast("/"))
-                                    if (oldFile != null) {
-                                        applicationContext.contentResolver.openOutputStream(newVideoFile.uri, "wa")!!.sink().buffer().use { sink ->
-                                            sink.writeAll(applicationContext.contentResolver.openInputStream(oldFile.uri)!!.source().buffer())
-                                        }
-                                    }
-                                }
-                                repository.updateVideo(video.apply {
-                                    maxProgress = tracksToDelete.count()
-                                })
-                                oldPlaylist.segments.forEach { track ->
-                                    val oldFile = oldVideoDirectory.findFile(track.uri.substringAfterLast("%2F").substringAfterLast("/"))
-                                    if (oldFile != null) {
-                                        applicationContext.contentResolver.openOutputStream(newVideoFile.uri, "wa")!!.sink().buffer().use { sink ->
-                                            sink.writeAll(applicationContext.contentResolver.openInputStream(oldFile.uri)!!.source().buffer())
-                                        }
-                                        if (tracksToDelete.contains(oldFile.name)) {
-                                            oldFile.delete()
-                                        }
-                                    }
-                                    repository.updateVideo(video.apply {
-                                        progress += 1
-                                    })
-                                }
-                                repository.updateVideo(video.apply {
-                                    thumbnail.let {
-                                        if (it == null || it == url || !File(it).exists()) {
-                                            newVideoFile.uri.toString()
-                                        }
-                                    }
-                                    url = newVideoFile.uri.toString()
-                                })
-                                if (playlists.isNotEmpty()) {
-                                    oldPlaylistFile.delete()
-                                } else {
-                                    oldVideoDirectory.delete()
-                                }
+                            p.segments.forEach { tracksToDelete.remove(it.uri.substringAfterLast("%2F").substringAfterLast("/")) }
+                        } catch (e: Exception) {
+
+                        }
+                    }
+                    val new = try {
+                        applicationContext.contentResolver.openOutputStream(newVideoFileUri.toUri())!!.close()
+                        false
+                    } catch (e: IllegalArgumentException) {
+                        DocumentsContract.createDocument(applicationContext.contentResolver, oldDirectoryUri.toUri(), "", videoFileName)
+                        true
+                    }
+                    if (oldPlaylist.initSegmentUri != null && new) {
+                        val oldFileUri = oldPlaylist.initSegmentUri
+                        applicationContext.contentResolver.openOutputStream(newVideoFileUri.toUri(), "wa")!!.sink().buffer().use { sink ->
+                            sink.writeAll(applicationContext.contentResolver.openInputStream(oldFileUri.toUri())!!.source().buffer())
+                        }
+                    }
+                    repository.updateVideo(video.apply {
+                        maxProgress = tracksToDelete.count()
+                    })
+                    oldPlaylist.segments.forEach { track ->
+                        val oldFileUri = track.uri
+                        val oldFileName = oldFileUri.substringAfterLast("%2F").substringAfterLast("/")
+                        applicationContext.contentResolver.openOutputStream(newVideoFileUri.toUri(), "wa")!!.sink().buffer().use { sink ->
+                            sink.writeAll(applicationContext.contentResolver.openInputStream(oldFileUri.toUri())!!.source().buffer())
+                        }
+                        if (tracksToDelete.contains(oldFileName)) {
+                            try {
+                                DocumentsContract.deleteDocument(applicationContext.contentResolver, oldFileUri.toUri())
+                            } catch (e: Exception) {
+
                             }
+                        }
+                        repository.updateVideo(video.apply {
+                            progress += 1
+                        })
+                    }
+                    repository.updateVideo(video.apply {
+                        thumbnail.let {
+                            if (it == null || it == url || !File(it).exists()) {
+                                newVideoFileUri
+                            }
+                        }
+                        url = newVideoFileUri
+                    })
+                    if (playlists.isNotEmpty()) {
+                        try {
+                            DocumentsContract.deleteDocument(applicationContext.contentResolver, videoUrl.toUri())
+                        } catch (e: Exception) {
+
+                        }
+                    } else {
+                        try {
+                            DocumentsContract.deleteDocument(applicationContext.contentResolver, oldVideoDirectoryUri.toUri())
+                        } catch (e: Exception) {
+
                         }
                     }
                 } else {
@@ -251,7 +269,7 @@ class DownloadsViewModel @Inject internal constructor(
                             val newVideoFileUri = "${oldDirectory.path}${File.separator}$videoFileName"
                             val tracksToDelete = mutableListOf<String>()
                             oldPlaylist.segments.forEach { tracksToDelete.add(it.uri.substringAfterLast("%2F").substringAfterLast("/")) }
-                            val playlists = oldVideoDirectory.listFiles(FileFilter { it.extension == "m3u8" && it != oldPlaylistFile })
+                            val playlists = oldVideoDirectory.listFiles { it.extension == "m3u8" && it != oldPlaylistFile }
                             playlists?.forEach { file ->
                                 val p = PlaylistUtils.parseMediaPlaylist(file.inputStream())
                                 p.segments.forEach { tracksToDelete.remove(it.uri.substringAfterLast("%2F").substringAfterLast("/")) }
@@ -323,118 +341,147 @@ class DownloadsViewModel @Inject internal constructor(
                     if (oldPlaylistFile.exists()) {
                         val oldVideoDirectory = oldPlaylistFile.parentFile
                         if (oldVideoDirectory != null) {
-                            val newDirectory = DocumentFile.fromTreeUri(applicationContext, newUri)
-                            val newVideoDirectory = newDirectory?.findFile(oldVideoDirectory.name) ?: newDirectory?.createDirectory(oldVideoDirectory.name)
-                            val newPlaylistFile = newVideoDirectory?.createFile("", oldPlaylistFile.name)
-                            if (newPlaylistFile != null) {
-                                val oldPlaylist = FileInputStream(oldPlaylistFile).use {
-                                    PlaylistUtils.parseMediaPlaylist(it)
+                            val newDirectoryUri = newUri.toString() + "/document/" + newUri.toString().substringAfter("/tree/")
+                            val newVideoDirectoryUri = newDirectoryUri + (if (!newDirectoryUri.endsWith("%3A")) "%2F" else "") + oldVideoDirectory.name
+                            try {
+                                applicationContext.contentResolver.openOutputStream(newVideoDirectoryUri.toUri())!!.close()
+                            } catch (e: Exception) {
+                                if (e is IllegalArgumentException) {
+                                    DocumentsContract.createDocument(applicationContext.contentResolver, newDirectoryUri.toUri(), DocumentsContract.Document.MIME_TYPE_DIR, oldVideoDirectory.name)
                                 }
-                                val segments = ArrayList<Segment>()
-                                oldPlaylist.segments.forEach { segment ->
-                                    segments.add(segment.copy(uri = newVideoDirectory.uri.toString() + "%2F" + segment.uri.substringAfterLast("%2F").substringAfterLast("/")))
-                                }
-                                applicationContext.contentResolver.openOutputStream(newPlaylistFile.uri)!!.use {
-                                    PlaylistUtils.writeMediaPlaylist(oldPlaylist.copy(
-                                        initSegmentUri = oldPlaylist.initSegmentUri?.let { uri -> newVideoDirectory.uri.toString() + "%2F" + uri.substringAfterLast("%2F").substringAfterLast("/") },
-                                        segments = segments
-                                    ), it)
-                                }
-                                val tracksToDelete = mutableListOf<String>()
-                                oldPlaylist.segments.forEach { tracksToDelete.add(it.uri.substringAfterLast("%2F").substringAfterLast("/")) }
-                                val playlists = oldVideoDirectory.listFiles(FileFilter { it.extension == "m3u8" && it != oldPlaylistFile })
-                                playlists?.forEach { file ->
-                                    val p = PlaylistUtils.parseMediaPlaylist(file.inputStream())
-                                    p.segments.forEach { tracksToDelete.remove(it.uri.substringAfterLast("%2F").substringAfterLast("/")) }
-                                }
-                                if (oldPlaylist.initSegmentUri != null) {
-                                    val oldFile = File(oldVideoDirectory.path + File.separator + oldPlaylist.initSegmentUri.substringAfterLast("%2F").substringAfterLast("/"))
-                                    if (oldFile.exists()) {
-                                        val newFile = newVideoDirectory.findFile(oldFile.name) ?: newVideoDirectory.createFile("", oldFile.name)
-                                        if (newFile != null) {
-                                            applicationContext.contentResolver.openOutputStream(newFile.uri)!!.sink().buffer().use { sink ->
-                                                sink.writeAll(oldFile.source().buffer())
-                                            }
-                                        }
-                                    }
-                                }
-                                repository.updateVideo(video.apply {
-                                    maxProgress = tracksToDelete.count()
-                                })
-                                oldPlaylist.segments.forEach { track ->
-                                    val oldFile = File(oldVideoDirectory.path + File.separator + track.uri.substringAfterLast("%2F").substringAfterLast("/"))
-                                    if (oldFile.exists()) {
-                                        val newFile = newVideoDirectory.findFile(oldFile.name) ?: newVideoDirectory.createFile("", oldFile.name)
-                                        if (newFile != null) {
-                                            applicationContext.contentResolver.openOutputStream(newFile.uri)!!.sink().buffer().use { sink ->
-                                                sink.writeAll(oldFile.source().buffer())
-                                            }
-                                            if (tracksToDelete.contains(oldFile.name)) {
-                                                oldFile.delete()
-                                            }
-                                        }
-                                    }
-                                    repository.updateVideo(video.apply {
-                                        progress += 1
-                                    })
-                                }
-                                val oldChatFile = video.chatUrl?.let { uri -> File(uri).takeIf { it.exists() } }
-                                val newChatFile = oldChatFile?.let { newDirectory?.findFile(it.name) ?: newDirectory?.createFile("", it.name) }
-                                if (newChatFile != null) {
-                                    applicationContext.contentResolver.openOutputStream(newChatFile.uri)!!.sink().buffer().use { sink ->
-                                        sink.writeAll(oldChatFile.source().buffer())
-                                    }
-                                }
-                                repository.updateVideo(video.apply {
-                                    thumbnail.let {
-                                        if (it == null || it == url || !File(it).exists()) {
-                                            oldPlaylist.segments.getOrNull(max(0,  (oldPlaylist.segments.size / 2) - 1))?.uri?.substringAfterLast("%2F")?.substringAfterLast("/")?.let { track ->
-                                                newVideoDirectory.findFile(track)?.uri?.let { trackUri ->
-                                                    thumbnail = trackUri.toString()
-                                                }
-                                            }
-                                        }
-                                    }
-                                    url = newPlaylistFile.uri.toString()
-                                    chatUrl = newChatFile?.uri?.toString()
-                                })
-                                if (playlists?.isNotEmpty() == true) {
-                                    oldPlaylistFile.delete()
-                                } else {
-                                    oldVideoDirectory.deleteRecursively()
-                                }
-                                oldChatFile?.delete()
                             }
-                        }
-                    }
-                } else {
-                    val oldFile = File(videoUrl)
-                    if (oldFile.exists()) {
-                        val newDirectory = DocumentFile.fromTreeUri(applicationContext, newUri)
-                        val newFile = newDirectory?.findFile(oldFile.name) ?: newDirectory?.createFile("", oldFile.name)
-                        if (newFile != null) {
-                            applicationContext.contentResolver.openOutputStream(newFile.uri)!!.sink().buffer().use { sink ->
-                                sink.writeAll(oldFile.source().buffer())
+                            val newPlaylistFileUri = newVideoDirectoryUri + "%2F" + oldPlaylistFile.name
+                            val oldPlaylist = FileInputStream(oldPlaylistFile).use {
+                                PlaylistUtils.parseMediaPlaylist(it)
+                            }
+                            val segments = ArrayList<Segment>()
+                            oldPlaylist.segments.forEach { segment ->
+                                segments.add(segment.copy(uri = newVideoDirectoryUri + "%2F" + segment.uri.substringAfterLast("%2F").substringAfterLast("/")))
+                            }
+                            try {
+                                applicationContext.contentResolver.openOutputStream(newPlaylistFileUri.toUri())!!
+                            } catch (e: IllegalArgumentException) {
+                                DocumentsContract.createDocument(applicationContext.contentResolver, newVideoDirectoryUri.toUri(), "", oldPlaylistFile.name)
+                                applicationContext.contentResolver.openOutputStream(newPlaylistFileUri.toUri())!!
+                            }.use {
+                                PlaylistUtils.writeMediaPlaylist(oldPlaylist.copy(
+                                    initSegmentUri = oldPlaylist.initSegmentUri?.let { uri -> newVideoDirectoryUri + "%2F" + uri.substringAfterLast("%2F").substringAfterLast("/") },
+                                    segments = segments
+                                ), it)
+                            }
+                            val tracksToDelete = mutableListOf<String>()
+                            oldPlaylist.segments.forEach { tracksToDelete.add(it.uri.substringAfterLast("%2F").substringAfterLast("/")) }
+                            val playlists = oldVideoDirectory.listFiles { it.extension == "m3u8" && it != oldPlaylistFile }
+                            playlists?.forEach { file ->
+                                val p = PlaylistUtils.parseMediaPlaylist(file.inputStream())
+                                p.segments.forEach { tracksToDelete.remove(it.uri.substringAfterLast("%2F").substringAfterLast("/")) }
+                            }
+                            if (oldPlaylist.initSegmentUri != null) {
+                                val oldFile = File(oldVideoDirectory.path + File.separator + oldPlaylist.initSegmentUri.substringAfterLast("%2F").substringAfterLast("/"))
+                                if (oldFile.exists()) {
+                                    val newFileUri = newVideoDirectoryUri + "%2F" + oldFile.name
+                                    try {
+                                        applicationContext.contentResolver.openOutputStream(newFileUri.toUri())!!
+                                    } catch (e: IllegalArgumentException) {
+                                        DocumentsContract.createDocument(applicationContext.contentResolver, newVideoDirectoryUri.toUri(), "", oldFile.name)
+                                        applicationContext.contentResolver.openOutputStream(newFileUri.toUri())!!
+                                    }.sink().buffer().use { sink ->
+                                        sink.writeAll(oldFile.source().buffer())
+                                    }
+                                }
+                            }
+                            repository.updateVideo(video.apply {
+                                maxProgress = tracksToDelete.count()
+                            })
+                            oldPlaylist.segments.forEach { track ->
+                                val oldFile = File(oldVideoDirectory.path + File.separator + track.uri.substringAfterLast("%2F").substringAfterLast("/"))
+                                if (oldFile.exists()) {
+                                    val newFileUri = newVideoDirectoryUri + "%2F" + oldFile.name
+                                    try {
+                                        applicationContext.contentResolver.openOutputStream(newFileUri.toUri())!!
+                                    } catch (e: IllegalArgumentException) {
+                                        DocumentsContract.createDocument(applicationContext.contentResolver, newVideoDirectoryUri.toUri(), "", oldFile.name)
+                                        applicationContext.contentResolver.openOutputStream(newFileUri.toUri())!!
+                                    }.sink().buffer().use { sink ->
+                                        sink.writeAll(oldFile.source().buffer())
+                                    }
+                                    if (tracksToDelete.contains(oldFile.name)) {
+                                        oldFile.delete()
+                                    }
+                                }
+                                repository.updateVideo(video.apply {
+                                    progress += 1
+                                })
                             }
                             val oldChatFile = video.chatUrl?.let { uri -> File(uri).takeIf { it.exists() } }
-                            val newChatFile = oldChatFile?.let { newDirectory?.findFile(it.name) ?: newDirectory?.createFile("", it.name) }
-                            if (newChatFile != null) {
-                                applicationContext.contentResolver.openOutputStream(newChatFile.uri)!!.sink().buffer().use { sink ->
+                            val newChatFileUri = oldChatFile?.let { newDirectoryUri + (if (!newDirectoryUri.endsWith("%3A")) "%2F" else "") + it.name }
+                            if (newChatFileUri != null) {
+                                try {
+                                    applicationContext.contentResolver.openOutputStream(newChatFileUri.toUri())!!
+                                } catch (e: IllegalArgumentException) {
+                                    DocumentsContract.createDocument(applicationContext.contentResolver, newDirectoryUri.toUri(), "", oldChatFile.name)
+                                    applicationContext.contentResolver.openOutputStream(newChatFileUri.toUri())!!
+                                }.sink().buffer().use { sink ->
                                     sink.writeAll(oldChatFile.source().buffer())
                                 }
                             }
                             repository.updateVideo(video.apply {
                                 thumbnail.let {
                                     if (it == null || it == url || !File(it).exists()) {
-                                        thumbnail = newFile.uri.toString()
+                                        oldPlaylist.segments.getOrNull(
+                                            max(0, (oldPlaylist.segments.size / 2) - 1)
+                                        )?.uri?.substringAfterLast("%2F")?.substringAfterLast("/")?.let { trackUri ->
+                                            thumbnail = "$newVideoDirectoryUri%2F$trackUri"
+                                        }
                                     }
                                 }
-                                url = newFile.uri.toString()
-                                chatUrl = newChatFile?.uri?.toString()
+                                url = newPlaylistFileUri
+                                chatUrl = newChatFileUri
                             })
-                            oldFile.delete()
+                            if (playlists?.isNotEmpty() == true) {
+                                oldPlaylistFile.delete()
+                            } else {
+                                oldVideoDirectory.deleteRecursively()
+                            }
                             oldChatFile?.delete()
                         }
+                    }
+                } else {
+                    val oldFile = File(videoUrl)
+                    if (oldFile.exists()) {
+                        val newDirectoryUri = newUri.toString() + "/document/" + newUri.toString().substringAfter("/tree/")
+                        val newFileUri = newDirectoryUri + (if (!newDirectoryUri.endsWith("%3A")) "%2F" else "") + oldFile.name
+                        try {
+                            applicationContext.contentResolver.openOutputStream(newFileUri.toUri())!!
+                        } catch (e: IllegalArgumentException) {
+                            DocumentsContract.createDocument(applicationContext.contentResolver, newDirectoryUri.toUri(), "", oldFile.name)
+                            applicationContext.contentResolver.openOutputStream(newFileUri.toUri())!!
+                        }.sink().buffer().use { sink ->
+                            sink.writeAll(oldFile.source().buffer())
+                        }
+                        val oldChatFile = video.chatUrl?.let { uri -> File(uri).takeIf { it.exists() } }
+                        val newChatFileUri = oldChatFile?.let { newDirectoryUri + (if (!newDirectoryUri.endsWith("%3A")) "%2F" else "") + it.name }
+                        if (newChatFileUri != null) {
+                            try {
+                                applicationContext.contentResolver.openOutputStream(newChatFileUri.toUri())!!
+                            } catch (e: IllegalArgumentException) {
+                                DocumentsContract.createDocument(applicationContext.contentResolver, newDirectoryUri.toUri(), "", oldChatFile.name)
+                                applicationContext.contentResolver.openOutputStream(newChatFileUri.toUri())!!
+                            }.sink().buffer().use { sink ->
+                                sink.writeAll(oldChatFile.source().buffer())
+                            }
+                        }
+                        repository.updateVideo(video.apply {
+                            thumbnail.let {
+                                if (it == null || it == url || !File(it).exists()) {
+                                    thumbnail = newFileUri
+                                }
+                            }
+                            url = newFileUri
+                            chatUrl = newChatFileUri
+                        })
+                        oldFile.delete()
+                        oldChatFile?.delete()
                     }
                 }
             }.invokeOnCompletion {
@@ -459,112 +506,146 @@ class DownloadsViewModel @Inject internal constructor(
                     status = OfflineVideo.STATUS_MOVING
                 })
                 if (videoUrl.endsWith(".m3u8")) {
-                    val oldPlaylistFile = DocumentFile.fromSingleUri(applicationContext, videoUrl.toUri())
-                    if (oldPlaylistFile != null) {
-                        val oldDirectory = DocumentFile.fromTreeUri(applicationContext, videoUrl.substringBefore("/document/").toUri())
-                        val oldVideoDirectory = oldDirectory?.findFile(videoUrl.substringAfter("/document/").substringBeforeLast("%2F").substringAfterLast("%2F").substringAfterLast("%3A"))
-                        if (oldVideoDirectory != null) {
-                            val newVideoDirectoryUri = "$path${File.separator}${oldVideoDirectory.name}${File.separator}"
-                            File(newVideoDirectoryUri).mkdir()
-                            val newPlaylistFileUri = "$newVideoDirectoryUri${oldPlaylistFile.name}"
-                            val oldPlaylist = applicationContext.contentResolver.openInputStream(oldPlaylistFile.uri)!!.use {
-                                PlaylistUtils.parseMediaPlaylist(it)
-                            }
-                            val segments = ArrayList<Segment>()
-                            oldPlaylist.segments.forEach { segment ->
-                                segments.add(segment.copy(uri = newVideoDirectoryUri + segment.uri.substringAfterLast("%2F").substringAfterLast("/")))
-                            }
-                            FileOutputStream(newPlaylistFileUri).use {
-                                PlaylistUtils.writeMediaPlaylist(oldPlaylist.copy(
-                                    initSegmentUri = oldPlaylist.initSegmentUri?.let { uri -> newVideoDirectoryUri + uri.substringAfterLast("%2F").substringAfterLast("/") },
-                                    segments = segments
-                                ), it)
-                            }
-                            val tracksToDelete = mutableListOf<String>()
-                            oldPlaylist.segments.forEach { tracksToDelete.add(it.uri.substringAfterLast("%2F").substringAfterLast("/")) }
-                            val playlists = oldVideoDirectory.listFiles().filter { it.name?.endsWith(".m3u8") == true && it.uri != oldPlaylistFile.uri }
-                            playlists.forEach { file ->
-                                val p = applicationContext.contentResolver.openInputStream(file.uri)!!.use {
-                                    PlaylistUtils.parseMediaPlaylist(it)
-                                }
-                                p.segments.forEach { tracksToDelete.remove(it.uri.substringAfterLast("%2F").substringAfterLast("/")) }
-                            }
-                            if (oldPlaylist.initSegmentUri != null) {
-                                val oldFile = oldVideoDirectory.findFile(oldPlaylist.initSegmentUri.substringAfterLast("%2F").substringAfterLast("/"))
-                                if (oldFile != null) {
-                                    val newFileUri = "$newVideoDirectoryUri${oldFile.name}"
-                                    File(newFileUri).sink().buffer().use { sink ->
-                                        sink.writeAll(applicationContext.contentResolver.openInputStream(oldFile.uri)!!.source().buffer())
-                                    }
-                                }
-                            }
-                            repository.updateVideo(video.apply {
-                                maxProgress = tracksToDelete.count()
-                            })
-                            oldPlaylist.segments.forEach { track ->
-                                val oldFile = oldVideoDirectory.findFile(track.uri.substringAfterLast("%2F").substringAfterLast("/"))
-                                if (oldFile != null) {
-                                    val newFileUri = "$newVideoDirectoryUri${oldFile.name}"
-                                    File(newFileUri).sink().buffer().use { sink ->
-                                        sink.writeAll(applicationContext.contentResolver.openInputStream(oldFile.uri)!!.source().buffer())
-                                    }
-                                    if (tracksToDelete.contains(oldFile.name)) {
-                                        oldFile.delete()
-                                    }
-                                }
-                                repository.updateVideo(video.apply {
-                                    progress += 1
-                                })
-                            }
-                            val oldChatFile = video.chatUrl?.let { DocumentFile.fromSingleUri(applicationContext, it.toUri()) }
-                            val newChatFileUri = oldChatFile?.let { "$path${File.separator}${it.name}" }
-                            if (newChatFileUri != null) {
-                                File(newChatFileUri).sink().buffer().use { sink ->
-                                    sink.writeAll(applicationContext.contentResolver.openInputStream(oldChatFile.uri)!!.source().buffer())
-                                }
-                            }
-                            repository.updateVideo(video.apply {
-                                thumbnail.let {
-                                    if (it == null || it == url || !File(it).exists()) {
-                                        thumbnail = newVideoDirectoryUri + oldPlaylist.segments.getOrNull(max(0,  (oldPlaylist.segments.size / 2) - 1))?.uri?.substringAfterLast("%2F")?.substringAfterLast("/")
-                                    }
-                                }
-                                url = newPlaylistFileUri
-                                chatUrl = newChatFileUri
-                            })
-                            if (playlists.isNotEmpty()) {
-                                oldPlaylistFile.delete()
-                            } else {
-                                oldVideoDirectory.delete()
-                            }
-                            oldChatFile?.delete()
+                    val oldPlaylistFileName = Uri.decode(videoUrl.substringAfterLast("%2F"))
+                    val oldVideoDirectoryUri = videoUrl.substringBeforeLast("%2F")
+                    val oldVideoDirectoryName = Uri.decode(oldVideoDirectoryUri.substringAfterLast("%2F").substringAfterLast("%3A"))
+                    val newVideoDirectoryUri = path + File.separator + oldVideoDirectoryName
+                    File(newVideoDirectoryUri).mkdir()
+                    val newPlaylistFileUri = newVideoDirectoryUri + File.separator + oldPlaylistFileName
+                    val oldPlaylist = applicationContext.contentResolver.openInputStream(videoUrl.toUri())!!.use {
+                        PlaylistUtils.parseMediaPlaylist(it)
+                    }
+                    val segments = ArrayList<Segment>()
+                    oldPlaylist.segments.forEach { segment ->
+                        segments.add(segment.copy(uri = newVideoDirectoryUri + File.separator + Uri.decode(segment.uri.substringAfterLast("%2F").substringAfterLast("/"))))
+                    }
+                    FileOutputStream(newPlaylistFileUri).use {
+                        PlaylistUtils.writeMediaPlaylist(oldPlaylist.copy(
+                            initSegmentUri = oldPlaylist.initSegmentUri?.let { uri -> newVideoDirectoryUri + File.separator + Uri.decode(uri.substringAfterLast("%2F").substringAfterLast("/")) },
+                            segments = segments
+                        ), it)
+                    }
+                    val tracksToDelete = mutableListOf<String>()
+                    oldPlaylist.segments.forEach { tracksToDelete.add(it.uri.substringAfterLast("%2F").substringAfterLast("/")) }
+                    val playlists = repository.getPlaylists().mapNotNull { video ->
+                        video.url?.takeIf {
+                            it.toUri().scheme == ContentResolver.SCHEME_CONTENT
+                                    && it.substringBeforeLast("%2F") == oldVideoDirectoryUri
+                                    && it != videoUrl
                         }
                     }
-                } else {
-                    val oldFile = DocumentFile.fromSingleUri(applicationContext, videoUrl.toUri())
-                    if (oldFile != null) {
-                        val newFileUri = "$path${File.separator}${oldFile.name}"
-                        File(newFileUri).sink().buffer().use { sink ->
-                            sink.writeAll(applicationContext.contentResolver.openInputStream(oldFile.uri)!!.source().buffer())
+                    playlists.forEach { uri ->
+                        try {
+                            val p = applicationContext.contentResolver.openInputStream(uri.toUri())!!.use {
+                                PlaylistUtils.parseMediaPlaylist(it)
+                            }
+                            p.segments.forEach { tracksToDelete.remove(Uri.decode(it.uri.substringAfterLast("%2F").substringAfterLast("/"))) }
+                        } catch (e: Exception) {
+
                         }
-                        val oldChatFile = video.chatUrl?.let { DocumentFile.fromSingleUri(applicationContext, it.toUri()) }
-                        val newChatFileUri = oldChatFile?.let { "$path${File.separator}${it.name}" }
-                        if (newChatFileUri != null) {
-                            File(newChatFileUri).sink().buffer().use { sink ->
-                                sink.writeAll(applicationContext.contentResolver.openInputStream(oldChatFile.uri)!!.source().buffer())
+                    }
+                    if (oldPlaylist.initSegmentUri != null) {
+                        val oldFileName = oldPlaylist.initSegmentUri.substringAfterLast("%2F").substringAfterLast("/")
+                        val oldFileUri = "$oldVideoDirectoryUri%2F$oldFileName"
+                        val newFileUri = newVideoDirectoryUri + File.separator + Uri.decode(oldFileName)
+                        File(newFileUri).sink().buffer().use { sink ->
+                            sink.writeAll(applicationContext.contentResolver.openInputStream(oldFileUri.toUri())!!.source().buffer())
+                        }
+                    }
+                    repository.updateVideo(video.apply {
+                        maxProgress = tracksToDelete.count()
+                    })
+                    oldPlaylist.segments.forEach { track ->
+                        val oldFileName = track.uri.substringAfterLast("%2F").substringAfterLast("/")
+                        val oldFileUri = "$oldVideoDirectoryUri%2F$oldFileName"
+                        val newFileUri = newVideoDirectoryUri + File.separator + Uri.decode(oldFileName)
+                        File(newFileUri).sink().buffer().use { sink ->
+                            sink.writeAll(applicationContext.contentResolver.openInputStream(oldFileUri.toUri())!!.source().buffer())
+                        }
+                        if (tracksToDelete.contains(Uri.decode(oldFileName))) {
+                            try {
+                                DocumentsContract.deleteDocument(applicationContext.contentResolver, oldFileUri.toUri())
+                            } catch (e: Exception) {
+
                             }
                         }
                         repository.updateVideo(video.apply {
-                            thumbnail.let {
-                                if (it == null || it == url || !File(it).exists()) {
-                                    thumbnail = newFileUri
-                                }
-                            }
-                            url = newFileUri
-                            chatUrl = newChatFileUri
+                            progress += 1
                         })
-                        oldFile.delete()
-                        oldChatFile?.delete()
+                    }
+                    val oldChatUri = video.chatUrl
+                    val oldChatFileName = oldChatUri?.substringAfterLast("%2F")?.substringAfterLast("/")?.substringAfterLast("%3A")?.let { Uri.decode(it) }
+                    val newChatFileUri = oldChatFileName?.let { path + File.separator + it }
+                    if (oldChatUri != null && newChatFileUri != null) {
+                        File(newChatFileUri).sink().buffer().use { sink ->
+                            sink.writeAll(applicationContext.contentResolver.openInputStream(oldChatUri.toUri())!!.source().buffer())
+                        }
+                    }
+                    repository.updateVideo(video.apply {
+                        thumbnail.let {
+                            if (it == null || it == url || !File(it).exists()) {
+                                thumbnail = newVideoDirectoryUri + File.separator + oldPlaylist.segments.getOrNull(
+                                    max(0, (oldPlaylist.segments.size / 2) - 1)
+                                )?.uri?.substringAfterLast("%2F")?.substringAfterLast("/")?.let { Uri.decode(it) }
+                            }
+                        }
+                        url = newPlaylistFileUri
+                        chatUrl = newChatFileUri
+                    })
+                    if (playlists.isNotEmpty()) {
+                        try {
+                            DocumentsContract.deleteDocument(applicationContext.contentResolver, videoUrl.toUri())
+                        } catch (e: Exception) {
+
+                        }
+                    } else {
+                        try {
+                            DocumentsContract.deleteDocument(applicationContext.contentResolver, oldVideoDirectoryUri.toUri())
+                        } catch (e: Exception) {
+
+                        }
+                    }
+                    if (oldChatUri != null) {
+                        try {
+                            DocumentsContract.deleteDocument(applicationContext.contentResolver, oldChatUri.toUri())
+                        } catch (e: Exception) {
+
+                        }
+                    }
+                } else {
+                    val oldFileName = Uri.decode(videoUrl.substringAfterLast("%2F").substringAfterLast("/").substringAfterLast("%3A"))
+                    val newFileUri = path + File.separator + oldFileName
+                    File(newFileUri).sink().buffer().use { sink ->
+                        sink.writeAll(applicationContext.contentResolver.openInputStream(videoUrl.toUri())!!.source().buffer())
+                    }
+                    val oldChatUri = video.chatUrl
+                    val oldChatFileName = oldChatUri?.substringAfterLast("%2F")?.substringAfterLast("/")?.substringAfterLast("%3A")?.let { Uri.decode(it) }
+                    val newChatFileUri = oldChatFileName?.let { path + File.separator + it }
+                    if (oldChatUri != null && newChatFileUri != null) {
+                        File(newChatFileUri).sink().buffer().use { sink ->
+                            sink.writeAll(applicationContext.contentResolver.openInputStream(oldChatUri.toUri())!!.source().buffer())
+                        }
+                    }
+                    repository.updateVideo(video.apply {
+                        thumbnail.let {
+                            if (it == null || it == url || !File(it).exists()) {
+                                thumbnail = newFileUri
+                            }
+                        }
+                        url = newFileUri
+                        chatUrl = newChatFileUri
+                    })
+                    try {
+                        DocumentsContract.deleteDocument(applicationContext.contentResolver, videoUrl.toUri())
+                    } catch (e: Exception) {
+
+                    }
+                    if (oldChatUri != null) {
+                        try {
+                            DocumentsContract.deleteDocument(applicationContext.contentResolver, oldChatUri.toUri())
+                        } catch (e: Exception) {
+
+                        }
                     }
                 }
             }.invokeOnCompletion {
@@ -657,37 +738,67 @@ class DownloadsViewModel @Inject internal constructor(
                 if (videoUrl != null && !keepFiles) {
                     if (videoUrl.toUri().scheme == ContentResolver.SCHEME_CONTENT) {
                         if (videoUrl.endsWith(".m3u8")) {
-                            val directory = DocumentFile.fromTreeUri(applicationContext, videoUrl.substringBefore("/document/").toUri()) ?: return@launch
-                            val videoDirectory = directory.findFile(videoUrl.substringBeforeLast("%2F").substringAfterLast("%2F").substringAfterLast("%3A")) ?: return@launch
-                            val playlistFile = videoDirectory.findFile(videoUrl.substringAfterLast("%2F")) ?: return@launch
-                            val playlists = videoDirectory.listFiles().filter { it.name?.endsWith(".m3u8") == true && it.uri != playlistFile.uri }
+                            val videoDirectoryUri = videoUrl.substringBeforeLast("%2F")
                             val playlist = applicationContext.contentResolver.openInputStream(videoUrl.toUri())!!.use {
                                 PlaylistUtils.parseMediaPlaylist(it)
                             }
                             val tracksToDelete = playlist.segments.toMutableSet()
-                            playlists.forEach { file ->
-                                val p = applicationContext.contentResolver.openInputStream(file.uri)!!.use {
-                                    PlaylistUtils.parseMediaPlaylist(it)
+                            val playlists = repository.getPlaylists().mapNotNull { video ->
+                                video.url?.takeIf {
+                                    it.toUri().scheme == ContentResolver.SCHEME_CONTENT
+                                            && it.substringBeforeLast("%2F") == videoDirectoryUri
+                                            && it != videoUrl
                                 }
-                                tracksToDelete.removeAll(p.segments.toSet())
+                            }
+                            playlists.forEach { uri ->
+                                try {
+                                    val p = applicationContext.contentResolver.openInputStream(uri.toUri())!!.use {
+                                        PlaylistUtils.parseMediaPlaylist(it)
+                                    }
+                                    tracksToDelete.removeAll(p.segments.toSet())
+                                } catch (e: Exception) {
+
+                                }
                             }
                             repository.updateVideo(video.apply {
                                 maxProgress = tracksToDelete.count()
                             })
                             tracksToDelete.forEach {
-                                videoDirectory.findFile(it.uri.substringAfterLast("%2F"))?.delete()
+                                try {
+                                    DocumentsContract.deleteDocument(applicationContext.contentResolver, it.uri.toUri())
+                                } catch (e: Exception) {
+
+                                }
                                 repository.updateVideo(video.apply {
                                     progress += 1
                                 })
                             }
-                            playlistFile.delete()
+                            try {
+                                DocumentsContract.deleteDocument(applicationContext.contentResolver, videoUrl.toUri())
+                            } catch (e: Exception) {
+
+                            }
                             if (playlists.isEmpty()) {
-                                videoDirectory.delete()
+                                try {
+                                    DocumentsContract.deleteDocument(applicationContext.contentResolver, videoDirectoryUri.toUri())
+                                } catch (e: Exception) {
+
+                                }
                             }
                         } else {
-                            DocumentFile.fromSingleUri(applicationContext, videoUrl.toUri())?.delete()
+                            try {
+                                DocumentsContract.deleteDocument(applicationContext.contentResolver, videoUrl.toUri())
+                            } catch (e: Exception) {
+
+                            }
                         }
-                        video.chatUrl?.let { DocumentFile.fromSingleUri(applicationContext, it.toUri())?.delete() }
+                        video.chatUrl?.let {
+                            try {
+                                DocumentsContract.deleteDocument(applicationContext.contentResolver, it.toUri())
+                            } catch (e: Exception) {
+
+                            }
+                        }
                     } else {
                         val playlistFile = File(videoUrl)
                         if (!playlistFile.exists()) {
@@ -696,7 +807,7 @@ class DownloadsViewModel @Inject internal constructor(
                         if (videoUrl.endsWith(".m3u8")) {
                             val directory = playlistFile.parentFile
                             if (directory != null) {
-                                val playlists = directory.listFiles(FileFilter { it.extension == "m3u8" && it != playlistFile })
+                                val playlists = directory.listFiles { it.extension == "m3u8" && it != playlistFile }
                                 if (playlists != null) {
                                     val playlist = PlaylistUtils.parseMediaPlaylist(playlistFile.inputStream())
                                     val tracksToDelete = playlist.segments.toMutableSet()

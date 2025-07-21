@@ -80,7 +80,7 @@ class PlayerViewerListDialog : BottomSheetDialogFragment(), IntegrityDialog.Call
             }
             viewModel.loadViewerList(
                 requireArguments().getString(LOGIN),
-                requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                 TwitchApiHelper.getGQLHeaders(requireContext()),
                 requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
             )
@@ -190,7 +190,7 @@ class PlayerViewerListDialog : BottomSheetDialogFragment(), IntegrityDialog.Call
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.loadViewerList(
                         requireArguments().getString(LOGIN),
-                        requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                        requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                         TwitchApiHelper.getGQLHeaders(requireContext()),
                         requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                     )

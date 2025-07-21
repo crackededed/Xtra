@@ -317,7 +317,7 @@ class StvEventApiWebSocket(
                             url4x = urls.getOrNull(3) ?: if (urls.isEmpty()) "https:${template}/4x.webp" else null,
                             format = urls.getOrNull(0)?.substringAfterLast(".") ?: "webp",
                             isAnimated = if (!objectData.isNull("animated")) objectData.optBoolean("animated") else null ?: true,
-                            isZeroWidth = objectData.optInt("flags") == 1
+                            isOverlayEmote = objectData.optInt("flags") == 1
                         )
                     } else null
                 } else null

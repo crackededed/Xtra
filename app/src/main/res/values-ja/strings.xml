@@ -136,7 +136,6 @@
     <string name="show_scrolltop">最上部へスクロールボタンの表示</string>
     <string name="bold_usernames">ユーザー名を太字で表示</string>
     <string name="randomcolor">色が未設定のユーザーのランダム色表示</string>
-    <string name="zerowidth">ゼロ幅スタンプ</string>
     <string name="message_limit">メッセージ数の上限</string>
     <string name="player_defaultquality">デフォルトの画質</string>
     <string name="player_doubletap">ダブルタップしてチャットを切り替え</string>
@@ -449,7 +448,6 @@
     <string name="dark_theme_on">ダークテーマ オン</string>
     <string name="dark_theme_off">ダークテーマ オフ</string>
     <string name="follow_system_theme">デバイスのテーマに応じて変更</string>
-    <string name="pixels">%d ピクセル</string>
     <string name="image_quality">画像品質</string>
     <string name="lang_auto">システムのデフォルト</string>
     <string name="save_default">デフォルトとして保存</string>
@@ -681,12 +679,15 @@
     <string name="disabled_setting">Disabled</string>
     <string name="use_webp_images">Use WEBP images</string>
     <string name="use_background_audio">Play audio in the background</string>
-    <string name="use_cronet_downloads">Use Cronet for downloads</string>
-    <string name="use_cronet">Use Cronet network library</string>
     <string name="avoid_rounded_corners">Avoid rounded screen corners</string>
     <string name="api_web_gql_token">Web GQL token</string>
     <string name="use_new_pubsub">Use new PubSub url</string>
     <string name="default_page">Default page</string>
+    <string name="chat_size_modifier">Size modifier</string>
+    <string name="chat_emote_size">Emote size</string>
+    <string name="chat_badge_size">Badge size</string>
+    <string name="overlay_emotes">Overlay emotes</string>
+    <string name="network_library">Network library</string>
     <string name="remove_games_page">Remove Games page</string>
     <string name="remove_popular_page">Remove Popular page</string>
     <string name="remove_following_page">Remove Following page</string>

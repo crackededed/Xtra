@@ -1,8 +1,10 @@
 package com.github.andreyasadchy.xtra.ui.chat
 
 import android.graphics.drawable.Animatable
+import android.graphics.drawable.LayerDrawable
 import android.text.Spannable
 import android.text.SpannableStringBuilder
+import android.text.TextUtils
 import android.text.method.LinkMovementMethod
 import android.text.style.ImageSpan
 import android.view.LayoutInflater
@@ -55,11 +57,12 @@ class ChatAdapter(
     private val backgroundColor: Int,
     private val dialogBackgroundColor: Int,
     private val imageLibrary: String?,
+    private val messageTextSize: Float,
     private val emoteSize: Int,
     private val badgeSize: Int,
     private val emoteQuality: String,
     private val animateGifs: Boolean,
-    private val enableZeroWidth: Boolean,
+    private val enableOverlayEmotes: Boolean,
     private val channelId: String?,
 ) : RecyclerView.Adapter<ChatAdapter.ViewHolder>() {
 
@@ -109,41 +112,41 @@ class ChatAdapter(
         val chatMessage = messages?.get(position) ?: return
         val pair = ChatAdapterUtils.prepareChatMessage(
             chatMessage, holder.textView, enableTimestamps, timestampFormat, firstMsgVisibility, firstChatMsg, redeemedChatMsg, redeemedNoMsg,
-            rewardChatMsg, true, replyMessage, null, null, useRandomColors, random, useReadableColors, isLightTheme, nameDisplay, useBoldNames,
-            showNamePaints, namePaints, paintUsers, showStvBadges, stvBadges, stvBadgeUsers, showPersonalEmotes, personalEmoteSets, personalEmoteSetUsers,
-            showSystemMessageEmotes, loggedInUser, chatUrl, getEmoteBytes, userColors, savedColors, localTwitchEmotes, globalStvEmotes,
-            channelStvEmotes, globalBttvEmotes, channelBttvEmotes, globalFfzEmotes, channelFfzEmotes, globalBadges, channelBadges, cheerEmotes,
-            savedLocalTwitchEmotes, savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes
+            rewardChatMsg, replyMessage, null, useRandomColors, random, useReadableColors, isLightTheme, nameDisplay, useBoldNames, showNamePaints,
+            namePaints, paintUsers, showStvBadges, stvBadges, stvBadgeUsers, showPersonalEmotes, personalEmoteSets, personalEmoteSetUsers, enableOverlayEmotes,
+            showSystemMessageEmotes, loggedInUser, chatUrl, getEmoteBytes, userColors, savedColors, localTwitchEmotes, globalStvEmotes, channelStvEmotes,
+            globalBttvEmotes, channelBttvEmotes, globalFfzEmotes, channelFfzEmotes, globalBadges, channelBadges, cheerEmotes, savedLocalTwitchEmotes,
+            savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes
         )
         holder.bind(chatMessage, pair.first)
         ChatAdapterUtils.loadImages(
             fragment, holder.textView, { holder.bind(chatMessage, it) }, pair.second, pair.third, backgroundColor, imageLibrary, pair.first, emoteSize,
-            badgeSize, emoteQuality, animateGifs, enableZeroWidth
+            badgeSize, emoteQuality, animateGifs, enableOverlayEmotes
         )
     }
 
-    fun createMessageClickedChatAdapter(messages: List<ChatMessage>): MessageClickedChatAdapter {
+    fun createMessageClickedChatAdapter(messages: List<ChatMessage>?): MessageClickedChatAdapter {
         return MessageClickedChatAdapter(
             enableTimestamps, timestampFormat, firstMsgVisibility, firstChatMsg, redeemedChatMsg, redeemedNoMsg, rewardChatMsg, replyMessage,
             { chatMessage -> selectedMessage = chatMessage; replyClickListener?.invoke() },
             { url, name, source, format, isAnimated, emoteId -> imageClickListener?.invoke(url, name, source, format, isAnimated, emoteId) },
             useRandomColors, useReadableColors, isLightTheme, nameDisplay, useBoldNames, showNamePaints, namePaints, paintUsers, showStvBadges,
             stvBadges, stvBadgeUsers, showPersonalEmotes, personalEmoteSets, personalEmoteSetUsers, showSystemMessageEmotes, chatUrl, getEmoteBytes,
-            fragment, dialogBackgroundColor, imageLibrary, emoteSize, badgeSize, emoteQuality, animateGifs, enableZeroWidth, messages, userColors,
-            savedColors, loggedInUser, localTwitchEmotes, globalStvEmotes, channelStvEmotes, globalBttvEmotes, channelBttvEmotes, globalFfzEmotes,
-            channelFfzEmotes, globalBadges, channelBadges, cheerEmotes, selectedMessage
+            fragment, dialogBackgroundColor, imageLibrary, messageTextSize, emoteSize, badgeSize, emoteQuality, animateGifs, enableOverlayEmotes,
+            messages, userColors, savedColors, loggedInUser, localTwitchEmotes, globalStvEmotes, channelStvEmotes, globalBttvEmotes, channelBttvEmotes,
+            globalFfzEmotes, channelFfzEmotes, globalBadges, channelBadges, cheerEmotes, selectedMessage
         )
     }
 
-    fun createReplyClickedChatAdapter(messages: List<ChatMessage>): ReplyClickedChatAdapter {
+    fun createReplyClickedChatAdapter(messages: List<ChatMessage>?): ReplyClickedChatAdapter {
         return ReplyClickedChatAdapter(
             enableTimestamps, timestampFormat, firstMsgVisibility, firstChatMsg, redeemedChatMsg, redeemedNoMsg, rewardChatMsg, replyMessage,
             { url, name, source, format, isAnimated, emoteId -> imageClickListener?.invoke(url, name, source, format, isAnimated, emoteId) },
             useRandomColors, useReadableColors, isLightTheme, nameDisplay, useBoldNames, showNamePaints, namePaints, paintUsers, showStvBadges,
             stvBadges, stvBadgeUsers, showPersonalEmotes, personalEmoteSets, personalEmoteSetUsers, showSystemMessageEmotes, chatUrl, getEmoteBytes,
-            fragment, dialogBackgroundColor, imageLibrary, emoteSize, badgeSize, emoteQuality, animateGifs, enableZeroWidth, messages, userColors,
-            savedColors, loggedInUser, localTwitchEmotes, globalStvEmotes, channelStvEmotes, globalBttvEmotes, channelBttvEmotes, globalFfzEmotes,
-            channelFfzEmotes, globalBadges, channelBadges, cheerEmotes, selectedMessage
+            fragment, dialogBackgroundColor, imageLibrary, messageTextSize, emoteSize, badgeSize, emoteQuality, animateGifs, enableOverlayEmotes,
+            messages, userColors, savedColors, loggedInUser, localTwitchEmotes, globalStvEmotes, channelStvEmotes, globalBttvEmotes, channelBttvEmotes,
+            globalFfzEmotes, channelFfzEmotes, globalBadges, channelBadges, cheerEmotes, selectedMessage
         )
     }
 
@@ -154,7 +157,15 @@ class ChatAdapter(
         if (animateGifs) {
             (holder.textView.text as? Spannable)?.let { view ->
                 view.getSpans<ImageSpan>().forEach {
-                    (it.drawable as? Animatable)?.start()
+                    (it.drawable as? Animatable)?.start() ?:
+                    (it.drawable as? LayerDrawable)?.let {
+                        val lastIndex = it.numberOfLayers - 1
+                        if (lastIndex > -1) {
+                            for (i in 0..lastIndex) {
+                                (it.getDrawable(i) as? Animatable)?.start()
+                            }
+                        }
+                    }
                 }
                 view.getSpans<NamePaintImageSpan>().forEach {
                     (it.drawable as? Animatable)?.start()
@@ -168,7 +179,15 @@ class ChatAdapter(
         if (animateGifs) {
             (holder.textView.text as? Spannable)?.let { view ->
                 view.getSpans<ImageSpan>().forEach {
-                    (it.drawable as? Animatable)?.stop()
+                    (it.drawable as? Animatable)?.stop() ?:
+                    (it.drawable as? LayerDrawable)?.let {
+                        val lastIndex = it.numberOfLayers - 1
+                        if (lastIndex > -1) {
+                            for (i in 0..lastIndex) {
+                                (it.getDrawable(i) as? Animatable)?.stop()
+                            }
+                        }
+                    }
                 }
                 view.getSpans<NamePaintImageSpan>().forEach {
                     (it.drawable as? Animatable)?.stop()
@@ -183,7 +202,15 @@ class ChatAdapter(
             for (i in 0 until childCount) {
                 ((recyclerView.getChildAt(i) as TextView).text as? Spannable)?.let { view ->
                     view.getSpans<ImageSpan>().forEach {
-                        (it.drawable as? Animatable)?.stop()
+                        (it.drawable as? Animatable)?.stop() ?:
+                        (it.drawable as? LayerDrawable)?.let {
+                            val lastIndex = it.numberOfLayers - 1
+                            if (lastIndex > -1) {
+                                for (i in 0..lastIndex) {
+                                    (it.getDrawable(i) as? Animatable)?.stop()
+                                }
+                            }
+                        }
                     }
                     view.getSpans<NamePaintImageSpan>().forEach {
                         (it.drawable as? Animatable)?.stop()
@@ -201,12 +228,28 @@ class ChatAdapter(
         fun bind(chatMessage: ChatMessage, formattedMessage: SpannableStringBuilder) {
             textView.apply {
                 text = formattedMessage
-                movementMethod = LinkMovementMethod.getInstance()
-                TooltipCompat.setTooltipText(this, chatMessage.message ?: chatMessage.systemMsg)
-                setOnClickListener {
-                    if (selectionStart == -1 && selectionEnd == -1) {
-                        selectedMessage = chatMessage
-                        messageClickListener?.invoke(channelId)
+                textSize = messageTextSize
+                if (chatMessage.isReply) {
+                    movementMethod = null
+                    maxLines = 2
+                    ellipsize = TextUtils.TruncateAt.END
+                    TooltipCompat.setTooltipText(this, chatMessage.replyParent?.message ?: chatMessage.replyParent?.systemMsg)
+                    setOnClickListener {
+                        if (selectionStart == -1 && selectionEnd == -1) {
+                            selectedMessage = chatMessage.replyParent
+                            messageClickListener?.invoke(channelId)
+                        }
+                    }
+                } else {
+                    movementMethod = LinkMovementMethod.getInstance()
+                    maxLines = Int.MAX_VALUE
+                    ellipsize = null
+                    TooltipCompat.setTooltipText(this, chatMessage.message ?: chatMessage.systemMsg)
+                    setOnClickListener {
+                        if (selectionStart == -1 && selectionEnd == -1) {
+                            selectedMessage = chatMessage
+                            messageClickListener?.invoke(channelId)
+                        }
                     }
                 }
             }

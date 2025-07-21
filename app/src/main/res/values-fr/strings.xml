@@ -136,7 +136,6 @@
     <string name="show_scrolltop">Afficher le bouton de défilement vers le haut</string>
     <string name="bold_usernames">Noms d\'utilisateur en gras</string>
     <string name="randomcolor">Couleur aléatoire pour les utilisateurs sans couleur</string>
-    <string name="zerowidth">Emotes de largeur nulle</string>
     <string name="message_limit">Limite de messages</string>
     <string name="player_defaultquality">Qualité du lecteur par défaut</string>
     <string name="player_doubletap">Appuyez deux fois pour basculer le chat</string>
@@ -449,7 +448,6 @@
     <string name="dark_theme_on">Thème sombre activé</string>
     <string name="dark_theme_off">Thème sombre désactivé</string>
     <string name="follow_system_theme">Modifier en fonction du thème de l\'appareil</string>
-    <string name="pixels">%d pixels</string>
     <string name="image_quality">Qualité d\'image</string>
     <string name="lang_auto">Valeur par défaut du système</string>
     <string name="save_default">Enregistrer par défaut</string>
@@ -681,12 +679,15 @@
     <string name="disabled_setting">Disabled</string>
     <string name="use_webp_images">Use WEBP images</string>
     <string name="use_background_audio">Play audio in the background</string>
-    <string name="use_cronet_downloads">Use Cronet for downloads</string>
-    <string name="use_cronet">Use Cronet network library</string>
     <string name="avoid_rounded_corners">Avoid rounded screen corners</string>
     <string name="api_web_gql_token">Web GQL token</string>
     <string name="use_new_pubsub">Use new PubSub url</string>
     <string name="default_page">Default page</string>
+    <string name="chat_size_modifier">Size modifier</string>
+    <string name="chat_emote_size">Emote size</string>
+    <string name="chat_badge_size">Badge size</string>
+    <string name="overlay_emotes">Overlay emotes</string>
+    <string name="network_library">Network library</string>
     <string name="remove_games_page">Remove Games page</string>
     <string name="remove_popular_page">Remove Popular page</string>
     <string name="remove_following_page">Remove Following page</string>

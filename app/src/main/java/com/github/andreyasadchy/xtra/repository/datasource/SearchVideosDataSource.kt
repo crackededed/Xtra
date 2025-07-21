@@ -13,7 +13,7 @@ class SearchVideosDataSource(
     private val graphQLRepository: GraphQLRepository,
     private val enableIntegrity: Boolean,
     private val apiPref: List<String>,
-    private val useCronet: Boolean,
+    private val networkLibrary: String?,
 ) : PagingSource<Int, Video>() {
     private var api: String? = null
     private var offset: String? = null
@@ -56,7 +56,7 @@ class SearchVideosDataSource(
     }
 
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): LoadResult<Int, Video> {
-        val response = graphQLRepository.loadQuerySearchVideos(useCronet, gqlHeaders, query, params.loadSize, offset)
+        val response = graphQLRepository.loadQuerySearchVideos(networkLibrary, gqlHeaders, query, params.loadSize, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }
@@ -98,7 +98,7 @@ class SearchVideosDataSource(
     }
 
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, Video> {
-        val response = graphQLRepository.loadSearchVideos(useCronet, gqlHeaders, query, offset)
+        val response = graphQLRepository.loadSearchVideos(networkLibrary, gqlHeaders, query, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }

@@ -26,7 +26,7 @@ class ChannelVideosDataSource(
     private val helixRepository: HelixRepository,
     private val enableIntegrity: Boolean,
     private val apiPref: List<String>,
-    private val useCronet: Boolean,
+    private val networkLibrary: String?,
 ) : PagingSource<Int, Video>() {
     private var api: String? = null
     private var offset: String? = null
@@ -66,7 +66,7 @@ class ChannelVideosDataSource(
     }
 
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): LoadResult<Int, Video> {
-        val response = graphQLRepository.loadQueryUserVideos(useCronet, gqlHeaders, channelId, channelLogin.takeIf { channelId.isNullOrBlank() }, gqlQuerySort, gqlQueryType?.let { listOf(it) }, params.loadSize, offset)
+        val response = graphQLRepository.loadQueryUserVideos(networkLibrary, gqlHeaders, channelId, channelLogin.takeIf { channelId.isNullOrBlank() }, gqlQuerySort, gqlQueryType?.let { listOf(it) }, params.loadSize, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }
@@ -111,7 +111,7 @@ class ChannelVideosDataSource(
     }
 
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, Video> {
-        val response = graphQLRepository.loadChannelVideos(useCronet, gqlHeaders, channelLogin, gqlType, gqlSort, params.loadSize, offset)
+        val response = graphQLRepository.loadChannelVideos(networkLibrary, gqlHeaders, channelLogin, gqlType, gqlSort, params.loadSize, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }
@@ -155,7 +155,7 @@ class ChannelVideosDataSource(
 
     private suspend fun helixLoad(params: LoadParams<Int>): LoadResult<Int, Video> {
         val response = helixRepository.getVideos(
-            useCronet = useCronet,
+            networkLibrary = networkLibrary,
             headers = helixHeaders,
             channelId = channelId,
             period = helixPeriod,

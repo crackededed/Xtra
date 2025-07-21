@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string-array name="networkLibraryEntries">
+        <item>HttpEngine</item>
+        <item>Cronet</item>
+        <item>OkHttp</item>
+    </string-array>
+
+    <string-array name="networkLibraryEntriesNoCronet">
+        <item>HttpEngine</item>
+        <item>OkHttp</item>
+    </string-array>
+
+    <string-array name="networkLibraryEntriesNoHttpEngine">
+        <item>Cronet</item>
+        <item>OkHttp</item>
+    </string-array>
+
     <string-array name="nameDisplayEntries">
         <item>@string/name_display_entry1</item>
         <item>@string/name_display_entry2</item>
@@ -192,7 +208,7 @@
 
     <string-array name="playerQualityValues">
         <item>saved</item>
-        <item>Auto</item>
+        <item>auto</item>
         <item>Source</item>
         <item>1080p60</item>
         <item>1080</item>

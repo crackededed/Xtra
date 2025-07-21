@@ -136,7 +136,6 @@
     <string name="show_scrolltop">顯示捲動到頂部按鈕</string>
     <string name="bold_usernames">粗體使用者名稱</string>
     <string name="randomcolor">對於沒有顏色的使用者隨機顏色</string>
-    <string name="zerowidth">Zero width emotes</string>
     <string name="message_limit">訊息限制</string>
     <string name="player_defaultquality">預設播放器品質</string>
     <string name="player_doubletap">雙輕觸以開關聊天室</string>
@@ -449,7 +448,6 @@
     <string name="dark_theme_on">深色主題開啟</string>
     <string name="dark_theme_off">深色主題關閉</string>
     <string name="follow_system_theme">根據裝置主題變更</string>
-    <string name="pixels">%d 像素</string>
     <string name="image_quality">圖片品質</string>
     <string name="lang_auto">系統預設</string>
     <string name="save_default">儲存為預設</string>
@@ -649,7 +647,7 @@
     <string name="player_menu_settings">播放選單設定</string>
     <string name="chapters">章節</string>
     <string name="seek_to_live">跳轉至實況</string>
-    <string name="audio_compressor">音訊壓縮器r</string>
+    <string name="audio_compressor">音訊壓縮器</string>
     <string name="subtitles">字幕</string>
     <string name="chat_input_toggle">聊天輸入切換</string>
     <string name="chat_toggle">聊天切換</string>
@@ -681,12 +679,15 @@
     <string name="disabled_setting">已禁用</string>
     <string name="use_webp_images">使用 WEBP 圖片</string>
     <string name="use_background_audio">在背景播放音訊</string>
-    <string name="use_cronet_downloads">Use Cronet for downloads</string>
-    <string name="use_cronet">Use Cronet network library</string>
-    <string name="avoid_rounded_corners">Avoid rounded screen corners</string>
-    <string name="api_web_gql_token">Web GQL token</string>
-    <string name="use_new_pubsub">Use new PubSub url</string>
-    <string name="default_page">Default page</string>
+    <string name="avoid_rounded_corners">避開螢幕圓角</string>
+    <string name="api_web_gql_token">Web GQL 權杖</string>
+    <string name="use_new_pubsub">使用新的 PubSub URL</string>
+    <string name="default_page">預設頁面</string>
+    <string name="chat_size_modifier">大小修改</string>
+    <string name="chat_emote_size">表情符號大小</string>
+    <string name="chat_badge_size">徽章大小</string>
+    <string name="overlay_emotes">疊加表情符號</string>
+    <string name="network_library">網路函式庫</string>
     <string name="remove_games_page">Remove Games page</string>
     <string name="remove_popular_page">Remove Popular page</string>
     <string name="remove_following_page">Remove Following page</string>

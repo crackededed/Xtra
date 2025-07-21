@@ -1,7 +1,10 @@
 package com.github.andreyasadchy.xtra.ui.game.videos
 
 import android.content.Context
+import android.net.http.HttpEngine
+import android.net.http.UrlResponseInfo
 import android.os.Build
+import android.os.ext.SdkExtensions
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -24,9 +27,11 @@ import com.github.andreyasadchy.xtra.type.VideoSort
 import com.github.andreyasadchy.xtra.ui.common.VideosSortDialog
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentArgs
 import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.HttpEngineUtils
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
 import com.github.andreyasadchy.xtra.util.prefs
+import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -39,7 +44,6 @@ import okhttp3.Request
 import okio.buffer
 import okio.sink
 import org.chromium.net.CronetEngine
-import org.chromium.net.UrlResponseInfo
 import org.chromium.net.apihelpers.RedirectHandlers
 import org.chromium.net.apihelpers.UrlRequestCallbacks
 import java.io.File
@@ -56,7 +60,8 @@ class GameVideosViewModel @Inject constructor(
     private val bookmarksRepository: BookmarksRepository,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
-    private val cronetEngine: CronetEngine?,
+    private val httpEngine: Lazy<HttpEngine>?,
+    private val cronetEngine: Lazy<CronetEngine>?,
     private val cronetExecutor: ExecutorService,
     private val okHttpClient: OkHttpClient,
     savedStateHandle: SavedStateHandle,
@@ -142,7 +147,7 @@ class GameVideosViewModel @Inject constructor(
                 helixRepository = helixRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                 apiPref = applicationContext.prefs().getString(C.API_PREFS_GAME_VIDEOS, null)?.split(',') ?: TwitchApiHelper.gameVideosApiDefaults,
-                useCronet = applicationContext.prefs().getBoolean(C.USE_CRONET, false),
+                networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
             )
         }.flow
     }.cachedIn(viewModelScope)
@@ -167,7 +172,7 @@ class GameVideosViewModel @Inject constructor(
         val saveSort: Boolean?,
     )
 
-    fun saveBookmark(filesDir: String, video: Video, useCronet: Boolean, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>) {
+    fun saveBookmark(filesDir: String, video: Video, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>) {
         viewModelScope.launch {
             val item = video.id?.let { bookmarksRepository.getBookmarkByVideoId(it) }
             if (item != null) {
@@ -179,19 +184,10 @@ class GameVideosViewModel @Inject constructor(
                         val path = filesDir + File.separator + "thumbnails" + File.separator + id
                         viewModelScope.launch(Dispatchers.IO) {
                             try {
-                                if (useCronet && cronetEngine != null) {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                        val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
-                                        cronetEngine.newUrlRequestBuilder(it, request.callback, cronetExecutor).build().start()
-                                        val response = request.future.get()
-                                        if (response.urlResponseInfo.httpStatusCode in 200..299) {
-                                            FileOutputStream(path).use {
-                                                it.write(response.responseBody as ByteArray)
-                                            }
-                                        }
-                                    } else {
-                                        val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
-                                            cronetEngine.newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
+                                when {
+                                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                        val response = suspendCoroutine<Pair<android.net.http.UrlResponseInfo, ByteArray>> { continuation ->
+                                            httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
                                         if (response.first.httpStatusCode in 200..299) {
                                             FileOutputStream(path).use {
@@ -199,11 +195,33 @@ class GameVideosViewModel @Inject constructor(
                                             }
                                         }
                                     }
-                                } else {
-                                    okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
-                                        if (response.isSuccessful) {
-                                            File(path).sink().buffer().use { sink ->
-                                                sink.writeAll(response.body.source())
+                                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                            val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
+                                            cronetEngine.get().newUrlRequestBuilder(it, request.callback, cronetExecutor).build().start()
+                                            val response = request.future.get()
+                                            if (response.urlResponseInfo.httpStatusCode in 200..299) {
+                                                FileOutputStream(path).use {
+                                                    it.write(response.responseBody as ByteArray)
+                                                }
+                                            }
+                                        } else {
+                                            val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                                                cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
+                                            }
+                                            if (response.first.httpStatusCode in 200..299) {
+                                                FileOutputStream(path).use {
+                                                    it.write(response.second)
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else -> {
+                                        okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                            if (response.isSuccessful) {
+                                                File(path).sink().buffer().use { sink ->
+                                                    sink.writeAll(response.body.source())
+                                                }
                                             }
                                         }
                                     }
@@ -221,19 +239,10 @@ class GameVideosViewModel @Inject constructor(
                         val path = filesDir + File.separator + "profile_pics" + File.separator + id
                         viewModelScope.launch(Dispatchers.IO) {
                             try {
-                                if (useCronet && cronetEngine != null) {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                        val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
-                                        cronetEngine.newUrlRequestBuilder(it, request.callback, cronetExecutor).build().start()
-                                        val response = request.future.get()
-                                        if (response.urlResponseInfo.httpStatusCode in 200..299) {
-                                            FileOutputStream(path).use {
-                                                it.write(response.responseBody as ByteArray)
-                                            }
-                                        }
-                                    } else {
+                                when {
+                                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                         val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
-                                            cronetEngine.newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
+                                            httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
                                         if (response.first.httpStatusCode in 200..299) {
                                             FileOutputStream(path).use {
@@ -241,11 +250,33 @@ class GameVideosViewModel @Inject constructor(
                                             }
                                         }
                                     }
-                                } else {
-                                    okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
-                                        if (response.isSuccessful) {
-                                            File(path).sink().buffer().use { sink ->
-                                                sink.writeAll(response.body.source())
+                                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                            val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
+                                            cronetEngine.get().newUrlRequestBuilder(it, request.callback, cronetExecutor).build().start()
+                                            val response = request.future.get()
+                                            if (response.urlResponseInfo.httpStatusCode in 200..299) {
+                                                FileOutputStream(path).use {
+                                                    it.write(response.responseBody as ByteArray)
+                                                }
+                                            }
+                                        } else {
+                                            val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                                                cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
+                                            }
+                                            if (response.first.httpStatusCode in 200..299) {
+                                                FileOutputStream(path).use {
+                                                    it.write(response.second)
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else -> {
+                                        okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                            if (response.isSuccessful) {
+                                                File(path).sink().buffer().use { sink ->
+                                                    sink.writeAll(response.body.source())
+                                                }
                                             }
                                         }
                                     }
@@ -259,7 +290,7 @@ class GameVideosViewModel @Inject constructor(
                 }
                 val userTypes = video.channelId?.let {
                     try {
-                        val response = graphQLRepository.loadQueryUsersType(useCronet, gqlHeaders, listOf(it))
+                        val response = graphQLRepository.loadQueryUsersType(networkLibrary, gqlHeaders, listOf(it))
                         response.data!!.users?.firstOrNull()?.let {
                             User(
                                 channelId = it.id,
@@ -278,7 +309,7 @@ class GameVideosViewModel @Inject constructor(
                         if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                             try {
                                 helixRepository.getUsers(
-                                    useCronet = useCronet,
+                                    networkLibrary = networkLibrary,
                                     headers = helixHeaders,
                                     ids = listOf(it)
                                 ).data.firstOrNull()?.let {

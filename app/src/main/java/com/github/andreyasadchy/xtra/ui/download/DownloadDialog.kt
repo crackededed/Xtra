@@ -71,10 +71,11 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
         private const val KEY_GAME_NAME = "gameName"
         private const val KEY_VIDEO_TOTAL_DURATION = "totalDuration"
         private const val KEY_VIDEO_CURRENT_POSITION = "currentPosition"
-        private const val KEY_URLS_KEYS = "urls_keys"
-        private const val KEY_URLS_VALUES = "urls_values"
+        private const val KEY_QUALITY_KEYS = "quality_keys"
+        private const val KEY_QUALITY_NAMES = "quality_names"
+        private const val KEY_QUALITY_URLS = "quality_urls"
 
-        fun newInstance(id: String?, title: String?, startedAt: String?, channelId: String?, channelLogin: String?, channelName: String?, channelLogo: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, keys: Array<String>? = null, values: Array<String>? = null): DownloadDialog {
+        fun newInstance(id: String?, title: String?, startedAt: String?, channelId: String?, channelLogin: String?, channelName: String?, channelLogo: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, qualityKeys: Array<String>? = null, qualityNames: Array<String>? = null, qualityUrls: Array<String>? = null): DownloadDialog {
             return DownloadDialog().apply {
                 arguments = bundleOf(
                     KEY_TYPE to STREAM,
@@ -89,13 +90,14 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                     KEY_GAME_ID to gameId,
                     KEY_GAME_SLUG to gameSlug,
                     KEY_GAME_NAME to gameName,
-                    KEY_URLS_KEYS to keys,
-                    KEY_URLS_VALUES to values
+                    KEY_QUALITY_KEYS to qualityKeys,
+                    KEY_QUALITY_NAMES to qualityNames,
+                    KEY_QUALITY_URLS to qualityUrls
                 )
             }
         }
 
-        fun newInstance(id: String?, title: String?, uploadDate: String?, duration: String?, videoType: String?, animatedPreviewUrl: String?, channelId: String?, channelLogin: String?, channelName: String?, channelLogo: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, totalDuration: Long? = null, currentPosition: Long? = null, keys: Array<String>? = null, values: Array<String>? = null): DownloadDialog {
+        fun newInstance(id: String?, title: String?, uploadDate: String?, duration: String?, videoType: String?, animatedPreviewUrl: String?, channelId: String?, channelLogin: String?, channelName: String?, channelLogo: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, totalDuration: Long? = null, currentPosition: Long? = null, qualityKeys: Array<String>? = null, qualityNames: Array<String>? = null, qualityUrls: Array<String>? = null): DownloadDialog {
             return DownloadDialog().apply {
                 arguments = bundleOf(
                     KEY_TYPE to VIDEO,
@@ -115,13 +117,14 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                     KEY_GAME_NAME to gameName,
                     KEY_VIDEO_TOTAL_DURATION to totalDuration,
                     KEY_VIDEO_CURRENT_POSITION to currentPosition,
-                    KEY_URLS_KEYS to keys,
-                    KEY_URLS_VALUES to values
+                    KEY_QUALITY_KEYS to qualityKeys,
+                    KEY_QUALITY_NAMES to qualityNames,
+                    KEY_QUALITY_URLS to qualityUrls
                 )
             }
         }
 
-        fun newInstance(clipId: String?, title: String?, uploadDate: String?, duration: Double?, videoId: String?, vodOffset: Int?, channelId: String?, channelLogin: String?, channelName: String?, channelLogo: String?, thumbnailUrl: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, keys: Array<String>? = null, values: Array<String>? = null): DownloadDialog {
+        fun newInstance(clipId: String?, title: String?, uploadDate: String?, duration: Double?, videoId: String?, vodOffset: Int?, channelId: String?, channelLogin: String?, channelName: String?, channelLogo: String?, thumbnailUrl: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, qualityKeys: Array<String>? = null, qualityNames: Array<String>? = null, qualityUrls: Array<String>? = null): DownloadDialog {
             return DownloadDialog().apply {
                 arguments = bundleOf(
                     KEY_TYPE to CLIP,
@@ -140,8 +143,9 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                     KEY_GAME_ID to gameId,
                     KEY_GAME_SLUG to gameSlug,
                     KEY_GAME_NAME to gameName,
-                    KEY_URLS_KEYS to keys,
-                    KEY_URLS_VALUES to values
+                    KEY_QUALITY_KEYS to qualityKeys,
+                    KEY_QUALITY_NAMES to qualityNames,
+                    KEY_QUALITY_URLS to qualityUrls
                 )
             }
         }
@@ -218,12 +222,14 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                     }
                 }
                 viewModel.setStream(
-                    useCronet = requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                     gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), requireContext().prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, true)),
                     channelLogin = requireArguments().getString(KEY_CHANNEL_LOGIN),
-                    qualities = requireArguments().getStringArray(KEY_URLS_KEYS)?.let { keys ->
-                        requireArguments().getStringArray(KEY_URLS_VALUES)?.let { values ->
-                            keys.zip(values).toMap(mutableMapOf())
+                    qualities = requireArguments().getStringArray(KEY_QUALITY_KEYS)?.let { keys ->
+                        requireArguments().getStringArray(KEY_QUALITY_NAMES)?.let { names ->
+                            requireArguments().getStringArray(KEY_QUALITY_URLS)?.let { urls ->
+                                keys.zip(names.zip(urls)).toMap(mutableMapOf())
+                            }
                         }
                     },
                     randomDeviceId = requireContext().prefs().getBoolean(C.TOKEN_RANDOM_DEVICEID, true),
@@ -259,14 +265,16 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                     }
                 }
                 viewModel.setVideo(
-                    useCronet = requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                     gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), requireContext().prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_VIDEO, true)),
                     videoId = requireArguments().getString(KEY_VIDEO_ID),
                     animatedPreviewUrl = requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW),
                     videoType = requireArguments().getString(KEY_VIDEO_TYPE),
-                    qualities = requireArguments().getStringArray(KEY_URLS_KEYS)?.let { keys ->
-                        requireArguments().getStringArray(KEY_URLS_VALUES)?.let { values ->
-                            keys.zip(values).toMap(mutableMapOf())
+                    qualities = requireArguments().getStringArray(KEY_QUALITY_KEYS)?.let { keys ->
+                        requireArguments().getStringArray(KEY_QUALITY_NAMES)?.let { names ->
+                            requireArguments().getStringArray(KEY_QUALITY_URLS)?.let { urls ->
+                                keys.zip(names.zip(urls)).toMap(mutableMapOf())
+                            }
                         }
                     },
                     playerType = requireContext().prefs().getString(C.TOKEN_PLAYERTYPE_VIDEO, "channel_home_live"),
@@ -286,13 +294,15 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                     }
                 }
                 viewModel.setClip(
-                    useCronet = requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                     gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
                     clipId = requireArguments().getString(KEY_CLIP_ID),
                     thumbnailUrl = requireArguments().getString(KEY_THUMBNAIL_URL),
-                    qualities = requireArguments().getStringArray(KEY_URLS_KEYS)?.let { keys ->
-                        requireArguments().getStringArray(KEY_URLS_VALUES)?.let { values ->
-                            keys.zip(values).toMap(mutableMapOf())
+                    qualities = requireArguments().getStringArray(KEY_QUALITY_KEYS)?.let { keys ->
+                        requireArguments().getStringArray(KEY_QUALITY_NAMES)?.let { names ->
+                            requireArguments().getStringArray(KEY_QUALITY_URLS)?.let { urls ->
+                                keys.zip(names.zip(urls)).toMap(mutableMapOf())
+                            }
                         }
                     },
                     skipAccessToken = requireContext().prefs().getString(C.TOKEN_SKIP_CLIP_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2,
@@ -362,7 +372,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                 isEnabled = downloadChat.isChecked
             }
             (spinner.editText as? MaterialAutoCompleteTextView)?.apply {
-                setSimpleItems(qualities.keys.toTypedArray())
+                setSimpleItems(qualities.map { it.value.first }.toTypedArray())
                 setText(adapter.getItem(0).toString(), false)
             }
             cancel.setOnClickListener { dismiss() }
@@ -374,12 +384,12 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
             layout.children.forEach { v -> v.isVisible = v.id != R.id.progressBar && v.id != R.id.timeLayout && v.id != R.id.sharedStorageLayout && v.id != R.id.appStorageLayout }
             initDialog(qualities)
             download.setOnClickListener {
-                val quality = qualities.getValue(spinner.editText?.text.toString())
+                val quality = qualities.entries.find { it.value.first == spinner.editText?.text.toString() }
                 val location = resources.getStringArray(R.array.spinnerStorage).indexOf(storageSelectionContainer.storageSpinner.editText?.text.toString())
                 val path = if (location == 0) sharedPath else downloadPath
                 val downloadChat = downloadChat.isChecked
                 val downloadChatEmotes = downloadChatEmotes.isChecked
-                if (!path.isNullOrBlank()) {
+                if (quality != null && !path.isNullOrBlank()) {
                     (requireActivity() as? MainActivity)?.downloadStream(
                         filesDir = requireContext().filesDir.path,
                         id = requireArguments().getString(KEY_STREAM_ID),
@@ -393,8 +403,8 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                         gameId = requireArguments().getString(KEY_GAME_ID),
                         gameSlug = requireArguments().getString(KEY_GAME_SLUG),
                         gameName = requireArguments().getString(KEY_GAME_NAME),
-                        path = path,
-                        quality = quality.first,
+                        downloadPath = path,
+                        quality = quality.key,
                         downloadChat = downloadChat,
                         downloadChatEmotes = downloadChatEmotes,
                         wifiOnly = requireContext().prefs().getBoolean(C.DOWNLOAD_WIFI_ONLY, false)
@@ -437,12 +447,12 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                         timeTo.editText?.error = getString(R.string.to_is_longer)
                     }
                     from < to -> {
-                        val quality = qualities.getValue(spinner.editText?.text.toString())
+                        val quality = qualities.entries.find { it.value.first == spinner.editText?.text.toString() }
                         val location = resources.getStringArray(R.array.spinnerStorage).indexOf(storageSelectionContainer.storageSpinner.editText?.text.toString())
                         val path = if (location == 0) sharedPath else downloadPath
                         val downloadChat = downloadChat.isChecked
                         val downloadChatEmotes = downloadChatEmotes.isChecked
-                        if (!path.isNullOrBlank()) {
+                        if (quality != null && !path.isNullOrBlank()) {
                             (requireActivity() as? MainActivity)?.downloadVideo(
                                 filesDir = requireContext().filesDir.path,
                                 id = requireArguments().getString(KEY_VIDEO_ID),
@@ -457,9 +467,9 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                                 gameId = requireArguments().getString(KEY_GAME_ID),
                                 gameSlug = requireArguments().getString(KEY_GAME_SLUG),
                                 gameName = requireArguments().getString(KEY_GAME_NAME),
-                                url = quality.second,
-                                path = path,
-                                quality = quality.first,
+                                url = quality.value.second,
+                                downloadPath = path,
+                                quality = quality.key,
                                 from = from,
                                 to = to,
                                 downloadChat = downloadChat,
@@ -506,12 +516,12 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
             layout.children.forEach { v -> v.isVisible = v.id != R.id.progressBar && v.id != R.id.timeLayout && v.id != R.id.sharedStorageLayout && v.id != R.id.appStorageLayout }
             initDialog(qualities)
             download.setOnClickListener {
-                val quality = qualities.getValue(spinner.editText?.text.toString())
+                val quality = qualities.entries.find { it.value.first == spinner.editText?.text.toString() }
                 val location = resources.getStringArray(R.array.spinnerStorage).indexOf(storageSelectionContainer.storageSpinner.editText?.text.toString())
                 val path = if (location == 0) sharedPath else downloadPath
                 val downloadChat = downloadChat.isChecked
                 val downloadChatEmotes = downloadChatEmotes.isChecked
-                if (!path.isNullOrBlank()) {
+                if (quality != null && !path.isNullOrBlank()) {
                     (requireActivity() as? MainActivity)?.downloadClip(
                         filesDir = requireContext().filesDir.path,
                         clipId = requireArguments().getString(KEY_CLIP_ID),
@@ -528,9 +538,9 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                         gameId = requireArguments().getString(KEY_GAME_ID),
                         gameSlug = requireArguments().getString(KEY_GAME_SLUG),
                         gameName = requireArguments().getString(KEY_GAME_NAME),
-                        url = quality.second,
-                        path = path,
-                        quality = quality.first,
+                        url = quality.value.second,
+                        downloadPath = path,
+                        quality = quality.key,
                         downloadChat = downloadChat,
                         downloadChatEmotes = downloadChatEmotes,
                         wifiOnly = requireContext().prefs().getBoolean(C.DOWNLOAD_WIFI_ONLY, false)

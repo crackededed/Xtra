@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.ext.SdkExtensions
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -27,6 +28,7 @@ import androidx.core.content.res.use
 import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
@@ -223,7 +225,7 @@ class SettingsActivity : AppCompatActivity() {
                     }
                     viewModel.restoreSettings(
                         list = list,
-                        useCronet = requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                        networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                         gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), true),
                         helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext())
                     )
@@ -289,7 +291,7 @@ class SettingsActivity : AppCompatActivity() {
                 }
                 viewModel.toggleNotifications(
                     enabled = newValue as Boolean,
-                    useCronet = requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                     gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), true),
                     helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext())
                 )
@@ -350,7 +352,7 @@ class SettingsActivity : AppCompatActivity() {
             }
             findPreference<Preference>("check_updates")?.setOnPreferenceClickListener {
                 viewModel.checkUpdates(
-                    requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                     requireContext().prefs().getString(C.UPDATE_URL, null) ?: "https://api.github.com/repos/crackededed/xtra/releases/tags/latest",
                     requireContext().tokenPrefs().getLong(C.UPDATE_LAST_CHECKED, 0)
                 )
@@ -438,7 +440,7 @@ class SettingsActivity : AppCompatActivity() {
                                             requireContext().toast(R.string.no_browser_found)
                                         }
                                     } else {
-                                        viewModel.downloadUpdate(requireContext().prefs().getBoolean(C.USE_CRONET, false), it)
+                                        viewModel.downloadUpdate(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"), it)
                                     }
                                 }
                                 .setNegativeButton(getString(R.string.no), null)
@@ -578,11 +580,9 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
             findPreference<SeekBarPreference>("chatWidth")?.apply {
-                summary = requireContext().getString(R.string.pixels, requireContext().prefs().getInt(C.LANDSCAPE_CHAT_WIDTH, 30))
                 setOnPreferenceChangeListener { _, newValue ->
                     (requireActivity() as? SettingsActivity)?.setResult()
                     val chatWidth = DisplayUtils.calculateLandscapeWidthByPercent(requireActivity(), newValue as Int)
-                    summary = requireContext().getString(R.string.pixels, chatWidth)
                     requireContext().prefs().edit { putInt(C.LANDSCAPE_CHAT_WIDTH, chatWidth) }
                     true
                 }
@@ -1088,9 +1088,24 @@ class SettingsActivity : AppCompatActivity() {
                 IntegrityDialog.show(childFragmentManager)
                 true
             }
-            if (!CronetProvider.getAllProviders(requireContext()).any { it.isEnabled }) {
-                findPreference<SwitchPreferenceCompat>(C.USE_CRONET)?.isVisible = false
-                findPreference<SwitchPreferenceCompat>(C.DOWNLOAD_USE_CRONET)?.isVisible = false
+            val httpEngine = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7
+            val cronet = CronetProvider.getAllProviders(requireContext()).any { it.isEnabled }
+            if (!httpEngine || !cronet) {
+                findPreference<ListPreference>(C.NETWORK_LIBRARY)?.apply {
+                    when {
+                        !httpEngine && !cronet -> {
+                            isVisible = false
+                        }
+                        !cronet -> {
+                            setEntries(R.array.networkLibraryEntriesNoCronet)
+                            setEntryValues(R.array.networkLibraryEntriesNoCronet)
+                        }
+                        else -> {
+                            setEntries(R.array.networkLibraryEntriesNoHttpEngine)
+                            setEntryValues(R.array.networkLibraryEntriesNoHttpEngine)
+                        }
+                    }
+                }
             }
         }
 
@@ -1396,7 +1411,8 @@ class SettingsActivity : AppCompatActivity() {
             }
             requireActivity().findViewById<SearchView>(R.id.searchView)?.let {
                 savedQuery?.let { query -> it.setQuery(query, true) }
-                it.isIconified = false
+                it.requestFocus()
+                WindowCompat.getInsetsController(requireActivity().window, it).show(WindowInsetsCompat.Type.ime())
             }
         }
 

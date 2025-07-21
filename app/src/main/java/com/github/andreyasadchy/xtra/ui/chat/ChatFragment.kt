@@ -130,6 +130,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                 !TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank())
                 val chatUrl = args.getString(KEY_CHAT_URL)
                 if (isLive || (args.getString(KEY_VIDEO_ID) != null && args.getInt(KEY_START_TIME) != -1) || chatUrl != null) {
+                    val sizeModifier = (requireContext().prefs().getInt(C.CHAT_SIZE_MODIFIER, 100).toFloat() / 100f)
                     adapter = ChatAdapter(
                         enableTimestamps = requireContext().prefs().getBoolean(C.CHAT_TIMESTAMPS, false),
                         timestampFormat = requireContext().prefs().getString(C.CHAT_TIMESTAMP_FORMAT, "0"),
@@ -167,11 +168,12 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                             }
                         ),
                         imageLibrary = requireContext().prefs().getString(C.CHAT_IMAGE_LIBRARY, "0"),
-                        emoteSize = requireContext().convertDpToPixels(29.5f),
-                        badgeSize = requireContext().convertDpToPixels(18.5f),
+                        messageTextSize = (requireContext().prefs().getString(C.CHAT_TEXT_SIZE, "14")?.toFloatOrNull() ?: 14f) * sizeModifier,
+                        emoteSize = requireContext().convertDpToPixels((requireContext().prefs().getString(C.CHAT_EMOTE_SIZE, "29.5")?.toFloatOrNull() ?: 29.5f) * sizeModifier),
+                        badgeSize = requireContext().convertDpToPixels((requireContext().prefs().getString(C.CHAT_BADGE_SIZE, "18.5")?.toFloatOrNull() ?: 18.5f) * sizeModifier),
                         emoteQuality = requireContext().prefs().getString(C.CHAT_IMAGE_QUALITY, "4") ?: "4",
                         animateGifs = requireContext().prefs().getBoolean(C.ANIMATED_EMOTES, true),
-                        enableZeroWidth = requireContext().prefs().getBoolean(C.CHAT_ZEROWIDTH, true),
+                        enableOverlayEmotes = requireContext().prefs().getBoolean(C.CHAT_ZEROWIDTH, true),
                         channelId = channelId,
                     )
                     recyclerView.let {
@@ -1037,7 +1039,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
             val channelId = args.getString(KEY_CHANNEL_ID)
             val channelLogin = args.getString(KEY_CHANNEL_LOGIN)
             if (args.getBoolean(KEY_IS_LIVE)) {
-                viewModel.startLive(requireContext().prefs().getBoolean(C.USE_CRONET, false), channelId, channelLogin, args.getString(KEY_CHANNEL_NAME), args.getString(KEY_STREAM_ID))
+                viewModel.startLive(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"), channelId, channelLogin, args.getString(KEY_CHANNEL_NAME), args.getString(KEY_STREAM_ID))
             } else {
                 val videoId = args.getString(KEY_VIDEO_ID)
                 val startTime = args.getInt(KEY_START_TIME)
@@ -1088,7 +1090,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
         if (channelLogin != null) {
             viewModel.startLiveChat(requireArguments().getString(KEY_CHANNEL_ID), channelLogin)
             if (requireContext().prefs().getBoolean(C.CHAT_RECENT, true)) {
-                viewModel.loadRecentMessages(requireContext().prefs().getBoolean(C.USE_CRONET, false), channelLogin)
+                viewModel.loadRecentMessages(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"), channelLogin)
             }
         }
         viewModel.autoReconnect = true
@@ -1160,7 +1162,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                 viewModel.send(
                     message = text,
                     replyId = replyId,
-                    useCronet = requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                     gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), true),
                     helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext()),
                     accountId = requireContext().tokenPrefs().getString(C.USER_ID, null),
@@ -1204,11 +1206,11 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
     }
 
     override fun onCreateMessageClickedChatAdapter(): MessageClickedChatAdapter {
-        return adapter.createMessageClickedChatAdapter(viewModel.chatMessages.value.toList())
+        return adapter.createMessageClickedChatAdapter(adapter.messages?.toList())
     }
 
     override fun onCreateReplyClickedChatAdapter(): ReplyClickedChatAdapter {
-        return adapter.createReplyClickedChatAdapter(viewModel.chatMessages.value.toList())
+        return adapter.createReplyClickedChatAdapter(adapter.messages?.toList())
     }
 
     override fun onReplyClicked(replyId: String?, userLogin: String?, userName: String?, message: String?) {

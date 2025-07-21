@@ -8,8 +8,8 @@ class Image(
     val url4x: String? = null,
     val format: String? = null,
     val isAnimated: Boolean = false,
-    val isZeroWidth: Boolean = false,
     val isEmote: Boolean = false,
+    var overlayEmote: Image? = null,
     var start: Int,
     var end: Int,
 )

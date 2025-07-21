@@ -152,7 +152,6 @@
     <string name="show_scrolltop">Show scroll to top button</string>
     <string name="bold_usernames">Bold usernames</string>
     <string name="randomcolor">Random color for users without color</string>
-    <string name="zerowidth">Zero width emotes</string>
     <string name="message_limit">Message limit</string>
     <string name="player_defaultquality">Default player quality</string>
     <string name="player_doubletap">Double tap to toggle chat</string>
@@ -465,7 +464,6 @@
     <string name="dark_theme_on">Dark theme on</string>
     <string name="dark_theme_off">Dark theme off</string>
     <string name="follow_system_theme">Change based on device theme</string>
-    <string name="pixels">%d pixels</string>
     <string name="image_quality">Image quality</string>
     <string name="lang_auto">System default</string>
     <string name="save_default">Save as default</string>
@@ -697,12 +695,15 @@
     <string name="disabled_setting">Disabled</string>
     <string name="use_webp_images">Use WEBP images</string>
     <string name="use_background_audio">Play audio in the background</string>
-    <string name="use_cronet_downloads">Use Cronet for downloads</string>
-    <string name="use_cronet">Use Cronet network library</string>
     <string name="avoid_rounded_corners">Avoid rounded screen corners</string>
     <string name="api_web_gql_token">Web GQL token</string>
     <string name="use_new_pubsub">Use new PubSub url</string>
     <string name="default_page">Default page</string>
+    <string name="chat_size_modifier">Size modifier</string>
+    <string name="chat_emote_size">Emote size</string>
+    <string name="chat_badge_size">Badge size</string>
+    <string name="overlay_emotes">Overlay emotes</string>
+    <string name="network_library">Network library</string>
     <string name="remove_games_page">Remove Games page</string>
     <string name="remove_popular_page">Remove Popular page</string>
     <string name="remove_following_page">Remove Following page</string>

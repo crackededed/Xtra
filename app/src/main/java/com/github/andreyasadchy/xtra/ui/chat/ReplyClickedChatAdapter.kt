@@ -2,6 +2,7 @@ package com.github.andreyasadchy.xtra.ui.chat
 
 import android.graphics.drawable.Animatable
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.LayerDrawable
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -58,11 +59,12 @@ class ReplyClickedChatAdapter(
     private val fragment: Fragment,
     private val backgroundColor: Int,
     private val imageLibrary: String?,
+    private val messageTextSize: Float,
     private val emoteSize: Int,
     private val badgeSize: Int,
     private val emoteQuality: String,
     private val animateGifs: Boolean,
-    private val enableZeroWidth: Boolean,
+    private val enableOverlayEmotes: Boolean,
     messages: List<ChatMessage>?,
     private val userColors: HashMap<String, Int>,
     private val savedColors: HashMap<String, Int>,
@@ -82,7 +84,7 @@ class ReplyClickedChatAdapter(
 
     val threadParentId = selectedMessage?.reply?.threadParentId
     var messages: MutableList<ChatMessage>? =
-        messages?.filter { it.reply?.threadParentId == threadParentId || it.id == threadParentId }?.toMutableList()
+        messages?.filter { (it.reply?.threadParentId == threadParentId || it.id == threadParentId) && !it.isReply }?.toMutableList()
             ?: selectedMessage?.let { mutableListOf(it) }
         set(value) {
             val oldSize = field?.size ?: 0
@@ -107,13 +109,12 @@ class ReplyClickedChatAdapter(
         val chatMessage = messages?.get(position) ?: return
         val pair = ChatAdapterUtils.prepareChatMessage(
             chatMessage, holder.textView, enableTimestamps, timestampFormat, firstMsgVisibility, firstChatMsg, redeemedChatMsg, redeemedNoMsg,
-            rewardChatMsg, false, replyMessage, null,
-            { url, name, source, format, isAnimated, emoteId -> imageClick(url, name, source, format, isAnimated, emoteId) },
+            rewardChatMsg, replyMessage, { url, name, source, format, isAnimated, emoteId -> imageClick(url, name, source, format, isAnimated, emoteId) },
             useRandomColors, random, useReadableColors, isLightTheme, nameDisplay, useBoldNames, showNamePaints, namePaints, paintUsers,
             showStvBadges, stvBadges, stvBadgeUsers, showPersonalEmotes, personalEmoteSets, personalEmoteSetUsers, showSystemMessageEmotes,
-            loggedInUser, chatUrl, getEmoteBytes, userColors, savedColors, localTwitchEmotes, globalStvEmotes, channelStvEmotes, globalBttvEmotes,
-            channelBttvEmotes, globalFfzEmotes, channelFfzEmotes, globalBadges, channelBadges, cheerEmotes, savedLocalTwitchEmotes, savedLocalBadges,
-            savedLocalCheerEmotes, savedLocalEmotes
+            enableOverlayEmotes, loggedInUser, chatUrl, getEmoteBytes, userColors, savedColors, localTwitchEmotes, globalStvEmotes, channelStvEmotes,
+            globalBttvEmotes, channelBttvEmotes, globalFfzEmotes, channelFfzEmotes, globalBadges, channelBadges, cheerEmotes, savedLocalTwitchEmotes,
+            savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes
         )
         if (chatMessage == selectedMessage) {
             holder.textView.setBackgroundResource(R.color.chatMessageSelected)
@@ -121,7 +122,7 @@ class ReplyClickedChatAdapter(
         holder.bind(chatMessage, pair.first)
         ChatAdapterUtils.loadImages(
             fragment, holder.textView, { holder.bind(chatMessage, it) }, pair.second, pair.third, backgroundColor, imageLibrary, pair.first, emoteSize,
-            badgeSize, emoteQuality, animateGifs, enableZeroWidth
+            badgeSize, emoteQuality, animateGifs, enableOverlayEmotes
         )
     }
 
@@ -158,7 +159,15 @@ class ReplyClickedChatAdapter(
         if (animateGifs) {
             (holder.textView.text as? Spannable)?.let { view ->
                 view.getSpans<ImageSpan>().forEach {
-                    (it.drawable as? Animatable)?.start()
+                    (it.drawable as? Animatable)?.start() ?:
+                    (it.drawable as? LayerDrawable)?.let {
+                        val lastIndex = it.numberOfLayers - 1
+                        if (lastIndex > -1) {
+                            for (i in 0..lastIndex) {
+                                (it.getDrawable(i) as? Animatable)?.start()
+                            }
+                        }
+                    }
                 }
                 view.getSpans<NamePaintImageSpan>().forEach {
                     (it.drawable as? Animatable)?.start()
@@ -172,7 +181,15 @@ class ReplyClickedChatAdapter(
         if (animateGifs) {
             (holder.textView.text as? Spannable)?.let { view ->
                 view.getSpans<ImageSpan>().forEach {
-                    (it.drawable as? Animatable)?.stop()
+                    (it.drawable as? Animatable)?.stop() ?:
+                    (it.drawable as? LayerDrawable)?.let {
+                        val lastIndex = it.numberOfLayers - 1
+                        if (lastIndex > -1) {
+                            for (i in 0..lastIndex) {
+                                (it.getDrawable(i) as? Animatable)?.stop()
+                            }
+                        }
+                    }
                 }
                 view.getSpans<NamePaintImageSpan>().forEach {
                     (it.drawable as? Animatable)?.stop()
@@ -187,7 +204,15 @@ class ReplyClickedChatAdapter(
             for (i in 0 until childCount) {
                 ((recyclerView.getChildAt(i) as TextView).text as? Spannable)?.let { view ->
                     view.getSpans<ImageSpan>().forEach {
-                        (it.drawable as? Animatable)?.stop()
+                        (it.drawable as? Animatable)?.stop() ?:
+                        (it.drawable as? LayerDrawable)?.let {
+                            val lastIndex = it.numberOfLayers - 1
+                            if (lastIndex > -1) {
+                                for (i in 0..lastIndex) {
+                                    (it.getDrawable(i) as? Animatable)?.stop()
+                                }
+                            }
+                        }
                     }
                     view.getSpans<NamePaintImageSpan>().forEach {
                         (it.drawable as? Animatable)?.stop()
@@ -205,6 +230,7 @@ class ReplyClickedChatAdapter(
         fun bind(chatMessage: ChatMessage, formattedMessage: SpannableStringBuilder) {
             textView.apply {
                 text = formattedMessage
+                textSize = messageTextSize
                 movementMethod = LinkMovementMethod.getInstance()
                 TooltipCompat.setTooltipText(this, chatMessage.message ?: chatMessage.systemMsg)
                 setOnClickListener {

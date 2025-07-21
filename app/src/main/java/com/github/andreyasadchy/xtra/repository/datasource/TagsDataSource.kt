@@ -11,14 +11,14 @@ class TagsDataSource(
     private val gqlHeaders: Map<String, String>,
     private val graphQLRepository: GraphQLRepository,
     private val enableIntegrity: Boolean,
-    private val useCronet: Boolean,
+    private val networkLibrary: String?,
 ) : PagingSource<Int, Tag>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Tag> {
         return try {
             val response = query.takeIf { it.isNotBlank() }?.let {
                 if (getGameTags) {
-                    val response = graphQLRepository.loadGameTags(useCronet, gqlHeaders, query, 100)
+                    val response = graphQLRepository.loadGameTags(networkLibrary, gqlHeaders, query, 100)
                     if (enableIntegrity) {
                         response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
                     }
@@ -30,7 +30,7 @@ class TagsDataSource(
                         )
                     }
                 } else {
-                    val response = graphQLRepository.loadFreeformTags(useCronet, gqlHeaders, query, 100)
+                    val response = graphQLRepository.loadFreeformTags(networkLibrary, gqlHeaders, query, 100)
                     if (enableIntegrity) {
                         response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
                     }

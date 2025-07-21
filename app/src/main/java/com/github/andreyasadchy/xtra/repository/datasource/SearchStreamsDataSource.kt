@@ -15,7 +15,7 @@ class SearchStreamsDataSource(
     private val helixRepository: HelixRepository,
     private val enableIntegrity: Boolean,
     private val apiPref: List<String>,
-    private val useCronet: Boolean,
+    private val networkLibrary: String?,
 ) : PagingSource<Int, Stream>() {
     private var api: String? = null
     private var offset: String? = null
@@ -58,7 +58,7 @@ class SearchStreamsDataSource(
     }
 
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): LoadResult<Int, Stream> {
-        val response = graphQLRepository.loadQuerySearchStreams(useCronet, gqlHeaders, query, params.loadSize, offset)
+        val response = graphQLRepository.loadQuerySearchStreams(networkLibrary, gqlHeaders, query, params.loadSize, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }
@@ -96,7 +96,7 @@ class SearchStreamsDataSource(
 
     private suspend fun helixLoad(params: LoadParams<Int>): LoadResult<Int, Stream> {
         val response = helixRepository.getSearchChannels(
-            useCronet = useCronet,
+            networkLibrary = networkLibrary,
             headers = helixHeaders,
             query = query,
             limit = params.loadSize,

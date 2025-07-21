@@ -136,7 +136,6 @@
     <string name="show_scrolltop">Nach-oben-scrollen Button anzeigen</string>
     <string name="bold_usernames">Fette Benutzernamen</string>
     <string name="randomcolor">Zufällige Farbe für Nutzer ohne Farbe</string>
-    <string name="zerowidth">Emotes mit Nullbreite</string>
     <string name="message_limit">Nachrichtenlimit</string>
     <string name="player_defaultquality">Standard-Player-Qualität</string>
     <string name="player_doubletap">Doppelklicken um die Chat-Anzeige umzuschalten</string>
@@ -449,7 +448,6 @@
     <string name="dark_theme_on">Dunkles Theme einschalten</string>
     <string name="dark_theme_off">Dunkles Theme ausschalten</string>
     <string name="follow_system_theme">Basierend auf Geräte-Theme ändern</string>
-    <string name="pixels">%d Pixel</string>
     <string name="image_quality">Bildqualität</string>
     <string name="lang_auto">Systemstandard</string>
     <string name="save_default">Als Standard speichern</string>
@@ -681,12 +679,15 @@
     <string name="disabled_setting">Deaktiviert</string>
     <string name="use_webp_images">Verwende WEBP-Bilder</string>
     <string name="use_background_audio">Audio im Hintergrund abspielen</string>
-    <string name="use_cronet_downloads">Verwende Cronet für Downloads</string>
-    <string name="use_cronet">Verwende die Cronet-Netzwerkbibliothek</string>
     <string name="avoid_rounded_corners">Vermeide abgerundete Bildschirmecken</string>
     <string name="api_web_gql_token">Web-GQL-Token</string>
     <string name="use_new_pubsub">Neue PubSub-URL verwenden</string>
-    <string name="default_page">Default page</string>
+    <string name="default_page">Standardseite</string>
+    <string name="chat_size_modifier">Größenmodifikator</string>
+    <string name="chat_emote_size">Emote-Größe</string>
+    <string name="chat_badge_size">Abzeichengröße</string>
+    <string name="overlay_emotes">Emotes überlagern</string>
+    <string name="network_library">Network library</string>
     <string name="remove_games_page">Remove Games page</string>
     <string name="remove_popular_page">Remove Popular page</string>
     <string name="remove_following_page">Remove Following page</string>

@@ -82,7 +82,7 @@ class LoginActivity : AppCompatActivity() {
             windowInsets
         }
         with(binding) {
-            val useCronet = prefs().getBoolean(C.USE_CRONET, false)
+            val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp")
             val helixHeaders = TwitchApiHelper.getHelixHeaders(this@LoginActivity)
             val helixClientId = helixHeaders[C.HEADER_CLIENT_ID]
             val oldHelixToken = helixHeaders[C.HEADER_TOKEN]?.removePrefix("Bearer ")
@@ -102,7 +102,7 @@ class LoginActivity : AppCompatActivity() {
                 lifecycleScope.launch {
                     if (!helixClientId.isNullOrBlank() && !oldHelixToken.isNullOrBlank()) {
                         try {
-                            authRepository.revoke(useCronet, "client_id=${helixClientId}&token=${oldHelixToken}")
+                            authRepository.revoke(networkLibrary, "client_id=${helixClientId}&token=${oldHelixToken}")
                         } catch (e: Exception) {
 
                         }
@@ -110,7 +110,7 @@ class LoginActivity : AppCompatActivity() {
                     val gqlClientId = gqlHeaders[C.HEADER_CLIENT_ID]
                     if (!gqlClientId.isNullOrBlank() && !oldGQLToken.isNullOrBlank()) {
                         try {
-                            authRepository.revoke(useCronet, "client_id=${gqlClientId}&token=${oldGQLToken}")
+                            authRepository.revoke(networkLibrary, "client_id=${gqlClientId}&token=${oldGQLToken}")
                         } catch (e: Exception) {
 
                         }
@@ -118,7 +118,7 @@ class LoginActivity : AppCompatActivity() {
                     val webGQLToken = tokenPrefs().getString(C.GQL_TOKEN_WEB, null)
                     if (!webGQLToken.isNullOrBlank()) {
                         try {
-                            authRepository.revoke(useCronet, "client_id=kimne78kx3ncx6brgo4mv6wki5h1ko&token=${webGQLToken}")
+                            authRepository.revoke(networkLibrary, "client_id=kimne78kx3ncx6brgo4mv6wki5h1ko&token=${webGQLToken}")
                         } catch (e: Exception) {
 
                         }
@@ -195,7 +195,7 @@ class LoginActivity : AppCompatActivity() {
                                         val token = matcher.group(1)
                                         if (!token.isNullOrBlank()) {
                                             lifecycleScope.launch {
-                                                val valid = validateHelixToken(useCronet, helixClientId, token)
+                                                val valid = validateHelixToken(networkLibrary, helixClientId, token)
                                                 if (valid) {
                                                     helixToken = token
                                                     done()
@@ -262,7 +262,7 @@ class LoginActivity : AppCompatActivity() {
                             readHeaders = false
                             val clientId = webViewRequest.requestHeaders.entries.firstOrNull { it.key.equals(C.HEADER_CLIENT_ID, true) }?.value
                             lifecycleScope.launch {
-                                val valid = validateGQLToken(useCronet, clientId, token)
+                                val valid = validateGQLToken(networkLibrary, clientId, token)
                                 if (prefs().getBoolean(C.ENABLE_INTEGRITY, false)) {
                                     if (apiSetting == 0) {
                                         if (valid || !helixToken.isNullOrBlank()) {
@@ -317,7 +317,7 @@ class LoginActivity : AppCompatActivity() {
 
                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                     if (checkUrl) {
-                        loginIfValidUrl(request.url.toString(), useCronet, gqlClientId, gqlRedirect, helixClientId, helixAuthUrl, apiSetting)
+                        loginIfValidUrl(request.url.toString(), networkLibrary, gqlClientId, gqlRedirect, helixClientId, helixAuthUrl, apiSetting)
                     }
                     return super.shouldOverrideUrlLoading(view, request)
                 }
@@ -326,7 +326,7 @@ class LoginActivity : AppCompatActivity() {
                 override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
                     if (!WebViewFeature.isFeatureSupported(WebViewFeature.SHOULD_OVERRIDE_WITH_REDIRECTS)) {
                         if (checkUrl && url != null) {
-                            loginIfValidUrl(url, useCronet, gqlClientId, gqlRedirect, helixClientId, helixAuthUrl, apiSetting)
+                            loginIfValidUrl(url, networkLibrary, gqlClientId, gqlRedirect, helixClientId, helixAuthUrl, apiSetting)
                         }
                     }
                     return super.shouldOverrideUrlLoading(view, url)
@@ -375,7 +375,7 @@ class LoginActivity : AppCompatActivity() {
                 } else {
                     checkUrl = true
                     lifecycleScope.launch {
-                        loadGQLAuthUrl(useCronet, gqlClientId, gqlRedirect)
+                        loadGQLAuthUrl(networkLibrary, gqlClientId, gqlRedirect)
                     }
                 }
             } else {
@@ -385,10 +385,10 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun loadGQLAuthUrl(useCronet: Boolean, gqlClientId: String?, gqlRedirect: String?): Boolean {
+    private suspend fun loadGQLAuthUrl(networkLibrary: String?, gqlClientId: String?, gqlRedirect: String?): Boolean {
         with(binding) {
             return try {
-                val response = authRepository.getDeviceCode(useCronet, "client_id=${gqlClientId}&scopes=channel_read+chat%3Aread+user_blocks_edit+user_blocks_read+user_follows_edit+user_read")
+                val response = authRepository.getDeviceCode(networkLibrary, "client_id=${gqlClientId}&scopes=channel_read+chat%3Aread+user_blocks_edit+user_blocks_read+user_follows_edit+user_read")
                 deviceCode = response.deviceCode
                 val gqlAuthUrl = "https://id.twitch.tv/oauth2/authorize?client_id=${gqlClientId}&device_code=${deviceCode}&force_verify=true&redirect_uri=${gqlRedirect}&response_type=device_grant_trigger&scope=channel_read chat:read user_blocks_edit user_blocks_read user_follows_edit user_read"
                 webView.loadUrl(gqlAuthUrl)
@@ -399,13 +399,13 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun loginIfValidUrl(url: String, useCronet: Boolean, gqlClientId: String?, gqlRedirect: String?, helixClientId: String?, helixAuthUrl: String, apiSetting: Int) {
+    private fun loginIfValidUrl(url: String, networkLibrary: String?, gqlClientId: String?, gqlRedirect: String?, helixClientId: String?, helixAuthUrl: String, apiSetting: Int) {
         with(binding) {
             if (url == gqlRedirect) {
                 lifecycleScope.launch {
-                    val response = authRepository.getToken(useCronet, "client_id=${gqlClientId}&device_code=${deviceCode}&grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code")
+                    val response = authRepository.getToken(networkLibrary, "client_id=${gqlClientId}&device_code=${deviceCode}&grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code")
                     val token = response.token
-                    val valid = validateGQLToken(useCronet, gqlClientId, token)
+                    val valid = validateGQLToken(networkLibrary, gqlClientId, token)
                     if (apiSetting == 0) {
                         if (valid) {
                             gqlToken = token
@@ -421,7 +421,7 @@ class LoginActivity : AppCompatActivity() {
                             webView.loadUrl("https://www.twitch.tv/login")
                         } else {
                             error()
-                            loadGQLAuthUrl(useCronet, gqlClientId, gqlRedirect)
+                            loadGQLAuthUrl(networkLibrary, gqlClientId, gqlRedirect)
                         }
                     }
                 }
@@ -435,7 +435,7 @@ class LoginActivity : AppCompatActivity() {
                         textZoom.gone()
                         progressBar.visible()
                         lifecycleScope.launch {
-                            val valid = validateHelixToken(useCronet, helixClientId, token)
+                            val valid = validateHelixToken(networkLibrary, helixClientId, token)
                             if (apiSetting == 0) {
                                 if (valid) {
                                     helixToken = token
@@ -445,7 +445,7 @@ class LoginActivity : AppCompatActivity() {
                                     checkUrl = false
                                     webView.loadUrl("https://www.twitch.tv/login")
                                 } else {
-                                    val loaded = loadGQLAuthUrl(useCronet, gqlClientId, gqlRedirect)
+                                    val loaded = loadGQLAuthUrl(networkLibrary, gqlClientId, gqlRedirect)
                                     if (loaded) {
                                         webViewContainer.visible()
                                         textZoom.visible()
@@ -470,9 +470,9 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun validateGQLToken(useCronet: Boolean, gqlClientId: String?, token: String): Boolean {
+    private suspend fun validateGQLToken(networkLibrary: String?, gqlClientId: String?, token: String): Boolean {
         return try {
-            val response = authRepository.validate(useCronet, TwitchApiHelper.addTokenPrefixGQL(token))
+            val response = authRepository.validate(networkLibrary, TwitchApiHelper.addTokenPrefixGQL(token))
             if (response.clientId.isNotBlank() && response.clientId == gqlClientId) {
                 response.userId?.let { userId = it }
                 response.login?.let { userLogin = it }
@@ -483,9 +483,9 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun validateHelixToken(useCronet: Boolean, helixClientId: String?, token: String): Boolean {
+    private suspend fun validateHelixToken(networkLibrary: String?, helixClientId: String?, token: String): Boolean {
         return try {
-            val response = authRepository.validate(useCronet, TwitchApiHelper.addTokenPrefixHelix(token))
+            val response = authRepository.validate(networkLibrary, TwitchApiHelper.addTokenPrefixHelix(token))
             if (response.clientId.isNotBlank() && response.clientId == helixClientId) {
                 response.userId?.let { userId = it }
                 response.login?.let { userLogin = it }

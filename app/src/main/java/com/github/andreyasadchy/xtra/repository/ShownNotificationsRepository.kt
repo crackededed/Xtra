@@ -15,15 +15,15 @@ class ShownNotificationsRepository @Inject constructor(
     private val shownNotificationsDao: ShownNotificationsDao,
 ) {
 
-    suspend fun getNewStreams(notificationUsersRepository: NotificationUsersRepository, useCronet: Boolean, gqlHeaders: Map<String, String>, graphQLRepository: GraphQLRepository, helixHeaders: Map<String, String>, helixRepository: HelixRepository): List<Stream> = withContext(Dispatchers.IO) {
+    suspend fun getNewStreams(notificationUsersRepository: NotificationUsersRepository, networkLibrary: String?, gqlHeaders: Map<String, String>, graphQLRepository: GraphQLRepository, helixHeaders: Map<String, String>, helixRepository: HelixRepository): List<Stream> = withContext(Dispatchers.IO) {
         val list = mutableListOf<Stream>()
         notificationUsersRepository.loadUsers().map { it.channelId }.takeIf { it.isNotEmpty() }?.let {
             try {
-                gqlQueryLocal(useCronet, gqlHeaders, it, graphQLRepository)
+                gqlQueryLocal(networkLibrary, gqlHeaders, it, graphQLRepository)
             } catch (e: Exception) {
                 if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                     try {
-                        helixLocal(useCronet, helixHeaders, it, helixRepository)
+                        helixLocal(networkLibrary, helixHeaders, it, helixRepository)
                     } catch (e: Exception) {
                         return@withContext emptyList()
                     }
@@ -32,7 +32,7 @@ class ShownNotificationsRepository @Inject constructor(
         }
         if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
             try {
-                gqlQueryLoad(useCronet, gqlHeaders, graphQLRepository)
+                gqlQueryLoad(networkLibrary, gqlHeaders, graphQLRepository)
             } catch (e: Exception) {
                 return@withContext emptyList()
             }.mapNotNull { item ->
@@ -59,11 +59,11 @@ class ShownNotificationsRepository @Inject constructor(
         list.filter { it.channelId in newStreams }
     }
 
-    private suspend fun gqlQueryLoad(useCronet: Boolean, gqlHeaders: Map<String, String>, graphQLRepository: GraphQLRepository): List<Stream> {
+    private suspend fun gqlQueryLoad(networkLibrary: String?, gqlHeaders: Map<String, String>, graphQLRepository: GraphQLRepository): List<Stream> {
         val list = mutableListOf<Stream>()
         var offset: String? = null
         do {
-            val response = graphQLRepository.loadQueryUserFollowedStreams(useCronet, gqlHeaders, 100, offset)
+            val response = graphQLRepository.loadQueryUserFollowedStreams(networkLibrary, gqlHeaders, 100, offset)
             val data = response.data!!.user!!.followedLiveUsers!!
             val items = data.edges!!
             items.mapNotNull { item ->
@@ -93,9 +93,9 @@ class ShownNotificationsRepository @Inject constructor(
         return list
     }
 
-    private suspend fun gqlQueryLocal(useCronet: Boolean, gqlHeaders: Map<String, String>, ids: List<String>, graphQLRepository: GraphQLRepository): List<Stream> {
+    private suspend fun gqlQueryLocal(networkLibrary: String?, gqlHeaders: Map<String, String>, ids: List<String>, graphQLRepository: GraphQLRepository): List<Stream> {
         val items = ids.chunked(100).map { list ->
-            graphQLRepository.loadQueryUsersStream(useCronet, gqlHeaders, list)
+            graphQLRepository.loadQueryUsersStream(networkLibrary, gqlHeaders, list)
         }.flatMap { it.data!!.users!! }
         val list = items.mapNotNull { item ->
             item?.let {
@@ -122,17 +122,17 @@ class ShownNotificationsRepository @Inject constructor(
         return list
     }
 
-    private suspend fun helixLocal(useCronet: Boolean, helixHeaders: Map<String, String>, ids: List<String>, helixRepository: HelixRepository): List<Stream> {
+    private suspend fun helixLocal(networkLibrary: String?, helixHeaders: Map<String, String>, ids: List<String>, helixRepository: HelixRepository): List<Stream> {
         val items = ids.chunked(100).map {
             helixRepository.getStreams(
-                useCronet = useCronet,
+                networkLibrary = networkLibrary,
                 headers = helixHeaders,
                 ids = it
             )
         }.flatMap { it.data }
         val users = items.mapNotNull { it.channelId }.chunked(100).map {
             helixRepository.getUsers(
-                useCronet = useCronet,
+                networkLibrary = networkLibrary,
                 headers = helixHeaders,
                 ids = it
             )

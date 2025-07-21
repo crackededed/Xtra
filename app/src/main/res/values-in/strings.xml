@@ -135,7 +135,6 @@
     <string name="show_scrolltop">Tampilkan tombol gulir ke atas</string>
     <string name="bold_usernames">Tebali nama pengguna</string>
     <string name="randomcolor">Warna acak untuk user tanpa warna</string>
-    <string name="zerowidth">Zero width emotes</string>
     <string name="message_limit">Batasi pesan</string>
     <string name="player_defaultquality">Kualitas pemutar default</string>
     <string name="player_doubletap">Ketuk dua kali untuk toggle chat</string>
@@ -448,7 +447,6 @@
     <string name="dark_theme_on">Tema gelap aktif</string>
     <string name="dark_theme_off">Tema gelap nonaktif</string>
     <string name="follow_system_theme">Ubah berdasarkan tema perangkat</string>
-    <string name="pixels">%d pixel</string>
     <string name="image_quality">Kualitas gambar</string>
     <string name="lang_auto">Standar sistem</string>
     <string name="save_default">Simpan sebagai default</string>
@@ -682,12 +680,15 @@
     <string name="disabled_setting">Disabled</string>
     <string name="use_webp_images">Use WEBP images</string>
     <string name="use_background_audio">Play audio in the background</string>
-    <string name="use_cronet_downloads">Use Cronet for downloads</string>
-    <string name="use_cronet">Use Cronet network library</string>
     <string name="avoid_rounded_corners">Avoid rounded screen corners</string>
     <string name="api_web_gql_token">Web GQL token</string>
     <string name="use_new_pubsub">Use new PubSub url</string>
     <string name="default_page">Default page</string>
+    <string name="chat_size_modifier">Size modifier</string>
+    <string name="chat_emote_size">Emote size</string>
+    <string name="chat_badge_size">Badge size</string>
+    <string name="overlay_emotes">Overlay emotes</string>
+    <string name="network_library">Network library</string>
     <string name="remove_games_page">Remove Games page</string>
     <string name="remove_popular_page">Remove Popular page</string>
     <string name="remove_following_page">Remove Following page</string>

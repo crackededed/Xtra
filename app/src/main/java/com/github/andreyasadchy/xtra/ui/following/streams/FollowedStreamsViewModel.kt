@@ -42,7 +42,7 @@ class FollowedStreamsViewModel @Inject constructor(
             helixRepository = helixRepository,
             enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
             apiPref = applicationContext.prefs().getString(C.API_PREFS_FOLLOWED_STREAMS, null)?.split(',') ?: TwitchApiHelper.followedStreamsApiDefaults,
-            useCronet = applicationContext.prefs().getBoolean(C.USE_CRONET, false),
+            networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
         )
     }.flow.cachedIn(viewModelScope)
 }

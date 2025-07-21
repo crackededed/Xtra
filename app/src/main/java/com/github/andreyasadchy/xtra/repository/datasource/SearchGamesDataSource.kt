@@ -16,7 +16,7 @@ class SearchGamesDataSource(
     private val helixRepository: HelixRepository,
     private val enableIntegrity: Boolean,
     private val apiPref: List<String>,
-    private val useCronet: Boolean,
+    private val networkLibrary: String?,
 ) : PagingSource<Int, Game>() {
     private var api: String? = null
     private var offset: String? = null
@@ -64,7 +64,7 @@ class SearchGamesDataSource(
     }
 
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): LoadResult<Int, Game> {
-        val response = graphQLRepository.loadQuerySearchGames(useCronet, gqlHeaders, query, params.loadSize, offset)
+        val response = graphQLRepository.loadQuerySearchGames(networkLibrary, gqlHeaders, query, params.loadSize, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }
@@ -99,7 +99,7 @@ class SearchGamesDataSource(
     }
 
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, Game> {
-        val response = graphQLRepository.loadSearchGames(useCronet, gqlHeaders, query, offset)
+        val response = graphQLRepository.loadSearchGames(networkLibrary, gqlHeaders, query, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }
@@ -133,7 +133,7 @@ class SearchGamesDataSource(
 
     private suspend fun helixLoad(params: LoadParams<Int>): LoadResult<Int, Game> {
         val response = helixRepository.getSearchGames(
-            useCronet = useCronet,
+            networkLibrary = networkLibrary,
             headers = helixHeaders,
             query = query,
             limit = params.loadSize,

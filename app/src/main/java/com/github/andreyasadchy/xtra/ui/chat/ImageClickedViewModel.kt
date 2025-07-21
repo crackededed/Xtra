@@ -18,11 +18,11 @@ class ImageClickedViewModel @Inject constructor(
 
     val emoteCard = MutableStateFlow<EmoteCard?>(null)
 
-    fun loadEmoteCard(emoteId: String?, useCronet: Boolean, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
+    fun loadEmoteCard(emoteId: String?, networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
         if (emoteCard.value == null) {
             viewModelScope.launch {
                 try {
-                    val response = graphQLRepository.loadEmoteCard(useCronet, gqlHeaders, emoteId).also { response ->
+                    val response = graphQLRepository.loadEmoteCard(networkLibrary, gqlHeaders, emoteId).also { response ->
                         if (enableIntegrity && integrity.value == null) {
                             response.errors?.find { it.message == "failed integrity check" }?.let {
                                 integrity.value = "refresh"

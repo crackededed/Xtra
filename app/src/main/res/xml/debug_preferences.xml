@@ -89,17 +89,13 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="use_cronet"
-        android:title="@string/use_cronet"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="download_use_cronet"
-        android:title="@string/use_cronet_downloads"
+    <ListPreference
+        android:defaultValue="OkHttp"
+        android:entries="@array/networkLibraryEntries"
+        android:entryValues="@array/networkLibraryEntries"
+        android:key="network_library"
+        android:summary="%s"
+        android:title="@string/network_library"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 

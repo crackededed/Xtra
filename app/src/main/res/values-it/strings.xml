@@ -136,7 +136,6 @@
     <string name="show_scrolltop">Mostra il pulsante per tornare in alto</string>
     <string name="bold_usernames">Nomi utente in grassetto</string>
     <string name="randomcolor">Colore casuale per gli utenti senza colore</string>
-    <string name="zerowidth">Emote a larghezza zero</string>
     <string name="message_limit">Limite messaggi</string>
     <string name="player_defaultquality">Qualità predefinita del lettore</string>
     <string name="player_doubletap">Doppio tap per cambiare la chat</string>
@@ -449,7 +448,6 @@
     <string name="dark_theme_on">Tema scuro attivo</string>
     <string name="dark_theme_off">Tema scuro disattivato</string>
     <string name="follow_system_theme">Cambia in base al tema del dispositivo</string>
-    <string name="pixels">%d pixel</string>
     <string name="image_quality">Qualità dell\'immagine</string>
     <string name="lang_auto">Predefinito di sistema</string>
     <string name="save_default">Salva come predefinito</string>
@@ -681,12 +679,15 @@
     <string name="disabled_setting">Disabled</string>
     <string name="use_webp_images">Use WEBP images</string>
     <string name="use_background_audio">Play audio in the background</string>
-    <string name="use_cronet_downloads">Use Cronet for downloads</string>
-    <string name="use_cronet">Use Cronet network library</string>
     <string name="avoid_rounded_corners">Avoid rounded screen corners</string>
     <string name="api_web_gql_token">Web GQL token</string>
     <string name="use_new_pubsub">Use new PubSub url</string>
     <string name="default_page">Default page</string>
+    <string name="chat_size_modifier">Size modifier</string>
+    <string name="chat_emote_size">Emote size</string>
+    <string name="chat_badge_size">Badge size</string>
+    <string name="overlay_emotes">Overlay emotes</string>
+    <string name="network_library">Network library</string>
     <string name="remove_games_page">Remove Games page</string>
     <string name="remove_popular_page">Remove Popular page</string>
     <string name="remove_following_page">Remove Following page</string>

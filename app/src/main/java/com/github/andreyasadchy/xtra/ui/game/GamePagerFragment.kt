@@ -105,7 +105,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                                         viewModel.deleteFollowGame(
                                             args.gameId,
                                             setting,
-                                            requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                                            requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                                             TwitchApiHelper.getGQLHeaders(requireContext(), true),
                                             requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                                         )
@@ -118,7 +118,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                                     args.gameName,
                                     setting,
                                     requireContext().filesDir.path,
-                                    requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                                     TwitchApiHelper.getGQLHeaders(requireContext(), true),
                                     TwitchApiHelper.getHelixHeaders(requireContext()),
                                     requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
@@ -250,7 +250,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                 args.gameId,
                 args.gameName,
                 setting,
-                requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                 TwitchApiHelper.getGQLHeaders(requireContext(), true),
             )
         }
@@ -259,7 +259,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                 requireContext().filesDir.path,
                 args.gameId,
                 args.gameName,
-                requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                 TwitchApiHelper.getGQLHeaders(requireContext()),
                 TwitchApiHelper.getHelixHeaders(requireContext()),
             )
@@ -286,7 +286,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                                     args.gameId,
                                     args.gameName,
                                     setting,
-                                    requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                                     TwitchApiHelper.getGQLHeaders(requireContext(), true),
                                 )
                             }
@@ -297,7 +297,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                             args.gameName,
                             requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
                             requireContext().filesDir.path,
-                            requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                            requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                             TwitchApiHelper.getGQLHeaders(requireContext(), true),
                             TwitchApiHelper.getHelixHeaders(requireContext()),
                             requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
@@ -305,7 +305,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                         "unfollow" -> viewModel.deleteFollowGame(
                             args.gameId,
                             requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
-                            requireContext().prefs().getBoolean(C.USE_CRONET, false),
+                            requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                             TwitchApiHelper.getGQLHeaders(requireContext(), true),
                             requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                         )

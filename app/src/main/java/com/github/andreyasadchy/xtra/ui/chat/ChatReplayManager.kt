@@ -15,7 +15,7 @@ import javax.inject.Inject
 import kotlin.math.max
 
 class ChatReplayManager @Inject constructor(
-    private val useCronet: Boolean,
+    private val networkLibrary: String?,
     private val gqlHeaders: Map<String, String>,
     private val graphQLRepository: GraphQLRepository,
     private val enableIntegrity: Boolean,
@@ -62,9 +62,9 @@ class ChatReplayManager @Inject constructor(
         loadJob = coroutineScope.launch(Dispatchers.IO) {
             try {
                 val response = if (position != null) {
-                    graphQLRepository.loadVideoMessages(useCronet, gqlHeaders, videoId, offset = position.div(1000).toInt())
+                    graphQLRepository.loadVideoMessages(networkLibrary, gqlHeaders, videoId, offset = position.div(1000).toInt())
                 } else {
-                    graphQLRepository.loadVideoMessages(useCronet, gqlHeaders, videoId, cursor = cursor)
+                    graphQLRepository.loadVideoMessages(networkLibrary, gqlHeaders, videoId, cursor = cursor)
                 }
                 if (enableIntegrity) {
                     response.errors?.find { it.message == "failed integrity check" }?.let {

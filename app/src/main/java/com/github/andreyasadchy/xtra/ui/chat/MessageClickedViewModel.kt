@@ -22,12 +22,12 @@ class MessageClickedViewModel @Inject constructor(
     val user = MutableStateFlow<Pair<User?, Boolean?>?>(null)
     private var isLoading = false
 
-    fun loadUser(channelId: String?, channelLogin: String?, targetId: String?, useCronet: Boolean, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
+    fun loadUser(channelId: String?, channelLogin: String?, targetId: String?, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
         if (user.value == null && !isLoading) {
             isLoading = true
             viewModelScope.launch {
                 val response = try {
-                    val response = graphQLRepository.loadQueryUserMessageClicked(useCronet, gqlHeaders, channelId, channelLogin.takeIf { channelId.isNullOrBlank() }, targetId)
+                    val response = graphQLRepository.loadQueryUserMessageClicked(networkLibrary, gqlHeaders, channelId, channelLogin.takeIf { channelId.isNullOrBlank() }, targetId)
                     if (enableIntegrity && integrity.value == null) {
                         response.errors?.find { it.message == "failed integrity check" }?.let {
                             integrity.value = "refresh"
@@ -50,7 +50,7 @@ class MessageClickedViewModel @Inject constructor(
                     if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                         try {
                             helixRepository.getUsers(
-                                useCronet = useCronet,
+                                networkLibrary = networkLibrary,
                                 headers = helixHeaders,
                                 ids = channelId?.let { listOf(it) },
                                 logins = if (channelId.isNullOrBlank()) channelLogin?.let { listOf(it) } else null

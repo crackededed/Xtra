@@ -21,12 +21,12 @@ class PlayerViewerListViewModel @Inject constructor(
     val viewerList: StateFlow<ChannelViewerList?> = _viewerList
     private var isLoading = false
 
-    fun loadViewerList(channelLogin: String?, useCronet: Boolean, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
+    fun loadViewerList(channelLogin: String?, networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
         if (_viewerList.value == null && !isLoading) {
             isLoading = true
             viewModelScope.launch {
                 try {
-                    val response = graphQLRepository.loadChannelViewerList(useCronet, gqlHeaders, channelLogin)
+                    val response = graphQLRepository.loadChannelViewerList(networkLibrary, gqlHeaders, channelLogin)
                     if (enableIntegrity && integrity.value == null) {
                         response.errors?.find { it.message == "failed integrity check" }?.let {
                             integrity.value = "refresh"

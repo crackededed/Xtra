@@ -14,7 +14,7 @@ class FollowedGamesDataSource(
     private val graphQLRepository: GraphQLRepository,
     private val enableIntegrity: Boolean,
     private val apiPref: List<String>,
-    private val useCronet: Boolean,
+    private val networkLibrary: String?,
 ) : PagingSource<Int, Game>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Game> {
@@ -72,7 +72,7 @@ class FollowedGamesDataSource(
     }
 
     private suspend fun gqlQueryLoad(): LoadResult<Int, Game> {
-        val response = graphQLRepository.loadQueryUserFollowedGames(useCronet, gqlHeaders, 100)
+        val response = graphQLRepository.loadQueryUserFollowedGames(networkLibrary, gqlHeaders, 100)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }
@@ -102,7 +102,7 @@ class FollowedGamesDataSource(
     }
 
     private suspend fun gqlLoad(): LoadResult<Int, Game> {
-        val response = graphQLRepository.loadFollowedGames(useCronet, gqlHeaders, 100)
+        val response = graphQLRepository.loadFollowedGames(networkLibrary, gqlHeaders, 100)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }

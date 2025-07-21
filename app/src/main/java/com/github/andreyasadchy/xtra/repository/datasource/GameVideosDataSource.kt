@@ -29,7 +29,7 @@ class GameVideosDataSource(
     private val helixRepository: HelixRepository,
     private val enableIntegrity: Boolean,
     private val apiPref: List<String>,
-    private val useCronet: Boolean,
+    private val networkLibrary: String?,
 ) : PagingSource<Int, Video>() {
     private var api: String? = null
     private var offset: String? = null
@@ -70,7 +70,7 @@ class GameVideosDataSource(
 
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): LoadResult<Int, Video> {
         val response = graphQLRepository.loadQueryGameVideos(
-            useCronet = useCronet,
+            networkLibrary = networkLibrary,
             headers = gqlHeaders,
             id = gameId,
             slug = gameSlug.takeIf { gameId.isNullOrBlank() },
@@ -125,7 +125,7 @@ class GameVideosDataSource(
     }
 
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, Video> {
-        val response = graphQLRepository.loadGameVideos(useCronet, gqlHeaders, gameSlug, gqlType, gqlSort, params.loadSize, offset)
+        val response = graphQLRepository.loadGameVideos(networkLibrary, gqlHeaders, gameSlug, gqlType, gqlSort, params.loadSize, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }
@@ -170,7 +170,7 @@ class GameVideosDataSource(
 
     private suspend fun helixLoad(params: LoadParams<Int>): LoadResult<Int, Video> {
         val response = helixRepository.getVideos(
-            useCronet = useCronet,
+            networkLibrary = networkLibrary,
             headers = helixHeaders,
             gameId = gameId,
             period = helixPeriod,
@@ -182,7 +182,7 @@ class GameVideosDataSource(
         )
         val users = response.data.mapNotNull { it.channelId }.let {
             helixRepository.getUsers(
-                useCronet = useCronet,
+                networkLibrary = networkLibrary,
                 headers = helixHeaders,
                 ids = it,
             ).data

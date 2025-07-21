@@ -14,7 +14,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.edit
 import androidx.core.net.toUri
-import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -210,19 +209,18 @@ class DownloadsFragment : PagedListFragment(), Scrollable {
             })
         }, {
             it.url?.let { videoUrl ->
-                if (videoUrl.endsWith(".m3u8")) {
-                    DocumentFile.fromTreeUri(requireContext(), videoUrl.substringBefore("/document/").toUri())?.uri
+                val uri = if (videoUrl.endsWith(".m3u8")) {
+                    videoUrl.substringBefore("%2F").toUri()
                 } else {
                     videoUrl.toUri()
-                }?.let { url ->
-                    requireContext().startActivity(Intent.createChooser(Intent().apply {
-                        action = Intent.ACTION_SEND
-                        setDataAndType(url, requireContext().contentResolver.getType(url))
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
-                        it.name?.let { putExtra(Intent.EXTRA_TITLE, it) }
-                    }, null))
                 }
+                requireContext().startActivity(Intent.createChooser(Intent().apply {
+                    action = Intent.ACTION_SEND
+                    setDataAndType(uri, requireContext().contentResolver.getType(uri))
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+                    it.name?.let { putExtra(Intent.EXTRA_TITLE, it) }
+                }, null))
             }
         }, {
             val delete = getString(R.string.delete)

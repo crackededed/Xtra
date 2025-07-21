@@ -58,11 +58,16 @@ import androidx.media3.extractor.mp4.PsshAtomUtil;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -396,6 +401,7 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
     ArrayList<String> mediaTags = new ArrayList<>();
     ArrayList<DrmInitData> sessionKeyDrmInitData = new ArrayList<>();
     ArrayList<String> tags = new ArrayList<>();
+    ArrayList<String> unavailableMedia = new ArrayList<>(); // xtra: unavailable qualities
     Format muxedAudioFormat = null;
     List<Format> muxedCaptionFormats = null;
     boolean noClosedCaptions = false;
@@ -499,6 +505,110 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
           line = replaceVariableReferences(iterator.next(), variableDefinitions);
           uri = UriUtil.resolveToUri(baseUri, line);
         }
+        if (!unavailableMedia.isEmpty() && uri.toString().contains("/index-")) { // xtra: unavailable qualities
+          for (int index = 0; index < unavailableMedia.size(); index++) {
+            String string = unavailableMedia.get(index);
+            JSONArray array = null;
+            try {
+              array = new JSONArray(string);
+            } catch (JSONException e) {
+
+            }
+            if (array != null) {
+              for (int i = 0; i < array.length(); i++) {
+                JSONObject obj = array.optJSONObject(i);
+                if (obj != null) {
+                  boolean skip = false;
+                  JSONArray filterReasons = obj.optJSONArray("FILTER_REASONS");
+                  if (filterReasons != null) {
+                    for (int filterIndex = 0; filterIndex < filterReasons.length(); filterIndex++) {
+                      String filter = filterReasons.optString(filterIndex);
+                      if (filter.equals("FR_CODEC_NOT_REQUESTED")) {
+                        skip = true;
+                        break;
+                      }
+                    }
+                  }
+                  if (!skip) {
+                    String name = obj.optString("NAME");
+                    int newPeakBitrate = obj.optInt("BANDWIDTH");
+                    String newCodecsString = obj.optString("CODECS");
+                    String newResolutionString = obj.optString("RESOLUTION");
+                    String newVideoGroupId = obj.optString("GROUP-ID");
+                    float newFrameRate = obj.optInt("FRAME-RATE");
+                    int newWidth;
+                    int newHeight;
+                    if (!newResolutionString.isBlank()) {
+                      String[] widthAndHeight = Util.split(newResolutionString, "x");
+                      newWidth = Integer.parseInt(widthAndHeight[0]);
+                      newHeight = Integer.parseInt(widthAndHeight[1]);
+                      if (newWidth <= 0 || newHeight <= 0) {
+                        // Resolution string is invalid.
+                        newWidth = Format.NO_VALUE;
+                        newHeight = Format.NO_VALUE;
+                      }
+                    } else {
+                      newWidth = Format.NO_VALUE;
+                      newHeight = Format.NO_VALUE;
+                    }
+                    Uri newUri = Uri.parse(uri.toString().replace(videoGroupId + "/index-", newVideoGroupId + "/index-"));
+                    Format format =
+                            new Format.Builder()
+                                    .setId(variants.size())
+                                    .setContainerMimeType(MimeTypes.APPLICATION_M3U8)
+                                    .setCodecs(newCodecsString)
+                                    .setAverageBitrate(-1)
+                                    .setPeakBitrate(newPeakBitrate)
+                                    .setWidth(newWidth)
+                                    .setHeight(newHeight)
+                                    .setFrameRate(newFrameRate)
+                                    .setRoleFlags(0)
+                                    .build();
+                    Variant variant =
+                            new Variant(
+                                    newUri, format, newVideoGroupId, null, null, null);
+                    variants.add(variant);
+                    @Nullable ArrayList<VariantInfo> variantInfosForUrl = urlToVariantInfos.get(newUri);
+                    if (variantInfosForUrl == null) {
+                      variantInfosForUrl = new ArrayList<>();
+                      urlToVariantInfos.put(newUri, variantInfosForUrl);
+                    }
+                    variantInfosForUrl.add(
+                            new VariantInfo(
+                                    -1,
+                                    newPeakBitrate,
+                                    newVideoGroupId,
+                                    null,
+                                    null,
+                                    null));
+                    Format.Builder formatBuilder =
+                            new Format.Builder()
+                                    .setId(newVideoGroupId + ":" + name)
+                                    .setLabel(name)
+                                    .setContainerMimeType(MimeTypes.APPLICATION_M3U8)
+                                    .setSelectionFlags(0)
+                                    .setRoleFlags(0)
+                                    .setLanguage(null);
+                    Metadata metadata =
+                            new Metadata(new HlsTrackMetadataEntry(newVideoGroupId, name, Collections.emptyList()));
+                    Format variantFormat = variant.format;
+                    @Nullable
+                    String newCodecs = Util.getCodecsOfType(variantFormat.codecs, C.TRACK_TYPE_VIDEO);
+                    formatBuilder
+                            .setCodecs(newCodecs)
+                            .setSampleMimeType(MimeTypes.getMediaMimeType(newCodecs))
+                            .setWidth(variantFormat.width)
+                            .setHeight(variantFormat.height)
+                            .setFrameRate(variantFormat.frameRate);
+                    formatBuilder.setMetadata(metadata);
+                    videos.add(new Rendition(newUri, formatBuilder.build(), newVideoGroupId, name));
+                  }
+                }
+              }
+            }
+          }
+          unavailableMedia.clear();
+        }
 
         Format format =
             new Format.Builder()
@@ -529,6 +639,22 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
                 audioGroupId,
                 subtitlesGroupId,
                 closedCaptionsGroupId));
+      } else if (line.startsWith("#EXT-X-SESSION-DATA")) { // xtra: unavailable qualities
+        String id = parseOptionalStringAttr(line, Pattern.compile("DATA-ID=\"(.+?)\""), variableDefinitions);
+        if (id != null && id.equals("com.amazon.ivs.unavailable-media")) {
+          String value = parseOptionalStringAttr(line, REGEX_VALUE, variableDefinitions);
+          if (value != null) {
+            byte[] bytes = null;
+            try {
+              bytes = Base64.decode(value, Base64.DEFAULT);
+            } catch (IllegalArgumentException e) {
+
+            }
+            if (bytes != null) {
+              unavailableMedia.add(new String(bytes, StandardCharsets.UTF_8));
+            }
+          }
+        }
       }
     }
 
@@ -836,7 +962,12 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
         }
         segmentByteRangeLength = C.LENGTH_UNSET;
       } else if (line.startsWith(TAG_TARGET_DURATION)) {
-        targetDurationUs = 2 * C.MICROS_PER_SECOND; // xtra: low latency
+        long target = parseIntAttr(line, REGEX_TARGET_DURATION) * C.MICROS_PER_SECOND;
+        if (target < 10) {
+          targetDurationUs = 2 * C.MICROS_PER_SECOND; // xtra: low latency
+        } else {
+          targetDurationUs = target;
+        }
       } else if (line.startsWith(TAG_MEDIA_SEQUENCE)) {
         mediaSequence = parseLongAttr(line, REGEX_MEDIA_SEQUENCE);
         segmentMediaSequence = mediaSequence;

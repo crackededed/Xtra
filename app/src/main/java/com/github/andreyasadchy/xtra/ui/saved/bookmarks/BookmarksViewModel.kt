@@ -1,6 +1,9 @@
 package com.github.andreyasadchy.xtra.ui.saved.bookmarks
 
+import android.net.http.HttpEngine
+import android.net.http.UrlResponseInfo
 import android.os.Build
+import android.os.ext.SdkExtensions
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -16,7 +19,9 @@ import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.repository.VodBookmarkIgnoredUsersRepository
 import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.HttpEngineUtils
 import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
+import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +31,6 @@ import okhttp3.Request
 import okio.buffer
 import okio.sink
 import org.chromium.net.CronetEngine
-import org.chromium.net.UrlResponseInfo
 import org.chromium.net.apihelpers.RedirectHandlers
 import org.chromium.net.apihelpers.UrlRequestCallbacks
 import java.io.File
@@ -42,7 +46,8 @@ class BookmarksViewModel @Inject internal constructor(
     private val bookmarksRepository: BookmarksRepository,
     playerRepository: PlayerRepository,
     private val vodBookmarkIgnoredUsersRepository: VodBookmarkIgnoredUsersRepository,
-    private val cronetEngine: CronetEngine?,
+    private val httpEngine: Lazy<HttpEngine>?,
+    private val cronetEngine: Lazy<CronetEngine>?,
     private val cronetExecutor: ExecutorService,
     private val okHttpClient: OkHttpClient,
 ) : ViewModel() {
@@ -76,7 +81,7 @@ class BookmarksViewModel @Inject internal constructor(
         }
     }
 
-    fun updateUsers(useCronet: Boolean, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
+    fun updateUsers(networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
         if (!updatedUsers) {
             viewModelScope.launch {
                 val bookmarks = bookmarksRepository.loadBookmarks()
@@ -85,7 +90,7 @@ class BookmarksViewModel @Inject internal constructor(
                     bookmark.userId?.takeIf { ignored.find { it.userId == bookmark.userId } == null }
                 }.chunked(100).forEach { ids ->
                     try {
-                        val response = graphQLRepository.loadQueryUsersType(useCronet, gqlHeaders, ids)
+                        val response = graphQLRepository.loadQueryUsersType(networkLibrary, gqlHeaders, ids)
                         if (enableIntegrity && integrity.value == null) {
                             response.errors?.find { it.message == "failed integrity check" }?.let {
                                 integrity.value = "users"
@@ -112,7 +117,7 @@ class BookmarksViewModel @Inject internal constructor(
                         if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                             try {
                                 helixRepository.getUsers(
-                                    useCronet = useCronet,
+                                    networkLibrary = networkLibrary,
                                     headers = helixHeaders,
                                     ids = ids,
                                 ).data.map {
@@ -148,11 +153,11 @@ class BookmarksViewModel @Inject internal constructor(
         }
     }
 
-    fun updateVideo(filesDir: String, videoId: String?, useCronet: Boolean, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
+    fun updateVideo(filesDir: String, videoId: String?, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
         viewModelScope.launch {
             if (!videoId.isNullOrBlank()) {
                 val video = try {
-                    val response = graphQLRepository.loadQueryVideo(useCronet, gqlHeaders, videoId)
+                    val response = graphQLRepository.loadQueryVideo(networkLibrary, gqlHeaders, videoId)
                     if (enableIntegrity && integrity.value == null) {
                         response.errors?.find { it.message == "failed integrity check" }?.let {
                             integrity.value = "video"
@@ -180,7 +185,7 @@ class BookmarksViewModel @Inject internal constructor(
                     if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                         try {
                             helixRepository.getVideos(
-                                useCronet = useCronet,
+                                networkLibrary = networkLibrary,
                                 headers = helixHeaders,
                                 ids = listOf(videoId),
                             ).data.firstOrNull()?.let {
@@ -209,19 +214,10 @@ class BookmarksViewModel @Inject internal constructor(
                             val path = filesDir + File.separator + "thumbnails" + File.separator + id
                             viewModelScope.launch(Dispatchers.IO) {
                                 try {
-                                    if (useCronet && cronetEngine != null) {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                            val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
-                                            cronetEngine.newUrlRequestBuilder(it, request.callback, cronetExecutor).build().start()
-                                            val response = request.future.get()
-                                            if (response.urlResponseInfo.httpStatusCode in 200..299) {
-                                                FileOutputStream(path).use {
-                                                    it.write(response.responseBody as ByteArray)
-                                                }
-                                            }
-                                        } else {
+                                    when {
+                                        networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                             val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
-                                                cronetEngine.newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
+                                                httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                             }
                                             if (response.first.httpStatusCode in 200..299) {
                                                 FileOutputStream(path).use {
@@ -229,11 +225,33 @@ class BookmarksViewModel @Inject internal constructor(
                                                 }
                                             }
                                         }
-                                    } else {
-                                        okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
-                                            if (response.isSuccessful) {
-                                                File(path).sink().buffer().use { sink ->
-                                                    sink.writeAll(response.body.source())
+                                        networkLibrary == "Cronet" && cronetEngine != null -> {
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                                val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
+                                                cronetEngine.get().newUrlRequestBuilder(it, request.callback, cronetExecutor).build().start()
+                                                val response = request.future.get()
+                                                if (response.urlResponseInfo.httpStatusCode in 200..299) {
+                                                    FileOutputStream(path).use {
+                                                        it.write(response.responseBody as ByteArray)
+                                                    }
+                                                }
+                                            } else {
+                                                val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                                                    cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
+                                                }
+                                                if (response.first.httpStatusCode in 200..299) {
+                                                    FileOutputStream(path).use {
+                                                        it.write(response.second)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else -> {
+                                            okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                                if (response.isSuccessful) {
+                                                    File(path).sink().buffer().use { sink ->
+                                                        sink.writeAll(response.body.source())
+                                                    }
                                                 }
                                             }
                                         }
@@ -270,13 +288,13 @@ class BookmarksViewModel @Inject internal constructor(
         }
     }
 
-    fun updateVideos(filesDir: String, useCronet: Boolean, helixHeaders: Map<String, String>) {
+    fun updateVideos(filesDir: String, networkLibrary: String?, helixHeaders: Map<String, String>) {
         if (!updatedVideos) {
             viewModelScope.launch {
                 val bookmarks = bookmarksRepository.loadBookmarks()
                 bookmarks.mapNotNull { it.videoId }.chunked(100).forEach { ids ->
                     helixRepository.getVideos(
-                        useCronet = useCronet,
+                        networkLibrary = networkLibrary,
                         headers = helixHeaders,
                         ids = ids,
                     ).data.map {
@@ -308,19 +326,10 @@ class BookmarksViewModel @Inject internal constructor(
                                     val path = filesDir + File.separator + "thumbnails" + File.separator + video.id
                                     viewModelScope.launch(Dispatchers.IO) {
                                         try {
-                                            if (useCronet && cronetEngine != null) {
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                                    val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
-                                                    cronetEngine.newUrlRequestBuilder(it, request.callback, cronetExecutor).build().start()
-                                                    val response = request.future.get()
-                                                    if (response.urlResponseInfo.httpStatusCode in 200..299) {
-                                                        FileOutputStream(path).use {
-                                                            it.write(response.responseBody as ByteArray)
-                                                        }
-                                                    }
-                                                } else {
+                                            when {
+                                                networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                                     val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
-                                                        cronetEngine.newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
+                                                        httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                                     }
                                                     if (response.first.httpStatusCode in 200..299) {
                                                         FileOutputStream(path).use {
@@ -328,11 +337,33 @@ class BookmarksViewModel @Inject internal constructor(
                                                         }
                                                     }
                                                 }
-                                            } else {
-                                                okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
-                                                    if (response.isSuccessful) {
-                                                        File(path).sink().buffer().use { sink ->
-                                                            sink.writeAll(response.body.source())
+                                                networkLibrary == "Cronet" && cronetEngine != null -> {
+                                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                                        val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
+                                                        cronetEngine.get().newUrlRequestBuilder(it, request.callback, cronetExecutor).build().start()
+                                                        val response = request.future.get()
+                                                        if (response.urlResponseInfo.httpStatusCode in 200..299) {
+                                                            FileOutputStream(path).use {
+                                                                it.write(response.responseBody as ByteArray)
+                                                            }
+                                                        }
+                                                    } else {
+                                                        val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                                                            cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
+                                                        }
+                                                        if (response.first.httpStatusCode in 200..299) {
+                                                            FileOutputStream(path).use {
+                                                                it.write(response.second)
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                else -> {
+                                                    okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                                        if (response.isSuccessful) {
+                                                            File(path).sink().buffer().use { sink ->
+                                                                sink.writeAll(response.body.source())
+                                                            }
                                                         }
                                                     }
                                                 }
