@@ -37,6 +37,7 @@ import androidx.core.os.LocaleListCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -168,7 +169,7 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
         setContentView(binding.root)
         setNavBarColor(isInPortraitOrientation)
         val ignoreCutouts = prefs.getBoolean(C.UI_DRAW_BEHIND_CUTOUTS, false)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, windowInsets ->
             val insets = if (ignoreCutouts) {
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime())
             } else {
@@ -181,6 +182,16 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
             binding.navBarContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                 leftMargin = insets.left
                 rightMargin = insets.right
+            }
+            if (isInPortraitOrientation) {
+                if (prefs.getBoolean(C.UI_REMOVE_GAMES, false)
+                    && prefs.getBoolean(C.UI_REMOVE_POPULAR, false)
+                    && prefs.getBoolean(C.UI_REMOVE_FOLLOWING, false)
+                    && prefs.getBoolean(C.UI_REMOVE_SAVED, false)
+                ) {
+                    val navBarInsets = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars())
+                    view.updatePadding(bottom = navBarInsets.bottom)
+                }
             }
             windowInsets
         }
@@ -748,15 +759,15 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
             if (!prefs.getBoolean(C.UI_THEME_BOTTOM_NAV_COLOR, true) && prefs.getBoolean(C.UI_THEME_MATERIAL3, true)) {
                 setBackgroundColor(MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurface))
             }
-            var gamesRemoved = prefs.getBoolean(C.UI_REMOVE_GAMES, false)
+            val gamesRemoved = prefs.getBoolean(C.UI_REMOVE_GAMES, false)
             if (!gamesRemoved) {
                 menu.add(Menu.NONE, R.id.rootGamesFragment, Menu.NONE, R.string.games).setIcon(R.drawable.ic_games_black_24dp)
             }
-            var popularRemoved = prefs.getBoolean(C.UI_REMOVE_POPULAR, false)
+            val popularRemoved = prefs.getBoolean(C.UI_REMOVE_POPULAR, false)
             if (!popularRemoved) {
                 menu.add(Menu.NONE, R.id.rootTopFragment, Menu.NONE, R.string.popular).setIcon(R.drawable.ic_trending_up_black_24dp)
             }
-            var followingRemoved = prefs.getBoolean(C.UI_REMOVE_FOLLOWING, false)
+            val followingRemoved = prefs.getBoolean(C.UI_REMOVE_FOLLOWING, false)
             if (!followingRemoved) {
                 if (prefs.getBoolean(C.UI_FOLLOWPAGER, true)) {
                     menu.add(Menu.NONE, R.id.followPagerFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
@@ -764,7 +775,7 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
                     menu.add(Menu.NONE, R.id.followMediaFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
                 }
             }
-            var savedRemoved = prefs.getBoolean(C.UI_REMOVE_SAVED, false)
+            val savedRemoved = prefs.getBoolean(C.UI_REMOVE_SAVED, false)
             if (!savedRemoved) {
                 if (prefs.getBoolean(C.UI_SAVEDPAGER, true)) {
                     menu.add(Menu.NONE, R.id.savedPagerFragment, Menu.NONE, R.string.saved).setIcon(R.drawable.ic_file_download_black_24dp)
