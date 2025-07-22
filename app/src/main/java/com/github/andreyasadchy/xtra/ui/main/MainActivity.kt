@@ -183,6 +183,9 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
                 leftMargin = insets.left
                 rightMargin = insets.right
             }
+            windowInsets
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.navBarContainer)) { view, windowInsets ->
             if (isInPortraitOrientation) {
                 if (prefs.getBoolean(C.UI_REMOVE_GAMES, false)
                     && prefs.getBoolean(C.UI_REMOVE_POPULAR, false)
