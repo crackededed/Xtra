@@ -10,17 +10,14 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import android.util.AttributeSet
-import android.util.DisplayMetrics
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
-import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.Insets
 import androidx.core.os.bundleOf
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.view.postDelayed
 import androidx.customview.widget.ViewDragHelper
@@ -256,25 +253,6 @@ class SlidingLayout : LinearLayout {
         listeners.forEach { it.onMinimize() }
     }
 
-    fun hasSystemNavigationBar(context: Context): Boolean {
-        val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val insets = windowManager.currentWindowMetrics.windowInsets
-            val navBarInsets = insets.getInsetsIgnoringVisibility(WindowInsets.Type.navigationBars())
-            return navBarInsets.bottom > 0
-        } else {
-            val metrics = DisplayMetrics()
-            @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.getMetrics(metrics)
-            val usableHeight = metrics.heightPixels
-            @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.getRealMetrics(metrics)
-            val realHeight = metrics.heightPixels
-            return realHeight > usableHeight
-        }
-    }
-
     fun init() {
         debug = context.prefs().getBoolean(C.DEBUG_SECONDVIEW, false)
         dragView.post {
@@ -286,20 +264,7 @@ class SlidingLayout : LinearLayout {
                 minScaleX = 0.3f
                 minScaleY = 0.325f
             }
-            var navBarHeight = rootView.findViewById<LinearLayout>(R.id.navBarContainer)?.height ?: 100
-
-            // Fix a bug where the minimized player go behind the system nav bar after leaving fullscreen mode
-            if (isPortrait && hasSystemNavigationBar(context)
-                && rootView.findViewById<LinearLayout>(R.id.navBar).isGone
-            ) {
-                navBarHeight = 125
-            }
-            if (isPortrait && hasSystemNavigationBar(context)
-                && !rootView.findViewById<LinearLayout>(R.id.navBar).isGone
-            ) {
-                navBarHeight = 350
-            }
-
+            val navBarHeight = rootView.findViewById<LinearLayout>(R.id.navBarContainer)?.height ?: 100
             bottomMargin = (navBarHeight / (1f - minScaleY)) + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30F, resources.displayMetrics)
 
             fun initialize() {
