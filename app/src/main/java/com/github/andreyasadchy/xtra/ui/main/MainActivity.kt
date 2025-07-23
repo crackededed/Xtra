@@ -362,6 +362,16 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         setNavBarColor(newConfig.orientation == Configuration.ORIENTATION_PORTRAIT)
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            if (prefs.getBoolean(C.UI_REMOVE_GAMES, false)
+                && prefs.getBoolean(C.UI_REMOVE_POPULAR, false)
+                && prefs.getBoolean(C.UI_REMOVE_FOLLOWING, false)
+                && prefs.getBoolean(C.UI_REMOVE_SAVED, false)
+                && !viewModel.isPlayerMaximized
+            ) {
+                recreate()
+            }
+        }
     }
 
     override fun onResume() {
