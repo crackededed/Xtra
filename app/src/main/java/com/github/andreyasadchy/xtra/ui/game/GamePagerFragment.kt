@@ -238,7 +238,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                 toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                     topMargin = insets.top
                 }
-                WindowInsetsCompat.CONSUMED
+                windowInsets
             }
         }
     }

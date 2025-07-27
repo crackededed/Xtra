@@ -21,7 +21,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.view.Menu
-import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.activity.result.ActivityResultLauncher
@@ -37,7 +36,6 @@ import androidx.core.os.LocaleListCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
-import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -73,6 +71,7 @@ import com.github.andreyasadchy.xtra.util.DisplayUtils
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.applyTheme
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
+import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.isInPortraitOrientation
 import com.github.andreyasadchy.xtra.util.isLightTheme
 import com.github.andreyasadchy.xtra.util.isNetworkAvailable
@@ -169,7 +168,7 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
         setContentView(binding.root)
         setNavBarColor(isInPortraitOrientation)
         val ignoreCutouts = prefs.getBoolean(C.UI_DRAW_BEHIND_CUTOUTS, false)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, windowInsets ->
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
             val insets = if (ignoreCutouts) {
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime())
             } else {
@@ -182,19 +181,6 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
             binding.navBarContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                 leftMargin = insets.left
                 rightMargin = insets.right
-            }
-            windowInsets
-        }
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.navBarContainer)) { view, windowInsets ->
-            if (isInPortraitOrientation) {
-                if (prefs.getBoolean(C.UI_REMOVE_GAMES, false)
-                    && prefs.getBoolean(C.UI_REMOVE_POPULAR, false)
-                    && prefs.getBoolean(C.UI_REMOVE_FOLLOWING, false)
-                    && prefs.getBoolean(C.UI_REMOVE_SAVED, false)
-                ) {
-                    val navBarInsets = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars())
-                    view.updatePadding(bottom = navBarInsets.bottom)
-                }
             }
             windowInsets
         }
@@ -329,10 +315,12 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
 
     private fun setNavBarColor(isPortrait: Boolean) {
         when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> window.isNavigationBarContrastEnforced = !isPortrait
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
+                window.isNavigationBarContrastEnforced = !isPortrait || prefs.getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()
+            }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
                 @Suppress("DEPRECATION")
-                window.navigationBarColor = if (isPortrait) {
+                window.navigationBarColor = if (isPortrait && !prefs.getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
                     Color.TRANSPARENT
                 } else {
                     ContextCompat.getColor(this, if (!isLightTheme) R.color.darkScrim else R.color.lightScrim)
@@ -341,13 +329,17 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
                 @Suppress("DEPRECATION")
                 if (!isLightTheme) {
-                    window.navigationBarColor = if (isPortrait) Color.TRANSPARENT else ContextCompat.getColor(this, R.color.darkScrim)
+                    window.navigationBarColor = if (isPortrait && !prefs.getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
+                        Color.TRANSPARENT
+                    } else {
+                        ContextCompat.getColor(this, R.color.darkScrim)
+                    }
                 }
             }
-            Build.VERSION.SDK_INT < Build.VERSION_CODES.M -> {
+            else -> {
                 @Suppress("DEPRECATION")
                 if (!isLightTheme) {
-                    if (isPortrait) {
+                    if (isPortrait && !prefs.getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
                         window.navigationBarColor = Color.TRANSPARENT
                         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
                     } else {
@@ -362,16 +354,6 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         setNavBarColor(newConfig.orientation == Configuration.ORIENTATION_PORTRAIT)
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            if (prefs.getBoolean(C.UI_REMOVE_GAMES, false)
-                && prefs.getBoolean(C.UI_REMOVE_POPULAR, false)
-                && prefs.getBoolean(C.UI_REMOVE_FOLLOWING, false)
-                && prefs.getBoolean(C.UI_REMOVE_SAVED, false)
-                && !viewModel.isPlayerMaximized
-            ) {
-                recreate()
-            }
-        }
     }
 
     override fun onResume() {
@@ -772,32 +754,30 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
             if (!prefs.getBoolean(C.UI_THEME_BOTTOM_NAV_COLOR, true) && prefs.getBoolean(C.UI_THEME_MATERIAL3, true)) {
                 setBackgroundColor(MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurface))
             }
-            val gamesRemoved = prefs.getBoolean(C.UI_REMOVE_GAMES, false)
-            if (!gamesRemoved) {
-                menu.add(Menu.NONE, R.id.rootGamesFragment, Menu.NONE, R.string.games).setIcon(R.drawable.ic_games_black_24dp)
-            }
-            val popularRemoved = prefs.getBoolean(C.UI_REMOVE_POPULAR, false)
-            if (!popularRemoved) {
-                menu.add(Menu.NONE, R.id.rootTopFragment, Menu.NONE, R.string.popular).setIcon(R.drawable.ic_trending_up_black_24dp)
-            }
-            val followingRemoved = prefs.getBoolean(C.UI_REMOVE_FOLLOWING, false)
-            if (!followingRemoved) {
-                if (prefs.getBoolean(C.UI_FOLLOWPAGER, true)) {
-                    menu.add(Menu.NONE, R.id.followPagerFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
-                } else {
-                    menu.add(Menu.NONE, R.id.followMediaFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
+            val tabs = prefs.getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet())
+            if (!tabs.isNullOrEmpty()) {
+                tabs.forEach {
+                    when (it) {
+                        "0" -> menu.add(Menu.NONE, R.id.rootGamesFragment, Menu.NONE, R.string.games).setIcon(R.drawable.ic_games_black_24dp)
+                        "1" -> menu.add(Menu.NONE, R.id.rootTopFragment, Menu.NONE, R.string.popular).setIcon(R.drawable.ic_trending_up_black_24dp)
+                        "2" -> {
+                            if (prefs.getBoolean(C.UI_FOLLOWPAGER, true)) {
+                                menu.add(Menu.NONE, R.id.followPagerFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
+                            } else {
+                                menu.add(Menu.NONE, R.id.followMediaFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
+                            }
+                        }
+                        "3" -> {
+                            if (prefs.getBoolean(C.UI_SAVEDPAGER, true)) {
+                                menu.add(Menu.NONE, R.id.savedPagerFragment, Menu.NONE, R.string.saved).setIcon(R.drawable.ic_file_download_black_24dp)
+                            } else {
+                                menu.add(Menu.NONE, R.id.savedMediaFragment, Menu.NONE, R.string.saved).setIcon(R.drawable.ic_file_download_black_24dp)
+                            }
+                        }
+                    }
                 }
-            }
-            val savedRemoved = prefs.getBoolean(C.UI_REMOVE_SAVED, false)
-            if (!savedRemoved) {
-                if (prefs.getBoolean(C.UI_SAVEDPAGER, true)) {
-                    menu.add(Menu.NONE, R.id.savedPagerFragment, Menu.NONE, R.string.saved).setIcon(R.drawable.ic_file_download_black_24dp)
-                } else {
-                    menu.add(Menu.NONE, R.id.savedMediaFragment, Menu.NONE, R.string.saved).setIcon(R.drawable.ic_file_download_black_24dp)
-                }
-            }
-            if (gamesRemoved && popularRemoved && followingRemoved && savedRemoved) {
-                binding.navBar.visibility = View.GONE
+            } else {
+                binding.navBarContainer.gone()
             }
             setupWithNavController(navController)
             setOnItemSelectedListener {

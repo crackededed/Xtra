@@ -38,7 +38,6 @@ import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import dagger.hilt.android.AndroidEntryPoint
-import kotlin.text.isNullOrBlank
 
 @AndroidEntryPoint
 class SavedMediaFragment : Fragment(), Scrollable, FragmentHost {
@@ -183,7 +182,7 @@ class SavedMediaFragment : Fragment(), Scrollable, FragmentHost {
                 toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                     topMargin = insets.top
                 }
-                WindowInsetsCompat.CONSUMED
+                windowInsets
             }
         }
     }

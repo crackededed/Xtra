@@ -4,6 +4,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
+import androidx.preference.MultiSelectListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.github.andreyasadchy.xtra.util.C
@@ -15,6 +16,7 @@ abstract class MaterialPreferenceFragment : PreferenceFragmentCompat() {
         if (requireContext().prefs().getBoolean(C.UI_THEME_MATERIAL3, true)) {
             when (preference) {
                 is ListPreference -> showPreferenceDialog(preference, MaterialListPreference())
+                is MultiSelectListPreference -> showPreferenceDialog(preference, MaterialMultiSelectListPreference())
                 is EditTextPreference -> showPreferenceDialog(preference, MaterialEditTextPreference())
                 else -> super.onDisplayPreferenceDialog(preference)
             }

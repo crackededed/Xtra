@@ -689,8 +689,5 @@
     <string name="chat_badge_size">Badge size</string>
     <string name="overlay_emotes">Overlay emotes</string>
     <string name="network_library">Network library</string>
-    <string name="remove_games_page">Remove Games page</string>
-    <string name="remove_popular_page">Remove Popular page</string>
-    <string name="remove_following_page">Remove Following page</string>
-    <string name="remove_saved_page">Remove Saved page</string>
+    <string name="navigation_tabs">Navigation tabs</string>
 </resources>

@@ -14,10 +14,12 @@ import android.widget.MultiAutoCompleteTextView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.res.use
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.core.widget.TextViewCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -1028,6 +1030,17 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                     }
                 } else {
                     chatReplayUnavailable.visible()
+                }
+            }
+            if (view.parent?.parent?.parent !is SlidingLayout) {
+                ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
+                    if (requireContext().prefs().getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
+                        val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+                        view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                            bottomMargin = insets.bottom
+                        }
+                    }
+                    WindowInsetsCompat.CONSUMED
                 }
             }
         }

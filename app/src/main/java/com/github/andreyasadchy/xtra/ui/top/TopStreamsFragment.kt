@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -115,6 +116,10 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
                 val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
                 toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                     topMargin = insets.top
+                }
+                if (requireContext().prefs().getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
+                    val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+                    recyclerViewLayout.recyclerView.updatePadding(bottom = systemBars.bottom)
                 }
                 WindowInsetsCompat.CONSUMED
             }

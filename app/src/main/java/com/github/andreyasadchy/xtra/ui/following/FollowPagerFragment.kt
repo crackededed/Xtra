@@ -162,7 +162,7 @@ class FollowPagerFragment : Fragment(), Scrollable, FragmentHost {
                 toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                     topMargin = insets.top
                 }
-                WindowInsetsCompat.CONSUMED
+                windowInsets
             }
         }
     }

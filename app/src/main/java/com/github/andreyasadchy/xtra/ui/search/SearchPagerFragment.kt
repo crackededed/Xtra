@@ -187,7 +187,7 @@ class SearchPagerFragment : BaseNetworkFragment(), FragmentHost {
                 toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                     topMargin = insets.top
                 }
-                WindowInsetsCompat.CONSUMED
+                windowInsets
             }
         }
     }

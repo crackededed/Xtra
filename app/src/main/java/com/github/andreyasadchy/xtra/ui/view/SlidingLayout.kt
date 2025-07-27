@@ -264,12 +264,12 @@ class SlidingLayout : LinearLayout {
                 minScaleX = 0.3f
                 minScaleY = 0.325f
             }
-            val navBarHeight = rootView.findViewById<LinearLayout>(R.id.navBarContainer)?.height ?: 100
+            val navBarHeight = rootView.findViewById<LinearLayout>(R.id.navBarContainer)?.height?.takeIf { it != 0 } ?: savedInsets?.bottom ?: 100
             bottomMargin = (navBarHeight / (1f - minScaleY)) + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30F, resources.displayMetrics)
 
             fun initialize() {
                 minimizeThreshold = height / 5
-                pivotX = (width - ((savedInsets?.right ?: 0) / (1f - minScaleX))) * 0.95f
+                pivotX = width * 0.95f
                 if (isPortrait) {
                     bottomBound = height / 2
                     pivotY = height * 2 - dragView.height - bottomMargin

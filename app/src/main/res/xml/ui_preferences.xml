@@ -51,6 +51,15 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <MultiSelectListPreference
+        android:defaultValue="@array/pageValues"
+        android:entries="@array/pageEntries"
+        android:entryValues="@array/pageValues"
+        android:key="ui_navigation_tabs"
+        android:title="@string/navigation_tabs"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
     <ListPreference
         android:defaultValue="0"
         android:entries="@array/spinnerFollowedEntries"
@@ -158,34 +167,6 @@
         android:defaultValue="true"
         android:key="ui_bookmark_time_left"
         android:title="@string/show_vod_time_left"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="ui_remove_games"
-        android:title="@string/remove_games_page"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="ui_remove_popular"
-        android:title="@string/remove_popular_page"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="ui_remove_following"
-        android:title="@string/remove_following_page"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="ui_remove_saved"
-        android:title="@string/remove_saved_page"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 

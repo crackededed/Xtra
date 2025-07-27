@@ -688,8 +688,5 @@
     <string name="chat_badge_size">Размер значков</string>
     <string name="overlay_emotes">Наложение смайлов</string>
     <string name="network_library">Сетевая библиотека</string>
-    <string name="remove_games_page">Remove Games page</string>
-    <string name="remove_popular_page">Remove Popular page</string>
-    <string name="remove_following_page">Remove Following page</string>
-    <string name="remove_saved_page">Remove Saved page</string>
+    <string name="navigation_tabs">Navigation tabs</string>
 </resources>

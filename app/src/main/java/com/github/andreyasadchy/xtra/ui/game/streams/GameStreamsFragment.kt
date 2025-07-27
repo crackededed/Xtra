@@ -4,6 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -12,6 +15,7 @@ import androidx.navigation.fragment.navArgs
 import androidx.paging.PagingData
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
 import com.github.andreyasadchy.xtra.databinding.SortBarBinding
 import com.github.andreyasadchy.xtra.model.ui.Stream
@@ -53,6 +57,13 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
             StreamsAdapter(this, args, showGame = false)
         }
         setAdapter(binding.recyclerView, pagingAdapter)
+        ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
+            if (requireContext().prefs().getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
+                val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+                binding.recyclerView.updatePadding(bottom = insets.bottom)
+            }
+            WindowInsetsCompat.CONSUMED
+        }
     }
 
     override fun initialize() {

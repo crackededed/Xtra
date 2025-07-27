@@ -5,6 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.edit
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -79,6 +82,13 @@ class ChannelVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosS
             )
         }, showChannel = false)
         setAdapter(binding.recyclerView, pagingAdapter)
+        ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
+            if (requireContext().prefs().getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
+                val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+                binding.recyclerView.updatePadding(bottom = insets.bottom)
+            }
+            WindowInsetsCompat.CONSUMED
+        }
     }
 
     override fun initialize() {
