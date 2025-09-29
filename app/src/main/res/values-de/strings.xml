@@ -699,8 +699,8 @@
     <string name="download_language_model_message">Sprachmodell für %s herunterladen?</string>
     <string name="translate_from_selected">Aus der ausgewählten Sprache übersetzen</string>
     <string name="translate_all_messages">Übersetze alle Nachrichten auf diesem Kanal</string>
-    <string name="use_custom_websockets">Use custom WebSockets</string>
-    <string name="show_more_websocket_info">Show more info about WebSockets</string>
-    <string name="websocket_connected">%s: Connected</string>
-    <string name="websocket_disconnected">%1$s: Disconnected - %2$s</string>
+    <string name="use_custom_websockets">Verwende benutzerdefinierte WebSockets</string>
+    <string name="show_more_websocket_info">Weitere Informationen zu WebSockets anzeigen</string>
+    <string name="websocket_connected">%s: Verbunden</string>
+    <string name="websocket_disconnected">%1$s: Getrennt - %2$s</string>
 </resources>
