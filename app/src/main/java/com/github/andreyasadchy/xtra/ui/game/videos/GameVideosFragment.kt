@@ -107,7 +107,7 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                     saveSort = sortValues?.saveSort,
                 )
                 viewModel.sortText.value = requireContext().getString(
-                    R.string.sort_and_period,
+                    R.string.sort_and_type,
                     requireContext().getString(
                         when (viewModel.sort) {
                             VideosSortDialog.SORT_TIME -> R.string.upload_date
@@ -116,12 +116,11 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                         }
                     ),
                     requireContext().getString(
-                        when (viewModel.period) {
-                            VideosSortDialog.PERIOD_DAY -> R.string.today
-                            VideosSortDialog.PERIOD_WEEK -> R.string.this_week
-                            VideosSortDialog.PERIOD_MONTH -> R.string.this_month
-                            VideosSortDialog.PERIOD_ALL -> R.string.all_time
-                            else -> R.string.this_week
+                        when (viewModel.type) {
+                            VideosSortDialog.VIDEO_TYPE_ARCHIVE -> R.string.video_type_archive
+                            VideosSortDialog.VIDEO_TYPE_HIGHLIGHT -> R.string.video_type_highlight
+                            VideosSortDialog.VIDEO_TYPE_UPLOAD -> R.string.video_type_upload
+                            else -> R.string.all
                         }
                     )
                 )
@@ -178,7 +177,14 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                 binding.scrollTop.gone()
                 pagingAdapter.submitData(PagingData.empty())
                 viewModel.setFilter(sort, period, type, languageIndex, saveSort)
-                viewModel.sortText.value = requireContext().getString(R.string.sort_and_period, sortText, periodText)
+                viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, requireContext().getString(
+                    when (viewModel.type) {
+                        VideosSortDialog.VIDEO_TYPE_ARCHIVE -> R.string.video_type_archive
+                        VideosSortDialog.VIDEO_TYPE_HIGHLIGHT -> R.string.video_type_highlight
+                        VideosSortDialog.VIDEO_TYPE_UPLOAD -> R.string.video_type_upload
+                        else -> R.string.all
+                    }
+                ))
                 val sortValues = args.gameId?.let { viewModel.getSortGame(it) }
                 if (saveSort) {
                     if (sortValues != null) {

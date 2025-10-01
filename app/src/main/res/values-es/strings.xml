@@ -705,4 +705,6 @@
     <string name="websocket_disconnected">%1$s: Disconnected - %2$s</string>
     <string name="folder_not_accesible_or_writable">Selected folder is not writable or accessible</string>
     <string name="select_internal_storage_folder">Selecciona una carpeta del almacenamiento interno</string>
+    <string name="sort_and_type">Ordenar por: %1$s. Tipo: %2$s</string>
+    <string name="search_tags">Buscar etiquetas</string>
 </resources>

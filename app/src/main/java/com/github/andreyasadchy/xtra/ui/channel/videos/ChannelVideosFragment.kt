@@ -103,7 +103,7 @@ class ChannelVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosS
                     saveSort = sortValues?.saveSort,
                 )
                 viewModel.sortText.value = requireContext().getString(
-                    R.string.sort_and_period,
+                    R.string.sort_and_type,
                     requireContext().getString(
                         when (viewModel.sort) {
                             VideosSortDialog.SORT_TIME -> R.string.upload_date
@@ -111,7 +111,7 @@ class ChannelVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosS
                             else -> R.string.upload_date
                         }
                     ),
-                    requireContext().getString(R.string.all_time)
+                    requireContext().getString(R.string.all)
                 )
             }
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -165,7 +165,14 @@ class ChannelVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosS
                 binding.scrollTop.gone()
                 pagingAdapter.submitData(PagingData.empty())
                 viewModel.setFilter(sort, type, saveSort)
-                viewModel.sortText.value = requireContext().getString(R.string.sort_and_period, sortText, periodText)
+                viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, requireContext().getString(
+                    when (viewModel.type) {
+                        VideosSortDialog.VIDEO_TYPE_ARCHIVE -> R.string.video_type_archive
+                        VideosSortDialog.VIDEO_TYPE_HIGHLIGHT -> R.string.video_type_highlight
+                        VideosSortDialog.VIDEO_TYPE_UPLOAD -> R.string.video_type_upload
+                        else -> R.string.all
+                    }
+                ))
                 val sortValues = args.channelId?.let { viewModel.getSortChannel(it) }
                 if (saveSort) {
                     if (sortValues != null) {
