@@ -19,6 +19,7 @@ import androidx.core.os.bundleOf
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
+import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -34,6 +35,7 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
+import com.github.andreyasadchy.xtra.util.toast
 import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import dagger.hilt.android.AndroidEntryPoint
@@ -192,9 +194,25 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                 if (result.resultCode == Activity.RESULT_OK) {
                     result.data?.data?.let {
                         requireContext().contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                        sharedPath = it.toString()
-                        directory.visible()
-                        directory.text = it.path?.substringAfter("/tree/")?.removeSuffix(":")
+
+                        // Only allow folders from primary (internal) storage.
+                        if (!Uri.decode(it.toString()).contains("primary:")) {
+                            requireActivity().toast(getString(R.string.select_internal_storage_folder))
+                        }
+                        else {
+                            val documentFile = DocumentFile.fromTreeUri(requireContext(), it)
+
+                            // SAF storage valid: verifies the URI points to an valid and writable folder.
+                            if (documentFile != null && documentFile.name != null && documentFile.canWrite()) {
+                                sharedPath = it.toString()
+                                directory.visible()
+                                binding.download.isEnabled = true
+                                directory.text =
+                                    it.path?.substringAfter("/tree/")?.removeSuffix(":")
+                            } else {
+                                requireActivity().toast(getString(R.string.folder_not_accesible_or_writable))
+                            }
+                        }
                     }
                 }
             }
@@ -328,10 +346,12 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                             0 -> {
                                 sharedStorageLayout.visible()
                                 appStorageLayout.gone()
+                                binding.download.isEnabled = sharedPath != null
                             }
                             1 -> {
                                 appStorageLayout.visible()
                                 sharedStorageLayout.gone()
+                                binding.download.isEnabled = true
                             }
                         }
                     }
@@ -360,6 +380,8 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                     visible()
                     text = Uri.decode(previousPath.substringAfter("/tree/"))
                 }
+            } else {
+                binding.download.isEnabled = false
             }
             downloadChat.apply {
                 isChecked = requireContext().prefs().getBoolean(C.DOWNLOAD_CHAT, false)
