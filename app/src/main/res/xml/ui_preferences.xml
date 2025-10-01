@@ -71,6 +71,16 @@
         app:singleLineTitle="false" />
 
     <ListPreference
+        android:defaultValue="2"
+        android:entries="@array/spinnerSearchedEntries"
+        android:entryValues="@array/spinnerSearchedValues"
+        android:key="ui_search_default_page"
+        android:summary="%s"
+        android:title="@string/default_search_tab"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <ListPreference
         android:defaultValue="0"
         android:entries="@array/spinnerSavedEntries"
         android:entryValues="@array/spinnerSavedValues"

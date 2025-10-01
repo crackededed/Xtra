@@ -70,7 +70,12 @@
         android:name="com.github.andreyasadchy.xtra.ui.saved.SavedMediaFragment" />
     <fragment
         android:id="@+id/searchPagerFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.search.SearchPagerFragment" />
+        android:name="com.github.andreyasadchy.xtra.ui.search.SearchPagerFragment">
+        <argument
+            android:name="tabIndex"
+            app:argType="integer"
+            android:defaultValue="-1" />
+    </fragment>
     <action
         android:id="@+id/action_global_searchPagerFragment"
         app:destination="@id/searchPagerFragment" />

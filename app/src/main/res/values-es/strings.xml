@@ -714,4 +714,5 @@
     <string name="recent">Más recientes</string>
     <string name="filters">Filtros</string>
     <string name="sort_by">Ordenar por: %1$s</string>
+    <string name="default_search_tab">Default search tab</string>
 </resources>
