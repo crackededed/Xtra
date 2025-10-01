@@ -27,7 +27,7 @@
                 android:textDirection="locale"
                 app:iconifiedByDefault="false"
                 app:queryBackground="@android:color/transparent"
-                app:queryHint="@string/search"
+                app:queryHint="@string/search_tags"
                 app:searchIcon="@null" />
         </com.google.android.material.appbar.MaterialToolbar>
 

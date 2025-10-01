@@ -96,7 +96,7 @@ class FollowedVideosFragment : PagedListFragment(), Scrollable, Sortable, Videos
                     type = sortValues?.videoType,
                 )
                 viewModel.sortText.value = requireContext().getString(
-                    R.string.sort_and_period,
+                    R.string.sort_and_type,
                     requireContext().getString(
                         when (viewModel.sort) {
                             VideosSortDialog.SORT_TIME -> R.string.upload_date
@@ -104,7 +104,7 @@ class FollowedVideosFragment : PagedListFragment(), Scrollable, Sortable, Videos
                             else -> R.string.upload_date
                         }
                     ),
-                    requireContext().getString(R.string.all_time)
+                    requireContext().getString(R.string.all)
                 )
             }
             repeatOnLifecycle(Lifecycle.State.STARTED) {
