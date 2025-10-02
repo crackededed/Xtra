@@ -74,6 +74,7 @@ import com.github.andreyasadchy.xtra.model.gql.search.SearchStreamTagsResponse
 import com.github.andreyasadchy.xtra.model.gql.search.SearchVideosResponse
 import com.github.andreyasadchy.xtra.model.gql.stream.StreamsResponse
 import com.github.andreyasadchy.xtra.model.gql.stream.ViewerCountResponse
+import com.github.andreyasadchy.xtra.model.gql.suggested.ChannelSuggestedResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoGamesResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoMessagesResponse
 import com.github.andreyasadchy.xtra.type.BadgeImageSize
@@ -1544,5 +1545,35 @@ class GraphQLRepository @Inject constructor(
             }
         }.toString()
         json.decodeFromString<ErrorResponse>(sendPersistedQuery(networkLibrary, headers, body))
+    }
+
+    suspend fun loadChannelSuggested(networkLibrary: String?, headers: Map<String, String>, query: String?): ChannelSuggestedResponse = withContext(Dispatchers.IO) {
+
+        val body = buildJsonObject {
+            putJsonObject("extensions") {
+                putJsonObject("persistedQuery") {
+                    put("sha256Hash", "89ae376644937a5843e7f9220392331484f78d4641e46df63bcf7491eacf2bd0")
+                    put("version", 1)
+                }
+            }
+            put("operationName", "SideNav")
+            putJsonObject("variables") {
+                putJsonObject("input") {
+                    putJsonObject("recommendationContext") {
+                        put("platform", "web")
+                        put("clientApp", "twilight")
+                        put("location", "channel")
+                    }
+                    put("contextChannelName", query)
+                }
+                put("creatorAnniversariesFeature", false)
+                put("withFreeformTags", false)
+                put("isLoggedIn", false)
+            }
+        }.toString()
+
+        val response = sendPersistedQuery(networkLibrary, headers, body)
+
+        json.decodeFromString<ChannelSuggestedResponse>(response)
     }
 }

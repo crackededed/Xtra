@@ -448,7 +448,8 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                 tab.text = when (position) {
                     0 -> getString(R.string.videos)
                     1 -> getString(R.string.clips)
-                    else -> getString(R.string.chat)
+                    2 -> getString(R.string.chat)
+                    else -> getString(R.string.suggested)
                 }
             }.attach()
             ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->

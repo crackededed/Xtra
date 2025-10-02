@@ -719,4 +719,5 @@
     <string name="show_more_websocket_info">Show more info about WebSockets</string>
     <string name="websocket_connected">%s: Connected</string>
     <string name="websocket_disconnected">%1$s: Disconnected - %2$s</string>
+    <string name="suggested">Suggested</string>
 </resources>
