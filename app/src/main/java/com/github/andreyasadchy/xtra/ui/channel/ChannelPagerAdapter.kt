@@ -16,13 +16,13 @@ class ChannelPagerAdapter(
         return when (position) {
             0 -> ChannelVideosFragment().apply { arguments = fragment.arguments }
             1 -> ChannelClipsFragment().apply { arguments = fragment.arguments }
-            2 -> ChatFragment.newInstance(
+            2 -> ChannelSuggestedFragment().apply { arguments = fragment.arguments }
+            else -> ChatFragment.newInstance(
                 channelId = args.channelId,
                 channelLogin = args.channelLogin,
                 channelName = args.channelName,
                 streamId = args.streamId
             )
-            else -> ChannelSuggestedFragment().apply { arguments = fragment.arguments }
         }
     }
 
