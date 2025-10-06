@@ -34,6 +34,7 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
+import com.github.andreyasadchy.xtra.util.toast
 import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import dagger.hilt.android.AndroidEntryPoint
@@ -192,9 +193,14 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                 if (result.resultCode == Activity.RESULT_OK) {
                     result.data?.data?.let {
                         requireContext().contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                        sharedPath = it.toString()
-                        directory.visible()
-                        directory.text = it.path?.substringAfter("/tree/")?.removeSuffix(":")
+                        if (it.authority?.startsWith("com.android.providers") != true) {
+                            sharedPath = it.toString()
+                            binding.download.isEnabled = true
+                            directory.visible()
+                            directory.text = it.path?.substringAfter("/tree/")?.removeSuffix(":")
+                        } else {
+                            requireActivity().toast(getString(R.string.invalid_directory))
+                        }
                     }
                 }
             }
@@ -328,10 +334,12 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                             0 -> {
                                 sharedStorageLayout.visible()
                                 appStorageLayout.gone()
+                                binding.download.isEnabled = sharedPath != null
                             }
                             1 -> {
                                 appStorageLayout.visible()
                                 sharedStorageLayout.gone()
+                                binding.download.isEnabled = true
                             }
                         }
                     }
@@ -360,6 +368,8 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                     visible()
                     text = Uri.decode(previousPath.substringAfter("/tree/"))
                 }
+            } else {
+                binding.download.isEnabled = false
             }
             downloadChat.apply {
                 isChecked = requireContext().prefs().getBoolean(C.DOWNLOAD_CHAT, false)
