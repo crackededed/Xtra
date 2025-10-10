@@ -24,7 +24,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 class VideosSortDialog : BottomSheetDialogFragment(), RadioButtonDialogFragment.OnSortOptionChanged {
 
     interface OnFilter {
-        fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, languageIndex: Int, saveSort: Boolean, saveDefault: Boolean)
+        fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languageIndex: Int, saveSort: Boolean, saveDefault: Boolean)
     }
 
     companion object {
@@ -161,6 +161,7 @@ class VideosSortDialog : BottomSheetDialogFragment(), RadioButtonDialogFragment.
                 ) {
                     val sortBtn = view.findViewById<RadioButton>(checkedSortId)
                     val periodBtn = view.findViewById<RadioButton>(checkedPeriodId)
+                    val typeBtn = view.findViewById<RadioButton>(checkedTypeId)
                     listener.onChange(
                         when (checkedSortId) {
                             R.id.time -> SORT_TIME
@@ -183,6 +184,7 @@ class VideosSortDialog : BottomSheetDialogFragment(), RadioButtonDialogFragment.
                             R.id.typeUpload -> VIDEO_TYPE_UPLOAD
                             else -> VIDEO_TYPE_ALL
                         },
+                        typeBtn.text,
                         langIndex,
                         checkedSaveSort,
                         checkedSaveDefault

@@ -171,20 +171,13 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
         }
     }
 
-    override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, languageIndex: Int, saveSort: Boolean, saveDefault: Boolean) {
+    override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languageIndex: Int, saveSort: Boolean, saveDefault: Boolean) {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
                 binding.scrollTop.gone()
                 pagingAdapter.submitData(PagingData.empty())
                 viewModel.setFilter(sort, period, type, languageIndex, saveSort)
-                viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, requireContext().getString(
-                    when (viewModel.type) {
-                        VideosSortDialog.VIDEO_TYPE_ARCHIVE -> R.string.video_type_archive
-                        VideosSortDialog.VIDEO_TYPE_HIGHLIGHT -> R.string.video_type_highlight
-                        VideosSortDialog.VIDEO_TYPE_UPLOAD -> R.string.video_type_upload
-                        else -> R.string.all
-                    }
-                ))
+                viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, typeText)
                 val sortValues = args.gameId?.let { viewModel.getSortGame(it) }
                 if (saveSort) {
                     if (sortValues != null) {

@@ -116,7 +116,7 @@ class FollowedChannelsFragment : PagedListFragment(), Scrollable, Sortable, Foll
             viewLifecycleOwner.lifecycleScope.launch {
                 pagingAdapter.submitData(PagingData.empty())
                 viewModel.setFilter(sort, order)
-                viewModel.sortText.value = requireContext().getString(R.string.sort_and_period, sortText, orderText)
+                viewModel.sortText.value = requireContext().getString(R.string.sort_and_order, sortText, orderText)
                 if (saveDefault) {
                     val sortDefaults = viewModel.getSortChannel("followed_channels")
                     if (sortDefaults != null) {
