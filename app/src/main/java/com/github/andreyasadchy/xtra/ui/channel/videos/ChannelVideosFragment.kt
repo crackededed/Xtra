@@ -103,7 +103,7 @@ class ChannelVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosS
                     saveSort = sortValues?.saveSort,
                 )
                 viewModel.sortText.value = requireContext().getString(
-                    R.string.sort_and_period,
+                    R.string.sort_and_type,
                     requireContext().getString(
                         when (viewModel.sort) {
                             VideosSortDialog.SORT_TIME -> R.string.upload_date
@@ -111,7 +111,7 @@ class ChannelVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosS
                             else -> R.string.upload_date
                         }
                     ),
-                    requireContext().getString(R.string.all_time)
+                    requireContext().getString(R.string.all)
                 )
             }
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -159,13 +159,13 @@ class ChannelVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosS
         }
     }
 
-    override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, languageIndex: Int, saveSort: Boolean, saveDefault: Boolean) {
+    override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languageIndex: Int, saveSort: Boolean, saveDefault: Boolean) {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
                 binding.scrollTop.gone()
                 pagingAdapter.submitData(PagingData.empty())
                 viewModel.setFilter(sort, type, saveSort)
-                viewModel.sortText.value = requireContext().getString(R.string.sort_and_period, sortText, periodText)
+                viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, typeText)
                 val sortValues = args.channelId?.let { viewModel.getSortChannel(it) }
                 if (saveSort) {
                     if (sortValues != null) {

@@ -34,6 +34,7 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
+import com.github.andreyasadchy.xtra.util.toast
 import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import dagger.hilt.android.AndroidEntryPoint
@@ -192,13 +193,32 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                 if (result.resultCode == Activity.RESULT_OK) {
                     result.data?.data?.let {
                         requireContext().contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                        sharedPath = it.toString()
-                        directory.visible()
-                        directory.text = it.path?.substringAfter("/tree/")?.removeSuffix(":")
+                        if (it.authority?.startsWith("com.android.providers") != true) {
+                            sharedPath = it.toString()
+                            binding.download.isEnabled = true
+                            directory.visible()
+                            directory.text = it.path?.substringAfter("/tree/")?.removeSuffix(":")
+                        } else {
+                            requireActivity().toast(getString(R.string.invalid_directory))
+                        }
                     }
                 }
             }
             selectDirectory.setOnClickListener {
+                viewModel.selectedQuality = viewModel.qualities.value?.entries?.find { it.value.first == binding.spinner.editText?.text.toString() }?.value?.first
+                val location = resources.getStringArray(R.array.spinnerStorage).indexOf(storageSpinner.editText?.text.toString())
+                val downloadChat = binding.downloadChat.isChecked
+                val downloadChatEmotes = binding.downloadChatEmotes.isChecked
+                requireContext().prefs().edit {
+                    putInt(C.DOWNLOAD_LOCATION, location)
+                    putString(C.DOWNLOAD_SHARED_PATH, sharedPath)
+                    if (storage.size != 1) {
+                        val checked = max(binding.storageSelectionContainer.radioGroup.checkedRadioButtonId, 0)
+                        putInt(C.DOWNLOAD_STORAGE, checked)
+                    }
+                    putBoolean(C.DOWNLOAD_CHAT, downloadChat)
+                    putBoolean(C.DOWNLOAD_CHAT_EMOTES, downloadChatEmotes)
+                }
                 resultLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         putExtra(DocumentsContract.EXTRA_INITIAL_URI, sharedPath)
@@ -318,8 +338,14 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
             if (DownloadUtils.isExternalStorageAvailable) {
                 val location = requireContext().prefs().getInt(C.DOWNLOAD_LOCATION, 0)
                 when (location) {
-                    0 -> sharedStorageLayout.visible()
-                    1 -> appStorageLayout.visible()
+                    0 -> {
+                        sharedStorageLayout.visible()
+                        appStorageLayout.gone()
+                    }
+                    1 -> {
+                        appStorageLayout.visible()
+                        sharedStorageLayout.gone()
+                    }
                 }
                 (storageSpinner.editText as? MaterialAutoCompleteTextView)?.apply {
                     setSimpleItems(resources.getStringArray(R.array.spinnerStorage))
@@ -328,16 +354,20 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                             0 -> {
                                 sharedStorageLayout.visible()
                                 appStorageLayout.gone()
+                                binding.download.isEnabled = sharedPath != null
                             }
                             1 -> {
                                 appStorageLayout.visible()
                                 sharedStorageLayout.gone()
+                                binding.download.isEnabled = true
                             }
                         }
                     }
                     setText(adapter.getItem(location).toString(), false)
                 }
                 if (storage.size > 1) {
+                    radioGroup.removeAllViews()
+                    radioGroup.clearCheck()
                     for (s in storage) {
                         radioGroup.addView(RadioButton(requireContext()).apply {
                             id = s.id
@@ -360,6 +390,8 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                     visible()
                     text = Uri.decode(previousPath.substringAfter("/tree/"))
                 }
+            } else {
+                binding.download.isEnabled = false
             }
             downloadChat.apply {
                 isChecked = requireContext().prefs().getBoolean(C.DOWNLOAD_CHAT, false)
@@ -372,8 +404,12 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                 isEnabled = downloadChat.isChecked
             }
             (spinner.editText as? MaterialAutoCompleteTextView)?.apply {
-                setSimpleItems(qualities.map { it.value.first }.toTypedArray())
-                setText(adapter.getItem(0).toString(), false)
+                val array = qualities.map { it.value.first }.toTypedArray()
+                val selectedQuality = viewModel.selectedQuality?.let { quality ->
+                    array.find { it == quality }
+                } ?: array.first()
+                setSimpleItems(array)
+                setText(selectedQuality, false)
             }
             cancel.setOnClickListener { dismiss() }
         }
