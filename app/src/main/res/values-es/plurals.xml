@@ -17,7 +17,7 @@
         <item quantity="other">%d minutos</item>
     </plurals>
     <plurals name="broadcasters">
-        <item quantity="one">%d broadcaster</item>
-        <item quantity="other">%d broadcasters</item>
+        <item quantity="one">%d transmisor</item>
+        <item quantity="other">%d transmisores</item>
     </plurals>
 </resources>
