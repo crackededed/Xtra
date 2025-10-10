@@ -14,9 +14,9 @@ class ChannelPagerAdapter(
 
     override fun createFragment(position: Int): Fragment {
         return when (position) {
-            0 -> ChannelVideosFragment().apply { arguments = fragment.arguments }
-            1 -> ChannelClipsFragment().apply { arguments = fragment.arguments }
-            2 -> ChannelSuggestedFragment().apply { arguments = fragment.arguments }
+            0 -> ChannelSuggestedFragment().apply { arguments = fragment.arguments }
+            1 -> ChannelVideosFragment().apply { arguments = fragment.arguments }
+            2 -> ChannelClipsFragment().apply { arguments = fragment.arguments }
             else -> ChatFragment.newInstance(
                 channelId = args.channelId,
                 channelLogin = args.channelLogin,

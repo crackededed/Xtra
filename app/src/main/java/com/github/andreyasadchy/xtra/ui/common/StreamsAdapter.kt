@@ -220,11 +220,19 @@ class StreamsAdapter(
                             text.setOnClickListener {
                                 if (args?.gameId != null && args.gameName != null) {
                                     fragment.findNavController().navigate(
-                                        GamePagerFragmentDirections.actionGlobalGamePagerFragment(
-                                            gameId = args.gameId,
-                                            gameName = args.gameName,
-                                            tags = arrayOf(tag),
-                                        )
+                                        if (context.prefs().getBoolean(C.UI_GAMEPAGER, true)) {
+                                            GamePagerFragmentDirections.actionGlobalGamePagerFragment(
+                                                gameId = args.gameId,
+                                                gameName = args.gameName,
+                                                tags = arrayOf(tag),
+                                            )
+                                        } else {
+                                            GameMediaFragmentDirections.actionGlobalGameMediaFragment(
+                                                gameId = args.gameId,
+                                                gameName = args.gameName,
+                                                tags = arrayOf(tag),
+                                            )
+                                        }
                                     )
                                 } else {
                                     fragment.findNavController().navigate(

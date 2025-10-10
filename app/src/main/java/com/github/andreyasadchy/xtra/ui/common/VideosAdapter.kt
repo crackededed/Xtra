@@ -250,9 +250,15 @@ class VideosAdapter(
                             if (tag.name != null) {
                                 text.setOnClickListener {
                                     fragment.findNavController().navigate(
-                                        GamePagerFragmentDirections.actionGlobalGamePagerFragment(
-                                            tags = arrayOf(tag.name),
-                                        )
+                                        if (context.prefs().getBoolean(C.UI_GAMEPAGER, true)) {
+                                            GamePagerFragmentDirections.actionGlobalGamePagerFragment(
+                                                tags = arrayOf(tag.name),
+                                            )
+                                        } else {
+                                            GameMediaFragmentDirections.actionGlobalGameMediaFragment(
+                                                tags = arrayOf(tag.name),
+                                            )
+                                        }
                                     )
                                 }
                             }

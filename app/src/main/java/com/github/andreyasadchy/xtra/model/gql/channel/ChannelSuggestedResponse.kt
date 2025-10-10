@@ -1,4 +1,4 @@
-package com.github.andreyasadchy.xtra.model.gql.suggested
+package com.github.andreyasadchy.xtra.model.gql.channel
 
 import com.github.andreyasadchy.xtra.model.gql.Error
 import kotlinx.serialization.Serializable
@@ -20,46 +20,47 @@ class ChannelSuggestedResponse(
 
     @Serializable
     class Sections(
-        val edges: List<ProviderEdge>
+        val edges: List<ShelfEdge>
     )
 
     @Serializable
-    class ProviderEdge(
-        val cursor: String?,
-        val node: ProviderNode
+    class ShelfEdge(
+        val node: Shelf
     )
 
     @Serializable
-    class ProviderNode(
-        val id: String?,
+    class Shelf(
+        val id: String? = null,
         val content: Content
     )
 
     @Serializable
     class Content(
-        val edges: List<UserEdge>
+        val edges: List<Item>
     )
 
     @Serializable
-    class UserEdge(
-        val node: UserNode
+    class Item(
+        val node: Stream
     )
 
     @Serializable
-    class UserNode(
-        val viewersCount: Int? = null,
-        val broadcaster: Broadcaster? = null,
+    class Stream(
+        val id: String? = null,
+        val broadcaster: User? = null,
         val game: Game? = null,
-        val type: String? = null
+        val viewersCount: Int? = null,
+        val type: String? = null,
+        val freeformTags: List<Tag>? = null,
     )
 
     @Serializable
-    class Broadcaster(
+    class User(
         val id: String? = null,
         val login: String? = null,
         val displayName: String? = null,
         val profileImageURL: String? = null,
-        val broadcastSettings: BroadcastSettings
+        val broadcastSettings: BroadcastSettings? = null
     )
 
     @Serializable
@@ -70,8 +71,12 @@ class ChannelSuggestedResponse(
     @Serializable
     class Game(
         val id: String? = null,
-        val name: String? = null,
+        val slug: String? = null,
         val displayName: String? = null,
-        val slug: String? = null
+    )
+
+    @Serializable
+    class Tag(
+        val name: String? = null,
     )
 }

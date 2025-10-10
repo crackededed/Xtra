@@ -43,6 +43,7 @@ import com.github.andreyasadchy.xtra.UsersTypeQuery
 import com.github.andreyasadchy.xtra.VideoQuery
 import com.github.andreyasadchy.xtra.model.gql.ErrorResponse
 import com.github.andreyasadchy.xtra.model.gql.channel.ChannelClipsResponse
+import com.github.andreyasadchy.xtra.model.gql.channel.ChannelSuggestedResponse
 import com.github.andreyasadchy.xtra.model.gql.channel.ChannelVideosResponse
 import com.github.andreyasadchy.xtra.model.gql.channel.ChannelViewerListResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.BadgesResponse
@@ -74,7 +75,6 @@ import com.github.andreyasadchy.xtra.model.gql.search.SearchStreamTagsResponse
 import com.github.andreyasadchy.xtra.model.gql.search.SearchVideosResponse
 import com.github.andreyasadchy.xtra.model.gql.stream.StreamsResponse
 import com.github.andreyasadchy.xtra.model.gql.stream.ViewerCountResponse
-import com.github.andreyasadchy.xtra.model.gql.suggested.ChannelSuggestedResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoGamesResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoMessagesResponse
 import com.github.andreyasadchy.xtra.type.BadgeImageSize
@@ -83,6 +83,7 @@ import com.github.andreyasadchy.xtra.type.ClipsPeriod
 import com.github.andreyasadchy.xtra.type.Language
 import com.github.andreyasadchy.xtra.type.StreamSort
 import com.github.andreyasadchy.xtra.type.VideoSort
+import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.HttpEngineUtils
 import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
 import dagger.Lazy
@@ -105,6 +106,7 @@ import org.chromium.net.CronetEngine
 import org.chromium.net.apihelpers.RedirectHandlers
 import org.chromium.net.apihelpers.UploadDataProviders
 import org.chromium.net.apihelpers.UrlRequestCallbacks
+import java.util.UUID
 import java.util.concurrent.ExecutorService
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -675,6 +677,39 @@ class GraphQLRepository @Inject constructor(
             }
         }.toString()
         json.decodeFromString<GameClipsResponse>(sendPersistedQuery(networkLibrary, headers, body))
+    }
+
+    suspend fun loadChannelSuggested(networkLibrary: String?, headers: Map<String, String>, channelLogin: String?): ChannelSuggestedResponse = withContext(Dispatchers.IO) {
+        val body = buildJsonObject {
+            putJsonObject("extensions") {
+                putJsonObject("persistedQuery") {
+                    put("sha256Hash", "b9660765905e84e7b6a1ed18937b49ef0569e9b2a1c8f7a40a1bf289fbe2ced6")
+                    put("version", 1)
+                }
+            }
+            put("operationName", "SideNav")
+            putJsonObject("variables") {
+                put("creatorAnniversariesFeature", false)
+                putJsonObject("input") {
+                    put("contextChannelName", channelLogin)
+                    putJsonObject("recommendationContext") {
+                        put("channelName", channelLogin)
+                        put("clientApp", "twilight")
+                        put("location", "channel")
+                        put("platform", "web")
+                    }
+                }
+                put("isLoggedIn", headers[C.HEADER_TOKEN] != null)
+                put("withFreeformTags", true)
+            }
+        }.toString()
+        val headers = if (headers["X-Device-Id"] == null) {
+            headers.toMutableMap().apply {
+                val randomId = UUID.randomUUID().toString().replace("-", "").substring(0, 32)
+                put("X-Device-Id", randomId)
+            }
+        } else headers
+        json.decodeFromString<ChannelSuggestedResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
     suspend fun loadChannelVideos(networkLibrary: String?, headers: Map<String, String>, channelLogin: String?, type: String?, sort: String?, limit: Int?, cursor: String?): ChannelVideosResponse = withContext(Dispatchers.IO) {
@@ -1545,35 +1580,5 @@ class GraphQLRepository @Inject constructor(
             }
         }.toString()
         json.decodeFromString<ErrorResponse>(sendPersistedQuery(networkLibrary, headers, body))
-    }
-
-    suspend fun loadChannelSuggested(networkLibrary: String?, headers: Map<String, String>, query: String?): ChannelSuggestedResponse = withContext(Dispatchers.IO) {
-
-        val body = buildJsonObject {
-            putJsonObject("extensions") {
-                putJsonObject("persistedQuery") {
-                    put("sha256Hash", "89ae376644937a5843e7f9220392331484f78d4641e46df63bcf7491eacf2bd0")
-                    put("version", 1)
-                }
-            }
-            put("operationName", "SideNav")
-            putJsonObject("variables") {
-                putJsonObject("input") {
-                    putJsonObject("recommendationContext") {
-                        put("platform", "web")
-                        put("clientApp", "twilight")
-                        put("location", "channel")
-                    }
-                    put("contextChannelName", query)
-                }
-                put("creatorAnniversariesFeature", false)
-                put("withFreeformTags", false)
-                put("isLoggedIn", false)
-            }
-        }.toString()
-
-        val response = sendPersistedQuery(networkLibrary, headers, body)
-
-        json.decodeFromString<ChannelSuggestedResponse>(response)
     }
 }

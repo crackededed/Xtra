@@ -26,6 +26,7 @@ import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentArgs
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
+import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.convertDpToPixels
@@ -197,13 +198,29 @@ class StreamsCompactAdapter(
                                 TextViewCompat.setTextAppearance(text, it.getResourceId(0, 0))
                             }
                             text.setOnClickListener {
-                                fragment.findNavController().navigate(
-                                    GamePagerFragmentDirections.actionGlobalGamePagerFragment(
-                                        gameId = args?.gameId,
-                                        gameName = args?.gameName,
-                                        tags = arrayOf(tag),
+                                if (args?.gameId != null && args.gameName != null) {
+                                    fragment.findNavController().navigate(
+                                        if (context.prefs().getBoolean(C.UI_GAMEPAGER, true)) {
+                                            GamePagerFragmentDirections.actionGlobalGamePagerFragment(
+                                                gameId = args.gameId,
+                                                gameName = args.gameName,
+                                                tags = arrayOf(tag),
+                                            )
+                                        } else {
+                                            GameMediaFragmentDirections.actionGlobalGameMediaFragment(
+                                                gameId = args.gameId,
+                                                gameName = args.gameName,
+                                                tags = arrayOf(tag),
+                                            )
+                                        }
                                     )
-                                )
+                                } else {
+                                    fragment.findNavController().navigate(
+                                        TopStreamsFragmentDirections.actionGlobalTopFragment(
+                                            tags = arrayOf(tag)
+                                        )
+                                    )
+                                }
                             }
                             val padding = context.convertDpToPixels(5f)
                             text.setPadding(padding, 0, padding, 0)
