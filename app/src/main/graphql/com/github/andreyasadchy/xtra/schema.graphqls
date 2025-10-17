@@ -370,6 +370,7 @@ input GameOptions {
 input GameStreamOptions {
     freeformTags: [String!]
     sort: StreamSort
+    broadcasterLanguages: [Language!]
 }
 
 input PlaybackAccessTokenParams {
@@ -386,6 +387,7 @@ input SearchForTarget {
 input StreamOptions {
     freeformTags: [String!]
     sort: StreamSort
+    broadcasterLanguages: [Language!]
 }
 
 input UserClipsInput {

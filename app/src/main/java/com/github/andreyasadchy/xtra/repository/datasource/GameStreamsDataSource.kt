@@ -5,6 +5,7 @@ import androidx.paging.PagingState
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
+import com.github.andreyasadchy.xtra.type.Language
 import com.github.andreyasadchy.xtra.type.StreamSort
 import com.github.andreyasadchy.xtra.util.C
 
@@ -15,6 +16,7 @@ class GameStreamsDataSource(
     private val gqlQuerySort: StreamSort?,
     private val gqlSort: String?,
     private val tags: List<String>?,
+    private val languages: List<String>?,
     private val gqlHeaders: Map<String, String>,
     private val graphQLRepository: GraphQLRepository,
     private val helixHeaders: Map<String, String>,
@@ -69,6 +71,7 @@ class GameStreamsDataSource(
             name = gameName.takeIf { gameId.isNullOrBlank() && gameSlug.isNullOrBlank() },
             sort = gqlQuerySort,
             tags = tags,
+            languages = languages?.map { Language.valueOf(it) },
             first = params.loadSize,
             after = offset
         )
@@ -109,7 +112,7 @@ class GameStreamsDataSource(
     }
 
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, Stream> {
-        val response = graphQLRepository.loadGameStreams(networkLibrary, gqlHeaders, gameSlug, gqlSort, tags, params.loadSize, offset)
+        val response = graphQLRepository.loadGameStreams(networkLibrary, gqlHeaders, gameSlug, gqlSort, tags, languages,params.loadSize, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }

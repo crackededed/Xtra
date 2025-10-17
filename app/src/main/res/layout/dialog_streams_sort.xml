@@ -34,14 +34,22 @@
                 android:layout_height="wrap_content"
                 android:text="@string/viewers_low" />
 
+            <RadioButton
+                android:id="@+id/recent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/recent" />
+
         </RadioGroup>
 
-        <Button
-            android:id="@+id/apply"
-            style="?attr/bottomSheetButtonStyle"
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/apply" />
+            android:text="@string/filters"
+            android:textAppearance="?attr/textAppearanceTitleSmall"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textStyle="bold"
+            android:layout_marginStart="5dp" />
 
         <Button
             android:id="@+id/selectTags"
@@ -49,6 +57,27 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/tags" />
+
+        <Button
+            android:id="@+id/selectLangs"
+            style="?attr/bottomSheetButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/select_language" />
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="1dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:background="?android:attr/colorButtonNormal" />
+
+        <Button
+            android:id="@+id/apply"
+            style="?attr/bottomSheetButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/apply" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

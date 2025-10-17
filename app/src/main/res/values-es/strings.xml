@@ -711,4 +711,10 @@
     <string name="search_tags">Buscar etiquetas</string>
     <string name="invalid_directory">Directory Invalido</string>
     <string name="suggested">Sugeridos</string>
+    <string name="languages">Idiomas</string>
+    <string name="recent">Más recientes</string>
+    <string name="filters">Filtros</string>
+    <string name="sort_by">Ordenar por: %1$s</string>
+    <string name="languages_list">Idiomas: %1$s</string>
+    <string name="tags_list">Etiquetas: %1$s</string>
 </resources>

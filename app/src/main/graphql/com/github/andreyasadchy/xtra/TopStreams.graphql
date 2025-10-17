@@ -1,5 +1,5 @@
-query TopStreams($tags: [String!], $first: Int, $after: Cursor) {
-    streams(first: $first, after: $after, options: { freeformTags: $tags }) {
+query TopStreams($sort: StreamSort, $tags: [String!], $languages: [Language!], $first: Int, $after: Cursor) {
+    streams(first: $first, after: $after, options: { sort: $sort, freeformTags: $tags, broadcasterLanguages: $languages }) {
         edges {
             cursor
             node {

@@ -27,6 +27,9 @@ import com.github.andreyasadchy.xtra.ui.common.Sortable
 import com.github.andreyasadchy.xtra.ui.common.StreamsAdapter
 import com.github.andreyasadchy.xtra.ui.common.StreamsCompactAdapter
 import com.github.andreyasadchy.xtra.ui.common.StreamsSortDialog
+import com.github.andreyasadchy.xtra.ui.common.StreamsSortDialog.Companion.RECENT
+import com.github.andreyasadchy.xtra.ui.common.StreamsSortDialog.Companion.SORT_VIEWERS
+import com.github.andreyasadchy.xtra.ui.common.StreamsSortDialog.Companion.SORT_VIEWERS_ASC
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentArgs
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
@@ -68,6 +71,29 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
 
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
+            if (viewModel.filter.value == null) {
+                viewModel.setFilter(viewModel.sort, viewModel.languages)
+            }
+            viewModel.sortText.value = requireContext().getString(
+                R.string.sort_by,
+                requireContext().getString(
+                    when (viewModel.sort) {
+                        SORT_VIEWERS -> R.string.viewers_high
+                        SORT_VIEWERS_ASC -> R.string.viewers_low
+                        RECENT -> R.string.recent
+                        else -> R.string.viewers_high
+                    }
+                )
+            )
+            viewModel.filtersText.value = buildString {
+                args.tags?.takeIf { it.isNotEmpty() }?.let {
+                    append(requireContext().getString(R.string.tags_list, it.joinToString(", ")))
+                    append(" ")
+                }
+                if (viewModel.languages.isNotEmpty()) {
+                    append(requireContext().getString(R.string.languages_list, viewModel.languages.joinToString(", ")))
+                }
+            }.trimEnd()
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.flow.collectLatest { pagingData ->
                     pagingAdapter.submitData(pagingData)
@@ -80,18 +106,64 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
     override fun setupSortBar(sortBar: SortBarBinding) {
         sortBar.root.visible()
         sortBar.sortText.text = null
+        sortBar.filtersText.text = null
         sortBar.root.setOnClickListener {
             StreamsSortDialog.newInstance(
-                sort = viewModel.sort
+                sort = viewModel.sort,
+                languages = viewModel.languages
             ).show(childFragmentManager, null)
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.sortText.collectLatest {
+                    sortBar.sortText.text = it
+                }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.filtersText.collectLatest {
+                    sortBar.filtersText.text = it
+                }
+            }
         }
     }
 
-    override fun onChange(sort: String) {
+    override fun onChange(sort: String, sortText: CharSequence, languages: Array<String>, languagesText: CharSequence) {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
                 pagingAdapter.submitData(PagingData.empty())
-                viewModel.setFilter(sort)
+                viewModel.setFilter(sort, languages)
+                viewModel.sortText.value = requireContext().getString(
+                    R.string.sort_by,
+                    requireContext().getString(
+                        when (viewModel.sort) {
+                            SORT_VIEWERS -> R.string.viewers_high
+                            SORT_VIEWERS_ASC -> R.string.viewers_low
+                            RECENT -> R.string.recent
+                            else -> R.string.viewers_high
+                        }
+                    )
+                )
+                viewModel.filtersText.value = buildString {
+                    args.tags?.takeIf { it.isNotEmpty() }?.let {
+                        append(
+                            requireContext().getString(
+                                R.string.tags_list,
+                                it.joinToString(", ")
+                            )
+                        )
+                        append(" ")
+                    }
+                    if (viewModel.languages.isNotEmpty()) {
+                        append(
+                            requireContext().getString(
+                                R.string.languages_list,
+                                viewModel.languages.joinToString(", ")
+                            )
+                        )
+                    }
+                }.trimEnd()
             }
         }
     }

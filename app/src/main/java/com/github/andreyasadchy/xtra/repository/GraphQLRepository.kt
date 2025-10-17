@@ -266,13 +266,14 @@ class GraphQLRepository @Inject constructor(
         sendQuery(networkLibrary, headers, query)
     }
 
-    suspend fun loadQueryGameStreams(networkLibrary: String?, headers: Map<String, String>, id: String?, slug: String?, name: String?, sort: StreamSort?, tags: List<String>?, first: Int?, after: String?): ApolloResponse<GameStreamsQuery.Data> = withContext(Dispatchers.IO) {
+    suspend fun loadQueryGameStreams(networkLibrary: String?, headers: Map<String, String>, id: String?, slug: String?, name: String?, sort: StreamSort?, tags: List<String>?, languages: List<Language>?, first: Int?, after: String?): ApolloResponse<GameStreamsQuery.Data> = withContext(Dispatchers.IO) {
         val query = GameStreamsQuery(
             id = if (!id.isNullOrBlank()) Optional.Present(id) else Optional.Absent,
             slug = if (!slug.isNullOrBlank()) Optional.Present(slug) else Optional.Absent,
             name = if (!name.isNullOrBlank()) Optional.Present(name) else Optional.Absent,
             sort = Optional.Present(sort),
             tags = Optional.Present(tags),
+            languages = Optional.Present(languages),
             first = Optional.Present(first),
             after = Optional.Present(after),
         )
@@ -343,9 +344,11 @@ class GraphQLRepository @Inject constructor(
         sendQuery(networkLibrary, headers, query)
     }
 
-    suspend fun loadQueryTopStreams(networkLibrary: String?, headers: Map<String, String>, tags: List<String>?, first: Int?, after: String?): ApolloResponse<TopStreamsQuery.Data> = withContext(Dispatchers.IO) {
+    suspend fun loadQueryTopStreams(networkLibrary: String?, headers: Map<String, String>, sort: StreamSort?, tags: List<String>?, languages: List<Language>?, first: Int?, after: String?): ApolloResponse<TopStreamsQuery.Data> = withContext(Dispatchers.IO) {
         val query = TopStreamsQuery(
+            sort = Optional.Present(sort),
             tags = Optional.Present(tags),
+            languages = Optional.Present(languages),
             first = Optional.Present(first),
             after = Optional.Present(after),
         )
@@ -598,7 +601,7 @@ class GraphQLRepository @Inject constructor(
         json.decodeFromString<GamesResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
-    suspend fun loadTopStreams(networkLibrary: String?, headers: Map<String, String>, tags: List<String>?, limit: Int?, cursor: String?): StreamsResponse = withContext(Dispatchers.IO) {
+    suspend fun loadTopStreams(networkLibrary: String?, headers: Map<String, String>, sort: String?, tags: List<String>?, languages: List<String>?, limit: Int?, cursor: String?): StreamsResponse = withContext(Dispatchers.IO) {
         val body = buildJsonObject {
             putJsonObject("extensions") {
                 putJsonObject("persistedQuery") {
@@ -619,14 +622,19 @@ class GraphQLRepository @Inject constructor(
                             add(it)
                         }
                     }
-                    put("sort", "VIEWER_COUNT")
+                    putJsonArray("broadcasterLanguages") {
+                        languages?.forEach {
+                            add(it)
+                        }
+                    }
+                    put("sort", sort)
                 }
             }
         }.toString()
         json.decodeFromString<StreamsResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
-    suspend fun loadGameStreams(networkLibrary: String?, headers: Map<String, String>, gameSlug: String?, sort: String?, tags: List<String>?, limit: Int?, cursor: String?): GameStreamsResponse = withContext(Dispatchers.IO) {
+    suspend fun loadGameStreams(networkLibrary: String?, headers: Map<String, String>, gameSlug: String?, sort: String?, tags: List<String>?, languages: List<String>?, limit: Int?, cursor: String?): GameStreamsResponse = withContext(Dispatchers.IO) {
         val body = buildJsonObject {
             putJsonObject("extensions") {
                 putJsonObject("persistedQuery") {
@@ -644,6 +652,11 @@ class GraphQLRepository @Inject constructor(
                 putJsonObject("options") {
                     putJsonArray("freeformTags") {
                         tags?.forEach {
+                            add(it)
+                        }
+                    }
+                    putJsonArray("broadcasterLanguages") {
+                        languages?.forEach {
                             add(it)
                         }
                     }

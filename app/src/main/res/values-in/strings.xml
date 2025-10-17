@@ -707,4 +707,10 @@
     <string name="search_tags">Search tags</string>
     <string name="invalid_directory">Invalid directory</string>
     <string name="suggested">Suggested</string>
+    <string name="languages">Languages</string>
+    <string name="recent">Recently Started</string>
+    <string name="filters">Filters</string>
+    <string name="sort_by">Sort by: %1$s</string>
+    <string name="languages_list">Languages: %1$s</string>
+    <string name="tags_list">Tags: %1$s</string>
 </resources>
