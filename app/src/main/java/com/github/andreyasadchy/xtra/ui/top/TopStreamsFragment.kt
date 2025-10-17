@@ -137,7 +137,7 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                viewModel.setFilter(viewModel.sort, viewModel.languages)
+                viewModel.setFilter(viewModel.sort, args.languages ?: viewModel.languages)
             }
             viewModel.sortText.value = requireContext().getString(
                 R.string.sort_by,
@@ -200,7 +200,7 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
         }
     }
 
-    override fun onChange(sort: String, sortText: CharSequence, languages: Array<String>, languagesText: CharSequence) {
+    override fun onChange(sort: String, languages: Array<String>) {
         viewLifecycleOwner.lifecycleScope.launch {
             pagingAdapter.submitData(PagingData.empty())
             viewModel.setFilter(sort, languages)

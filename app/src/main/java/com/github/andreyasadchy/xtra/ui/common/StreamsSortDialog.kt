@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.RadioButton
 import androidx.core.os.bundleOf
 import androidx.navigation.fragment.findNavController
 import com.github.andreyasadchy.xtra.R
@@ -18,7 +17,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 class StreamsSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialogFragment.OnSortOptionChanged {
 
     interface OnFilter {
-        fun onChange(sort: String, sortText: CharSequence, languages: Array<String>, languagesText: CharSequence)
+        fun onChange(sort: String, languages: Array<String>)
     }
 
     companion object {
@@ -70,7 +69,6 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialogFrag
             apply.setOnClickListener {
                 val checkedSortId = sort.checkedRadioButtonId
                 if (checkedSortId != originalSortId || !originalLanguages.contentEquals(languages)) {
-                    val sortBtn = view.findViewById<RadioButton>(checkedSortId)
                     listener.onChange(
                         when (checkedSortId) {
                             R.id.viewers_high -> SORT_VIEWERS
@@ -78,9 +76,7 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialogFrag
                             R.id.recent -> RECENT
                             else -> SORT_VIEWERS
                         },
-                        sortBtn.text,
-                        languages = languages,
-                        "yyyy" // languages.joinToString(", ")
+                        languages = languages
                     )
                 }
                 dismiss()
@@ -90,7 +86,8 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialogFrag
                     TagSearchFragmentDirections.actionGlobalTagSearchFragment(
                         gameId = parentFragment?.arguments?.getString(C.GAME_ID),
                         gameSlug = parentFragment?.arguments?.getString(C.GAME_SLUG),
-                        gameName = parentFragment?.arguments?.getString(C.GAME_NAME)
+                        gameName = parentFragment?.arguments?.getString(C.GAME_NAME),
+                        languages = languages,
                     )
                 )
                 dismiss()

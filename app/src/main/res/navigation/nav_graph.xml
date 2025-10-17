@@ -21,6 +21,11 @@
             app:argType="string[]"
             app:nullable="true"
             android:defaultValue="@null" />
+        <argument
+            android:name="languages"
+            app:argType="string[]"
+            app:nullable="true"
+            android:defaultValue="@null"/>
     </fragment>
     <fragment
         android:id="@+id/gamesFragment"
@@ -42,6 +47,11 @@
             app:argType="string[]"
             app:nullable="true"
             android:defaultValue="@null" />
+        <argument
+            android:name="languages"
+            app:argType="string[]"
+            app:nullable="true"
+            android:defaultValue="@null"/>
     </fragment>
     <action
         android:id="@+id/action_global_topFragment"
@@ -86,6 +96,11 @@
             android:name="getGameTags"
             app:argType="boolean"
             android:defaultValue="false" />
+        <argument
+            android:name="languages"
+            app:argType="string[]"
+            app:nullable="true"
+            android:defaultValue="@null"/>
     </fragment>
     <action
         android:id="@+id/action_global_tagSearchFragment"
@@ -117,6 +132,11 @@
             android:name="updateLocal"
             app:argType="boolean"
             android:defaultValue="false" />
+        <argument
+            android:name="languages"
+            app:argType="string[]"
+            app:nullable="true"
+            android:defaultValue="@null"/>
     </fragment>
     <action
         android:id="@+id/action_global_gamePagerFragment"
@@ -144,6 +164,11 @@
             app:argType="string[]"
             app:nullable="true"
             android:defaultValue="@null" />
+        <argument
+            android:name="languages"
+            app:argType="string[]"
+            app:nullable="true"
+            android:defaultValue="@null"/>
         <argument
             android:name="updateLocal"
             app:argType="boolean"

@@ -72,7 +72,7 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                viewModel.setFilter(viewModel.sort, viewModel.languages)
+                viewModel.setFilter(viewModel.sort, args.languages ?: viewModel.languages)
             }
             viewModel.sortText.value = requireContext().getString(
                 R.string.sort_by,
@@ -129,7 +129,7 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
         }
     }
 
-    override fun onChange(sort: String, sortText: CharSequence, languages: Array<String>, languagesText: CharSequence) {
+    override fun onChange(sort: String, languages: Array<String>) {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
                 pagingAdapter.submitData(PagingData.empty())
