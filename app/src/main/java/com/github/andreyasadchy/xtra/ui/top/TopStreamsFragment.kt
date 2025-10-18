@@ -152,11 +152,23 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
             )
             viewModel.filtersText.value = buildString {
                 args.tags?.takeIf { it.isNotEmpty() }?.let {
-                    append(requireContext().getString(R.string.tags_list, it.joinToString(", ")))
+                    append(
+                        requireContext().resources.getQuantityString(
+                            R.plurals.tags_list,
+                            it.size,
+                            it.joinToString(", ")
+                        )
+                    )
                     append(" ")
                 }
                 if (viewModel.languages.isNotEmpty()) {
-                    append(requireContext().getString(R.string.languages_list, viewModel.languages.joinToString(", ")))
+                    append(
+                        requireContext().resources.getQuantityString(
+                            R.plurals.languages_list,
+                            viewModel.languages.size,
+                            viewModel.languages.joinToString(", ")
+                        )
+                    )
                 }
             }.trimEnd()
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -217,11 +229,23 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
             )
             viewModel.filtersText.value = buildString {
                 args.tags?.takeIf { it.isNotEmpty() }?.let {
-                    append(requireContext().getString(R.string.tags_list, it.joinToString(", ")))
+                    append(
+                        requireContext().resources.getQuantityString(
+                            R.plurals.tags_list,
+                            it.size,
+                            it.joinToString(", ")
+                        )
+                    )
                     append(" ")
                 }
                 if (viewModel.languages.isNotEmpty()) {
-                    append(requireContext().getString(R.string.languages_list, viewModel.languages.joinToString(", ")))
+                    append(
+                        requireContext().resources.getQuantityString(
+                            R.plurals.languages_list,
+                            languages.size,
+                            languages.joinToString(", ")
+                        )
+                    )
                 }
             }.trimEnd()
         }

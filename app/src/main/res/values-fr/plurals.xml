@@ -20,4 +20,12 @@
         <item quantity="one">%d diffuseur</item>
         <item quantity="other">%d diffuseurs</item>
     </plurals>
+    <plurals name="languages_list">
+        <item quantity="one">Language: %1$s.</item>
+        <item quantity="other">Languages: %1$s.</item>
+    </plurals>
+    <plurals name="tags_list">
+        <item quantity="one">Tag: %1$s.</item>
+        <item quantity="other">Tags: %1$s.</item>
+    </plurals>
 </resources>

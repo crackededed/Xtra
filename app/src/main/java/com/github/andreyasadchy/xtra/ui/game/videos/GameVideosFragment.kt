@@ -125,8 +125,8 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                     )
                 )
                 if (viewModel.languageIndex > 0) {
-                    viewModel.filtersText.value = requireContext().getString(
-                        R.string.languages_list,
+                    viewModel.filtersText.value = requireContext().resources.getQuantityString(
+                        R.plurals.languages_list, 1,
                         resources.getStringArray(R.array.gqlUserLanguageValues).toList()
                             .elementAt(viewModel.languageIndex)
                     )
@@ -193,9 +193,12 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                 pagingAdapter.submitData(PagingData.empty())
                 viewModel.setFilter(sort, period, type, languageIndex, saveSort)
                 viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, typeText)
-                viewModel.filtersText.value = if (languageIndex > 0) requireContext().getString(R.string.languages_list,
-                    resources.getStringArray(R.array.gqlUserLanguageValues).toList().elementAt(languageIndex)
-                ) else null
+                viewModel.filtersText.value =
+                    if (languageIndex > 0) requireContext().resources.getQuantityString(
+                        R.plurals.languages_list, 1,
+                        resources.getStringArray(R.array.gqlUserLanguageValues).toList()
+                            .elementAt(languageIndex)
+                    ) else null
                 val sortValues = args.gameId?.let { viewModel.getSortGame(it) }
                 if (saveSort) {
                     if (sortValues != null) {

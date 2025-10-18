@@ -20,4 +20,12 @@
         <item quantity="one">%d transmisor</item>
         <item quantity="other">%d transmisores</item>
     </plurals>
+    <plurals name="languages_list">
+        <item quantity="one">Idioma: %1$s.</item>
+        <item quantity="other">Idiomas: %1$s.</item>
+    </plurals>
+    <plurals name="tags_list">
+        <item quantity="one">Etiqueta: %1$s.</item>
+        <item quantity="other">Etiquetas: %1$s.</item>
+    </plurals>
 </resources>

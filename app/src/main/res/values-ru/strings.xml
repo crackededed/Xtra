@@ -710,6 +710,4 @@
     <string name="recent">Recently Started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
-    <string name="languages_list">Languages: %1$s</string>
-    <string name="tags_list">Tags: %1$s.</string>
 </resources>

@@ -107,9 +107,13 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
                         }
                     )
                 )
-                viewModel.filtersText.value = if (viewModel.languageIndex > 0) requireContext().getString(R.string.languages_list,
-                    resources.getStringArray(R.array.gqlUserLanguageValues).toList().elementAt(viewModel.languageIndex)
-                ) else null
+                viewModel.filtersText.value =
+                    if (viewModel.languageIndex > 0) requireContext().resources.getQuantityString(
+                        R.plurals.languages_list,
+                        1,
+                        resources.getStringArray(R.array.gqlUserLanguageValues).toList()
+                            .elementAt(viewModel.languageIndex)
+                    ) else null
             }
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.flow.collectLatest { pagingData ->
@@ -154,9 +158,12 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
                 pagingAdapter.submitData(PagingData.empty())
                 viewModel.setFilter(period, languageIndex, saveSort)
                 viewModel.sortText.value = requireContext().getString(R.string.sort_and_period, sortText, periodText)
-                viewModel.filtersText.value = if (languageIndex > 0) requireContext().getString(R.string.languages_list,
-                    resources.getStringArray(R.array.gqlUserLanguageValues).toList().elementAt(languageIndex)
-                ) else null
+                viewModel.filtersText.value =
+                    if (languageIndex > 0) requireContext().resources.getQuantityString(
+                        R.plurals.languages_list, 1,
+                        resources.getStringArray(R.array.gqlUserLanguageValues).toList()
+                            .elementAt(languageIndex)
+                    ) else null
                 if (!args.gameId.isNullOrBlank() || !args.gameName.isNullOrBlank()) {
                     val sortValues = args.gameId?.let { viewModel.getSortGame(it) }
                     if (saveSort) {
