@@ -124,6 +124,13 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                         }
                     )
                 )
+                if (viewModel.languageIndex > 0) {
+                    viewModel.filtersText.value = requireContext().getString(
+                        R.string.languages_list,
+                        resources.getStringArray(R.array.gqlUserLanguageValues).toList()
+                            .elementAt(viewModel.languageIndex)
+                    )
+                }
             }
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.flow.collectLatest { pagingData ->
@@ -152,6 +159,7 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
 
     override fun setupSortBar(sortBar: SortBarBinding) {
         sortBar.root.visible()
+        sortBar.filtersText.text = null
         sortBar.root.setOnClickListener {
             VideosSortDialog.newInstance(
                 sort = viewModel.sort,
@@ -169,6 +177,13 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                 }
             }
         }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.filtersText.collectLatest {
+                    sortBar.filtersText.text = it
+                }
+            }
+        }
     }
 
     override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languageIndex: Int, saveSort: Boolean, saveDefault: Boolean) {
@@ -178,6 +193,9 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                 pagingAdapter.submitData(PagingData.empty())
                 viewModel.setFilter(sort, period, type, languageIndex, saveSort)
                 viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, typeText)
+                viewModel.filtersText.value = if (languageIndex > 0) requireContext().getString(R.string.languages_list,
+                    resources.getStringArray(R.array.gqlUserLanguageValues).toList().elementAt(languageIndex)
+                ) else null
                 val sortValues = args.gameId?.let { viewModel.getSortGame(it) }
                 if (saveSort) {
                     if (sortValues != null) {

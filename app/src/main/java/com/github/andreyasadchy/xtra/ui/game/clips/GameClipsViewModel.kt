@@ -44,6 +44,7 @@ class GameClipsViewModel @Inject constructor(
         get() = filter.value?.period ?: VideosSortDialog.PERIOD_WEEK
     val languageIndex: Int
         get() = filter.value?.languageIndex ?: 0
+    val filtersText = MutableStateFlow<CharSequence?>(null)
     val saveSort: Boolean
         get() = filter.value?.saveSort == true
 

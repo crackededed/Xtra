@@ -107,6 +107,9 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
                         }
                     )
                 )
+                viewModel.filtersText.value = if (viewModel.languageIndex > 0) requireContext().getString(R.string.languages_list,
+                    resources.getStringArray(R.array.gqlUserLanguageValues).toList().elementAt(viewModel.languageIndex)
+                ) else null
             }
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.flow.collectLatest { pagingData ->
@@ -119,6 +122,7 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
 
     override fun setupSortBar(sortBar: SortBarBinding) {
         sortBar.root.visible()
+        sortBar.filtersText.text = null
         sortBar.root.setOnClickListener {
             VideosSortDialog.newInstance(
                 period = viewModel.period,
@@ -134,6 +138,13 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
                 }
             }
         }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.filtersText.collectLatest {
+                    sortBar.filtersText.text = it
+                }
+            }
+        }
     }
 
     override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languageIndex: Int, saveSort: Boolean, saveDefault: Boolean) {
@@ -143,6 +154,9 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
                 pagingAdapter.submitData(PagingData.empty())
                 viewModel.setFilter(period, languageIndex, saveSort)
                 viewModel.sortText.value = requireContext().getString(R.string.sort_and_period, sortText, periodText)
+                viewModel.filtersText.value = if (languageIndex > 0) requireContext().getString(R.string.languages_list,
+                    resources.getStringArray(R.array.gqlUserLanguageValues).toList().elementAt(languageIndex)
+                ) else null
                 if (!args.gameId.isNullOrBlank() || !args.gameName.isNullOrBlank()) {
                     val sortValues = args.gameId?.let { viewModel.getSortGame(it) }
                     if (saveSort) {

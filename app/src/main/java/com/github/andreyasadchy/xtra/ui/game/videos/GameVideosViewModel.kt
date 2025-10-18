@@ -79,6 +79,7 @@ class GameVideosViewModel @Inject constructor(
         get() = filter.value?.type ?: VideosSortDialog.VIDEO_TYPE_ALL
     val languageIndex: Int
         get() = filter.value?.languageIndex ?: 0
+    val filtersText = MutableStateFlow<CharSequence?>(null)
     val saveSort: Boolean
         get() = filter.value?.saveSort == true
 
