@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.RadioButton
 import androidx.core.os.bundleOf
 import androidx.navigation.fragment.findNavController
 import com.github.andreyasadchy.xtra.R
@@ -14,10 +15,10 @@ import com.github.andreyasadchy.xtra.util.C
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
-class StreamsSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialogFragment.OnSortOptionChanged {
+class StreamsSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialog.OnSelectedLanguagesChanged {
 
     interface OnFilter {
-        fun onChange(sort: String, languages: Array<String>)
+        fun onChange(sort: String, sortText: CharSequence, languages: Array<String>)
     }
 
     companion object {
@@ -38,7 +39,8 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialogFrag
     private var _binding: DialogStreamsSortBinding? = null
     private val binding get() = _binding!!
     private lateinit var listener: OnFilter
-    private lateinit var languages: Array<String>
+
+    private var selectedLanguages: Array<String> = emptyArray()
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -65,10 +67,11 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialogFrag
             }
             sort.check(originalSortId)
             val originalLanguages = args.getStringArray(LANGUAGES) ?: emptyArray()
-            languages = originalLanguages
+            selectedLanguages = originalLanguages
             apply.setOnClickListener {
                 val checkedSortId = sort.checkedRadioButtonId
-                if (checkedSortId != originalSortId || !originalLanguages.contentEquals(languages)) {
+                if (checkedSortId != originalSortId || !selectedLanguages.contentEquals(originalLanguages)) {
+                    val sortBtn = view.findViewById<RadioButton>(checkedSortId)
                     listener.onChange(
                         when (checkedSortId) {
                             R.id.viewers_high -> SORT_VIEWERS
@@ -76,7 +79,8 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialogFrag
                             R.id.recent -> RECENT
                             else -> SORT_VIEWERS
                         },
-                        languages = languages
+                        sortBtn.text,
+                        selectedLanguages
                     )
                 }
                 dismiss()
@@ -87,23 +91,23 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialogFrag
                         gameId = parentFragment?.arguments?.getString(C.GAME_ID),
                         gameSlug = parentFragment?.arguments?.getString(C.GAME_SLUG),
                         gameName = parentFragment?.arguments?.getString(C.GAME_NAME),
-                        languages = languages,
+                        languages = selectedLanguages,
                     )
                 )
                 dismiss()
             }
-            selectLangs.setOnClickListener {
-                SelectLanguagesDialogFragment.newInstance(languages).show(childFragmentManager, "closeOnPip")
+            selectLanguages.setOnClickListener {
+                SelectLanguagesDialog.newInstance(selectedLanguages).show(childFragmentManager, "closeOnPip")
             }
         }
+    }
+
+    override fun onChange(languages: Array<String>) {
+        selectedLanguages = languages
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    override fun onChange(languages: Array<String>) {
-        this.languages = languages
     }
 }

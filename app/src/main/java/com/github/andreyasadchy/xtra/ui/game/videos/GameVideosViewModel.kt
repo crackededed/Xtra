@@ -11,7 +11,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
-import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.model.ui.Bookmark
 import com.github.andreyasadchy.xtra.model.ui.SortGame
 import com.github.andreyasadchy.xtra.model.ui.User
@@ -68,6 +67,7 @@ class GameVideosViewModel @Inject constructor(
     private val args = GamePagerFragmentArgs.fromSavedStateHandle(savedStateHandle)
     val filter = MutableStateFlow<Filter?>(null)
     val sortText = MutableStateFlow<CharSequence?>(null)
+    val filtersText = MutableStateFlow<CharSequence?>(null)
     val positions = playerRepository.loadVideoPositions()
     val bookmarks = bookmarksRepository.loadBookmarksFlow()
 
@@ -77,9 +77,8 @@ class GameVideosViewModel @Inject constructor(
         get() = filter.value?.period ?: VideosSortDialog.PERIOD_WEEK
     val type: String
         get() = filter.value?.type ?: VideosSortDialog.VIDEO_TYPE_ALL
-    val languageIndex: Int
-        get() = filter.value?.languageIndex ?: 0
-    val filtersText = MutableStateFlow<CharSequence?>(null)
+    val languages: Array<String>
+        get() = filter.value?.languages ?: emptyArray()
     val saveSort: Boolean
         get() = filter.value?.saveSort == true
 
@@ -88,14 +87,10 @@ class GameVideosViewModel @Inject constructor(
         Pager(
             PagingConfig(pageSize = 30, prefetchDistance = 3, initialLoadSize = 30)
         ) {
-            val language = if (languageIndex != 0) {
-                applicationContext.resources.getStringArray(R.array.gqlUserLanguageValues).toList().elementAt(languageIndex)
-            } else null
             GameVideosDataSource(
                 gameId = args.gameId,
                 gameSlug = args.gameSlug,
                 gameName = args.gameName,
-                gqlQueryLanguages = language?.let { listOf(it) },
                 gqlQueryType = when (type) {
                     VideosSortDialog.VIDEO_TYPE_ALL -> null
                     VideosSortDialog.VIDEO_TYPE_ARCHIVE -> BroadcastType.ARCHIVE
@@ -108,6 +103,7 @@ class GameVideosViewModel @Inject constructor(
                     VideosSortDialog.SORT_VIEWS -> VideoSort.VIEWS
                     else -> VideoSort.VIEWS
                 },
+                gqlLanguages = languages.ifEmpty { null }?.toList(),
                 gqlType = when (type) {
                     VideosSortDialog.VIDEO_TYPE_ALL -> null
                     VideosSortDialog.VIDEO_TYPE_ARCHIVE -> "ARCHIVE"
@@ -134,7 +130,7 @@ class GameVideosViewModel @Inject constructor(
                     VideosSortDialog.VIDEO_TYPE_UPLOAD -> "upload"
                     else -> "all"
                 },
-                helixLanguage = language?.lowercase(),
+                helixLanguage = languages.singleOrNull()?.lowercase(),
                 helixSort = when (sort) {
                     VideosSortDialog.SORT_TIME -> "time"
                     VideosSortDialog.SORT_VIEWS -> "views"
@@ -159,15 +155,15 @@ class GameVideosViewModel @Inject constructor(
         sortGameRepository.save(item)
     }
 
-    fun setFilter(sort: String?, period: String?, type: String?, languageIndex: Int?, saveSort: Boolean?) {
-        filter.value = Filter(sort, period, type, languageIndex, saveSort)
+    fun setFilter(sort: String?, period: String?, type: String?, languages: Array<String>?, saveSort: Boolean?) {
+        filter.value = Filter(sort, period, type, languages, saveSort)
     }
 
     class Filter(
         val sort: String?,
         val period: String?,
         val type: String?,
-        val languageIndex: Int?,
+        val languages: Array<String>?,
         val saveSort: Boolean?,
     )
 

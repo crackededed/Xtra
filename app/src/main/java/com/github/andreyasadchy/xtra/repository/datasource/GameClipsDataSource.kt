@@ -16,6 +16,7 @@ class GameClipsDataSource(
     private val gameName: String?,
     private val gqlQueryLanguages: List<Language>?,
     private val gqlQueryPeriod: ClipsPeriod?,
+    private val gqlLanguages: List<String>?,
     private val gqlPeriod: String?,
     private val startedAt: String?,
     private val endedAt: String?,
@@ -58,8 +59,8 @@ class GameClipsDataSource(
         api = apiPref
         return when (apiPref) {
             C.GQL -> gqlQueryLoad(params)
-            C.GQL_PERSISTED_QUERY -> if (gqlQueryLanguages.isNullOrEmpty()) gqlLoad(params) else throw Exception()
-            C.HELIX -> if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank() && gqlQueryLanguages.isNullOrEmpty()) helixLoad(params) else throw Exception()
+            C.GQL_PERSISTED_QUERY -> gqlLoad(params)
+            C.HELIX -> if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank() && gqlQueryLanguages.isNullOrEmpty() && gqlLanguages.isNullOrEmpty()) helixLoad(params) else throw Exception()
             else -> throw Exception()
         }
     }
@@ -72,7 +73,7 @@ class GameClipsDataSource(
             slug = gameSlug.takeIf { gameId.isNullOrBlank() },
             name = gameName.takeIf { gameId.isNullOrBlank() && gameSlug.isNullOrBlank() },
             languages = gqlQueryLanguages,
-            sort = gqlQueryPeriod,
+            period = gqlQueryPeriod,
             first = params.loadSize,
             after = offset
         )
@@ -119,7 +120,7 @@ class GameClipsDataSource(
     }
 
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, Clip> {
-        val response = graphQLRepository.loadGameClips(networkLibrary, gqlHeaders, gameSlug, gqlPeriod, params.loadSize, offset)
+        val response = graphQLRepository.loadGameClips(networkLibrary, gqlHeaders, gameSlug, gqlPeriod, gqlLanguages, params.loadSize, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }

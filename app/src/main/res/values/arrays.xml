@@ -316,7 +316,6 @@
     </string-array>
 
     <string-array name="gqlUserLanguageEntries">
-        <item>@string/all</item>
         <item>العربية</item>
         <item>American sign language</item>
         <item>Български</item>
@@ -355,7 +354,6 @@
     </string-array>
 
     <string-array name="gqlUserLanguageValues">
-        <item>All</item>
         <item>AR</item>
         <item>ASL</item>
         <item>BG</item>

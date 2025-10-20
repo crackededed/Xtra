@@ -184,7 +184,6 @@
     <string name="user_affiliate">Affiliate</string>
     <string name="user_staff">Staff</string>
     <string name="uptime">%s uptime</string>
-    <string name="select_language">Pilih bahasa</string>
     <string name="show_tags">Tampilkan tag</string>
     <string name="recentMsg_enable">Muat pesan terakhir</string>
     <string name="recentMsg_limit">Batasi pesan terakhir</string>
@@ -708,7 +707,7 @@
     <string name="invalid_directory">Invalid directory</string>
     <string name="suggested">Suggested</string>
     <string name="languages">Languages</string>
-    <string name="recent">Recently Started</string>
+    <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
 </resources>

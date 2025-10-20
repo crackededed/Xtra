@@ -185,7 +185,6 @@
     <string name="user_affiliate">實況盟友</string>
     <string name="user_staff">工作人員</string>
     <string name="uptime">%s 上線時間</string>
-    <string name="select_language">選擇語言</string>
     <string name="show_tags">顯示標籤</string>
     <string name="recentMsg_enable">載入最近的訊息</string>
     <string name="recentMsg_limit">最近的訊息限制</string>
@@ -707,7 +706,7 @@
     <string name="invalid_directory">Invalid directory</string>
     <string name="suggested">Suggested</string>
     <string name="languages">Languages</string>
-    <string name="recent">Recently Started</string>
+    <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
 </resources>

@@ -38,6 +38,7 @@ class GameStreamsResponse(
         val type: String? = null,
         val title: String? = null,
         val viewersCount: Int? = null,
+        val createdAt: String? = null,
         val previewImageURL: String? = null,
         val freeformTags: List<Tag>? = null,
     )

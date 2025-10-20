@@ -14,9 +14,9 @@ class GameVideosDataSource(
     private val gameId: String?,
     private val gameSlug: String?,
     private val gameName: String?,
-    private val gqlQueryLanguages: List<String>?,
     private val gqlQueryType: BroadcastType?,
     private val gqlQuerySort: VideoSort?,
+    private val gqlLanguages: List<String>?,
     private val gqlType: String?,
     private val gqlSort: String?,
     private val helixPeriod: String,
@@ -62,8 +62,8 @@ class GameVideosDataSource(
         api = apiPref
         return when (apiPref) {
             C.GQL -> if (helixPeriod == "week") gqlQueryLoad(params) else throw Exception()
-            C.GQL_PERSISTED_QUERY -> if (helixLanguage.isNullOrBlank() && gqlQueryLanguages.isNullOrEmpty() && helixPeriod == "week") gqlLoad(params) else throw Exception()
-            C.HELIX -> if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) helixLoad(params) else throw Exception()
+            C.GQL_PERSISTED_QUERY -> if (helixPeriod == "week") gqlLoad(params) else throw Exception()
+            C.HELIX -> if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank() && (gqlLanguages.isNullOrEmpty() || helixLanguage != null)) helixLoad(params) else throw Exception()
             else -> throw Exception()
         }
     }
@@ -75,7 +75,7 @@ class GameVideosDataSource(
             id = gameId,
             slug = gameSlug.takeIf { gameId.isNullOrBlank() },
             name = gameName.takeIf { gameId.isNullOrBlank() && gameSlug.isNullOrBlank() },
-            languages = gqlQueryLanguages,
+            languages = gqlLanguages,
             sort = gqlQuerySort,
             type = gqlQueryType?.let { listOf(it) },
             first = params.loadSize,
@@ -125,7 +125,7 @@ class GameVideosDataSource(
     }
 
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, Video> {
-        val response = graphQLRepository.loadGameVideos(networkLibrary, gqlHeaders, gameSlug, gqlType, gqlSort, params.loadSize, offset)
+        val response = graphQLRepository.loadGameVideos(networkLibrary, gqlHeaders, gameSlug, gqlType, gqlSort, gqlLanguages, params.loadSize, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }

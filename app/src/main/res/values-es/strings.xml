@@ -190,7 +190,6 @@
     <string name="user_affiliate">Afiliado</string>
     <string name="user_staff">Personal</string>
     <string name="uptime">%s en vivo</string>
-    <string name="select_language">Seleccionar idioma</string>
     <string name="show_tags">Mostrar etiquetas</string>
     <string name="recentMsg_enable">Cargar mensajes recientes</string>
     <string name="recentMsg_limit">Límite de mensajes recientes</string>

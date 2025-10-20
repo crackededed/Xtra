@@ -25,7 +25,7 @@
             android:name="languages"
             app:argType="string[]"
             app:nullable="true"
-            android:defaultValue="@null"/>
+            android:defaultValue="@null" />
     </fragment>
     <fragment
         android:id="@+id/gamesFragment"
@@ -51,7 +51,7 @@
             android:name="languages"
             app:argType="string[]"
             app:nullable="true"
-            android:defaultValue="@null"/>
+            android:defaultValue="@null" />
     </fragment>
     <action
         android:id="@+id/action_global_topFragment"
@@ -100,7 +100,7 @@
             android:name="languages"
             app:argType="string[]"
             app:nullable="true"
-            android:defaultValue="@null"/>
+            android:defaultValue="@null" />
     </fragment>
     <action
         android:id="@+id/action_global_tagSearchFragment"
@@ -136,7 +136,7 @@
             android:name="languages"
             app:argType="string[]"
             app:nullable="true"
-            android:defaultValue="@null"/>
+            android:defaultValue="@null" />
     </fragment>
     <action
         android:id="@+id/action_global_gamePagerFragment"
@@ -168,7 +168,7 @@
             android:name="languages"
             app:argType="string[]"
             app:nullable="true"
-            android:defaultValue="@null"/>
+            android:defaultValue="@null" />
         <argument
             android:name="updateLocal"
             app:argType="boolean"

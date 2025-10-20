@@ -81,7 +81,8 @@ class TagSearchAdapter(
                                                 gameId = args.gameId,
                                                 gameSlug = args.gameSlug,
                                                 gameName = args.gameName,
-                                                tags = arrayOf(item.name)
+                                                tags = arrayOf(item.name),
+                                                languages = args.languages,
                                             )
                                         }
                                     )
@@ -91,7 +92,7 @@ class TagSearchAdapter(
                                     fragment.findNavController().navigate(
                                         TopStreamsFragmentDirections.actionGlobalTopFragment(
                                             tags = arrayOf(item.name),
-                                            languages = args.languages
+                                            languages = args.languages,
                                         )
                                     )
                                 }

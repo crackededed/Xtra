@@ -185,7 +185,6 @@
     <string name="user_affiliate">直播盟友</string>
     <string name="user_staff">工作人员</string>
     <string name="uptime">%s 直播时间</string>
-    <string name="select_language">选择语言</string>
     <string name="show_tags">显示标签</string>
     <string name="recentMsg_enable">载入最近的信息</string>
     <string name="recentMsg_limit">最近的信息限制</string>
@@ -707,7 +706,7 @@
     <string name="invalid_directory">Invalid directory</string>
     <string name="suggested">Suggested</string>
     <string name="languages">Languages</string>
-    <string name="recent">Recently Started</string>
+    <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
 </resources>

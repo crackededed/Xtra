@@ -185,7 +185,6 @@
     <string name="user_affiliate">Компаньон</string>
     <string name="user_staff">Персонал</string>
     <string name="uptime">В эфире: %s</string>
-    <string name="select_language">Выберите язык</string>
     <string name="show_tags">Показать метки</string>
     <string name="recentMsg_enable">Загружать последние сообщения</string>
     <string name="recentMsg_limit">Максимум последних сообщений</string>
@@ -707,7 +706,7 @@
     <string name="invalid_directory">Invalid directory</string>
     <string name="suggested">Suggested</string>
     <string name="languages">Languages</string>
-    <string name="recent">Recently Started</string>
+    <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
 </resources>

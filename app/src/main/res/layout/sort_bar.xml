@@ -15,12 +15,11 @@
     tools:visibility="visible">
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
         android:layout_marginTop="1dp"
         android:layout_marginEnd="10dp"
+        android:orientation="vertical"
         app:layout_constraintEnd_toStartOf="@id/sortByImage"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/sortByImage"
@@ -28,19 +27,20 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-                android:id="@+id/sortText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?attr/sortBarTextColor"
-                tools:text="@string/all_time" />
+            android:id="@+id/sortText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/sortBarTextColor"
+            tools:text="@string/all_time" />
 
         <TextView
             android:id="@+id/filtersText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/sortBarTextColor" />
+            android:textColor="?attr/sortBarTextColor"
+            android:visibility="gone" />
 
     </LinearLayout>
 

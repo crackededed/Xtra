@@ -32,6 +32,7 @@ import com.github.andreyasadchy.xtra.ui.common.StreamsSortDialog.Companion.SORT_
 import com.github.andreyasadchy.xtra.ui.common.StreamsSortDialog.Companion.SORT_VIEWERS_ASC
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentArgs
 import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
@@ -73,39 +74,43 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
                 viewModel.setFilter(viewModel.sort, args.languages ?: viewModel.languages)
-            }
-            viewModel.sortText.value = requireContext().getString(
-                R.string.sort_by,
-                requireContext().getString(
-                    when (viewModel.sort) {
-                        SORT_VIEWERS -> R.string.viewers_high
-                        SORT_VIEWERS_ASC -> R.string.viewers_low
-                        RECENT -> R.string.recent
-                        else -> R.string.viewers_high
-                    }
+                viewModel.sortText.value = requireContext().getString(
+                    R.string.sort_by,
+                    requireContext().getString(
+                        when (viewModel.sort) {
+                            SORT_VIEWERS -> R.string.viewers_high
+                            SORT_VIEWERS_ASC -> R.string.viewers_low
+                            RECENT -> R.string.recent
+                            else -> R.string.viewers_high
+                        }
+                    )
                 )
-            )
-            viewModel.filtersText.value = buildString {
-                args.tags?.takeIf { it.isNotEmpty() }?.let {
-                    append(
-                        requireContext().resources.getQuantityString(
-                            R.plurals.tags_list,
-                            it.size,
-                            it.joinToString(", ")
-                        )
-                    )
-                    append(" ")
-                }
-                if (viewModel.languages.isNotEmpty()) {
-                    append(
-                        requireContext().resources.getQuantityString(
-                            R.plurals.languages_list,
-                            viewModel.languages.size,
-                            viewModel.languages.joinToString(", ")
-                        )
-                    )
-                }
-            }.trimEnd()
+                viewModel.filtersText.value = if (!args.tags.isNullOrEmpty() || viewModel.languages.isNotEmpty()) {
+                    buildString {
+                        args.tags?.takeIf { it.isNotEmpty() }?.let {
+                            append(
+                                requireContext().resources.getQuantityString(
+                                    R.plurals.tags,
+                                    it.size,
+                                    it.joinToString()
+                                )
+                            )
+                        }
+                        if (viewModel.languages.isNotEmpty()) {
+                            if (isNotEmpty()) {
+                                append(". ")
+                            }
+                            append(
+                                requireContext().resources.getQuantityString(
+                                    R.plurals.languages,
+                                    viewModel.languages.size,
+                                    viewModel.languages.joinToString()
+                                )
+                            )
+                        }
+                    }
+                } else null
+            }
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.flow.collectLatest { pagingData ->
                     pagingAdapter.submitData(pagingData)
@@ -117,8 +122,6 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
 
     override fun setupSortBar(sortBar: SortBarBinding) {
         sortBar.root.visible()
-        sortBar.sortText.text = null
-        sortBar.filtersText.text = null
         sortBar.root.setOnClickListener {
             StreamsSortDialog.newInstance(
                 sort = viewModel.sort,
@@ -135,49 +138,48 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.filtersText.collectLatest {
-                    sortBar.filtersText.text = it
+                    if (it != null) {
+                        sortBar.filtersText.visible()
+                        sortBar.filtersText.text = it
+                    } else {
+                        sortBar.filtersText.gone()
+                    }
                 }
             }
         }
     }
 
-    override fun onChange(sort: String, languages: Array<String>) {
+    override fun onChange(sort: String, sortText: CharSequence, languages: Array<String>) {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
                 pagingAdapter.submitData(PagingData.empty())
                 viewModel.setFilter(sort, languages)
-                viewModel.sortText.value = requireContext().getString(
-                    R.string.sort_by,
-                    requireContext().getString(
-                        when (viewModel.sort) {
-                            SORT_VIEWERS -> R.string.viewers_high
-                            SORT_VIEWERS_ASC -> R.string.viewers_low
-                            RECENT -> R.string.recent
-                            else -> R.string.viewers_high
+                viewModel.sortText.value = requireContext().getString(R.string.sort_by, sortText)
+                viewModel.filtersText.value = if (!args.tags.isNullOrEmpty() || viewModel.languages.isNotEmpty()) {
+                    buildString {
+                        args.tags?.takeIf { it.isNotEmpty() }?.let {
+                            append(
+                                requireContext().resources.getQuantityString(
+                                    R.plurals.tags,
+                                    it.size,
+                                    it.joinToString()
+                                )
+                            )
                         }
-                    )
-                )
-                viewModel.filtersText.value = buildString {
-                    args.tags?.takeIf { it.isNotEmpty() }?.let {
-                        append(
-                            requireContext().resources.getQuantityString(
-                                R.plurals.tags_list,
-                                it.size,
-                                it.joinToString(", ")
+                        if (viewModel.languages.isNotEmpty()) {
+                            if (isNotEmpty()) {
+                                append(". ")
+                            }
+                            append(
+                                requireContext().resources.getQuantityString(
+                                    R.plurals.languages,
+                                    viewModel.languages.size,
+                                    viewModel.languages.joinToString()
+                                )
                             )
-                        )
-                        append(" ")
+                        }
                     }
-                    if (languages.isNotEmpty()) {
-                        append(
-                            requireContext().resources.getQuantityString(
-                                R.plurals.languages_list,
-                                languages.size,
-                                languages.joinToString(", ")
-                            )
-                        )
-                    }
-                }.trimEnd()
+                } else null
             }
         }
     }

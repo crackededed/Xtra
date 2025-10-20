@@ -185,7 +185,6 @@
     <string name="user_affiliate">アフェリエイト</string>
     <string name="user_staff">スタッフ</string>
     <string name="uptime">%s 経過</string>
-    <string name="select_language">言語を選択</string>
     <string name="show_tags">タグの表示</string>
     <string name="recentMsg_enable">最新のメッセージを読み込み</string>
     <string name="recentMsg_limit">最新のメッセージの数の上限</string>
@@ -707,7 +706,7 @@
     <string name="invalid_directory">Invalid directory</string>
     <string name="suggested">Suggested</string>
     <string name="languages">Languages</string>
-    <string name="recent">Recently Started</string>
+    <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
 </resources>

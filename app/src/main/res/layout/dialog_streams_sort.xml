@@ -45,11 +45,11 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_marginBottom="5dp"
             android:text="@string/filters"
             android:textAppearance="?attr/textAppearanceTitleSmall"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textStyle="bold"
-            android:layout_marginStart="5dp" />
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/selectTags"
@@ -59,18 +59,17 @@
             android:text="@string/tags" />
 
         <Button
-            android:id="@+id/selectLangs"
+            android:id="@+id/selectLanguages"
             style="?attr/bottomSheetButtonStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/select_language" />
+            android:text="@string/languages" />
 
-        <View
-            android:layout_width="wrap_content"
-            android:layout_height="1dp"
+        <com.google.android.material.divider.MaterialDivider
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp"
-            android:background="?android:attr/colorButtonNormal" />
+            android:layout_marginBottom="5dp" />
 
         <Button
             android:id="@+id/apply"

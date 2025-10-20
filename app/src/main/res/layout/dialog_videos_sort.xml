@@ -135,11 +135,11 @@
             android:text="@string/apply" />
 
         <Button
-            android:id="@+id/selectLang"
+            android:id="@+id/selectLanguages"
             style="?attr/bottomSheetButtonStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/select_language" />
+            android:text="@string/languages" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

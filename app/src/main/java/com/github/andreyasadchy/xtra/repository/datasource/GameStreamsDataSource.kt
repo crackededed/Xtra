@@ -13,10 +13,11 @@ class GameStreamsDataSource(
     private val gameId: String?,
     private val gameSlug: String?,
     private val gameName: String?,
+    private val gqlQueryLanguages: List<Language>?,
     private val gqlQuerySort: StreamSort?,
+    private val gqlLanguages: List<String>?,
     private val gqlSort: String?,
     private val tags: List<String>?,
-    private val languages: List<String>?,
     private val gqlHeaders: Map<String, String>,
     private val graphQLRepository: GraphQLRepository,
     private val helixHeaders: Map<String, String>,
@@ -57,7 +58,7 @@ class GameStreamsDataSource(
         return when (apiPref) {
             C.GQL -> gqlQueryLoad(params)
             C.GQL_PERSISTED_QUERY -> gqlLoad(params)
-            C.HELIX -> if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank() && (gqlSort == "VIEWER_COUNT" || gqlSort == null) && tags.isNullOrEmpty()) helixLoad(params) else throw Exception()
+            C.HELIX -> if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank() && (gqlSort == "VIEWER_COUNT" || gqlSort == null) && tags.isNullOrEmpty() && gqlQueryLanguages.isNullOrEmpty() && gqlLanguages.isNullOrEmpty()) helixLoad(params) else throw Exception()
             else -> throw Exception()
         }
     }
@@ -71,7 +72,7 @@ class GameStreamsDataSource(
             name = gameName.takeIf { gameId.isNullOrBlank() && gameSlug.isNullOrBlank() },
             sort = gqlQuerySort,
             tags = tags,
-            languages = languages?.map { Language.valueOf(it) },
+            languages = gqlQueryLanguages,
             first = params.loadSize,
             after = offset
         )
@@ -112,7 +113,7 @@ class GameStreamsDataSource(
     }
 
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, Stream> {
-        val response = graphQLRepository.loadGameStreams(networkLibrary, gqlHeaders, gameSlug, gqlSort, tags, languages,params.loadSize, offset)
+        val response = graphQLRepository.loadGameStreams(networkLibrary, gqlHeaders, gameSlug, gqlSort, tags, gqlLanguages, params.loadSize, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }
@@ -131,6 +132,7 @@ class GameStreamsDataSource(
                     type = it.type,
                     title = it.title,
                     viewerCount = it.viewersCount,
+                    startedAt = it.createdAt,
                     thumbnailUrl = it.previewImageURL,
                     profileImageUrl = it.broadcaster?.profileImageURL,
                     tags = it.freeformTags?.mapNotNull { tag -> tag.name }

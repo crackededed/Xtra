@@ -185,7 +185,6 @@
     <string name="user_affiliate">Affilié</string>
     <string name="user_staff">Staff</string>
     <string name="uptime">%s durée du direct</string>
-    <string name="select_language">Choisir la langue</string>
     <string name="show_tags">Voir les étiquettes</string>
     <string name="recentMsg_enable">Charger les messages récents</string>
     <string name="recentMsg_limit">Limite de messages récents</string>
@@ -707,7 +706,7 @@
     <string name="invalid_directory">Invalid directory</string>
     <string name="suggested">Suggested</string>
     <string name="languages">Languages</string>
-    <string name="recent">Recently Started</string>
+    <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
 </resources>

@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
-import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.model.ui.SortGame
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
@@ -39,12 +38,12 @@ class GameClipsViewModel @Inject constructor(
     private val args = GamePagerFragmentArgs.fromSavedStateHandle(savedStateHandle)
     val filter = MutableStateFlow<Filter?>(null)
     val sortText = MutableStateFlow<CharSequence?>(null)
+    val filtersText = MutableStateFlow<CharSequence?>(null)
 
     val period: String
         get() = filter.value?.period ?: VideosSortDialog.PERIOD_WEEK
-    val languageIndex: Int
-        get() = filter.value?.languageIndex ?: 0
-    val filtersText = MutableStateFlow<CharSequence?>(null)
+    val languages: Array<String>
+        get() = filter.value?.languages ?: emptyArray()
     val saveSort: Boolean
         get() = filter.value?.saveSort == true
 
@@ -82,22 +81,15 @@ class GameClipsViewModel @Inject constructor(
                 VideosSortDialog.PERIOD_ALL -> "ALL_TIME"
                 else -> "LAST_WEEK"
             }
-            val langList = mutableListOf<Language>()
-            if (languageIndex != 0) {
-                val langValues = applicationContext.resources.getStringArray(R.array.gqlUserLanguageValues).toList()
-                val item = Language.entries.find { lang ->
-                    lang.rawValue == langValues.elementAt(languageIndex)
-                }
-                if (item != null) {
-                    langList.add(item)
-                }
-            }
             GameClipsDataSource(
                 gameId = args.gameId,
                 gameSlug = args.gameSlug,
                 gameName = args.gameName,
-                gqlQueryLanguages = langList.ifEmpty { null },
+                gqlQueryLanguages = languages.ifEmpty { null }?.mapNotNull { language ->
+                    Language.entries.find { it.rawValue == language }
+                },
                 gqlQueryPeriod = gqlQueryPeriod,
+                gqlLanguages = languages.ifEmpty { null }?.toList(),
                 gqlPeriod = gqlPeriod,
                 startedAt = started,
                 endedAt = ended,
@@ -120,13 +112,13 @@ class GameClipsViewModel @Inject constructor(
         sortGameRepository.save(item)
     }
 
-    fun setFilter(period: String?, languageIndex: Int?, saveSort: Boolean?) {
-        filter.value = Filter(period, languageIndex, saveSort)
+    fun setFilter(period: String?, languages: Array<String>?, saveSort: Boolean?) {
+        filter.value = Filter(period, languages, saveSort)
     }
 
     class Filter(
         val period: String?,
-        val languageIndex: Int?,
+        val languages: Array<String>?,
         val saveSort: Boolean?,
     )
 }

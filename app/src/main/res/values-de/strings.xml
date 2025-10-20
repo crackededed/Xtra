@@ -185,7 +185,6 @@
     <string name="user_affiliate">Partner</string>
     <string name="user_staff">Mitarbeiter*in</string>
     <string name="uptime">%s Uptime</string>
-    <string name="select_language">Sprache wählen</string>
     <string name="show_tags">Tags anzeigen</string>
     <string name="recentMsg_enable">Letzte Nachrichten laden</string>
     <string name="recentMsg_limit">Anzahl der zu ladenden letzten Nachrichten</string>
@@ -707,7 +706,7 @@
     <string name="invalid_directory">Invalid directory</string>
     <string name="suggested">Suggested</string>
     <string name="languages">Languages</string>
-    <string name="recent">Recently Started</string>
+    <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
 </resources>

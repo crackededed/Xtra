@@ -103,7 +103,7 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                         sortValues?.videoPeriod
                     } else null,
                     type = sortValues?.videoType,
-                    languageIndex = sortValues?.videoLanguageIndex,
+                    languages = sortValues?.videoLanguages?.split(',')?.toTypedArray(),
                     saveSort = sortValues?.saveSort,
                 )
                 viewModel.sortText.value = requireContext().getString(
@@ -124,13 +124,9 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                         }
                     )
                 )
-                if (viewModel.languageIndex > 0) {
-                    viewModel.filtersText.value = requireContext().resources.getQuantityString(
-                        R.plurals.languages_list, 1,
-                        resources.getStringArray(R.array.gqlUserLanguageValues).toList()
-                            .elementAt(viewModel.languageIndex)
-                    )
-                }
+                viewModel.filtersText.value = if (viewModel.languages.isNotEmpty()) {
+                    requireContext().resources.getQuantityString(R.plurals.languages, viewModel.languages.size, viewModel.languages.joinToString())
+                } else null
             }
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.flow.collectLatest { pagingData ->
@@ -159,13 +155,12 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
 
     override fun setupSortBar(sortBar: SortBarBinding) {
         sortBar.root.visible()
-        sortBar.filtersText.text = null
         sortBar.root.setOnClickListener {
             VideosSortDialog.newInstance(
                 sort = viewModel.sort,
                 period = viewModel.period,
                 type = viewModel.type,
-                languageIndex = viewModel.languageIndex,
+                languages = viewModel.languages,
                 saveSort = viewModel.saveSort,
                 saveDefault = requireContext().prefs().getBoolean(C.SORT_DEFAULT_GAME_VIDEOS, false)
             ).show(childFragmentManager, null)
@@ -180,25 +175,27 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.filtersText.collectLatest {
-                    sortBar.filtersText.text = it
+                    if (it != null) {
+                        sortBar.filtersText.visible()
+                        sortBar.filtersText.text = it
+                    } else {
+                        sortBar.filtersText.gone()
+                    }
                 }
             }
         }
     }
 
-    override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languageIndex: Int, saveSort: Boolean, saveDefault: Boolean) {
+    override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languages: Array<String>, saveSort: Boolean, saveDefault: Boolean) {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
                 binding.scrollTop.gone()
                 pagingAdapter.submitData(PagingData.empty())
-                viewModel.setFilter(sort, period, type, languageIndex, saveSort)
+                viewModel.setFilter(sort, period, type, languages, saveSort)
                 viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, typeText)
-                viewModel.filtersText.value =
-                    if (languageIndex > 0) requireContext().resources.getQuantityString(
-                        R.plurals.languages_list, 1,
-                        resources.getStringArray(R.array.gqlUserLanguageValues).toList()
-                            .elementAt(languageIndex)
-                    ) else null
+                viewModel.filtersText.value = if (languages.isNotEmpty()) {
+                    requireContext().resources.getQuantityString(R.plurals.languages, languages.size, languages.joinToString())
+                } else null
                 val sortValues = args.gameId?.let { viewModel.getSortGame(it) }
                 if (saveSort) {
                     if (sortValues != null) {
@@ -209,7 +206,7 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                                 videoPeriod = period
                             }
                             videoType = type
-                            videoLanguageIndex = languageIndex
+                            videoLanguages = languages.joinToString(",")
                         }
                     } else {
                         args.gameId?.let {
@@ -219,7 +216,7 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                                 videoSort = sort,
                                 videoPeriod = if (!TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank()) period else null,
                                 videoType = type,
-                                videoLanguageIndex = languageIndex
+                                videoLanguages = languages.joinToString(",")
                             )
                         }
                     }
@@ -249,7 +246,7 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                                 videoPeriod = period
                             }
                             videoType = type
-                            videoLanguageIndex = languageIndex
+                            videoLanguages = languages.joinToString(",")
                         }
                     } else {
                         SortGame(
@@ -257,7 +254,7 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                             videoSort = sort,
                             videoPeriod = if (!TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank()) period else null,
                             videoType = type,
-                            videoLanguageIndex = languageIndex
+                            videoLanguages = languages.joinToString(",")
                         )
                     }.let { viewModel.saveSortGame(it) }
                 }

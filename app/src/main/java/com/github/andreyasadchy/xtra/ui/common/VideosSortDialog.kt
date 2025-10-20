@@ -21,10 +21,10 @@ import com.github.andreyasadchy.xtra.util.gone
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
-class VideosSortDialog : BottomSheetDialogFragment(), RadioButtonDialogFragment.OnSortOptionChanged {
+class VideosSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialog.OnSelectedLanguagesChanged {
 
     interface OnFilter {
-        fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languageIndex: Int, saveSort: Boolean, saveDefault: Boolean)
+        fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languages: Array<String>, saveSort: Boolean, saveDefault: Boolean)
     }
 
     companion object {
@@ -42,19 +42,17 @@ class VideosSortDialog : BottomSheetDialogFragment(), RadioButtonDialogFragment.
         private const val SORT = "sort"
         private const val PERIOD = "period"
         private const val TYPE = "type"
-        private const val LANGUAGE = "language"
+        private const val LANGUAGES = "languages"
         private const val SAVE_SORT = "save_sort"
         private const val SAVE_DEFAULT = "save_default"
 
-        private const val REQUEST_CODE_LANGUAGE = 0
-
-        fun newInstance(sort: String? = SORT_TIME, period: String? = PERIOD_WEEK, type: String? = VIDEO_TYPE_ALL, languageIndex: Int? = 0, saveSort: Boolean? = false, saveDefault: Boolean? = false): VideosSortDialog {
+        fun newInstance(sort: String? = SORT_TIME, period: String? = PERIOD_WEEK, type: String? = VIDEO_TYPE_ALL, languages: Array<String>? = null, saveSort: Boolean? = false, saveDefault: Boolean? = false): VideosSortDialog {
             return VideosSortDialog().apply {
                 arguments = bundleOf(
                     SORT to sort,
                     PERIOD to period,
                     TYPE to type,
-                    LANGUAGE to languageIndex,
+                    LANGUAGES to languages,
                     SAVE_SORT to saveSort,
                     SAVE_DEFAULT to saveDefault,
                 )
@@ -66,7 +64,7 @@ class VideosSortDialog : BottomSheetDialogFragment(), RadioButtonDialogFragment.
     private val binding get() = _binding!!
     private lateinit var listener: OnFilter
 
-    private var langIndex = 0
+    private var selectedLanguages: Array<String> = emptyArray()
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -89,7 +87,7 @@ class VideosSortDialog : BottomSheetDialogFragment(), RadioButtonDialogFragment.
                 is ChannelClipsFragment -> {
                     sort.gone()
                     sortType.gone()
-                    selectLang.gone()
+                    selectLanguages.gone()
                     saveSort.text = requireContext().getString(R.string.save_sort_channel)
                     saveSort.isVisible = parentFragment?.arguments?.getString(C.CHANNEL_ID).isNullOrBlank() == false
                 }
@@ -101,13 +99,13 @@ class VideosSortDialog : BottomSheetDialogFragment(), RadioButtonDialogFragment.
                 }
                 is ChannelVideosFragment -> {
                     period.gone()
-                    selectLang.gone()
+                    selectLanguages.gone()
                     saveSort.text = requireContext().getString(R.string.save_sort_channel)
                     saveSort.isVisible = parentFragment?.arguments?.getString(C.CHANNEL_ID).isNullOrBlank() == false
                 }
                 is FollowedVideosFragment -> {
                     period.gone()
-                    selectLang.gone()
+                    selectLanguages.gone()
                     saveSort.gone()
                 }
                 is GameVideosFragment -> {
@@ -137,13 +135,13 @@ class VideosSortDialog : BottomSheetDialogFragment(), RadioButtonDialogFragment.
                 VIDEO_TYPE_UPLOAD -> R.id.typeUpload
                 else -> R.id.typeAll
             }
-            val originalLanguageIndex = args.getInt(LANGUAGE)
+            val originalLanguages = args.getStringArray(LANGUAGES) ?: emptyArray()
             val originalSaveSort = args.getBoolean(SAVE_SORT)
             val originalSaveDefault = args.getBoolean(SAVE_DEFAULT)
             sort.check(originalSortId)
             period.check(originalPeriodId)
             sortType.check(originalTypeId)
-            langIndex = originalLanguageIndex
+            selectedLanguages = originalLanguages
             saveSort.isChecked = originalSaveSort
             saveDefault.isChecked = originalSaveDefault
             apply.setOnClickListener {
@@ -155,7 +153,7 @@ class VideosSortDialog : BottomSheetDialogFragment(), RadioButtonDialogFragment.
                 if (checkedPeriodId != originalPeriodId ||
                     checkedSortId != originalSortId ||
                     checkedTypeId != originalTypeId ||
-                    langIndex != originalLanguageIndex ||
+                    !selectedLanguages.contentEquals(originalLanguages) ||
                     checkedSaveSort != originalSaveSort ||
                     checkedSaveDefault != originalSaveDefault
                 ) {
@@ -185,26 +183,21 @@ class VideosSortDialog : BottomSheetDialogFragment(), RadioButtonDialogFragment.
                             else -> VIDEO_TYPE_ALL
                         },
                         typeBtn.text,
-                        langIndex,
+                        selectedLanguages,
                         checkedSaveSort,
                         checkedSaveDefault
                     )
                 }
                 dismiss()
             }
-            val langArray = resources.getStringArray(R.array.gqlUserLanguageEntries).toList()
-            selectLang.setOnClickListener {
-                RadioButtonDialogFragment.newInstance(REQUEST_CODE_LANGUAGE, langArray, null, langIndex).show(childFragmentManager, "closeOnPip")
+            selectLanguages.setOnClickListener {
+                SelectLanguagesDialog.newInstance(selectedLanguages).show(childFragmentManager, "closeOnPip")
             }
         }
     }
 
-    override fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: Int?) {
-        when (requestCode) {
-            REQUEST_CODE_LANGUAGE -> {
-                langIndex = index
-            }
-        }
+    override fun onChange(languages: Array<String>) {
+        selectedLanguages = languages
     }
 
     override fun onDestroyView() {

@@ -1,0 +1,619 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 30,
+    "identityHash": "4713e3909b4e9b2d03ca05f808a3ae33",
+    "entities": [
+      {
+        "tableName": "videos",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`url` TEXT, `source_url` TEXT, `source_start_position` INTEGER, `name` TEXT, `channel_id` TEXT, `channel_login` TEXT, `channel_name` TEXT, `channel_logo` TEXT, `thumbnail` TEXT, `gameId` TEXT, `gameSlug` TEXT, `gameName` TEXT, `duration` INTEGER, `upload_date` INTEGER, `download_date` INTEGER, `last_watch_position` INTEGER, `progress` INTEGER NOT NULL, `max_progress` INTEGER NOT NULL, `bytes` INTEGER NOT NULL, `downloadPath` TEXT, `fromTime` INTEGER, `toTime` INTEGER, `status` INTEGER NOT NULL, `type` TEXT, `videoId` TEXT, `clipId` TEXT, `quality` TEXT, `downloadChat` INTEGER NOT NULL, `downloadChatEmotes` INTEGER NOT NULL, `chatProgress` INTEGER NOT NULL, `maxChatProgress` INTEGER NOT NULL, `chatBytes` INTEGER NOT NULL, `chatOffsetSeconds` INTEGER NOT NULL, `chatUrl` TEXT, `playlistToFile` INTEGER NOT NULL, `live` INTEGER NOT NULL, `lastSegmentUrl` TEXT, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sourceUrl",
+            "columnName": "source_url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sourceStartPosition",
+            "columnName": "source_start_position",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "channelId",
+            "columnName": "channel_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "channelLogin",
+            "columnName": "channel_login",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "channelName",
+            "columnName": "channel_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "channelLogo",
+            "columnName": "channel_logo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "thumbnail",
+            "columnName": "thumbnail",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "gameId",
+            "columnName": "gameId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "gameSlug",
+            "columnName": "gameSlug",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "gameName",
+            "columnName": "gameName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "duration",
+            "columnName": "duration",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "uploadDate",
+            "columnName": "upload_date",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "downloadDate",
+            "columnName": "download_date",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastWatchPosition",
+            "columnName": "last_watch_position",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "progress",
+            "columnName": "progress",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "maxProgress",
+            "columnName": "max_progress",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bytes",
+            "columnName": "bytes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "downloadPath",
+            "columnName": "downloadPath",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fromTime",
+            "columnName": "fromTime",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "toTime",
+            "columnName": "toTime",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "videoId",
+            "columnName": "videoId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "clipId",
+            "columnName": "clipId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "quality",
+            "columnName": "quality",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "downloadChat",
+            "columnName": "downloadChat",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "downloadChatEmotes",
+            "columnName": "downloadChatEmotes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chatProgress",
+            "columnName": "chatProgress",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "maxChatProgress",
+            "columnName": "maxChatProgress",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chatBytes",
+            "columnName": "chatBytes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chatOffsetSeconds",
+            "columnName": "chatOffsetSeconds",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chatUrl",
+            "columnName": "chatUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "playlistToFile",
+            "columnName": "playlistToFile",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "live",
+            "columnName": "live",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastSegmentUrl",
+            "columnName": "lastSegmentUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "recent_emotes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `used_at` INTEGER NOT NULL, PRIMARY KEY(`name`))",
+        "fields": [
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "usedAt",
+            "columnName": "used_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "name"
+          ]
+        }
+      },
+      {
+        "tableName": "video_positions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "local_follows",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userId` TEXT, `userLogin` TEXT, `userName` TEXT, `channelLogo` TEXT, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "userLogin",
+            "columnName": "userLogin",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "userName",
+            "columnName": "userName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "channelLogo",
+            "columnName": "channelLogo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "local_follows_games",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`gameId` TEXT, `gameSlug` TEXT, `gameName` TEXT, `boxArt` TEXT, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "gameId",
+            "columnName": "gameId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "gameSlug",
+            "columnName": "gameSlug",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "gameName",
+            "columnName": "gameName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "boxArt",
+            "columnName": "boxArt",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "bookmarks",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`videoId` TEXT, `userId` TEXT, `userLogin` TEXT, `userName` TEXT, `userType` TEXT, `userBroadcasterType` TEXT, `userLogo` TEXT, `gameId` TEXT, `gameSlug` TEXT, `gameName` TEXT, `title` TEXT, `createdAt` TEXT, `thumbnail` TEXT, `type` TEXT, `duration` TEXT, `animatedPreviewURL` TEXT, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "videoId",
+            "columnName": "videoId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "userLogin",
+            "columnName": "userLogin",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "userName",
+            "columnName": "userName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "userType",
+            "columnName": "userType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "userBroadcasterType",
+            "columnName": "userBroadcasterType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "userLogo",
+            "columnName": "userLogo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "gameId",
+            "columnName": "gameId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "gameSlug",
+            "columnName": "gameSlug",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "gameName",
+            "columnName": "gameName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "thumbnail",
+            "columnName": "thumbnail",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "duration",
+            "columnName": "duration",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "animatedPreviewURL",
+            "columnName": "animatedPreviewURL",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "vod_bookmark_ignored_users",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`user_id` TEXT NOT NULL, PRIMARY KEY(`user_id`))",
+        "fields": [
+          {
+            "fieldPath": "userId",
+            "columnName": "user_id",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "user_id"
+          ]
+        }
+      },
+      {
+        "tableName": "sort_channel",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `saveSort` INTEGER, `videoSort` TEXT, `videoType` TEXT, `clipPeriod` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "saveSort",
+            "columnName": "saveSort",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "videoSort",
+            "columnName": "videoSort",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "videoType",
+            "columnName": "videoType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "clipPeriod",
+            "columnName": "clipPeriod",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "sort_game",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `saveSort` INTEGER, `videoSort` TEXT, `videoPeriod` TEXT, `videoType` TEXT, `videoLanguages` TEXT, `clipPeriod` TEXT, `clipLanguages` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "saveSort",
+            "columnName": "saveSort",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "videoSort",
+            "columnName": "videoSort",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "videoPeriod",
+            "columnName": "videoPeriod",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "videoType",
+            "columnName": "videoType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "videoLanguages",
+            "columnName": "videoLanguages",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "clipPeriod",
+            "columnName": "clipPeriod",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "clipLanguages",
+            "columnName": "clipLanguages",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "shown_notifications",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`channelId` TEXT NOT NULL, `startedAt` INTEGER NOT NULL, PRIMARY KEY(`channelId`))",
+        "fields": [
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startedAt",
+            "columnName": "startedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "channelId"
+          ]
+        }
+      },
+      {
+        "tableName": "notifications",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`channelId` TEXT NOT NULL, PRIMARY KEY(`channelId`))",
+        "fields": [
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "channelId"
+          ]
+        }
+      },
+      {
+        "tableName": "translate_all_messages",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`channelId` TEXT NOT NULL, PRIMARY KEY(`channelId`))",
+        "fields": [
+          {
+            "fieldPath": "channelId",
+            "columnName": "channelId",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "channelId"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4713e3909b4e9b2d03ca05f808a3ae33')"
+    ]
+  }
+}
