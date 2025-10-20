@@ -13,6 +13,7 @@ import com.github.andreyasadchy.xtra.db.RecentEmotesDao
 import com.github.andreyasadchy.xtra.db.ShownNotificationsDao
 import com.github.andreyasadchy.xtra.db.SortChannelDao
 import com.github.andreyasadchy.xtra.db.SortGameDao
+import com.github.andreyasadchy.xtra.db.StreamFilterDao
 import com.github.andreyasadchy.xtra.db.TranslateAllMessagesUsersDao
 import com.github.andreyasadchy.xtra.db.VideoPositionsDao
 import com.github.andreyasadchy.xtra.db.VideosDao
@@ -25,6 +26,7 @@ import com.github.andreyasadchy.xtra.repository.OfflineRepository
 import com.github.andreyasadchy.xtra.repository.ShownNotificationsRepository
 import com.github.andreyasadchy.xtra.repository.SortChannelRepository
 import com.github.andreyasadchy.xtra.repository.SortGameRepository
+import com.github.andreyasadchy.xtra.repository.StreamFilterRepository
 import com.github.andreyasadchy.xtra.repository.TranslateAllMessagesUsersRepository
 import com.github.andreyasadchy.xtra.repository.VodBookmarkIgnoredUsersRepository
 import dagger.Module
@@ -79,6 +81,10 @@ class DatabaseModule {
 
     @Singleton
     @Provides
+    fun providesStreamFilterRepository(streamFilterDao: StreamFilterDao): StreamFilterRepository = StreamFilterRepository(streamFilterDao)
+
+    @Singleton
+    @Provides
     fun providesVideosDao(database: AppDatabase): VideosDao = database.videos()
 
     @Singleton
@@ -124,6 +130,10 @@ class DatabaseModule {
     @Singleton
     @Provides
     fun providesTranslateAllMessagesUsersDao(database: AppDatabase): TranslateAllMessagesUsersDao = database.translateAllMessagesUsersDao()
+
+    @Singleton
+    @Provides
+    fun providesSortFilterDao(database: AppDatabase): StreamFilterDao = database.streamFilterDao()
 
     @Singleton
     @Provides
@@ -297,6 +307,11 @@ class DatabaseModule {
                         db.execSQL("INSERT INTO sort_game1 (id, saveSort, videoSort, videoPeriod, videoType, clipPeriod) SELECT id, saveSort, videoSort, videoPeriod, videoType, clipPeriod FROM sort_game")
                         db.execSQL("DROP TABLE sort_game")
                         db.execSQL("ALTER TABLE sort_game1 RENAME TO sort_game")
+                    }
+                },
+                object : Migration(30, 31) {
+                    override fun migrate(db: SupportSQLiteDatabase) {
+                        db.execSQL("CREATE TABLE IF NOT EXISTS stream_filter (id TEXT NOT NULL, gameId TEXT, gameSlug TEXT, gameName TEXT, tags TEXT, languages TEXT, PRIMARY KEY (id))")
                     }
                 },
             )
