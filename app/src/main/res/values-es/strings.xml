@@ -130,7 +130,7 @@
     <string name="ascending">Ascendente</string>
     <string name="logout_title">¿Cerrar sesión?</string>
     <string name="logout_msg">Sesión iniciada como %s</string>
-    <string name="language">Idioma</string>
+    <string name="app_language">Idioma de aplicación</string>
     <string name="never">Nunca</string>
     <string name="blue">Azul</string>
     <string name="rounduserimage">Imágenes de perfil circulares</string>
@@ -714,4 +714,5 @@
     <string name="recent">Más recientes</string>
     <string name="filters">Filtros</string>
     <string name="sort_by">Ordenar por: %1$s</string>
+    <string name="content_language">Idoma del contenido</string>
 </resources>

@@ -137,7 +137,12 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                viewModel.setFilter(viewModel.sort, args.languages ?: viewModel.languages)
+                var languages = args.languages ?: viewModel.languages
+                if (languages.isEmpty()) {
+                    val contentLanguage = requireContext().prefs().getString(C.CONTENT_LANGUAGE, "all")
+                    languages = if (contentLanguage != null && contentLanguage != "all") arrayOf(contentLanguage) else emptyArray()
+                }
+                viewModel.setFilter(viewModel.sort, languages)
                 viewModel.sortText.value = requireContext().getString(
                     R.string.sort_by,
                     requireContext().getString(

@@ -125,7 +125,7 @@
     <string name="ascending">По возрастанию</string>
     <string name="logout_title">Выйти?</string>
     <string name="logout_msg">Авторизован как %s</string>
-    <string name="language">Язык</string>
+    <string name="app_language">Язык</string>
     <string name="never">Никогда</string>
     <string name="blue">Синяя</string>
     <string name="rounduserimage">Круглые аватары</string>
@@ -709,4 +709,5 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="content_language">Content language</string>
 </resources>

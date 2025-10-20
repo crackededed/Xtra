@@ -125,7 +125,7 @@
     <string name="ascending">Crescente</string>
     <string name="logout_title">Vuoi uscire?</string>
     <string name="logout_msg">Accesso come %s</string>
-    <string name="language">Lingua</string>
+    <string name="app_language">Lingua</string>
     <string name="never">Mai</string>
     <string name="blue">Blu</string>
     <string name="rounduserimage">Immagini del profilo circolari</string>
@@ -709,4 +709,5 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="content_language">Content language</string>
 </resources>

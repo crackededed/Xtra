@@ -125,7 +125,7 @@
     <string name="ascending">Aufsteigend</string>
     <string name="logout_title">Abmelden?</string>
     <string name="logout_msg">Eingeloggt als %s</string>
-    <string name="language">Sprache</string>
+    <string name="app_language">Sprache</string>
     <string name="never">Nie</string>
     <string name="blue">Blau</string>
     <string name="rounduserimage">Runde Profilbilder</string>
@@ -709,4 +709,5 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="content_language">Content language</string>
 </resources>

@@ -123,7 +123,7 @@
     <string name="ascending">Naik</string>
     <string name="logout_title">Keluar?</string>
     <string name="logout_msg">Masuk sebagai %s</string>
-    <string name="language">Bahasa</string>
+    <string name="app_language">Bahasa</string>
     <string name="never">Tidak pernah</string>
     <string name="blue">Biru</string>
     <string name="rounduserimage">Lingkari gambar profil</string>
@@ -710,4 +710,5 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="content_language">Content language</string>
 </resources>

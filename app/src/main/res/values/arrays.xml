@@ -391,6 +391,84 @@
         <item>OTHER</item>
     </string-array>
 
+    <string-array name="contentLanguageEntries">
+        <item>@string/all</item>
+        <item>العربية</item>
+        <item>American sign language</item>
+        <item>Български</item>
+        <item>Catalan</item>
+        <item>čeština</item>
+        <item>Dansk</item>
+        <item>Deutsch</item>
+        <item>Eλληνικά</item>
+        <item>English</item>
+        <item>Español</item>
+        <item>Suomi</item>
+        <item>Français</item>
+        <item>Hindi</item>
+        <item>Magyar</item>
+        <item>Indonesian</item>
+        <item>Italiano</item>
+        <item>日本語</item>
+        <item>한국어</item>
+        <item>Malay</item>
+        <item>Nederlands</item>
+        <item>Norsk</item>
+        <item>Polski</item>
+        <item>Português</item>
+        <item>Română</item>
+        <item>Pусский</item>
+        <item>Slovenčina</item>
+        <item>Svenska</item>
+        <item>ภาษาไทย</item>
+        <item>Tagalog</item>
+        <item>Türkçe</item>
+        <item>Ukrainian</item>
+        <item>Tiếng việt</item>
+        <item>中文</item>
+        <item>Chinese (Hong Kong)</item>
+        <item>@string/other</item>
+    </string-array>
+
+    <string-array name="contentLanguageValues">
+        <item>all</item>
+        <item>AR</item>
+        <item>ASL</item>
+        <item>BG</item>
+        <item>CA</item>
+        <item>CS</item>
+        <item>DA</item>
+        <item>DE</item>
+        <item>EL</item>
+        <item>EN</item>
+        <item>ES</item>
+        <item>FI</item>
+        <item>FR</item>
+        <item>HI</item>
+        <item>HU</item>
+        <item>ID</item>
+        <item>IT</item>
+        <item>JA</item>
+        <item>KO</item>
+        <item>MS</item>
+        <item>NL</item>
+        <item>NO</item>
+        <item>PL</item>
+        <item>PT</item>
+        <item>RO</item>
+        <item>RU</item>
+        <item>SK</item>
+        <item>SV</item>
+        <item>TH</item>
+        <item>TL</item>
+        <item>TR</item>
+        <item>UK</item>
+        <item>VI</item>
+        <item>ZH</item>
+        <item>ZH_HK</item>
+        <item>OTHER</item>
+    </string-array>
+
     <string-array name="compactStreamsEntries">
         <item>@string/all</item>
         <item>@string/followed_only</item>

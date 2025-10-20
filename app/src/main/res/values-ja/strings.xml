@@ -125,7 +125,7 @@
     <string name="ascending">昇順</string>
     <string name="logout_title">ログアウトしますか？</string>
     <string name="logout_msg">%s としてログイン中</string>
-    <string name="language">言語</string>
+    <string name="app_language">言語</string>
     <string name="never">しない</string>
     <string name="blue">ブルー</string>
     <string name="rounduserimage">丸いプロフィール画像</string>
@@ -709,4 +709,5 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="content_language">Content language</string>
 </resources>

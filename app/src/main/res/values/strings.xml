@@ -141,7 +141,7 @@
     <string name="ascending">Ascending</string>
     <string name="logout_title">Log out?</string>
     <string name="logout_msg">Logged in as %s</string>
-    <string name="language">Language</string>
+    <string name="app_language">App language</string>
     <string name="never">Never</string>
     <string name="blue">Blue</string>
     <string name="rounduserimage">Circle profile pictures</string>
@@ -725,4 +725,5 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="content_language">Content language</string>
 </resources>

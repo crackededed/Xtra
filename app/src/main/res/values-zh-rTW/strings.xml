@@ -125,7 +125,7 @@
     <string name="ascending">遞減</string>
     <string name="logout_title">登出？</string>
     <string name="logout_msg">登入為 %s</string>
-    <string name="language">語言</string>
+    <string name="app_language">語言</string>
     <string name="never">永不</string>
     <string name="blue">藍色</string>
     <string name="rounduserimage">圓形個人檔案圖片</string>
@@ -709,4 +709,5 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="content_language">Content language</string>
 </resources>

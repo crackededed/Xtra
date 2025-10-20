@@ -126,7 +126,7 @@
     <string name="ascending">Artan</string>
     <string name="logout_title">Çıkış yapılsın mı?</string>
     <string name="logout_msg">%s olarak giriş yapıldı</string>
-    <string name="language">Dil</string>
+    <string name="app_language">Dil</string>
     <string name="never">Asla</string>
     <string name="blue">Mavi</string>
     <string name="rounduserimage">Dairesel profil resimleri</string>
@@ -710,4 +710,5 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="content_language">Content language</string>
 </resources>
