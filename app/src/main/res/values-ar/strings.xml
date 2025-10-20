@@ -43,7 +43,7 @@
     <string name="to_is_lesser">الوقت (إلى) يجب أن يكون أكبر من (من)</string>
     <string name="to_is_longer">(إلى) لا يمكن أن يكون أكبر من مدة الفيديو</string>
     <string name="delete">حذف</string>
-    <string name="are_you_sure">هل أنت متأكد أنك تريد حذف هذا الفيديو؟</string>
+    <string name="are_you_sure_delete_video">هل أنت متأكد أنك تريد حذف هذا الفيديو؟</string>
     <string name="token_expired">إنتهت صلاحية الجلسة الخاصة بك. الرجاء الدخول على الحساب من جديد</string>
     <string name="no_connection">لا يوجد إتصال بالإنترنت</string>
     <string name="connection_restored">تم  إستعادة الإتصال</string>
@@ -710,4 +710,6 @@
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
     <string name="content_language">Content language</string>
+    <string name="filter_saved">Filter saved</string>
+    <string name="are_you_sure_delete_filter">Are you sure you want to delete this filter?</string>
 </resources>

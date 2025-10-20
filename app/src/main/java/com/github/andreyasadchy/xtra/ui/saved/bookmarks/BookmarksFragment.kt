@@ -91,7 +91,7 @@ class BookmarksFragment : PagedListFragment(), Scrollable {
             val delete = getString(R.string.delete)
             requireActivity().getAlertDialogBuilder()
                 .setTitle(delete)
-                .setMessage(getString(R.string.are_you_sure))
+                .setMessage(getString(R.string.are_you_sure_delete_video))
                 .setPositiveButton(delete) { _, _ -> viewModel.delete(it) }
                 .setNegativeButton(getString(android.R.string.cancel), null)
                 .show()

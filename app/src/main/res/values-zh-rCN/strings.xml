@@ -43,7 +43,7 @@
     <string name="to_is_lesser">结束时间必须大于开始时间</string>
     <string name="to_is_longer">结束时间不能大于视频长度</string>
     <string name="delete">删除</string>
-    <string name="are_you_sure">您确定想要删除此视频吗？</string>
+    <string name="are_you_sure_delete_video">您确定想要删除此视频吗？</string>
     <string name="token_expired">您的会话已过期。请再次登录</string>
     <string name="no_connection">没有网络连接</string>
     <string name="connection_restored">重新上线</string>
@@ -710,4 +710,6 @@
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
     <string name="content_language">Content language</string>
+    <string name="filter_saved">Filter saved</string>
+    <string name="are_you_sure_delete_filter">Are you sure you want to delete this filter?</string>
 </resources>

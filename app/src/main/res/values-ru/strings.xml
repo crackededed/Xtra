@@ -43,7 +43,7 @@
     <string name="to_is_lesser">Время «До» должно быть больше чем «От»</string>
     <string name="to_is_longer">Время «До» должно быть меньше длины видео</string>
     <string name="delete">Удалить</string>
-    <string name="are_you_sure">Вы действительно хотите удалить это видео?</string>
+    <string name="are_you_sure_delete_video">Вы действительно хотите удалить это видео?</string>
     <string name="token_expired">Ваш сеанс истёк. Пожалуйста, авторизуйтесь</string>
     <string name="no_connection">Отсутствует Интернет-соединение</string>
     <string name="connection_restored">Соединение восстановлено</string>
@@ -710,4 +710,6 @@
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
     <string name="content_language">Content language</string>
+    <string name="filter_saved">Filter saved</string>
+    <string name="are_you_sure_delete_filter">Are you sure you want to delete this filter?</string>
 </resources>

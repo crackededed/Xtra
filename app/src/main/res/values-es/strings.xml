@@ -48,7 +48,7 @@
     <string name="to_is_lesser">El tiempo Hasta debe ser mayor que Desde</string>
     <string name="to_is_longer">No puede ser mayor que la duración del video</string>
     <string name="delete">Borrar</string>
-    <string name="are_you_sure">¿Estás seguro de que deseas eliminar este video?</string>
+    <string name="are_you_sure_delete_video">¿Estás seguro de que deseas eliminar este video?</string>
     <string name="token_expired">Su sesión ha caducado. Inicia sesión de nuevo</string>
     <string name="no_connection">Sin conexión a Internet</string>
     <string name="connection_restored">Conexión restablecida</string>
@@ -715,4 +715,6 @@
     <string name="filters">Filtros</string>
     <string name="sort_by">Ordenar por: %1$s</string>
     <string name="content_language">Idoma del contenido</string>
+    <string name="filter_saved">Filter saved</string>
+    <string name="are_you_sure_delete_filter">¿Estás seguro de que deseas eliminar este filtro?</string>
 </resources>

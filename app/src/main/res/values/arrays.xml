@@ -113,11 +113,13 @@
     <string-array name="spinnerSavedEntries">
         <item>@string/bookmarks</item>
         <item>@string/downloads</item>
+        <item>@string/filters</item>
     </string-array>
 
     <string-array name="spinnerSavedValues">
         <item>0</item>
         <item>1</item>
+        <item>2</item>
     </string-array>
 
     <string-array name="spinnerStorage">

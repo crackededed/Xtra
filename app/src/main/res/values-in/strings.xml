@@ -43,7 +43,7 @@
     <string name="to_is_lesser">Waktu \'Hingga\' harus lebih besar dari \'Dari\'</string>
     <string name="to_is_longer">\'Hingga\' Tidak boleh lebih panjang dari durasi video</string>
     <string name="delete">Hapus</string>
-    <string name="are_you_sure">Apakah anda yakin ingin manghapus video ini?</string>
+    <string name="are_you_sure_delete_video">Apakah anda yakin ingin manghapus video ini?</string>
     <string name="token_expired">Sesi anda telah berakhir. Silahkan masuk lagi</string>
     <string name="no_connection">Tidak ada koneksi internet</string>
     <string name="connection_restored">Kembali online</string>
@@ -711,4 +711,6 @@
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
     <string name="content_language">Content language</string>
+    <string name="filter_saved">Filter saved</string>
+    <string name="are_you_sure_delete_filter">Are you sure you want to delete this filter?</string>
 </resources>
