@@ -100,18 +100,21 @@ object TwitchApiHelper {
         } else return null
     }
 
-    fun getUptime(context: Context, input: String?): String? {
-        return if (input != null) {
+    fun getUptime(startedAt: String?): String? {
+        return if (startedAt != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val createdAt = try {
-                    Instant.parse(input)
+                    Instant.parse(startedAt)
                 } catch (e: DateTimeParseException) {
                     null
                 }
                 if (createdAt != null) {
                     val diff = Duration.between(createdAt, Instant.now())
                     if (!diff.isNegative) {
-                        getDurationFromSeconds(context, diff.seconds.toString(), false)
+                        val hours = diff.toHours()
+                        val minutes = (diff.toMinutes() % 60)
+                        val seconds = (diff.seconds % 60)
+                        String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
                     } else null
                 } else null
             } else {
@@ -119,13 +122,16 @@ object TwitchApiHelper {
                 val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
                 format.timeZone = TimeZone.getTimeZone("UTC")
                 val createdAt = try {
-                    format.parse(input)?.time
+                    format.parse(startedAt)?.time
                 } catch (e: ParseException) {
                     null
                 }
                 val diff = if (createdAt != null) ((currentTime - createdAt) / 1000) else null
                 if (diff != null && diff >= 0) {
-                    getDurationFromSeconds(context, diff.toString(), false)
+                    val hours = (diff / 3600)
+                    val minutes = (diff % 3600) / 60
+                    val seconds = (diff % 60)
+                    String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
                 } else null
             }
         } else null

@@ -621,7 +621,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
             }
             if (requireContext().prefs().getBoolean(C.UI_UPTIME, true)) {
                 if (stream?.startedAt != null) {
-                    TwitchApiHelper.getUptime(requireContext(), stream.startedAt).let {
+                    TwitchApiHelper.getUptime(stream.startedAt).let {
                         if (it != null) {
                             streamLayout.visible()
                             uptime.visible()
