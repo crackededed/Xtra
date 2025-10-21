@@ -67,6 +67,15 @@ class StreamFiltersFragment : PagedListFragment(), Scrollable {
                 }
             }
         }
+        with (binding) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    pagingAdapter.loadStateFlow.collectLatest { loadStates ->
+                        nothingHere.text = getString(R.string.how_save_filter)
+                    }
+                }
+            }
+        }
         initializeAdapter(binding, pagingAdapter, enableScrollTopButton = false)
     }
 

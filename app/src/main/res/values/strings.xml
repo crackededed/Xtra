@@ -728,4 +728,5 @@
     <string name="content_language">Content language</string>
     <string name="filter_saved">Filter saved</string>
     <string name="are_you_sure_delete_filter">Are you sure you want to delete this filter?</string>
+    <string name="how_save_filter">Long press on the filter bar to save</string>
 </resources>

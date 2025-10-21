@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -135,7 +136,7 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
             ).show(childFragmentManager, null)
         }
         sortBar.root.setOnLongClickListener {
-            if (!args.tags.isNullOrEmpty() || viewModel.languages.isNotEmpty()) {
+            if (sortBar.filtersText.isVisible) {
                 viewModel.saveStreamFilter(
                     args.gameId,
                     args.gameName,

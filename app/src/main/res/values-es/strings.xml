@@ -715,6 +715,7 @@
     <string name="filters">Filtros</string>
     <string name="sort_by">Ordenar por: %1$s</string>
     <string name="content_language">Idoma del contenido</string>
-    <string name="filter_saved">Filter saved</string>
+    <string name="filter_saved">Filtro guardado</string>
     <string name="are_you_sure_delete_filter">¿Estás seguro de que deseas eliminar este filtro?</string>
+    <string name="how_save_filter">Mantenga presionada la barra de filtrado para guardar</string>
 </resources>
