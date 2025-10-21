@@ -111,10 +111,7 @@ object TwitchApiHelper {
                 if (createdAt != null) {
                     val diff = Duration.between(createdAt, Instant.now())
                     if (!diff.isNegative) {
-                        val hours = diff.toHours()
-                        val minutes = (diff.toMinutes() % 60)
-                        val seconds = (diff.seconds % 60)
-                        String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
+                        DateUtils.formatElapsedTime(diff.seconds)
                     } else null
                 } else null
             } else {
@@ -128,10 +125,7 @@ object TwitchApiHelper {
                 }
                 val diff = if (createdAt != null) ((currentTime - createdAt) / 1000) else null
                 if (diff != null && diff >= 0) {
-                    val hours = (diff / 3600)
-                    val minutes = (diff % 3600) / 60
-                    val seconds = (diff % 60)
-                    String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
+                    DateUtils.formatElapsedTime(diff)
                 } else null
             }
         } else null
