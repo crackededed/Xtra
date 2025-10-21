@@ -34,6 +34,7 @@ import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentArgs
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
+import com.github.andreyasadchy.xtra.util.shortToast
 import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -132,6 +133,19 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
                 sort = viewModel.sort,
                 languages = viewModel.languages
             ).show(childFragmentManager, null)
+        }
+        sortBar.root.setOnLongClickListener {
+            if (!args.tags.isNullOrEmpty() || viewModel.languages.isNotEmpty()) {
+                viewModel.saveStreamFilter(
+                    args.gameId,
+                    args.gameName,
+                    args.gameSlug,
+                    args.tags,
+                    viewModel.languages
+                )
+                requireContext().shortToast(getString(R.string.filter_saved))
+            }
+            true
         }
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {

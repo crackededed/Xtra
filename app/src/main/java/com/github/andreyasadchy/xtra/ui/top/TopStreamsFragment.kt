@@ -41,6 +41,7 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
+import com.github.andreyasadchy.xtra.util.shortToast
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
@@ -201,6 +202,13 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
                     sort = viewModel.sort,
                     languages = viewModel.languages
                 ).show(childFragmentManager, null)
+            }
+            sortBar.root.setOnLongClickListener {
+                if (!args.tags.isNullOrEmpty() || viewModel.languages.isNotEmpty()) {
+                    viewModel.saveStreamFilter(args.tags, viewModel.languages)
+                    requireContext().shortToast(getString(R.string.filter_saved))
+                }
+                true
             }
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
