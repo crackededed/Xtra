@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.fragment.app.viewModels
@@ -41,6 +42,7 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
+import com.github.andreyasadchy.xtra.util.shortToast
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
@@ -137,7 +139,12 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                viewModel.setFilter(viewModel.sort, args.languages ?: viewModel.languages)
+                var languages = args.languages ?: viewModel.languages
+                if (languages.isEmpty()) {
+                    val contentLanguage = requireContext().prefs().getString(C.CONTENT_LANGUAGE, "all")
+                    languages = if (contentLanguage != null && contentLanguage != "all") arrayOf(contentLanguage) else emptyArray()
+                }
+                viewModel.setFilter(viewModel.sort, languages)
                 viewModel.sortText.value = requireContext().getString(
                     R.string.sort_by,
                     requireContext().getString(
@@ -196,6 +203,13 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
                     sort = viewModel.sort,
                     languages = viewModel.languages
                 ).show(childFragmentManager, null)
+            }
+            sortBar.root.setOnLongClickListener {
+                if (sortBar.filtersText.isVisible) {
+                    viewModel.saveStreamFilter(args.tags, viewModel.languages)
+                    requireContext().shortToast(getString(R.string.filter_saved))
+                }
+                true
             }
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {

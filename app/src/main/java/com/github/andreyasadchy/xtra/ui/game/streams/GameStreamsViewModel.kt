@@ -7,8 +7,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
+import com.github.andreyasadchy.xtra.model.ui.StreamFilter
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
+import com.github.andreyasadchy.xtra.repository.StreamFilterRepository
 import com.github.andreyasadchy.xtra.repository.datasource.GameStreamsDataSource
 import com.github.andreyasadchy.xtra.type.Language
 import com.github.andreyasadchy.xtra.type.StreamSort
@@ -22,6 +24,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -29,6 +32,7 @@ class GameStreamsViewModel @Inject constructor(
     @ApplicationContext applicationContext: Context,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
+    private val streamFilterRepository: StreamFilterRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -85,6 +89,20 @@ class GameStreamsViewModel @Inject constructor(
 
     fun setFilter(sort: String?, languages: Array<String>?) {
         filter.value = Filter(sort, languages)
+    }
+
+    fun saveStreamFilter(gameId: String?, gameName: String?,gameSlug : String?, tags: Array<String>?, languages: Array<String>?) {
+        viewModelScope.launch {
+            streamFilterRepository.save(
+                StreamFilter(
+                    gameId = gameId,
+                    gameName = gameName,
+                    gameSlug = gameSlug,
+                    tags = if(!tags.isNullOrEmpty()) tags.joinToString(",") else null,
+                    languages = if(!languages.isNullOrEmpty()) languages.joinToString(",") else null
+                )
+            )
+        }
     }
 
     class Filter(
