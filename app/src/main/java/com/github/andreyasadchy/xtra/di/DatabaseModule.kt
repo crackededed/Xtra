@@ -311,7 +311,7 @@ class DatabaseModule {
                 },
                 object : Migration(30, 31) {
                     override fun migrate(db: SupportSQLiteDatabase) {
-                        db.execSQL("CREATE TABLE IF NOT EXISTS stream_filter (id TEXT NOT NULL, gameId TEXT, gameSlug TEXT, gameName TEXT, tags TEXT, languages TEXT, PRIMARY KEY (id))")
+                        db.execSQL("CREATE TABLE IF NOT EXISTS stream_filter (id INTEGER NOT NULL, gameId TEXT, gameSlug TEXT, gameName TEXT, tags TEXT, languages TEXT, PRIMARY KEY (id))")
                     }
                 },
             )
