@@ -7,7 +7,17 @@
         android:entryValues="@array/language"
         android:key="ui_language"
         android:summary="%s"
-        android:title="@string/language"
+        android:title="@string/app_language"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <ListPreference
+        android:defaultValue="all"
+        android:entries="@array/contentLanguageEntries"
+        android:entryValues="@array/contentLanguageValues"
+        android:key="content_language"
+        android:summary="%s"
+        android:title="@string/content_language"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 

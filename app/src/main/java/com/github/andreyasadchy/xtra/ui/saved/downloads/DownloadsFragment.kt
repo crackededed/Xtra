@@ -238,7 +238,7 @@ class DownloadsFragment : PagedListFragment(), Scrollable {
             }
             requireActivity().getAlertDialogBuilder()
                 .setTitle(delete)
-                .setMessage(getString(R.string.are_you_sure))
+                .setMessage(getString(R.string.are_you_sure_delete_video))
                 .setView(checkBoxView)
                 .setPositiveButton(delete) { _, _ -> viewModel.delete(it, checkBox.isChecked) }
                 .setNegativeButton(getString(android.R.string.cancel), null)

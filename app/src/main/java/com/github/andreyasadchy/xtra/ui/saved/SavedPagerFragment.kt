@@ -175,7 +175,8 @@ class SavedPagerFragment : Fragment(), Scrollable, FragmentHost {
             TabLayoutMediator(tabLayout, viewPager) { tab, position ->
                 tab.text = when (position) {
                     0 -> getString(R.string.bookmarks)
-                    else -> getString(R.string.downloads)
+                    1 -> getString(R.string.downloads)
+                    else -> getString(R.string.filters)
                 }
             }.attach()
             ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
