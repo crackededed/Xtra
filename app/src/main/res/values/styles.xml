@@ -1,42 +1,42 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="BaseDarkTheme" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="BaseDarkTheme" parent="Theme.Material3Expressive.Dark.NoActionBar">
         <item name="colorPrimary">@color/primaryBlue</item>
         <item name="chatStatus">@color/chatStatusDark</item>
         <item name="sortBarTextColor">?android:textColorSecondary</item>
         <item name="dialogPadding">8dp</item>
         <item name="dialogLayoutPadding">8dp</item>
         <item name="cardStyle">@style/Card</item>
-        <item name="bottomSheetButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
-        <item name="elevatedButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
-        <item name="dialogButtonStyle">@style/Widget.Material3.Button.TextButton.Dialog</item>
+        <item name="bottomSheetButtonStyle">@style/Widget.Material3Expressive.Button.ElevatedButton</item>
+        <item name="elevatedButtonStyle">@style/Widget.Material3Expressive.Button.ElevatedButton</item>
+        <item name="dialogButtonStyle">@style/Widget.Material3Expressive.Button.TextButton.Dialog</item>
         <item name="tabStyle">@style/Widget.Material3.TabLayout.OnSurface</item>
         <item name="radioButtonStyle">@style/RadioButton</item>
         <item name="checkboxStyle">@style/CheckBox</item>
         <item name="materialSwitchStyle">@style/SwitchBlue</item>
-        <item name="sliderStyle">@style/Slider</item>
-        <item name="linearProgressIndicatorStyle">@style/Widget.Material3.LinearProgressIndicator.Legacy</item>
+        <item name="sliderStyle">@style/Widget.Material3Expressive.Slider.Xsmall</item>
+        <item name="linearProgressIndicatorStyle">@style/Widget.Material3.CircularProgressIndicator</item>
         <item name="preferenceTheme">@style/PreferenceTheme</item>
         <item name="android:navigationBarColor">@color/darkScrim</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
-    <style name="BaseLightTheme" parent="Theme.Material3.Light.NoActionBar">
+    <style name="BaseLightTheme" parent="Theme.Material3Expressive.Light.NoActionBar">
         <item name="colorPrimary">@color/accent</item>
         <item name="chatStatus">@color/chatStatusLight</item>
         <item name="sortBarTextColor">?android:textColorSecondary</item>
         <item name="dialogPadding">8dp</item>
         <item name="dialogLayoutPadding">8dp</item>
         <item name="cardStyle">@style/Card</item>
-        <item name="bottomSheetButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
-        <item name="elevatedButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
-        <item name="dialogButtonStyle">@style/Widget.Material3.Button.TextButton.Dialog</item>
+        <item name="bottomSheetButtonStyle">@style/Widget.Material3Expressive.Button.ElevatedButton</item>
+        <item name="elevatedButtonStyle">@style/Widget.Material3Expressive.Button.ElevatedButton</item>
+        <item name="dialogButtonStyle">@style/Widget.Material3Expressive.Button.TextButton.Dialog</item>
         <item name="tabStyle">@style/Widget.Material3.TabLayout.OnSurface</item>
         <item name="radioButtonStyle">@style/RadioButton</item>
         <item name="checkboxStyle">@style/CheckBox</item>
         <item name="materialSwitchStyle">@style/SwitchBlue</item>
-        <item name="sliderStyle">@style/Slider</item>
-        <item name="linearProgressIndicatorStyle">@style/Widget.Material3.LinearProgressIndicator.Legacy</item>
+        <item name="sliderStyle">@style/Widget.Material3Expressive.Slider.Xsmall</item>
+        <item name="linearProgressIndicatorStyle">@style/Widget.Material3.LinearProgressIndicator</item>
         <item name="preferenceTheme">@style/PreferenceTheme</item>
         <item name="android:navigationBarColor">@color/darkScrim</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
@@ -44,7 +44,7 @@
         <item name="android:windowLightStatusBar">true</item>
     </style>
 
-    <style name="BaseAmoledTheme" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="BaseAmoledTheme" parent="Theme.Material3Expressive.Dark.NoActionBar">
         <item name="colorPrimary">@android:color/white</item>
         <item name="colorSurface">@color/surfaceAmoled</item>
         <item name="android:colorBackground">@color/surfaceAmoled</item>
@@ -55,14 +55,14 @@
         <item name="dialogPadding">8dp</item>
         <item name="dialogLayoutPadding">8dp</item>
         <item name="cardStyle">@style/CardAmoled</item>
-        <item name="bottomSheetButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
-        <item name="elevatedButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
-        <item name="dialogButtonStyle">@style/Widget.Material3.Button.TextButton.Dialog</item>
+        <item name="bottomSheetButtonStyle">@style/Widget.Material3Expressive.Button.ElevatedButton</item>
+        <item name="elevatedButtonStyle">@style/Widget.Material3Expressive.Button.ElevatedButton</item>
+        <item name="dialogButtonStyle">@style/Widget.Material3Expressive.Button.TextButton.Dialog</item>
         <item name="tabStyle">@style/Widget.Material3.TabLayout.OnSurface</item>
         <item name="radioButtonStyle">@style/RadioButton</item>
         <item name="checkboxStyle">@style/CheckBox</item>
         <item name="materialSwitchStyle">@style/SwitchAmoled</item>
-        <item name="sliderStyle">@style/Slider</item>
+        <item name="sliderStyle">@style/Widget.Material3Expressive.Slider.Xsmall</item>
         <item name="linearProgressIndicatorStyle">@style/LinearProgressIndicatorAmoled</item>
         <item name="bottomNavigationStyle">@style/BottomNavigationAmoled</item>
         <item name="bottomSheetDialogTheme">@style/BottomSheet</item>
@@ -72,7 +72,7 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
-    <style name="BaseBlueTheme" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="BaseBlueTheme" parent="Theme.Material3Expressive.Dark.NoActionBar">
         <item name="colorPrimary">@color/primaryBlue</item>
         <item name="colorSurface">@color/surfaceBlue</item>
         <item name="android:colorBackground">@color/surfaceBlue</item>
@@ -86,14 +86,14 @@
         <item name="dialogPadding">8dp</item>
         <item name="dialogLayoutPadding">8dp</item>
         <item name="cardStyle">@style/Card</item>
-        <item name="bottomSheetButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
-        <item name="elevatedButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
-        <item name="dialogButtonStyle">@style/Widget.Material3.Button.TextButton.Dialog</item>
+        <item name="bottomSheetButtonStyle">@style/Widget.Material3Expressive.Button.ElevatedButton</item>
+        <item name="elevatedButtonStyle">@style/Widget.Material3Expressive.Button.ElevatedButton</item>
+        <item name="dialogButtonStyle">@style/Widget.Material3Expressive.Button.TextButton.Dialog</item>
         <item name="tabStyle">@style/Widget.Material3.TabLayout.OnSurface</item>
         <item name="radioButtonStyle">@style/RadioButton</item>
         <item name="checkboxStyle">@style/CheckBox</item>
         <item name="materialSwitchStyle">@style/SwitchBlue</item>
-        <item name="sliderStyle">@style/Slider</item>
+        <item name="sliderStyle">@style/Widget.Material3Expressive.Slider.Xsmall</item>
         <item name="linearProgressIndicatorStyle">@style/Widget.Material3.LinearProgressIndicator.Legacy</item>
         <item name="bottomNavigationStyle">@style/BottomNavigationBlue</item>
         <item name="preferenceTheme">@style/PreferenceTheme</item>
@@ -162,15 +162,15 @@
     <style name="AppCompatAmoledTheme" parent="BaseAppCompatAmoledTheme" />
     <style name="AppCompatBlueTheme" parent="BaseAppCompatBlueTheme" />
 
-    <style name="DarkDynamicOverlay" parent="ThemeOverlay.Material3.DynamicColors.Dark">
+    <style name="DarkDynamicOverlay" parent="ThemeOverlay.Material3Expressive.DynamicColors.Dark">
         <item name="materialSwitchStyle">@style/Widget.Material3.CompoundButton.MaterialSwitch</item>
     </style>
 
-    <style name="LightDynamicOverlay" parent="ThemeOverlay.Material3.DynamicColors.Light">
+    <style name="LightDynamicOverlay" parent="ThemeOverlay.Material3Expressive.DynamicColors.Light">
         <item name="materialSwitchStyle">@style/Widget.Material3.CompoundButton.MaterialSwitch</item>
     </style>
 
-    <style name="AmoledDynamicOverlay" parent="ThemeOverlay.Material3.DynamicColors.Dark">
+    <style name="AmoledDynamicOverlay" parent="ThemeOverlay.Material3Expressive.DynamicColors.Dark">
         <item name="colorSurface">@color/surfaceAmoled</item>
         <item name="android:colorBackground">@color/surfaceAmoled</item>
         <item name="colorSurfaceContainerLow">@color/surfaceAmoled</item>

@@ -66,12 +66,16 @@ android {
     ))
 }
 
-dependencies {
-    implementation("com.google.android.gms:play-services-cronet:18.1.0")
-    implementation("com.google.mlkit:language-id:17.0.6")
-    implementation("com.google.mlkit:translate:17.0.3")
+repositories {
+    google()
+    mavenCentral()
+}
 
-    implementation(libs.material)
+dependencies {
+    implementation(libs.play.services.cronet)
+    implementation(libs.language.id)
+    implementation(libs.translate)
+    implementation(libs.material.v1140alpha06)
 
     implementation(libs.activity)
     implementation(libs.appcompat)
