@@ -1,1 +1,1 @@
-a Twitch player and browser
+Third-party Twitch client
