@@ -21,11 +21,11 @@
         <item quantity="other">%d diffuseurs</item>
     </plurals>
     <plurals name="languages">
-        <item quantity="one">Language: %s</item>
-        <item quantity="other">Languages: %s</item>
+        <item quantity="one">Langage : %s</item>
+        <item quantity="other">Langages : %s</item>
     </plurals>
     <plurals name="tags">
-        <item quantity="one">Tag: %s</item>
-        <item quantity="other">Tags: %s</item>
+        <item quantity="one">Tag : %s</item>
+        <item quantity="other">Tags : %s</item>
     </plurals>
 </resources>
