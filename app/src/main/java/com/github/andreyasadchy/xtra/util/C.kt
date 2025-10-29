@@ -266,4 +266,5 @@ object C {
     const val USE_WEBVIEW_INTEGRITY = "use_webview_integrity"
     const val GET_ALL_GQL_HEADERS = "get_all_gql_headers"
     const val UI_SEARCH_DEFAULT_PAGE = "ui_search_default_page"
+    const val UI_CHANNEL_TABS = "ui_channel_tabs"
 }

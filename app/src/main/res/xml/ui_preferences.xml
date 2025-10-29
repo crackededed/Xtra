@@ -60,6 +60,15 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <MultiSelectListPreference
+        android:defaultValue="@array/channelTabsValues"
+        android:entries="@array/channelTabsEntries"
+        android:entryValues="@array/channelTabsValues"
+        android:key="ui_channel_tabs"
+        android:title="@string/channel_tabs"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
     <ListPreference
         android:defaultValue="0"
         android:entries="@array/spinnerFollowedEntries"

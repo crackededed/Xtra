@@ -714,5 +714,6 @@
     <string name="recent">Más recientes</string>
     <string name="filters">Filtros</string>
     <string name="sort_by">Ordenar por: %1$s</string>
-    <string name="default_search_tab">Default search tab</string>
+    <string name="default_search_tab">Pestaña de búsqueda predeterminada</string>
+    <string name="channel_tabs">Pestañas en el canal de usuario</string>
 </resources>
