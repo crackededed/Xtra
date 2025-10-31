@@ -1,6 +1,7 @@
 package com.github.andreyasadchy.xtra.db
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -14,4 +15,7 @@ interface SortGameDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(video: SortGame)
+
+    @Delete
+    fun delete(video: SortGame)
 }

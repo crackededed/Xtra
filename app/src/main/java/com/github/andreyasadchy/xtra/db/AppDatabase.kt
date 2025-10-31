@@ -17,7 +17,7 @@ import com.github.andreyasadchy.xtra.model.ui.VodBookmarkIgnoredUser
 
 @Database(
     entities = [OfflineVideo::class, RecentEmote::class, VideoPosition::class, LocalFollowChannel::class, LocalFollowGame::class, Bookmark::class, VodBookmarkIgnoredUser::class, SortChannel::class, SortGame::class, ShownNotification::class, NotificationUser::class, TranslateAllMessagesUser::class],
-    version = 30
+    version = 31
 )
 abstract class AppDatabase : RoomDatabase() {
 

@@ -24,6 +24,7 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentGamesBinding
+import com.github.andreyasadchy.xtra.model.ui.SortGame
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
@@ -139,7 +140,12 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                viewModel.setFilter(viewModel.sort, viewModel.tags.ifEmpty { args.tags }, viewModel.languages.ifEmpty { args.languages })
+                val sortValues = viewModel.getSortGame("top_streams")
+                viewModel.setFilter(
+                    sort = sortValues?.streamSort,
+                    tags = args.tags ?: sortValues?.streamTags?.split(',')?.toTypedArray(),
+                    languages = sortValues?.streamLanguages?.split(',')?.toTypedArray(),
+                )
                 viewModel.sortText.value = requireContext().getString(
                     R.string.sort_by,
                     requireContext().getString(
@@ -253,38 +259,55 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
         }
     }
 
-    override fun onChange(sort: String, sortText: CharSequence, tags: Array<String>, languages: Array<String>) {
+    override fun onChange(sort: String, sortText: CharSequence, tags: Array<String>, languages: Array<String>, changed: Boolean, saveSort: Boolean, saveDefault: Boolean) {
         viewLifecycleOwner.lifecycleScope.launch {
-            pagingAdapter.submitData(PagingData.empty())
-            viewModel.setFilter(sort, tags, languages)
-            viewModel.sortText.value = requireContext().getString(R.string.sort_by, sortText)
-            viewModel.filtersText.value = if (viewModel.tags.isNotEmpty() || viewModel.languages.isNotEmpty()) {
-                buildString {
-                    if (viewModel.tags.isNotEmpty()) {
-                        append(
-                            requireContext().resources.getQuantityString(
-                                R.plurals.tags,
-                                viewModel.tags.size,
-                                viewModel.tags.joinToString()
+            if (changed) {
+                pagingAdapter.submitData(PagingData.empty())
+                viewModel.setFilter(sort, tags, languages)
+                viewModel.sortText.value = requireContext().getString(R.string.sort_by, sortText)
+                viewModel.filtersText.value = if (viewModel.tags.isNotEmpty() || viewModel.languages.isNotEmpty()) {
+                    buildString {
+                        if (viewModel.tags.isNotEmpty()) {
+                            append(
+                                requireContext().resources.getQuantityString(
+                                    R.plurals.tags,
+                                    viewModel.tags.size,
+                                    viewModel.tags.joinToString()
+                                )
                             )
-                        )
-                    }
-                    if (viewModel.languages.isNotEmpty()) {
-                        if (isNotEmpty()) {
-                            append(". ")
                         }
-                        append(
-                            requireContext().resources.getQuantityString(
-                                R.plurals.languages,
-                                viewModel.languages.size,
-                                viewModel.languages.joinToString()
+                        if (viewModel.languages.isNotEmpty()) {
+                            if (isNotEmpty()) {
+                                append(". ")
+                            }
+                            append(
+                                requireContext().resources.getQuantityString(
+                                    R.plurals.languages,
+                                    viewModel.languages.size,
+                                    viewModel.languages.joinToString()
+                                )
                             )
-                        )
+                        }
                     }
-                }
-            } else null
+                } else null
+            }
+            if (saveDefault) {
+                val item = viewModel.getSortGame("top_streams")?.apply {
+                    streamSort = sort
+                    streamTags = tags.takeIf { it.isNotEmpty() }?.joinToString(",")
+                    streamLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
+                } ?: SortGame(
+                    id = "top_streams",
+                    streamSort = sort,
+                    streamTags = tags.takeIf { it.isNotEmpty() }?.joinToString(","),
+                    streamLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
+                )
+                viewModel.saveSortGame(item)
+            }
         }
     }
+
+    override fun deleteSavedSort() {}
 
     override fun scrollToTop() {
         with(binding) {

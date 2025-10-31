@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
 import com.github.andreyasadchy.xtra.databinding.SortBarBinding
+import com.github.andreyasadchy.xtra.model.ui.SortGame
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.ui.common.FragmentHost
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
@@ -75,7 +76,12 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                viewModel.setFilter(viewModel.sort, viewModel.tags.ifEmpty { args.tags }, viewModel.languages.ifEmpty { args.languages })
+                val sortValues = args.gameId?.let { viewModel.getSortGame(it) } ?: viewModel.getSortGame("default")
+                viewModel.setFilter(
+                    sort = sortValues?.streamSort,
+                    tags = sortValues?.streamTags?.split(',')?.toTypedArray(),
+                    languages = sortValues?.streamLanguages?.split(',')?.toTypedArray(),
+                )
                 viewModel.sortText.value = requireContext().getString(
                     R.string.sort_by,
                     requireContext().getString(
@@ -125,11 +131,14 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
     override fun setupSortBar(sortBar: SortBarBinding) {
         sortBar.root.visible()
         sortBar.root.setOnClickListener {
-            StreamsSortDialog.newInstance(
-                sort = viewModel.sort,
-                tags = viewModel.tags,
-                languages = viewModel.languages
-            ).show(childFragmentManager, null)
+            viewLifecycleOwner.lifecycleScope.launch {
+                StreamsSortDialog.newInstance(
+                    sort = viewModel.sort,
+                    tags = viewModel.tags,
+                    languages = viewModel.languages,
+                    saved = args.gameId?.let { viewModel.getSortGame(it) } != null
+                ).show(childFragmentManager, null)
+            }
         }
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -183,37 +192,75 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
         }
     }
 
-    override fun onChange(sort: String, sortText: CharSequence, tags: Array<String>, languages: Array<String>) {
+    override fun onChange(sort: String, sortText: CharSequence, tags: Array<String>, languages: Array<String>, changed: Boolean, saveSort: Boolean, saveDefault: Boolean) {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
-                pagingAdapter.submitData(PagingData.empty())
-                viewModel.setFilter(sort, tags, languages)
-                viewModel.sortText.value = requireContext().getString(R.string.sort_by, sortText)
-                viewModel.filtersText.value = if (viewModel.tags.isNotEmpty() || viewModel.languages.isNotEmpty()) {
-                    buildString {
-                        if (viewModel.tags.isNotEmpty()) {
-                            append(
-                                requireContext().resources.getQuantityString(
-                                    R.plurals.tags,
-                                    viewModel.tags.size,
-                                    viewModel.tags.joinToString()
+                if (changed) {
+                    pagingAdapter.submitData(PagingData.empty())
+                    viewModel.setFilter(sort, tags, languages)
+                    viewModel.sortText.value = requireContext().getString(R.string.sort_by, sortText)
+                    viewModel.filtersText.value = if (viewModel.tags.isNotEmpty() || viewModel.languages.isNotEmpty()) {
+                        buildString {
+                            if (viewModel.tags.isNotEmpty()) {
+                                append(
+                                    requireContext().resources.getQuantityString(
+                                        R.plurals.tags,
+                                        viewModel.tags.size,
+                                        viewModel.tags.joinToString()
+                                    )
                                 )
-                            )
-                        }
-                        if (viewModel.languages.isNotEmpty()) {
-                            if (isNotEmpty()) {
-                                append(". ")
                             }
-                            append(
-                                requireContext().resources.getQuantityString(
-                                    R.plurals.languages,
-                                    viewModel.languages.size,
-                                    viewModel.languages.joinToString()
+                            if (viewModel.languages.isNotEmpty()) {
+                                if (isNotEmpty()) {
+                                    append(". ")
+                                }
+                                append(
+                                    requireContext().resources.getQuantityString(
+                                        R.plurals.languages,
+                                        viewModel.languages.size,
+                                        viewModel.languages.joinToString()
+                                    )
                                 )
-                            )
+                            }
                         }
+                    } else null
+                }
+                if (saveSort) {
+                    args.gameId?.let { id ->
+                        val item = viewModel.getSortGame(id)?.apply {
+                            streamSort = sort
+                            streamTags = tags.takeIf { it.isNotEmpty() }?.joinToString(",")
+                            streamLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
+                        } ?: SortGame(
+                            id = id,
+                            streamSort = sort,
+                            streamTags = tags.takeIf { it.isNotEmpty() }?.joinToString(","),
+                            streamLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
+                        )
+                        viewModel.saveSortGame(item)
                     }
-                } else null
+                }
+                if (saveDefault) {
+                    val item = viewModel.getSortGame("default")?.apply {
+                        streamSort = sort
+                        streamTags = tags.takeIf { it.isNotEmpty() }?.joinToString(",")
+                        streamLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
+                    } ?: SortGame(
+                        id = "default",
+                        streamSort = sort,
+                        streamTags = tags.takeIf { it.isNotEmpty() }?.joinToString(","),
+                        streamLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
+                    )
+                    viewModel.saveSortGame(item)
+                }
+            }
+        }
+    }
+
+    override fun deleteSavedSort() {
+        if ((parentFragment as? FragmentHost)?.currentFragment == this) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                args.gameId?.let { viewModel.getSortGame(it) }?.let { viewModel.deleteSortGame(it) }
             }
         }
     }

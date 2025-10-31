@@ -79,8 +79,6 @@ class GameVideosViewModel @Inject constructor(
         get() = filter.value?.type ?: VideosSortDialog.VIDEO_TYPE_ALL
     val languages: Array<String>
         get() = filter.value?.languages ?: emptyArray()
-    val saveSort: Boolean
-        get() = filter.value?.saveSort == true
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow = filter.flatMapLatest { filter ->
@@ -160,8 +158,12 @@ class GameVideosViewModel @Inject constructor(
         sortGameRepository.save(item)
     }
 
-    fun setFilter(sort: String?, period: String?, type: String?, languages: Array<String>?, saveSort: Boolean?) {
-        filter.value = Filter(sort, period, type, languages, saveSort)
+    suspend fun deleteSortGame(item: SortGame) {
+        sortGameRepository.delete(item)
+    }
+
+    fun setFilter(sort: String?, period: String?, type: String?, languages: Array<String>?) {
+        filter.value = Filter(sort, period, type, languages)
     }
 
     class Filter(
@@ -169,7 +171,6 @@ class GameVideosViewModel @Inject constructor(
         val period: String?,
         val type: String?,
         val languages: Array<String>?,
-        val saveSort: Boolean?,
     )
 
     fun saveBookmark(filesDir: String, video: Video, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>) {

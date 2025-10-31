@@ -68,8 +68,9 @@
 
         </RadioGroup>
 
-        <CheckBox
+        <Button
             android:id="@+id/saveDefault"
+            style="?attr/bottomSheetButtonStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/save_default" />

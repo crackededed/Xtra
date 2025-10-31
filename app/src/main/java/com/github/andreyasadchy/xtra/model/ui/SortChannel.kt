@@ -7,7 +7,6 @@ import androidx.room.PrimaryKey
 class SortChannel(
     @PrimaryKey
     val id: String,
-    var saveSort: Boolean? = null,
     var videoSort: String? = null,
     var videoType: String? = null,
     var clipPeriod: String? = null,
