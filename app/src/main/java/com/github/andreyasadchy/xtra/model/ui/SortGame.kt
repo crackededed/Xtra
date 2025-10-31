@@ -7,7 +7,9 @@ import androidx.room.PrimaryKey
 class SortGame(
     @PrimaryKey
     val id: String,
-    var saveSort: Boolean? = null,
+    var streamSort: String? = null,
+    var streamTags: String? = null,
+    var streamLanguages: String? = null,
     var videoSort: String? = null,
     var videoPeriod: String? = null,
     var videoType: String? = null,

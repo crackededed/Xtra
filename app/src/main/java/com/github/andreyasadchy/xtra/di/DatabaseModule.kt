@@ -299,6 +299,18 @@ class DatabaseModule {
                         db.execSQL("ALTER TABLE sort_game1 RENAME TO sort_game")
                     }
                 },
+                object : Migration(30, 31) {
+                    override fun migrate(db: SupportSQLiteDatabase) {
+                        db.execSQL("CREATE TABLE IF NOT EXISTS sort_game1 (id TEXT NOT NULL, streamSort TEXT, streamTags TEXT, streamLanguages TEXT, videoSort TEXT, videoPeriod TEXT, videoType TEXT, videoLanguages TEXT, clipPeriod TEXT, clipLanguages TEXT, PRIMARY KEY (id))")
+                        db.execSQL("INSERT INTO sort_game1 (id, videoSort, videoPeriod, videoType, videoLanguages, clipPeriod, clipLanguages) SELECT id, videoSort, videoPeriod, videoType, videoLanguages, clipPeriod, clipLanguages FROM sort_game WHERE saveSort=1")
+                        db.execSQL("DROP TABLE sort_game")
+                        db.execSQL("ALTER TABLE sort_game1 RENAME TO sort_game")
+                        db.execSQL("CREATE TABLE IF NOT EXISTS sort_channel1 (id TEXT NOT NULL, videoSort TEXT, videoType TEXT, clipPeriod TEXT, PRIMARY KEY (id))")
+                        db.execSQL("INSERT INTO sort_channel1 (id, videoSort, videoType, clipPeriod) SELECT id, videoSort, videoType, clipPeriod FROM sort_channel WHERE saveSort=1")
+                        db.execSQL("DROP TABLE sort_channel")
+                        db.execSQL("ALTER TABLE sort_channel1 RENAME TO sort_channel")
+                    }
+                },
             )
             .build()
 }

@@ -7,9 +7,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioButton
 import androidx.core.os.bundleOf
+import androidx.core.view.isVisible
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.DialogStreamsSortBinding
 import com.github.andreyasadchy.xtra.model.ui.Tag
+import com.github.andreyasadchy.xtra.ui.game.streams.GameStreamsFragment
+import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragment
+import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.gone
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.chip.Chip
@@ -17,7 +22,8 @@ import com.google.android.material.chip.Chip
 class StreamsSortDialog : BottomSheetDialogFragment(), SearchTagsDialog.OnTagSelectedListener, SelectLanguagesDialog.OnSelectedLanguagesChanged {
 
     interface OnFilter {
-        fun onChange(sort: String, sortText: CharSequence, tags: Array<String>, languages: Array<String>)
+        fun onChange(sort: String, sortText: CharSequence, tags: Array<String>, languages: Array<String>, changed: Boolean, saveSort: Boolean, saveDefault: Boolean)
+        fun deleteSavedSort()
     }
 
     companion object {
@@ -28,10 +34,11 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SearchTagsDialog.OnTagSel
         private const val SORT = "sort"
         private const val TAGS = "tags"
         private const val LANGUAGES = "languages"
+        private const val SAVED = "saved"
 
-        fun newInstance(sort: String?, tags: Array<String>?, languages: Array<String>?): StreamsSortDialog {
+        fun newInstance(sort: String?, tags: Array<String>?, languages: Array<String>?, saved: Boolean = false): StreamsSortDialog {
             return StreamsSortDialog().apply {
-                arguments = bundleOf(SORT to sort, TAGS to tags, LANGUAGES to languages)
+                arguments = bundleOf(SORT to sort, TAGS to tags, LANGUAGES to languages, SAVED to saved)
             }
         }
     }
@@ -60,6 +67,14 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SearchTagsDialog.OnTagSel
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
         with(binding) {
             val args = requireArguments()
+            when (parentFragment) {
+                is GameStreamsFragment -> {
+                    saveSortLayout.isVisible = parentFragment?.arguments?.getString(C.GAME_ID).isNullOrBlank() == false
+                }
+                is TopStreamsFragment -> {
+                    saveSortLayout.gone()
+                }
+            }
             val originalSortId = when (args.getString(SORT)) {
                 SORT_VIEWERS -> R.id.viewers_high
                 SORT_VIEWERS_ASC -> R.id.viewers_low
@@ -68,6 +83,9 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SearchTagsDialog.OnTagSel
             }
             val originalTags = args.getStringArray(TAGS) ?: emptyArray()
             val originalLanguages = args.getStringArray(LANGUAGES) ?: emptyArray()
+            if (!args.getBoolean(SAVED)) {
+                deleteSavedSort.gone()
+            }
             sort.check(originalSortId)
             selectedTags = originalTags.toMutableList()
             selectedLanguages = originalLanguages
@@ -89,28 +107,44 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SearchTagsDialog.OnTagSel
             selectLanguages.setOnClickListener {
                 SelectLanguagesDialog.newInstance(selectedLanguages).show(childFragmentManager, "closeOnPip")
             }
-            apply.setOnClickListener {
-                val checkedSortId = sort.checkedRadioButtonId
-                val tags = selectedTags.toTypedArray().sortedArray()
-                if (checkedSortId != originalSortId ||
-                    !tags.contentEquals(originalTags) ||
-                    !selectedLanguages.contentEquals(originalLanguages)
-                ) {
-                    val sortBtn = view.findViewById<RadioButton>(checkedSortId)
-                    listener.onChange(
-                        when (checkedSortId) {
-                            R.id.viewers_high -> SORT_VIEWERS
-                            R.id.viewers_low -> SORT_VIEWERS_ASC
-                            R.id.recent -> RECENT
-                            else -> SORT_VIEWERS
-                        },
-                        sortBtn.text,
-                        tags,
-                        selectedLanguages
-                    )
-                }
+            saveSort.setOnClickListener {
+                applyFilters(originalSortId, originalTags, originalLanguages, saveSort = true, saveDefault = false)
                 dismiss()
             }
+            deleteSavedSort.setOnClickListener {
+                listener.deleteSavedSort()
+                deleteSavedSort.gone()
+            }
+            saveDefault.setOnClickListener {
+                applyFilters(originalSortId, originalTags, originalLanguages, saveSort = false, saveDefault = true)
+                dismiss()
+            }
+            apply.setOnClickListener {
+                applyFilters(originalSortId, originalTags, originalLanguages, saveSort = false, saveDefault = false)
+                dismiss()
+            }
+        }
+    }
+
+    private fun applyFilters(originalSortId: Int, originalTags: Array<String>, originalLanguages: Array<String>, saveSort: Boolean, saveDefault: Boolean) {
+        with(binding) {
+            val checkedSortId = sort.checkedRadioButtonId
+            val tags = selectedTags.toTypedArray().sortedArray()
+            val sortBtn = requireView().findViewById<RadioButton>(checkedSortId)
+            listener.onChange(
+                when (checkedSortId) {
+                    R.id.viewers_high -> SORT_VIEWERS
+                    R.id.viewers_low -> SORT_VIEWERS_ASC
+                    R.id.recent -> RECENT
+                    else -> SORT_VIEWERS
+                },
+                sortBtn.text,
+                tags,
+                selectedLanguages,
+                checkedSortId != originalSortId || !tags.contentEquals(originalTags) || !selectedLanguages.contentEquals(originalLanguages),
+                saveSort,
+                saveDefault
+            )
         }
     }
 
