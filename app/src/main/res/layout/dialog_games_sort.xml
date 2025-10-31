@@ -10,39 +10,6 @@
         android:layout_height="match_parent"
         android:padding="?attr/dialogPadding">
 
-        <RadioGroup
-            android:id="@+id/sort"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/sort"
-                android:textAppearance="?attr/textAppearanceTitleSmall"
-                android:textStyle="bold"
-                android:layout_marginStart="5dp" />
-
-            <RadioButton
-                android:id="@+id/viewers_high"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/viewers_high" />
-
-            <RadioButton
-                android:id="@+id/viewers_low"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/viewers_low" />
-
-            <RadioButton
-                android:id="@+id/recent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/recent" />
-
-        </RadioGroup>
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -70,19 +37,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/add_tag" />
-
-        <Button
-            android:id="@+id/selectLanguages"
-            style="?attr/bottomSheetButtonStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/languages" />
-
-        <com.google.android.material.divider.MaterialDivider
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp" />
 
         <Button
             android:id="@+id/apply"

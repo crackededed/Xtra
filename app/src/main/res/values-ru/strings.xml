@@ -450,7 +450,6 @@
     <string name="save_default">Сохранить по умолчанию</string>
     <string name="viewers_high">Зрители (по убыванию)</string>
     <string name="viewers_low">Зрители (по возрастанию)</string>
-    <string name="tags">Метки</string>
     <string name="search_videos">Поиск видео</string>
     <string name="points_earned">Собраны баллы канала: %d</string>
     <string name="points_notify">Уведомлять о сборе баллов канала</string>
@@ -711,4 +710,5 @@
     <string name="channel_tabs">Channel tabs</string>
     <string name="game_tabs">Game tabs</string>
     <string name="search_tabs">Search tabs</string>
+    <string name="add_tag">Add tag</string>
 </resources>

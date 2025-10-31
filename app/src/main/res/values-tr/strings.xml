@@ -451,7 +451,6 @@
     <string name="save_default">Varsayılan olarak kaydet</string>
     <string name="viewers_high">İzleyiciler (çoktan aza)</string>
     <string name="viewers_low">İzleyiciler (azdan çoğa)</string>
-    <string name="tags">Etiketler</string>
     <string name="search_videos">Video ara</string>
     <string name="points_earned">%d kanal puanı kazanıldı</string>
     <string name="points_notify">Kanal puanı kazanıldığında bildir</string>
@@ -712,4 +711,5 @@
     <string name="channel_tabs">Channel tabs</string>
     <string name="game_tabs">Game tabs</string>
     <string name="search_tabs">Search tabs</string>
+    <string name="add_tag">Add tag</string>
 </resources>
