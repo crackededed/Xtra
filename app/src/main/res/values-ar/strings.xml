@@ -450,7 +450,6 @@
     <string name="save_default">Save as default</string>
     <string name="viewers_high">Viewers (high to low)</string>
     <string name="viewers_low">Viewers (low to high)</string>
-    <string name="tags">Tags</string>
     <string name="search_videos">Search videos</string>
     <string name="points_earned">Received %d channel points</string>
     <string name="points_notify">Notify when earning channel points</string>
@@ -711,4 +710,5 @@
     <string name="channel_tabs">Channel tabs</string>
     <string name="game_tabs">Game tabs</string>
     <string name="search_tabs">Search tabs</string>
+    <string name="add_tag">Add tag</string>
 </resources>

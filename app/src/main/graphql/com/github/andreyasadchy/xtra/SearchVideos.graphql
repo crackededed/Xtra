@@ -5,10 +5,6 @@ query SearchVideos($query: String!, $first: Int, $after: String) {
             items {
                 animatedPreviewURL
                 broadcastType
-                contentTags {
-                    id
-                    localizedName
-                }
                 createdAt
                 game {
                     displayName

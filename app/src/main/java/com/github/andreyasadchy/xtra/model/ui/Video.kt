@@ -21,7 +21,6 @@ class Video(
     var gameSlug: String? = null,
     var gameName: String? = null,
     var profileImageUrl: String? = null,
-    val tags: List<Tag>? = null,
     val animatedPreviewURL: String? = null,
 ) : Parcelable {
 

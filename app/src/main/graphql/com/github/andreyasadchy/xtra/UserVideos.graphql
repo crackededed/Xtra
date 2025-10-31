@@ -9,10 +9,6 @@ query UserVideos($id: ID, $login: String, $sort: VideoSort, $types: [BroadcastTy
                 node {
                     animatedPreviewURL
                     broadcastType
-                    contentTags {
-                        id
-                        localizedName
-                    }
                     createdAt
                     game {
                         id

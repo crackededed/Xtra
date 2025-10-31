@@ -9,7 +9,7 @@
         android:name="com.github.andreyasadchy.xtra.ui.games.GamesFragment">
         <argument
             android:name="tags"
-            app:argType="string[]"
+            app:argType="com.github.andreyasadchy.xtra.model.ui.Tag[]"
             app:nullable="true"
             android:defaultValue="@null" />
     </fragment>
@@ -32,7 +32,7 @@
         android:name="com.github.andreyasadchy.xtra.ui.games.GamesFragment">
         <argument
             android:name="tags"
-            app:argType="string[]"
+            app:argType="com.github.andreyasadchy.xtra.model.ui.Tag[]"
             app:nullable="true"
             android:defaultValue="@null" />
     </fragment>
@@ -74,37 +74,6 @@
     <action
         android:id="@+id/action_global_searchPagerFragment"
         app:destination="@id/searchPagerFragment" />
-    <fragment
-        android:id="@+id/tagSearchFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.search.tags.TagSearchFragment">
-        <argument
-            android:name="gameId"
-            app:argType="string"
-            app:nullable="true"
-            android:defaultValue="@null" />
-        <argument
-            android:name="gameSlug"
-            app:argType="string"
-            app:nullable="true"
-            android:defaultValue="@null" />
-        <argument
-            android:name="gameName"
-            app:argType="string"
-            app:nullable="true"
-            android:defaultValue="@null" />
-        <argument
-            android:name="getGameTags"
-            app:argType="boolean"
-            android:defaultValue="false" />
-        <argument
-            android:name="languages"
-            app:argType="string[]"
-            app:nullable="true"
-            android:defaultValue="@null" />
-    </fragment>
-    <action
-        android:id="@+id/action_global_tagSearchFragment"
-        app:destination="@id/tagSearchFragment" />
     <fragment
         android:id="@+id/gamePagerFragment"
         android:name="com.github.andreyasadchy.xtra.ui.game.GamePagerFragment">

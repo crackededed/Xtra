@@ -1,7 +1,6 @@
 package com.github.andreyasadchy.xtra.ui.top
 
 import android.content.Context
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -13,7 +12,6 @@ import com.github.andreyasadchy.xtra.repository.datasource.StreamsDataSource
 import com.github.andreyasadchy.xtra.type.Language
 import com.github.andreyasadchy.xtra.type.StreamSort
 import com.github.andreyasadchy.xtra.ui.common.StreamsSortDialog
-import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentArgs
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
@@ -29,16 +27,16 @@ class TopStreamsViewModel @Inject constructor(
     @ApplicationContext applicationContext: Context,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
-    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val args = GamePagerFragmentArgs.fromSavedStateHandle(savedStateHandle)
     val filter = MutableStateFlow<Filter?>(null)
     val sortText = MutableStateFlow<CharSequence?>(null)
     val filtersText = MutableStateFlow<CharSequence?>(null)
 
     val sort: String
         get() = filter.value?.sort ?: StreamsSortDialog.Companion.SORT_VIEWERS
+    val tags: Array<String>
+        get() = filter.value?.tags ?: emptyArray()
     val languages: Array<String>
         get() = filter.value?.languages ?: emptyArray()
 
@@ -68,7 +66,7 @@ class TopStreamsViewModel @Inject constructor(
                     StreamsSortDialog.Companion.RECENT -> "RECENT"
                     else -> "VIEWER_COUNT"
                 },
-                tags = args.tags?.toList(),
+                tags = tags.ifEmpty { null }?.toList(),
                 gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext),
                 graphQLRepository = graphQLRepository,
                 helixHeaders = TwitchApiHelper.getHelixHeaders(applicationContext),
@@ -85,12 +83,13 @@ class TopStreamsViewModel @Inject constructor(
         }.flow
     }.cachedIn(viewModelScope)
 
-    fun setFilter(sort: String?, languages: Array<String>?) {
-        filter.value = Filter(sort, languages)
+    fun setFilter(sort: String?, tags: Array<String>?, languages: Array<String>?) {
+        filter.value = Filter(sort, tags, languages)
     }
 
     class Filter(
         val sort: String?,
+        val tags: Array<String>?,
         val languages: Array<String>?,
     )
 }

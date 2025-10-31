@@ -6,10 +6,6 @@ query GameVideos($id: ID, $slug: String, $name: String, $languages: [String!], $
                 node {
                     animatedPreviewURL
                     broadcastType
-                    contentTags {
-                        id
-                        localizedName
-                    }
                     createdAt
                     id
                     lengthSeconds

@@ -39,6 +39,8 @@ class GameStreamsViewModel @Inject constructor(
 
     val sort: String
         get() = filter.value?.sort ?: StreamsSortDialog.Companion.SORT_VIEWERS
+    val tags: Array<String>
+        get() = filter.value?.tags ?: emptyArray()
     val languages: Array<String>
         get() = filter.value?.languages ?: emptyArray()
 
@@ -71,7 +73,7 @@ class GameStreamsViewModel @Inject constructor(
                     StreamsSortDialog.Companion.RECENT -> "RECENT"
                     else -> "VIEWER_COUNT"
                 },
-                tags = args.tags?.toList(),
+                tags = tags.ifEmpty { null }?.toList(),
                 gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext),
                 graphQLRepository = graphQLRepository,
                 helixHeaders = TwitchApiHelper.getHelixHeaders(applicationContext),
@@ -88,12 +90,13 @@ class GameStreamsViewModel @Inject constructor(
         }.flow
     }.cachedIn(viewModelScope)
 
-    fun setFilter(sort: String?, languages: Array<String>?) {
-        filter.value = Filter(sort, languages)
+    fun setFilter(sort: String?, tags: Array<String>?, languages: Array<String>?) {
+        filter.value = Filter(sort, tags, languages)
     }
 
     class Filter(
         val sort: String?,
+        val tags: Array<String>?,
         val languages: Array<String>?,
     )
 }

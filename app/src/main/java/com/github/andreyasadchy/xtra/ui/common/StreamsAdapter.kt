@@ -25,10 +25,8 @@ import com.github.andreyasadchy.xtra.databinding.FragmentStreamsListItemBinding
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
-import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentArgs
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
-import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.convertDpToPixels
@@ -38,7 +36,7 @@ import com.github.andreyasadchy.xtra.util.visible
 
 class StreamsAdapter(
     private val fragment: Fragment,
-    private val args: GamePagerFragmentArgs? = null,
+    private val selectTag: (String) -> Unit,
     private val showGame: Boolean = true,
 ) : PagingDataAdapter<Stream, StreamsAdapter.PagingViewHolder>(
     object : DiffUtil.ItemCallback<Stream>() {
@@ -53,7 +51,7 @@ class StreamsAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PagingViewHolder {
         val binding = FragmentStreamsListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return PagingViewHolder(binding, fragment, args, showGame)
+        return PagingViewHolder(binding, fragment, showGame)
     }
 
     override fun onBindViewHolder(holder: PagingViewHolder, position: Int) {
@@ -63,7 +61,6 @@ class StreamsAdapter(
     inner class PagingViewHolder(
         private val binding: FragmentStreamsListItemBinding,
         private val fragment: Fragment,
-        private val args: GamePagerFragmentArgs?,
         private val showGame: Boolean,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: Stream?) {
@@ -218,29 +215,7 @@ class StreamsAdapter(
                                 TextViewCompat.setTextAppearance(text, it.getResourceId(0, 0))
                             }
                             text.setOnClickListener {
-                                if (args?.gameId != null && args.gameName != null) {
-                                    fragment.findNavController().navigate(
-                                        if (context.prefs().getBoolean(C.UI_GAMEPAGER, true)) {
-                                            GamePagerFragmentDirections.actionGlobalGamePagerFragment(
-                                                gameId = args.gameId,
-                                                gameName = args.gameName,
-                                                tags = arrayOf(tag),
-                                            )
-                                        } else {
-                                            GameMediaFragmentDirections.actionGlobalGameMediaFragment(
-                                                gameId = args.gameId,
-                                                gameName = args.gameName,
-                                                tags = arrayOf(tag),
-                                            )
-                                        }
-                                    )
-                                } else {
-                                    fragment.findNavController().navigate(
-                                        TopStreamsFragmentDirections.actionGlobalTopFragment(
-                                            tags = arrayOf(tag)
-                                        )
-                                    )
-                                }
+                                selectTag(tag)
                             }
                             val padding = context.convertDpToPixels(5f)
                             text.setPadding(padding, 0, padding, 0)

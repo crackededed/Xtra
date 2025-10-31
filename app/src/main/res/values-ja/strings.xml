@@ -450,7 +450,6 @@
     <string name="save_default">デフォルトとして保存</string>
     <string name="viewers_high">視聴者数 (多い順)</string>
     <string name="viewers_low">視聴者数 (少ない順)</string>
-    <string name="tags">タグ</string>
     <string name="search_videos">動画検索</string>
     <string name="points_earned">%d チャンネルポイントを獲得しました</string>
     <string name="points_notify">チャンネルポイント獲得時に通知</string>
@@ -711,4 +710,5 @@
     <string name="channel_tabs">Channel tabs</string>
     <string name="game_tabs">Game tabs</string>
     <string name="search_tabs">Search tabs</string>
+    <string name="add_tag">Add tag</string>
 </resources>
