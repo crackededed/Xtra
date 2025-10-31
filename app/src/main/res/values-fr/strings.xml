@@ -363,7 +363,6 @@
     <string name="position">Position : %s</string>
     <string name="player_viewerlist">Ouvrir la liste des spectateurs à partir du nombre de vues</string>
     <string name="use_followpager">Utiliser la disposition des onglets pour la page suivante</string>
-    <string name="default_follow_tab">Onglet suivant par défaut</string>
     <string name="sleep_timer_lock">Verrouiller l\'écran après</string>
     <string name="sleep_timer_lock_permissions">Verrouiller l\'écran après (nécessite des autorisations d\'administrateur)</string>
     <string name="admin_settings">Activer/désactiver en tant qu\'application d\'administration de l\'appareil</string>
@@ -404,7 +403,6 @@
     <string name="vod_ignore_user">Ignorer la suppression automatique pour cet utilisateur</string>
     <string name="bookmarks">Signets</string>
     <string name="use_savedpager">Utiliser la disposition des onglets pour la page enregistrée</string>
-    <string name="default_saved_tab">Onglet enregistré par défaut</string>
     <string name="vod_remove_ignore">Supprimer de la liste des ignorés</string>
     <string name="remove_bookmark">Supprimer le signet</string>
     <string name="saved">Enregistré</string>
@@ -680,7 +678,6 @@
     <string name="avoid_rounded_corners">Avoid rounded screen corners</string>
     <string name="api_web_gql_token">Web GQL token</string>
     <string name="use_new_pubsub">Use new PubSub url</string>
-    <string name="default_page">Default page</string>
     <string name="chat_size_modifier">Size modifier</string>
     <string name="chat_emote_size">Emote size</string>
     <string name="chat_badge_size">Badge size</string>
@@ -709,4 +706,9 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="following_tabs">Following tabs</string>
+    <string name="saved_tabs">Saved tabs</string>
+    <string name="channel_tabs">Channel tabs</string>
+    <string name="game_tabs">Game tabs</string>
+    <string name="search_tabs">Search tabs</string>
 </resources>

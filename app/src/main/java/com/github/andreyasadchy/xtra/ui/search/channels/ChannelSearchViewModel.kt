@@ -42,7 +42,12 @@ class ChannelSearchViewModel @Inject constructor(
                 gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext),
                 graphQLRepository = graphQLRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                apiPref = applicationContext.prefs().getString(C.API_PREFS_SEARCH_CHANNEL, null)?.split(',') ?: TwitchApiHelper.searchChannelsApiDefaults,
+                apiPref = (applicationContext.prefs().getString(C.API_PREFS_SEARCH_CHANNELS, null) ?: C.DEFAULT_API_PREFS_SEARCH_CHANNELS).split(',').mapNotNull {
+                    val split = it.split(':')
+                    val key = split[0]
+                    val enabled = split[1] != "0"
+                    if (enabled) key else null
+                },
                 networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
             )
         }.flow

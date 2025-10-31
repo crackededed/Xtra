@@ -363,7 +363,6 @@
     <string name="position">Позиция: %s</string>
     <string name="player_viewerlist">Открывать список зрителей из счётчика просмотров</string>
     <string name="use_followpager">Использовать вкладки на странице отслеживания</string>
-    <string name="default_follow_tab">Стандартная вкладка отслеживания</string>
     <string name="sleep_timer_lock">Блокировать экран</string>
     <string name="sleep_timer_lock_permissions">Блокировать экран (нужны права админа)</string>
     <string name="admin_settings">Вкл/откл права администратора устройства в приложении</string>
@@ -404,7 +403,6 @@
     <string name="vod_ignore_user">Пропуск автоудаления для этого пользователя</string>
     <string name="bookmarks">Закладки</string>
     <string name="use_savedpager">Вкладки на странице сохранений</string>
-    <string name="default_saved_tab">Стандартная вкладка сохранений</string>
     <string name="vod_remove_ignore">Убрать из списка игнорируемых</string>
     <string name="remove_bookmark">Убрать из закладок</string>
     <string name="saved">Сохранения</string>
@@ -680,7 +678,6 @@
     <string name="avoid_rounded_corners">Избегать скруглённые углы экрана</string>
     <string name="api_web_gql_token">Токен веб GQL</string>
     <string name="use_new_pubsub">Использовать новый адрес PubSub</string>
-    <string name="default_page">Стандартная страница</string>
     <string name="chat_size_modifier">Модификатор размера</string>
     <string name="chat_emote_size">Размер смайлов</string>
     <string name="chat_badge_size">Размер значков</string>
@@ -709,4 +706,9 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="following_tabs">Following tabs</string>
+    <string name="saved_tabs">Saved tabs</string>
+    <string name="channel_tabs">Channel tabs</string>
+    <string name="game_tabs">Game tabs</string>
+    <string name="search_tabs">Search tabs</string>
 </resources>
