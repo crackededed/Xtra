@@ -450,7 +450,6 @@
     <string name="save_default">储存为默认</string>
     <string name="viewers_high">观众数（高至低）</string>
     <string name="viewers_low">观众数（低至高）</string>
-    <string name="tags">标签</string>
     <string name="search_videos">搜索视频</string>
     <string name="points_earned">已收到 %d 忠诚点数</string>
     <string name="points_notify">当赚取忠诚点数时通知</string>
@@ -711,4 +710,5 @@
     <string name="channel_tabs">Channel tabs</string>
     <string name="game_tabs">Game tabs</string>
     <string name="search_tabs">Search tabs</string>
+    <string name="add_tag">Add tag</string>
 </resources>

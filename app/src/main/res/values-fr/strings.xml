@@ -450,7 +450,6 @@
     <string name="save_default">Enregistrer par défaut</string>
     <string name="viewers_high">Spectateurs (descendant)</string>
     <string name="viewers_low">Spectateurs (ascendant)</string>
-    <string name="tags">Balises</string>
     <string name="search_videos">Rechercher des vidéos</string>
     <string name="points_earned">A reçu %d points de chaîne</string>
     <string name="points_notify">Notifier lorsque vous gagnez des points de chaîne</string>
@@ -711,4 +710,5 @@
     <string name="channel_tabs">Channel tabs</string>
     <string name="game_tabs">Game tabs</string>
     <string name="search_tabs">Search tabs</string>
+    <string name="add_tag">Add tag</string>
 </resources>

@@ -6,10 +6,6 @@ query UserFollowedVideos($languages: [String!], $sort: VideoSort, $type: [Broadc
                 node {
                     animatedPreviewURL
                     broadcastType
-                    contentTags {
-                        id
-                        localizedName
-                    }
                     createdAt
                     game {
                         id

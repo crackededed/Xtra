@@ -450,7 +450,6 @@
     <string name="save_default">Salva come predefinito</string>
     <string name="viewers_high">Spettatori (da alto a basso)</string>
     <string name="viewers_low">Spettatori (da basso a alto)</string>
-    <string name="tags">Tag</string>
     <string name="search_videos">Cerca video</string>
     <string name="points_earned">Ricevuti %d punti canale</string>
     <string name="points_notify">Notifica quando guadagni punti canale</string>
@@ -711,4 +710,5 @@
     <string name="channel_tabs">Channel tabs</string>
     <string name="game_tabs">Game tabs</string>
     <string name="search_tabs">Search tabs</string>
+    <string name="add_tag">Add tag</string>
 </resources>

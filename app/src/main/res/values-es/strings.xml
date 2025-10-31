@@ -455,7 +455,6 @@
     <string name="save_default">Guardar como predeterminado</string>
     <string name="viewers_high">Espectadores (de alto a bajo)</string>
     <string name="viewers_low">Espectadores (de menor a mayor)</string>
-    <string name="tags">Etiquetas</string>
     <string name="search_videos">Buscar vídeos</string>
     <string name="points_earned">Recibió %d puntos de canal</string>
     <string name="points_notify">Notificar cuando se ganan puntos del canal</string>
@@ -716,4 +715,5 @@
     <string name="channel_tabs">Channel tabs</string>
     <string name="game_tabs">Game tabs</string>
     <string name="search_tabs">Search tabs</string>
+    <string name="add_tag">Add tag</string>
 </resources>

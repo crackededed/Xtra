@@ -1,7 +1,6 @@
-package com.github.andreyasadchy.xtra.ui.search.tags
+package com.github.andreyasadchy.xtra.ui.common
 
 import android.content.Context
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -21,13 +20,12 @@ import kotlinx.coroutines.flow.flatMapLatest
 import javax.inject.Inject
 
 @HiltViewModel
-class TagSearchViewModel @Inject constructor(
+class SearchTagsViewModel @Inject constructor(
     @ApplicationContext applicationContext: Context,
     private val graphQLRepository: GraphQLRepository,
-    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val args = TagSearchFragmentArgs.fromSavedStateHandle(savedStateHandle)
+    var getGameTags = false
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query
 
@@ -37,7 +35,7 @@ class TagSearchViewModel @Inject constructor(
             PagingConfig(pageSize = 30, prefetchDistance = 10, initialLoadSize = 30)
         ) {
             TagsDataSource(
-                getGameTags = args.getGameTags,
+                getGameTags = getGameTags,
                 query = query,
                 gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext),
                 graphQLRepository = graphQLRepository,

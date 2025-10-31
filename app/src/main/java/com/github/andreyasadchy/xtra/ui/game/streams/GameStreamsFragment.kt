@@ -58,9 +58,9 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         pagingAdapter = if (requireContext().prefs().getString(C.COMPACT_STREAMS, "disabled") == "all") {
-            StreamsCompactAdapter(this, args, showGame = false)
+            StreamsCompactAdapter(this, { addTag(it) }, showGame = false)
         } else {
-            StreamsAdapter(this, args, showGame = false)
+            StreamsAdapter(this, { addTag(it) }, showGame = false)
         }
         setAdapter(binding.recyclerView, pagingAdapter)
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
@@ -75,7 +75,7 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                viewModel.setFilter(viewModel.sort, args.languages ?: viewModel.languages)
+                viewModel.setFilter(viewModel.sort, viewModel.tags.ifEmpty { args.tags }, viewModel.languages.ifEmpty { args.languages })
                 viewModel.sortText.value = requireContext().getString(
                     R.string.sort_by,
                     requireContext().getString(
@@ -87,14 +87,14 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
                         }
                     )
                 )
-                viewModel.filtersText.value = if (!args.tags.isNullOrEmpty() || viewModel.languages.isNotEmpty()) {
+                viewModel.filtersText.value = if (viewModel.tags.isNotEmpty() || viewModel.languages.isNotEmpty()) {
                     buildString {
-                        args.tags?.takeIf { it.isNotEmpty() }?.let {
+                        if (viewModel.tags.isNotEmpty()) {
                             append(
                                 requireContext().resources.getQuantityString(
                                     R.plurals.tags,
-                                    it.size,
-                                    it.joinToString()
+                                    viewModel.tags.size,
+                                    viewModel.tags.joinToString()
                                 )
                             )
                         }
@@ -127,6 +127,7 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
         sortBar.root.setOnClickListener {
             StreamsSortDialog.newInstance(
                 sort = viewModel.sort,
+                tags = viewModel.tags,
                 languages = viewModel.languages
             ).show(childFragmentManager, null)
         }
@@ -151,20 +152,51 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
         }
     }
 
-    override fun onChange(sort: String, sortText: CharSequence, languages: Array<String>) {
+    private fun addTag(tag: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            pagingAdapter.submitData(PagingData.empty())
+            val tags = viewModel.tags.plus(tag).sortedArray()
+            viewModel.setFilter(viewModel.sort, tags, viewModel.languages)
+            viewModel.filtersText.value = buildString {
+                if (viewModel.tags.isNotEmpty()) {
+                    append(
+                        requireContext().resources.getQuantityString(
+                            R.plurals.tags,
+                            viewModel.tags.size,
+                            viewModel.tags.joinToString()
+                        )
+                    )
+                }
+                if (viewModel.languages.isNotEmpty()) {
+                    if (isNotEmpty()) {
+                        append(". ")
+                    }
+                    append(
+                        requireContext().resources.getQuantityString(
+                            R.plurals.languages,
+                            viewModel.languages.size,
+                            viewModel.languages.joinToString()
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    override fun onChange(sort: String, sortText: CharSequence, tags: Array<String>, languages: Array<String>) {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
                 pagingAdapter.submitData(PagingData.empty())
-                viewModel.setFilter(sort, languages)
+                viewModel.setFilter(sort, tags, languages)
                 viewModel.sortText.value = requireContext().getString(R.string.sort_by, sortText)
-                viewModel.filtersText.value = if (!args.tags.isNullOrEmpty() || viewModel.languages.isNotEmpty()) {
+                viewModel.filtersText.value = if (viewModel.tags.isNotEmpty() || viewModel.languages.isNotEmpty()) {
                     buildString {
-                        args.tags?.takeIf { it.isNotEmpty() }?.let {
+                        if (viewModel.tags.isNotEmpty()) {
                             append(
                                 requireContext().resources.getQuantityString(
                                     R.plurals.tags,
-                                    it.size,
-                                    it.joinToString()
+                                    viewModel.tags.size,
+                                    viewModel.tags.joinToString()
                                 )
                             )
                         }

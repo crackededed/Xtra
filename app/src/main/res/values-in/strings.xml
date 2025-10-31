@@ -449,7 +449,6 @@
     <string name="save_default">Simpan sebagai default</string>
     <string name="viewers_high">Penonton (tertinggi ke terendah)</string>
     <string name="viewers_low">Penonton (terendah ke tertinggi)</string>
-    <string name="tags">Tags</string>
     <string name="search_videos">Cari video</string>
     <string name="points_earned">Mendapat %d channel point</string>
     <string name="points_notify">Beri tahu saat mendapatkan channel poin</string>
@@ -712,4 +711,5 @@
     <string name="channel_tabs">Channel tabs</string>
     <string name="game_tabs">Game tabs</string>
     <string name="search_tabs">Search tabs</string>
+    <string name="add_tag">Add tag</string>
 </resources>
