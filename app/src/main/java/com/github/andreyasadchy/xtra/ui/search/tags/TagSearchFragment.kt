@@ -66,7 +66,7 @@ class TagSearchFragment : PagedListFragment() {
                 toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                     topMargin = insets.top
                 }
-                if (requireContext().prefs().getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
+                if ((requireContext().prefs().getString(C.UI_NAVIGATION_TAB_LIST, null) ?: C.DEFAULT_NAVIGATION_TAB_LIST).split(',').all { it.split(':')[2] == "0" }) {
                     val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
                     recyclerViewLayout.recyclerView.updatePadding(bottom = systemBars.bottom)
                 }

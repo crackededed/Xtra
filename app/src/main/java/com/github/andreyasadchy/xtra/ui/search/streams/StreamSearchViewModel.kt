@@ -46,7 +46,12 @@ class StreamSearchViewModel @Inject constructor(
                 gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext),
                 graphQLRepository = graphQLRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                apiPref = applicationContext.prefs().getString(C.API_PREFS_SEARCH_STREAMS, null)?.split(',') ?: TwitchApiHelper.searchStreamsApiDefaults,
+                apiPref = (applicationContext.prefs().getString(C.API_PREFS_SEARCH_STREAMS, null) ?: C.DEFAULT_API_PREFS_SEARCH_STREAMS).split(',').mapNotNull {
+                    val split = it.split(':')
+                    val key = split[0]
+                    val enabled = split[1] != "0"
+                    if (enabled) key else null
+                },
                 networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
             )
         }.flow

@@ -80,7 +80,34 @@ class SearchPagerFragment : BaseNetworkFragment(), FragmentHost {
             }
         }
         with(binding) {
-            val adapter = SearchPagerAdapter(this@SearchPagerFragment)
+            val tabList = requireContext().prefs().getString(C.UI_SEARCH_TABS, null).let { tabPref ->
+                val defaultTabs = C.DEFAULT_SEARCH_TABS.split(',')
+                if (tabPref != null) {
+                    val list = tabPref.split(',').filter { item ->
+                        defaultTabs.find { it.first() == item.first() } != null
+                    }.toMutableList()
+                    defaultTabs.forEachIndexed { index, item ->
+                        if (list.find { it.first() == item.first() } == null) {
+                            list.add(index, item)
+                        }
+                    }
+                    list
+                } else defaultTabs
+            }
+            val tabs = tabList.mapNotNull {
+                val split = it.split(':')
+                val key = split[0]
+                val enabled = split[2] != "0"
+                if (enabled) {
+                    key
+                } else {
+                    null
+                }
+            }
+            if (tabs.size <= 1) {
+                tabLayout.gone()
+            }
+            val adapter = SearchPagerAdapter(this@SearchPagerFragment, tabs)
             viewPager.adapter = adapter
             viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
@@ -110,17 +137,22 @@ class SearchPagerFragment : BaseNetworkFragment(), FragmentHost {
                 }
             })
             if (firstLaunch) {
-                viewPager.setCurrentItem(2, false)
+                val defaultItem = tabList.find { it.split(':')[1] != "0" }?.split(':')[0] ?: "2"
+                viewPager.setCurrentItem(
+                    tabs.indexOf(defaultItem).takeIf { it != -1 } ?: tabs.indexOf("2").takeIf { it != -1 } ?: 0,
+                    false
+                )
                 firstLaunch = false
             }
             viewPager.offscreenPageLimit = adapter.itemCount
             viewPager.reduceDragSensitivity()
             TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-                tab.text = when (position) {
-                    0 -> getString(R.string.videos)
-                    1 -> getString(R.string.streams)
-                    2 -> getString(R.string.channels)
-                    else -> getString(R.string.games)
+                tab.text = when (tabs.getOrNull(position)) {
+                    "0" -> getString(R.string.videos)
+                    "1" -> getString(R.string.streams)
+                    "2" -> getString(R.string.channels)
+                    "3" -> getString(R.string.games)
+                    else -> getString(R.string.channels)
                 }
             }.attach()
             val navController = findNavController()

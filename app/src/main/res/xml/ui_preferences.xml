@@ -33,16 +33,6 @@
 
     <ListPreference
         android:defaultValue="1"
-        android:entries="@array/pageEntries"
-        android:entryValues="@array/pageValues"
-        android:key="ui_default_page"
-        android:summary="%s"
-        android:title="@string/default_page"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <ListPreference
-        android:defaultValue="1"
         android:entries="@array/followedEntries"
         android:entryValues="@array/miscValues"
         android:key="ui_startonfollowed"
@@ -51,32 +41,39 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
-    <MultiSelectListPreference
-        android:defaultValue="@array/pageValues"
-        android:entries="@array/pageEntries"
-        android:entryValues="@array/pageValues"
-        android:key="ui_navigation_tabs"
+    <Preference
+        android:key="ui_navigation_tab_list_dialog"
         android:title="@string/navigation_tabs"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
-    <ListPreference
-        android:defaultValue="0"
-        android:entries="@array/spinnerFollowedEntries"
-        android:entryValues="@array/spinnerFollowedValues"
-        android:key="ui_follow_default_page"
-        android:summary="%s"
-        android:title="@string/default_follow_tab"
+    <Preference
+        android:key="ui_following_tabs_dialog"
+        android:title="@string/following_tabs"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
-    <ListPreference
-        android:defaultValue="0"
-        android:entries="@array/spinnerSavedEntries"
-        android:entryValues="@array/spinnerSavedValues"
-        android:key="ui_saved_default_page"
-        android:summary="%s"
-        android:title="@string/default_saved_tab"
+    <Preference
+        android:key="ui_saved_tabs_dialog"
+        android:title="@string/saved_tabs"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <Preference
+        android:key="ui_channel_tabs_dialog"
+        android:title="@string/channel_tabs"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <Preference
+        android:key="ui_game_tabs_dialog"
+        android:title="@string/game_tabs"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <Preference
+        android:key="ui_search_tabs_dialog"
+        android:title="@string/search_tabs"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 

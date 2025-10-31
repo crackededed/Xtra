@@ -364,7 +364,6 @@
     <string name="position">Konum: %s</string>
     <string name="player_viewerlist">İzleyici sayısından izleyici listesini aç</string>
     <string name="use_followpager">Takip edilenler sayfası için sekmeli düzeni kullan</string>
-    <string name="default_follow_tab">Varsayılan takip sekmesi</string>
     <string name="sleep_timer_lock">Süre bitiminde ekranı kilitle</string>
     <string name="sleep_timer_lock_permissions">Süre bitiminde ekranı kilitle (yönetici izni gerektirir)</string>
     <string name="admin_settings">Cihaz yöneticisi uygulaması olarak etkinleştir/devre dışı bırak</string>
@@ -405,7 +404,6 @@
     <string name="vod_ignore_user">Bu kullanıcı için otomatik silmeyi yoksay</string>
     <string name="bookmarks">Yer İşaretleri</string>
     <string name="use_savedpager">Kaydedilenler sayfası için sekmeli düzeni kullan</string>
-    <string name="default_saved_tab">Varsayılan kaydedilenler sekmesi</string>
     <string name="vod_remove_ignore">Yoksayma listesinden kaldır</string>
     <string name="remove_bookmark">Yer işaretini kaldır</string>
     <string name="saved">Kaydedildi</string>
@@ -681,7 +679,6 @@
     <string name="avoid_rounded_corners">Yuvarlatılmış ekran köşelerinden kaçın</string>
     <string name="api_web_gql_token">Web GQL token\'ı</string>
     <string name="use_new_pubsub">Yeni PubSub URL\'sini kullan</string>
-    <string name="default_page">Varsayılan sayfa</string>
     <string name="chat_size_modifier">Boyut değiştirici</string>
     <string name="chat_emote_size">İfade boyutu</string>
     <string name="chat_badge_size">Rozet boyutu</string>
@@ -710,4 +707,9 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="following_tabs">Following tabs</string>
+    <string name="saved_tabs">Saved tabs</string>
+    <string name="channel_tabs">Channel tabs</string>
+    <string name="game_tabs">Game tabs</string>
+    <string name="search_tabs">Search tabs</string>
 </resources>

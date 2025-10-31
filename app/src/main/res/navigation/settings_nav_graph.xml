@@ -103,13 +103,6 @@
         android:id="@+id/action_global_debugSettingsFragment"
         app:destination="@id/debugSettingsFragment" />
     <fragment
-        android:id="@+id/apiSettingsFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$ApiSettingsFragment"
-        android:label="@string/api_settings" />
-    <action
-        android:id="@+id/action_global_apiSettingsFragment"
-        app:destination="@id/apiSettingsFragment" />
-    <fragment
         android:id="@+id/settingsSearchFragment"
         android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$SettingsSearchFragment"
         android:label="" />

@@ -4,8 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -112,7 +114,7 @@ class BookmarksFragment : PagedListFragment(), Scrollable {
             recyclerView.adapter = pagingAdapter
             (recyclerView.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
             ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
-                if (requireContext().prefs().getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
+                if (activity?.findViewById<LinearLayout>(R.id.navBarContainer)?.isVisible == false) {
                     val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
                     recyclerView.updatePadding(bottom = insets.bottom)
                 }
