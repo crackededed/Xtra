@@ -31,7 +31,12 @@ class FollowedGamesViewModel @Inject constructor(
             gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext, true),
             graphQLRepository = graphQLRepository,
             enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-            apiPref = applicationContext.prefs().getString(C.API_PREFS_FOLLOWED_GAMES, null)?.split(',') ?: TwitchApiHelper.followedGamesApiDefaults,
+            apiPref = (applicationContext.prefs().getString(C.API_PREFS_FOLLOWED_GAMES, null) ?: C.DEFAULT_API_PREFS_FOLLOWED_GAMES).split(',').mapNotNull {
+                val split = it.split(':')
+                val key = split[0]
+                val enabled = split[1] != "0"
+                if (enabled) key else null
+            },
             networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
         )
     }.flow.cachedIn(viewModelScope)

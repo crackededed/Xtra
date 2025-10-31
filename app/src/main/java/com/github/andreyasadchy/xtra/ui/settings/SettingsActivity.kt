@@ -10,9 +10,9 @@ import android.os.Build
 import android.os.Bundle
 import android.os.ext.SdkExtensions
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
@@ -41,22 +41,19 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
-import androidx.preference.MultiSelectListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceManager
 import androidx.preference.SeekBarPreference
 import androidx.preference.SwitchPreferenceCompat
 import androidx.preference.forEach
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.SettingsNavGraphDirections
 import com.github.andreyasadchy.xtra.databinding.ActivitySettingsBinding
-import com.github.andreyasadchy.xtra.databinding.DragListItemBinding
+import com.github.andreyasadchy.xtra.model.ui.SettingsDragListItem
 import com.github.andreyasadchy.xtra.model.ui.SettingsSearchItem
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.util.AdminReceiver
@@ -152,6 +149,59 @@ class SettingsActivity : AppCompatActivity() {
                 return false
             }
         })
+    }
+
+    fun showDragListDialog(list: List<SettingsDragListItem>, prefKey: String, title: CharSequence?) {
+        val listAdapter = SettingsDragListAdapter()
+        val itemTouchHelper = ItemTouchHelper(
+            object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+                override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+                    Collections.swap(list, viewHolder.bindingAdapterPosition, target.bindingAdapterPosition)
+                    listAdapter.notifyItemMoved(viewHolder.bindingAdapterPosition, target.bindingAdapterPosition)
+                    return true
+                }
+
+                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
+
+                override fun isLongPressDragEnabled(): Boolean {
+                    return false
+                }
+            }
+        )
+        listAdapter.itemTouchHelper = itemTouchHelper
+        val recyclerView = RecyclerView(this).apply {
+            layoutManager = LinearLayoutManager(this@SettingsActivity)
+            adapter = listAdapter
+            val padding = convertDpToPixels(10f)
+            setPadding(0, padding, 0, 0)
+        }
+        listAdapter.setDefault = { item ->
+            list.find { it.default }?.let { previous ->
+                previous.default = false
+                recyclerView.findViewHolderForAdapterPosition(
+                    list.indexOf(previous)
+                )?.itemView?.findViewById<ImageButton>(R.id.setAsDefault)?.let {
+                    it.setImageResource(R.drawable.outline_home_black_24)
+                    it.isClickable = true
+                }
+            }
+            item.default = true
+        }
+        itemTouchHelper.attachToRecyclerView(recyclerView)
+        listAdapter.submitList(list)
+        getAlertDialogBuilder()
+            .setTitle(title)
+            .setView(recyclerView)
+            .setPositiveButton(getString(android.R.string.ok)) { _, _ ->
+                prefs().edit {
+                    putString(prefKey, listAdapter.currentList.joinToString(",") {
+                        "${it.key}:${if (it.default) "1" else "0"}:${if (it.enabled) "1" else "0"}"
+                    })
+                    setResult()
+                }
+            }
+            .setNegativeButton(getString(android.R.string.cancel), null)
+            .show()
     }
 
     private fun showSearchView(showSearch: Boolean) {
@@ -473,7 +523,201 @@ class SettingsActivity : AppCompatActivity() {
             findPreference<ListPreference>(C.PORTRAIT_COLUMN_COUNT)?.onPreferenceChangeListener = changeListener
             findPreference<ListPreference>(C.LANDSCAPE_COLUMN_COUNT)?.onPreferenceChangeListener = changeListener
             findPreference<ListPreference>(C.COMPACT_STREAMS)?.onPreferenceChangeListener = changeListener
-            findPreference<MultiSelectListPreference>(C.UI_NAVIGATION_TABS)?.onPreferenceChangeListener = changeListener
+            findPreference<Preference>("ui_navigation_tab_list_dialog")?.setOnPreferenceClickListener { preference ->
+                val tabList = requireContext().prefs().getString(C.UI_NAVIGATION_TAB_LIST, null).let { tabPref ->
+                    val defaultTabs = C.DEFAULT_NAVIGATION_TAB_LIST.split(',')
+                    if (tabPref != null) {
+                        val list = tabPref.split(',').filter { item ->
+                            defaultTabs.find { it.first() == item.first() } != null
+                        }.toMutableList()
+                        defaultTabs.forEachIndexed { index, item ->
+                            if (list.find { it.first() == item.first() } == null) {
+                                list.add(index, item)
+                            }
+                        }
+                        list
+                    } else defaultTabs
+                }
+                val tabs = tabList.map {
+                    val split = it.split(':')
+                    SettingsDragListItem(
+                        key = split[0],
+                        text = when (split[0]) {
+                            "0" -> getString(R.string.games)
+                            "1" -> getString(R.string.popular)
+                            "2" -> getString(R.string.following)
+                            "3" -> getString(R.string.saved)
+                            else -> getString(R.string.popular)
+                        },
+                        default = split[1] != "0",
+                        enabled = split[2] != "0",
+                    )
+                }
+                (requireActivity() as? SettingsActivity)?.showDragListDialog(tabs, C.UI_NAVIGATION_TAB_LIST, preference.title)
+                true
+            }
+            findPreference<Preference>("ui_following_tabs_dialog")?.setOnPreferenceClickListener { preference ->
+                val tabList = requireContext().prefs().getString(C.UI_FOLLOWING_TABS, null).let { tabPref ->
+                    val defaultTabs = C.DEFAULT_FOLLOWING_TABS.split(',')
+                    if (tabPref != null) {
+                        val list = tabPref.split(',').filter { item ->
+                            defaultTabs.find { it.first() == item.first() } != null
+                        }.toMutableList()
+                        defaultTabs.forEachIndexed { index, item ->
+                            if (list.find { it.first() == item.first() } == null) {
+                                list.add(index, item)
+                            }
+                        }
+                        list
+                    } else defaultTabs
+                }
+                val tabs = tabList.map {
+                    val split = it.split(':')
+                    SettingsDragListItem(
+                        key = split[0],
+                        text = when (split[0]) {
+                            "0" -> getString(R.string.games)
+                            "1" -> getString(R.string.live)
+                            "2" -> getString(R.string.videos)
+                            "3" -> getString(R.string.channels)
+                            else -> getString(R.string.live)
+                        },
+                        default = split[1] != "0",
+                        enabled = split[2] != "0",
+                    )
+                }
+                (requireActivity() as? SettingsActivity)?.showDragListDialog(tabs, C.UI_FOLLOWING_TABS, preference.title)
+                true
+            }
+            findPreference<Preference>("ui_saved_tabs_dialog")?.setOnPreferenceClickListener { preference ->
+                val tabList = requireContext().prefs().getString(C.UI_SAVED_TABS, null).let { tabPref ->
+                    val defaultTabs = C.DEFAULT_SAVED_TABS.split(',')
+                    if (tabPref != null) {
+                        val list = tabPref.split(',').filter { item ->
+                            defaultTabs.find { it.first() == item.first() } != null
+                        }.toMutableList()
+                        defaultTabs.forEachIndexed { index, item ->
+                            if (list.find { it.first() == item.first() } == null) {
+                                list.add(index, item)
+                            }
+                        }
+                        list
+                    } else defaultTabs
+                }
+                val tabs = tabList.map {
+                    val split = it.split(':')
+                    SettingsDragListItem(
+                        key = split[0],
+                        text = when (split[0]) {
+                            "0" -> getString(R.string.bookmarks)
+                            "1" -> getString(R.string.downloads)
+                            else -> getString(R.string.downloads)
+                        },
+                        default = split[1] != "0",
+                        enabled = split[2] != "0",
+                    )
+                }
+                (requireActivity() as? SettingsActivity)?.showDragListDialog(tabs, C.UI_SAVED_TABS, preference.title)
+                true
+            }
+            findPreference<Preference>("ui_channel_tabs_dialog")?.setOnPreferenceClickListener { preference ->
+                val tabList = requireContext().prefs().getString(C.UI_CHANNEL_TABS, null).let { tabPref ->
+                    val defaultTabs = C.DEFAULT_CHANNEL_TABS.split(',')
+                    if (tabPref != null) {
+                        val list = tabPref.split(',').filter { item ->
+                            defaultTabs.find { it.first() == item.first() } != null
+                        }.toMutableList()
+                        defaultTabs.forEachIndexed { index, item ->
+                            if (list.find { it.first() == item.first() } == null) {
+                                list.add(index, item)
+                            }
+                        }
+                        list
+                    } else defaultTabs
+                }
+                val tabs = tabList.map {
+                    val split = it.split(':')
+                    SettingsDragListItem(
+                        key = split[0],
+                        text = when (split[0]) {
+                            "0" -> getString(R.string.suggested)
+                            "1" -> getString(R.string.videos)
+                            "2" -> getString(R.string.clips)
+                            "3" -> getString(R.string.chat)
+                            else -> getString(R.string.videos)
+                        },
+                        default = split[1] != "0",
+                        enabled = split[2] != "0",
+                    )
+                }
+                (requireActivity() as? SettingsActivity)?.showDragListDialog(tabs, C.UI_CHANNEL_TABS, preference.title)
+                true
+            }
+            findPreference<Preference>("ui_game_tabs_dialog")?.setOnPreferenceClickListener { preference ->
+                val tabList = requireContext().prefs().getString(C.UI_GAME_TABS, null).let { tabPref ->
+                    val defaultTabs = C.DEFAULT_GAME_TABS.split(',')
+                    if (tabPref != null) {
+                        val list = tabPref.split(',').filter { item ->
+                            defaultTabs.find { it.first() == item.first() } != null
+                        }.toMutableList()
+                        defaultTabs.forEachIndexed { index, item ->
+                            if (list.find { it.first() == item.first() } == null) {
+                                list.add(index, item)
+                            }
+                        }
+                        list
+                    } else defaultTabs
+                }
+                val tabs = tabList.map {
+                    val split = it.split(':')
+                    SettingsDragListItem(
+                        key = split[0],
+                        text = when (split[0]) {
+                            "0" -> getString(R.string.videos)
+                            "1" -> getString(R.string.live)
+                            "2" -> getString(R.string.clips)
+                            else -> getString(R.string.live)
+                        },
+                        default = split[1] != "0",
+                        enabled = split[2] != "0",
+                    )
+                }
+                (requireActivity() as? SettingsActivity)?.showDragListDialog(tabs, C.UI_GAME_TABS, preference.title)
+                true
+            }
+            findPreference<Preference>("ui_search_tabs_dialog")?.setOnPreferenceClickListener { preference ->
+                val tabList = requireContext().prefs().getString(C.UI_SEARCH_TABS, null).let { tabPref ->
+                    val defaultTabs = C.DEFAULT_SEARCH_TABS.split(',')
+                    if (tabPref != null) {
+                        val list = tabPref.split(',').filter { item ->
+                            defaultTabs.find { it.first() == item.first() } != null
+                        }.toMutableList()
+                        defaultTabs.forEachIndexed { index, item ->
+                            if (list.find { it.first() == item.first() } == null) {
+                                list.add(index, item)
+                            }
+                        }
+                        list
+                    } else defaultTabs
+                }
+                val tabs = tabList.map {
+                    val split = it.split(':')
+                    SettingsDragListItem(
+                        key = split[0],
+                        text = when (split[0]) {
+                            "0" -> getString(R.string.videos)
+                            "1" -> getString(R.string.streams)
+                            "2" -> getString(R.string.channels)
+                            "3" -> getString(R.string.games)
+                            else -> getString(R.string.channels)
+                        },
+                        default = split[1] != "0",
+                        enabled = split[2] != "0",
+                    )
+                }
+                (requireActivity() as? SettingsActivity)?.showDragListDialog(tabs, C.UI_SEARCH_TABS, preference.title)
+                true
+            }
         }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -931,9 +1175,102 @@ class SettingsActivity : AppCompatActivity() {
     class DebugSettingsFragment : MaterialPreferenceFragment() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.debug_preferences, rootKey)
-            findPreference<Preference>("api_settings")?.setOnPreferenceClickListener {
-                requireActivity().findViewById<AppBarLayout>(R.id.appBar)?.setExpanded(true)
-                findNavController().navigate(SettingsNavGraphDirections.actionGlobalApiSettingsFragment())
+            findPreference<Preference>("api_settings")?.setOnPreferenceClickListener { preference ->
+                var newId = 1000
+                val view = LinearLayout(requireContext()).apply {
+                    id = R.id.layout
+                    orientation = LinearLayout.VERTICAL
+                }
+                val list = listOf(
+                    Triple(getString(R.string.games), C.API_PREFS_GAMES, C.DEFAULT_API_PREFS_GAMES),
+                    Triple(getString(R.string.streams), C.API_PREFS_STREAMS, C.DEFAULT_API_PREFS_STREAMS),
+                    Triple(getString(R.string.followed_games), C.API_PREFS_FOLLOWED_GAMES, C.DEFAULT_API_PREFS_FOLLOWED_GAMES),
+                    Triple(getString(R.string.followed_streams), C.API_PREFS_FOLLOWED_STREAMS, C.DEFAULT_API_PREFS_FOLLOWED_STREAMS),
+                    Triple(getString(R.string.followed_videos), C.API_PREFS_FOLLOWED_VIDEOS, C.DEFAULT_API_PREFS_FOLLOWED_VIDEOS),
+                    Triple(getString(R.string.followed_channels), C.API_PREFS_FOLLOWED_CHANNELS, C.DEFAULT_API_PREFS_FOLLOWED_CHANNELS),
+                    Triple(getString(R.string.channel_videos), C.API_PREFS_CHANNEL_VIDEOS, C.DEFAULT_API_PREFS_CHANNEL_VIDEOS),
+                    Triple(getString(R.string.channel_clips), C.API_PREFS_CHANNEL_CLIPS, C.DEFAULT_API_PREFS_CHANNEL_CLIPS),
+                    Triple(getString(R.string.game_videos), C.API_PREFS_GAME_VIDEOS, C.DEFAULT_API_PREFS_GAME_VIDEOS),
+                    Triple(getString(R.string.game_streams), C.API_PREFS_GAME_STREAMS, C.DEFAULT_API_PREFS_GAME_STREAMS),
+                    Triple(getString(R.string.game_clips), C.API_PREFS_GAME_CLIPS, C.DEFAULT_API_PREFS_GAME_CLIPS),
+                    Triple(getString(R.string.search_videos), C.API_PREFS_SEARCH_VIDEOS, C.DEFAULT_API_PREFS_SEARCH_VIDEOS),
+                    Triple(getString(R.string.search_streams), C.API_PREFS_SEARCH_STREAMS, C.DEFAULT_API_PREFS_SEARCH_STREAMS),
+                    Triple(getString(R.string.search_channels), C.API_PREFS_SEARCH_CHANNELS, C.DEFAULT_API_PREFS_SEARCH_CHANNELS),
+                    Triple(getString(R.string.search_games), C.API_PREFS_SEARCH_GAMES, C.DEFAULT_API_PREFS_SEARCH_GAMES),
+                ).map { item ->
+                    newId++
+                    view.addView(TextView(requireContext()).apply {
+                        text = item.first
+                        layoutParams = LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            setMargins(context.convertDpToPixels(20F), context.convertDpToPixels(3F), context.convertDpToPixels(20F), context.convertDpToPixels(3F))
+                        }
+                        context.obtainStyledAttributes(intArrayOf(com.google.android.material.R.attr.textAppearanceTitleMedium)).use {
+                            TextViewCompat.setTextAppearance(this, it.getResourceId(0, 0))
+                        }
+                    })
+                    val prefKey = item.second
+                    val list = (requireContext().prefs().getString(prefKey, null) ?: item.third).split(',').map {
+                        val split = it.split(':')
+                        SettingsDragListItem(
+                            key = split[0],
+                            text = when (split[0]) {
+                                "0" -> getString(R.string.api_gql)
+                                "1" -> getString(R.string.api_gql_persisted_query)
+                                "2" -> getString(R.string.api_helix)
+                                else -> getString(R.string.api_gql)
+                            },
+                            default = false,
+                            enabled = split[1] != "0",
+                        )
+                    }
+                    val listAdapter = SettingsDragListAdapter()
+                    val itemTouchHelper = ItemTouchHelper(
+                        object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+                            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+                                Collections.swap(list, viewHolder.bindingAdapterPosition, target.bindingAdapterPosition)
+                                listAdapter.notifyItemMoved(viewHolder.bindingAdapterPosition, target.bindingAdapterPosition)
+                                return true
+                            }
+
+                            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
+
+                            override fun isLongPressDragEnabled(): Boolean {
+                                return false
+                            }
+                        }
+                    )
+                    listAdapter.itemTouchHelper = itemTouchHelper
+                    val recyclerView = RecyclerView(requireContext()).apply {
+                        id = newId
+                        layoutManager = LinearLayoutManager(requireContext())
+                        adapter = listAdapter
+                    }
+                    itemTouchHelper.attachToRecyclerView(recyclerView)
+                    listAdapter.submitList(list)
+                    view.addView(recyclerView)
+                    prefKey to listAdapter
+                }
+                requireContext().getAlertDialogBuilder()
+                    .setTitle(preference.title)
+                    .setView(NestedScrollView(requireContext()).apply {
+                        addView(view)
+                        setPadding(0, context.convertDpToPixels(10F), 0, 0)
+                    })
+                    .setPositiveButton(getString(android.R.string.ok)) { _, _ ->
+                        requireContext().prefs().edit {
+                            list.forEach { item ->
+                                putString(item.first, item.second.currentList.joinToString(",") {
+                                    "${it.key}:${if (it.enabled) "1" else "0"}"
+                                })
+                            }
+                            (requireActivity() as? SettingsActivity)?.setResult()
+                        }
+                    }
+                    .setNegativeButton(getString(android.R.string.cancel), null)
+                    .show()
                 true
             }
             findPreference<EditTextPreference>("gql_headers")?.apply {
@@ -998,156 +1335,6 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
             (requireActivity() as? SettingsActivity)?.getSelectedSearchItem()?.let { scrollToPreference(it) }
-        }
-    }
-
-    class ApiSettingsFragment : Fragment() {
-        override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-            var newId = 1000
-            val view = LinearLayout(requireContext()).apply {
-                id = R.id.layout
-                orientation = LinearLayout.VERTICAL
-            }
-            mapOf(
-                getString(R.string.games) to Pair(C.API_PREFS_GAMES, TwitchApiHelper.gamesApiDefaults),
-                getString(R.string.streams) to Pair(C.API_PREFS_STREAMS, TwitchApiHelper.streamsApiDefaults),
-                getString(R.string.game_streams) to Pair(C.API_PREFS_GAME_STREAMS, TwitchApiHelper.gameStreamsApiDefaults),
-                getString(R.string.game_videos) to Pair(C.API_PREFS_GAME_VIDEOS, TwitchApiHelper.gameVideosApiDefaults),
-                getString(R.string.game_clips) to Pair(C.API_PREFS_GAME_CLIPS, TwitchApiHelper.gameClipsApiDefaults),
-                getString(R.string.channel_videos) to Pair(C.API_PREFS_CHANNEL_VIDEOS, TwitchApiHelper.channelVideosApiDefaults),
-                getString(R.string.channel_clips) to Pair(C.API_PREFS_CHANNEL_CLIPS, TwitchApiHelper.channelClipsApiDefaults),
-                getString(R.string.search_videos) to Pair(C.API_PREFS_SEARCH_VIDEOS, TwitchApiHelper.searchVideosApiDefaults),
-                getString(R.string.search_streams) to Pair(C.API_PREFS_SEARCH_STREAMS, TwitchApiHelper.searchStreamsApiDefaults),
-                getString(R.string.search_channels) to Pair(C.API_PREFS_SEARCH_CHANNEL, TwitchApiHelper.searchChannelsApiDefaults),
-                getString(R.string.search_games) to Pair(C.API_PREFS_SEARCH_GAMES, TwitchApiHelper.searchGamesApiDefaults),
-                getString(R.string.followed_streams) to Pair(C.API_PREFS_FOLLOWED_STREAMS, TwitchApiHelper.followedStreamsApiDefaults),
-                getString(R.string.followed_videos) to Pair(C.API_PREFS_FOLLOWED_VIDEOS, TwitchApiHelper.followedVideosApiDefaults),
-                getString(R.string.followed_channels) to Pair(C.API_PREFS_FOLLOWED_CHANNELS, TwitchApiHelper.followedChannelsApiDefaults),
-                getString(R.string.followed_games) to Pair(C.API_PREFS_FOLLOWED_GAMES, TwitchApiHelper.followedGamesApiDefaults),
-            ).forEach { entry ->
-                newId++
-                view.addView(TextView(requireContext()).apply {
-                    text = entry.key
-                    layoutParams = LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        setMargins(context.convertDpToPixels(10F), context.convertDpToPixels(3F), 0, context.convertDpToPixels(3F))
-                    }
-                    context.obtainStyledAttributes(intArrayOf(com.google.android.material.R.attr.textAppearanceTitleMedium)).use {
-                        TextViewCompat.setTextAppearance(this, it.getResourceId(0, 0))
-                    }
-                })
-                val list = (requireContext().prefs().getString(entry.value.first, null)?.split(',') ?: entry.value.second).map {
-                    Pair(
-                        when (it) {
-                            C.HELIX -> requireContext().getString(R.string.api_helix)
-                            C.GQL -> requireContext().getString(R.string.api_gql)
-                            C.GQL_PERSISTED_QUERY -> requireContext().getString(R.string.api_gql_persisted_query)
-                            else -> ""
-                        }, it
-                    )
-                }
-                val listAdapter = DragListAdapter()
-                val itemTouchHelper = ItemTouchHelper(
-                    object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
-                        override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-                            Collections.swap(list, viewHolder.bindingAdapterPosition, target.bindingAdapterPosition)
-                            listAdapter.notifyItemMoved(viewHolder.bindingAdapterPosition, target.bindingAdapterPosition)
-                            return true
-                        }
-
-                        override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
-                            super.onSelectedChanged(viewHolder, actionState)
-                            if (actionState == ItemTouchHelper.ACTION_STATE_IDLE) {
-                                requireContext().prefs().edit {
-                                    putString(entry.value.first, listAdapter.currentList.joinToString(",") { it.second })
-                                }
-                            }
-                        }
-
-                        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
-
-                        override fun isLongPressDragEnabled(): Boolean {
-                            return false
-                        }
-                    }
-                )
-                listAdapter.itemTouchHelper = itemTouchHelper
-                val recyclerView = RecyclerView(requireContext()).apply {
-                    id = newId
-                    layoutManager = LinearLayoutManager(requireContext())
-                    adapter = listAdapter
-                }
-                itemTouchHelper.attachToRecyclerView(recyclerView)
-                listAdapter.submitList(list)
-                view.addView(recyclerView)
-            }
-            return NestedScrollView(requireContext()).apply {
-                addView(view)
-            }
-        }
-
-        class DragListAdapter() : ListAdapter<Pair<String, String>, DragListAdapter.ViewHolder>(
-            object : DiffUtil.ItemCallback<Pair<String, String>>() {
-                override fun areItemsTheSame(oldItem: Pair<String, String>, newItem: Pair<String, String>): Boolean {
-                    return oldItem.second == newItem.second
-                }
-
-                override fun areContentsTheSame(oldItem: Pair<String, String>, newItem: Pair<String, String>): Boolean {
-                    return true
-                }
-            }
-        ) {
-            var itemTouchHelper: ItemTouchHelper? = null
-
-            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-                val binding = DragListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-                return ViewHolder(binding)
-            }
-
-            override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-                holder.bind(getItem(position))
-            }
-
-            inner class ViewHolder(private val binding: DragListItemBinding) : RecyclerView.ViewHolder(binding.root) {
-                @SuppressLint("ClickableViewAccessibility")
-                fun bind(item: Pair<String, String>) {
-                    with(binding) {
-                        image.setOnTouchListener(object : View.OnTouchListener {
-                            override fun onTouch(v: View, event: MotionEvent): Boolean {
-                                if (event.action == MotionEvent.ACTION_DOWN) {
-                                    itemTouchHelper?.startDrag(this@ViewHolder)
-                                }
-                                return false
-                            }
-                        })
-                        text.text = item.first
-                    }
-                }
-            }
-        }
-
-        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-            super.onViewCreated(view, savedInstanceState)
-            ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
-                val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-                view.findViewById<LinearLayout>(R.id.layout)?.updatePadding(bottom = insets.bottom)
-                WindowInsetsCompat.CONSUMED
-            }
-            requireActivity().findViewById<AppBarLayout>(R.id.appBar)?.let { appBar ->
-                if (requireContext().prefs().getBoolean(C.UI_THEME_APPBAR_LIFT, true)) {
-                    view.let {
-                        appBar.setLiftOnScrollTargetView(it)
-                        it.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-                            appBar.isLifted = it.canScrollVertically(-1)
-                        }
-                    }
-                } else {
-                    appBar.setLiftable(false)
-                    appBar.background = null
-                }
-            }
         }
     }
 

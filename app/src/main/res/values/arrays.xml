@@ -84,42 +84,6 @@
         <item>2</item>
     </string-array>
 
-    <string-array name="spinnerMedia">
-        <item>@string/live</item>
-        <item>@string/videos</item>
-        <item>@string/clips</item>
-    </string-array>
-
-    <string-array name="spinnerFollowedEntriesNotLoggedIn">
-        <item>@string/live</item>
-        <item>@string/channels</item>
-        <item>@string/games</item>
-    </string-array>
-
-    <string-array name="spinnerFollowedEntries">
-        <item>@string/live</item>
-        <item>@string/videos</item>
-        <item>@string/channels</item>
-        <item>@string/games</item>
-    </string-array>
-
-    <string-array name="spinnerFollowedValues">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-    </string-array>
-
-    <string-array name="spinnerSavedEntries">
-        <item>@string/bookmarks</item>
-        <item>@string/downloads</item>
-    </string-array>
-
-    <string-array name="spinnerSavedValues">
-        <item>0</item>
-        <item>1</item>
-    </string-array>
-
     <string-array name="spinnerStorage">
         <item>@string/shared_storage</item>
         <item>@string/app_storage</item>
@@ -265,20 +229,6 @@
         <item>@string/always</item>
         <item>@string/when_logged_in</item>
         <item>@string/never</item>
-    </string-array>
-
-    <string-array name="pageEntries">
-        <item>@string/games</item>
-        <item>@string/popular</item>
-        <item>@string/following</item>
-        <item>@string/saved</item>
-    </string-array>
-
-    <string-array name="pageValues">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
     </string-array>
 
     <string-array name="chatFirstMsgEntries">

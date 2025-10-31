@@ -42,7 +42,12 @@ class GameSearchViewModel @Inject constructor(
                 gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext),
                 graphQLRepository = graphQLRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                apiPref = applicationContext.prefs().getString(C.API_PREFS_SEARCH_GAMES, null)?.split(',') ?: TwitchApiHelper.searchGamesApiDefaults,
+                apiPref = (applicationContext.prefs().getString(C.API_PREFS_SEARCH_GAMES, null) ?: C.DEFAULT_API_PREFS_SEARCH_GAMES).split(',').mapNotNull {
+                    val split = it.split(':')
+                    val key = split[0]
+                    val enabled = split[1] != "0"
+                    if (enabled) key else null
+                },
                 networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
             )
         }.flow

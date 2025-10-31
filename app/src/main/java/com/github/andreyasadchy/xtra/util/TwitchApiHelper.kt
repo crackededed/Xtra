@@ -357,22 +357,6 @@ object TwitchApiHelper {
         return System.currentTimeMillis() >= context.tokenPrefs().getLong(C.INTEGRITY_EXPIRATION, 0)
     }
 
-    val gamesApiDefaults = listOf(C.GQL, C.GQL_PERSISTED_QUERY, C.HELIX)
-    val streamsApiDefaults = listOf(C.GQL, C.GQL_PERSISTED_QUERY, C.HELIX)
-    val gameStreamsApiDefaults = listOf(C.GQL, C.GQL_PERSISTED_QUERY, C.HELIX)
-    val gameVideosApiDefaults = listOf(C.GQL, C.GQL_PERSISTED_QUERY, C.HELIX)
-    val gameClipsApiDefaults = listOf(C.GQL, C.HELIX, C.GQL_PERSISTED_QUERY)
-    val channelVideosApiDefaults = listOf(C.GQL, C.GQL_PERSISTED_QUERY, C.HELIX)
-    val channelClipsApiDefaults = listOf(C.GQL, C.HELIX, C.GQL_PERSISTED_QUERY)
-    val searchVideosApiDefaults = listOf(C.GQL, C.GQL_PERSISTED_QUERY)
-    val searchStreamsApiDefaults = listOf(C.GQL, C.HELIX)
-    val searchChannelsApiDefaults = listOf(C.GQL, C.HELIX, C.GQL_PERSISTED_QUERY)
-    val searchGamesApiDefaults = listOf(C.GQL, C.GQL_PERSISTED_QUERY, C.HELIX)
-    val followedStreamsApiDefaults = listOf(C.GQL, C.HELIX, C.GQL_PERSISTED_QUERY)
-    val followedVideosApiDefaults = listOf(C.GQL, C.GQL_PERSISTED_QUERY)
-    val followedChannelsApiDefaults = listOf(C.GQL, C.GQL_PERSISTED_QUERY, C.HELIX)
-    val followedGamesApiDefaults = listOf(C.GQL, C.GQL_PERSISTED_QUERY)
-
     fun getVideoUrlMapFromPreview(url: String, type: String?, list: List<String>?): Map<String, String> {
         val qualityList = list ?: listOf("chunked", "1080p60", "1080p30", "720p60", "720p30", "480p30", "360p30", "160p30", "144p30", "high", "medium", "low", "mobile", "audio_only")
         val map = mutableMapOf<String, String>()
