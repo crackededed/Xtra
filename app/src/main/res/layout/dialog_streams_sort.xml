@@ -80,11 +80,38 @@
             android:layout_height="wrap_content"
             android:text="@string/languages" />
 
-        <com.google.android.material.divider.MaterialDivider
+        <Button
+            android:id="@+id/saveDefault"
+            style="?attr/bottomSheetButtonStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp" />
+            android:text="@string/save_default" />
+
+        <LinearLayout
+            android:id="@+id/saveSortLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/saveSort"
+                style="?attr/bottomSheetButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/save_sort_game" />
+
+            <ImageView
+                android:id="@+id/deleteSavedSort"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center_vertical"
+                android:layout_margin="5dp"
+                android:background="?android:selectableItemBackground"
+                android:src="@drawable/baseline_close_black_36"
+                app:tint="?attr/colorControlNormal" />
+
+        </LinearLayout>
 
         <Button
             android:id="@+id/apply"

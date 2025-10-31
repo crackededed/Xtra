@@ -77,8 +77,6 @@ class ChannelVideosViewModel @Inject constructor(
         get() = filter.value?.period ?: VideosSortDialog.PERIOD_ALL
     val type: String
         get() = filter.value?.type ?: VideosSortDialog.VIDEO_TYPE_ALL
-    val saveSort: Boolean
-        get() = filter.value?.saveSort == true
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow = filter.flatMapLatest { filter ->
@@ -155,15 +153,18 @@ class ChannelVideosViewModel @Inject constructor(
         sortChannelRepository.save(item)
     }
 
-    fun setFilter(sort: String?, type: String?, saveSort: Boolean?) {
-        filter.value = Filter(sort, null, type, saveSort)
+    suspend fun deleteSortChannel(item: SortChannel) {
+        sortChannelRepository.delete(item)
+    }
+
+    fun setFilter(sort: String?, type: String?) {
+        filter.value = Filter(sort, null, type)
     }
 
     class Filter(
         val sort: String?,
         val period: String?,
         val type: String?,
-        val saveSort: Boolean?,
     )
 
     fun saveBookmark(filesDir: String, video: Video, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>) {

@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import androidx.core.content.edit
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -141,7 +140,6 @@ class FollowedVideosFragment : PagedListFragment(), Scrollable, Sortable, Videos
                 sort = viewModel.sort,
                 period = viewModel.period,
                 type = viewModel.type,
-                saveDefault = requireContext().prefs().getBoolean(C.SORT_DEFAULT_FOLLOWED_VIDEOS, false)
             ).show(childFragmentManager, null)
         }
         viewLifecycleOwner.lifecycleScope.launch {
@@ -153,34 +151,31 @@ class FollowedVideosFragment : PagedListFragment(), Scrollable, Sortable, Videos
         }
     }
 
-    override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languages: Array<String>, saveSort: Boolean, saveDefault: Boolean) {
+    override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languages: Array<String>, changed: Boolean, saveSort: Boolean, saveDefault: Boolean) {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
-                binding.scrollTop.gone()
-                pagingAdapter.submitData(PagingData.empty())
-                viewModel.setFilter(sort, type)
-                viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, typeText)
-                if (saveDefault) {
-                    val sortDefaults = viewModel.getSortChannel("followed_videos")
-                    if (sortDefaults != null) {
-                        sortDefaults.apply {
-                            videoSort = sort
-                            videoType = type
-                        }
-                    } else {
-                        SortChannel(
-                            id = "followed_videos",
-                            videoSort = sort,
-                            videoType = type
-                        )
-                    }.let { viewModel.saveSortChannel(it) }
+                if (changed) {
+                    binding.scrollTop.gone()
+                    pagingAdapter.submitData(PagingData.empty())
+                    viewModel.setFilter(sort, type)
+                    viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, typeText)
                 }
-                if (saveDefault != requireContext().prefs().getBoolean(C.SORT_DEFAULT_FOLLOWED_VIDEOS, false)) {
-                    requireContext().prefs().edit { putBoolean(C.SORT_DEFAULT_FOLLOWED_VIDEOS, saveDefault) }
+                if (saveDefault) {
+                    val item = viewModel.getSortChannel("followed_videos")?.apply {
+                        videoSort = sort
+                        videoType = type
+                    } ?: SortChannel(
+                        id = "followed_videos",
+                        videoSort = sort,
+                        videoType = type
+                    )
+                    viewModel.saveSortChannel(item)
                 }
             }
         }
     }
+
+    override fun deleteSavedSort() {}
 
     override fun scrollToTop() {
         binding.recyclerView.scrollToPosition(0)

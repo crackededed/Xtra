@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import androidx.core.content.edit
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -32,9 +31,7 @@ import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.common.Sortable
 import com.github.andreyasadchy.xtra.ui.common.VideosSortDialog
 import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
-import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -88,12 +85,9 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                val sortValues = args.channelId?.let {
-                    viewModel.getSortChannel(it)?.takeIf { it.saveSort == true }
-                } ?: viewModel.getSortChannel("default")
+                val sortValues = args.channelId?.let { viewModel.getSortChannel(it) } ?: viewModel.getSortChannel("default")
                 viewModel.setFilter(
                     period = sortValues?.clipPeriod,
-                    saveSort = sortValues?.saveSort,
                 )
                 viewModel.sortText.value = requireContext().getString(
                     R.string.sort_and_period,
@@ -121,11 +115,12 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
     override fun setupSortBar(sortBar: SortBarBinding) {
         sortBar.root.visible()
         sortBar.root.setOnClickListener {
-            VideosSortDialog.newInstance(
-                period = viewModel.period,
-                saveSort = viewModel.saveSort,
-                saveDefault = requireContext().prefs().getBoolean(C.SORT_DEFAULT_CHANNEL_CLIPS, false)
-            ).show(childFragmentManager, null)
+            viewLifecycleOwner.lifecycleScope.launch {
+                VideosSortDialog.newInstance(
+                    period = viewModel.period,
+                    saved = args.channelId?.let { viewModel.getSortChannel(it) } != null
+                ).show(childFragmentManager, null)
+            }
         }
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -136,64 +131,43 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
         }
     }
 
-    override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languages: Array<String>, saveSort: Boolean, saveDefault: Boolean) {
+    override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languages: Array<String>, changed: Boolean, saveSort: Boolean, saveDefault: Boolean) {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
-                binding.scrollTop.gone()
-                pagingAdapter.submitData(PagingData.empty())
-                viewModel.setFilter(period, saveSort)
-                viewModel.sortText.value = requireContext().getString(R.string.sort_and_period, sortText, periodText)
-                if (!args.channelId.isNullOrBlank() || !args.channelLogin.isNullOrBlank()) {
-                    val sortValues = args.channelId?.let { viewModel.getSortChannel(it) }
-                    if (saveSort) {
-                        if (sortValues != null) {
-                            sortValues.apply {
-                                this.saveSort = true
-                                clipPeriod = period
-                            }
-                        } else {
-                            args.channelId?.let {
-                                SortChannel(
-                                    id = it,
-                                    saveSort = true,
-                                    clipPeriod = period
-                                )
-                            }
-                        }
-                    } else {
-                        sortValues?.apply {
-                            this.saveSort = false
-                        }
-                    }?.let { viewModel.saveSortChannel(it) }
-                    if (saveDefault) {
-                        if (sortValues != null) {
-                            sortValues.apply {
-                                this.saveSort = saveSort
-                            }
-                        } else {
-                            args.channelId?.let {
-                                SortChannel(
-                                    id = it,
-                                    saveSort = saveSort
-                                )
-                            }
-                        }?.let { viewModel.saveSortChannel(it) }
-                        val sortDefaults = viewModel.getSortChannel("default")
-                        if (sortDefaults != null) {
-                            sortDefaults.apply {
-                                clipPeriod = period
-                            }
-                        } else {
-                            SortChannel(
-                                id = "default",
-                                clipPeriod = period
-                            )
-                        }.let { viewModel.saveSortChannel(it) }
-                    }
-                    if (saveDefault != requireContext().prefs().getBoolean(C.SORT_DEFAULT_CHANNEL_CLIPS, false)) {
-                        requireContext().prefs().edit { putBoolean(C.SORT_DEFAULT_CHANNEL_CLIPS, saveDefault) }
+                if (changed) {
+                    binding.scrollTop.gone()
+                    pagingAdapter.submitData(PagingData.empty())
+                    viewModel.setFilter(period)
+                    viewModel.sortText.value = requireContext().getString(R.string.sort_and_period, sortText, periodText)
+                }
+                if (saveSort) {
+                    args.channelId?.let { id ->
+                        val item = viewModel.getSortChannel(id)?.apply {
+                            clipPeriod = period
+                        } ?: SortChannel(
+                            id = id,
+                            clipPeriod = period
+                        )
+                        viewModel.saveSortChannel(item)
                     }
                 }
+                if (saveDefault) {
+                    val item = viewModel.getSortChannel("default")?.apply {
+                        clipPeriod = period
+                    } ?: SortChannel(
+                        id = "default",
+                        clipPeriod = period
+                    )
+                    viewModel.saveSortChannel(item)
+                }
+            }
+        }
+    }
+
+    override fun deleteSavedSort() {
+        if ((parentFragment as? FragmentHost)?.currentFragment == this) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                args.channelId?.let { viewModel.getSortChannel(it) }?.let { viewModel.deleteSortChannel(it) }
             }
         }
     }

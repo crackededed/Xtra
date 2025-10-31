@@ -40,8 +40,6 @@ class ChannelClipsViewModel @Inject constructor(
 
     val period: String
         get() = filter.value?.period ?: VideosSortDialog.PERIOD_WEEK
-    val saveSort: Boolean
-        get() = filter.value?.saveSort == true
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow = filter.flatMapLatest { filter ->
@@ -108,12 +106,15 @@ class ChannelClipsViewModel @Inject constructor(
         sortChannelRepository.save(item)
     }
 
-    fun setFilter(period: String?, saveSort: Boolean?) {
-        filter.value = Filter(period, saveSort)
+    suspend fun deleteSortChannel(item: SortChannel) {
+        sortChannelRepository.delete(item)
+    }
+
+    fun setFilter(period: String?) {
+        filter.value = Filter(period)
     }
 
     class Filter(
         val period: String?,
-        val saveSort: Boolean?,
     )
 }

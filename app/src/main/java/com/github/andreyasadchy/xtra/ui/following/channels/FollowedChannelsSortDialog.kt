@@ -15,7 +15,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 class FollowedChannelsSortDialog : BottomSheetDialogFragment() {
 
     interface OnFilter {
-        fun onChange(sort: String, sortText: CharSequence, order: String, orderText: CharSequence, saveDefault: Boolean)
+        fun onChange(sort: String, sortText: CharSequence, order: String, orderText: CharSequence, changed: Boolean, saveDefault: Boolean)
     }
 
     companion object {
@@ -27,11 +27,10 @@ class FollowedChannelsSortDialog : BottomSheetDialogFragment() {
 
         private const val SORT = "sort"
         private const val ORDER = "order"
-        private const val SAVE_DEFAULT = "save_default"
 
-        fun newInstance(sort: String?, order: String?, saveDefault: Boolean?): FollowedChannelsSortDialog {
+        fun newInstance(sort: String?, order: String?): FollowedChannelsSortDialog {
             return FollowedChannelsSortDialog().apply {
-                arguments = bundleOf(SORT to sort, ORDER to order, SAVE_DEFAULT to saveDefault)
+                arguments = bundleOf(SORT to sort, ORDER to order)
             }
         }
     }
@@ -68,36 +67,42 @@ class FollowedChannelsSortDialog : BottomSheetDialogFragment() {
                 ORDER_ASC -> R.id.oldest_first
                 else -> R.id.newest_first
             }
-            val originalSaveDefault = args.getBoolean(SAVE_DEFAULT)
             sort.check(originalSortId)
             order.check(originalOrderId)
-            saveDefault.isChecked = originalSaveDefault
-            apply.setOnClickListener {
-                val checkedSortId = sort.checkedRadioButtonId
-                val checkedOrderId = order.checkedRadioButtonId
-                val checkedSaveDefault = saveDefault.isChecked
-                if (checkedSortId != originalSortId || checkedOrderId != originalOrderId || checkedSaveDefault != originalSaveDefault) {
-                    val sortBtn = view.findViewById<RadioButton>(checkedSortId)
-                    val orderBtn = view.findViewById<RadioButton>(checkedOrderId)
-                    listener.onChange(
-                        when (checkedSortId) {
-                            R.id.time_followed -> SORT_FOLLOWED_AT
-                            R.id.alphabetically -> SORT_ALPHABETICALLY
-                            R.id.last_broadcast -> SORT_LAST_BROADCAST
-                            else -> SORT_LAST_BROADCAST
-                        },
-                        sortBtn.text,
-                        when (checkedOrderId) {
-                            R.id.newest_first -> ORDER_DESC
-                            R.id.oldest_first -> ORDER_ASC
-                            else -> ORDER_DESC
-                        },
-                        orderBtn.text,
-                        checkedSaveDefault
-                    )
-                }
+            saveDefault.setOnClickListener {
+                applyFilters(originalSortId, originalOrderId, true)
                 dismiss()
             }
+            apply.setOnClickListener {
+                applyFilters(originalSortId, originalOrderId, false)
+                dismiss()
+            }
+        }
+    }
+
+    private fun applyFilters(originalSortId: Int, originalOrderId: Int, saveDefault: Boolean) {
+        with(binding) {
+            val checkedSortId = sort.checkedRadioButtonId
+            val checkedOrderId = order.checkedRadioButtonId
+            val sortBtn = requireView().findViewById<RadioButton>(checkedSortId)
+            val orderBtn = requireView().findViewById<RadioButton>(checkedOrderId)
+            listener.onChange(
+                when (checkedSortId) {
+                    R.id.time_followed -> SORT_FOLLOWED_AT
+                    R.id.alphabetically -> SORT_ALPHABETICALLY
+                    R.id.last_broadcast -> SORT_LAST_BROADCAST
+                    else -> SORT_LAST_BROADCAST
+                },
+                sortBtn.text,
+                when (checkedOrderId) {
+                    R.id.newest_first -> ORDER_DESC
+                    R.id.oldest_first -> ORDER_ASC
+                    else -> ORDER_DESC
+                },
+                orderBtn.text,
+                checkedSortId != originalSortId || checkedOrderId != originalOrderId,
+                saveDefault
+            )
         }
     }
 
