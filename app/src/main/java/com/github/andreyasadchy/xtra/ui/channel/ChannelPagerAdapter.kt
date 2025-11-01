@@ -10,12 +10,10 @@ import com.github.andreyasadchy.xtra.ui.chat.ChatFragment
 class ChannelPagerAdapter(
     private val fragment: Fragment,
     private val args: ChannelPagerFragmentArgs,
-    private val visibleTabs: Array<Int>
 ) : FragmentStateAdapter(fragment) {
 
     override fun createFragment(position: Int): Fragment {
-        val index = visibleTabs[position]
-        return when (index) {
+        return when (position) {
             0 -> ChannelSuggestedFragment().apply { arguments = fragment.arguments }
             1 -> ChannelVideosFragment().apply { arguments = fragment.arguments }
             2 -> ChannelClipsFragment().apply { arguments = fragment.arguments }
@@ -28,5 +26,5 @@ class ChannelPagerAdapter(
         }
     }
 
-    override fun getItemCount(): Int = visibleTabs.size
+    override fun getItemCount(): Int = 4
 }

@@ -726,5 +726,4 @@
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
     <string name="default_search_tab">Default search tab</string>
-    <string name="channel_tabs">Channel tabs</string>
 </resources>

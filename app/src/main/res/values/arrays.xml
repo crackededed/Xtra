@@ -416,18 +416,4 @@
         <item>followed</item>
         <item>disabled</item>
     </string-array>
-
-    <string-array name="channelTabsEntries">
-        <item>@string/suggested</item>
-        <item>@string/videos</item>
-        <item>@string/clips</item>
-        <item>@string/chat</item>
-    </string-array>
-
-    <string-array name="channelTabsValues">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-    </string-array>
 </resources>
