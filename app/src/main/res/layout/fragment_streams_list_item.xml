@@ -91,6 +91,8 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="?attr/textAppearanceTitleMedium"
                     android:visibility="gone"
+                    android:ellipsize="end"
+                    android:maxLines="3"
                     tools:text="@sample/streams.json/streams/channel/status"
                     tools:visibility="visible" />
 
