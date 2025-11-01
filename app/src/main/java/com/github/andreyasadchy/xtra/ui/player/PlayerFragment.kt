@@ -17,7 +17,6 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.text.format.DateFormat
 import android.util.Log
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.RoundedCorner
 import android.view.View
@@ -308,7 +307,6 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                     requireView().findViewById<TextView>(R.id.playerTitle)?.apply {
                         visible()
                         text = title
-                        isSelected = true
                     }
                 }
             }
