@@ -103,21 +103,7 @@
         <item>@string/games</item>
     </string-array>
 
-    <string-array name="spinnerSearchedEntries">
-        <item>@string/videos</item>
-        <item>@string/live</item>
-        <item>@string/channels</item>
-        <item>@string/games</item>
-    </string-array>
-
     <string-array name="spinnerFollowedValues">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-    </string-array>
-
-    <string-array name="spinnerSearchedValues">
         <item>0</item>
         <item>1</item>
         <item>2</item>

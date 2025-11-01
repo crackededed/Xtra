@@ -17,7 +17,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.withResumed
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.RecyclerView
@@ -42,14 +41,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlin.getValue
 
 @AndroidEntryPoint
 class SearchPagerFragment : BaseNetworkFragment(), FragmentHost {
 
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!
-    private val args: SearchPagerFragmentArgs by navArgs()
     private val viewModel: SearchPagerViewModel by viewModels()
     private var firstLaunch = true
 
@@ -113,9 +110,7 @@ class SearchPagerFragment : BaseNetworkFragment(), FragmentHost {
                 }
             })
             if (firstLaunch) {
-                val tabIndex = args.tabIndex.takeIf { it != -1 } ?:
-                requireContext().prefs().getString(C.UI_SEARCH_DEFAULT_PAGE, "2")?.toIntOrNull() ?: 2
-                viewPager.setCurrentItem(tabIndex, false)
+                viewPager.setCurrentItem(2, false)
                 firstLaunch = false
             }
             viewPager.offscreenPageLimit = adapter.itemCount
