@@ -39,7 +39,8 @@
             app:layout_scrollFlags="scroll|enterAlways"
             app:tabGravity="fill"
             app:tabMaxWidth="0dp"
-            app:tabMode="fixed" />
+            app:tabMode="fixed"
+            android:visibility="gone" />
 
         <include
             android:id="@+id/sortBar"
@@ -47,8 +48,16 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
+    <FrameLayout
+        android:id="@+id/recentSearchesContainer"
+        android:visibility="visible"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
