@@ -114,6 +114,13 @@
         </LinearLayout>
 
         <Button
+            android:id="@+id/saveFilters"
+            style="?attr/bottomSheetButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/save_filters" />
+
+        <Button
             android:id="@+id/apply"
             style="?attr/bottomSheetButtonStyle"
             android:layout_width="match_parent"

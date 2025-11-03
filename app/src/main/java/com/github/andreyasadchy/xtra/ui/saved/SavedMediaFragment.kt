@@ -31,6 +31,7 @@ import com.github.andreyasadchy.xtra.ui.login.LoginActivity
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.saved.bookmarks.BookmarksFragment
 import com.github.andreyasadchy.xtra.ui.saved.downloads.DownloadsFragment
+import com.github.andreyasadchy.xtra.ui.saved.filters.FiltersFragment
 import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.settings.SettingsActivity
 import com.github.andreyasadchy.xtra.util.C
@@ -251,6 +252,7 @@ class SavedMediaFragment : Fragment(), Scrollable, FragmentHost {
                     when (it) {
                         "0" -> getString(R.string.bookmarks)
                         "1" -> getString(R.string.downloads)
+                        "2" -> getString(R.string.filters)
                         else -> getString(R.string.bookmarks)
                     }
                 }.toTypedArray().ifEmpty { arrayOf(getString(R.string.bookmarks)) })
@@ -315,6 +317,7 @@ class SavedMediaFragment : Fragment(), Scrollable, FragmentHost {
         return when (tabs.getOrNull(position)) {
             "0" -> BookmarksFragment()
             "1" -> DownloadsFragment()
+            "2" -> FiltersFragment()
             else -> BookmarksFragment()
         }
     }

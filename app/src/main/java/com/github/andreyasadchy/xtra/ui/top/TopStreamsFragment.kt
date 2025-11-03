@@ -24,6 +24,7 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentGamesBinding
+import com.github.andreyasadchy.xtra.model.ui.SavedFilter
 import com.github.andreyasadchy.xtra.model.ui.SortGame
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
@@ -144,7 +145,7 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
                 viewModel.setFilter(
                     sort = sortValues?.streamSort,
                     tags = args.tags ?: sortValues?.streamTags?.split(',')?.toTypedArray(),
-                    languages = sortValues?.streamLanguages?.split(',')?.toTypedArray(),
+                    languages = args.languages ?: sortValues?.streamLanguages?.split(',')?.toTypedArray(),
                 )
                 viewModel.sortText.value = requireContext().getString(
                     R.string.sort_by,
@@ -189,7 +190,7 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
                 }
             }
         }
-        val enableScrollTopButton = !args.tags.isNullOrEmpty()
+        val enableScrollTopButton = !args.tags.isNullOrEmpty() || !args.languages.isNullOrEmpty()
         initializeAdapter(binding.recyclerViewLayout, pagingAdapter, enableScrollTopButton = enableScrollTopButton)
         if (enableScrollTopButton && requireContext().prefs().getBoolean(C.UI_SCROLLTOP, true)) {
             binding.recyclerViewLayout.scrollTop.setOnClickListener {
@@ -259,7 +260,7 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
         }
     }
 
-    override fun onChange(sort: String, sortText: CharSequence, tags: Array<String>, languages: Array<String>, changed: Boolean, saveSort: Boolean, saveDefault: Boolean) {
+    override fun onChange(sort: String, sortText: CharSequence, tags: Array<String>, languages: Array<String>, changed: Boolean, saveFilters: Boolean, saveSort: Boolean, saveDefault: Boolean) {
         viewLifecycleOwner.lifecycleScope.launch {
             if (changed) {
                 pagingAdapter.submitData(PagingData.empty())
@@ -290,6 +291,14 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
                         }
                     }
                 } else null
+            }
+            if (saveFilters && (tags.isNotEmpty() || languages.isNotEmpty())) {
+                viewModel.saveFilters(
+                    SavedFilter(
+                        tags = tags.takeIf { it.isNotEmpty() }?.joinToString(","),
+                        languages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
+                    )
+                )
             }
             if (saveDefault) {
                 val item = viewModel.getSortGame("top_streams")?.apply {

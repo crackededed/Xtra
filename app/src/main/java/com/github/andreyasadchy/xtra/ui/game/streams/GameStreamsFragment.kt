@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
 import com.github.andreyasadchy.xtra.databinding.SortBarBinding
+import com.github.andreyasadchy.xtra.model.ui.SavedFilter
 import com.github.andreyasadchy.xtra.model.ui.SortGame
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.ui.common.FragmentHost
@@ -79,8 +80,8 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
                 val sortValues = args.gameId?.let { viewModel.getSortGame(it) } ?: viewModel.getSortGame("default")
                 viewModel.setFilter(
                     sort = sortValues?.streamSort,
-                    tags = sortValues?.streamTags?.split(',')?.toTypedArray(),
-                    languages = sortValues?.streamLanguages?.split(',')?.toTypedArray(),
+                    tags = args.tags ?: sortValues?.streamTags?.split(',')?.toTypedArray(),
+                    languages = args.languages ?: sortValues?.streamLanguages?.split(',')?.toTypedArray(),
                 )
                 viewModel.sortText.value = requireContext().getString(
                     R.string.sort_by,
@@ -192,7 +193,7 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
         }
     }
 
-    override fun onChange(sort: String, sortText: CharSequence, tags: Array<String>, languages: Array<String>, changed: Boolean, saveSort: Boolean, saveDefault: Boolean) {
+    override fun onChange(sort: String, sortText: CharSequence, tags: Array<String>, languages: Array<String>, changed: Boolean, saveFilters: Boolean, saveSort: Boolean, saveDefault: Boolean) {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
                 if (changed) {
@@ -224,6 +225,17 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
                             }
                         }
                     } else null
+                }
+                if (saveFilters && (tags.isNotEmpty() || languages.isNotEmpty())) {
+                    viewModel.saveFilters(
+                        SavedFilter(
+                            gameId = args.gameId,
+                            gameSlug = args.gameSlug,
+                            gameName = args.gameName,
+                            tags = tags.takeIf { it.isNotEmpty() }?.joinToString(","),
+                            languages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
+                        )
+                    )
                 }
                 if (saveSort) {
                     args.gameId?.let { id ->
