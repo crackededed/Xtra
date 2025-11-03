@@ -7,149 +7,128 @@
     android:layout_height="wrap_content">
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/topLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/topLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent">
+        <ImageView
+            android:id="@+id/thumbnail"
+            style="@style/Thumbnail"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@tools:sample/backgrounds/scenic" />
 
-            <ImageView
-                android:id="@+id/thumbnail"
-                style="@style/Thumbnail"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:src="@tools:sample/backgrounds/scenic" />
+        <com.github.andreyasadchy.xtra.ui.view.TextWithShadow
+            android:id="@+id/date"
+            style="@style/ThumbnailItem"
+            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="5dp"
+            app:layout_constraintBottom_toBottomOf="@id/thumbnail"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:text="April 20, 2017" />
 
-            <com.github.andreyasadchy.xtra.ui.view.TextWithShadow
-                android:id="@+id/date"
-                style="@style/ThumbnailItem"
-                android:layout_marginEnd="5dp"
-                android:layout_marginBottom="5dp"
-                app:layout_constraintBottom_toBottomOf="@id/thumbnail"
-                app:layout_constraintEnd_toEndOf="parent"
-                tools:text="April 20, 2017" />
+        <com.github.andreyasadchy.xtra.ui.view.TextWithShadow
+            android:id="@+id/views"
+            style="@style/ThumbnailItem"
+            android:layout_marginStart="5dp"
+            android:layout_marginBottom="5dp"
+            app:layout_constraintBottom_toBottomOf="@id/thumbnail"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="133769 views" />
 
-            <com.github.andreyasadchy.xtra.ui.view.TextWithShadow
-                android:id="@+id/views"
-                style="@style/ThumbnailItem"
-                android:layout_marginStart="5dp"
-                android:layout_marginBottom="5dp"
-                app:layout_constraintBottom_toBottomOf="@id/thumbnail"
-                app:layout_constraintStart_toStartOf="parent"
-                tools:text="133769 views" />
-
-            <com.github.andreyasadchy.xtra.ui.view.TextWithShadow
-                android:id="@+id/duration"
-                style="@style/ThumbnailItem"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="10dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="13:37" />
-
-            <com.github.andreyasadchy.xtra.ui.view.TextWithShadow
-                android:id="@+id/type"
-                style="@style/ThumbnailItem"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="10dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="type" />
-
-            <com.google.android.material.progressindicator.LinearProgressIndicator
-                android:id="@+id/progressBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layoutDirection="ltr"
-                android:visibility="gone"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/thumbnail"
-                tools:visibility="visible" />
-
-            <ImageView
-                android:id="@+id/userImage"
-                style="@style/UserPicture"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="12dp"
-                android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/thumbnail"
-                app:layout_constraintVertical_bias="0.0"
-                tools:src="@tools:sample/backgrounds/scenic"
-                tools:visibility="visible" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp"
-                android:layout_marginTop="7dp"
-                android:layout_marginBottom="7dp"
-                android:orientation="vertical"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/options"
-                app:layout_constraintStart_toEndOf="@id/userImage"
-                app:layout_constraintTop_toBottomOf="@id/thumbnail">
-
-                <TextView
-                    android:id="@+id/title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?attr/textAppearanceTitleMedium"
-                    android:visibility="gone"
-                    tools:text="@sample/videos.json/vods/title"
-                    tools:visibility="visible" />
-
-                <TextView
-                    android:id="@+id/username"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="?android:attr/textColorSecondary"
-                    android:visibility="gone"
-                    tools:text="@sample/videos.json/vods/channel/name"
-                    tools:visibility="visible" />
-
-                <TextView
-                    android:id="@+id/gameName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="?android:attr/textColorSecondary"
-                    android:visibility="gone"
-                    tools:text="@sample/videos.json/vods/game"
-                    tools:visibility="visible" />
-            </LinearLayout>
-
-            <ImageButton
-                android:id="@+id/options"
-                style="?android:attr/actionOverflowButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/thumbnail" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/tagsLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+        <com.github.andreyasadchy.xtra.ui.view.TextWithShadow
+            android:id="@+id/duration"
+            style="@style/ThumbnailItem"
             android:layout_marginStart="10dp"
-            android:layout_marginTop="7dp"
+            android:layout_marginTop="10dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="13:37" />
+
+        <com.github.andreyasadchy.xtra.ui.view.TextWithShadow
+            android:id="@+id/type"
+            style="@style/ThumbnailItem"
+            android:layout_marginTop="10dp"
             android:layout_marginEnd="10dp"
-            android:layout_marginBottom="7dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="type" />
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progressBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layoutDirection="ltr"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/thumbnail"
+            tools:visibility="visible" />
+
+        <ImageView
+            android:id="@+id/userImage"
+            style="@style/UserPicture"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/topLayout" />
+            app:layout_constraintTop_toBottomOf="@id/thumbnail"
+            app:layout_constraintVertical_bias="0.0"
+            tools:src="@tools:sample/backgrounds/scenic"
+            tools:visibility="visible" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginTop="7dp"
+            android:layout_marginBottom="7dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/options"
+            app:layout_constraintStart_toEndOf="@id/userImage"
+            app:layout_constraintTop_toBottomOf="@id/thumbnail">
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:visibility="gone"
+                tools:text="@sample/videos.json/vods/title"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/username"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?android:attr/textColorSecondary"
+                android:visibility="gone"
+                tools:text="@sample/videos.json/vods/channel/name"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/gameName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?android:attr/textColorSecondary"
+                android:visibility="gone"
+                tools:text="@sample/videos.json/vods/game"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/options"
+            style="?android:attr/actionOverflowButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/thumbnail" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

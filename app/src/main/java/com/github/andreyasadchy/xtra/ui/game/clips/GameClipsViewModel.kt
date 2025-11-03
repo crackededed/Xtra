@@ -44,8 +44,6 @@ class GameClipsViewModel @Inject constructor(
         get() = filter.value?.period ?: VideosSortDialog.PERIOD_WEEK
     val languages: Array<String>
         get() = filter.value?.languages ?: emptyArray()
-    val saveSort: Boolean
-        get() = filter.value?.saveSort == true
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow = filter.flatMapLatest { filter ->
@@ -98,7 +96,12 @@ class GameClipsViewModel @Inject constructor(
                 gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext),
                 graphQLRepository = graphQLRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                apiPref = applicationContext.prefs().getString(C.API_PREFS_GAME_CLIPS, null)?.split(',') ?: TwitchApiHelper.gameClipsApiDefaults,
+                apiPref = (applicationContext.prefs().getString(C.API_PREFS_GAME_CLIPS, null) ?: C.DEFAULT_API_PREFS_GAME_CLIPS).split(',').mapNotNull {
+                    val split = it.split(':')
+                    val key = split[0]
+                    val enabled = split[1] != "0"
+                    if (enabled) key else null
+                },
                 networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
             )
         }.flow
@@ -112,13 +115,16 @@ class GameClipsViewModel @Inject constructor(
         sortGameRepository.save(item)
     }
 
-    fun setFilter(period: String?, languages: Array<String>?, saveSort: Boolean?) {
-        filter.value = Filter(period, languages, saveSort)
+    suspend fun deleteSortGame(item: SortGame) {
+        sortGameRepository.delete(item)
+    }
+
+    fun setFilter(period: String?, languages: Array<String>?) {
+        filter.value = Filter(period, languages)
     }
 
     class Filter(
         val period: String?,
         val languages: Array<String>?,
-        val saveSort: Boolean?,
     )
 }

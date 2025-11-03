@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -51,12 +52,24 @@
             android:textAppearance="?attr/textAppearanceTitleSmall"
             android:textStyle="bold" />
 
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/tagGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleLine="true" />
+
+        </HorizontalScrollView>
+
         <Button
             android:id="@+id/selectTags"
             style="?attr/bottomSheetButtonStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/tags" />
+            android:text="@string/add_tag" />
 
         <Button
             android:id="@+id/selectLanguages"
@@ -65,11 +78,45 @@
             android:layout_height="wrap_content"
             android:text="@string/languages" />
 
-        <com.google.android.material.divider.MaterialDivider
+        <Button
+            android:id="@+id/saveDefault"
+            style="?attr/bottomSheetButtonStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp" />
+            android:text="@string/save_default" />
+
+        <LinearLayout
+            android:id="@+id/saveSortLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/saveSort"
+                style="?attr/bottomSheetButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/save_sort_game" />
+
+            <ImageView
+                android:id="@+id/deleteSavedSort"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center_vertical"
+                android:layout_margin="5dp"
+                android:background="?android:selectableItemBackground"
+                android:src="@drawable/baseline_close_black_36"
+                app:tint="?attr/colorControlNormal" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/saveFilters"
+            style="?attr/bottomSheetButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/save_filters" />
 
         <Button
             android:id="@+id/apply"

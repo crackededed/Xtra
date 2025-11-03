@@ -362,7 +362,6 @@
     <string name="position">Posisi: %s</string>
     <string name="player_viewerlist">Buka daftar penonton dari jumlah penonton</string>
     <string name="use_followpager">Gunakan susunan tab untuk halaman mengikuti</string>
-    <string name="default_follow_tab">Default tab mengikuti</string>
     <string name="sleep_timer_lock">Kunci layar setelah</string>
     <string name="sleep_timer_lock_permissions">Kunci layar setelah (memerlukan izin admin)</string>
     <string name="admin_settings">Aktifkan/nonaktifkan sebagai aplikasi admin perangkat</string>
@@ -403,7 +402,6 @@
     <string name="vod_ignore_user">Abaikan penghapusan otomatis untuk pengguna ini</string>
     <string name="bookmarks">Bookmarks</string>
     <string name="use_savedpager">Gunakan susunan tab untuk halaman yang disimpan</string>
-    <string name="default_saved_tab">Default tab penyimpanan</string>
     <string name="vod_remove_ignore">Hapus dari daftar abaikan</string>
     <string name="remove_bookmark">Hapus bookmark</string>
     <string name="saved">Simpan</string>
@@ -451,7 +449,6 @@
     <string name="save_default">Simpan sebagai default</string>
     <string name="viewers_high">Penonton (tertinggi ke terendah)</string>
     <string name="viewers_low">Penonton (terendah ke tertinggi)</string>
-    <string name="tags">Tags</string>
     <string name="search_videos">Cari video</string>
     <string name="points_earned">Mendapat %d channel point</string>
     <string name="points_notify">Beri tahu saat mendapatkan channel poin</string>
@@ -681,7 +678,6 @@
     <string name="avoid_rounded_corners">Avoid rounded screen corners</string>
     <string name="api_web_gql_token">Web GQL token</string>
     <string name="use_new_pubsub">Use new PubSub url</string>
-    <string name="default_page">Default page</string>
     <string name="chat_size_modifier">Size modifier</string>
     <string name="chat_emote_size">Emote size</string>
     <string name="chat_badge_size">Badge size</string>
@@ -710,4 +706,12 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="following_tabs">Following tabs</string>
+    <string name="saved_tabs">Saved tabs</string>
+    <string name="channel_tabs">Channel tabs</string>
+    <string name="game_tabs">Game tabs</string>
+    <string name="search_tabs">Search tabs</string>
+    <string name="add_tag">Add tag</string>
+    <string name="save_filters">Save filters</string>
+    <string name="delete_filter_message">Are you sure you want to delete this filter?</string>
 </resources>

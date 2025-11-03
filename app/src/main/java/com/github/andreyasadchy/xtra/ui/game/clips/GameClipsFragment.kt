@@ -4,9 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.edit
+import android.widget.LinearLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -30,9 +31,7 @@ import com.github.andreyasadchy.xtra.ui.common.Sortable
 import com.github.andreyasadchy.xtra.ui.common.VideosSortDialog
 import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentArgs
-import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -75,7 +74,7 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
         pagingAdapter = ClipsAdapter(this, showDialog, showGame = false)
         setAdapter(binding.recyclerView, pagingAdapter)
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
-            if (requireContext().prefs().getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
+            if (activity?.findViewById<LinearLayout>(R.id.navBarContainer)?.isVisible == false) {
                 val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
                 binding.recyclerView.updatePadding(bottom = insets.bottom)
             }
@@ -86,13 +85,10 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                val sortValues = args.gameId?.let {
-                    viewModel.getSortGame(it)?.takeIf { it.saveSort == true }
-                } ?: viewModel.getSortGame("default")
+                val sortValues = args.gameId?.let { viewModel.getSortGame(it) } ?: viewModel.getSortGame("default")
                 viewModel.setFilter(
                     period = sortValues?.clipPeriod,
                     languages = sortValues?.clipLanguages?.split(',')?.toTypedArray(),
-                    saveSort = sortValues?.saveSort,
                 )
                 viewModel.sortText.value = requireContext().getString(
                     R.string.sort_and_period,
@@ -123,12 +119,13 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
     override fun setupSortBar(sortBar: SortBarBinding) {
         sortBar.root.visible()
         sortBar.root.setOnClickListener {
-            VideosSortDialog.newInstance(
-                period = viewModel.period,
-                languages = viewModel.languages,
-                saveSort = viewModel.saveSort,
-                saveDefault = requireContext().prefs().getBoolean(C.SORT_DEFAULT_GAME_CLIPS, false)
-            ).show(childFragmentManager, null)
+            viewLifecycleOwner.lifecycleScope.launch {
+                VideosSortDialog.newInstance(
+                    period = viewModel.period,
+                    languages = viewModel.languages,
+                    saved = args.gameId?.let { viewModel.getSortGame(it) } != null
+                ).show(childFragmentManager, null)
+            }
         }
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -151,71 +148,50 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
         }
     }
 
-    override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languages: Array<String>, saveSort: Boolean, saveDefault: Boolean) {
+    override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languages: Array<String>, changed: Boolean, saveSort: Boolean, saveDefault: Boolean) {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
-                binding.scrollTop.gone()
-                pagingAdapter.submitData(PagingData.empty())
-                viewModel.setFilter(period, languages, saveSort)
-                viewModel.sortText.value = requireContext().getString(R.string.sort_and_period, sortText, periodText)
-                viewModel.filtersText.value = if (languages.isNotEmpty()) {
-                    requireContext().resources.getQuantityString(R.plurals.languages, languages.size, languages.joinToString())
-                } else null
-                if (!args.gameId.isNullOrBlank() || !args.gameName.isNullOrBlank()) {
-                    val sortValues = args.gameId?.let { viewModel.getSortGame(it) }
-                    if (saveSort) {
-                        if (sortValues != null) {
-                            sortValues.apply {
-                                this.saveSort = true
-                                clipPeriod = period
-                                clipLanguages = languages.joinToString(",")
-                            }
-                        } else {
-                            args.gameId?.let {
-                                SortGame(
-                                    id = it,
-                                    saveSort = true,
-                                    clipPeriod = period,
-                                    clipLanguages = languages.joinToString(",")
-                                )
-                            }
-                        }
-                    } else {
-                        sortValues?.apply {
-                            this.saveSort = false
-                        }
-                    }?.let { viewModel.saveSortGame(it) }
-                    if (saveDefault) {
-                        if (sortValues != null) {
-                            sortValues.apply {
-                                this.saveSort = saveSort
-                            }
-                        } else {
-                            args.gameId?.let {
-                                SortGame(
-                                    id = it,
-                                    saveSort = saveSort
-                                )
-                            }
-                        }?.let { viewModel.saveSortGame(it) }
-                        val sortDefaults = viewModel.getSortGame("default")
-                        if (sortDefaults != null) {
-                            sortDefaults.apply {
-                                clipPeriod = period
-                                clipLanguages = languages.joinToString(",")
-                            }
-                        } else {
-                            SortGame(
-                                id = "default",
-                                clipPeriod = period,
-                                clipLanguages = languages.joinToString(",")
-                            )
-                        }.let { viewModel.saveSortGame(it) }
-                    }
-                    if (saveDefault != requireContext().prefs().getBoolean(C.SORT_DEFAULT_GAME_CLIPS, false)) {
-                        requireContext().prefs().edit { putBoolean(C.SORT_DEFAULT_GAME_CLIPS, saveDefault) }
+                if (changed) {
+                    binding.scrollTop.gone()
+                    pagingAdapter.submitData(PagingData.empty())
+                    viewModel.setFilter(period, languages)
+                    viewModel.sortText.value = requireContext().getString(R.string.sort_and_period, sortText, periodText)
+                    viewModel.filtersText.value = if (languages.isNotEmpty()) {
+                        requireContext().resources.getQuantityString(R.plurals.languages, languages.size, languages.joinToString())
+                    } else null
+                }
+                if (saveSort) {
+                    args.gameId?.let { id ->
+                        val item = viewModel.getSortGame(id)?.apply {
+                            clipPeriod = period
+                            clipLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
+                        } ?: SortGame(
+                            id = id,
+                            clipPeriod = period,
+                            clipLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
+                        )
+                        viewModel.saveSortGame(item)
                     }
                 }
+                if (saveDefault) {
+                    val item = viewModel.getSortGame("default")?.apply {
+                        clipPeriod = period
+                        clipLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
+                    } ?: SortGame(
+                        id = "default",
+                        clipPeriod = period,
+                        clipLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
+                    )
+                    viewModel.saveSortGame(item)
+                }
+            }
+        }
+    }
+
+    override fun deleteSavedSort() {
+        if ((parentFragment as? FragmentHost)?.currentFragment == this) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                args.gameId?.let { viewModel.getSortGame(it) }?.let { viewModel.deleteSortGame(it) }
             }
         }
     }

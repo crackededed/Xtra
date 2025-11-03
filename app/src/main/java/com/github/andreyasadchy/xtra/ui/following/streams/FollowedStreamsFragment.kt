@@ -4,13 +4,16 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
@@ -20,6 +23,7 @@ import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.common.StreamsAdapter
 import com.github.andreyasadchy.xtra.ui.common.StreamsCompactAdapter
+import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
 import dagger.hilt.android.AndroidEntryPoint
@@ -42,13 +46,25 @@ class FollowedStreamsFragment : PagedListFragment(), Scrollable {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         pagingAdapter = if (requireContext().prefs().getString(C.COMPACT_STREAMS, "disabled") != "disabled") {
-            StreamsCompactAdapter(this)
+            StreamsCompactAdapter(this, {
+                findNavController().navigate(
+                    TopStreamsFragmentDirections.actionGlobalTopFragment(
+                        tags = arrayOf(it)
+                    )
+                )
+            })
         } else {
-            StreamsAdapter(this)
+            StreamsAdapter(this, {
+                findNavController().navigate(
+                    TopStreamsFragmentDirections.actionGlobalTopFragment(
+                        tags = arrayOf(it)
+                    )
+                )
+            })
         }
         setAdapter(binding.recyclerView, pagingAdapter)
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
-            if (requireContext().prefs().getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
+            if (activity?.findViewById<LinearLayout>(R.id.navBarContainer)?.isVisible == false) {
                 val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
                 binding.recyclerView.updatePadding(bottom = insets.bottom)
             }

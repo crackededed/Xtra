@@ -363,7 +363,6 @@
     <string name="position">Posição: %s</string>
     <string name="player_viewerlist">Abrir a lista de visualizadores com o número de visualizações</string>
     <string name="use_followpager">Usar o layout da aba seguindo</string>
-    <string name="default_follow_tab">Aba padrão de seguindo</string>
     <string name="sleep_timer_lock">Tela de bloqueio</string>
     <string name="sleep_timer_lock_permissions">Tela de bloqueio (requer permissões de administrador)</string>
     <string name="admin_settings">Como ativar/desativar aplicativo de administração do dispositivo</string>
@@ -404,7 +403,6 @@
     <string name="vod_ignore_user">Ignore a exclusão automática para este usuário</string>
     <string name="bookmarks">Marcadores</string>
     <string name="use_savedpager">Usar o layout aba baixado</string>
-    <string name="default_saved_tab">Aba padrão de Baixado </string>
     <string name="vod_remove_ignore">Remover da lista de ignorados</string>
     <string name="remove_bookmark">Remover marcador</string>
     <string name="saved">Baixado</string>
@@ -452,7 +450,6 @@
     <string name="save_default">Salvar como padrão</string>
     <string name="viewers_high">Telespectadores (alto para baixo)</string>
     <string name="viewers_low">Telespectadores (baixo para alto)</string>
-    <string name="tags">Etiqueta</string>
     <string name="search_videos">Pesquisar vídeos</string>
     <string name="points_earned">%d pontos de canal recebidos</string>
     <string name="points_notify">Notificar ao ganhar pontos de canal</string>
@@ -680,7 +677,6 @@
     <string name="avoid_rounded_corners">Avoid rounded screen corners</string>
     <string name="api_web_gql_token">Web GQL token</string>
     <string name="use_new_pubsub">Use new PubSub url</string>
-    <string name="default_page">Default page</string>
     <string name="chat_size_modifier">Size modifier</string>
     <string name="chat_emote_size">Emote size</string>
     <string name="chat_badge_size">Badge size</string>
@@ -709,4 +705,12 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="following_tabs">Following tabs</string>
+    <string name="saved_tabs">Saved tabs</string>
+    <string name="channel_tabs">Channel tabs</string>
+    <string name="game_tabs">Game tabs</string>
+    <string name="search_tabs">Search tabs</string>
+    <string name="add_tag">Add tag</string>
+    <string name="save_filters">Save filters</string>
+    <string name="delete_filter_message">Are you sure you want to delete this filter?</string>
 </resources>

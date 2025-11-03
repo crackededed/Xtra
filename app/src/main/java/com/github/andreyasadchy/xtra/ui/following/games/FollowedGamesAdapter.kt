@@ -21,9 +21,9 @@ import coil3.request.target
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentFollowedGamesListItemBinding
 import com.github.andreyasadchy.xtra.model.ui.Game
+import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
-import com.github.andreyasadchy.xtra.ui.games.GamesFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.convertDpToPixels
@@ -33,6 +33,7 @@ import com.github.andreyasadchy.xtra.util.visible
 
 class FollowedGamesAdapter(
     private val fragment: Fragment,
+    private val selectTag: (Tag) -> Unit,
 ) : PagingDataAdapter<Game, FollowedGamesAdapter.PagingViewHolder>(
     object : DiffUtil.ItemCallback<Game>() {
         override fun areItemsTheSame(oldItem: Game, newItem: Game): Boolean =
@@ -137,11 +138,7 @@ class FollowedGamesAdapter(
                             }
                             if (tag.id != null) {
                                 text.setOnClickListener {
-                                    fragment.findNavController().navigate(
-                                        GamesFragmentDirections.actionGlobalGamesFragment(
-                                            tags = arrayOf(tag.id)
-                                        )
-                                    )
+                                    selectTag(tag)
                                 }
                             }
                             val padding = context.convertDpToPixels(5f)

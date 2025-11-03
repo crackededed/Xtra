@@ -19,4 +19,8 @@ class SortGameRepository @Inject constructor(
     suspend fun save(item: SortGame) = withContext(Dispatchers.IO) {
         sortGameDao.insert(item)
     }
+
+    suspend fun delete(item: SortGame) = withContext(Dispatchers.IO) {
+        sortGameDao.delete(item)
+    }
 }

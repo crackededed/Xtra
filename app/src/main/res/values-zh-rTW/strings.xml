@@ -363,7 +363,6 @@
     <string name="position">位置：%s</string>
     <string name="player_viewerlist">從觀看次數中開啟觀眾清單</string>
     <string name="use_followpager">對於追隨頁面使用分頁布局</string>
-    <string name="default_follow_tab">預設的追隨分頁</string>
     <string name="sleep_timer_lock">之後鎖定畫面</string>
     <string name="sleep_timer_lock_permissions">之後鎖定畫面（需要管理員權限）</string>
     <string name="admin_settings">啟用/禁用為裝置管理應用程式</string>
@@ -404,7 +403,6 @@
     <string name="vod_ignore_user">忽略該用戶的自動刪除</string>
     <string name="bookmarks">書籤</string>
     <string name="use_savedpager">對於已儲存頁面使用分頁布局</string>
-    <string name="default_saved_tab">預設的已儲存分頁</string>
     <string name="vod_remove_ignore">從忽略清單移除</string>
     <string name="remove_bookmark">移除書籤</string>
     <string name="saved">已儲存</string>
@@ -452,7 +450,6 @@
     <string name="save_default">儲存為預設</string>
     <string name="viewers_high">觀眾數（高至低）</string>
     <string name="viewers_low">觀眾數（低至高）</string>
-    <string name="tags">標籤</string>
     <string name="search_videos">搜尋影片</string>
     <string name="points_earned">已收到 %d 忠誠點數</string>
     <string name="points_notify">當賺取忠誠點數時通知</string>
@@ -680,7 +677,6 @@
     <string name="avoid_rounded_corners">避開螢幕圓角</string>
     <string name="api_web_gql_token">Web GQL 權杖</string>
     <string name="use_new_pubsub">使用新的 PubSub URL</string>
-    <string name="default_page">預設頁面</string>
     <string name="chat_size_modifier">大小修改</string>
     <string name="chat_emote_size">表情符號大小</string>
     <string name="chat_badge_size">徽章大小</string>
@@ -709,4 +705,12 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="following_tabs">Following tabs</string>
+    <string name="saved_tabs">Saved tabs</string>
+    <string name="channel_tabs">Channel tabs</string>
+    <string name="game_tabs">Game tabs</string>
+    <string name="search_tabs">Search tabs</string>
+    <string name="add_tag">Add tag</string>
+    <string name="save_filters">Save filters</string>
+    <string name="delete_filter_message">Are you sure you want to delete this filter?</string>
 </resources>

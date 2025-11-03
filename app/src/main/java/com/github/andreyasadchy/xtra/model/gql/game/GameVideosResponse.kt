@@ -40,7 +40,6 @@ class GameVideosResponse(
         val previewThumbnailURL: String? = null,
         val viewCount: Int? = null,
         val lengthSeconds: Int? = null,
-        val contentTags: List<Tag>? = null,
         val animatedPreviewURL: String? = null,
     )
 
@@ -50,11 +49,5 @@ class GameVideosResponse(
         val login: String? = null,
         val displayName: String? = null,
         val profileImageURL: String? = null,
-    )
-
-    @Serializable
-    class Tag(
-        val id: String? = null,
-        val localizedName: String? = null,
     )
 }

@@ -7,6 +7,7 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.MultiAutoCompleteTextView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
@@ -1050,7 +1051,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
             }
             if (view.parent?.parent?.parent !is SlidingLayout) {
                 ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
-                    if (requireContext().prefs().getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
+                    if (activity?.findViewById<LinearLayout>(R.id.navBarContainer)?.isVisible == false) {
                         val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
                         view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                             bottomMargin = insets.bottom

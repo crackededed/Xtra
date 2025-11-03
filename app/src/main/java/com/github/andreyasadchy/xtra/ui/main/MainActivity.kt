@@ -34,6 +34,7 @@ import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.Lifecycle
@@ -313,11 +314,11 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
     private fun setNavBarColor(isPortrait: Boolean) {
         when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
-                window.isNavigationBarContrastEnforced = !isPortrait || prefs.getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()
+                window.isNavigationBarContrastEnforced = !isPortrait || !binding.navBarContainer.isVisible
             }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
                 @Suppress("DEPRECATION")
-                window.navigationBarColor = if (isPortrait && !prefs.getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
+                window.navigationBarColor = if (isPortrait && binding.navBarContainer.isVisible) {
                     Color.TRANSPARENT
                 } else {
                     ContextCompat.getColor(this, if (!isLightTheme) R.color.darkScrim else R.color.lightScrim)
@@ -326,7 +327,7 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
             else -> {
                 @Suppress("DEPRECATION")
                 if (!isLightTheme) {
-                    window.navigationBarColor = if (isPortrait && !prefs.getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
+                    window.navigationBarColor = if (isPortrait && binding.navBarContainer.isVisible) {
                         Color.TRANSPARENT
                     } else {
                         ContextCompat.getColor(this, R.color.darkScrim)
@@ -714,21 +715,35 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
 
     private fun initNavigation() {
         navController = (supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment).navController
+        val tabList = prefs.getString(C.UI_NAVIGATION_TAB_LIST, null).let { tabPref ->
+            val defaultTabs = C.DEFAULT_NAVIGATION_TAB_LIST.split(',')
+            if (tabPref != null) {
+                val list = tabPref.split(',').filter { item ->
+                    defaultTabs.find { it.first() == item.first() } != null
+                }.toMutableList()
+                defaultTabs.forEachIndexed { index, item ->
+                    if (list.find { it.first() == item.first() } == null) {
+                        list.add(index, item)
+                    }
+                }
+                list
+            } else defaultTabs
+        }
         navController.setGraph(navController.navInflater.inflate(R.navigation.nav_graph).also {
             val startOnFollowed = prefs.getString(C.UI_STARTONFOLLOWED, "1")?.toIntOrNull() ?: 1
             val isLoggedIn = !TwitchApiHelper.getGQLHeaders(this, true)[C.HEADER_TOKEN].isNullOrBlank() ||
                     !TwitchApiHelper.getHelixHeaders(this)[C.HEADER_TOKEN].isNullOrBlank()
-            val defaultPage = prefs.getString(C.UI_DEFAULT_PAGE, "1")?.toIntOrNull() ?: 1
+            val defaultItem = tabList.find { it.split(':')[1] != "0" }?.split(':')[0] ?: "1"
             when {
-                (isLoggedIn && startOnFollowed < 2) || (!isLoggedIn && startOnFollowed == 0) || defaultPage == 2 -> {
+                (isLoggedIn && startOnFollowed < 2) || (!isLoggedIn && startOnFollowed == 0) || defaultItem == "2" -> {
                     if (prefs.getBoolean(C.UI_FOLLOWPAGER, true)) {
                         it.setStartDestination(R.id.followPagerFragment)
                     } else {
                         it.setStartDestination(R.id.followMediaFragment)
                     }
                 }
-                defaultPage == 0 -> it.setStartDestination(R.id.rootGamesFragment)
-                defaultPage == 3 -> {
+                defaultItem == "0" -> it.setStartDestination(R.id.rootGamesFragment)
+                defaultItem == "3" -> {
                     if (prefs.getBoolean(C.UI_SAVEDPAGER, true)) {
                         it.setStartDestination(R.id.savedPagerFragment)
                     } else {
@@ -741,24 +756,28 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
             if (!prefs.getBoolean(C.UI_THEME_BOTTOM_NAV_COLOR, true) && prefs.getBoolean(C.UI_THEME_MATERIAL3, true)) {
                 setBackgroundColor(MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurface))
             }
-            val tabs = prefs.getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet())?.toSortedSet()
-            if (!tabs.isNullOrEmpty()) {
-                tabs.forEach {
-                    when (it) {
-                        "0" -> menu.add(Menu.NONE, R.id.rootGamesFragment, Menu.NONE, R.string.games).setIcon(R.drawable.ic_games_black_24dp)
-                        "1" -> menu.add(Menu.NONE, R.id.rootTopFragment, Menu.NONE, R.string.popular).setIcon(R.drawable.ic_trending_up_black_24dp)
-                        "2" -> {
-                            if (prefs.getBoolean(C.UI_FOLLOWPAGER, true)) {
-                                menu.add(Menu.NONE, R.id.followPagerFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
-                            } else {
-                                menu.add(Menu.NONE, R.id.followMediaFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
+            if (tabList.any { it.split(':')[2] != "0" }) {
+                tabList.forEach {
+                    val split = it.split(':')
+                    val key = split[0]
+                    val enabled = split[2] != "0"
+                    if (enabled) {
+                        when (key) {
+                            "0" -> menu.add(Menu.NONE, R.id.rootGamesFragment, Menu.NONE, R.string.games).setIcon(R.drawable.ic_games_black_24dp)
+                            "1" -> menu.add(Menu.NONE, R.id.rootTopFragment, Menu.NONE, R.string.popular).setIcon(R.drawable.ic_trending_up_black_24dp)
+                            "2" -> {
+                                if (prefs.getBoolean(C.UI_FOLLOWPAGER, true)) {
+                                    menu.add(Menu.NONE, R.id.followPagerFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
+                                } else {
+                                    menu.add(Menu.NONE, R.id.followMediaFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
+                                }
                             }
-                        }
-                        "3" -> {
-                            if (prefs.getBoolean(C.UI_SAVEDPAGER, true)) {
-                                menu.add(Menu.NONE, R.id.savedPagerFragment, Menu.NONE, R.string.saved).setIcon(R.drawable.ic_file_download_black_24dp)
-                            } else {
-                                menu.add(Menu.NONE, R.id.savedMediaFragment, Menu.NONE, R.string.saved).setIcon(R.drawable.ic_file_download_black_24dp)
+                            "3" -> {
+                                if (prefs.getBoolean(C.UI_SAVEDPAGER, true)) {
+                                    menu.add(Menu.NONE, R.id.savedPagerFragment, Menu.NONE, R.string.saved).setIcon(R.drawable.ic_file_download_black_24dp)
+                                } else {
+                                    menu.add(Menu.NONE, R.id.savedMediaFragment, Menu.NONE, R.string.saved).setIcon(R.drawable.ic_file_download_black_24dp)
+                                }
                             }
                         }
                     }
@@ -890,7 +909,36 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
                         putBoolean(C.PLAYER_BACKGROUND_AUDIO, false)
                     }
                 }
-                putInt(C.SETTINGS_VERSION, 10)
+            }
+        }
+        if (version < 11) {
+            prefs.edit {
+                val tabs = prefs.getStringSet(C.UI_NAVIGATION_TABS, null)?.toSortedSet()
+                val defaultPage = prefs.getString(C.UI_DEFAULT_PAGE, null)
+                if (tabs != null || defaultPage != null) {
+                    val set = tabs ?: setOf("0", "1", "2", "3")
+                    val default = defaultPage ?: "1"
+                    val list = "0:${if (default == "0") "1" else "0"}:${if (set.contains("0")) "1" else "0"}," +
+                            "1:${if (default == "1") "1" else "0"}:${if (set.contains("1")) "1" else "0"}," +
+                            "2:${if (default == "2") "1" else "0"}:${if (set.contains("2")) "1" else "0"}," +
+                            "3:${if (default == "3") "1" else "0"}:${if (set.contains("3")) "1" else "0"}"
+                    putString(C.UI_NAVIGATION_TAB_LIST, list)
+                }
+                val defaultFollowPage = prefs.getString(C.UI_FOLLOW_DEFAULT_PAGE, null)
+                if (defaultFollowPage != null) {
+                    val list = "0:${if (defaultFollowPage == "3") "1" else "0"}:1," +
+                            "1:${if (defaultFollowPage == "0") "1" else "0"}:1," +
+                            "2:${if (defaultFollowPage == "1") "1" else "0"}:1," +
+                            "3:${if (defaultFollowPage == "2") "1" else "0"}:1"
+                    putString(C.UI_FOLLOWING_TABS, list)
+                }
+                val defaultSavedPage = prefs.getString(C.UI_SAVED_DEFAULT_PAGE, null)
+                if (defaultSavedPage != null) {
+                    val list = "0:${if (defaultSavedPage == "0") "1" else "0"}:1," +
+                            "1:${if (defaultSavedPage == "1") "1" else "0"}:1"
+                    putString(C.UI_SAVED_TABS, list)
+                }
+                putInt(C.SETTINGS_VERSION, 11)
             }
         }
     }

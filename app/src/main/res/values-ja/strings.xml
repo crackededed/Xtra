@@ -363,7 +363,6 @@
     <string name="position">位置: %s</string>
     <string name="player_viewerlist">視聴者数から視聴者リストを開く</string>
     <string name="use_followpager">[フォロー中] ページにタブ UI を使用 </string>
-    <string name="default_follow_tab">デフォルトの [フォロー中] タブ</string>
     <string name="sleep_timer_lock">終了時に画面をロック</string>
     <string name="sleep_timer_lock_permissions">終了時に画面をロック (要デバイス管理アプリ権限)</string>
     <string name="admin_settings">デバイス管理アプリを有効化/無効化</string>
@@ -404,7 +403,6 @@
     <string name="vod_ignore_user">このユーザーの自動削除を無視</string>
     <string name="bookmarks">ブックマーク</string>
     <string name="use_savedpager">[保存済み] ページにタブ UI を使用</string>
-    <string name="default_saved_tab">デフォルトの [保存済み] タブ</string>
     <string name="vod_remove_ignore">無視リストから削除</string>
     <string name="remove_bookmark">ブックマークを削除</string>
     <string name="saved">保存済み</string>
@@ -452,7 +450,6 @@
     <string name="save_default">デフォルトとして保存</string>
     <string name="viewers_high">視聴者数 (多い順)</string>
     <string name="viewers_low">視聴者数 (少ない順)</string>
-    <string name="tags">タグ</string>
     <string name="search_videos">動画検索</string>
     <string name="points_earned">%d チャンネルポイントを獲得しました</string>
     <string name="points_notify">チャンネルポイント獲得時に通知</string>
@@ -680,7 +677,6 @@
     <string name="avoid_rounded_corners">Avoid rounded screen corners</string>
     <string name="api_web_gql_token">Web GQL token</string>
     <string name="use_new_pubsub">Use new PubSub url</string>
-    <string name="default_page">Default page</string>
     <string name="chat_size_modifier">Size modifier</string>
     <string name="chat_emote_size">Emote size</string>
     <string name="chat_badge_size">Badge size</string>
@@ -709,4 +705,12 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="following_tabs">Following tabs</string>
+    <string name="saved_tabs">Saved tabs</string>
+    <string name="channel_tabs">Channel tabs</string>
+    <string name="game_tabs">Game tabs</string>
+    <string name="search_tabs">Search tabs</string>
+    <string name="add_tag">Add tag</string>
+    <string name="save_filters">Save filters</string>
+    <string name="delete_filter_message">Are you sure you want to delete this filter?</string>
 </resources>

@@ -70,7 +70,12 @@ class FollowedChannelsViewModel @Inject constructor(
                 helixHeaders = TwitchApiHelper.getHelixHeaders(applicationContext),
                 helixRepository = helixRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                apiPref = applicationContext.prefs().getString(C.API_PREFS_FOLLOWED_CHANNELS, null)?.split(',') ?: TwitchApiHelper.followedChannelsApiDefaults,
+                apiPref = (applicationContext.prefs().getString(C.API_PREFS_FOLLOWED_CHANNELS, null) ?: C.DEFAULT_API_PREFS_FOLLOWED_CHANNELS).split(',').mapNotNull {
+                    val split = it.split(':')
+                    val key = split[0]
+                    val enabled = split[1] != "0"
+                    if (enabled) key else null
+                },
                 networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
             )
         }.flow

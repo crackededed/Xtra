@@ -79,8 +79,6 @@ class GameVideosViewModel @Inject constructor(
         get() = filter.value?.type ?: VideosSortDialog.VIDEO_TYPE_ALL
     val languages: Array<String>
         get() = filter.value?.languages ?: emptyArray()
-    val saveSort: Boolean
-        get() = filter.value?.saveSort == true
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow = filter.flatMapLatest { filter ->
@@ -141,7 +139,12 @@ class GameVideosViewModel @Inject constructor(
                 helixHeaders = TwitchApiHelper.getHelixHeaders(applicationContext),
                 helixRepository = helixRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                apiPref = applicationContext.prefs().getString(C.API_PREFS_GAME_VIDEOS, null)?.split(',') ?: TwitchApiHelper.gameVideosApiDefaults,
+                apiPref = (applicationContext.prefs().getString(C.API_PREFS_GAME_VIDEOS, null) ?: C.DEFAULT_API_PREFS_GAME_VIDEOS).split(',').mapNotNull {
+                    val split = it.split(':')
+                    val key = split[0]
+                    val enabled = split[1] != "0"
+                    if (enabled) key else null
+                },
                 networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
             )
         }.flow
@@ -155,8 +158,12 @@ class GameVideosViewModel @Inject constructor(
         sortGameRepository.save(item)
     }
 
-    fun setFilter(sort: String?, period: String?, type: String?, languages: Array<String>?, saveSort: Boolean?) {
-        filter.value = Filter(sort, period, type, languages, saveSort)
+    suspend fun deleteSortGame(item: SortGame) {
+        sortGameRepository.delete(item)
+    }
+
+    fun setFilter(sort: String?, period: String?, type: String?, languages: Array<String>?) {
+        filter.value = Filter(sort, period, type, languages)
     }
 
     class Filter(
@@ -164,7 +171,6 @@ class GameVideosViewModel @Inject constructor(
         val period: String?,
         val type: String?,
         val languages: Array<String>?,
-        val saveSort: Boolean?,
     )
 
     fun saveBookmark(filesDir: String, video: Video, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>) {

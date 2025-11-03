@@ -76,8 +76,6 @@ class ChannelVideosViewModel @Inject constructor(
         get() = filter.value?.period ?: VideosSortDialog.PERIOD_ALL
     val type: String
         get() = filter.value?.type ?: VideosSortDialog.VIDEO_TYPE_ALL
-    val saveSort: Boolean
-        get() = filter.value?.saveSort == true
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow = filter.flatMapLatest { filter ->
@@ -135,7 +133,12 @@ class ChannelVideosViewModel @Inject constructor(
                 helixHeaders = TwitchApiHelper.getHelixHeaders(applicationContext),
                 helixRepository = helixRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                apiPref = applicationContext.prefs().getString(C.API_PREFS_CHANNEL_VIDEOS, null)?.split(',') ?: TwitchApiHelper.channelVideosApiDefaults,
+                apiPref = (applicationContext.prefs().getString(C.API_PREFS_CHANNEL_VIDEOS, null) ?: C.DEFAULT_API_PREFS_CHANNEL_VIDEOS).split(',').mapNotNull {
+                    val split = it.split(':')
+                    val key = split[0]
+                    val enabled = split[1] != "0"
+                    if (enabled) key else null
+                },
                 networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
             )
         }.flow
@@ -149,15 +152,18 @@ class ChannelVideosViewModel @Inject constructor(
         sortChannelRepository.save(item)
     }
 
-    fun setFilter(sort: String?, type: String?, saveSort: Boolean?) {
-        filter.value = Filter(sort, null, type, saveSort)
+    suspend fun deleteSortChannel(item: SortChannel) {
+        sortChannelRepository.delete(item)
+    }
+
+    fun setFilter(sort: String?, type: String?) {
+        filter.value = Filter(sort, null, type)
     }
 
     class Filter(
         val sort: String?,
         val period: String?,
         val type: String?,
-        val saveSort: Boolean?,
     )
 
     fun saveBookmark(filesDir: String, video: Video, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>) {

@@ -27,6 +27,7 @@ import com.github.andreyasadchy.xtra.ui.login.LoginActivity
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.saved.bookmarks.BookmarksFragment
 import com.github.andreyasadchy.xtra.ui.saved.downloads.DownloadsFragment
+import com.github.andreyasadchy.xtra.ui.saved.filters.FiltersFragment
 import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.settings.SettingsActivity
 import com.github.andreyasadchy.xtra.util.C
@@ -137,21 +138,57 @@ class SavedMediaFragment : Fragment(), Scrollable, FragmentHost {
                     else -> false
                 }
             }
-            spinner.visible()
+            val tabList = requireContext().prefs().getString(C.UI_SAVED_TABS, null).let { tabPref ->
+                val defaultTabs = C.DEFAULT_SAVED_TABS.split(',')
+                if (tabPref != null) {
+                    val list = tabPref.split(',').filter { item ->
+                        defaultTabs.find { it.first() == item.first() } != null
+                    }.toMutableList()
+                    defaultTabs.forEachIndexed { index, item ->
+                        if (list.find { it.first() == item.first() } == null) {
+                            list.add(index, item)
+                        }
+                    }
+                    list
+                } else defaultTabs
+            }
+            val tabs = tabList.mapNotNull {
+                val split = it.split(':')
+                val key = split[0]
+                val enabled = split[2] != "0"
+                if (enabled) {
+                    key
+                } else {
+                    null
+                }
+            }
+            if (tabs.size > 1) {
+                spinner.visible()
+            }
             (spinner.editText as? MaterialAutoCompleteTextView)?.apply {
-                setSimpleItems(resources.getStringArray(R.array.spinnerSavedEntries))
+                setSimpleItems(tabs.map {
+                    when (it) {
+                        "0" -> getString(R.string.bookmarks)
+                        "1" -> getString(R.string.downloads)
+                        "2" -> getString(R.string.filters)
+                        else -> getString(R.string.bookmarks)
+                    }
+                }.toTypedArray().ifEmpty { arrayOf(getString(R.string.bookmarks)) })
                 setOnItemClickListener { _, _, position, _ ->
                     if (position != previousItem) {
-                        childFragmentManager.beginTransaction().replace(R.id.fragmentContainer, onSpinnerItemSelected(position)).commit()
+                        childFragmentManager.beginTransaction().replace(R.id.fragmentContainer, onSpinnerItemSelected(tabs, position)).commit()
                         previousItem = position
                     }
                 }
                 if (previousItem == -1) {
-                    val defaultItem = requireContext().prefs().getString(C.UI_SAVED_DEFAULT_PAGE, "0")?.toIntOrNull() ?: 0
-                    childFragmentManager.beginTransaction().replace(R.id.fragmentContainer, onSpinnerItemSelected(defaultItem)).commit()
-                    previousItem = defaultItem
+                    val defaultItem = tabList.find { it.split(':')[1] != "0" }?.split(':')[0] ?: "1"
+                    val position = tabs.indexOf(defaultItem).takeIf { it != -1 } ?: tabs.indexOf("1").takeIf { it != -1 } ?: 0
+                    childFragmentManager.beginTransaction().replace(R.id.fragmentContainer, onSpinnerItemSelected(tabs, position)).commit()
+                    previousItem = position
                 }
-                setText(adapter.getItem(previousItem).toString(), false)
+                if (previousItem <= tabs.lastIndex) {
+                    setText(adapter.getItem(previousItem).toString(), false)
+                }
             }
             childFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
                 override fun onFragmentViewCreated(fm: FragmentManager, f: Fragment, v: View, savedInstanceState: Bundle?) {
@@ -187,10 +224,12 @@ class SavedMediaFragment : Fragment(), Scrollable, FragmentHost {
         }
     }
 
-    private fun onSpinnerItemSelected(position: Int): Fragment {
-        return when (position) {
-            0 -> BookmarksFragment()
-            else -> DownloadsFragment()
+    private fun onSpinnerItemSelected(tabs: List<String>, position: Int): Fragment {
+        return when (tabs.getOrNull(position)) {
+            "0" -> BookmarksFragment()
+            "1" -> DownloadsFragment()
+            "2" -> FiltersFragment()
+            else -> BookmarksFragment()
         }
     }
 

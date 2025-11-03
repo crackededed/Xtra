@@ -5,8 +5,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.fragment.app.viewModels
@@ -17,18 +19,19 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
+import androidx.paging.PagingData
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentGamesBinding
 import com.github.andreyasadchy.xtra.model.ui.Game
+import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.ui.common.GamesAdapter
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.login.LoginActivity
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragmentDirections
-import com.github.andreyasadchy.xtra.ui.search.tags.TagSearchFragmentDirections
 import com.github.andreyasadchy.xtra.ui.settings.SettingsActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
@@ -42,7 +45,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class GamesFragment : PagedListFragment(), Scrollable {
+class GamesFragment : PagedListFragment(), Scrollable, GamesSortDialog.OnFilter {
 
     private var _binding: FragmentGamesBinding? = null
     private val binding get() = _binding!!
@@ -113,19 +116,33 @@ class GamesFragment : PagedListFragment(), Scrollable {
                 toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                     topMargin = insets.top
                 }
-                if (requireContext().prefs().getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
+                if (activity.findViewById<LinearLayout>(R.id.navBarContainer)?.isVisible == false) {
                     val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
                     recyclerViewLayout.recyclerView.updatePadding(bottom = systemBars.bottom)
                 }
                 WindowInsetsCompat.CONSUMED
             }
         }
-        pagingAdapter = GamesAdapter(this)
+        pagingAdapter = GamesAdapter(this) { addTag(it) }
         setAdapter(binding.recyclerViewLayout.recyclerView, pagingAdapter)
     }
 
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
+            if (viewModel.filter.value == null) {
+                viewModel.setFilter(viewModel.tags.ifEmpty { args.tags })
+                viewModel.filtersText.value = if (viewModel.tags.isNotEmpty()) {
+                    buildString {
+                        append(
+                            requireContext().resources.getQuantityString(
+                                R.plurals.tags,
+                                viewModel.tags.size,
+                                viewModel.tags.mapNotNull { it.name }.joinToString()
+                            )
+                        )
+                    }
+                } else null
+            }
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.flow.collectLatest { pagingData ->
                     pagingAdapter.submitData(pagingData)
@@ -143,10 +160,64 @@ class GamesFragment : PagedListFragment(), Scrollable {
         with(binding) {
             sortBar.root.visible()
             sortBar.root.setOnClickListener {
-                findNavController().navigate(
-                    TagSearchFragmentDirections.actionGlobalTagSearchFragment(getGameTags = true)
+                val tags = viewModel.tags.mapNotNull { tag ->
+                    if (tag.id != null && tag.name != null) {
+                        tag.id to tag.name
+                    } else null
+                }.toMap()
+                GamesSortDialog.newInstance(
+                    tagIds = tags.keys.toTypedArray(),
+                    tagNames = tags.values.toTypedArray(),
+                ).show(childFragmentManager, null)
+            }
+            sortBar.sortText.gone()
+            viewLifecycleOwner.lifecycleScope.launch {
+                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.filtersText.collectLatest {
+                        if (it != null) {
+                            sortBar.filtersText.visible()
+                            sortBar.filtersText.text = it
+                        } else {
+                            sortBar.filtersText.gone()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun addTag(tag: Tag) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            pagingAdapter.submitData(PagingData.empty())
+            val tags = viewModel.tags.plus(tag).sortedBy { it.id }.toTypedArray()
+            viewModel.setFilter(tags)
+            viewModel.filtersText.value = buildString {
+                append(
+                    requireContext().resources.getQuantityString(
+                        R.plurals.tags,
+                        viewModel.tags.size,
+                        viewModel.tags.mapNotNull { it.name }.joinToString()
+                    )
                 )
             }
+        }
+    }
+
+    override fun onChange(tags: Array<Tag>) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            pagingAdapter.submitData(PagingData.empty())
+            viewModel.setFilter(tags)
+            viewModel.filtersText.value = if (viewModel.tags.isNotEmpty()) {
+                buildString {
+                    append(
+                        requireContext().resources.getQuantityString(
+                            R.plurals.tags,
+                            viewModel.tags.size,
+                            viewModel.tags.mapNotNull { it.name }.joinToString()
+                        )
+                    )
+                }
+            } else null
         }
     }
 

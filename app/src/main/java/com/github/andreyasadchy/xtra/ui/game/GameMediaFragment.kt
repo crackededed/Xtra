@@ -195,26 +195,56 @@ class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                     }
                 }
             }
-            if (!args.gameId.isNullOrBlank() || !args.gameName.isNullOrBlank()) {
-                spinner.visible()
-                (spinner.editText as? MaterialAutoCompleteTextView)?.apply {
-                    setSimpleItems(resources.getStringArray(R.array.spinnerMedia))
-                    setOnItemClickListener { _, _, position, _ ->
-                        if (position != previousItem) {
-                            childFragmentManager.beginTransaction().replace(R.id.fragmentContainer, onSpinnerItemSelected(position)).commit()
-                            previousItem = position
+            val tabList = requireContext().prefs().getString(C.UI_GAME_TABS, null).let { tabPref ->
+                val defaultTabs = C.DEFAULT_GAME_TABS.split(',')
+                if (tabPref != null) {
+                    val list = tabPref.split(',').filter { item ->
+                        defaultTabs.find { it.first() == item.first() } != null
+                    }.toMutableList()
+                    defaultTabs.forEachIndexed { index, item ->
+                        if (list.find { it.first() == item.first() } == null) {
+                            list.add(index, item)
                         }
                     }
-                    if (previousItem == -1) {
-                        childFragmentManager.beginTransaction().replace(R.id.fragmentContainer, onSpinnerItemSelected(0)).commit()
-                        previousItem = 0
-                    }
-                    setText(adapter.getItem(previousItem).toString(), false)
+                    list
+                } else defaultTabs
+            }
+            val tabs = tabList.mapNotNull {
+                val split = it.split(':')
+                val key = split[0]
+                val enabled = split[2] != "0"
+                if (enabled) {
+                    key
+                } else {
+                    null
                 }
-            } else {
+            }
+            if (tabs.size > 1) {
+                spinner.visible()
+            }
+            (spinner.editText as? MaterialAutoCompleteTextView)?.apply {
+                setSimpleItems(tabs.map {
+                    when (it) {
+                        "0" -> getString(R.string.videos)
+                        "1" -> getString(R.string.live)
+                        "2" -> getString(R.string.clips)
+                        else -> getString(R.string.live)
+                    }
+                }.toTypedArray().ifEmpty { arrayOf(getString(R.string.live)) })
+                setOnItemClickListener { _, _, position, _ ->
+                    if (position != previousItem) {
+                        childFragmentManager.beginTransaction().replace(R.id.fragmentContainer, onSpinnerItemSelected(tabs, position)).commit()
+                        previousItem = position
+                    }
+                }
                 if (previousItem == -1) {
-                    childFragmentManager.beginTransaction().replace(R.id.fragmentContainer, onSpinnerItemSelected(0)).commit()
-                    previousItem = 0
+                    val defaultItem = tabList.find { it.split(':')[1] != "0" }?.split(':')[0] ?: "1"
+                    val position = tabs.indexOf(defaultItem).takeIf { it != -1 } ?: tabs.indexOf("1").takeIf { it != -1 } ?: 0
+                    childFragmentManager.beginTransaction().replace(R.id.fragmentContainer, onSpinnerItemSelected(tabs, position)).commit()
+                    previousItem = position
+                }
+                if (previousItem <= tabs.lastIndex) {
+                    setText(adapter.getItem(previousItem).toString(), false)
                 }
             }
             childFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
@@ -272,13 +302,13 @@ class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
         }
     }
 
-    private fun onSpinnerItemSelected(position: Int): Fragment {
-        val fragment: Fragment = when (position) {
-            0 -> GameStreamsFragment()
-            1 -> GameVideosFragment()
-            else -> GameClipsFragment()
-        }
-        return fragment.also { it.arguments = requireArguments() }
+    private fun onSpinnerItemSelected(tabs: List<String>, position: Int): Fragment {
+        return when (tabs.getOrNull(position)) {
+            "0" -> GameVideosFragment()
+            "1" -> GameStreamsFragment()
+            "2" -> GameClipsFragment()
+            else -> GameStreamsFragment()
+        }.also { it.arguments = requireArguments() }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

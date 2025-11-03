@@ -136,7 +136,34 @@ class SavedPagerFragment : Fragment(), Scrollable, FragmentHost {
                     else -> false
                 }
             }
-            val adapter = SavedPagerAdapter(this@SavedPagerFragment)
+            val tabList = requireContext().prefs().getString(C.UI_SAVED_TABS, null).let { tabPref ->
+                val defaultTabs = C.DEFAULT_SAVED_TABS.split(',')
+                if (tabPref != null) {
+                    val list = tabPref.split(',').filter { item ->
+                        defaultTabs.find { it.first() == item.first() } != null
+                    }.toMutableList()
+                    defaultTabs.forEachIndexed { index, item ->
+                        if (list.find { it.first() == item.first() } == null) {
+                            list.add(index, item)
+                        }
+                    }
+                    list
+                } else defaultTabs
+            }
+            val tabs = tabList.mapNotNull {
+                val split = it.split(':')
+                val key = split[0]
+                val enabled = split[2] != "0"
+                if (enabled) {
+                    key
+                } else {
+                    null
+                }
+            }
+            if (tabs.size <= 1) {
+                tabLayout.gone()
+            }
+            val adapter = SavedPagerAdapter(this@SavedPagerFragment, tabs)
             viewPager.adapter = adapter
             viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
@@ -167,15 +194,21 @@ class SavedPagerFragment : Fragment(), Scrollable, FragmentHost {
                 }
             })
             if (firstLaunch) {
-                viewPager.setCurrentItem(requireContext().prefs().getString(C.UI_SAVED_DEFAULT_PAGE, "0")?.toIntOrNull() ?: 0, false)
+                val defaultItem = tabList.find { it.split(':')[1] != "0" }?.split(':')[0] ?: "1"
+                viewPager.setCurrentItem(
+                    tabs.indexOf(defaultItem).takeIf { it != -1 } ?: tabs.indexOf("1").takeIf { it != -1 } ?: 0,
+                    false
+                )
                 firstLaunch = false
             }
             viewPager.offscreenPageLimit = adapter.itemCount
             viewPager.reduceDragSensitivity()
             TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-                tab.text = when (position) {
-                    0 -> getString(R.string.bookmarks)
-                    else -> getString(R.string.downloads)
+                tab.text = when (tabs.getOrNull(position)) {
+                    "0" -> getString(R.string.bookmarks)
+                    "1" -> getString(R.string.downloads)
+                    "2" -> getString(R.string.filters)
+                    else -> getString(R.string.bookmarks)
                 }
             }.attach()
             ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->

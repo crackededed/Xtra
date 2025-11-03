@@ -4,9 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.edit
+import android.widget.LinearLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -83,7 +84,7 @@ class ChannelVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosS
         }, showChannel = false)
         setAdapter(binding.recyclerView, pagingAdapter)
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
-            if (requireContext().prefs().getStringSet(C.UI_NAVIGATION_TABS, resources.getStringArray(R.array.pageValues).toSet()).isNullOrEmpty()) {
+            if (activity?.findViewById<LinearLayout>(R.id.navBarContainer)?.isVisible == false) {
                 val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
                 binding.recyclerView.updatePadding(bottom = insets.bottom)
             }
@@ -94,13 +95,10 @@ class ChannelVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosS
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                val sortValues = args.channelId?.let {
-                    viewModel.getSortChannel(it)?.takeIf { it.saveSort == true }
-                } ?: viewModel.getSortChannel("default")
+                val sortValues = args.channelId?.let { viewModel.getSortChannel(it) } ?: viewModel.getSortChannel("default")
                 viewModel.setFilter(
                     sort = sortValues?.videoSort,
                     type = sortValues?.videoType,
-                    saveSort = sortValues?.saveSort,
                 )
                 viewModel.sortText.value = requireContext().getString(
                     R.string.sort_and_type,
@@ -111,7 +109,14 @@ class ChannelVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosS
                             else -> R.string.upload_date
                         }
                     ),
-                    requireContext().getString(R.string.all)
+                    requireContext().getString(
+                        when (viewModel.type) {
+                            VideosSortDialog.VIDEO_TYPE_ARCHIVE -> R.string.video_type_archive
+                            VideosSortDialog.VIDEO_TYPE_HIGHLIGHT -> R.string.video_type_highlight
+                            VideosSortDialog.VIDEO_TYPE_UPLOAD -> R.string.video_type_upload
+                            else -> R.string.all
+                        }
+                    )
                 )
             }
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -142,13 +147,14 @@ class ChannelVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosS
     override fun setupSortBar(sortBar: SortBarBinding) {
         sortBar.root.visible()
         sortBar.root.setOnClickListener {
-            VideosSortDialog.newInstance(
-                sort = viewModel.sort,
-                period = viewModel.period,
-                type = viewModel.type,
-                saveSort = viewModel.saveSort,
-                saveDefault = requireContext().prefs().getBoolean(C.SORT_DEFAULT_CHANNEL_VIDEOS, false)
-            ).show(childFragmentManager, null)
+            viewLifecycleOwner.lifecycleScope.launch {
+                VideosSortDialog.newInstance(
+                    sort = viewModel.sort,
+                    period = viewModel.period,
+                    type = viewModel.type,
+                    saved = args.channelId?.let { viewModel.getSortChannel(it) } != null
+                ).show(childFragmentManager, null)
+            }
         }
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -159,66 +165,47 @@ class ChannelVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosS
         }
     }
 
-    override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languages: Array<String>, saveSort: Boolean, saveDefault: Boolean) {
+    override fun onChange(sort: String, sortText: CharSequence, period: String, periodText: CharSequence, type: String, typeText: CharSequence, languages: Array<String>, changed: Boolean, saveSort: Boolean, saveDefault: Boolean) {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
-                binding.scrollTop.gone()
-                pagingAdapter.submitData(PagingData.empty())
-                viewModel.setFilter(sort, type, saveSort)
-                viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, typeText)
-                val sortValues = args.channelId?.let { viewModel.getSortChannel(it) }
+                if (changed) {
+                    binding.scrollTop.gone()
+                    pagingAdapter.submitData(PagingData.empty())
+                    viewModel.setFilter(sort, type)
+                    viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, typeText)
+                }
                 if (saveSort) {
-                    if (sortValues != null) {
-                        sortValues.apply {
-                            this.saveSort = true
+                    args.channelId?.let { id ->
+                        val item = viewModel.getSortChannel(id)?.apply {
                             videoSort = sort
                             videoType = type
-                        }
-                    } else {
-                        args.channelId?.let {
-                            SortChannel(
-                                id = it,
-                                saveSort = true,
-                                videoSort = sort,
-                                videoType = type
-                            )
-                        }
-                    }
-                } else {
-                    sortValues?.apply {
-                        this.saveSort = false
-                    }
-                }?.let { viewModel.saveSortChannel(it) }
-                if (saveDefault) {
-                    if (sortValues != null) {
-                        sortValues.apply {
-                            this.saveSort = saveSort
-                        }
-                    } else {
-                        args.channelId?.let {
-                            SortChannel(
-                                id = it,
-                                saveSort = saveSort
-                            )
-                        }
-                    }?.let { viewModel.saveSortChannel(it) }
-                    val sortDefaults = viewModel.getSortChannel("default")
-                    if (sortDefaults != null) {
-                        sortDefaults.apply {
-                            videoSort = sort
-                            videoType = type
-                        }
-                    } else {
-                        SortChannel(
-                            id = "default",
+                        } ?: SortChannel(
+                            id = id,
                             videoSort = sort,
                             videoType = type
                         )
-                    }.let { viewModel.saveSortChannel(it) }
+                        viewModel.saveSortChannel(item)
+                    }
                 }
-                if (saveDefault != requireContext().prefs().getBoolean(C.SORT_DEFAULT_CHANNEL_VIDEOS, false)) {
-                    requireContext().prefs().edit { putBoolean(C.SORT_DEFAULT_CHANNEL_VIDEOS, saveDefault) }
+                if (saveDefault) {
+                    val item = viewModel.getSortChannel("default")?.apply {
+                        videoSort = sort
+                        videoType = type
+                    } ?: SortChannel(
+                        id = "default",
+                        videoSort = sort,
+                        videoType = type
+                    )
+                    viewModel.saveSortChannel(item)
                 }
+            }
+        }
+    }
+
+    override fun deleteSavedSort() {
+        if ((parentFragment as? FragmentHost)?.currentFragment == this) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                args.channelId?.let { viewModel.getSortChannel(it) }?.let { viewModel.deleteSortChannel(it) }
             }
         }
     }

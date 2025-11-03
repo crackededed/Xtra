@@ -6,7 +6,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:paddingStart="10dp"
+    android:paddingEnd="10dp">
 
     <ImageView
         android:id="@+id/image"
@@ -19,9 +21,24 @@
 
     <TextView
         android:id="@+id/text"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="6dp"
+        android:layout_weight="1"
         android:textAppearance="?attr/textAppearanceBodyMedium"
         tools:text="text" />
+
+    <ImageButton
+        android:id="@+id/setAsDefault"
+        android:layout_width="50dp"
+        android:layout_height="match_parent"
+        android:background="?android:selectableItemBackground"
+        android:src="@drawable/outline_home_black_24"
+        app:tint="?attr/colorControlNormal" />
+
+    <CheckBox
+        android:id="@+id/checkBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

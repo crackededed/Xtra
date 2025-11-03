@@ -40,8 +40,6 @@ class ChannelClipsViewModel @Inject constructor(
 
     val period: String
         get() = filter.value?.period ?: VideosSortDialog.PERIOD_WEEK
-    val saveSort: Boolean
-        get() = filter.value?.saveSort == true
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow = filter.flatMapLatest { filter ->
@@ -89,7 +87,12 @@ class ChannelClipsViewModel @Inject constructor(
                 helixHeaders = TwitchApiHelper.getHelixHeaders(applicationContext),
                 helixRepository = helixRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                apiPref = applicationContext.prefs().getString(C.API_PREFS_GAME_CLIPS, null)?.split(',') ?: TwitchApiHelper.gameClipsApiDefaults,
+                apiPref = (applicationContext.prefs().getString(C.API_PREFS_CHANNEL_CLIPS, null) ?: C.DEFAULT_API_PREFS_CHANNEL_CLIPS).split(',').mapNotNull {
+                    val split = it.split(':')
+                    val key = split[0]
+                    val enabled = split[1] != "0"
+                    if (enabled) key else null
+                },
                 networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
             )
         }.flow
@@ -103,12 +106,15 @@ class ChannelClipsViewModel @Inject constructor(
         sortChannelRepository.save(item)
     }
 
-    fun setFilter(period: String?, saveSort: Boolean?) {
-        filter.value = Filter(period, saveSort)
+    suspend fun deleteSortChannel(item: SortChannel) {
+        sortChannelRepository.delete(item)
+    }
+
+    fun setFilter(period: String?) {
+        filter.value = Filter(period)
     }
 
     class Filter(
         val period: String?,
-        val saveSort: Boolean?,
     )
 }

@@ -368,7 +368,6 @@
     <string name="position">Posición: %s</string>
     <string name="player_viewerlist">Abrir lista de espectadores a partir del recuento de vistas</string>
     <string name="use_followpager">Utilizar el diseño de pestañas para la página "Siguiendo"</string>
-    <string name="default_follow_tab">Pestaña en "Siguiendo" por defecto</string>
     <string name="sleep_timer_lock">Bloquear pantalla tras detener reproducción </string>
     <string name="sleep_timer_lock_permissions">Bloquear pantalla tras detener reproducción (requiere permisos de administrador)</string>
     <string name="admin_settings">Habilitar/deshabilitar como aplicación de administración del dispositivo</string>
@@ -409,7 +408,6 @@
     <string name="vod_ignore_user">Ignorar el borrado automático para este usuario</string>
     <string name="bookmarks">Marcadores</string>
     <string name="use_savedpager">Utilizar el diseño de pestañas para la página "Guardado"</string>
-    <string name="default_saved_tab">Pestaña en "Guardado" por defecto</string>
     <string name="vod_remove_ignore">Eliminar de la lista de ignorados</string>
     <string name="remove_bookmark">Eliminar marcador</string>
     <string name="saved">Guardado</string>
@@ -457,7 +455,6 @@
     <string name="save_default">Guardar como predeterminado</string>
     <string name="viewers_high">Espectadores (de alto a bajo)</string>
     <string name="viewers_low">Espectadores (de menor a mayor)</string>
-    <string name="tags">Etiquetas</string>
     <string name="search_videos">Buscar vídeos</string>
     <string name="points_earned">Recibió %d puntos de canal</string>
     <string name="points_notify">Notificar cuando se ganan puntos del canal</string>
@@ -685,7 +682,6 @@
     <string name="avoid_rounded_corners">Evitar esquinas redondeadas de pantalla</string>
     <string name="api_web_gql_token">Token de Web GQL</string>
     <string name="use_new_pubsub">Utilizar la nueva URL de PubSub</string>
-    <string name="default_page">Página predeterminada</string>
     <string name="chat_size_modifier">Modificador de tamaño</string>
     <string name="chat_emote_size">Tamaño de emote</string>
     <string name="chat_badge_size">Tamaño de insignia</string>
@@ -714,4 +710,12 @@
     <string name="recent">Más recientes</string>
     <string name="filters">Filtros</string>
     <string name="sort_by">Ordenar por: %1$s</string>
+    <string name="following_tabs">Following tabs</string>
+    <string name="saved_tabs">Saved tabs</string>
+    <string name="channel_tabs">Channel tabs</string>
+    <string name="game_tabs">Game tabs</string>
+    <string name="search_tabs">Search tabs</string>
+    <string name="add_tag">Add tag</string>
+    <string name="save_filters">Save filters</string>
+    <string name="delete_filter_message">Are you sure you want to delete this filter?</string>
 </resources>

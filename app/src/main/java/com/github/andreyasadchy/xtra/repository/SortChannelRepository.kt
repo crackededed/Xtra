@@ -19,4 +19,8 @@ class SortChannelRepository @Inject constructor(
     suspend fun save(item: SortChannel) = withContext(Dispatchers.IO) {
         sortChannelDao.insert(item)
     }
+
+    suspend fun delete(item: SortChannel) = withContext(Dispatchers.IO) {
+        sortChannelDao.delete(item)
+    }
 }

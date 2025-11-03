@@ -363,7 +363,6 @@
     <string name="position">Position: %s</string>
     <string name="player_viewerlist">Zuschauerliste öffnen über Zuschauerzahl</string>
     <string name="use_followpager">Tab-Layout für Folgeseite verwenden</string>
-    <string name="default_follow_tab">Standard-Tab zum Folgen</string>
     <string name="sleep_timer_lock">Danach Display sperren</string>
     <string name="sleep_timer_lock_permissions">Danach Display sperren (benötigt Admin-Rechte)</string>
     <string name="admin_settings">Als Geräte Admin App aktivieren/deaktivieren</string>
@@ -404,7 +403,6 @@
     <string name="vod_ignore_user">Automatisches Löschen für diesen Benutzer ignorieren</string>
     <string name="bookmarks">Lesezeichen</string>
     <string name="use_savedpager">Tabs Layout für gespeicherte Seite nutzen</string>
-    <string name="default_saved_tab">Gespeichert als Standardseite</string>
     <string name="vod_remove_ignore">Von Ignorierliste entfernen</string>
     <string name="remove_bookmark">Lesezeichen entfernen</string>
     <string name="saved">Gespeichert</string>
@@ -452,7 +450,6 @@
     <string name="save_default">Als Standard speichern</string>
     <string name="viewers_high">Zuschauer (viel zu wenig)</string>
     <string name="viewers_low">Zuschauer (wenig zu viel)</string>
-    <string name="tags">Tags</string>
     <string name="search_videos">Videos durchsuchen</string>
     <string name="points_earned">%d Kanalpunkte verdient</string>
     <string name="points_notify">Benachrichtigen, wenn Kanal Punkte gesammelt wurden</string>
@@ -680,7 +677,6 @@
     <string name="avoid_rounded_corners">Vermeide abgerundete Bildschirmecken</string>
     <string name="api_web_gql_token">Web-GQL-Token</string>
     <string name="use_new_pubsub">Neue PubSub-URL verwenden</string>
-    <string name="default_page">Standardseite</string>
     <string name="chat_size_modifier">Größenmodifikator</string>
     <string name="chat_emote_size">Emote-Größe</string>
     <string name="chat_badge_size">Abzeichengröße</string>
@@ -709,4 +705,12 @@
     <string name="recent">Recently started</string>
     <string name="filters">Filters</string>
     <string name="sort_by">Sort by: %1$s</string>
+    <string name="following_tabs">Following tabs</string>
+    <string name="saved_tabs">Saved tabs</string>
+    <string name="channel_tabs">Channel tabs</string>
+    <string name="game_tabs">Game tabs</string>
+    <string name="search_tabs">Search tabs</string>
+    <string name="add_tag">Add tag</string>
+    <string name="save_filters">Save filters</string>
+    <string name="delete_filter_message">Are you sure you want to delete this filter?</string>
 </resources>

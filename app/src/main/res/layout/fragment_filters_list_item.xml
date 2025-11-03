@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="?attr/cardStyle"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/topLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginTop="7dp"
+            android:layout_marginBottom="7dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/options"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/gameName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:visibility="gone"
+                tools:text="@sample/videos.json/vods/title"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/tags"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?android:attr/textColorSecondary"
+                android:visibility="gone"
+                tools:text="@sample/videos.json/vods/channel/name"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/languages"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?android:attr/textColorSecondary"
+                android:visibility="gone"
+                tools:text="@sample/videos.json/vods/game"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/options"
+            style="?android:attr/actionOverflowButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>
