@@ -751,11 +751,11 @@
     <string name="recent">Récemment démarré</string>
     <string name="filters">Filtres</string>
     <string name="sort_by">Trier par : %1$s</string>
-        <string name="following_tabs">Following tabs</string>
-    <string name="saved_tabs">Saved tabs</string>
-    <string name="channel_tabs">Channel tabs</string>
-    <string name="game_tabs">Game tabs</string>
-    <string name="search_tabs">Search tabs</string>
+    <string name="following_tabs">Onglets suivis</string>
+    <string name="saved_tabs">Onglets enregistrés</string>
+    <string name="channel_tabs">Onglets de chaîne</string>
+    <string name="game_tabs">Onglets de catégorie</string>
+    <string name="search_tabs">Onglets de recherche</string>
     <string name="add_tag">Ajouter un tag</string>
     <string name="save_filters">Enregistrer les filtres</string>
     <string name="delete_filter_message">Êtes-vous sûr.e de vouloir supprimer ce filtre ?</string>
