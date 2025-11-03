@@ -22,7 +22,7 @@ import com.google.android.material.chip.Chip
 class StreamsSortDialog : BottomSheetDialogFragment(), SearchTagsDialog.OnTagSelectedListener, SelectLanguagesDialog.OnSelectedLanguagesChanged {
 
     interface OnFilter {
-        fun onChange(sort: String, sortText: CharSequence, tags: Array<String>, languages: Array<String>, changed: Boolean, saveSort: Boolean, saveDefault: Boolean)
+        fun onChange(sort: String, sortText: CharSequence, tags: Array<String>, languages: Array<String>, changed: Boolean, saveFilters: Boolean, saveSort: Boolean, saveDefault: Boolean)
         fun deleteSavedSort()
     }
 
@@ -107,8 +107,12 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SearchTagsDialog.OnTagSel
             selectLanguages.setOnClickListener {
                 SelectLanguagesDialog.newInstance(selectedLanguages).show(childFragmentManager, "closeOnPip")
             }
+            saveFilters.setOnClickListener {
+                applyFilters(originalSortId, originalTags, originalLanguages, saveFilters = true, saveSort = false, saveDefault = false)
+                dismiss()
+            }
             saveSort.setOnClickListener {
-                applyFilters(originalSortId, originalTags, originalLanguages, saveSort = true, saveDefault = false)
+                applyFilters(originalSortId, originalTags, originalLanguages, saveFilters = false, saveSort = true, saveDefault = false)
                 dismiss()
             }
             deleteSavedSort.setOnClickListener {
@@ -116,17 +120,17 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SearchTagsDialog.OnTagSel
                 deleteSavedSort.gone()
             }
             saveDefault.setOnClickListener {
-                applyFilters(originalSortId, originalTags, originalLanguages, saveSort = false, saveDefault = true)
+                applyFilters(originalSortId, originalTags, originalLanguages, saveFilters = false, saveSort = false, saveDefault = true)
                 dismiss()
             }
             apply.setOnClickListener {
-                applyFilters(originalSortId, originalTags, originalLanguages, saveSort = false, saveDefault = false)
+                applyFilters(originalSortId, originalTags, originalLanguages, saveFilters = false, saveSort = false, saveDefault = false)
                 dismiss()
             }
         }
     }
 
-    private fun applyFilters(originalSortId: Int, originalTags: Array<String>, originalLanguages: Array<String>, saveSort: Boolean, saveDefault: Boolean) {
+    private fun applyFilters(originalSortId: Int, originalTags: Array<String>, originalLanguages: Array<String>, saveFilters: Boolean, saveSort: Boolean, saveDefault: Boolean) {
         with(binding) {
             val checkedSortId = sort.checkedRadioButtonId
             val tags = selectedTags.toTypedArray().sortedArray()
@@ -142,6 +146,7 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SearchTagsDialog.OnTagSel
                 tags,
                 selectedLanguages,
                 checkedSortId != originalSortId || !tags.contentEquals(originalTags) || !selectedLanguages.contentEquals(originalLanguages),
+                saveFilters,
                 saveSort,
                 saveDefault
             )

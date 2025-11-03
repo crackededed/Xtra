@@ -207,6 +207,7 @@ class SavedPagerFragment : Fragment(), Scrollable, FragmentHost {
                 tab.text = when (tabs.getOrNull(position)) {
                     "0" -> getString(R.string.bookmarks)
                     "1" -> getString(R.string.downloads)
+                    "2" -> getString(R.string.filters)
                     else -> getString(R.string.bookmarks)
                 }
             }.attach()

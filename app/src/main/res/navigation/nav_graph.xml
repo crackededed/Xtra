@@ -98,14 +98,14 @@
             app:nullable="true"
             android:defaultValue="@null" />
         <argument
-            android:name="updateLocal"
-            app:argType="boolean"
-            android:defaultValue="false" />
-        <argument
             android:name="languages"
             app:argType="string[]"
             app:nullable="true"
             android:defaultValue="@null" />
+        <argument
+            android:name="updateLocal"
+            app:argType="boolean"
+            android:defaultValue="false" />
     </fragment>
     <action
         android:id="@+id/action_global_gamePagerFragment"

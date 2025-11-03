@@ -10,6 +10,7 @@ import com.github.andreyasadchy.xtra.db.LocalFollowsChannelDao
 import com.github.andreyasadchy.xtra.db.LocalFollowsGameDao
 import com.github.andreyasadchy.xtra.db.NotificationUsersDao
 import com.github.andreyasadchy.xtra.db.RecentEmotesDao
+import com.github.andreyasadchy.xtra.db.SavedFiltersDao
 import com.github.andreyasadchy.xtra.db.ShownNotificationsDao
 import com.github.andreyasadchy.xtra.db.SortChannelDao
 import com.github.andreyasadchy.xtra.db.SortGameDao
@@ -22,6 +23,7 @@ import com.github.andreyasadchy.xtra.repository.LocalFollowChannelRepository
 import com.github.andreyasadchy.xtra.repository.LocalFollowGameRepository
 import com.github.andreyasadchy.xtra.repository.NotificationUsersRepository
 import com.github.andreyasadchy.xtra.repository.OfflineRepository
+import com.github.andreyasadchy.xtra.repository.SavedFiltersRepository
 import com.github.andreyasadchy.xtra.repository.ShownNotificationsRepository
 import com.github.andreyasadchy.xtra.repository.SortChannelRepository
 import com.github.andreyasadchy.xtra.repository.SortGameRepository
@@ -79,6 +81,10 @@ class DatabaseModule {
 
     @Singleton
     @Provides
+    fun providesSavedFiltersRepository(savedFiltersDao: SavedFiltersDao): SavedFiltersRepository = SavedFiltersRepository(savedFiltersDao)
+
+    @Singleton
+    @Provides
     fun providesVideosDao(database: AppDatabase): VideosDao = database.videos()
 
     @Singleton
@@ -124,6 +130,10 @@ class DatabaseModule {
     @Singleton
     @Provides
     fun providesTranslateAllMessagesUsersDao(database: AppDatabase): TranslateAllMessagesUsersDao = database.translateAllMessagesUsersDao()
+
+    @Singleton
+    @Provides
+    fun providesSavedFiltersDao(database: AppDatabase): SavedFiltersDao = database.savedFiltersDao()
 
     @Singleton
     @Provides
@@ -309,6 +319,11 @@ class DatabaseModule {
                         db.execSQL("INSERT INTO sort_channel1 (id, videoSort, videoType, clipPeriod) SELECT id, videoSort, videoType, clipPeriod FROM sort_channel WHERE saveSort=1")
                         db.execSQL("DROP TABLE sort_channel")
                         db.execSQL("ALTER TABLE sort_channel1 RENAME TO sort_channel")
+                    }
+                },
+                object : Migration(31, 32) {
+                    override fun migrate(db: SupportSQLiteDatabase) {
+                        db.execSQL("CREATE TABLE IF NOT EXISTS filters (id INTEGER NOT NULL, gameId TEXT, gameSlug TEXT, gameName TEXT, tags TEXT, languages TEXT, PRIMARY KEY (id))")
                     }
                 },
             )

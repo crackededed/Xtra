@@ -716,4 +716,6 @@
     <string name="game_tabs">Game tabs</string>
     <string name="search_tabs">Search tabs</string>
     <string name="add_tag">Add tag</string>
+    <string name="save_filters">Save filters</string>
+    <string name="delete_filter_message">Are you sure you want to delete this filter?</string>
 </resources>
