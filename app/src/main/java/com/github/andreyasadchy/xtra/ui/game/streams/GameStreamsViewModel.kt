@@ -7,9 +7,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
+import com.github.andreyasadchy.xtra.model.ui.SavedFilter
 import com.github.andreyasadchy.xtra.model.ui.SortGame
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
+import com.github.andreyasadchy.xtra.repository.SavedFiltersRepository
 import com.github.andreyasadchy.xtra.repository.SortGameRepository
 import com.github.andreyasadchy.xtra.repository.datasource.GameStreamsDataSource
 import com.github.andreyasadchy.xtra.type.Language
@@ -30,6 +32,7 @@ import javax.inject.Inject
 class GameStreamsViewModel @Inject constructor(
     @ApplicationContext applicationContext: Context,
     private val sortGameRepository: SortGameRepository,
+    private val savedFiltersRepository: SavedFiltersRepository,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
     savedStateHandle: SavedStateHandle,
@@ -103,6 +106,10 @@ class GameStreamsViewModel @Inject constructor(
 
     suspend fun deleteSortGame(item: SortGame) {
         sortGameRepository.delete(item)
+    }
+
+    suspend fun saveFilters(item: SavedFilter) {
+        savedFiltersRepository.saveFilter(item)
     }
 
     fun setFilter(sort: String?, tags: Array<String>?, languages: Array<String>?) {

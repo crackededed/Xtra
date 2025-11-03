@@ -611,6 +611,7 @@ class SettingsActivity : AppCompatActivity() {
                         text = when (split[0]) {
                             "0" -> getString(R.string.bookmarks)
                             "1" -> getString(R.string.downloads)
+                            "2" -> getString(R.string.filters)
                             else -> getString(R.string.downloads)
                         },
                         default = split[1] != "0",
