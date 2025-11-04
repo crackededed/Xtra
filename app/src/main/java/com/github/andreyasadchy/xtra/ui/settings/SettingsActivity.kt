@@ -574,6 +574,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     class UiSettingsFragment : MaterialPreferenceFragment() {
+        private val viewModel: SettingsViewModel by activityViewModels()
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.ui_preferences, rootKey)
             val changeListener = Preference.OnPreferenceChangeListener { _, _ ->
@@ -784,6 +785,16 @@ class SettingsActivity : AppCompatActivity() {
                     )
                 }
                 (requireActivity() as? SettingsActivity)?.showDragListDialog(tabs, C.UI_SEARCH_TABS, preference.title)
+                true
+            }
+            findPreference<Preference>("delete_recent_searches")?.setOnPreferenceClickListener {
+                requireActivity().getAlertDialogBuilder()
+                    .setMessage(getString(R.string.delete_recent_searches_message))
+                    .setPositiveButton(getString(R.string.yes)) { _, _ ->
+                        viewModel.deleteRecentSearches()
+                    }
+                    .setNegativeButton(getString(R.string.no), null)
+                    .show()
                 true
             }
         }
