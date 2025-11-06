@@ -30,6 +30,7 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.convertDpToPixels
 import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
+import com.github.andreyasadchy.xtra.util.shortToast
 import com.github.andreyasadchy.xtra.util.visible
 
 class StreamsCompactAdapter(
@@ -110,7 +111,11 @@ class StreamsCompactAdapter(
                     } else {
                         username.gone()
                     }
-                    if (item.title != null && item.title != "") {
+                    if (!item.title.isNullOrEmpty()) {
+                        title.setOnLongClickListener {
+                            context.shortToast(item.title!!)
+                            true
+                        }
                         title.visible()
                         title.text = item.title?.trim()
                     } else {

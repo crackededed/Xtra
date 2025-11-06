@@ -3,10 +3,14 @@ package com.github.andreyasadchy.xtra.ui.common
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupWindow
 import android.widget.TextView
+import androidx.appcompat.widget.TooltipCompat
 import androidx.constraintlayout.helper.widget.Flow
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.use
+import androidx.core.view.postDelayed
+import androidx.core.widget.PopupWindowCompat
 import androidx.core.widget.TextViewCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -32,7 +36,9 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.convertDpToPixels
 import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
+import com.github.andreyasadchy.xtra.util.shortToast
 import com.github.andreyasadchy.xtra.util.visible
+import com.google.android.material.tooltip.TooltipDrawable
 
 class StreamsAdapter(
     private val fragment: Fragment,
@@ -49,6 +55,8 @@ class StreamsAdapter(
                     oldItem.title == newItem.title
     }) {
 
+    private var currentPopup: PopupWindow? = null
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PagingViewHolder {
         val binding = FragmentStreamsListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return PagingViewHolder(binding, fragment, showGame)
@@ -56,6 +64,12 @@ class StreamsAdapter(
 
     override fun onBindViewHolder(holder: PagingViewHolder, position: Int) {
         holder.bind(getItem(position))
+    }
+
+    override fun onViewRecycled(holder: PagingViewHolder) {
+        super.onViewRecycled(holder)
+        currentPopup?.dismiss()
+        currentPopup = null
     }
 
     inner class PagingViewHolder(
@@ -97,6 +111,7 @@ class StreamsAdapter(
                     } else {
                         userImage.gone()
                     }
+                    fragment.findNavController()
                     if (item.channelName != null) {
                         username.visible()
                         username.text = if (item.channelLogin != null && !item.channelLogin.equals(item.channelName, true)) {
@@ -112,7 +127,11 @@ class StreamsAdapter(
                     } else {
                         username.gone()
                     }
-                    if (item.title != null && item.title != "") {
+                    if (!item.title.isNullOrEmpty()) {
+                        title.setOnLongClickListener {
+                            context.shortToast(item.title!!)
+                            true
+                        }
                         title.visible()
                         title.text = item.title?.trim()
                     } else {
