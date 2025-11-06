@@ -8,7 +8,7 @@
 
     <style name="LightTheme" parent="BaseLightTheme">
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">?attr/colorSurface</item>
         <item name="android:windowLayoutInDisplayCutoutMode">always</item>
     </style>
 
@@ -29,7 +29,7 @@
 
     <style name="LightThemeNoCorners" parent="BaseLightThemeNoCorners">
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">?attr/colorSurface</item>
         <item name="android:windowLayoutInDisplayCutoutMode">always</item>
     </style>
 
@@ -50,7 +50,7 @@
 
     <style name="AppCompatLightTheme" parent="BaseAppCompatLightTheme">
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">?attr/colorSurface</item>
         <item name="android:windowLayoutInDisplayCutoutMode">always</item>
     </style>
 

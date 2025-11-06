@@ -7,7 +7,7 @@
 
     <style name="LightTheme" parent="BaseLightTheme">
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">?attr/colorSurface</item>
     </style>
 
     <style name="AmoledTheme" parent="BaseAmoledTheme">
@@ -24,7 +24,7 @@
 
     <style name="LightThemeNoCorners" parent="BaseLightThemeNoCorners">
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">?attr/colorSurface</item>
     </style>
 
     <style name="AmoledThemeNoCorners" parent="BaseAmoledThemeNoCorners">
@@ -41,7 +41,7 @@
 
     <style name="AppCompatLightTheme" parent="BaseAppCompatLightTheme">
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">?attr/colorSurface</item>
     </style>
 
     <style name="AppCompatAmoledTheme" parent="BaseAppCompatAmoledTheme">
