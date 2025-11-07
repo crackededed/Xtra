@@ -2,17 +2,17 @@
 <resources>
 
     <style name="LightTheme" parent="BaseLightTheme">
-        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
     <style name="LightThemeNoCorners" parent="BaseLightThemeNoCorners">
-        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
     <style name="AppCompatLightTheme" parent="BaseAppCompatLightTheme">
-        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 </resources>

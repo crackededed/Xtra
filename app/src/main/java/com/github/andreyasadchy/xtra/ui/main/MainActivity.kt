@@ -10,8 +10,6 @@ import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
-import android.content.res.Configuration
-import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -34,8 +32,8 @@ import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -72,8 +70,6 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.applyTheme
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.isInPortraitOrientation
-import com.github.andreyasadchy.xtra.util.isLightTheme
 import com.github.andreyasadchy.xtra.util.isNetworkAvailable
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.shortToast
@@ -166,22 +162,27 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
         applyTheme()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setNavBarColor(isInPortraitOrientation)
         val ignoreCutouts = prefs.getBoolean(C.UI_DRAW_BEHIND_CUTOUTS, false)
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
-            val insets = if (ignoreCutouts) {
+            val systemBarsInsets = if (ignoreCutouts) {
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime())
             } else {
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.displayCutout())
             }
             binding.navHostFragment.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                leftMargin = insets.left
-                rightMargin = insets.right
+                leftMargin = systemBarsInsets.left
+                rightMargin = systemBarsInsets.right
             }
             binding.navBarContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                leftMargin = insets.left
-                rightMargin = insets.right
+                leftMargin = systemBarsInsets.left
+                rightMargin = systemBarsInsets.right
             }
+            val statusBarInsets = if (ignoreCutouts) {
+                windowInsets.getInsets(WindowInsetsCompat.Type.statusBars())
+            } else {
+                windowInsets.getInsets(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout())
+            }
+            binding.root.updatePadding(top = statusBarInsets.top)
             windowInsets
         }
         settingsResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -309,37 +310,6 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
                     .build()
             )
         }
-    }
-
-    private fun setNavBarColor(isPortrait: Boolean) {
-        when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
-                window.isNavigationBarContrastEnforced = !isPortrait || !binding.navBarContainer.isVisible
-            }
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
-                @Suppress("DEPRECATION")
-                window.navigationBarColor = if (isPortrait && binding.navBarContainer.isVisible) {
-                    Color.TRANSPARENT
-                } else {
-                    ContextCompat.getColor(this, if (!isLightTheme) R.color.darkScrim else R.color.lightScrim)
-                }
-            }
-            else -> {
-                @Suppress("DEPRECATION")
-                if (!isLightTheme) {
-                    window.navigationBarColor = if (isPortrait && binding.navBarContainer.isVisible) {
-                        Color.TRANSPARENT
-                    } else {
-                        ContextCompat.getColor(this, R.color.darkScrim)
-                    }
-                }
-            }
-        }
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        setNavBarColor(newConfig.orientation == Configuration.ORIENTATION_PORTRAIT)
     }
 
     override fun onResume() {
@@ -707,10 +677,6 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
 
     fun downloadClip(filesDir: String, clipId: String?, title: String?, uploadDate: String?, duration: Double?, videoId: String?, vodOffset: Int?, channelId: String?, channelLogin: String?, channelName: String?, channelLogo: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, url: String, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {
         viewModel.downloadClip(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), filesDir, clipId, title, uploadDate, duration, videoId, vodOffset, channelId, channelLogin, channelName, channelLogo, thumbnail, gameId, gameSlug, gameName, url, downloadPath, quality, downloadChat, downloadChatEmotes, wifiOnly)
-    }
-
-    fun popFragment() {
-        navController.navigateUp()
     }
 
     private fun initNavigation() {

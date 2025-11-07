@@ -17,7 +17,7 @@
         <item name="sliderStyle">@style/Slider</item>
         <item name="linearProgressIndicatorStyle">@style/Widget.Material3.LinearProgressIndicator.Legacy</item>
         <item name="preferenceTheme">@style/PreferenceTheme</item>
-        <item name="android:navigationBarColor">@color/darkScrim</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
@@ -38,7 +38,7 @@
         <item name="sliderStyle">@style/Slider</item>
         <item name="linearProgressIndicatorStyle">@style/Widget.Material3.LinearProgressIndicator.Legacy</item>
         <item name="preferenceTheme">@style/PreferenceTheme</item>
-        <item name="android:navigationBarColor">@color/darkScrim</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
         <item name="android:windowLightStatusBar">true</item>
@@ -68,7 +68,7 @@
         <item name="bottomSheetDialogTheme">@style/BottomSheet</item>
         <item name="materialAlertDialogTheme">@style/Dialog</item>
         <item name="preferenceTheme">@style/PreferenceTheme</item>
-        <item name="android:navigationBarColor">@color/darkScrim</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
@@ -97,7 +97,7 @@
         <item name="linearProgressIndicatorStyle">@style/Widget.Material3.LinearProgressIndicator.Legacy</item>
         <item name="bottomNavigationStyle">@style/BottomNavigationBlue</item>
         <item name="preferenceTheme">@style/PreferenceTheme</item>
-        <item name="android:navigationBarColor">@color/darkScrim</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
@@ -363,7 +363,7 @@
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Material3.Corner.None</item>
-        <item name="android:navigationBarColor">@color/darkScrim</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
@@ -421,7 +421,7 @@
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Material3.Corner.None</item>
-        <item name="android:navigationBarColor">@color/darkScrim</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
         <item name="android:windowLightStatusBar">true</item>
@@ -481,7 +481,7 @@
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Material3.Corner.None</item>
-        <item name="android:navigationBarColor">@color/darkScrim</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
@@ -539,7 +539,7 @@
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Material3.Corner.None</item>
-        <item name="android:navigationBarColor">@color/darkScrim</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 

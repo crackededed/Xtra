@@ -104,14 +104,10 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(binding.root)
         val ignoreCutouts = prefs().getBoolean(C.UI_DRAW_BEHIND_CUTOUTS, false)
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-            binding.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                topMargin = insets.top
-            }
             val cutoutInsets = if (ignoreCutouts) {
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             } else {
-                insets
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             }
             binding.appBar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                 leftMargin = cutoutInsets.left
@@ -121,6 +117,12 @@ class SettingsActivity : AppCompatActivity() {
                 leftMargin = cutoutInsets.left
                 rightMargin = cutoutInsets.right
             }
+            val statusBarInsets = if (ignoreCutouts) {
+                windowInsets.getInsets(WindowInsetsCompat.Type.statusBars())
+            } else {
+                windowInsets.getInsets(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout())
+            }
+            binding.root.updatePadding(top = statusBarInsets.top, bottom = cutoutInsets.bottom)
             windowInsets
         }
         val navController = (supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment).navController
