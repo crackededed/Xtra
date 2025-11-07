@@ -411,12 +411,39 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                 appBar.background = null
                 collapsingToolbar.setContentScrimColor(MaterialColors.getColor(collapsingToolbar, com.google.android.material.R.attr.colorSurface))
             }
+            val tabList = requireContext().prefs().getString(C.UI_CHANNEL_TABS, null).let { tabPref ->
+                val defaultTabs = C.DEFAULT_CHANNEL_TABS.split(',')
+                if (tabPref != null) {
+                    val list = tabPref.split(',').filter { item ->
+                        defaultTabs.find { it.first() == item.first() } != null
+                    }.toMutableList()
+                    defaultTabs.forEachIndexed { index, item ->
+                        if (list.find { it.first() == item.first() } == null) {
+                            list.add(index, item)
+                        }
+                    }
+                    list
+                } else defaultTabs
+            }
+            val tabs = tabList.mapNotNull {
+                val split = it.split(':')
+                val key = split[0]
+                val enabled = split[2] != "0"
+                if (enabled) {
+                    key
+                } else {
+                    null
+                }
+            }
+            if (tabs.size <= 1) {
+                tabLayout.gone()
+            }
             viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 private val layoutParams = collapsingToolbar.layoutParams as AppBarLayout.LayoutParams
                 private val originalScrollFlags = layoutParams.scrollFlags
 
                 override fun onPageSelected(position: Int) {
-                    layoutParams.scrollFlags = if (position != 3) {
+                    layoutParams.scrollFlags = if ( tabs.getOrNull(position) != "3") {
                         originalScrollFlags
                     } else {
                         appBar.setExpanded(false, isResumed)
@@ -446,33 +473,6 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                     }
                 }
             })
-            val tabList = requireContext().prefs().getString(C.UI_CHANNEL_TABS, null).let { tabPref ->
-                val defaultTabs = C.DEFAULT_CHANNEL_TABS.split(',')
-                if (tabPref != null) {
-                    val list = tabPref.split(',').filter { item ->
-                        defaultTabs.find { it.first() == item.first() } != null
-                    }.toMutableList()
-                    defaultTabs.forEachIndexed { index, item ->
-                        if (list.find { it.first() == item.first() } == null) {
-                            list.add(index, item)
-                        }
-                    }
-                    list
-                } else defaultTabs
-            }
-            val tabs = tabList.mapNotNull {
-                val split = it.split(':')
-                val key = split[0]
-                val enabled = split[2] != "0"
-                if (enabled) {
-                    key
-                } else {
-                    null
-                }
-            }
-            if (tabs.size <= 1) {
-                tabLayout.gone()
-            }
             val adapter = ChannelPagerAdapter(this@ChannelPagerFragment, args, tabs)
             viewPager.adapter = adapter
             if (firstLaunch) {
