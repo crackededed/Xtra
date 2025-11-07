@@ -411,6 +411,41 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                 appBar.background = null
                 collapsingToolbar.setContentScrimColor(MaterialColors.getColor(collapsingToolbar, com.google.android.material.R.attr.colorSurface))
             }
+            viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+                private val layoutParams = collapsingToolbar.layoutParams as AppBarLayout.LayoutParams
+                private val originalScrollFlags = layoutParams.scrollFlags
+
+                override fun onPageSelected(position: Int) {
+                    layoutParams.scrollFlags = if (position != 3) {
+                        originalScrollFlags
+                    } else {
+                        appBar.setExpanded(false, isResumed)
+                        appBar.background = null
+                        AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL
+                    }
+                    viewPager.doOnLayout {
+                        childFragmentManager.findFragmentByTag("f${position}").let { fragment ->
+                            if (fragment is Sortable) {
+                                fragment.setupSortBar(sortBar)
+                                sortBar.root.doOnLayout {
+                                    toolbarContainer.layoutParams = (toolbarContainer.layoutParams as CollapsingToolbarLayout.LayoutParams).apply { bottomMargin = toolbarContainer2.height }
+                                    val toolbarHeight = toolbarContainer.marginTop + toolbarContainer.marginBottom
+                                    toolbar.layoutParams = toolbar.layoutParams.apply { height = toolbarHeight }
+                                    collapsingToolbar.scrimVisibleHeightTrigger = toolbarHeight + 1
+                                }
+                            } else {
+                                sortBar.root.gone()
+                                toolbarContainer2.doOnLayout {
+                                    toolbarContainer.layoutParams = (toolbarContainer.layoutParams as CollapsingToolbarLayout.LayoutParams).apply { bottomMargin = toolbarContainer2.height }
+                                    val toolbarHeight = toolbarContainer.marginTop + toolbarContainer.marginBottom
+                                    toolbar.layoutParams = toolbar.layoutParams.apply { height = toolbarHeight }
+                                    collapsingToolbar.scrimVisibleHeightTrigger = toolbarHeight + 1
+                                }
+                            }
+                        }
+                    }
+                }
+            })
             val tabList = requireContext().prefs().getString(C.UI_CHANNEL_TABS, null).let { tabPref ->
                 val defaultTabs = C.DEFAULT_CHANNEL_TABS.split(',')
                 if (tabPref != null) {
@@ -459,41 +494,6 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                     else -> getString(R.string.videos)
                 }
             }.attach()
-            viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-                private val layoutParams = collapsingToolbar.layoutParams as AppBarLayout.LayoutParams
-                private val originalScrollFlags = layoutParams.scrollFlags
-
-                override fun onPageSelected(position: Int) {
-                    layoutParams.scrollFlags = if (tabs.getOrNull(position) != "3") {
-                        originalScrollFlags
-                    } else {
-                        appBar.setExpanded(false, isResumed)
-                        appBar.background = null
-                        AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL
-                    }
-                    viewPager.doOnLayout {
-                        childFragmentManager.findFragmentByTag("f${position}").let { fragment ->
-                            if (fragment is Sortable) {
-                                fragment.setupSortBar(sortBar)
-                                sortBar.root.doOnLayout {
-                                    toolbarContainer.layoutParams = (toolbarContainer.layoutParams as CollapsingToolbarLayout.LayoutParams).apply { bottomMargin = toolbarContainer2.height }
-                                    val toolbarHeight = toolbarContainer.marginTop + toolbarContainer.marginBottom
-                                    toolbar.layoutParams = toolbar.layoutParams.apply { height = toolbarHeight }
-                                    collapsingToolbar.scrimVisibleHeightTrigger = toolbarHeight + 1
-                                }
-                            } else {
-                                sortBar.root.gone()
-                                toolbarContainer2.doOnLayout {
-                                    toolbarContainer.layoutParams = (toolbarContainer.layoutParams as CollapsingToolbarLayout.LayoutParams).apply { bottomMargin = toolbarContainer2.height }
-                                    val toolbarHeight = toolbarContainer.marginTop + toolbarContainer.marginBottom
-                                    toolbar.layoutParams = toolbar.layoutParams.apply { height = toolbarHeight }
-                                    collapsingToolbar.scrimVisibleHeightTrigger = toolbarHeight + 1
-                                }
-                            }
-                        }
-                    }
-                }
-            })
             ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
                 val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
                 collapsingToolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
