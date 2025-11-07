@@ -18,7 +18,7 @@
         <item name="linearProgressIndicatorStyle">@style/Widget.Material3.LinearProgressIndicator.Legacy</item>
         <item name="preferenceTheme">@style/PreferenceTheme</item>
         <item name="android:navigationBarColor">@color/darkScrim</item>
-        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
     <style name="BaseLightTheme" parent="Theme.Material3.Light.NoActionBar">
@@ -39,7 +39,7 @@
         <item name="linearProgressIndicatorStyle">@style/Widget.Material3.LinearProgressIndicator.Legacy</item>
         <item name="preferenceTheme">@style/PreferenceTheme</item>
         <item name="android:navigationBarColor">@color/darkScrim</item>
-        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
@@ -69,7 +69,7 @@
         <item name="materialAlertDialogTheme">@style/Dialog</item>
         <item name="preferenceTheme">@style/PreferenceTheme</item>
         <item name="android:navigationBarColor">@color/darkScrim</item>
-        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
     <style name="BaseBlueTheme" parent="Theme.Material3.Dark.NoActionBar">
@@ -98,7 +98,7 @@
         <item name="bottomNavigationStyle">@style/BottomNavigationBlue</item>
         <item name="preferenceTheme">@style/PreferenceTheme</item>
         <item name="android:navigationBarColor">@color/darkScrim</item>
-        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
     <style name="BaseDarkThemeNoCorners" parent="BaseDarkTheme">
@@ -364,7 +364,7 @@
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="android:navigationBarColor">@color/darkScrim</item>
-        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
     <style name="BaseAppCompatLightTheme" parent="Theme.AppCompat.Light.NoActionBar">
@@ -422,7 +422,7 @@
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="android:navigationBarColor">@color/darkScrim</item>
-        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
@@ -482,7 +482,7 @@
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="android:navigationBarColor">@color/darkScrim</item>
-        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
     <style name="BaseAppCompatBlueTheme" parent="Theme.AppCompat.NoActionBar">
@@ -540,7 +540,7 @@
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Material3.Corner.None</item>
         <item name="android:navigationBarColor">@color/darkScrim</item>
-        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
     <style name="MaterialCard" parent="Widget.MaterialComponents.CardView">
