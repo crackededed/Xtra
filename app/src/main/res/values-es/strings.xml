@@ -724,4 +724,8 @@
     <string name="creation_date_low">Fecha de creación (de menor a mayor)</string>
     <string name="saved_date_high">Fecha guardada (de alto a bajo)</string>
     <string name="saved_date_low">Fecha guardada (de menor a mayor)</string>
+    <string name="status">Estado</string>
+    <string name="download_completed">Completado</string>
+    <string name="download_in_progress">Descargando</string>
+    <string name="by_status">Estado: %s</string>
 </resources>

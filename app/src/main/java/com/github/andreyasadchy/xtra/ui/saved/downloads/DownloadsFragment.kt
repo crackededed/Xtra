@@ -22,6 +22,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.paging.PagingData
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
@@ -33,10 +34,18 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
+import com.github.andreyasadchy.xtra.databinding.SortBarBinding
 import com.github.andreyasadchy.xtra.databinding.StorageSelectionBinding
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
+import com.github.andreyasadchy.xtra.model.ui.SortChannel
+import com.github.andreyasadchy.xtra.ui.common.DownloadsSortDialog
+import com.github.andreyasadchy.xtra.ui.common.DownloadsSortDialog.Companion.STATUS_ALL
+import com.github.andreyasadchy.xtra.ui.common.DownloadsSortDialog.Companion.STATUS_PENDING
+import com.github.andreyasadchy.xtra.ui.common.DownloadsSortDialog.Companion.STATUS_DOWNLOADING
+import com.github.andreyasadchy.xtra.ui.common.DownloadsSortDialog.Companion.STATUS_DOWNLOADED
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
+import com.github.andreyasadchy.xtra.ui.common.Sortable
 import com.github.andreyasadchy.xtra.ui.download.StreamDownloadWorker
 import com.github.andreyasadchy.xtra.ui.download.VideoDownloadWorker
 import com.github.andreyasadchy.xtra.util.C
@@ -51,7 +60,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class DownloadsFragment : PagedListFragment(), Scrollable {
+class DownloadsFragment : PagedListFragment(), Scrollable, Sortable, DownloadsSortDialog.OnFilter {
 
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
@@ -272,13 +281,33 @@ class DownloadsFragment : PagedListFragment(), Scrollable {
 
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
+            if (viewModel.filter.value == null) {
+                val statusValue = viewModel.getSortChannel("saved_downloads")
+                viewModel.setFilter(
+                    status = statusValue?.videoSort
+                )
+                viewModel.statusText.value = requireContext().getString(
+                    R.string.by_status,
+                    requireContext().getString(
+                        when (viewModel.status) {
+                            STATUS_ALL -> R.string.all
+                            STATUS_PENDING -> R.string.download_pending
+                            STATUS_DOWNLOADING -> R.string.download_in_progress
+                            STATUS_DOWNLOADED -> R.string.download_completed
+                            else -> R.string.all
+                        }
+                    )
+                )
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.flow.collectLatest { pagingData ->
                     pagingAdapter.submitData(pagingData)
                 }
             }
         }
-        initializeAdapter(binding, pagingAdapter, enableSwipeRefresh = false, enableScrollTopButton = false)
+        initializeAdapter(binding, pagingAdapter, enableSwipeRefresh = false)
     }
 
     override fun scrollToTop() {
@@ -294,5 +323,43 @@ class DownloadsFragment : PagedListFragment(), Scrollable {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun setupSortBar(sortBar: SortBarBinding) {
+        sortBar.root.visible()
+        sortBar.root.setOnClickListener {
+            viewLifecycleOwner.lifecycleScope.launch {
+                DownloadsSortDialog.newInstance(
+                    status = viewModel.status
+                ).show(childFragmentManager, null)
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.statusText.collectLatest {
+                    sortBar.sortText.text = it
+                }
+            }
+        }
+    }
+
+    override fun onChange(status: String, statusText: CharSequence, changed: Boolean, saveDefault: Boolean) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            if (changed) {
+                binding.scrollTop.gone()
+                pagingAdapter.submitData(PagingData.empty())
+                viewModel.setFilter(status)
+                viewModel.statusText.value = requireContext().getString(R.string.by_status, statusText)
+            }
+            if (saveDefault) {
+                val item = viewModel.getSortChannel("saved_downloads")?.apply {
+                    videoSort = status
+                } ?: SortChannel(
+                    id = "saved_downloads",
+                    videoSort = status
+                )
+                viewModel.saveSortChannel(item)
+            }
+        }
     }
 }

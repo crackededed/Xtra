@@ -50,7 +50,6 @@ class BookmarksSortDialog: BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        super.onViewCreated(view, savedInstanceState)
         val behavior = BottomSheetBehavior.from(view.parent as View)
         behavior.skipCollapsed = true
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
