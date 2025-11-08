@@ -13,26 +13,39 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.paging.PagingData
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
+import com.github.andreyasadchy.xtra.databinding.SortBarBinding
 import com.github.andreyasadchy.xtra.model.ui.Bookmark
+import com.github.andreyasadchy.xtra.model.ui.SortChannel
+import com.github.andreyasadchy.xtra.ui.common.BookmarksSortDialog
+import com.github.andreyasadchy.xtra.ui.common.BookmarksSortDialog.Companion.SORT_CREATED_AT
+import com.github.andreyasadchy.xtra.ui.common.BookmarksSortDialog.Companion.SORT_CREATED_AT_ASC
+import com.github.andreyasadchy.xtra.ui.common.BookmarksSortDialog.Companion.SORT_EXPIRED_AT
+import com.github.andreyasadchy.xtra.ui.common.BookmarksSortDialog.Companion.SORT_EXPIRED_AT_ASC
+import com.github.andreyasadchy.xtra.ui.common.BookmarksSortDialog.Companion.SORT_SAVED_AT
+import com.github.andreyasadchy.xtra.ui.common.BookmarksSortDialog.Companion.SORT_SAVED_AT_ASC
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
+import com.github.andreyasadchy.xtra.ui.common.Sortable
 import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
+import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
+import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class BookmarksFragment : PagedListFragment(), Scrollable {
+class BookmarksFragment : PagedListFragment(), Scrollable, Sortable, BookmarksSortDialog.OnFilter {
 
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
@@ -125,13 +138,35 @@ class BookmarksFragment : PagedListFragment(), Scrollable {
 
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
+            if (viewModel.filter.value == null) {
+                val sortValue = viewModel.getSortChannel("saved_bookmarks")
+                viewModel.setFilter(
+                    sort = sortValue?.videoSort
+                )
+                viewModel.sortText.value = requireContext().getString(
+                    R.string.sort_by,
+                    requireContext().getString(
+                        when (viewModel.sort) {
+                            SORT_EXPIRED_AT -> R.string.deletion_date_high
+                            SORT_EXPIRED_AT_ASC -> R.string.deletion_date_low
+                            SORT_CREATED_AT -> R.string.creation_date_high
+                            SORT_CREATED_AT_ASC -> R.string.creation_date_low
+                            SORT_SAVED_AT -> R.string.saved_date_high
+                            SORT_SAVED_AT_ASC -> R.string.saved_date_low
+                            else -> R.string.deletion_date_low
+                        }
+                    )
+                )
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.flow.collectLatest { pagingData ->
                     pagingAdapter.submitData(pagingData)
                 }
             }
         }
-        initializeAdapter(binding, pagingAdapter, enableSwipeRefresh = false, enableScrollTopButton = false)
+        initializeAdapter(binding, pagingAdapter)
         if (requireContext().prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -180,6 +215,7 @@ class BookmarksFragment : PagedListFragment(), Scrollable {
                             TwitchApiHelper.getHelixHeaders(requireContext()),
                             requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                         )
+                        "refresh" -> pagingAdapter.refresh()
                     }
                 }
             }
@@ -189,5 +225,43 @@ class BookmarksFragment : PagedListFragment(), Scrollable {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun setupSortBar(sortBar: SortBarBinding) {
+        sortBar.root.visible()
+        sortBar.root.setOnClickListener {
+            viewLifecycleOwner.lifecycleScope.launch {
+                BookmarksSortDialog.newInstance(
+                    sort = viewModel.sort
+                ).show(childFragmentManager, null)
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.sortText.collectLatest {
+                    sortBar.sortText.text = it
+                }
+            }
+        }
+    }
+
+    override fun onChange(sort: String, sortText: CharSequence, changed: Boolean, saveDefault: Boolean) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            if (changed) {
+                binding.scrollTop.gone()
+                pagingAdapter.submitData(PagingData.empty())
+                viewModel.setFilter(sort)
+                viewModel.sortText.value = requireContext().getString(R.string.sort_by, sortText)
+            }
+            if (saveDefault) {
+                val item = viewModel.getSortChannel("saved_bookmarks")?.apply {
+                    videoSort = sort
+                } ?: SortChannel(
+                    id = "saved_bookmarks",
+                    videoSort = sort
+                )
+                viewModel.saveSortChannel(item)
+            }
+        }
     }
 }

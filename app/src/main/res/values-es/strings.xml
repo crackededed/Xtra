@@ -718,4 +718,10 @@
     <string name="add_tag">Add tag</string>
     <string name="save_filters">Save filters</string>
     <string name="delete_filter_message">Are you sure you want to delete this filter?</string>
+    <string name="deletion_date_high">Fecha de eliminación (de alto a bajo)</string>
+    <string name="deletion_date_low">Fecha de eliminación (de alto a bajo)</string>
+    <string name="creation_date_high">Fecha de creación (de alto a bajo)</string>
+    <string name="creation_date_low">Fecha de creación (de menor a mayor)</string>
+    <string name="saved_date_high">Fecha guardada (de alto a bajo)</string>
+    <string name="saved_date_low">Fecha guardada (de menor a mayor)</string>
 </resources>

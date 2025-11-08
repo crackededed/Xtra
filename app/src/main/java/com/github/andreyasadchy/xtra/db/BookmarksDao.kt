@@ -21,6 +21,15 @@ interface BookmarksDao {
     @Query("SELECT * FROM bookmarks")
     fun getAll(): List<Bookmark>
 
+    @Query("SELECT * FROM bookmarks ORDER BY id DESC")
+    fun getAllDesc(): List<Bookmark>
+
+    @Query("SELECT * FROM bookmarks ORDER BY createdAt DESC")
+    fun getAllCreatedAtDesc(): List<Bookmark>
+
+    @Query("SELECT * FROM bookmarks ORDER BY createdAt")
+    fun getAllCreatedAt(): List<Bookmark>
+
     @Query("SELECT * FROM bookmarks WHERE videoId = :id")
     fun getByVideoId(id: String): Bookmark?
 
