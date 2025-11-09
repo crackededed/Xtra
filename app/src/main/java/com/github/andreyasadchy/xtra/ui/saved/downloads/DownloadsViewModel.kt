@@ -15,13 +15,21 @@ import androidx.work.NetworkType
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
+import com.github.andreyasadchy.xtra.model.ui.SortChannel
 import com.github.andreyasadchy.xtra.repository.OfflineRepository
+import com.github.andreyasadchy.xtra.repository.SortChannelRepository
+import com.github.andreyasadchy.xtra.ui.common.DownloadsSortDialog
+import com.github.andreyasadchy.xtra.ui.common.DownloadsSortDialog.Companion.STATUS_PENDING
+import com.github.andreyasadchy.xtra.ui.common.DownloadsSortDialog.Companion.STATUS_DOWNLOADING
+import com.github.andreyasadchy.xtra.ui.common.DownloadsSortDialog.Companion.STATUS_DOWNLOADED
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import com.github.andreyasadchy.xtra.util.m3u8.Segment
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileInputStream
@@ -32,6 +40,7 @@ import kotlin.math.max
 @HiltViewModel
 class DownloadsViewModel @Inject internal constructor(
     @param:ApplicationContext private val applicationContext: Context,
+    private val sortChannelRepository: SortChannelRepository,
     private val repository: OfflineRepository,
 ) : ViewModel() {
 
@@ -40,11 +49,27 @@ class DownloadsViewModel @Inject internal constructor(
     private val currentDownloads = mutableListOf<Int>()
     private val liveDownloads = mutableListOf<String>()
 
-    val flow = Pager(
-        PagingConfig(pageSize = 30, prefetchDistance = 3, initialLoadSize = 30),
-    ) {
-        repository.loadAllVideos()
-    }.flow.cachedIn(viewModelScope)
+    val filter = MutableStateFlow<Filter?>(null)
+    val statusText = MutableStateFlow<CharSequence?>(null)
+
+    val status: String
+        get() = filter.value?.status ?: DownloadsSortDialog.STATUS_ALL
+
+    val flow = filter.flatMapLatest { filter ->
+        Pager(
+            PagingConfig(pageSize = 30, prefetchDistance = 3, initialLoadSize = 30),
+        ) {
+            val status: Int? = when(status) {
+                STATUS_PENDING -> OfflineVideo.STATUS_PENDING
+                STATUS_DOWNLOADING -> OfflineVideo.STATUS_DOWNLOADING
+                STATUS_DOWNLOADED -> OfflineVideo.STATUS_DOWNLOADED
+                else -> null
+            }
+            status?.let {
+                repository.loadAllVideosByStatus(it)
+            } ?: repository.loadAllVideos()
+        }.flow
+    }.cachedIn(viewModelScope)
 
     fun finishDownload(video: OfflineVideo) {
         video.chatUrl?.let { url ->
@@ -874,4 +899,21 @@ class DownloadsViewModel @Inject internal constructor(
             }
         }
     }
+
+    suspend fun getSortChannel(id: String): SortChannel? {
+        return sortChannelRepository.getById(id)
+    }
+
+    suspend fun saveSortChannel(item: SortChannel) {
+        sortChannelRepository.save(item)
+    }
+
+
+    fun setFilter(status: String?) {
+        filter.value = Filter(status)
+    }
+
+    class Filter(
+        val status: String?,
+    )
 }

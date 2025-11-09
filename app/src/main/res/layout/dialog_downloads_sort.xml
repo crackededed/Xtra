@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="?attr/dialogPadding">
+
+        <RadioGroup
+            android:id="@+id/status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/status"
+                android:textAppearance="?attr/textAppearanceTitleSmall"
+                android:textStyle="bold"
+                android:layout_marginStart="5dp" />
+
+            <RadioButton
+                android:id="@+id/all"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/all" />
+
+            <RadioButton
+                android:id="@+id/pending"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/download_pending" />
+
+            <RadioButton
+                android:id="@+id/downloading"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/download_in_progress" />
+
+            <RadioButton
+                android:id="@+id/downloaded"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/download_completed" />
+        </RadioGroup>
+
+        <Button
+            android:id="@+id/saveDefault"
+            style="?attr/bottomSheetButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/save_default" />
+
+        <Button
+            android:id="@+id/apply"
+            style="?attr/bottomSheetButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/apply" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

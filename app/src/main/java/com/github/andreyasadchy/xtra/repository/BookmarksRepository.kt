@@ -23,6 +23,18 @@ class BookmarksRepository @Inject constructor(
         bookmarksDao.getAll()
     }
 
+    suspend fun loadBookmarksDesc() = withContext(Dispatchers.IO) {
+        bookmarksDao.getAllDesc()
+    }
+
+    suspend fun loadBookmarksCreatedAtDesc() = withContext(Dispatchers.IO) {
+        bookmarksDao.getAllCreatedAtDesc()
+    }
+
+    suspend fun loadBookmarksCreatedAt() = withContext(Dispatchers.IO) {
+        bookmarksDao.getAllCreatedAt()
+    }
+
     suspend fun getBookmarkByVideoId(id: String) = withContext(Dispatchers.IO) {
         bookmarksDao.getByVideoId(id)
     }
