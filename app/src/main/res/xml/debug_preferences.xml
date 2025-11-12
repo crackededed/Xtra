@@ -58,6 +58,13 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="false"
+        android:key="debug_use_custom_playback_service"
+        android:title="@string/use_custom_playback_service"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
         android:key="debug_eventsub_chat"
         android:title="@string/use_eventsub_chat"
         app:iconSpaceReserved="false"
