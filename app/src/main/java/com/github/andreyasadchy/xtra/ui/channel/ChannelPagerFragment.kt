@@ -445,7 +445,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                 private val originalScrollFlags = layoutParams.scrollFlags
 
                 override fun onPageSelected(position: Int) {
-                    layoutParams.scrollFlags = if (tabs.getOrNull(position) != "3") {
+                    layoutParams.scrollFlags = if (tabs.getOrNull(position) != "4") {
                         originalScrollFlags
                     } else {
                         appBar.setExpanded(false, isResumed)
@@ -487,10 +487,11 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
             viewPager.reduceDragSensitivity()
             TabLayoutMediator(tabLayout, viewPager) { tab, position ->
                 tab.text = when (tabs.getOrNull(position)) {
-                    "0" -> getString(R.string.suggested)
-                    "1" -> getString(R.string.videos)
-                    "2" -> getString(R.string.clips)
-                    "3" -> getString(R.string.chat)
+                    "0" -> getString(R.string.about)
+                    "1" -> getString(R.string.suggested)
+                    "2" -> getString(R.string.videos)
+                    "3" -> getString(R.string.clips)
+                    "4" -> getString(R.string.chat)
                     else -> getString(R.string.videos)
                 }
             }.attach()

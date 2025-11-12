@@ -714,4 +714,5 @@
     <string name="save_filters">Filter speichern</string>
     <string name="delete_filter_message">Möchtest du diesen Filter wirklich löschen?</string>
     <string name="use_custom_playback_service">Use custom playback service</string>
+    <string name="about">About</string>
 </resources>

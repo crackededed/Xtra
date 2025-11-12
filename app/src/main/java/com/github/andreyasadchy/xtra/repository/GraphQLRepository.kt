@@ -46,6 +46,8 @@ import com.github.andreyasadchy.xtra.VideoPlaybackAccessTokenQuery
 import com.github.andreyasadchy.xtra.VideoQuery
 import com.github.andreyasadchy.xtra.model.gql.ErrorResponse
 import com.github.andreyasadchy.xtra.model.gql.channel.ChannelClipsResponse
+import com.github.andreyasadchy.xtra.model.gql.channel.ChannelPanelsResponse
+import com.github.andreyasadchy.xtra.model.gql.channel.ChannelRootAboutPanelResponse
 import com.github.andreyasadchy.xtra.model.gql.channel.ChannelSuggestedResponse
 import com.github.andreyasadchy.xtra.model.gql.channel.ChannelVideosResponse
 import com.github.andreyasadchy.xtra.model.gql.channel.ChannelViewerListResponse
@@ -757,6 +759,40 @@ class GraphQLRepository @Inject constructor(
             }
         } else headers
         json.decodeFromString<ChannelSuggestedResponse>(sendPersistedQuery(networkLibrary, headers, body))
+    }
+
+    suspend fun loadChannelPanels(networkLibrary: String?, headers: Map<String, String>, channelId: String?): ChannelPanelsResponse = withContext(Dispatchers.IO) {
+        val body = buildJsonObject {
+            putJsonObject("extensions") {
+                putJsonObject("persistedQuery") {
+                    put("sha256Hash", "06d5b518ba3b016ebe62000151c9a81f162f2a1430eb1cf9ad0678ba56d0a768")
+                    put("version", 1)
+                }
+            }
+            put("operationName", "ChannelPanels")
+            putJsonObject("variables") {
+                put("id", channelId)
+            }
+        }.toString()
+        json.decodeFromString<ChannelPanelsResponse>(sendPersistedQuery(networkLibrary, headers, body))
+    }
+
+    suspend fun loadChannelRootAboutPanel(networkLibrary: String?, headers: Map<String, String>, channelLogin: String?): ChannelRootAboutPanelResponse = withContext(Dispatchers.IO) {
+        val body = buildJsonObject {
+            putJsonObject("extensions") {
+                putJsonObject("persistedQuery") {
+                    put("sha256Hash", "0df42c4d26990ec1216d0b815c92cc4a4a806e25b352b66ac1dd91d5a1d59b80")
+                    put("version", 1)
+                }
+            }
+            put("operationName", "ChannelRoot_AboutPanel")
+            putJsonObject("variables") {
+                put("channelLogin", channelLogin)
+                put("skipSchedule", false)
+                put("includeIsDJ", true)
+            }
+        }.toString()
+        json.decodeFromString<ChannelRootAboutPanelResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
     suspend fun loadChannelVideos(networkLibrary: String?, headers: Map<String, String>, channelLogin: String?, type: String?, sort: String?, limit: Int?, cursor: String?): ChannelVideosResponse = withContext(Dispatchers.IO) {
