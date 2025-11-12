@@ -406,46 +406,6 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                     }
                 }
             }
-            if (!requireContext().prefs().getBoolean(C.UI_THEME_APPBAR_LIFT, true)) {
-                appBar.setLiftable(false)
-                appBar.background = null
-                collapsingToolbar.setContentScrimColor(MaterialColors.getColor(collapsingToolbar, com.google.android.material.R.attr.colorSurface))
-            }
-            viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-                private val layoutParams = collapsingToolbar.layoutParams as AppBarLayout.LayoutParams
-                private val originalScrollFlags = layoutParams.scrollFlags
-
-                override fun onPageSelected(position: Int) {
-                    layoutParams.scrollFlags = if (position != 3) {
-                        originalScrollFlags
-                    } else {
-                        appBar.setExpanded(false, isResumed)
-                        appBar.background = null
-                        AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL
-                    }
-                    viewPager.doOnLayout {
-                        childFragmentManager.findFragmentByTag("f${position}").let { fragment ->
-                            if (fragment is Sortable) {
-                                fragment.setupSortBar(sortBar)
-                                sortBar.root.doOnLayout {
-                                    toolbarContainer.layoutParams = (toolbarContainer.layoutParams as CollapsingToolbarLayout.LayoutParams).apply { bottomMargin = toolbarContainer2.height }
-                                    val toolbarHeight = toolbarContainer.marginTop + toolbarContainer.marginBottom
-                                    toolbar.layoutParams = toolbar.layoutParams.apply { height = toolbarHeight }
-                                    collapsingToolbar.scrimVisibleHeightTrigger = toolbarHeight + 1
-                                }
-                            } else {
-                                sortBar.root.gone()
-                                toolbarContainer2.doOnLayout {
-                                    toolbarContainer.layoutParams = (toolbarContainer.layoutParams as CollapsingToolbarLayout.LayoutParams).apply { bottomMargin = toolbarContainer2.height }
-                                    val toolbarHeight = toolbarContainer.marginTop + toolbarContainer.marginBottom
-                                    toolbar.layoutParams = toolbar.layoutParams.apply { height = toolbarHeight }
-                                    collapsingToolbar.scrimVisibleHeightTrigger = toolbarHeight + 1
-                                }
-                            }
-                        }
-                    }
-                }
-            })
             val tabList = requireContext().prefs().getString(C.UI_CHANNEL_TABS, null).let { tabPref ->
                 val defaultTabs = C.DEFAULT_CHANNEL_TABS.split(',')
                 if (tabPref != null) {
@@ -475,6 +435,46 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
             }
             val adapter = ChannelPagerAdapter(this@ChannelPagerFragment, args, tabs)
             viewPager.adapter = adapter
+            if (!requireContext().prefs().getBoolean(C.UI_THEME_APPBAR_LIFT, true)) {
+                appBar.setLiftable(false)
+                appBar.background = null
+                collapsingToolbar.setContentScrimColor(MaterialColors.getColor(collapsingToolbar, com.google.android.material.R.attr.colorSurface))
+            }
+            viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+                private val layoutParams = collapsingToolbar.layoutParams as AppBarLayout.LayoutParams
+                private val originalScrollFlags = layoutParams.scrollFlags
+
+                override fun onPageSelected(position: Int) {
+                    layoutParams.scrollFlags = if (tabs.getOrNull(position) != "3") {
+                        originalScrollFlags
+                    } else {
+                        appBar.setExpanded(false, isResumed)
+                        appBar.background = null
+                        AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL
+                    }
+                    viewPager.doOnLayout {
+                        childFragmentManager.findFragmentByTag("f${position}").let { fragment ->
+                            if (fragment is Sortable) {
+                                fragment.setupSortBar(sortBar)
+                                sortBar.root.doOnLayout {
+                                    toolbarContainer.layoutParams = (toolbarContainer.layoutParams as CollapsingToolbarLayout.LayoutParams).apply { bottomMargin = toolbarContainer2.height }
+                                    val toolbarHeight = toolbarContainer.marginTop + toolbarContainer.marginBottom
+                                    toolbar.layoutParams = toolbar.layoutParams.apply { height = toolbarHeight }
+                                    collapsingToolbar.scrimVisibleHeightTrigger = toolbarHeight + 1
+                                }
+                            } else {
+                                sortBar.root.gone()
+                                toolbarContainer2.doOnLayout {
+                                    toolbarContainer.layoutParams = (toolbarContainer.layoutParams as CollapsingToolbarLayout.LayoutParams).apply { bottomMargin = toolbarContainer2.height }
+                                    val toolbarHeight = toolbarContainer.marginTop + toolbarContainer.marginBottom
+                                    toolbar.layoutParams = toolbar.layoutParams.apply { height = toolbarHeight }
+                                    collapsingToolbar.scrimVisibleHeightTrigger = toolbarHeight + 1
+                                }
+                            }
+                        }
+                    }
+                }
+            })
             if (firstLaunch) {
                 val defaultItem = tabList.find { it.split(':')[1] != "0" }?.split(':')[0] ?: "1"
                 viewPager.setCurrentItem(
