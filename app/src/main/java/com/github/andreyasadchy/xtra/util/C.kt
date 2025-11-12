@@ -287,6 +287,7 @@ object C {
     const val DEBUG_USE_NEW_PUBSUB = "debug_use_new_pubsub"
     const val DEBUG_USE_CUSTOM_WEBSOCKETS = "debug_use_custom_websockets"
     const val DEBUG_WEBSOCKET_INFO = "debug_websocket_info"
+    const val DEBUG_USE_CUSTOM_PLAYBACK_SERVICE = "debug_use_custom_playback_service"
     const val DEBUG_EVENTSUB_CHAT = "debug_eventsub_chat"
     const val DEBUG_PLAYER_MENU_PLAYLIST_TAGS = "debug_player_menu_playlist_tags"
     const val ENABLE_INTEGRITY = "enable_integrity"

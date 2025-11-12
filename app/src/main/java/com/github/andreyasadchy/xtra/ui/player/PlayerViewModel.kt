@@ -5,8 +5,11 @@ import android.net.http.HttpEngine
 import android.net.http.UrlResponseInfo
 import android.os.Build
 import android.os.ext.SdkExtensions
+import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.HttpDataSource
 import com.github.andreyasadchy.xtra.model.NotificationUser
 import com.github.andreyasadchy.xtra.model.ShownNotification
 import com.github.andreyasadchy.xtra.model.VideoPosition
@@ -16,6 +19,9 @@ import com.github.andreyasadchy.xtra.model.ui.LocalFollowChannel
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.model.ui.TranslateAllMessagesUser
 import com.github.andreyasadchy.xtra.model.ui.User
+import com.github.andreyasadchy.xtra.player.lowlatency.CronetDataSource
+import com.github.andreyasadchy.xtra.player.lowlatency.HttpEngineDataSource
+import com.github.andreyasadchy.xtra.player.lowlatency.OkHttpDataSource
 import com.github.andreyasadchy.xtra.repository.BookmarksRepository
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
@@ -25,12 +31,15 @@ import com.github.andreyasadchy.xtra.repository.OfflineRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.repository.ShownNotificationsRepository
 import com.github.andreyasadchy.xtra.repository.TranslateAllMessagesUsersRepository
+import com.github.andreyasadchy.xtra.ui.player.PlaybackService.Companion.MEDIA_PLAYLIST_REGEX
+import com.github.andreyasadchy.xtra.ui.player.PlaybackService.Companion.MULTIVARIANT_PLAYLIST_REGEX
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.HttpEngineUtils
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.body
 import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
+import com.github.andreyasadchy.xtra.util.request
 import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +50,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.chromium.net.CronetEngine
@@ -48,6 +58,12 @@ import org.chromium.net.apihelpers.RedirectHandlers
 import org.chromium.net.apihelpers.UrlRequestCallbacks
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
+import java.net.InetSocketAddress
+import java.net.Proxy
+import java.net.ProxySelector
+import java.net.SocketAddress
+import java.net.URI
 import java.util.concurrent.ExecutorService
 import javax.inject.Inject
 import kotlin.coroutines.suspendCoroutine
@@ -104,6 +120,69 @@ class PlayerViewModel @Inject constructor(
     private val _isFollowing = MutableStateFlow<Boolean?>(null)
     val isFollowing: StateFlow<Boolean?> = _isFollowing
     val follow = MutableStateFlow<Pair<Boolean, String?>?>(null)
+
+    @OptIn(UnstableApi::class)
+    fun getDataSourceFactory(networkLibrary: String?, proxyMultivariantPlaylist: Boolean = false, proxyMediaPlaylist: Boolean = false, proxyHost: String? = null, proxyPort: Int? = null, proxyUser: String? = null, proxyPassword: String? = null, useProxy: (() -> Boolean)? = { false }): HttpDataSource.Factory {
+        val multivariantPlaylistProxyClient = if (proxyMultivariantPlaylist && !proxyHost.isNullOrBlank() && proxyPort != null) {
+            okHttpClient.newBuilder().apply {
+                proxySelector(
+                    object : ProxySelector() {
+                        override fun select(u: URI): List<Proxy> {
+                            return if (Regex(MULTIVARIANT_PLAYLIST_REGEX).matches(u.host)) {
+                                listOf(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)), Proxy.NO_PROXY)
+                            } else {
+                                listOf(Proxy.NO_PROXY)
+                            }
+                        }
+
+                        override fun connectFailed(u: URI, sa: SocketAddress, e: IOException) {}
+                    }
+                )
+                if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                    proxyAuthenticator { _, response ->
+                        response.request.newBuilder().header(
+                            "Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)
+                        ).build()
+                    }
+                }
+            }.build()
+        } else null
+        val mediaPlaylistProxyClient = if (proxyMediaPlaylist && !proxyHost.isNullOrBlank() && proxyPort != null) {
+            okHttpClient.newBuilder().apply {
+                proxySelector(
+                    object : ProxySelector() {
+                        override fun select(u: URI): List<Proxy> {
+                            return if (Regex(MEDIA_PLAYLIST_REGEX).matches(u.host)) {
+                                listOf(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)), Proxy.NO_PROXY)
+                            } else {
+                                listOf(Proxy.NO_PROXY)
+                            }
+                        }
+
+                        override fun connectFailed(u: URI, sa: SocketAddress, e: IOException) {}
+                    }
+                )
+                if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                    proxyAuthenticator { _, response ->
+                        response.request.newBuilder().header(
+                            "Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)
+                        ).build()
+                    }
+                }
+            }.build()
+        } else null
+        return when {
+            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                HttpEngineDataSource.Factory(httpEngine.get(), cronetExecutor, multivariantPlaylistProxyClient, mediaPlaylistProxyClient, useProxy)
+            }
+            networkLibrary == "Cronet" && cronetEngine != null -> {
+                CronetDataSource.Factory(cronetEngine.get(), cronetExecutor, multivariantPlaylistProxyClient, mediaPlaylistProxyClient, useProxy)
+            }
+            else -> {
+                OkHttpDataSource.Factory(multivariantPlaylistProxyClient ?: okHttpClient, mediaPlaylistProxyClient, useProxy)
+            }
+        }
+    }
 
     suspend fun checkPlaylist(networkLibrary: String?, url: String): Boolean = withContext(Dispatchers.IO) {
         try {
