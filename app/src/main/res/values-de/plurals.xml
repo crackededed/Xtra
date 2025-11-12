@@ -21,8 +21,8 @@
         <item quantity="other">%d Streamer</item>
     </plurals>
     <plurals name="languages">
-        <item quantity="one">Language: %s</item>
-        <item quantity="other">Languages: %s</item>
+        <item quantity="one">Sprache: %s</item>
+        <item quantity="other">Sprachen: %s</item>
     </plurals>
     <plurals name="tags">
         <item quantity="one">Tag: %s</item>
