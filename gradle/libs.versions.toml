@@ -32,6 +32,7 @@ swiperefreshlayout = "1.1.0"
 viewpager2 = "1.1.0"
 webkit = "1.14.0"
 work = "2.11.0"
+core-version = "4.6.2"
 
 [libraries]
 activity = { module = "androidx.activity:activity", version.ref = "activity" }
@@ -77,6 +78,7 @@ swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout"
 viewpager2 = { module = "androidx.viewpager2:viewpager2", version.ref = "viewpager2" }
 webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
 work-runtime = { module = "androidx.work:work-runtime", version.ref = "work" }
+core = { group = "io.noties.markwon", name = "core", version.ref = "core-version" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "android-gradle-plugin" }

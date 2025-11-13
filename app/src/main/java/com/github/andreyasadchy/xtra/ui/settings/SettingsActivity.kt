@@ -708,10 +708,11 @@ class SettingsActivity : AppCompatActivity() {
                     SettingsDragListItem(
                         key = split[0],
                         text = when (split[0]) {
-                            "0" -> getString(R.string.suggested)
-                            "1" -> getString(R.string.videos)
-                            "2" -> getString(R.string.clips)
-                            "3" -> getString(R.string.chat)
+                            "0" -> getString(R.string.about)
+                            "1" -> getString(R.string.suggested)
+                            "2" -> getString(R.string.videos)
+                            "3" -> getString(R.string.clips)
+                            "4" -> getString(R.string.chat)
                             else -> getString(R.string.videos)
                         },
                         default = split[1] != "0",
