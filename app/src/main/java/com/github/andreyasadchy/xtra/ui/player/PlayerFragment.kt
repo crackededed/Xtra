@@ -136,6 +136,7 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private val player: Player?
         get() = playbackService?.player ?: controllerFuture?.let { if (it.isDone && !it.isCancelled) it.get() else null }
+    private var playerListener: Player.Listener? = null
 
     private var videoType: String? = null
     private var isPortrait = false
@@ -1753,7 +1754,7 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
         super.onStart()
         fun callback(newPlayer: Player?) {
             binding.playerView.player = newPlayer
-            newPlayer?.addListener(object : Player.Listener {
+            val listener = object : Player.Listener {
 
                 override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) {
                     if (reason == Player.DISCONTINUITY_REASON_SEEK) {
@@ -2105,7 +2106,7 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                                 }
                             }
                             if (player is ExoPlayer) {
-                                val responseCode = (player?.playerError?.cause as? HttpDataSource.InvalidResponseCodeException)?.responseCode
+                                val responseCode = (error.cause as? HttpDataSource.InvalidResponseCodeException)?.responseCode
                                 callback(responseCode ?: 0)
                             } else {
                                 (player as? MediaController)?.sendCustomCommand(
@@ -2123,7 +2124,9 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                         }
                     }
                 }
-            })
+            }
+            newPlayer?.addListener(listener)
+            playerListener = listener
             if (viewModel.restoreQuality) {
                 viewModel.restoreQuality = false
                 changeQuality(viewModel.previousQuality)
@@ -2191,9 +2194,11 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
         if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
             val connection = object : ServiceConnection {
                 override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-                    val binder = service as CustomPlaybackService.ServiceBinder
-                    playbackService = binder.getService()
-                    callback(playbackService?.player)
+                    if (view != null) {
+                        val binder = service as CustomPlaybackService.ServiceBinder
+                        playbackService = binder.getService()
+                        callback(playbackService?.player)
+                    }
                 }
 
                 override fun onServiceDisconnected(name: ComponentName?) {
@@ -2201,7 +2206,9 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                 }
             }
             serviceConnection = connection
-            requireContext().bindService(Intent(requireContext(), CustomPlaybackService::class.java), connection, Context.BIND_AUTO_CREATE)
+            val intent = Intent(requireContext(), CustomPlaybackService::class.java)
+            requireContext().startService(intent)
+            requireContext().bindService(intent, connection, Context.BIND_AUTO_CREATE)
         } else {
             controllerFuture = MediaController.Builder(
                 requireContext(),
@@ -2760,6 +2767,9 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
 
     private fun releaseController() {
         _binding?.playerView?.player = null
+        playerListener?.let { player?.removeListener(it) }
+        serviceConnection?.let { requireContext().unbindService(it) }
+        serviceConnection = null
         controllerFuture?.let { MediaController.releaseFuture(it) }
     }
 
@@ -2805,7 +2815,6 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
         player?.stop()
         player?.removeMediaItem(0)
         releaseController()
-        serviceConnection?.let { requireContext().unbindService(it) }
         playbackService?.stopSelf()
         playbackService = null
     }
