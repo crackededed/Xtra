@@ -401,7 +401,6 @@
     <string name="followed_games">Juegos seguidos</string>
     <string name="irc_msgid_highlighted_message">Mensaje destacado</string>
     <string name="irc_msgid_announcement">Anuncio</string>
-    <string name="debug_secondview">Movible en la aplicación PIP</string>
     <string name="add_bookmark">Añadir marcador</string>
     <string name="show_vod_time_left">Mostrar el tiempo restante en los vídeos guardados</string>
     <string name="vod_time_left">Borrado automático en %s</string>
@@ -719,4 +718,5 @@
     <string name="save_filters">Save filters</string>
     <string name="delete_filter_message">Are you sure you want to delete this filter?</string>
     <string name="use_custom_playback_service">Use custom playback service</string>
+    <string name="move_player_freely">Move minimized player freely</string>
 </resources>

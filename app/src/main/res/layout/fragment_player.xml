@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/playerBackground"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <com.github.andreyasadchy.xtra.ui.view.SlidingLayout
+    <FrameLayout
         android:id="@+id/slidingLayout"
-        android:layout_height="match_parent"
         android:layout_width="match_parent"
-        android:layoutDirection="ltr">
+        android:layout_height="match_parent">
 
         <androidx.media3.ui.AspectRatioFrameLayout
             android:id="@+id/aspectRatioFrameLayout"
@@ -28,6 +27,11 @@
                 app:surface_type="surface_view" />
 
         </androidx.media3.ui.AspectRatioFrameLayout>
+
+        <View
+            android:id="@+id/dragView"
+            android:layout_width="0dp"
+            android:layout_height="0dp" />
 
         <LinearLayout
             android:id="@+id/chatLayout"
@@ -56,5 +60,5 @@
 
         </LinearLayout>
 
-    </com.github.andreyasadchy.xtra.ui.view.SlidingLayout>
+    </FrameLayout>
 </LinearLayout>

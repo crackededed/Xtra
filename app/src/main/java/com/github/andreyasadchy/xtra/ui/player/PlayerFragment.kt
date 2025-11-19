@@ -1,5 +1,8 @@
 package com.github.andreyasadchy.xtra.ui.player
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
@@ -13,6 +16,7 @@ import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Color
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
@@ -20,12 +24,20 @@ import android.os.IBinder
 import android.os.SystemClock
 import android.text.format.DateFormat
 import android.util.Log
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.RoundedCorner
+import android.view.VelocityTracker
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.ViewGroup
+import android.view.ViewPropertyAnimator
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.Chronometer
+import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -92,7 +104,6 @@ import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.player.PlaybackService.CustomHlsPlaylistParserFactory
-import com.github.andreyasadchy.xtra.ui.view.SlidingLayout
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.disable
@@ -102,6 +113,7 @@ import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.hideKeyboard
 import com.github.andreyasadchy.xtra.util.isInPortraitOrientation
 import com.github.andreyasadchy.xtra.util.isKeyboardShown
+import com.github.andreyasadchy.xtra.util.isLightTheme
 import com.github.andreyasadchy.xtra.util.isNetworkAvailable
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.shortToast
@@ -109,6 +121,7 @@ import com.github.andreyasadchy.xtra.util.toast
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import com.google.common.util.concurrent.ListenableFuture
@@ -123,7 +136,7 @@ import kotlin.math.max
 
 @OptIn(UnstableApi::class)
 @AndroidEntryPoint
-class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGamesDialog.PlayerSeekListener, SleepTimerDialog.OnSleepTimerStartedListener, RadioButtonDialogFragment.OnSortOptionChanged, PlayerVolumeDialog.PlayerVolumeListener, IntegrityDialog.CallbackListener {
+class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListener, SleepTimerDialog.OnSleepTimerStartedListener, RadioButtonDialogFragment.OnSortOptionChanged, PlayerVolumeDialog.PlayerVolumeListener, IntegrityDialog.CallbackListener {
 
     private var _binding: FragmentPlayerBinding? = null
     private val binding get() = _binding!!
@@ -140,9 +153,26 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
 
     private var videoType: String? = null
     private var isPortrait = false
+    private var isMaximized = true
+    private var isChatOpen = true
     private var isKeyboardShown = false
     private var resizeMode = 0
     private var chatWidthLandscape = 0
+
+    private var activePointerId = -1
+    private var lastX = 0f
+    private var lastY = 0f
+    private var velocityTracker: VelocityTracker? = null
+    private var isTap = false
+    private var tapEventTime = 0L
+    private var startTranslationX = 0f
+    private var startTranslationY = 0f
+    private var statusBarSwipe = false
+    private var isAnimating = false
+    private var moveAnimation: ViewPropertyAnimator? = null
+    private var backgroundColor: Int? = null
+    private var backgroundVisible = false
+    private var isLightTheme: Boolean? = null
 
     private lateinit var prefs: SharedPreferences
 
@@ -169,16 +199,19 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentPlayerBinding.inflate(inflater, container, false).also {
-            it.slidingLayout.orientation = if (isPortrait) LinearLayout.VERTICAL else LinearLayout.HORIZONTAL
-        }
+        _binding = FragmentPlayerBinding.inflate(inflater, container, false)
         return binding.root
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         with(binding) {
-            slidingLayout.updateBackgroundColor(isPortrait)
+            if (isMaximized) {
+                enableBackground()
+            } else {
+                disableBackground()
+            }
             val ignoreCutouts = prefs.getBoolean(C.UI_DRAW_BEHIND_CUTOUTS, false)
             val cornerPadding = prefs.getBoolean(C.PLAYER_ROUNDED_CORNER_PADDING, false)
             ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
@@ -188,47 +221,32 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                     windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.displayCutout())
                 }
                 if (isPortrait) {
-                    view.updatePadding(left = 0, top = insets.top, right = 0)
+                    slidingLayout.updatePadding(left = 0, top = insets.top, right = 0)
                 } else {
-                    if (ignoreCutouts) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && cornerPadding) {
-                            val rootWindowInsets = view.rootView.rootWindowInsets
-                            val topLeft = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_TOP_LEFT)
-                            val topRight = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_TOP_RIGHT)
-                            val bottomLeft = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_LEFT)
-                            val bottomRight = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_RIGHT)
-                            val leftRadius = max(topLeft?.radius ?: 0, bottomLeft?.radius ?: 0)
-                            val rightRadius = max(topRight?.radius ?: 0, bottomRight?.radius ?: 0)
-                            view.updatePadding(left = leftRadius, top = 0, right = rightRadius)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && cornerPadding) {
+                        val rootWindowInsets = view.rootView.rootWindowInsets
+                        val topLeft = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_TOP_LEFT)
+                        val topRight = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_TOP_RIGHT)
+                        val bottomLeft = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_LEFT)
+                        val bottomRight = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_RIGHT)
+                        val leftRadius = max(topLeft?.radius ?: 0, bottomLeft?.radius ?: 0)
+                        val rightRadius = max(topRight?.radius ?: 0, bottomRight?.radius ?: 0)
+                        if (ignoreCutouts) {
+                            slidingLayout.updatePadding(left = leftRadius, top = 0, right = rightRadius)
                         } else {
-                            view.updatePadding(left = 0, top = 0, right = 0)
+                            val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+                            slidingLayout.updatePadding(left = max(cutoutInsets.left, leftRadius), top = 0, right = max(cutoutInsets.right, rightRadius))
                         }
                     } else {
-                        val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && cornerPadding) {
-                            val rootWindowInsets = view.rootView.rootWindowInsets
-                            val topLeft = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_TOP_LEFT)
-                            val topRight = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_TOP_RIGHT)
-                            val bottomLeft = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_LEFT)
-                            val bottomRight = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_RIGHT)
-                            val leftRadius = max(topLeft?.radius ?: 0, bottomLeft?.radius ?: 0)
-                            val rightRadius = max(topRight?.radius ?: 0, bottomRight?.radius ?: 0)
-                            view.updatePadding(left = max(cutoutInsets.left, leftRadius), top = 0, right = max(cutoutInsets.right, rightRadius))
+                        if (ignoreCutouts) {
+                            slidingLayout.updatePadding(left = 0, top = 0, right = 0)
                         } else {
-                            view.updatePadding(left = cutoutInsets.left, top = 0, right = cutoutInsets.right)
+                            val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+                            slidingLayout.updatePadding(left = cutoutInsets.left, top = 0, right = cutoutInsets.right)
                         }
                     }
                 }
-                slidingLayout.apply {
-                    val update = isMaximized && isPortrait && savedInsets != null
-                    savedInsets = insets
-                    if (update) {
-                        init()
-                    }
-                }
-                chatLayout.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                    bottomMargin = insets.bottom
-                }
+                chatLayout.updatePadding(bottom = insets.bottom)
                 WindowInsetsCompat.CONSUMED
             }
             viewLifecycleOwner.lifecycleScope.launch {
@@ -245,10 +263,263 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                     }
                 }
             }
+            val viewConfiguration = ViewConfiguration.get(requireContext())
+            val touchSlop = viewConfiguration.scaledTouchSlop
+            val touchSlopRange = -touchSlop.toFloat()..touchSlop.toFloat()
+            val longPressTimeout = ViewConfiguration.getLongPressTimeout()
+            val moveFreely = prefs.getBoolean(C.PLAYER_MOVE_FREELY, false)
+            val timeBar = requireView().findViewById<DefaultTimeBar>(androidx.media3.ui.R.id.exo_progress)
+
+            fun downAction(event: MotionEvent) {
+                moveAnimation?.cancel()
+                isTap = true
+                tapEventTime = event.eventTime
+                if (isMaximized) {
+                    aspectRatioFrameLayout.dispatchTouchEvent(event)
+                } else {
+                    velocityTracker?.clear()
+                    if (velocityTracker == null) {
+                        velocityTracker = VelocityTracker.obtain()
+                    }
+                    velocityTracker?.addMovement(
+                        MotionEvent.obtain(
+                            event.downTime,
+                            event.eventTime,
+                            event.action,
+                            slidingLayout.translationX,
+                            slidingLayout.translationY,
+                            event.metaState
+                        )
+                    )
+                    startTranslationX = slidingLayout.translationX
+                    startTranslationY = slidingLayout.translationY
+                }
+            }
+
+            fun upAction(event: MotionEvent) {
+                if (isMaximized) {
+                    if (timeBar?.isPressed == true) {
+                        aspectRatioFrameLayout.dispatchTouchEvent(event)
+                    } else {
+                        if (slidingLayout.translationY in touchSlopRange) {
+                            aspectRatioFrameLayout.dispatchTouchEvent(event)
+                        }
+                        val minimizeThreshold = slidingLayout.height / 5
+                        if (slidingLayout.translationY < minimizeThreshold) {
+                            moveAnimation = slidingLayout.animate().apply {
+                                translationX(0f)
+                                translationY(0f)
+                                setDuration(250L)
+                                setListener(
+                                    object : AnimatorListenerAdapter() {
+                                        override fun onAnimationEnd(animation: Animator) {
+                                            setListener(null)
+                                            if (slidingLayout.translationY < touchSlop) {
+                                                enableBackground()
+                                            }
+                                        }
+                                    }
+                                )
+                                start()
+                            }
+                        } else {
+                            minimize()
+                        }
+                    }
+                } else {
+                    velocityTracker?.computeCurrentVelocity(1000)
+                    val xVelocity = velocityTracker?.xVelocity ?: 0f
+                    velocityTracker?.recycle()
+                    velocityTracker = null
+                    when {
+                        xVelocity > 1500 -> {
+                            isAnimating = true
+                            slidingLayout.animate().apply {
+                                translationX(slidingLayout.translationX + (slidingLayout.width * slidingLayout.scaleX))
+                                setDuration(250L)
+                                start()
+                            }
+                            close()
+                            (activity as? MainActivity)?.closePlayer()
+                        }
+                        xVelocity < -1500 -> {
+                            isAnimating = true
+                            slidingLayout.animate().apply {
+                                translationX(slidingLayout.translationX - (slidingLayout.width * slidingLayout.scaleX))
+                                setDuration(250L)
+                                start()
+                            }
+                            close()
+                            (activity as? MainActivity)?.closePlayer()
+                        }
+                        else -> {
+                            if (isTap && (event.eventTime - tapEventTime) < longPressTimeout) {
+                                maximize()
+                            } else {
+                                if (moveFreely) {
+                                    val windowInsets = ViewCompat.getRootWindowInsets(requireView())
+                                    val insets = windowInsets?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+                                    val scaledXDiff = (slidingLayout.width * (1f - slidingLayout.scaleX)) / 2
+                                    val scaledYDiff = (slidingLayout.height * (1f - slidingLayout.scaleY)) / 2
+                                    val minX = 0f - scaledXDiff - ((insets?.left ?: 0) * slidingLayout.scaleX) + (insets?.left ?: 0)
+                                    val minY = 0f - scaledYDiff - ((insets?.top ?: 0) * slidingLayout.scaleY) + (insets?.top ?: 0)
+                                    val maxX = 0f - scaledXDiff - ((insets?.left ?: 0) * slidingLayout.scaleX) + slidingLayout.width - (aspectRatioFrameLayout.width * slidingLayout.scaleX) - (insets?.right ?: 0)
+                                    val maxY = 0f - scaledYDiff - ((insets?.top ?: 0) * slidingLayout.scaleY) + slidingLayout.height - (aspectRatioFrameLayout.height * slidingLayout.scaleY) - (insets?.bottom ?: 0)
+                                    val newX = when {
+                                        slidingLayout.translationX < minX -> minX
+                                        slidingLayout.translationX > maxX -> maxX
+                                        else -> null
+                                    }
+                                    val newY = when {
+                                        slidingLayout.translationY < minY -> minY
+                                        slidingLayout.translationY > maxY -> maxY
+                                        else -> null
+                                    }
+                                    if (newX != null || newY != null) {
+                                        moveAnimation = slidingLayout.animate().apply {
+                                            newX?.let { translationX(it) }
+                                            newY?.let { translationY(it) }
+                                            setDuration(250L)
+                                            start()
+                                        }
+                                    }
+                                } else {
+                                    val windowInsets = ViewCompat.getRootWindowInsets(requireView())
+                                    val insets = windowInsets?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+                                    val keyboardInsets = windowInsets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom?.let { if (it > 0) it - (insets?.bottom ?: 0) else it } ?: 0
+                                    val scaledXDiff = (slidingLayout.width * (1f - slidingLayout.scaleX)) / 2
+                                    val scaledYDiff = (slidingLayout.height * (1f - slidingLayout.scaleY)) / 2
+                                    val navBarHeight = requireView().rootView.findViewById<LinearLayout>(R.id.navBarContainer)?.height?.takeIf { it > 0 }?.let { it - keyboardInsets } ?: (insets?.bottom ?: 0)
+                                    val newX = slidingLayout.width - (insets?.right ?: 0) - (aspectRatioFrameLayout.width * slidingLayout.scaleX) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20F, resources.displayMetrics) * slidingLayout.scaleX)
+                                    val newY = slidingLayout.height - navBarHeight - (aspectRatioFrameLayout.height * slidingLayout.scaleY) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30F, resources.displayMetrics) * slidingLayout.scaleY)
+                                    moveAnimation = slidingLayout.animate().apply {
+                                        translationX(0f - scaledXDiff - ((insets?.left ?: 0) * slidingLayout.scaleX) + newX)
+                                        translationY(0f - scaledYDiff - ((insets?.top ?: 0) * slidingLayout.scaleY) + newY)
+                                        setDuration(250L)
+                                        start()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            dragView.setOnTouchListener { _, event ->
+                if (!isAnimating) {
+                    when (event.actionMasked) {
+                        MotionEvent.ACTION_DOWN -> {
+                            activePointerId = event.getPointerId(0)
+                            val x = event.x
+                            val y = event.y
+                            lastX = x * slidingLayout.scaleX
+                            lastY = y * slidingLayout.scaleY
+                            statusBarSwipe = !isPortrait && y <= 100
+                            downAction(event)
+                        }
+                        MotionEvent.ACTION_POINTER_DOWN -> {
+                            if (activePointerId == -1) {
+                                val pointerIndex = event.actionIndex
+                                val pointerId = event.getPointerId(pointerIndex)
+                                val x = event.getX(pointerIndex)
+                                val y = event.getY(pointerIndex)
+                                if (x in 0f..aspectRatioFrameLayout.width.toFloat() && y in 0f..aspectRatioFrameLayout.height.toFloat()) {
+                                    activePointerId = pointerId
+                                    lastX = x * slidingLayout.scaleX
+                                    lastY = y * slidingLayout.scaleY
+                                    statusBarSwipe = !isPortrait && y <= 100
+                                    downAction(event)
+                                }
+                            }
+                        }
+                        MotionEvent.ACTION_MOVE -> {
+                            if (isMaximized) {
+                                aspectRatioFrameLayout.dispatchTouchEvent(event)
+                                if (timeBar?.isPressed != true && !statusBarSwipe && activePointerId != -1) {
+                                    val pointerIndex = event.findPointerIndex(activePointerId)
+                                    if (pointerIndex != -1) {
+                                        val y = event.getY(pointerIndex)
+                                        val translationY = y - lastY
+                                        if (slidingLayout.translationY + translationY < 0) {
+                                            slidingLayout.translationY = 0f
+                                            lastY = y
+                                        } else {
+                                            slidingLayout.translationY += translationY
+                                            lastY = y - translationY
+                                        }
+                                        if (slidingLayout.translationY < touchSlop) {
+                                            if (!backgroundVisible) {
+                                                enableBackground()
+                                            }
+                                        } else {
+                                            if (backgroundVisible) {
+                                                disableBackground()
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                if (activePointerId != -1) {
+                                    val pointerIndex = event.findPointerIndex(activePointerId)
+                                    if (pointerIndex != -1) {
+                                        val x = event.getX(pointerIndex) * slidingLayout.scaleX
+                                        val y = event.getY(pointerIndex) * slidingLayout.scaleY
+                                        val translationX = x - lastX
+                                        val translationY = y - lastY
+                                        slidingLayout.translationX += translationX
+                                        if (moveFreely) {
+                                            slidingLayout.translationY += translationY
+                                        }
+                                        lastX = x - translationX
+                                        lastY = y - translationY
+                                        velocityTracker?.addMovement(
+                                            MotionEvent.obtain(
+                                                event.downTime,
+                                                event.eventTime,
+                                                event.action,
+                                                slidingLayout.translationX,
+                                                slidingLayout.translationY,
+                                                event.metaState
+                                            )
+                                        )
+                                        if (isTap && ((startTranslationX - slidingLayout.translationX) !in touchSlopRange || (startTranslationY - slidingLayout.translationY) !in touchSlopRange)) {
+                                            isTap = false
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        MotionEvent.ACTION_POINTER_UP -> {
+                            val pointerIndex = event.actionIndex
+                            val pointerId = event.getPointerId(pointerIndex)
+                            if (pointerId == activePointerId) {
+                                var newId = -1
+                                for (i in 0 until event.pointerCount) {
+                                    val id = event.getPointerId(i)
+                                    if (id != activePointerId) {
+                                        val x = event.getX(i)
+                                        val y = event.getY(i)
+                                        if (x in 0f..aspectRatioFrameLayout.width.toFloat() && y in 0f..aspectRatioFrameLayout.height.toFloat()) {
+                                            newId = id
+                                            lastX = x * slidingLayout.scaleX
+                                            lastY = y * slidingLayout.scaleY
+                                            break
+                                        }
+                                    }
+                                }
+                                if (newId == -1) {
+                                    upAction(event)
+                                }
+                                activePointerId = newId
+                            }
+                        }
+                        MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> upAction(event)
+                    }
+                }
+                true
+            }
             val activity = requireActivity() as MainActivity
-            slidingLayout.addListener(activity)
-            slidingLayout.addListener(this@PlayerFragment)
-            slidingLayout.maximizedSecondViewVisibility = if (prefs.getBoolean(C.KEY_CHAT_OPENED, true)) View.VISIBLE else View.GONE //TODO
+            isChatOpen = prefs.getBoolean(C.KEY_CHAT_OPENED, true) && !prefs.getBoolean(C.CHAT_DISABLE, false)
             if (activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 viewLifecycleOwner.lifecycleScope.launch {
                     repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -282,7 +553,7 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
             playerView.controllerAutoShow = videoType != STREAM
             if (prefs.getBoolean(C.PLAYER_DOUBLETAP, true) && !prefs.getBoolean(C.CHAT_DISABLE, false)) {
                 playerView.setOnDoubleTapListener {
-                    if (!isPortrait && slidingLayout.isMaximized) {
+                    if (!isPortrait && isMaximized) {
                         if (chatLayout.isVisible) {
                             hideChat()
                         } else {
@@ -318,7 +589,7 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                                 channelName = requireArguments().getString(KEY_CHANNEL_NAME),
                             )
                         )
-                        slidingLayout.minimize()
+                        minimize()
                     }
                 }
             }
@@ -351,7 +622,7 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                                     )
                                 }
                             )
-                            slidingLayout.minimize()
+                            minimize()
                         }
                     }
                 }
@@ -547,7 +818,7 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                                 chatLayout.clearFocus()
                                 if (!isPortrait) {
                                     chatLayout.updateLayoutParams { width = chatWidthLandscape }
-                                    if (slidingLayout.isMaximized) {
+                                    if (isMaximized) {
                                         hideStatusBar()
                                     }
                                 }
@@ -1079,17 +1350,57 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
         with(binding) {
             if (isPortrait) {
                 requireActivity().window.decorView.setOnSystemUiVisibilityChangeListener(null)
-                aspectRatioFrameLayout.updateLayoutParams<LinearLayout.LayoutParams> {
-                    width = LinearLayout.LayoutParams.MATCH_PARENT
-                    height = LinearLayout.LayoutParams.WRAP_CONTENT
-                    weight = 0f
+                showStatusBar()
+                if (isMaximized) {
+                    slidingLayout.post {
+                        val playerHeight = (slidingLayout.width / (16f / 9f)).toInt()
+                        val playerLayoutParams: FrameLayout.LayoutParams.() -> Unit = {
+                            width = ViewGroup.LayoutParams.MATCH_PARENT
+                            height = playerHeight
+                            marginEnd = 0
+                        }
+                        aspectRatioFrameLayout.updateLayoutParams(playerLayoutParams)
+                        dragView.updateLayoutParams(playerLayoutParams)
+                        chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                            width = ViewGroup.LayoutParams.MATCH_PARENT
+                            height = ViewGroup.LayoutParams.MATCH_PARENT
+                            topMargin = playerHeight
+                            gravity = Gravity.BOTTOM
+                        }
+                        chatLayout.visible()
+                    }
+                } else {
+                    slidingLayout.post {
+                        val (minimizedScaleX, minimizedScaleY) = getScaleValues()
+                        val windowInsets = ViewCompat.getRootWindowInsets(requireView())
+                        val insets = windowInsets?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+                        val keyboardInsets = windowInsets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom?.let { if (it > 0) it - (insets?.bottom ?: 0) else it } ?: 0
+                        val playerHeight = (slidingLayout.width / (16f / 9f)).toInt()
+                        val playerLayoutParams: FrameLayout.LayoutParams.() -> Unit = {
+                            width = ViewGroup.LayoutParams.MATCH_PARENT
+                            height = playerHeight
+                            marginEnd = 0
+                        }
+                        aspectRatioFrameLayout.updateLayoutParams(playerLayoutParams)
+                        dragView.updateLayoutParams(playerLayoutParams)
+                        chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                            width = ViewGroup.LayoutParams.MATCH_PARENT
+                            height = ViewGroup.LayoutParams.MATCH_PARENT
+                            topMargin = playerHeight
+                            gravity = Gravity.BOTTOM
+                        }
+                        val scaledXDiff = (slidingLayout.width * (1f - minimizedScaleX)) / 2
+                        val scaledYDiff = (slidingLayout.height * (1f - minimizedScaleY)) / 2
+                        val navBarHeight = requireView().rootView.findViewById<LinearLayout>(R.id.navBarContainer)?.height?.takeIf { it > 0 }?.let { it - keyboardInsets } ?: (insets?.bottom ?: 0)
+                        val newX = slidingLayout.width - (insets?.right ?: 0) - (slidingLayout.width * minimizedScaleX) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20F, resources.displayMetrics) * minimizedScaleX)
+                        val newY = slidingLayout.height - navBarHeight - (playerHeight * minimizedScaleY) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30F, resources.displayMetrics) * minimizedScaleY)
+                        slidingLayout.translationX = 0f - scaledXDiff - ((insets?.left ?: 0) * minimizedScaleX) + newX
+                        slidingLayout.translationY = 0f - scaledYDiff - ((insets?.top ?: 0) * minimizedScaleY) + newY
+                        slidingLayout.scaleX = minimizedScaleX
+                        slidingLayout.scaleY = minimizedScaleY
+                        chatLayout.gone()
+                    }
                 }
-                chatLayout.updateLayoutParams<LinearLayout.LayoutParams> {
-                    width = LinearLayout.LayoutParams.MATCH_PARENT
-                    height = 0
-                    weight = 1f
-                }
-                chatLayout.visible()
                 requireView().findViewById<ImageButton>(R.id.playerFullscreenToggle)?.let {
                     if (it.isVisible) {
                         it.setImageResource(R.drawable.baseline_fullscreen_black_24)
@@ -1097,38 +1408,73 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                 }
                 requireView().findViewById<ImageButton>(R.id.playerAspectRatio)?.gone()
                 requireView().findViewById<ImageButton>(R.id.playerChatToggle)?.gone()
-                showStatusBar()
                 aspectRatioFrameLayout.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH
                 resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             } else {
                 requireActivity().window.decorView.setOnSystemUiVisibilityChangeListener {
-                    if (!isKeyboardShown && slidingLayout.isMaximized && activity != null) {
+                    if (!isKeyboardShown && isMaximized && activity != null) {
                         hideStatusBar()
                     }
                 }
-                aspectRatioFrameLayout.updateLayoutParams<LinearLayout.LayoutParams> {
-                    width = 0
-                    height = LinearLayout.LayoutParams.MATCH_PARENT
-                    weight = 1f
-                }
-                chatLayout.updateLayoutParams<LinearLayout.LayoutParams> {
-                    width = chatWidthLandscape
-                    height = LinearLayout.LayoutParams.MATCH_PARENT
-                    weight = 0f
-                }
-                if (prefs.getBoolean(C.CHAT_DISABLE, false)) {
-                    chatLayout.gone()
-                    slidingLayout.maximizedSecondViewVisibility = View.GONE
-                } else {
-                    if (prefs.getBoolean(C.KEY_CHAT_OPENED, true)) {
-                        showChat()
-                    } else {
-                        hideChat()
+                if (isMaximized) {
+                    hideStatusBar()
+                    slidingLayout.post {
+                        val chatWidth = if (isChatOpen) chatWidthLandscape else 0
+                        val playerLayoutParams: FrameLayout.LayoutParams.() -> Unit = {
+                            width = ViewGroup.LayoutParams.MATCH_PARENT
+                            height = ViewGroup.LayoutParams.MATCH_PARENT
+                            marginEnd = chatWidth
+                        }
+                        aspectRatioFrameLayout.updateLayoutParams(playerLayoutParams)
+                        dragView.updateLayoutParams(playerLayoutParams)
+                        chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                            width = chatWidthLandscape
+                            height = ViewGroup.LayoutParams.MATCH_PARENT
+                            topMargin = 0
+                            gravity = Gravity.END
+                        }
+                        if (isChatOpen) {
+                            chatLayout.visible()
+                            if (requireView().findViewById<Button>(R.id.btnDown)?.isVisible == false) {
+                                requireView().findViewById<RecyclerView>(R.id.recyclerView)?.let { recyclerView ->
+                                    recyclerView.adapter?.itemCount?.let { recyclerView.scrollToPosition(it - 1) }
+                                }
+                            }
+                        } else {
+                            chatLayout.gone()
+                        }
                     }
-                }
-                if (chatLayout.isVisible && requireView().findViewById<Button>(R.id.btnDown)?.isVisible == false) {
-                    requireView().findViewById<RecyclerView>(R.id.recyclerView)?.let { recyclerView ->
-                        recyclerView.adapter?.itemCount?.let { recyclerView.scrollToPosition(it - 1) }
+                } else {
+                    showStatusBar()
+                    slidingLayout.post {
+                        val (minimizedScaleX, minimizedScaleY) = getScaleValues()
+                        val windowInsets = ViewCompat.getRootWindowInsets(requireView())
+                        val insets = windowInsets?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+                        val keyboardInsets = windowInsets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom?.let { if (it > 0) it - (insets?.bottom ?: 0) else it } ?: 0
+                        val playerWidth = slidingLayout.width - getHorizontalInsets(windowInsets)
+                        val playerLayoutParams: FrameLayout.LayoutParams.() -> Unit = {
+                            width = ViewGroup.LayoutParams.MATCH_PARENT
+                            height = ViewGroup.LayoutParams.MATCH_PARENT
+                            marginEnd = 0
+                        }
+                        aspectRatioFrameLayout.updateLayoutParams(playerLayoutParams)
+                        dragView.updateLayoutParams(playerLayoutParams)
+                        chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                            width = chatWidthLandscape
+                            height = ViewGroup.LayoutParams.MATCH_PARENT
+                            topMargin = 0
+                            gravity = Gravity.END
+                        }
+                        chatLayout.gone()
+                        val scaledXDiff = (slidingLayout.width * (1f - minimizedScaleX)) / 2
+                        val scaledYDiff = (slidingLayout.height * (1f - minimizedScaleY)) / 2
+                        val navBarHeight = requireView().rootView.findViewById<LinearLayout>(R.id.navBarContainer)?.height?.takeIf { it > 0 }?.let { it - keyboardInsets } ?: (insets?.bottom ?: 0)
+                        val newX = slidingLayout.width - (insets?.right ?: 0) - (playerWidth * minimizedScaleX) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20F, resources.displayMetrics) * minimizedScaleX)
+                        val newY = slidingLayout.height - navBarHeight - (slidingLayout.height * minimizedScaleY) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30F, resources.displayMetrics) * minimizedScaleY)
+                        slidingLayout.translationX = 0f - scaledXDiff - ((insets?.left ?: 0) * minimizedScaleX) + newX
+                        slidingLayout.translationY = 0f - scaledYDiff - ((insets?.top ?: 0) * minimizedScaleY) + newY
+                        slidingLayout.scaleX = minimizedScaleX
+                        slidingLayout.scaleY = minimizedScaleY
                     }
                 }
                 requireView().findViewById<ImageButton>(R.id.playerFullscreenToggle)?.let {
@@ -1139,13 +1485,6 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                 requireView().findViewById<ImageButton>(R.id.playerAspectRatio)?.let {
                     if (it.hasOnClickListeners()) {
                         it.visible()
-                    }
-                }
-                slidingLayout.post {
-                    if (slidingLayout.isMaximized) {
-                        hideStatusBar()
-                    } else {
-                        showStatusBar()
                     }
                 }
                 aspectRatioFrameLayout.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
@@ -1251,39 +1590,67 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
     }
 
     fun hideChat() {
-        with(binding) {
-            if (prefs.getBoolean(C.PLAYER_CHATTOGGLE, true)) {
-                requireView().findViewById<ImageButton>(R.id.playerChatToggle)?.apply {
-                    visible()
-                    setImageResource(R.drawable.baseline_speaker_notes_black_24)
-                    setOnClickListener { showChat() }
-                }
+        isChatOpen = false
+        hideChatLayout()
+        if (prefs.getBoolean(C.PLAYER_CHATTOGGLE, true)) {
+            requireView().findViewById<ImageButton>(R.id.playerChatToggle)?.apply {
+                visible()
+                setImageResource(R.drawable.baseline_speaker_notes_black_24)
+                setOnClickListener { showChat() }
             }
-            chatLayout.hideKeyboard()
-            chatLayout.clearFocus()
-            chatLayout.gone()
-            prefs.edit { putBoolean(C.KEY_CHAT_OPENED, false) }
-            slidingLayout.maximizedSecondViewVisibility = View.GONE
         }
+        prefs.edit { putBoolean(C.KEY_CHAT_OPENED, false) }
     }
 
     fun showChat() {
+        isChatOpen = true
+        showChatLayout()
+        if (prefs.getBoolean(C.PLAYER_CHATTOGGLE, true)) {
+            requireView().findViewById<ImageButton>(R.id.playerChatToggle)?.apply {
+                visible()
+                setImageResource(R.drawable.baseline_speaker_notes_off_black_24)
+                setOnClickListener { hideChat() }
+            }
+        }
+        prefs.edit { putBoolean(C.KEY_CHAT_OPENED, true) }
+        if (requireView().findViewById<Button>(R.id.btnDown)?.isVisible == false) {
+            requireView().findViewById<RecyclerView>(R.id.recyclerView)?.let { recyclerView ->
+                recyclerView.adapter?.itemCount?.let { recyclerView.scrollToPosition(it - 1) }
+            }
+        }
+    }
+
+    private fun hideChatLayout() {
         with(binding) {
-            if (prefs.getBoolean(C.PLAYER_CHATTOGGLE, true)) {
-                requireView().findViewById<ImageButton>(R.id.playerChatToggle)?.apply {
-                    visible()
-                    setImageResource(R.drawable.baseline_speaker_notes_off_black_24)
-                    setOnClickListener { hideChat() }
-                }
+            val playerLayoutParams: FrameLayout.LayoutParams.() -> Unit = {
+                width = ViewGroup.LayoutParams.MATCH_PARENT
+                height = ViewGroup.LayoutParams.MATCH_PARENT
+                marginEnd = 0
+            }
+            aspectRatioFrameLayout.updateLayoutParams(playerLayoutParams)
+            dragView.updateLayoutParams(playerLayoutParams)
+            chatLayout.hideKeyboard()
+            chatLayout.clearFocus()
+            chatLayout.gone()
+        }
+    }
+
+    private fun showChatLayout() {
+        with(binding) {
+            val playerLayoutParams: FrameLayout.LayoutParams.() -> Unit = {
+                width = ViewGroup.LayoutParams.MATCH_PARENT
+                height = ViewGroup.LayoutParams.MATCH_PARENT
+                marginEnd = chatWidthLandscape
+            }
+            aspectRatioFrameLayout.updateLayoutParams(playerLayoutParams)
+            dragView.updateLayoutParams(playerLayoutParams)
+            chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                width = chatWidthLandscape
+                height = ViewGroup.LayoutParams.MATCH_PARENT
+                topMargin = 0
+                gravity = Gravity.END
             }
             chatLayout.visible()
-            prefs.edit { putBoolean(C.KEY_CHAT_OPENED, true) }
-            slidingLayout.maximizedSecondViewVisibility = View.VISIBLE
-            if (requireView().findViewById<Button>(R.id.btnDown)?.isVisible == false) {
-                requireView().findViewById<RecyclerView>(R.id.recyclerView)?.let { recyclerView ->
-                    recyclerView.adapter?.itemCount?.let { recyclerView.scrollToPosition(it - 1) }
-                }
-            }
         }
     }
 
@@ -1328,14 +1695,6 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                     .build()
             }
         }
-    }
-
-    fun minimize() {
-        binding.slidingLayout.minimize()
-    }
-
-    fun maximize() {
-        binding.slidingLayout.maximize()
     }
 
     fun setQualityText() {
@@ -1419,7 +1778,7 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                             )
                         }
                     )
-                    binding.slidingLayout.minimize()
+                    minimize()
                 }
             } else {
                 text = null
@@ -1725,6 +2084,71 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
         ).hide(WindowInsetsCompat.Type.systemBars())
     }
 
+    private fun enableBackground() {
+        backgroundVisible = true
+        binding.playerBackground.setBackgroundColor(
+            if (isPortrait) {
+                backgroundColor ?: if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M && isLightTheme ?: requireContext().isLightTheme.also { isLightTheme = it }) {
+                    ContextCompat.getColor(requireContext(), R.color.darkScrimOnLightSurface)
+                } else {
+                    MaterialColors.getColor(binding.playerBackground, com.google.android.material.R.attr.colorSurface)
+                }.also { backgroundColor = it }
+            } else {
+                Color.BLACK
+            }
+        )
+        binding.playerBackground.isClickable = true
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            @Suppress("DEPRECATION")
+            requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+        }
+    }
+
+    private fun disableBackground() {
+        backgroundVisible = false
+        binding.playerBackground.setBackgroundColor(Color.TRANSPARENT)
+        binding.playerBackground.isClickable = false
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            @Suppress("DEPRECATION")
+            requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+        }
+    }
+
+    private fun getHorizontalInsets(windowInsets: WindowInsetsCompat?): Int {
+        return if (windowInsets != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && prefs.getBoolean(C.PLAYER_ROUNDED_CORNER_PADDING, false)) {
+                val rootWindowInsets = requireView().rootWindowInsets
+                val topLeft = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_TOP_LEFT)
+                val topRight = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_TOP_RIGHT)
+                val bottomLeft = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_LEFT)
+                val bottomRight = rootWindowInsets.getRoundedCorner(RoundedCorner.POSITION_BOTTOM_RIGHT)
+                val leftRadius = max(topLeft?.radius ?: 0, bottomLeft?.radius ?: 0)
+                val rightRadius = max(topRight?.radius ?: 0, bottomRight?.radius ?: 0)
+                if (prefs.getBoolean(C.UI_DRAW_BEHIND_CUTOUTS, false)) {
+                    leftRadius + rightRadius
+                } else {
+                    val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+                    max(cutoutInsets.left, leftRadius) + max(cutoutInsets.right, rightRadius)
+                }
+            } else {
+                if (prefs.getBoolean(C.UI_DRAW_BEHIND_CUTOUTS, false)) {
+                    0
+                } else {
+                    val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+                    cutoutInsets.left + cutoutInsets.right
+                }
+            }
+        } else 0
+    }
+
+    private fun getScaleValues(): Pair<Float, Float> {
+        return if (isPortrait) {
+            0.5f to 0.5f
+        } else {
+            0.3f to 0.325f
+        }
+    }
+
     fun getCurrentSpeed() = player?.playbackParameters?.speed
 
     fun getCurrentPosition() = player?.currentPosition
@@ -1739,7 +2163,7 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
 
     fun reconnect() = chatFragment?.reconnect()
 
-    fun secondViewIsHidden() = binding.slidingLayout.secondView?.isVisible == false
+    fun secondViewIsHidden() = !binding.chatLayout.isVisible
 
     fun enterPictureInPicture(): Boolean {
         val quality = if (viewModel.restoreQuality) {
@@ -2139,7 +2563,7 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                         (activity as? MainActivity)?.setSleepTimer(duration)
                     } else {
                         minimize()
-                        onClose()
+                        close()
                         (activity as? MainActivity)?.closePlayer()
                     }
                 }
@@ -2160,7 +2584,7 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                                     (activity as? MainActivity)?.setSleepTimer(duration)
                                 } else {
                                     minimize()
-                                    onClose()
+                                    close()
                                     (activity as? MainActivity)?.closePlayer()
                                 }
                             }
@@ -2570,7 +2994,11 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
         super.onConfigurationChanged(newConfig)
         with(binding) {
             isPortrait = newConfig.orientation == Configuration.ORIENTATION_PORTRAIT
-            slidingLayout.updateBackgroundColor(isPortrait)
+            if (isMaximized) {
+                enableBackground()
+            } else {
+                disableBackground()
+            }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !requireActivity().isInPictureInPictureMode) {
                 chatLayout.hideKeyboard()
                 chatLayout.clearFocus()
@@ -2583,11 +3011,23 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
         with(binding) {
             if (isInPictureInPictureMode) {
-                if (!slidingLayout.isMaximized) {
-                    slidingLayout.maximize()
+                if (!isMaximized) {
+                    isMaximized = true
+                    requireActivity().onBackPressedDispatcher.addCallback(this@PlayerFragment, backPressedCallback)
+                    if (videoType == STREAM && chatFragment?.emoteMenuIsVisible() == true) {
+                        chatFragment?.toggleBackPressedCallback(true)
+                    }
+                    slidingLayout.translationX = 0f
+                    slidingLayout.translationY = 0f
+                    slidingLayout.scaleX = 1f
+                    slidingLayout.scaleY = 1f
+                }
+                if (isPortrait) {
+                    chatLayout.gone()
+                } else {
+                    hideChatLayout()
                 }
                 playerView.useController = false
-                chatLayout.gone()
                 // player dialog
                 (childFragmentManager.findFragmentByTag("closeOnPip") as? BottomSheetDialogFragment)?.dismiss()
                 // player chat message dialog
@@ -2773,17 +3213,61 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
         controllerFuture?.let { MediaController.releaseFuture(it) }
     }
 
-    override fun onMinimize() {
+    fun minimize() {
         with(binding) {
-            chatLayout.hideKeyboard()
-            chatLayout.clearFocus()
+            isMaximized = false
             if (videoType == STREAM && chatFragment?.emoteMenuIsVisible() == true) {
                 chatFragment?.toggleBackPressedCallback(false)
             }
             backPressedCallback.remove()
             playerView.useController = false
-            if (!isPortrait) {
+            fun animate() {
+                val (minimizedScaleX, minimizedScaleY) = getScaleValues()
+                val windowInsets = ViewCompat.getRootWindowInsets(requireView())
+                val insets = windowInsets?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+                val keyboardInsets = windowInsets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom?.let { if (it > 0) it - (insets?.bottom ?: 0) else it } ?: 0
+                val scaledXDiff = (slidingLayout.width * (1f - minimizedScaleX)) / 2
+                val scaledYDiff = (slidingLayout.height * (1f - minimizedScaleY)) / 2
+                val navBarHeight = requireView().rootView.findViewById<LinearLayout>(R.id.navBarContainer)?.height?.takeIf { it > 0 }?.let { it - keyboardInsets } ?: (insets?.bottom ?: 0)
+                val playerWidth = if (isPortrait) {
+                    aspectRatioFrameLayout.width
+                } else {
+                    slidingLayout.width - getHorizontalInsets(windowInsets)
+                }
+                val newX = slidingLayout.width - (insets?.right ?: 0) - (playerWidth * minimizedScaleX) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20F, resources.displayMetrics) * minimizedScaleX)
+                val newY = slidingLayout.height - navBarHeight - (aspectRatioFrameLayout.height * minimizedScaleY) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30F, resources.displayMetrics) * minimizedScaleY)
+                slidingLayout.animate().apply {
+                    translationX(0f - scaledXDiff - ((insets?.left ?: 0) * minimizedScaleX) + newX)
+                    translationY(0f - scaledYDiff - ((insets?.top ?: 0) * minimizedScaleY) + newY)
+                    scaleX(minimizedScaleX)
+                    scaleY(minimizedScaleY)
+                    setDuration(250L)
+                    setListener(
+                        object : AnimatorListenerAdapter() {
+                            override fun onAnimationStart(animation: Animator) {
+                                isAnimating = true
+                                disableBackground()
+                            }
+
+                            override fun onAnimationEnd(animation: Animator) {
+                                isAnimating = false
+                                setListener(null)
+                                activePointerId = -1
+                            }
+                        }
+                    )
+                    start()
+                }
+            }
+            if (isPortrait) {
+                chatLayout.gone()
+                animate()
+            } else {
                 showStatusBar()
+                hideChatLayout()
+                slidingLayout.post {
+                    animate()
+                }
                 val activity = requireActivity()
                 activity.lifecycleScope.launch {
                     delay(500L)
@@ -2793,8 +3277,9 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
         }
     }
 
-    override fun onMaximize() {
+    fun maximize() {
         with(binding) {
+            isMaximized = true
             requireActivity().onBackPressedDispatcher.addCallback(this@PlayerFragment, backPressedCallback)
             if (videoType == STREAM && chatFragment?.emoteMenuIsVisible() == true) {
                 chatFragment?.toggleBackPressedCallback(true)
@@ -2803,13 +3288,40 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
             if (!playerView.controllerHideOnTouch) { //TODO
                 playerView.showController()
             }
-            if (!isPortrait) {
+            if (isPortrait) {
+                chatLayout.visible()
+            } else {
                 hideStatusBar()
+                if (isChatOpen) {
+                    showChatLayout()
+                }
+            }
+            slidingLayout.animate().apply {
+                translationX(0f)
+                translationY(0f)
+                scaleX(1f)
+                scaleY(1f)
+                setDuration(250L)
+                setListener(
+                    object : AnimatorListenerAdapter() {
+                        override fun onAnimationStart(animation: Animator) {
+                            isAnimating = true
+                        }
+
+                        override fun onAnimationEnd(animation: Animator) {
+                            isAnimating = false
+                            setListener(null)
+                            enableBackground()
+                            activePointerId = -1
+                        }
+                    }
+                )
+                start()
             }
         }
     }
 
-    override fun onClose() {
+    fun close() {
         savePosition()
         player?.pause()
         player?.stop()
