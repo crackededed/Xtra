@@ -181,7 +181,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                 }
             }
             if (!playlist.isNullOrBlank()) {
-                val names = Regex("NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                 val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
                 val map = names.zip(urls)
                     .sortedByDescending {
