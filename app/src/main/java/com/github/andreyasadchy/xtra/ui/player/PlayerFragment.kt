@@ -1853,13 +1853,20 @@ class PlayerFragment : BaseNetworkFragment(), SlidingLayout.Listener, PlayerGame
                         }
                         if (player is ExoPlayer) {
                             val playlist = (player?.currentManifest as? HlsManifest)?.multivariantPlaylist
-                            val variants = playlist?.variants?.mapNotNull { variant ->
-                                playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.let { variant to it }
+                            val names = playlist?.variants?.mapNotNull { it.format.label }?.toTypedArray()
+                            if (!names.isNullOrEmpty()) {
+                                val codecs = playlist.variants.map { it.format.codecs }.toTypedArray()
+                                val urls = playlist.variants.map { it.url.toString() }.toTypedArray()
+                                callback(names, codecs, urls)
+                            } else {
+                                val variants = playlist?.variants?.mapNotNull { variant ->
+                                    playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.let { variant to it }
+                                }
+                                val names = variants?.map { it.second }?.toTypedArray()
+                                val codecs = variants?.map { it.first.format.codecs }?.toTypedArray()
+                                val urls = variants?.map { it.first.url.toString() }?.toTypedArray()
+                                callback(names, codecs, urls)
                             }
-                            val names = variants?.map { it.second }?.toTypedArray()
-                            val codecs = variants?.map { it.first.format.codecs }?.toTypedArray()
-                            val urls = variants?.map { it.first.url.toString() }?.toTypedArray()
-                            callback(names, codecs, urls)
                         } else {
                             (player as? MediaController)?.sendCustomCommand(
                                 SessionCommand(PlaybackService.GET_QUALITIES, Bundle.EMPTY),

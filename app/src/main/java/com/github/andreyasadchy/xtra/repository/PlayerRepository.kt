@@ -99,7 +99,7 @@ class PlayerRepository @Inject constructor(
             supportedCodecs?.let { put("supported_codecs", it) }
             accessToken.second?.let { put("token", it) }
         }.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
-        "https://usher.ttvnw.net/api/channel/hls/${channelLogin}.m3u8${query}"
+        "https://usher.ttvnw.net/api/v2/channel/hls/${channelLogin}.m3u8${query}"
     }
 
     suspend fun loadStreamPlaylist(networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, supportedCodecs: String?, enableIntegrity: Boolean): String? = withContext(Dispatchers.IO) {
@@ -292,7 +292,7 @@ class PlayerRepository @Inject constructor(
             supportedCodecs?.let { put("supported_codecs", it) }
             accessToken.second?.let { put("token", it) }
         }.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
-        "https://usher.ttvnw.net/vod/${videoId}.m3u8${query}" to backupQualities
+        "https://usher.ttvnw.net/vod/v2/${videoId}.m3u8${query}" to backupQualities
     }
 
     suspend fun loadVideoPlaylist(networkLibrary: String?, gqlHeaders: Map<String, String>, videoId: String?, playerType: String?, supportedCodecs: String?, enableIntegrity: Boolean): Pair<String?, List<String>> = withContext(Dispatchers.IO) {
