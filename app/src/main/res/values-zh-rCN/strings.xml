@@ -396,7 +396,6 @@
     <string name="followed_games">关注的游戏</string>
     <string name="irc_msgid_highlighted_message">醒目的信息</string>
     <string name="irc_msgid_announcement">公告</string>
-    <string name="debug_secondview">在应用程序子母画面中可动的</string>
     <string name="add_bookmark">加入书签</string>
     <string name="show_vod_time_left">在加入书签的 VOD 中显示剩余时间</string>
     <string name="vod_time_left">在 %s 内自动删除</string>
@@ -714,4 +713,5 @@
     <string name="save_filters">Save filters</string>
     <string name="delete_filter_message">Are you sure you want to delete this filter?</string>
     <string name="use_custom_playback_service">Use custom playback service</string>
+    <string name="move_player_freely">Move minimized player freely</string>
 </resources>

@@ -15,13 +15,6 @@
         app:singleLineTitle="false" />
 
     <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="debug_secondview"
-        android:title="@string/debug_secondview"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="debug_api_commands"
         android:title="@string/debug_api_commands"
