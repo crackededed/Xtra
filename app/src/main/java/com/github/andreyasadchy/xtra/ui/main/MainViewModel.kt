@@ -76,11 +76,7 @@ class MainViewModel @Inject constructor(
     val checkNetworkStatus = MutableStateFlow(false)
     val isNetworkAvailable = MutableStateFlow<Boolean?>(null)
 
-    var isPlayerMaximized = false
-        private set
-
     var isPlayerOpened = false
-        private set
 
     var sleepTimer: Timer? = null
     var sleepTimerEndTime = 0L
@@ -88,24 +84,6 @@ class MainViewModel @Inject constructor(
     val video = MutableStateFlow<Video?>(null)
     val clip = MutableStateFlow<Clip?>(null)
     val user = MutableStateFlow<User?>(null)
-
-    fun onMaximize() {
-        isPlayerMaximized = true
-    }
-
-    fun onMinimize() {
-        isPlayerMaximized = false
-    }
-
-    fun onPlayerStarted() {
-        isPlayerOpened = true
-        isPlayerMaximized = true
-    }
-
-    fun onPlayerClosed() {
-        isPlayerOpened = false
-        isPlayerMaximized = false
-    }
 
     fun loadVideo(videoId: String?, offset: Long?, saveVideoPositions: Boolean, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
         if (video.value == null) {

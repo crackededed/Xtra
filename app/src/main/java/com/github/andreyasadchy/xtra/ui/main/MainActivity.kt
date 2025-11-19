@@ -63,7 +63,6 @@ import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.player.PlayerFragment
-import com.github.andreyasadchy.xtra.ui.view.SlidingLayout
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.DisplayUtils
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
@@ -84,7 +83,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.concurrent.schedule
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
+class MainActivity : AppCompatActivity() {
 
     companion object {
         const val KEY_VIDEO = "video"
@@ -300,7 +299,7 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
         connectivityManager.unregisterNetworkCallback(networkCallback)
         unregisterReceiver(pipActionReceiver)
         if (isFinishing) {
-            playerFragment?.onClose()
+            playerFragment?.close()
         }
         super.onDestroy()
     }
@@ -533,28 +532,14 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
         startPlayer(PlayerFragment.newInstance(video))
     }
 
-//SlidingLayout.Listener
-
-    override fun onMaximize() {
-        viewModel.onMaximize()
-    }
-
-    override fun onMinimize() {
-        viewModel.onMinimize()
-    }
-
-    override fun onClose() {
-        closePlayer()
-    }
-
 //Player methods
 
     private fun startPlayer(fragment: PlayerFragment) {
-        playerFragment?.onClose()
+        playerFragment?.close()
         playerFragment = fragment
         supportFragmentManager.beginTransaction()
             .replace(R.id.playerContainer, fragment).commit()
-        viewModel.onPlayerStarted()
+        viewModel.isPlayerOpened = true
         if (packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) &&
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             prefs.getBoolean(C.PLAYER_PICTURE_IN_PICTURE, true)
@@ -569,7 +554,7 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
             .remove(supportFragmentManager.findFragmentById(R.id.playerContainer)!!)
             .commit()
         playerFragment = null
-        viewModel.onPlayerClosed()
+        viewModel.isPlayerOpened = false
         if (packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             setPictureInPictureParams(PictureInPictureParams.Builder().setAutoEnterEnabled(false).build())
         }
@@ -596,8 +581,8 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
                     lifecycleScope.launch {
                         if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                             playerFragment?.let {
-                                it.onMinimize()
-                                it.onClose()
+                                it.minimize()
+                                it.close()
                                 closePlayer()
                             }
                             if (prefs.getBoolean(C.SLEEP_TIMER_LOCK, false)) {
@@ -612,8 +597,8 @@ class MainActivity : AppCompatActivity(), SlidingLayout.Listener {
                         } else {
                             withStarted {
                                 playerFragment?.let {
-                                    it.onMinimize()
-                                    it.onClose()
+                                    it.minimize()
+                                    it.close()
                                     closePlayer()
                                 }
                             }
