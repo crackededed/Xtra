@@ -48,7 +48,6 @@
         android:text="Sample panel description"
         android:textAppearance="?attr/textAppearanceBody2"
         android:visibility="gone"
-        android:textIsSelectable="true"
         tools:visibility="visible" />
 
 </LinearLayout>
