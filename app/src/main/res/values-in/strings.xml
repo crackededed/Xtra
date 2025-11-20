@@ -395,7 +395,6 @@
     <string name="followed_games">Game yang diikuti</string>
     <string name="irc_msgid_highlighted_message">Pesan yang disorot</string>
     <string name="irc_msgid_announcement">Pengumuman</string>
-    <string name="debug_secondview">Bergerak di aplikasi PIP</string>
     <string name="add_bookmark">Tambahkan bookmark</string>
     <string name="show_vod_time_left">Tampilkan waktu yang tersisa di vod yang di-bookmark</string>
     <string name="vod_time_left">Hapus otomatis %s</string>

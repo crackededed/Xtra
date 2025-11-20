@@ -48,7 +48,6 @@ coordinatorlayout = { module = "androidx.coordinatorlayout:coordinatorlayout", v
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "core" }
 coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 cronet-api = { module = "org.chromium.net:cronet-api", version.ref = "cronet" }
-customview = { module = "androidx.customview:customview", version.ref = "customview" }
 fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragment" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 glide-ksp = { module = "com.github.bumptech.glide:ksp", version.ref = "glide" }

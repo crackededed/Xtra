@@ -396,7 +396,6 @@
     <string name="followed_games">Jeux suivis</string>
     <string name="irc_msgid_highlighted_message">Message en surbrillance</string>
     <string name="irc_msgid_announcement">Annonce</string>
-    <string name="debug_secondview">Déplaçable dans l\'application PIP</string>
     <string name="add_bookmark">Ajouter un signet</string>
     <string name="show_vod_time_left">Afficher le temps restant sur les VODs marquées</string>
     <string name="vod_time_left">Suppression automatique dans %s</string>

@@ -396,7 +396,6 @@
     <string name="followed_games">Jogos seguidos</string>
     <string name="irc_msgid_highlighted_message">Mensagem destacada</string>
     <string name="irc_msgid_announcement">Anúncio</string>
-    <string name="debug_secondview">Usar aplicativo no modo PiP</string>
     <string name="add_bookmark">Adicionar ao marcardores</string>
     <string name="show_vod_time_left">Mostrar tempo marcado deixado em vods</string>
     <string name="vod_time_left">Auto excluído em %s</string>

@@ -396,7 +396,6 @@
     <string name="followed_games">Отслеживаемые игры</string>
     <string name="irc_msgid_highlighted_message">Выделенное сообщение</string>
     <string name="irc_msgid_announcement">Объявление</string>
-    <string name="debug_secondview">Разрешить перемещение картинки-в-картинке</string>
     <string name="add_bookmark">Добавить в закладки</string>
     <string name="show_vod_time_left">Показывать оставшееся время в видео из закладок</string>
     <string name="vod_time_left">Автоудаление через %s</string>

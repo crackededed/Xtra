@@ -396,7 +396,6 @@
     <string name="followed_games">追隨的遊戲</string>
     <string name="irc_msgid_highlighted_message">醒目的訊息</string>
     <string name="irc_msgid_announcement">公告</string>
-    <string name="debug_secondview">在應用程式子母畫面中可動的</string>
     <string name="add_bookmark">加入書籤</string>
     <string name="show_vod_time_left">在加入書籤的 VOD 中顯示剩餘時間</string>
     <string name="vod_time_left">在 %s 內自動刪除</string>

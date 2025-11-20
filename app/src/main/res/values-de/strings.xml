@@ -396,7 +396,6 @@
     <string name="followed_games">Gefolgte Spiele</string>
     <string name="irc_msgid_highlighted_message">Hervorgehobene Nachricht</string>
     <string name="irc_msgid_announcement">Ankündigung</string>
-    <string name="debug_secondview">Bewegbare in-App PIP Funktion</string>
     <string name="add_bookmark">Lesezeichen hinzufügen</string>
     <string name="show_vod_time_left">Zeige verbleibende Wiedergabezeit bei VODs</string>
     <string name="vod_time_left">Automatisch löschen in %s</string>

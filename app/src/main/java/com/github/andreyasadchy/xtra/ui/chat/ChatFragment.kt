@@ -44,7 +44,6 @@ import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.player.PlayerFragment
 import com.github.andreyasadchy.xtra.ui.view.AutoCompleteAdapter
-import com.github.andreyasadchy.xtra.ui.view.SlidingLayout
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.convertDpToPixels
@@ -307,7 +306,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         }
                         replyView.gone()
                         send.setOnClickListener { sendMessage() }
-                        if (view.parent?.parent?.parent is SlidingLayout && !requireContext().prefs().getBoolean(C.KEY_CHAT_BAR_VISIBLE, true)) {
+                        if ((view.parent?.parent?.parent as? View)?.id == R.id.slidingLayout && !requireContext().prefs().getBoolean(C.KEY_CHAT_BAR_VISIBLE, true)) {
                             messageView.gone()
                         } else {
                             messageView.visible()
@@ -1049,7 +1048,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                     chatReplayUnavailable.visible()
                 }
             }
-            if (view.parent?.parent?.parent !is SlidingLayout) {
+            if ((view.parent?.parent?.parent as? View)?.id != R.id.slidingLayout) {
                 ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
                     if (activity?.findViewById<LinearLayout>(R.id.navBarContainer)?.isVisible == false) {
                         val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())

@@ -396,7 +396,6 @@
     <string name="followed_games">Giochi seguiti</string>
     <string name="irc_msgid_highlighted_message">Messaggio evidenziato</string>
     <string name="irc_msgid_announcement">Annuncio</string>
-    <string name="debug_secondview">PIP mobile in-app</string>
     <string name="add_bookmark">Aggiungi segnalibro</string>
     <string name="show_vod_time_left">Mostra tempo rimasto su vod contrassegnati</string>
     <string name="vod_time_left">Cancellazione automatica in %s</string>

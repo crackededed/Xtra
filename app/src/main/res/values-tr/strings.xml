@@ -397,7 +397,6 @@
     <string name="followed_games">Takip edilen oyunlar</string>
     <string name="irc_msgid_highlighted_message">Vurgulanan mesaj</string>
     <string name="irc_msgid_announcement">Duyuru</string>
-    <string name="debug_secondview">Uygulama içinde hareketli PIP</string>
     <string name="add_bookmark">Yer işareti ekle</string>
     <string name="show_vod_time_left">Yer imli yayın tekrarlarında kalan süreyi göster</string>
     <string name="vod_time_left">Otomatik silinmesine %s kaldı</string>

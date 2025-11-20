@@ -413,7 +413,6 @@
     <string name="followed_games">Followed games</string>
     <string name="irc_msgid_highlighted_message">Highlighted message</string>
     <string name="irc_msgid_announcement">Announcement</string>
-    <string name="debug_secondview">Movable in app PIP</string>
     <string name="add_bookmark">Add bookmark</string>
     <string name="show_vod_time_left">Show time left on bookmarked vods</string>
     <string name="vod_time_left">Auto deleted in %s</string>

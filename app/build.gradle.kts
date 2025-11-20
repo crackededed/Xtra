@@ -30,7 +30,7 @@ android {
         minSdk = 23
         targetSdk = 36
         versionCode = 121
-        versionName = "2.51.1"
+        versionName = "2.51.2"
     }
 
     buildTypes {
@@ -78,7 +78,6 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.coordinatorlayout)
     implementation(libs.core.ktx)
-    implementation(libs.customview)
     implementation(libs.fragment.ktx)
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.navigation.fragment)
