@@ -1,10 +1,9 @@
 package com.github.andreyasadchy.xtra.ui.common
 
 import android.content.Intent
-import android.net.Uri
-import android.text.util.Linkify
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
@@ -19,10 +18,8 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.visible
 import io.noties.markwon.Markwon
-import androidx.core.net.toUri
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import io.noties.markwon.linkify.LinkifyPlugin
-import org.commonmark.node.Link
 
 class ChannelPanelAdapter(
     private val fragment: Fragment,
