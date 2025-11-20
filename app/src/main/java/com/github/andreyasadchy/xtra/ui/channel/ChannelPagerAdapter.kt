@@ -17,16 +17,16 @@ class ChannelPagerAdapter(
 
     override fun createFragment(position: Int): Fragment {
         return when (tabs.getOrNull(position)) {
-            "0" -> ChannelAboutFragment().apply { arguments = fragment.arguments }
-            "1" -> ChannelSuggestedFragment().apply { arguments = fragment.arguments }
-            "2" -> ChannelVideosFragment().apply { arguments = fragment.arguments }
-            "3" -> ChannelClipsFragment().apply { arguments = fragment.arguments }
-            "4" -> ChatFragment.newInstance(
+            "0" -> ChannelSuggestedFragment().apply { arguments = fragment.arguments }
+            "1" -> ChannelVideosFragment().apply { arguments = fragment.arguments }
+            "2" -> ChannelClipsFragment().apply { arguments = fragment.arguments }
+            "3" -> ChatFragment.newInstance(
                 channelId = args.channelId,
                 channelLogin = args.channelLogin,
                 channelName = args.channelName,
                 streamId = args.streamId
             )
+            "4" -> ChannelAboutFragment().apply { arguments = fragment.arguments }
             else -> ChannelVideosFragment().apply { arguments = fragment.arguments }
         }
     }

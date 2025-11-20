@@ -61,8 +61,7 @@ class ChannelPanelsDataSource(
             }
         }
 
-        response.data?.user?.panels?.forEach { panel ->
-            list.add(
+        response.data?.user?.panels.orEmpty().filter { it.type != "EXTENSION" }.map { panel ->
                 ChannelPanel(
                     id = panel.id,
                     type = panel.type,
@@ -72,8 +71,7 @@ class ChannelPanelsDataSource(
                     description = panel.description,
                     altText = panel.altText
                 )
-            )
-        }
+            }.let { list.addAll(it) }
 
         return LoadResult.Page(
             data = list,

@@ -88,6 +88,7 @@ dependencies {
     implementation(libs.recyclerview)
     implementation(libs.room.runtime)
     implementation(libs.core)
+    implementation(libs.linkify)
     ksp(libs.room.compiler)
     implementation(libs.room.paging)
     implementation(libs.swiperefreshlayout)

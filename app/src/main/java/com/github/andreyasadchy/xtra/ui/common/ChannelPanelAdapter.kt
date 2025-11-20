@@ -2,6 +2,7 @@ package com.github.andreyasadchy.xtra.ui.common
 
 import android.content.Intent
 import android.net.Uri
+import android.text.util.Linkify
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
@@ -18,6 +19,10 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.visible
 import io.noties.markwon.Markwon
+import androidx.core.net.toUri
+import io.noties.markwon.SoftBreakAddsNewLinePlugin
+import io.noties.markwon.linkify.LinkifyPlugin
+import org.commonmark.node.Link
 
 class ChannelPanelAdapter(
     private val fragment: Fragment,
@@ -33,7 +38,10 @@ class ChannelPanelAdapter(
                     oldItem.imageURL == newItem.imageURL
     }) {
 
-    private val markwon = Markwon.create(fragment.requireContext())
+    private val markwon = Markwon.builder(fragment.requireContext())
+        .usePlugin(SoftBreakAddsNewLinePlugin.create())
+        .usePlugin(LinkifyPlugin.create())
+        .build()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PagingViewHolder {
         val binding = FragmentChannelPanelListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -51,9 +59,9 @@ class ChannelPanelAdapter(
         fun bind(item: ChannelPanel?) {
             with(binding) {
                 if (item != null) {
-                    val context = fragment.requireContext()
+                    fragment.requireContext()
                     if (item.imageURL != null) {
-                        imageView.visible()
+                        imageLayout.visible()
                         fragment.requireContext().imageLoader.enqueue(
                             ImageRequest.Builder(fragment.requireContext()).apply {
                                 data(item.imageURL)
@@ -66,12 +74,18 @@ class ChannelPanelAdapter(
                                 val intent = Intent()
                                 intent.setAction(Intent.ACTION_VIEW)
                                 intent.addCategory(Intent.CATEGORY_BROWSABLE)
-                                intent.setData(Uri.parse(item.linkURL))
+                                intent.setData(item.linkURL.toUri())
                                 (fragment.activity as MainActivity).startActivity(intent)
                             }
                         }
                     } else {
-                        imageView.gone()
+                        imageLayout.gone()
+                    }
+                    if (item.title != null) {
+                        titleText.visible()
+                        titleText.text = item.title
+                    } else {
+                        titleText.gone()
                     }
                     if (item.description != null) {
                         descriptionText.visible()
