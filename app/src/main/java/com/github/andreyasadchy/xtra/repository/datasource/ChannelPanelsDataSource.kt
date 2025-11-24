@@ -15,43 +15,7 @@ class ChannelPanelsDataSource(
     private val networkLibrary: String?,
 ) : PagingSource<Int, ChannelPanel>() {
 
-    private suspend fun loadRootAboutPanel(): ChannelPanel? {
-        val response = graphQLRepository.loadChannelRootAboutPanel(networkLibrary, gqlHeaders, channelLogin)
-
-        if (enableIntegrity) {
-            response.errors?.find { it.message == "failed integrity check" }?.let { return null }
-        }
-
-        val user = response.data?.user ?: return null
-
-        val description = buildString {
-            user.description?.let {
-                append(it)
-                append("\n")
-            }
-            user.channel?.socialMedias?.forEach {
-                append("- [${it.title}](${it.url})\n")
-            }
-        }
-
-        return if (description.isNotBlank()) {
-            ChannelPanel(
-                id = user.id,
-                type = "ABOUT",
-                description = description
-            )
-        } else {
-            null
-        }
-    }
-
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, ChannelPanel> {
-        val list = mutableListOf<ChannelPanel>()
-
-        val aboutPanel = loadRootAboutPanel()
-        if (aboutPanel != null) {
-            list.add(aboutPanel)
-        }
 
         val response = graphQLRepository.loadChannelPanels(networkLibrary, gqlHeaders, channelId)
 
@@ -61,7 +25,8 @@ class ChannelPanelsDataSource(
             }
         }
 
-        response.data?.user?.panels.orEmpty().filter { it.type != "EXTENSION" }.map { panel ->
+        val list =
+            response.data?.user?.panels.orEmpty().filter { it.type != "EXTENSION" }.map { panel ->
                 ChannelPanel(
                     id = panel.id,
                     type = panel.type,
@@ -71,7 +36,7 @@ class ChannelPanelsDataSource(
                     description = panel.description,
                     altText = panel.altText
                 )
-            }.let { list.addAll(it) }
+            }
 
         return LoadResult.Page(
             data = list,

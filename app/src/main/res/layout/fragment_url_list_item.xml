@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/userName"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="start"
+    android:textAlignment="viewStart"
+    android:paddingTop="2dp"
+    android:paddingEnd="2dp"
+    android:textStyle="bold"
+    android:textAppearance="?attr/textAppearanceBodyMedium"
+    android:textColor="?android:attr/textColorSecondary"
+    tools:text="@sample/streams.json/streams/channel/name" />

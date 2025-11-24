@@ -1,41 +1,118 @@
 package com.github.andreyasadchy.xtra.ui.channel.about
 
-import android.content.Context
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.cachedIn
+import com.github.andreyasadchy.xtra.model.ui.ChannelPanel
+import com.github.andreyasadchy.xtra.model.ui.RootAbout
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
-import com.github.andreyasadchy.xtra.repository.datasource.ChannelPanelsDataSource
-import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentArgs
-import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.prefs
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ChannelAboutViewModel @Inject constructor(
-    @ApplicationContext applicationContext: Context,
-    private val graphQLRepository: GraphQLRepository,
-    savedStateHandle: SavedStateHandle,
+    private val graphQLRepository: GraphQLRepository
 ) : ViewModel() {
 
-    private val args = ChannelPagerFragmentArgs.fromSavedStateHandle(savedStateHandle)
+    val integrity = MutableStateFlow<String?>(null)
 
-    val flow = Pager(
-        PagingConfig(pageSize = 30, prefetchDistance = 10, initialLoadSize = 30)
-    ) {
-        ChannelPanelsDataSource(
-            channelId = args.channelId,
-            channelLogin = args.channelLogin,
-            gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext, true),
-            graphQLRepository = graphQLRepository,
-            enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-            networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-        )
-    }.flow.cachedIn(viewModelScope)
+    private val _rootAbout = MutableStateFlow<RootAbout?>(null)
+    val rootAbout: StateFlow<RootAbout?> = _rootAbout
+
+    private val _panelList = MutableStateFlow<List<ChannelPanel>?>(null)
+    val panelList: StateFlow<List<ChannelPanel>?> = _panelList
+
+    private var isLoadingRoot = false
+    private var isLoadingPanels = false
+
+    fun loadRootAbout(channelLogin: String?, networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
+        if (_rootAbout.value == null && !isLoadingRoot) {
+            isLoadingRoot = true
+            viewModelScope.launch {
+                try {
+                    val response = graphQLRepository.loadChannelRootAboutPanel(
+                        networkLibrary,
+                        gqlHeaders,
+                        channelLogin
+                    )
+
+                    if (enableIntegrity && integrity.value == null) {
+                        response.errors?.find { it.message == "failed integrity check" }?.let {
+                            integrity.value = "refresh"
+                            isLoadingRoot = false
+                            return@launch
+                        }
+                    }
+
+                    _rootAbout.value = response.data?.user?.let { user ->
+                        RootAbout(
+                            id = user.id,
+                            description = user.description,
+                            socialMedias = user.channel?.socialMedias?.map {
+                                RootAbout.SocialMedia(
+                                    id = it.id,
+                                    name = it.name,
+                                    title = it.title,
+                                    url = it.url
+                                )
+                            },
+                            primaryTeam = user.primaryTeam?.let {
+                                RootAbout.PrimaryTeam(
+                                    id = it.id,
+                                    name = it.name,
+                                    displayName = it.displayName
+
+                                )
+                            }
+                        )
+                    }
+                } catch (_: Exception) {
+
+                } finally {
+                    isLoadingRoot = false
+                }
+            }
+        }
+    }
+
+    fun loadPanelList(channelId: String?, networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
+        if (_panelList.value == null && !isLoadingPanels) {
+            isLoadingPanels = true
+            viewModelScope.launch {
+                try {
+                    val response =
+                        graphQLRepository.loadChannelPanels(networkLibrary, gqlHeaders, channelId)
+
+                    if (enableIntegrity && integrity.value == null) {
+                        response.errors?.find { it.message == "failed integrity check" }?.let {
+                            integrity.value = "refresh"
+                            isLoadingPanels = false
+                            return@launch
+                        }
+                    }
+
+                    _panelList.value = response.data?.user?.panels.orEmpty().filter { it.type != "EXTENSION" }
+                        .map { panel ->
+                            ChannelPanel(
+                                id = panel.id,
+                                type = panel.type,
+                                title = panel.title,
+                                imageURL = panel.imageURL,
+                                linkURL = panel.linkURL,
+                                description = panel.description,
+                                altText = panel.altText
+                            )
+                        }
+
+
+                } catch (_: Exception) {
+
+                } finally {
+                    isLoadingPanels = false
+                }
+            }
+        }
+    }
 }

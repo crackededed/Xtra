@@ -80,6 +80,8 @@ import com.github.andreyasadchy.xtra.model.gql.search.SearchStreamTagsResponse
 import com.github.andreyasadchy.xtra.model.gql.search.SearchVideosResponse
 import com.github.andreyasadchy.xtra.model.gql.stream.StreamsResponse
 import com.github.andreyasadchy.xtra.model.gql.stream.ViewerCountResponse
+import com.github.andreyasadchy.xtra.model.gql.team.TeamLandingMemberListResponse
+import com.github.andreyasadchy.xtra.model.gql.team.TeamsLandingBodyResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoGamesResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoMessagesResponse
 import com.github.andreyasadchy.xtra.type.BadgeImageSize
@@ -94,6 +96,7 @@ import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
 import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.add
@@ -1676,5 +1679,42 @@ class GraphQLRepository @Inject constructor(
             }
         }.toString()
         json.decodeFromString<ErrorResponse>(sendPersistedQuery(networkLibrary, headers, body))
+    }
+
+    suspend fun loadTeamsLandingBody(networkLibrary: String?, headers: Map<String, String>, teamName: String): TeamsLandingBodyResponse = withContext(Dispatchers.IO) {
+        val body = buildJsonObject {
+            putJsonObject("extensions") {
+                putJsonObject("persistedQuery") {
+                    put("sha256Hash", "289f1df5b41a742d1101fbbcbc7c2d68551864548c32e01ff103a5431e07e2b5")
+                    put("version", 1)
+                }
+            }
+            put("operationName", "TeamsLandingBody")
+            putJsonObject("variables") {
+                put("teamName", teamName)
+            }
+        }.toString()
+        json.decodeFromString<TeamsLandingBodyResponse>(sendPersistedQuery(networkLibrary, headers, body))
+    }
+
+    suspend fun loadTeamLandingMemberList(networkLibrary: String?, headers: Map<String, String>, teamName: String, withLiveMembers: Boolean, withMembers: Boolean, liveMembersCursor: String?, membersCursor: String?): TeamLandingMemberListResponse = withContext(Dispatchers.IO) {
+        val body = buildJsonObject {
+            putJsonObject("extensions") {
+                putJsonObject("persistedQuery") {
+                    put("sha256Hash", "ee7d5bb7aeb195ac05164b6f306f1eb51db407c59f4398cbaa7901a3c3ba833d")
+                    put("version", 1)
+                }
+            }
+            put("operationName", "TeamLandingMemberList")
+            putJsonObject("variables") {
+                put("teamName", teamName)
+                put("withLiveMembers", withLiveMembers)
+                put("withMembers", withMembers)
+                put("liveMembersCursor", liveMembersCursor)
+                put("membersCursor", membersCursor)
+            }
+        }.toString()
+
+        json.decodeFromString<TeamLandingMemberListResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 }

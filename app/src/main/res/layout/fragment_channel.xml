@@ -239,9 +239,9 @@
                     android:id="@+id/tabLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:tabGravity="fill"
+                    app:tabGravity="center"
                     app:tabMaxWidth="0dp"
-                    app:tabMode="auto" />
+                    app:tabMode="scrollable" />
 
                 <include
                     android:id="@+id/sortBar"

@@ -720,4 +720,5 @@
     <string name="use_custom_playback_service">Usar servicio de reproducción personalizado</string>
     <string name="move_player_freely">Move minimized player freely</string>
     <string name="about">Acerca de</string>
+    <string name="team">Equipo:</string>
 </resources>

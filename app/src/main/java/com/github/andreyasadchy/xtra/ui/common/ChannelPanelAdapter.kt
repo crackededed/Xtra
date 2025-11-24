@@ -5,8 +5,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
-import androidx.paging.PagingDataAdapter
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import coil3.imageLoader
 import coil3.request.ImageRequest
@@ -23,33 +21,31 @@ import io.noties.markwon.linkify.LinkifyPlugin
 
 class ChannelPanelAdapter(
     private val fragment: Fragment,
-) : PagingDataAdapter<ChannelPanel, ChannelPanelAdapter.PagingViewHolder>(
-    object : DiffUtil.ItemCallback<ChannelPanel>() {
-        override fun areItemsTheSame(oldItem: ChannelPanel, newItem: ChannelPanel): Boolean =
-            oldItem.id == newItem.id
+    data: List<ChannelPanel>
+) :  RecyclerView.Adapter<ChannelPanelAdapter.ViewHolder>() {
 
-        override fun areContentsTheSame(oldItem: ChannelPanel, newItem: ChannelPanel): Boolean =
-            oldItem.description == newItem.description &&
-                    oldItem.linkURL == newItem.linkURL &&
-                    oldItem.title == newItem.title &&
-                    oldItem.imageURL == newItem.imageURL
-    }) {
+    private val mData: List<ChannelPanel> = data
 
     private val markwon = Markwon.builder(fragment.requireContext())
         .usePlugin(SoftBreakAddsNewLinePlugin.create())
         .usePlugin(LinkifyPlugin.create())
         .build()
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PagingViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = FragmentChannelPanelListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return PagingViewHolder(binding, fragment)
+        return ViewHolder(binding, fragment)
     }
 
-    override fun onBindViewHolder(holder: PagingViewHolder, position: Int) {
-        holder.bind(getItem(position))
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val item = mData[position]
+        holder.bind(item)
     }
 
-    inner class PagingViewHolder(
+    override fun getItemCount(): Int {
+        return mData.size
+    }
+
+    inner class ViewHolder(
         private val binding: FragmentChannelPanelListItemBinding,
         private val fragment: Fragment,
     ) : RecyclerView.ViewHolder(binding.root) {

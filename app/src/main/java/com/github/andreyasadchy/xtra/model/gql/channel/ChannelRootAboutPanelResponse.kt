@@ -18,6 +18,7 @@ class ChannelRootAboutPanelResponse(
         val id: String,
         val description: String? = null,
         val channel: Channel? = null,
+        val primaryTeam: PrimaryTeam? = null,
     )
 
     @Serializable
@@ -32,5 +33,12 @@ class ChannelRootAboutPanelResponse(
         val name: String,
         val title: String,
         val url: String
+    )
+
+    @Serializable
+    class PrimaryTeam(
+        val id: String,
+        val name: String,
+        val displayName: String,
     )
 }
