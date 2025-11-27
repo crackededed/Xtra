@@ -30,7 +30,7 @@ android {
         minSdk = 16
         targetSdk = 36
         versionCode = 121
-        versionName = "2.51.2"
+        versionName = "2.51.3"
     }
 
     buildTypes {
@@ -72,7 +72,6 @@ android {
             "androidx.constraintlayout:constraintlayout:2.1.4",
             "androidx.coordinatorlayout:coordinatorlayout:1.3.0-alpha02",
             "androidx.core:core-ktx:1.13.0-alpha01",
-            "androidx.customview:customview:1.2.0-alpha02",
             "androidx.fragment:fragment-ktx:1.7.0-alpha06",
             "androidx.hilt:hilt-compiler:1.1.0",
             "androidx.hilt:hilt-work:1.1.0",

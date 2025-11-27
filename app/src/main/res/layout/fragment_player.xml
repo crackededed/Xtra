@@ -10,10 +10,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <androidx.media3.ui.AspectRatioFrameLayout
-            android:id="@+id/aspectRatioFrameLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+        <com.github.andreyasadchy.xtra.ui.view.PlayerLayout
+            android:id="@+id/playerLayout"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@android:color/black">
 
             <com.github.andreyasadchy.xtra.ui.view.CustomPlayerView
                 android:id="@+id/playerView"
@@ -26,39 +27,49 @@
                 app:show_buffering="always"
                 app:surface_type="surface_view" />
 
-        </androidx.media3.ui.AspectRatioFrameLayout>
+            <View
+                android:id="@+id/dragView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
 
-        <View
-            android:id="@+id/dragView"
-            android:layout_width="0dp"
-            android:layout_height="0dp" />
+        </com.github.andreyasadchy.xtra.ui.view.PlayerLayout>
 
-        <LinearLayout
+        <com.github.andreyasadchy.xtra.ui.view.ChatLayout
             android:id="@+id/chatLayout"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:orientation="vertical"
             android:background="?android:colorBackground">
 
-            <FrameLayout
-                android:id="@+id/chatFragmentContainer"
-                style="@style/ChatView"
+            <LinearLayout
+                android:id="@+id/chatLinearLayout"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-            <Button
-                android:id="@+id/watchVideo"
-                style="?attr/elevatedButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="3dp"
-                android:text="@string/watch_video"
-                android:textAllCaps="true"
-                android:visibility="gone" />
+                <FrameLayout
+                    android:id="@+id/chatFragmentContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
 
-        </LinearLayout>
+                <Button
+                    android:id="@+id/watchVideo"
+                    style="?attr/elevatedButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="3dp"
+                    android:text="@string/watch_video"
+                    android:textAllCaps="true"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/chatTouchView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </com.github.andreyasadchy.xtra.ui.view.ChatLayout>
 
     </FrameLayout>
 </LinearLayout>
