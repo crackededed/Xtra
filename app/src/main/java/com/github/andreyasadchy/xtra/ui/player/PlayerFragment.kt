@@ -1520,6 +1520,18 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
                         it.visible()
                     }
                 }
+                if (prefs.getBoolean(C.PLAYER_CHATTOGGLE, true) && !prefs.getBoolean(C.CHAT_DISABLE, false)) {
+                    requireView().findViewById<ImageButton>(R.id.playerChatToggle)?.apply {
+                        visible()
+                        if (isChatOpen) {
+                            setImageResource(R.drawable.baseline_speaker_notes_off_black_24)
+                            setOnClickListener { hideChat() }
+                        } else {
+                            setImageResource(R.drawable.baseline_speaker_notes_black_24)
+                            setOnClickListener { showChat() }
+                        }
+                    }
+                }
                 aspectRatioFrameLayout.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
                 resizeMode = prefs.getInt(C.ASPECT_RATIO_LANDSCAPE, AspectRatioFrameLayout.RESIZE_MODE_FIT)
             }
