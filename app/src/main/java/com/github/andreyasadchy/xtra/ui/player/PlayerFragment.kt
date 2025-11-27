@@ -571,8 +571,8 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
             }
             initLayout()
             playerView.controllerAutoShow = videoType != STREAM
-            if (prefs.getBoolean(C.PLAYER_DOUBLETAP, true) && !prefs.getBoolean(C.CHAT_DISABLE, false)) {
-                playerView.setOnDoubleTapListener {
+            playerView.setOnDoubleTapListener {
+                if (prefs.getBoolean(C.PLAYER_DOUBLETAP, true) && !prefs.getBoolean(C.CHAT_DISABLE, false)) {
                     if (!isPortrait && isMaximized) {
                         if (chatLayout.isVisible) {
                             hideChat()
