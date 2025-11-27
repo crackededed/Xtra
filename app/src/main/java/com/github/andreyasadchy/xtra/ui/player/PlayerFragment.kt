@@ -54,6 +54,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.doOnLayout
+import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
@@ -275,7 +277,7 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
                 isTap = true
                 tapEventTime = event.eventTime
                 if (isMaximized) {
-                    aspectRatioFrameLayout.dispatchTouchEvent(event)
+                    playerView.dispatchTouchEvent(event)
                 } else {
                     velocityTracker?.clear()
                     if (velocityTracker == null) {
@@ -299,10 +301,10 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
             fun upAction(event: MotionEvent) {
                 if (isMaximized) {
                     if (timeBar?.isPressed == true) {
-                        aspectRatioFrameLayout.dispatchTouchEvent(event)
+                        playerView.dispatchTouchEvent(event)
                     } else {
                         if (slidingLayout.translationY in touchSlopRange) {
-                            aspectRatioFrameLayout.dispatchTouchEvent(event)
+                            playerView.dispatchTouchEvent(event)
                         }
                         val minimizeThreshold = slidingLayout.height / 5
                         if (slidingLayout.translationY < minimizeThreshold) {
@@ -363,8 +365,8 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
                                     val scaledYDiff = (slidingLayout.height * (1f - slidingLayout.scaleY)) / 2
                                     val minX = 0f - scaledXDiff - ((insets?.left ?: 0) * slidingLayout.scaleX) + (insets?.left ?: 0)
                                     val minY = 0f - scaledYDiff - ((insets?.top ?: 0) * slidingLayout.scaleY) + (insets?.top ?: 0)
-                                    val maxX = 0f - scaledXDiff - ((insets?.left ?: 0) * slidingLayout.scaleX) + slidingLayout.width - (aspectRatioFrameLayout.width * slidingLayout.scaleX) - (insets?.right ?: 0)
-                                    val maxY = 0f - scaledYDiff - ((insets?.top ?: 0) * slidingLayout.scaleY) + slidingLayout.height - (aspectRatioFrameLayout.height * slidingLayout.scaleY) - (insets?.bottom ?: 0)
+                                    val maxX = 0f - scaledXDiff - ((insets?.left ?: 0) * slidingLayout.scaleX) + slidingLayout.width - (playerLayout.width * slidingLayout.scaleX) - (insets?.right ?: 0)
+                                    val maxY = 0f - scaledYDiff - ((insets?.top ?: 0) * slidingLayout.scaleY) + slidingLayout.height - (playerLayout.height * slidingLayout.scaleY) - (insets?.bottom ?: 0)
                                     val newX = when {
                                         slidingLayout.translationX < minX -> minX
                                         slidingLayout.translationX > maxX -> maxX
@@ -390,8 +392,8 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
                                     val scaledXDiff = (slidingLayout.width * (1f - slidingLayout.scaleX)) / 2
                                     val scaledYDiff = (slidingLayout.height * (1f - slidingLayout.scaleY)) / 2
                                     val navBarHeight = requireView().rootView.findViewById<LinearLayout>(R.id.navBarContainer)?.height?.takeIf { it > 0 }?.let { it - keyboardInsets } ?: (insets?.bottom ?: 0)
-                                    val newX = slidingLayout.width - (insets?.right ?: 0) - (aspectRatioFrameLayout.width * slidingLayout.scaleX) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20F, resources.displayMetrics) * slidingLayout.scaleX)
-                                    val newY = slidingLayout.height - navBarHeight - (aspectRatioFrameLayout.height * slidingLayout.scaleY) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30F, resources.displayMetrics) * slidingLayout.scaleY)
+                                    val newX = slidingLayout.width - (insets?.right ?: 0) - (playerLayout.width * slidingLayout.scaleX) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20F, resources.displayMetrics) * slidingLayout.scaleX)
+                                    val newY = slidingLayout.height - navBarHeight - (playerLayout.height * slidingLayout.scaleY) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30F, resources.displayMetrics) * slidingLayout.scaleY)
                                     moveAnimation = slidingLayout.animate().apply {
                                         translationX(0f - scaledXDiff - ((insets?.left ?: 0) * slidingLayout.scaleX) + newX)
                                         translationY(0f - scaledYDiff - ((insets?.top ?: 0) * slidingLayout.scaleY) + newY)
@@ -423,7 +425,7 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
                                 val pointerId = event.getPointerId(pointerIndex)
                                 val x = event.getX(pointerIndex)
                                 val y = event.getY(pointerIndex)
-                                if (x in 0f..aspectRatioFrameLayout.width.toFloat() && y in 0f..aspectRatioFrameLayout.height.toFloat()) {
+                                if (x in 0f..playerLayout.width.toFloat() && y in 0f..playerLayout.height.toFloat()) {
                                     activePointerId = pointerId
                                     lastX = x * slidingLayout.scaleX
                                     lastY = y * slidingLayout.scaleY
@@ -434,7 +436,7 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
                         }
                         MotionEvent.ACTION_MOVE -> {
                             if (isMaximized) {
-                                aspectRatioFrameLayout.dispatchTouchEvent(event)
+                                playerView.dispatchTouchEvent(event)
                                 if (timeBar?.isPressed != true && !statusBarSwipe && activePointerId != -1) {
                                     val pointerIndex = event.findPointerIndex(activePointerId)
                                     if (pointerIndex != -1) {
@@ -499,7 +501,7 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
                                     if (id != activePointerId) {
                                         val x = event.getX(i)
                                         val y = event.getY(i)
-                                        if (x in 0f..aspectRatioFrameLayout.width.toFloat() && y in 0f..aspectRatioFrameLayout.height.toFloat()) {
+                                        if (x in 0f..playerLayout.width.toFloat() && y in 0f..playerLayout.height.toFloat()) {
                                             newId = id
                                             lastX = x * slidingLayout.scaleX
                                             lastY = y * slidingLayout.scaleY
@@ -518,6 +520,9 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
                 }
                 true
             }
+            chatTouchView.setOnTouchListener { _, event ->
+                event.actionMasked == MotionEvent.ACTION_DOWN && !isPortrait && event.y <= 100
+            }
             val activity = requireActivity() as MainActivity
             isChatOpen = prefs.getBoolean(C.KEY_CHAT_OPENED, true) && !prefs.getBoolean(C.CHAT_DISABLE, false)
             if (activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -527,7 +532,6 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
                     }
                 }
             }
-            aspectRatioFrameLayout.setAspectRatio(16f / 9f)
             chatWidthLandscape = prefs.getInt(C.LANDSCAPE_CHAT_WIDTH, 0)
             if (prefs.getBoolean(C.PLAYER_FULLSCREEN, true)) {
                 view.findViewById<ImageButton>(R.id.playerFullscreenToggle)?.apply {
@@ -1351,44 +1355,29 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
             if (isPortrait) {
                 requireActivity().window.decorView.setOnSystemUiVisibilityChangeListener(null)
                 showStatusBar()
+                playerLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                    width = ViewGroup.LayoutParams.MATCH_PARENT
+                    height = ViewGroup.LayoutParams.MATCH_PARENT
+                    marginEnd = 0
+                }
+                chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                    width = ViewGroup.LayoutParams.MATCH_PARENT
+                    height = ViewGroup.LayoutParams.MATCH_PARENT
+                    gravity = Gravity.BOTTOM
+                }
                 if (isMaximized) {
-                    slidingLayout.post {
-                        val playerHeight = (slidingLayout.width / (16f / 9f)).toInt()
-                        val playerLayoutParams: FrameLayout.LayoutParams.() -> Unit = {
-                            width = ViewGroup.LayoutParams.MATCH_PARENT
-                            height = playerHeight
-                            marginEnd = 0
-                        }
-                        aspectRatioFrameLayout.updateLayoutParams(playerLayoutParams)
-                        dragView.updateLayoutParams(playerLayoutParams)
-                        chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
-                            width = ViewGroup.LayoutParams.MATCH_PARENT
-                            height = ViewGroup.LayoutParams.MATCH_PARENT
-                            topMargin = playerHeight
-                            gravity = Gravity.BOTTOM
-                        }
-                        chatLayout.visible()
-                    }
+                    chatLayout.visible()
                 } else {
-                    slidingLayout.post {
+                    chatLayout.gone()
+                    val (minimizedScaleX, minimizedScaleY) = getScaleValues()
+                    slidingLayout.scaleX = minimizedScaleX
+                    slidingLayout.scaleY = minimizedScaleY
+                    slidingLayout.doOnPreDraw {
                         val (minimizedScaleX, minimizedScaleY) = getScaleValues()
                         val windowInsets = ViewCompat.getRootWindowInsets(requireView())
                         val insets = windowInsets?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
                         val keyboardInsets = windowInsets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom?.let { if (it > 0) it - (insets?.bottom ?: 0) else it } ?: 0
                         val playerHeight = (slidingLayout.width / (16f / 9f)).toInt()
-                        val playerLayoutParams: FrameLayout.LayoutParams.() -> Unit = {
-                            width = ViewGroup.LayoutParams.MATCH_PARENT
-                            height = playerHeight
-                            marginEnd = 0
-                        }
-                        aspectRatioFrameLayout.updateLayoutParams(playerLayoutParams)
-                        dragView.updateLayoutParams(playerLayoutParams)
-                        chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
-                            width = ViewGroup.LayoutParams.MATCH_PARENT
-                            height = ViewGroup.LayoutParams.MATCH_PARENT
-                            topMargin = playerHeight
-                            gravity = Gravity.BOTTOM
-                        }
                         val scaledXDiff = (slidingLayout.width * (1f - minimizedScaleX)) / 2
                         val scaledYDiff = (slidingLayout.height * (1f - minimizedScaleY)) / 2
                         val navBarHeight = requireView().rootView.findViewById<LinearLayout>(R.id.navBarContainer)?.height?.takeIf { it > 0 }?.let { it - keyboardInsets } ?: (insets?.bottom ?: 0)
@@ -1396,11 +1385,10 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
                         val newY = slidingLayout.height - navBarHeight - (playerHeight * minimizedScaleY) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30F, resources.displayMetrics) * minimizedScaleY)
                         slidingLayout.translationX = 0f - scaledXDiff - ((insets?.left ?: 0) * minimizedScaleX) + newX
                         slidingLayout.translationY = 0f - scaledYDiff - ((insets?.top ?: 0) * minimizedScaleY) + newY
-                        slidingLayout.scaleX = minimizedScaleX
-                        slidingLayout.scaleY = minimizedScaleY
-                        chatLayout.gone()
                     }
                 }
+                playerLayout.isPortrait = true
+                chatLayout.isPortrait = true
                 requireView().findViewById<ImageButton>(R.id.playerFullscreenToggle)?.let {
                     if (it.isVisible) {
                         it.setImageResource(R.drawable.baseline_fullscreen_black_24)
@@ -1408,7 +1396,6 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
                 }
                 requireView().findViewById<ImageButton>(R.id.playerAspectRatio)?.gone()
                 requireView().findViewById<ImageButton>(R.id.playerChatToggle)?.gone()
-                aspectRatioFrameLayout.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH
                 resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             } else {
                 requireActivity().window.decorView.setOnSystemUiVisibilityChangeListener {
@@ -1418,54 +1405,49 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
                 }
                 if (isMaximized) {
                     hideStatusBar()
-                    slidingLayout.post {
-                        val chatWidth = if (isChatOpen) chatWidthLandscape else 0
-                        val playerLayoutParams: FrameLayout.LayoutParams.() -> Unit = {
-                            width = ViewGroup.LayoutParams.MATCH_PARENT
-                            height = ViewGroup.LayoutParams.MATCH_PARENT
-                            marginEnd = chatWidth
-                        }
-                        aspectRatioFrameLayout.updateLayoutParams(playerLayoutParams)
-                        dragView.updateLayoutParams(playerLayoutParams)
-                        chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
-                            width = chatWidthLandscape
-                            height = ViewGroup.LayoutParams.MATCH_PARENT
-                            topMargin = 0
-                            gravity = Gravity.END
-                        }
-                        if (isChatOpen) {
-                            chatLayout.visible()
-                            if (requireView().findViewById<Button>(R.id.btnDown)?.isVisible == false) {
-                                requireView().findViewById<RecyclerView>(R.id.recyclerView)?.let { recyclerView ->
-                                    recyclerView.adapter?.itemCount?.let { recyclerView.scrollToPosition(it - 1) }
-                                }
+                    val chatWidth = if (isChatOpen) chatWidthLandscape else 0
+                    playerLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                        width = ViewGroup.LayoutParams.MATCH_PARENT
+                        height = ViewGroup.LayoutParams.MATCH_PARENT
+                        marginEnd = chatWidth
+                    }
+                    chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                        width = chatWidthLandscape
+                        height = ViewGroup.LayoutParams.MATCH_PARENT
+                        gravity = Gravity.END
+                    }
+                    if (isChatOpen) {
+                        chatLayout.visible()
+                        if (requireView().findViewById<Button>(R.id.btnDown)?.isVisible == false) {
+                            requireView().findViewById<RecyclerView>(R.id.recyclerView)?.let { recyclerView ->
+                                recyclerView.adapter?.itemCount?.let { recyclerView.scrollToPosition(it - 1) }
                             }
-                        } else {
-                            chatLayout.gone()
                         }
+                    } else {
+                        chatLayout.gone()
                     }
                 } else {
                     showStatusBar()
-                    slidingLayout.post {
+                    playerLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                        width = ViewGroup.LayoutParams.MATCH_PARENT
+                        height = ViewGroup.LayoutParams.MATCH_PARENT
+                        marginEnd = 0
+                    }
+                    chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                        width = chatWidthLandscape
+                        height = ViewGroup.LayoutParams.MATCH_PARENT
+                        gravity = Gravity.END
+                    }
+                    chatLayout.gone()
+                    val (minimizedScaleX, minimizedScaleY) = getScaleValues()
+                    slidingLayout.scaleX = minimizedScaleX
+                    slidingLayout.scaleY = minimizedScaleY
+                    slidingLayout.doOnPreDraw {
                         val (minimizedScaleX, minimizedScaleY) = getScaleValues()
                         val windowInsets = ViewCompat.getRootWindowInsets(requireView())
                         val insets = windowInsets?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
                         val keyboardInsets = windowInsets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom?.let { if (it > 0) it - (insets?.bottom ?: 0) else it } ?: 0
                         val playerWidth = slidingLayout.width - getHorizontalInsets(windowInsets)
-                        val playerLayoutParams: FrameLayout.LayoutParams.() -> Unit = {
-                            width = ViewGroup.LayoutParams.MATCH_PARENT
-                            height = ViewGroup.LayoutParams.MATCH_PARENT
-                            marginEnd = 0
-                        }
-                        aspectRatioFrameLayout.updateLayoutParams(playerLayoutParams)
-                        dragView.updateLayoutParams(playerLayoutParams)
-                        chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
-                            width = chatWidthLandscape
-                            height = ViewGroup.LayoutParams.MATCH_PARENT
-                            topMargin = 0
-                            gravity = Gravity.END
-                        }
-                        chatLayout.gone()
                         val scaledXDiff = (slidingLayout.width * (1f - minimizedScaleX)) / 2
                         val scaledYDiff = (slidingLayout.height * (1f - minimizedScaleY)) / 2
                         val navBarHeight = requireView().rootView.findViewById<LinearLayout>(R.id.navBarContainer)?.height?.takeIf { it > 0 }?.let { it - keyboardInsets } ?: (insets?.bottom ?: 0)
@@ -1473,10 +1455,10 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
                         val newY = slidingLayout.height - navBarHeight - (slidingLayout.height * minimizedScaleY) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30F, resources.displayMetrics) * minimizedScaleY)
                         slidingLayout.translationX = 0f - scaledXDiff - ((insets?.left ?: 0) * minimizedScaleX) + newX
                         slidingLayout.translationY = 0f - scaledYDiff - ((insets?.top ?: 0) * minimizedScaleY) + newY
-                        slidingLayout.scaleX = minimizedScaleX
-                        slidingLayout.scaleY = minimizedScaleY
                     }
                 }
+                playerLayout.isPortrait = false
+                chatLayout.isPortrait = false
                 requireView().findViewById<ImageButton>(R.id.playerFullscreenToggle)?.let {
                     if (it.isVisible) {
                         it.setImageResource(R.drawable.baseline_fullscreen_exit_black_24)
@@ -1499,7 +1481,6 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
                         }
                     }
                 }
-                aspectRatioFrameLayout.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
                 resizeMode = prefs.getInt(C.ASPECT_RATIO_LANDSCAPE, AspectRatioFrameLayout.RESIZE_MODE_FIT)
             }
             playerView.resizeMode = resizeMode
@@ -1634,13 +1615,11 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
 
     private fun hideChatLayout() {
         with(binding) {
-            val playerLayoutParams: FrameLayout.LayoutParams.() -> Unit = {
+            playerLayout.updateLayoutParams<FrameLayout.LayoutParams> {
                 width = ViewGroup.LayoutParams.MATCH_PARENT
                 height = ViewGroup.LayoutParams.MATCH_PARENT
                 marginEnd = 0
             }
-            aspectRatioFrameLayout.updateLayoutParams(playerLayoutParams)
-            dragView.updateLayoutParams(playerLayoutParams)
             chatLayout.hideKeyboard()
             chatLayout.clearFocus()
             chatLayout.gone()
@@ -1649,17 +1628,14 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
 
     private fun showChatLayout() {
         with(binding) {
-            val playerLayoutParams: FrameLayout.LayoutParams.() -> Unit = {
+            playerLayout.updateLayoutParams<FrameLayout.LayoutParams> {
                 width = ViewGroup.LayoutParams.MATCH_PARENT
                 height = ViewGroup.LayoutParams.MATCH_PARENT
                 marginEnd = chatWidthLandscape
             }
-            aspectRatioFrameLayout.updateLayoutParams(playerLayoutParams)
-            dragView.updateLayoutParams(playerLayoutParams)
             chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
                 width = chatWidthLandscape
                 height = ViewGroup.LayoutParams.MATCH_PARENT
-                topMargin = 0
                 gravity = Gravity.END
             }
             chatLayout.visible()
@@ -3242,12 +3218,12 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
                 val scaledYDiff = (slidingLayout.height * (1f - minimizedScaleY)) / 2
                 val navBarHeight = requireView().rootView.findViewById<LinearLayout>(R.id.navBarContainer)?.height?.takeIf { it > 0 }?.let { it - keyboardInsets } ?: (insets?.bottom ?: 0)
                 val playerWidth = if (isPortrait) {
-                    aspectRatioFrameLayout.width
+                    playerLayout.width
                 } else {
                     slidingLayout.width - getHorizontalInsets(windowInsets)
                 }
                 val newX = slidingLayout.width - (insets?.right ?: 0) - (playerWidth * minimizedScaleX) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20F, resources.displayMetrics) * minimizedScaleX)
-                val newY = slidingLayout.height - navBarHeight - (aspectRatioFrameLayout.height * minimizedScaleY) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30F, resources.displayMetrics) * minimizedScaleY)
+                val newY = slidingLayout.height - navBarHeight - (playerLayout.height * minimizedScaleY) - (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30F, resources.displayMetrics) * minimizedScaleY)
                 slidingLayout.animate().apply {
                     translationX(0f - scaledXDiff - ((insets?.left ?: 0) * minimizedScaleX) + newX)
                     translationY(0f - scaledYDiff - ((insets?.top ?: 0) * minimizedScaleY) + newY)
@@ -3273,11 +3249,13 @@ class PlayerFragment : BaseNetworkFragment(), PlayerGamesDialog.PlayerSeekListen
             }
             if (isPortrait) {
                 chatLayout.gone()
-                animate()
+                slidingLayout.doOnLayout {
+                    animate()
+                }
             } else {
                 showStatusBar()
                 hideChatLayout()
-                slidingLayout.post {
+                slidingLayout.doOnPreDraw {
                     animate()
                 }
                 val activity = requireActivity()
