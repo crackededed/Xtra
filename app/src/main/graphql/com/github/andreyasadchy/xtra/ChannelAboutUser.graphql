@@ -1,0 +1,19 @@
+query ChannelAboutUser($id: ID, $login: String) {
+    user(id: $id, login: $login) {
+        id
+        description
+        primaryTeam {
+            id
+            name
+            displayName
+        }
+        channel {
+            socialMedias {
+                id
+                title
+                name
+                url
+            }
+        }
+    }
+}

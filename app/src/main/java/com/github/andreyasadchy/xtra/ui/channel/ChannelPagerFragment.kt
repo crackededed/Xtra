@@ -491,6 +491,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                     "1" -> getString(R.string.videos)
                     "2" -> getString(R.string.clips)
                     "3" -> getString(R.string.chat)
+                    "4" -> getString(R.string.about)
                     else -> getString(R.string.videos)
                 }
             }.attach()
