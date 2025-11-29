@@ -28,7 +28,7 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentAboutBinding
-import com.github.andreyasadchy.xtra.model.ui.RootAbout
+import com.github.andreyasadchy.xtra.model.ui.SocialMedia
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentArgs
 import com.github.andreyasadchy.xtra.ui.common.ChannelPanelAdapter
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
@@ -51,7 +51,11 @@ class ChannelAboutFragment : Fragment(), Scrollable {
     private val viewModel: ChannelAboutViewModel by viewModels()
     private var isInitialized = false
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentAboutBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -65,7 +69,7 @@ class ChannelAboutFragment : Fragment(), Scrollable {
                 }
             }
         }
-        with (binding) {
+        with(binding) {
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.rootAbout.collect { about ->
@@ -84,10 +88,15 @@ class ChannelAboutFragment : Fragment(), Scrollable {
                                 }
                                 hasContent = true
                             }
-                            if (about.primaryTeam != null) {
+                            if (about.primaryTeam != null && about.primaryTeam.displayName != null && about.primaryTeam.name != null) {
                                 teamLayout.visible()
                                 val spannableString = SpannableString(about.primaryTeam.displayName)
-                                spannableString.setSpan(UnderlineSpan(), 0, about.primaryTeam.displayName.length, 0)
+                                spannableString.setSpan(
+                                    UnderlineSpan(),
+                                    0,
+                                    about.primaryTeam.displayName.length,
+                                    0
+                                )
                                 teamText.setOnClickListener {
                                     this@ChannelAboutFragment.findNavController().navigate(
                                         TeamFragmentDirections.actionGlobalTeamFragment(
@@ -126,22 +135,27 @@ class ChannelAboutFragment : Fragment(), Scrollable {
     }
 
     private fun initialize() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.loadRootAbout(
-                args.channelLogin,
-                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                TwitchApiHelper.getGQLHeaders(requireContext()),
-                requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-            )
-            viewModel.loadPanelList(
-                args.channelId,
-                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                TwitchApiHelper.getGQLHeaders(requireContext()),
-                requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-            )
-        }
 
-        isInitialized = true
+        viewLifecycleOwner.lifecycleScope.launch {
+            val channelLogin = args.channelLogin
+            if (channelLogin != null) {
+                viewModel.loadRootAbout(
+                    channelLogin,
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    TwitchApiHelper.getGQLHeaders(requireContext()),
+                    requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                )
+
+                viewModel.loadPanelList(
+                    channelLogin,
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    TwitchApiHelper.getGQLHeaders(requireContext()),
+                    requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                )
+
+                isInitialized = true
+            }
+        }
     }
 
     override fun scrollToTop() {
@@ -153,8 +167,8 @@ class ChannelAboutFragment : Fragment(), Scrollable {
         _binding = null
     }
 
-    class Adapter internal constructor(context: Context?, data: List<RootAbout.SocialMedia>)  : RecyclerView.Adapter<Adapter.ViewHolder>() {
-        private val mData: List<RootAbout.SocialMedia> = data
+    class Adapter internal constructor(context: Context?, data: List<SocialMedia>)  : RecyclerView.Adapter<Adapter.ViewHolder>() {
+        private val mData: List<SocialMedia> = data
         private val mInflater: LayoutInflater = LayoutInflater.from(context)
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Adapter.ViewHolder {
@@ -165,15 +179,17 @@ class ChannelAboutFragment : Fragment(), Scrollable {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = mData[position]
             with (holder) {
-                val spannableString = SpannableString(item.title)
-                spannableString.setSpan(object: ClickableSpan() {
-                    override fun onClick(widget: View) {
-                        val intent = Intent(Intent.ACTION_VIEW, item.url.toUri())
-                        mInflater.context.startActivity(intent)
-                    }
-                }, 0, item.title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                textView.text = spannableString
-                textView.movementMethod = LinkMovementMethodCompat.getInstance()
+                if (item.title != null && item.url != null) {
+                    val spannableString = SpannableString(item.title)
+                    spannableString.setSpan(object : ClickableSpan() {
+                        override fun onClick(widget: View) {
+                            val intent = Intent(Intent.ACTION_VIEW, item.url.toUri())
+                            mInflater.context.startActivity(intent)
+                        }
+                    }, 0, item.title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    textView.text = spannableString
+                    textView.movementMethod = LinkMovementMethodCompat.getInstance()
+                }
             }
         }
 

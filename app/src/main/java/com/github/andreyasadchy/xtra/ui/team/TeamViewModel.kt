@@ -9,6 +9,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import com.github.andreyasadchy.xtra.model.ui.Team
 import com.github.andreyasadchy.xtra.model.ui.TeamMember
+import com.github.andreyasadchy.xtra.model.ui.User
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.datasource.TeamMembersDataSource
 import com.github.andreyasadchy.xtra.util.C
@@ -36,9 +37,6 @@ class TeamViewModel @Inject constructor(
     private val _team = MutableStateFlow<Team?>(null)
     val team: StateFlow<Team?> = _team
 
-    private val _liveMembers = MutableStateFlow<List<TeamMember>?>(null)
-    val liveMembers: StateFlow<List<TeamMember>?> = _liveMembers
-
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow = Pager(
         PagingConfig(pageSize = 30, prefetchDistance = 10, initialLoadSize = 30)
@@ -61,10 +59,10 @@ class TeamViewModel @Inject constructor(
             viewModelScope.launch {
                 _team.value = try {
                     val response =
-                        graphQLRepository.loadTeamsLandingBody(
+                        graphQLRepository.loadQueryTeam(
                             networkLibrary,
                             gqlHeaders,
-                            args.teamName
+                            name = args.teamName
                         )
                     if (enableIntegrity && integrity.value == null) {
                         response.errors?.find { it.message == "failed integrity check" }?.let {
@@ -72,7 +70,7 @@ class TeamViewModel @Inject constructor(
                             return@launch
                         }
                     }
-                    response.data!!.team.let {
+                    response.data!!.team?.let {
                         Team(
                             id = it.id,
                             backgroundImageURL = it.backgroundImageURL,
@@ -80,14 +78,48 @@ class TeamViewModel @Inject constructor(
                             description = it.description,
                             displayName = it.displayName,
                             logoURL = it.logoURL,
-                            ownerId = it.owner.id,
-                            ownerLogin = it.owner.login
+                            owner = it.owner?.let { owner ->
+                                User(
+                                    channelId = owner.id,
+                                    channelLogin = owner.login
+                                )
+                            }
                         )
                     }
-                } catch (_: Exception) {
-                    null
+                } catch (e: Exception) {
+                    try {
+                        val response =
+                            graphQLRepository.loadTeamsLandingBody(
+                                networkLibrary,
+                                gqlHeaders,
+                                args.teamName
+                            )
+                        if (enableIntegrity && integrity.value == null) {
+                            response.errors?.find { it.message == "failed integrity check" }?.let {
+                                integrity.value = "refresh"
+                                return@launch
+                            }
+                        }
+                        response.data!!.team.let {
+                            Team(
+                                id = it.id,
+                                backgroundImageURL = it.backgroundImageURL,
+                                bannerURL = it.bannerURL,
+                                description = it.description,
+                                displayName = it.displayName,
+                                logoURL = it.logoURL,
+                                owner = it.owner?.let { owner ->
+                                    User(
+                                        channelId = owner.id,
+                                        channelLogin = owner.login
+                                    )
+                                }
+                            )
+                        }
+                    } catch (e: Exception) {
+                        null
+                    }
                 }
-
             }
         }
     }

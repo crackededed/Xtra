@@ -5,12 +5,11 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 class Team(
-    val id: String,
+    val id: String? = null,
     val backgroundImageURL: String? = null,
     val bannerURL: String? = null,
     val description: String? = null,
-    val displayName: String,
+    val displayName: String? = null,
     val logoURL: String? = null,
-    val ownerId: String,
-    val ownerLogin: String,
+    val owner: User? = null,
 ) : Parcelable {}

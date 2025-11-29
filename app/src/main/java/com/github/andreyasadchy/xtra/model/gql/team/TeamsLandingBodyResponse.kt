@@ -15,13 +15,13 @@ class TeamsLandingBodyResponse(
 
     @Serializable
     class Team(
-        val id: String,
+        val id: String? = null,
         val backgroundImageURL: String? = null,
         val bannerURL: String? = null,
         val description: String? = null,
         val displayName: String,
         val logoURL: String? = null,
-        val owner: Owner
+        val owner: Owner? = null
     )
 
     @Serializable

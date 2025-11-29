@@ -17,6 +17,7 @@ type Query {
     video(id: ID): Video
     videoPlaybackAccessToken(id: ID!, params: PlaybackAccessTokenParams!): PlaybackAccessToken
     contentTag(id: ID!): Tag
+    team(name: String!): Team
 }
 
 type Badge {
@@ -293,6 +294,7 @@ type User {
     bannerImageURL: String
     broadcastBadges: [Badge]
     broadcastSettings: BroadcastSettings,
+    channel: Channel
     cheer: CheerInfo
     clips(first: Int, after: Cursor, criteria: UserClipsInput): ClipConnection
     createdAt: Time
@@ -309,6 +311,7 @@ type User {
     login: String
     lastBroadcast: Broadcast
     profileImageURL(width: Int): String
+    primaryTeam: Team
     roles: UserRoles
     self: UserSelfConnection
     stream: Stream
@@ -356,6 +359,29 @@ type VideoConnection {
 type VideoEdge {
     cursor: Cursor
     node: Video
+}
+
+type Team {
+    id: ID
+    backgroundImageURL: String
+    bannerURL: String
+    description: String
+    displayName: String
+    logoURL: String
+    name: String
+    owner: User
+}
+
+type Channel {
+    id: ID
+    socialMedias: [SocialMedia!]
+}
+
+type SocialMedia {
+    id: ID
+    name: String,
+    title: String
+    url: String
 }
 
 input GameClipsInput {

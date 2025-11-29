@@ -3,7 +3,9 @@ package com.github.andreyasadchy.xtra.ui.channel.about
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andreyasadchy.xtra.model.ui.ChannelPanel
+import com.github.andreyasadchy.xtra.model.ui.PrimaryTeam
 import com.github.andreyasadchy.xtra.model.ui.RootAbout
+import com.github.andreyasadchy.xtra.model.ui.SocialMedia
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,15 +29,15 @@ class ChannelAboutViewModel @Inject constructor(
     private var isLoadingRoot = false
     private var isLoadingPanels = false
 
-    fun loadRootAbout(channelLogin: String?, networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
+    fun loadRootAbout(channelLogin: String, networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
         if (_rootAbout.value == null && !isLoadingRoot) {
             isLoadingRoot = true
             viewModelScope.launch {
                 try {
-                    val response = graphQLRepository.loadChannelRootAboutPanel(
+                    val response = graphQLRepository.loadQueryChannelAboutUser(
                         networkLibrary,
                         gqlHeaders,
-                        channelLogin
+                        login = channelLogin
                     )
 
                     if (enableIntegrity && integrity.value == null) {
@@ -50,16 +52,16 @@ class ChannelAboutViewModel @Inject constructor(
                         RootAbout(
                             id = user.id,
                             description = user.description,
-                            socialMedias = user.channel?.socialMedias?.map {
-                                RootAbout.SocialMedia(
-                                    id = it.id,
-                                    name = it.name,
-                                    title = it.title,
-                                    url = it.url
+                            socialMedias = user.channel?.socialMedias?.map { socialMedia ->
+                                SocialMedia(
+                                    id = socialMedia.id,
+                                    name = socialMedia.name,
+                                    title = socialMedia.title,
+                                    url = socialMedia.url
                                 )
                             },
                             primaryTeam = user.primaryTeam?.let {
-                                RootAbout.PrimaryTeam(
+                                PrimaryTeam(
                                     id = it.id,
                                     name = it.name,
                                     displayName = it.displayName
@@ -68,8 +70,49 @@ class ChannelAboutViewModel @Inject constructor(
                             }
                         )
                     }
-                } catch (_: Exception) {
+                } catch (e: Exception) {
 
+                    try {
+                        val response = graphQLRepository.loadChannelRootAboutPanel(
+                            networkLibrary,
+                            gqlHeaders,
+                            channelLogin
+                        )
+
+                        if (enableIntegrity && integrity.value == null) {
+                            response.errors?.find { it.message == "failed integrity check" }
+                                ?.let {
+                                    integrity.value = "refresh"
+                                    isLoadingRoot = false
+                                    return@launch
+                                }
+                        }
+
+                        _rootAbout.value = response.data?.user?.let { user ->
+                            RootAbout(
+                                id = user.id,
+                                description = user.description,
+                                socialMedias = user.channel?.socialMedias?.map {
+                                    SocialMedia(
+                                        id = it.id,
+                                        name = it.name,
+                                        title = it.title,
+                                        url = it.url
+                                    )
+                                },
+                                primaryTeam = user.primaryTeam?.let {
+                                    PrimaryTeam(
+                                        id = it.id,
+                                        name = it.name,
+                                        displayName = it.displayName
+
+                                    )
+                                }
+                            )
+                        }
+                    } catch (e: Exception) {
+
+                    }
                 } finally {
                     isLoadingRoot = false
                 }

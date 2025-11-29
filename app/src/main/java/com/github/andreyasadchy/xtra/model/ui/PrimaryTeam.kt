@@ -4,9 +4,8 @@ import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-class RootAbout(
+class PrimaryTeam(
     val id: String? = null,
-    val description: String? = null,
-    val socialMedias: List<SocialMedia>? = null,
-    val primaryTeam: PrimaryTeam? = null,
+    val name: String? = null,
+    val displayName: String? = null,
 ) : Parcelable

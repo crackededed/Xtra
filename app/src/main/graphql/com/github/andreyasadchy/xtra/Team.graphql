@@ -1,0 +1,15 @@
+query Team($name: String!) {
+    team(name: $name) {
+        id
+        name
+        backgroundImageURL
+        bannerURL
+        description
+        displayName
+        logoURL
+        owner {
+            id
+            login
+        }
+    }
+}

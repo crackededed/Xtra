@@ -13,6 +13,7 @@ import com.apollographql.apollo.api.json.jsonReader
 import com.apollographql.apollo.api.json.writeObject
 import com.apollographql.apollo.api.parseResponse
 import com.github.andreyasadchy.xtra.BadgesQuery
+import com.github.andreyasadchy.xtra.ChannelAboutUserQuery
 import com.github.andreyasadchy.xtra.ClipUrlsQuery
 import com.github.andreyasadchy.xtra.GameBoxArtQuery
 import com.github.andreyasadchy.xtra.GameClipsQuery
@@ -24,6 +25,7 @@ import com.github.andreyasadchy.xtra.SearchStreamsQuery
 import com.github.andreyasadchy.xtra.SearchVideosQuery
 import com.github.andreyasadchy.xtra.StreamPlaybackAccessTokenQuery
 import com.github.andreyasadchy.xtra.TagQuery
+import com.github.andreyasadchy.xtra.TeamQuery
 import com.github.andreyasadchy.xtra.TopGamesQuery
 import com.github.andreyasadchy.xtra.TopStreamsQuery
 import com.github.andreyasadchy.xtra.UserBadgesQuery
@@ -779,6 +781,14 @@ class GraphQLRepository @Inject constructor(
             }
         }.toString()
         json.decodeFromString<ChannelPanelsResponse>(sendPersistedQuery(networkLibrary, headers, body))
+    }
+
+    suspend fun loadQueryChannelAboutUser(networkLibrary: String?, headers: Map<String, String>, id: String? = null, login: String? = null): ApolloResponse<ChannelAboutUserQuery.Data> = withContext(Dispatchers.IO) {
+        val query = ChannelAboutUserQuery(
+            id = if (!id.isNullOrBlank()) Optional.Present(id) else Optional.Absent,
+            login = if (!login.isNullOrBlank()) Optional.Present(login) else Optional.Absent,
+        )
+        sendQuery(networkLibrary, headers, query)
     }
 
     suspend fun loadChannelRootAboutPanel(networkLibrary: String?, headers: Map<String, String>, channelLogin: String?): ChannelRootAboutPanelResponse = withContext(Dispatchers.IO) {
@@ -1680,6 +1690,13 @@ class GraphQLRepository @Inject constructor(
             }
         }.toString()
         json.decodeFromString<ErrorResponse>(sendPersistedQuery(networkLibrary, headers, body))
+    }
+
+    suspend fun loadQueryTeam(networkLibrary: String?, headers: Map<String, String>, name: String): ApolloResponse<TeamQuery.Data> = withContext(Dispatchers.IO) {
+        val query = TeamQuery(
+            name = name
+        )
+        sendQuery(networkLibrary, headers, query)
     }
 
     suspend fun loadTeamsLandingBody(networkLibrary: String?, headers: Map<String, String>, teamName: String): TeamsLandingBodyResponse = withContext(Dispatchers.IO) {
