@@ -58,6 +58,7 @@ import com.github.andreyasadchy.xtra.databinding.ActivityMainBinding
 import com.github.andreyasadchy.xtra.model.ui.Clip
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.model.ui.Stream
+import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
@@ -472,16 +473,19 @@ class MainActivity : AppCompatActivity() {
                     }
                     url.contains("twitch.tv/directory/category/") -> {
                         val slug = url.substringAfter("twitch.tv/directory/category/").takeIf { it.isNotBlank() }?.let { it.substringBefore("?", it.substringBefore("/")) }
+                        val tl = url.substringAfter("?tl=").takeIf { it.isNotBlank() }?.substringBefore("&")
                         if (!slug.isNullOrBlank()) {
                             playerFragment?.minimize()
                             navController.navigate(
                                 if (prefs.getBoolean(C.UI_GAMEPAGER, true)) {
                                     GamePagerFragmentDirections.actionGlobalGamePagerFragment(
-                                        gameSlug = slug
+                                        gameSlug = slug,
+                                        tags = tl?.let { arrayOf( Uri.decode(it)) }
                                     )
                                 } else {
                                     GameMediaFragmentDirections.actionGlobalGameMediaFragment(
-                                        gameSlug = slug
+                                        gameSlug = slug,
+                                        tags = tl?.let { arrayOf(Uri.decode(it)) }
                                     )
                                 }
                             )
@@ -509,14 +513,37 @@ class MainActivity : AppCompatActivity() {
                         val tag = url.substringAfter("twitch.tv/directory/all/tags/", "").substringBefore("?").substringBefore("/").takeIf { it.isNotBlank() }
                         navController.navigate(
                             TopStreamsFragmentDirections.actionGlobalTopFragment(
-                                tags = tag?.let { arrayOf(it) }
+                                tags = tag?.let { arrayOf(Uri.decode( it )) }
                             )
                         )
                     }
                     url.contains("twitch.tv/directory") -> {
-                        navController.navigate(
-                            GamesFragmentDirections.actionGlobalGamesFragment()
-                        )
+                        val tagId = url.substringAfter("twitch.tv/directory/tags/", "").substringBefore("?").substringBefore("/").takeIf { it.isNotBlank() }
+                        if (!tagId.isNullOrBlank()) {
+                            viewModel.loadTag(
+                                tagId,
+                                prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                TwitchApiHelper.getGQLHeaders(this),
+                                prefs.getBoolean(C.ENABLE_INTEGRITY, false),
+                            )
+                            lifecycleScope.launch {
+                                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                                    viewModel.tag.collectLatest { tag ->
+                                        playerFragment?.minimize()
+                                        navController.navigate(
+                                            GamesFragmentDirections.actionGlobalGamesFragment(
+                                                tags = tag?.let { arrayOf(Tag(id = it.id, name = it.name)) }
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            playerFragment?.minimize()
+                            navController.navigate(
+                                GamesFragmentDirections.actionGlobalGamesFragment()
+                            )
+                        }
                     }
                     url.contains("twitch.tv/team/") -> {
                         val teamName = url.substringAfter("twitch.tv/team/").takeIf { it.isNotBlank() }?.let { it.substringBefore("?", it.substringBefore("/")) }
@@ -524,7 +551,7 @@ class MainActivity : AppCompatActivity() {
                             playerFragment?.minimize()
                             navController.navigate(
                                 TeamFragmentDirections.actionGlobalTeamFragment(
-                                    teamName = teamName
+                                    teamName = Uri.decode(teamName)
                                 )
                             )
                         }

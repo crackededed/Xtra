@@ -16,6 +16,7 @@ type Query {
     users(ids: [ID!], logins: [String!]): [User]
     video(id: ID): Video
     videoPlaybackAccessToken(id: ID!, params: PlaybackAccessTokenParams!): PlaybackAccessToken
+    contentTag(id: ID!): Tag
 }
 
 type Badge {
