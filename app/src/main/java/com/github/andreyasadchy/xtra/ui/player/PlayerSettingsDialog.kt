@@ -200,7 +200,7 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                     }
                 }
             }
-            (parentFragment as? PlayerFragment)?.setSubtitles()
+            (parentFragment as? PlayerFragment)?.setSubtitlesButton()
             if ((videoType == PlayerFragment.STREAM || videoType == PlayerFragment.VIDEO) &&
                 !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false) &&
                 requireContext().prefs().getBoolean(C.PLAYER_MENU_RELOAD_EMOTES, true)

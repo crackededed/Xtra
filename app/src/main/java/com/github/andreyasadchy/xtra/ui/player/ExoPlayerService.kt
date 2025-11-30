@@ -56,7 +56,7 @@ import kotlin.concurrent.scheduleAtFixedRate
 
 @OptIn(UnstableApi::class)
 @AndroidEntryPoint
-class CustomPlaybackService : Service() {
+class ExoPlayerService : Service() {
 
     @Inject
     lateinit var playerRepository: PlayerRepository
@@ -189,7 +189,7 @@ class CustomPlaybackService : Service() {
             reinitializeDynamicsProcessing(player.audioSessionId)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val session = MediaSession(this, "CustomPlaybackService")
+            val session = MediaSession(this, "ExoPlayerService")
             this.session = session
             session.setCallback(
                 object : MediaSession.Callback() {
@@ -307,8 +307,8 @@ class CustomPlaybackService : Service() {
                                 }
                             }
                         )
-                        addCustomAction(INTENT_REWIND, ContextCompat.getString(this@CustomPlaybackService, R.string.rewind), androidx.media3.session.R.drawable.media3_notification_seek_back)
-                        addCustomAction(INTENT_FAST_FORWARD, ContextCompat.getString(this@CustomPlaybackService, R.string.forward), androidx.media3.session.R.drawable.media3_notification_seek_forward)
+                        addCustomAction(INTENT_REWIND, ContextCompat.getString(this@ExoPlayerService, R.string.rewind), androidx.media3.session.R.drawable.media3_notification_seek_back)
+                        addCustomAction(INTENT_FAST_FORWARD, ContextCompat.getString(this@ExoPlayerService, R.string.forward), androidx.media3.session.R.drawable.media3_notification_seek_forward)
                     }.build()
                 )
             }
@@ -428,9 +428,9 @@ class CustomPlaybackService : Service() {
                     )
                     setContentIntent(
                         PendingIntent.getActivity(
-                            this@CustomPlaybackService,
+                            this@ExoPlayerService,
                             REQUEST_CODE_RESUME,
-                            Intent(this@CustomPlaybackService, MainActivity::class.java).apply {
+                            Intent(this@ExoPlayerService, MainActivity::class.java).apply {
                                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
                                 action = MainActivity.INTENT_OPEN_PLAYER
                             },
@@ -440,12 +440,12 @@ class CustomPlaybackService : Service() {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         addAction(
                             Notification.Action.Builder(
-                                Icon.createWithResource(this@CustomPlaybackService, androidx.media3.session.R.drawable.media3_notification_seek_back),
-                                ContextCompat.getString(this@CustomPlaybackService, R.string.rewind),
+                                Icon.createWithResource(this@ExoPlayerService, androidx.media3.session.R.drawable.media3_notification_seek_back),
+                                ContextCompat.getString(this@ExoPlayerService, R.string.rewind),
                                 PendingIntent.getService(
-                                    this@CustomPlaybackService,
+                                    this@ExoPlayerService,
                                     REQUEST_CODE_REWIND,
-                                    Intent(this@CustomPlaybackService, CustomPlaybackService::class.java).apply {
+                                    Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
                                         action = INTENT_REWIND
                                     },
                                     PendingIntent.FLAG_IMMUTABLE
@@ -455,12 +455,12 @@ class CustomPlaybackService : Service() {
                         if (Util.shouldShowPlayButton(player)) {
                             addAction(
                                 Notification.Action.Builder(
-                                    Icon.createWithResource(this@CustomPlaybackService, androidx.media3.session.R.drawable.media3_notification_play),
-                                    ContextCompat.getString(this@CustomPlaybackService, R.string.resume),
+                                    Icon.createWithResource(this@ExoPlayerService, androidx.media3.session.R.drawable.media3_notification_play),
+                                    ContextCompat.getString(this@ExoPlayerService, R.string.resume),
                                     PendingIntent.getService(
-                                        this@CustomPlaybackService,
+                                        this@ExoPlayerService,
                                         REQUEST_CODE_PLAY_PAUSE,
-                                        Intent(this@CustomPlaybackService, CustomPlaybackService::class.java).apply {
+                                        Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
                                             action = INTENT_PLAY_PAUSE
                                         },
                                         PendingIntent.FLAG_IMMUTABLE
@@ -470,12 +470,12 @@ class CustomPlaybackService : Service() {
                         } else {
                             addAction(
                                 Notification.Action.Builder(
-                                    Icon.createWithResource(this@CustomPlaybackService, androidx.media3.session.R.drawable.media3_notification_pause),
-                                    ContextCompat.getString(this@CustomPlaybackService, R.string.pause),
+                                    Icon.createWithResource(this@ExoPlayerService, androidx.media3.session.R.drawable.media3_notification_pause),
+                                    ContextCompat.getString(this@ExoPlayerService, R.string.pause),
                                     PendingIntent.getService(
-                                        this@CustomPlaybackService,
+                                        this@ExoPlayerService,
                                         REQUEST_CODE_PLAY_PAUSE,
-                                        Intent(this@CustomPlaybackService, CustomPlaybackService::class.java).apply {
+                                        Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
                                             action = INTENT_PLAY_PAUSE
                                         },
                                         PendingIntent.FLAG_IMMUTABLE
@@ -485,12 +485,12 @@ class CustomPlaybackService : Service() {
                         }
                         addAction(
                             Notification.Action.Builder(
-                                Icon.createWithResource(this@CustomPlaybackService, androidx.media3.session.R.drawable.media3_notification_seek_forward),
-                                ContextCompat.getString(this@CustomPlaybackService, R.string.forward),
+                                Icon.createWithResource(this@ExoPlayerService, androidx.media3.session.R.drawable.media3_notification_seek_forward),
+                                ContextCompat.getString(this@ExoPlayerService, R.string.forward),
                                 PendingIntent.getService(
-                                    this@CustomPlaybackService,
+                                    this@ExoPlayerService,
                                     REQUEST_CODE_FAST_FORWARD,
-                                    Intent(this@CustomPlaybackService, CustomPlaybackService::class.java).apply {
+                                    Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
                                         action = INTENT_FAST_FORWARD
                                     },
                                     PendingIntent.FLAG_IMMUTABLE
@@ -501,11 +501,11 @@ class CustomPlaybackService : Service() {
                         addAction(
                             Notification.Action.Builder(
                                 androidx.media3.session.R.drawable.media3_notification_seek_back,
-                                ContextCompat.getString(this@CustomPlaybackService, R.string.rewind),
+                                ContextCompat.getString(this@ExoPlayerService, R.string.rewind),
                                 PendingIntent.getService(
-                                    this@CustomPlaybackService,
+                                    this@ExoPlayerService,
                                     REQUEST_CODE_REWIND,
-                                    Intent(this@CustomPlaybackService, CustomPlaybackService::class.java).apply {
+                                    Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
                                         action = INTENT_REWIND
                                     },
                                     PendingIntent.FLAG_IMMUTABLE
@@ -516,11 +516,11 @@ class CustomPlaybackService : Service() {
                             addAction(
                                 Notification.Action.Builder(
                                     androidx.media3.session.R.drawable.media3_notification_play,
-                                    ContextCompat.getString(this@CustomPlaybackService, R.string.resume),
+                                    ContextCompat.getString(this@ExoPlayerService, R.string.resume),
                                     PendingIntent.getService(
-                                        this@CustomPlaybackService,
+                                        this@ExoPlayerService,
                                         REQUEST_CODE_PLAY_PAUSE,
-                                        Intent(this@CustomPlaybackService, CustomPlaybackService::class.java).apply {
+                                        Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
                                             action = INTENT_PLAY_PAUSE
                                         },
                                         PendingIntent.FLAG_IMMUTABLE
@@ -531,11 +531,11 @@ class CustomPlaybackService : Service() {
                             addAction(
                                 Notification.Action.Builder(
                                     androidx.media3.session.R.drawable.media3_notification_pause,
-                                    ContextCompat.getString(this@CustomPlaybackService, R.string.pause),
+                                    ContextCompat.getString(this@ExoPlayerService, R.string.pause),
                                     PendingIntent.getService(
-                                        this@CustomPlaybackService,
+                                        this@ExoPlayerService,
                                         REQUEST_CODE_PLAY_PAUSE,
-                                        Intent(this@CustomPlaybackService, CustomPlaybackService::class.java).apply {
+                                        Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
                                             action = INTENT_PLAY_PAUSE
                                         },
                                         PendingIntent.FLAG_IMMUTABLE
@@ -546,11 +546,11 @@ class CustomPlaybackService : Service() {
                         addAction(
                             Notification.Action.Builder(
                                 androidx.media3.session.R.drawable.media3_notification_seek_forward,
-                                ContextCompat.getString(this@CustomPlaybackService, R.string.forward),
+                                ContextCompat.getString(this@ExoPlayerService, R.string.forward),
                                 PendingIntent.getService(
-                                    this@CustomPlaybackService,
+                                    this@ExoPlayerService,
                                     REQUEST_CODE_FAST_FORWARD,
-                                    Intent(this@CustomPlaybackService, CustomPlaybackService::class.java).apply {
+                                    Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
                                         action = INTENT_FAST_FORWARD
                                     },
                                     PendingIntent.FLAG_IMMUTABLE
@@ -578,9 +578,9 @@ class CustomPlaybackService : Service() {
                     setStyle(androidx.media.app.NotificationCompat.MediaStyle())
                     setContentIntent(
                         PendingIntent.getActivity(
-                            this@CustomPlaybackService,
+                            this@ExoPlayerService,
                             REQUEST_CODE_RESUME,
-                            Intent(this@CustomPlaybackService, MainActivity::class.java).apply {
+                            Intent(this@ExoPlayerService, MainActivity::class.java).apply {
                                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
                                 action = MainActivity.INTENT_OPEN_PLAYER
                             },
@@ -589,11 +589,11 @@ class CustomPlaybackService : Service() {
                     )
                     addAction(
                         androidx.media3.session.R.drawable.media3_notification_seek_back,
-                        ContextCompat.getString(this@CustomPlaybackService, R.string.rewind),
+                        ContextCompat.getString(this@ExoPlayerService, R.string.rewind),
                         PendingIntent.getService(
-                            this@CustomPlaybackService,
+                            this@ExoPlayerService,
                             REQUEST_CODE_REWIND,
-                            Intent(this@CustomPlaybackService, CustomPlaybackService::class.java).apply {
+                            Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
                                 action = INTENT_REWIND
                             },
                             PendingIntent.FLAG_IMMUTABLE
@@ -602,11 +602,11 @@ class CustomPlaybackService : Service() {
                     if (Util.shouldShowPlayButton(player)) {
                         addAction(
                             androidx.media3.session.R.drawable.media3_notification_play,
-                            ContextCompat.getString(this@CustomPlaybackService, R.string.resume),
+                            ContextCompat.getString(this@ExoPlayerService, R.string.resume),
                             PendingIntent.getService(
-                                this@CustomPlaybackService,
+                                this@ExoPlayerService,
                                 REQUEST_CODE_PLAY_PAUSE,
-                                Intent(this@CustomPlaybackService, CustomPlaybackService::class.java).apply {
+                                Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
                                     action = INTENT_PLAY_PAUSE
                                 },
                                 PendingIntent.FLAG_IMMUTABLE
@@ -615,11 +615,11 @@ class CustomPlaybackService : Service() {
                     } else {
                         addAction(
                             androidx.media3.session.R.drawable.media3_notification_pause,
-                            ContextCompat.getString(this@CustomPlaybackService, R.string.pause),
+                            ContextCompat.getString(this@ExoPlayerService, R.string.pause),
                             PendingIntent.getService(
-                                this@CustomPlaybackService,
+                                this@ExoPlayerService,
                                 REQUEST_CODE_PLAY_PAUSE,
-                                Intent(this@CustomPlaybackService, CustomPlaybackService::class.java).apply {
+                                Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
                                     action = INTENT_PLAY_PAUSE
                                 },
                                 PendingIntent.FLAG_IMMUTABLE
@@ -628,11 +628,11 @@ class CustomPlaybackService : Service() {
                     }
                     addAction(
                         androidx.media3.session.R.drawable.media3_notification_seek_forward,
-                        ContextCompat.getString(this@CustomPlaybackService, R.string.forward),
+                        ContextCompat.getString(this@ExoPlayerService, R.string.forward),
                         PendingIntent.getService(
-                            this@CustomPlaybackService,
+                            this@ExoPlayerService,
                             REQUEST_CODE_FAST_FORWARD,
-                            Intent(this@CustomPlaybackService, CustomPlaybackService::class.java).apply {
+                            Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
                                 action = INTENT_FAST_FORWARD
                             },
                             PendingIntent.FLAG_IMMUTABLE
@@ -758,7 +758,7 @@ class CustomPlaybackService : Service() {
     }
 
     inner class ServiceBinder : Binder() {
-        fun getService() = this@CustomPlaybackService
+        fun getService() = this@ExoPlayerService
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {

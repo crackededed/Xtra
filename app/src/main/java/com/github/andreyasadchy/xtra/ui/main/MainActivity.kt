@@ -62,6 +62,8 @@ import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
+import com.github.andreyasadchy.xtra.ui.player.ExoPlayerFragment
+import com.github.andreyasadchy.xtra.ui.player.Media3Fragment
 import com.github.andreyasadchy.xtra.ui.player.PlayerFragment
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.DisplayUtils
@@ -117,7 +119,7 @@ class MainActivity : AppCompatActivity() {
                     moveTaskToBack(false)
                 }
                 INTENT_PLAY_PAUSE_PLAYER -> {
-                    playerFragment?.handlePlayPauseAction()
+                    playerFragment?.playPause()
                 }
             }
         }
@@ -383,11 +385,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        if (packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) &&
-            Build.VERSION.SDK_INT < Build.VERSION_CODES.S &&
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S &&
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) &&
             prefs.getBoolean(C.PLAYER_PICTURE_IN_PICTURE, true) &&
-            playerFragment?.enterPictureInPicture() == true
+            playerFragment?.canEnterPictureInPicture() == true
         ) {
             try {
                 enterPictureInPictureMode(PictureInPictureParams.Builder().build())
@@ -595,19 +597,39 @@ class MainActivity : AppCompatActivity() {
 //Navigation listeners
 
     fun startStream(stream: Stream) {
-        startPlayer(PlayerFragment.newInstance(stream))
+        val fragment = if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+            ExoPlayerFragment.newInstance(stream)
+        } else {
+            Media3Fragment.newInstance(stream)
+        }
+        startPlayer(fragment)
     }
 
     fun startVideo(video: Video, offset: Long?, ignoreSavedPosition: Boolean = false) {
-        startPlayer(PlayerFragment.newInstance(video, offset, ignoreSavedPosition))
+        val fragment = if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+            ExoPlayerFragment.newInstance(video, offset, ignoreSavedPosition)
+        } else {
+            Media3Fragment.newInstance(video, offset, ignoreSavedPosition)
+        }
+        startPlayer(fragment)
     }
 
     fun startClip(clip: Clip) {
-        startPlayer(PlayerFragment.newInstance(clip))
+        val fragment = if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+            ExoPlayerFragment.newInstance(clip)
+        } else {
+            Media3Fragment.newInstance(clip)
+        }
+        startPlayer(fragment)
     }
 
     fun startOfflineVideo(video: OfflineVideo) {
-        startPlayer(PlayerFragment.newInstance(video))
+        val fragment = if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+            ExoPlayerFragment.newInstance(video)
+        } else {
+            Media3Fragment.newInstance(video)
+        }
+        startPlayer(fragment)
     }
 
 //Player methods
@@ -618,8 +640,8 @@ class MainActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.playerContainer, fragment).commit()
         viewModel.isPlayerOpened = true
-        if (packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) &&
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) &&
             prefs.getBoolean(C.PLAYER_PICTURE_IN_PICTURE, true)
         ) {
             setPictureInPictureParams(PictureInPictureParams.Builder().setAutoEnterEnabled(true).build())
@@ -633,7 +655,7 @@ class MainActivity : AppCompatActivity() {
             .commit()
         playerFragment = null
         viewModel.isPlayerOpened = false
-        if (packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
             setPictureInPictureParams(PictureInPictureParams.Builder().setAutoEnterEnabled(false).build())
         }
         viewModel.sleepTimer?.cancel()
