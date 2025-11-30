@@ -1,6 +1,5 @@
 package com.github.andreyasadchy.xtra.ui.player
 
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,15 +14,9 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.slider.Slider
 
-
 class PlayerVolumeDialog : BottomSheetDialogFragment() {
 
-    interface PlayerVolumeListener {
-        fun changeVolume(volume: Float)
-    }
-
     companion object {
-
         private const val VOLUME = "volume"
 
         fun newInstance(volume: Float?): PlayerVolumeDialog {
@@ -35,12 +28,6 @@ class PlayerVolumeDialog : BottomSheetDialogFragment() {
 
     private var _binding: PlayerVolumeBinding? = null
     private val binding get() = _binding!!
-    private lateinit var listener: PlayerVolumeListener
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        listener = parentFragment as PlayerVolumeListener
-    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = PlayerVolumeBinding.inflate(inflater, container, false)
@@ -57,7 +44,7 @@ class PlayerVolumeDialog : BottomSheetDialogFragment() {
             setVolume(volume)
             volumeBar.value = volume
             volumeBar.addOnChangeListener { _, value, _ ->
-                listener.changeVolume((value / 100f))
+                (parentFragment as? PlayerFragment)?.changeVolume((value / 100f))
                 setVolume(value)
             }
             volumeBar.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {

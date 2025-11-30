@@ -3,7 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:alpha="0"
+    android:visibility="gone"
+    tools:alpha="1"
+    tools:visibility="visible">
 
     <View
         android:layout_width="match_parent"
@@ -12,68 +16,54 @@
         android:background="@android:color/black" />
 
     <ImageButton
-        android:id="@+id/exo_play_pause"
+        android:id="@+id/playPause"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_centerInParent="true"
         android:background="@android:color/transparent"
-        app:tint="@android:color/white"
-        tools:src="@drawable/baseline_pause_black_48" />
+        android:src="@drawable/baseline_play_arrow_black_48"
+        app:tint="@android:color/white" />
 
-    <FrameLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <Button
+        android:id="@+id/rewind"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:layout_centerVertical="true"
         android:layout_marginStart="50dp"
-        android:addStatesFromChildren="true">
+        android:background="@android:color/transparent"
+        android:foreground="@drawable/exo_styled_controls_rewind"
+        android:gravity="center|bottom"
+        android:insetBottom="0dp"
+        android:paddingLeft="0dp"
+        android:paddingRight="0dp"
+        android:paddingBottom="20dp"
+        android:textColor="@android:color/white"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        app:backgroundTint="@android:color/white"
+        app:tint="@android:color/white"
+        tools:text="10" />
 
-        <Button
-            android:id="@+id/exo_rew_with_amount"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:background="@drawable/exo_styled_controls_rewind"
-            android:foreground="@drawable/exo_styled_controls_rewind"
-            android:gravity="center|bottom"
-            android:insetBottom="0dp"
-            android:paddingLeft="0dp"
-            android:paddingRight="0dp"
-            android:paddingBottom="20dp"
-            android:textColor="@android:color/white"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            app:backgroundTint="@android:color/white"
-            app:tint="@android:color/white"
-            tools:text="10" />
-
-    </FrameLayout>
-
-    <FrameLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <Button
+        android:id="@+id/fastForward"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
         android:layout_marginEnd="50dp"
-        android:addStatesFromChildren="true">
-
-        <Button
-            android:id="@+id/exo_ffwd_with_amount"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:background="@drawable/exo_styled_controls_fastforward"
-            android:foreground="@drawable/exo_styled_controls_fastforward"
-            android:gravity="center|bottom"
-            android:insetBottom="0dp"
-            android:paddingLeft="0dp"
-            android:paddingRight="0dp"
-            android:paddingBottom="20dp"
-            android:textColor="@android:color/white"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            app:backgroundTint="@android:color/white"
-            app:tint="@android:color/white"
-            tools:text="10" />
-
-    </FrameLayout>
+        android:background="@android:color/transparent"
+        android:foreground="@drawable/exo_styled_controls_fastforward"
+        android:gravity="center|bottom"
+        android:insetBottom="0dp"
+        android:paddingLeft="0dp"
+        android:paddingRight="0dp"
+        android:paddingBottom="20dp"
+        android:textColor="@android:color/white"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        app:backgroundTint="@android:color/white"
+        app:tint="@android:color/white"
+        tools:text="10" />
 
     <LinearLayout
         android:id="@+id/topLeftLayout"
@@ -82,11 +72,10 @@
         android:layout_alignParentStart="true"
         android:layout_marginStart="10dp"
         android:layout_marginTop="5dp"
-        android:layout_toStartOf="@id/topRightLayout"
-        android:background="@android:color/transparent">
+        android:layout_toStartOf="@id/topRightLayout">
 
         <ImageButton
-            android:id="@+id/playerMinimize"
+            android:id="@+id/minimize"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginEnd="5dp"
@@ -97,20 +86,18 @@
             tools:visibility="visible" />
 
         <LinearLayout
-            android:id="@+id/playerInfoLayout"
+            android:id="@+id/infoLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:layout_marginEnd="10dp"
-            android:background="@android:color/transparent"
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/playerChannel"
+                android:id="@+id/channel"
                 android:layout_width="wrap_content"
                 android:layout_height="27dp"
                 android:layout_marginBottom="1dp"
-                android:background="@android:color/transparent"
                 android:ellipsize="end"
                 android:gravity="center_vertical|start"
                 android:maxLines="1"
@@ -125,11 +112,10 @@
                 tools:visibility="visible" />
 
             <TextView
-                android:id="@+id/playerTitle"
+                android:id="@+id/title"
                 android:layout_width="wrap_content"
                 android:layout_height="20dp"
                 android:layout_marginBottom="1dp"
-                android:background="@android:color/transparent"
                 android:ellipsize="end"
                 android:gravity="center_vertical|start"
                 android:maxLines="1"
@@ -144,11 +130,10 @@
                 tools:visibility="visible" />
 
             <TextView
-                android:id="@+id/playerCategory"
+                android:id="@+id/category"
                 android:layout_width="wrap_content"
                 android:layout_height="15dp"
                 android:layout_marginBottom="1dp"
-                android:background="@android:color/transparent"
                 android:ellipsize="end"
                 android:gravity="center_vertical|start"
                 android:maxLines="1"
@@ -172,11 +157,10 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_marginTop="5dp"
-        android:layout_marginEnd="10dp"
-        android:background="@android:color/transparent">
+        android:layout_marginEnd="10dp">
 
         <ImageButton
-            android:id="@+id/playerDownload"
+            android:id="@+id/download"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
@@ -186,7 +170,7 @@
             tools:visibility="visible" />
 
         <ImageButton
-            android:id="@+id/playerFollow"
+            android:id="@+id/follow"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
@@ -196,7 +180,7 @@
             tools:visibility="visible" />
 
         <ImageButton
-            android:id="@+id/playerSleepTimer"
+            android:id="@+id/sleepTimer"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
@@ -206,7 +190,7 @@
             tools:visibility="visible" />
 
         <ImageButton
-            android:id="@+id/playerAspectRatio"
+            android:id="@+id/aspectRatio"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
@@ -216,7 +200,7 @@
             tools:visibility="visible" />
 
         <ImageButton
-            android:id="@+id/playerSpeed"
+            android:id="@+id/speed"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
@@ -226,7 +210,7 @@
             tools:visibility="visible" />
 
         <ImageButton
-            android:id="@+id/playerSettings"
+            android:id="@+id/quality"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
@@ -236,7 +220,7 @@
             tools:visibility="visible" />
 
         <ImageButton
-            android:id="@+id/playerMenu"
+            android:id="@+id/menu"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
@@ -254,11 +238,10 @@
         android:layout_above="@id/bottomLayout"
         android:layout_alignParentStart="true"
         android:layout_marginStart="10dp"
-        android:layout_marginBottom="5dp"
-        android:background="@android:color/transparent">
+        android:layout_marginBottom="5dp">
 
         <ImageButton
-            android:id="@+id/playerRestart"
+            android:id="@+id/restart"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
@@ -268,7 +251,7 @@
             tools:visibility="visible" />
 
         <ImageButton
-            android:id="@+id/playerSeekLive"
+            android:id="@+id/seekLive"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
@@ -278,7 +261,7 @@
             tools:visibility="visible" />
 
         <ImageButton
-            android:id="@+id/playerGames"
+            android:id="@+id/vodGames"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
@@ -288,7 +271,7 @@
             tools:visibility="visible" />
 
         <ImageButton
-            android:id="@+id/playerVolume"
+            android:id="@+id/volume"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
@@ -298,7 +281,7 @@
             tools:visibility="visible" />
 
         <ImageButton
-            android:id="@+id/playerAudioCompressor"
+            android:id="@+id/audioCompressor"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
@@ -308,7 +291,7 @@
             tools:visibility="visible" />
 
         <ImageButton
-            android:id="@+id/playerMode"
+            android:id="@+id/audioOnly"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
@@ -326,21 +309,20 @@
         android:layout_above="@id/bottomLayout"
         android:layout_alignParentEnd="true"
         android:layout_marginEnd="10dp"
-        android:layout_marginBottom="5dp"
-        android:background="@android:color/transparent">
+        android:layout_marginBottom="5dp">
 
         <ImageButton
-            android:id="@+id/playerSubtitleToggle"
+            android:id="@+id/subtitles"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
+            android:src="@drawable/exo_ic_subtitle_off"
             android:visibility="gone"
             app:tint="@android:color/white"
-            tools:src="@drawable/exo_ic_subtitle_off"
             tools:visibility="visible" />
 
         <ImageButton
-            android:id="@+id/playerChatBarToggle"
+            android:id="@+id/toggleChatInput"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
@@ -350,23 +332,23 @@
             tools:visibility="visible" />
 
         <ImageButton
-            android:id="@+id/playerChatToggle"
+            android:id="@+id/toggleChat"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
+            android:src="@drawable/baseline_speaker_notes_black_24"
             android:visibility="gone"
             app:tint="@android:color/white"
-            tools:src="@drawable/baseline_speaker_notes_black_24"
             tools:visibility="visible" />
 
         <ImageButton
-            android:id="@+id/playerFullscreenToggle"
+            android:id="@+id/fullscreen"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@android:color/transparent"
+            android:src="@drawable/baseline_fullscreen_black_24"
             android:visibility="gone"
             app:tint="@android:color/white"
-            tools:src="@drawable/baseline_fullscreen_black_24"
             tools:visibility="visible" />
 
     </LinearLayout>
@@ -380,7 +362,7 @@
         android:layout_marginBottom="8dp">
 
         <LinearLayout
-            android:id="@+id/playerUptime"
+            android:id="@+id/uptimeLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="6dp"
@@ -388,7 +370,7 @@
             tools:visibility="visible">
 
             <ImageView
-                android:id="@+id/playerUptimeIcon"
+                android:id="@+id/uptimeIcon"
                 android:layout_width="12dp"
                 android:layout_height="12dp"
                 android:layout_marginTop="9dp"
@@ -400,23 +382,22 @@
                 tools:visibility="visible" />
 
             <Chronometer
-                android:id="@+id/playerUptimeText"
+                android:id="@+id/uptimeTimer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
                 android:layout_marginBottom="7dp"
-                android:background="@android:color/transparent"
                 android:textColor="@android:color/white" />
 
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/playerViewers"
+            android:id="@+id/viewersLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
             <ImageView
-                android:id="@+id/playerViewersIcon"
+                android:id="@+id/viewersIcon"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:background="@android:color/transparent"
@@ -426,12 +407,11 @@
                 tools:visibility="visible" />
 
             <TextView
-                android:id="@+id/playerViewersText"
+                android:id="@+id/viewersText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
                 android:layout_marginBottom="7dp"
-                android:background="@android:color/transparent"
                 android:textColor="@android:color/white"
                 tools:text="13.3K" />
 
@@ -440,7 +420,7 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/exo_position"
+        android:id="@+id/position"
         android:layout_width="55sp"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
@@ -456,28 +436,26 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_toStartOf="@id/exo_duration"
-        android:layout_toEndOf="@id/exo_position">
+        android:layout_toStartOf="@id/duration"
+        android:layout_toEndOf="@id/position">
 
         <androidx.media3.ui.DefaultTimeBar
-            android:id="@+id/exo_progress"
+            android:id="@+id/progressBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginEnd="5dp"
-            android:layout_marginBottom="5dp"
-            android:background="@android:color/transparent" />
+            android:layout_marginBottom="5dp" />
 
     </LinearLayout>
 
     <TextView
-        android:id="@+id/exo_duration"
+        android:id="@+id/duration"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_marginEnd="10dp"
         android:layout_marginBottom="10dp"
-        android:background="@android:color/transparent"
         android:textColor="@android:color/white"
         tools:text="1:12:16" />
 
