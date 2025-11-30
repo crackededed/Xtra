@@ -3,7 +3,6 @@ package com.github.andreyasadchy.xtra.util
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Rect
-import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
@@ -62,19 +61,5 @@ fun ViewPager2.reduceDragSensitivity() {
         val touchSlop = touchSlopField.get(recyclerView) as Int
         touchSlopField.set(recyclerView, touchSlop * 2)
     } catch (e: Exception) {
-    }
-}
-
-fun MotionEvent.isClick(outDownLocation: FloatArray): Boolean {
-    return when (actionMasked) {
-        MotionEvent.ACTION_DOWN -> {
-            outDownLocation[0] = x
-            outDownLocation[1] = y
-            false
-        }
-        MotionEvent.ACTION_UP -> {
-            outDownLocation[0] in x - 50..x + 50 && outDownLocation[1] in y - 50..y + 50 && eventTime - downTime <= 500
-        }
-        else -> false
     }
 }

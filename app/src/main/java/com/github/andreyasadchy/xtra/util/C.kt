@@ -9,7 +9,6 @@ object C {
     const val CHANNEL_LOGIN = "channelLogin"
     const val CHANNEL_DISPLAYNAME = "channelName"
     const val CHANNEL_PROFILEIMAGE = "channelLogo"
-    const val GAMES_LIST = "games_list"
     const val TAGS = "tags"
     const val HEADER_CLIENT_ID = "Client-Id"
     const val HEADER_TOKEN = "Authorization"
