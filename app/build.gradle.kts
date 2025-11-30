@@ -30,7 +30,7 @@ android {
         minSdk = 21
         targetSdk = 36
         versionCode = 121
-        versionName = "2.51.4"
+        versionName = "2.51.5"
     }
 
     buildTypes {
@@ -66,8 +66,10 @@ android {
     ))
     configurations.all {
         resolutionStrategy.force(listOf(
+            "androidx.activity:activity:1.12.0-alpha05",
             "androidx.hilt:hilt-compiler:1.3.0-alpha02",
             "androidx.hilt:hilt-work:1.3.0-alpha02",
+            "androidx.lifecycle:lifecycle-viewmodel:2.10.0-alpha01",
             "androidx.room:room-compiler:2.8.0-rc01",
             "androidx.room:room-paging:2.8.0-rc01",
             "androidx.room:room-runtime:2.8.0-rc01",
