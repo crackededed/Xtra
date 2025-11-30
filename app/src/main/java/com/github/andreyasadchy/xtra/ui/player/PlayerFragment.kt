@@ -1906,6 +1906,11 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     override fun onResume() {
         super.onResume()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && requireActivity().isInPictureInPictureMode) {
+            if (isPortrait) {
+                binding.chatLayout.gone()
+            } else {
+                hideChatLayout()
+            }
             useController = false
         }
     }
