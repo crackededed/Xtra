@@ -36,6 +36,7 @@ class SearchGamesResponse(
         val displayName: String? = null,
         val boxArtURL: String? = null,
         val viewersCount: Int? = null,
+        val followersCount: Int? = null,
         val tags: List<Tag>? = null,
     )
 

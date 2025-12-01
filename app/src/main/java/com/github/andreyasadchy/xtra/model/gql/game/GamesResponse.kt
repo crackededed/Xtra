@@ -33,6 +33,7 @@ class GamesResponse(
         val displayName: String? = null,
         val avatarURL: String? = null,
         val viewersCount: Int? = null,
+        val followersCount: Int? = null,
         val tags: List<Tag>? = null,
     )
 

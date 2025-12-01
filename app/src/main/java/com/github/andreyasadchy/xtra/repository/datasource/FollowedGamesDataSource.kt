@@ -19,6 +19,7 @@ class FollowedGamesDataSource(
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Game> {
         val list = mutableListOf<Game>()
+
         localFollowsGame.loadFollows().forEach {
             list.add(Game(
                 gameId = it.gameId,
@@ -50,6 +51,7 @@ class FollowedGamesDataSource(
                 } else {
                     item.followAccount = true
                     item.viewersCount = game.viewersCount
+                    item.followersCount = game.followersCount
                     item.broadcastersCount = game.broadcastersCount
                     item.tags = game.tags
                 }
@@ -84,6 +86,7 @@ class FollowedGamesDataSource(
                     gameName = it.displayName,
                     boxArtUrl = it.boxArtURL,
                     viewersCount = it.viewersCount,
+                    followersCount = it.followersCount,
                     broadcastersCount = it.broadcastersCount,
                     tags = it.tags?.map { tag ->
                         Tag(
@@ -113,6 +116,7 @@ class FollowedGamesDataSource(
                     gameName = it.displayName,
                     boxArtUrl = it.boxArtURL,
                     viewersCount = it.viewersCount ?: 0,
+                    followersCount = it.followersCount ?: 0,
                     tags = it.tags?.map { tag ->
                         Tag(
                             id = tag.id,

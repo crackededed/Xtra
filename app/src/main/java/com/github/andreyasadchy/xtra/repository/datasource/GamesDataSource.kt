@@ -70,6 +70,7 @@ class GamesDataSource(
                     gameName = it.displayName,
                     boxArtUrl = it.boxArtURL,
                     viewersCount = it.viewersCount,
+                    followersCount = it.followersCount,
                     broadcastersCount = it.broadcastersCount,
                     tags = it.tags?.map { tag ->
                         Tag(
@@ -106,6 +107,7 @@ class GamesDataSource(
                     gameName = it.displayName,
                     boxArtUrl = it.avatarURL,
                     viewersCount = it.viewersCount,
+                    followersCount = it.followersCount,
                     tags = it.tags?.map { tag ->
                         Tag(
                             id = tag.id,

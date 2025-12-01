@@ -59,14 +59,17 @@ import com.github.andreyasadchy.xtra.model.ui.Clip
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.model.ui.Video
+import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
+import com.github.andreyasadchy.xtra.ui.games.GamesFragmentDirections
 import com.github.andreyasadchy.xtra.ui.player.ExoPlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.Media3Fragment
 import com.github.andreyasadchy.xtra.ui.player.PlayerFragment
+import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.DisplayUtils
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
@@ -470,17 +473,20 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                     url.contains("twitch.tv/directory/category/") -> {
-                        val slug = url.substringAfter("twitch.tv/directory/category/").takeIf { it.isNotBlank() }?.substringBefore("/")
+                        val slug = url.substringAfter("twitch.tv/directory/category/").takeIf { it.isNotBlank() }?.let { it.substringBefore("?", it.substringBefore("/")) }
+                        val tl = url.substringAfter("?tl=").takeIf { it.isNotBlank() }?.substringBefore("&")
                         if (!slug.isNullOrBlank()) {
                             playerFragment?.minimize()
                             navController.navigate(
                                 if (prefs.getBoolean(C.UI_GAMEPAGER, true)) {
                                     GamePagerFragmentDirections.actionGlobalGamePagerFragment(
-                                        gameSlug = slug
+                                        gameSlug = slug,
+                                        tags = tl?.let { arrayOf( Uri.decode(it)) }
                                     )
                                 } else {
                                     GameMediaFragmentDirections.actionGlobalGameMediaFragment(
-                                        gameSlug = slug
+                                        gameSlug = slug,
+                                        tags = tl?.let { arrayOf(Uri.decode(it)) }
                                     )
                                 }
                             )
@@ -500,6 +506,43 @@ class MainActivity : AppCompatActivity() {
                                         gameName = Uri.decode(name)
                                     )
                                 }
+                            )
+                        }
+                    }
+                    url.contains("twitch.tv/directory/all") -> {
+                        playerFragment?.minimize()
+                        val tag = url.substringAfter("twitch.tv/directory/all/tags/", "").substringBefore("?").substringBefore("/").takeIf { it.isNotBlank() }
+                        navController.navigate(
+                            TopStreamsFragmentDirections.actionGlobalTopFragment(
+                                tags = tag?.let { arrayOf(Uri.decode( it )) }
+                            )
+                        )
+                    }
+                    url.contains("twitch.tv/directory") -> {
+                        val tagId = url.substringAfter("twitch.tv/directory/tags/", "").substringBefore("?").substringBefore("/").takeIf { it.isNotBlank() }
+                        if (!tagId.isNullOrBlank()) {
+                            viewModel.loadTag(
+                                tagId,
+                                prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                TwitchApiHelper.getGQLHeaders(this),
+                                prefs.getBoolean(C.ENABLE_INTEGRITY, false),
+                            )
+                            lifecycleScope.launch {
+                                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                                    viewModel.tag.collectLatest { tag ->
+                                        playerFragment?.minimize()
+                                        navController.navigate(
+                                            GamesFragmentDirections.actionGlobalGamesFragment(
+                                                tags = tag?.let { arrayOf(Tag(id = it.id, name = it.name)) }
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            playerFragment?.minimize()
+                            navController.navigate(
+                                GamesFragmentDirections.actionGlobalGamesFragment()
                             )
                         }
                     }

@@ -731,4 +731,5 @@
     <string name="delete_filter_message">Are you sure you want to delete this filter?</string>
     <string name="use_custom_playback_service">Use custom playback service</string>
     <string name="move_player_freely">Move minimized player freely</string>
+    <string name="followersCount">Show followers count on games</string>
 </resources>

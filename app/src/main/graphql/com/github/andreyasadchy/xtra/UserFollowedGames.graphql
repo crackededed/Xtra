@@ -5,6 +5,7 @@ query UserFollowedGames($first: Int) {
                 boxArtURL
                 broadcastersCount
                 displayName
+                followersCount
                 id
                 slug
                 tags(tagType: CONTENT) {

@@ -28,4 +28,8 @@
         <item quantity="one">Etiqueta: %s</item>
         <item quantity="other">Etiquetas: %s</item>
     </plurals>
+    <plurals name="followers">
+        <item quantity="one">%s seguidor</item>
+        <item quantity="other">@string/followers</item>
+    </plurals>
 </resources>
