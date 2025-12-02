@@ -23,17 +23,15 @@ class BookmarksRepository @Inject constructor(
         bookmarksDao.getAll()
     }
 
-    suspend fun loadBookmarksDesc() = withContext(Dispatchers.IO) {
-        bookmarksDao.getAllDesc()
-    }
+    fun loadBookmarksPagingSourceDesc() = bookmarksDao.getAllPagingSourceDesc()
 
-    suspend fun loadBookmarksCreatedAtDesc() = withContext(Dispatchers.IO) {
-        bookmarksDao.getAllCreatedAtDesc()
-    }
+    fun loadBookmarksPSCreatedAtDesc() = bookmarksDao.getAllPSCreatedAtDesc()
 
-    suspend fun loadBookmarksCreatedAt() = withContext(Dispatchers.IO) {
-        bookmarksDao.getAllCreatedAt()
-    }
+    fun loadBookmarksPSCreatedAt() = bookmarksDao.getAllPSCreatedAt()
+
+    fun loadBookmarksPSExpiredAtDesc() = bookmarksDao.getAllPSExpiredAtDesc()
+
+    fun loadBookmarksPSExpiredAt() = bookmarksDao.getAllPSExpiredAt()
 
     suspend fun getBookmarkByVideoId(id: String) = withContext(Dispatchers.IO) {
         bookmarksDao.getByVideoId(id)

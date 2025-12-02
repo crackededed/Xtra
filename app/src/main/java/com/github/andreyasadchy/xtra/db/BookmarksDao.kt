@@ -5,6 +5,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Update
 import com.github.andreyasadchy.xtra.model.ui.Bookmark
 import kotlinx.coroutines.flow.Flow
@@ -22,13 +23,49 @@ interface BookmarksDao {
     fun getAll(): List<Bookmark>
 
     @Query("SELECT * FROM bookmarks ORDER BY id DESC")
-    fun getAllDesc(): List<Bookmark>
+    fun getAllPagingSourceDesc(): PagingSource<Int, Bookmark>
 
     @Query("SELECT * FROM bookmarks ORDER BY createdAt DESC")
-    fun getAllCreatedAtDesc(): List<Bookmark>
+    fun getAllPSCreatedAtDesc(): PagingSource<Int,Bookmark>
 
     @Query("SELECT * FROM bookmarks ORDER BY createdAt")
-    fun getAllCreatedAt(): List<Bookmark>
+    fun getAllPSCreatedAt(): PagingSource<Int, Bookmark>
+
+    @RewriteQueriesToDropUnusedColumns
+    @Query("""
+        SELECT *,
+        (
+            (
+                strftime('%s', createdAt) +
+                CASE 
+                    WHEN lower(userType) = '' OR lower(userType) = 'affiliate'
+                        THEN 14 * 24 * 60 * 60
+                    ELSE 60 * 24 * 60 * 60
+                END
+            )
+            - strftime('%s', 'now')
+        ) AS expiratedAt
+        FROM bookmarks ORDER BY expiratedAt DESC
+        """)
+    fun getAllPSExpiredAtDesc(): PagingSource<Int, Bookmark>
+
+    @RewriteQueriesToDropUnusedColumns
+    @Query("""
+        SELECT *,
+        (
+            (
+                strftime('%s', createdAt) +
+                CASE 
+                    WHEN lower(userType) = '' OR lower(userType) = 'affiliate'
+                        THEN 14 * 24 * 60 * 60
+                    ELSE 60 * 24 * 60 * 60
+                END
+            )
+            - strftime('%s', 'now')
+        ) AS expiratedAt
+        FROM bookmarks ORDER BY expiratedAt
+        """)
+    fun getAllPSExpiredAt(): PagingSource<Int,Bookmark>
 
     @Query("SELECT * FROM bookmarks WHERE videoId = :id")
     fun getByVideoId(id: String): Bookmark?

@@ -4,7 +4,6 @@ import android.net.http.HttpEngine
 import android.net.http.UrlResponseInfo
 import android.os.Build
 import android.os.ext.SdkExtensions
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -21,14 +20,18 @@ import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.repository.SortChannelRepository
 import com.github.andreyasadchy.xtra.repository.VodBookmarkIgnoredUsersRepository
-import com.github.andreyasadchy.xtra.repository.datasource.BookmarksDataSource
-import com.github.andreyasadchy.xtra.ui.common.BookmarksSortDialog
+import com.github.andreyasadchy.xtra.ui.common.BookmarksSortDialog.Companion.SORT_CREATED_AT
+import com.github.andreyasadchy.xtra.ui.common.BookmarksSortDialog.Companion.SORT_CREATED_AT_ASC
+import com.github.andreyasadchy.xtra.ui.common.BookmarksSortDialog.Companion.SORT_EXPIRED_AT_ASC
+import com.github.andreyasadchy.xtra.ui.common.BookmarksSortDialog.Companion.SORT_SAVED_AT
+import com.github.andreyasadchy.xtra.ui.common.BookmarksSortDialog.Companion.SORT_SAVED_AT_ASC
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.HttpEngineUtils
 import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
 import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
@@ -68,13 +71,21 @@ class BookmarksViewModel @Inject internal constructor(
     val sortText = MutableStateFlow<CharSequence?>(null)
 
     val sort: String
-        get() = filter.value?.sort ?: BookmarksSortDialog.SORT_EXPIRED_AT_ASC
+        get() = filter.value?.sort ?: SORT_EXPIRED_AT_ASC
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val flow = filter.flatMapLatest { filter ->
         Pager(
             PagingConfig(pageSize = 30, prefetchDistance = 3, initialLoadSize = 30),
         ) {
-            BookmarksDataSource(bookmarksRepository, sort)
+            when (sort) {
+                SORT_EXPIRED_AT_ASC -> bookmarksRepository.loadBookmarksPSExpiredAt()
+                SORT_CREATED_AT ->bookmarksRepository.loadBookmarksPSCreatedAtDesc()
+                SORT_CREATED_AT_ASC -> bookmarksRepository.loadBookmarksPSCreatedAt()
+                SORT_SAVED_AT -> bookmarksRepository.loadBookmarksPagingSourceDesc()
+                SORT_SAVED_AT_ASC -> bookmarksRepository.loadBookmarksPagingSource()
+                else -> bookmarksRepository.loadBookmarksPSExpiredAtDesc()
+            }
         }.flow
     }.cachedIn(viewModelScope)
 
