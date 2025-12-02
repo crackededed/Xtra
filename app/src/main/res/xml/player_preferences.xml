@@ -46,6 +46,16 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <ListPreference
+        android:defaultValue="no_limit"
+        android:entries="@array/limitQualityMobileDataEntries"
+        android:entryValues="@array/limitQualityMobileDataValues"
+        android:key="limit_quality_mobile_data"
+        android:summary="%s"
+        android:title="@string/limit_quality_mobile_data"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="player_rounded_corner_padding"

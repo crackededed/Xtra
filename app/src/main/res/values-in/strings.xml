@@ -726,4 +726,5 @@
     <string name="members">%s members</string>
     <string name="owner">Owner: %s</string>
     <string name="original_name">Original name: %s</string>
+    <string name="limit_quality_mobile_data">Limit player quality on mobile data</string>
 </resources>

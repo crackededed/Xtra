@@ -730,4 +730,5 @@
     <string name="members">%s members</string>
     <string name="owner">Owner: %s</string>
     <string name="original_name">Original name: %s</string>
+    <string name="limit_quality_mobile_data">Limitar calidad del reproductor con datos móviles</string>
 </resources>
