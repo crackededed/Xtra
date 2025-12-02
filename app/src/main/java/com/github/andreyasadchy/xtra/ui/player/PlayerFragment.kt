@@ -739,21 +739,21 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                             toggleChatInput.visible()
                             toggleChatInput.setOnClickListener { toggleChatBar() }
                         }
-                        binding.slidingLayout.viewTreeObserver.addOnGlobalLayoutListener {
-                            if (binding.slidingLayout.isKeyboardShown) {
+                        slidingLayout.viewTreeObserver.addOnGlobalLayoutListener {
+                            if (slidingLayout.isKeyboardShown) {
                                 if (!isKeyboardShown) {
                                     isKeyboardShown = true
                                     if (!isPortrait) {
-                                        binding.chatLayout.updateLayoutParams { width = (binding.slidingLayout.width / 1.8f).toInt() }
+                                        chatLayout.updateLayoutParams { width = (slidingLayout.width / 1.8f).toInt() }
                                         showStatusBar()
                                     }
                                 }
                             } else {
                                 if (isKeyboardShown) {
                                     isKeyboardShown = false
-                                    binding.chatLayout.clearFocus()
+                                    chatLayout.clearFocus()
                                     if (!isPortrait) {
-                                        binding.chatLayout.updateLayoutParams { width = chatWidthLandscape }
+                                        chatLayout.updateLayoutParams { width = chatWidthLandscape }
                                         if (isMaximized) {
                                             hideStatusBar()
                                         }
