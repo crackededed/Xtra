@@ -248,7 +248,7 @@ class GraphQLRepository @Inject constructor(
         sendQuery(networkLibrary, headers, query)
     }
 
-    suspend fun loadQueryGame(networkLibrary: String?, headers: Map<String, String>, id: String?, slug: String?, name: String?): ApolloResponse<GameQuery.Data> = withContext(Dispatchers.IO) {
+    suspend fun loadQueryGame(networkLibrary: String?, headers: Map<String, String>, id: String? = null, slug: String? = null, name: String? = null): ApolloResponse<GameQuery.Data> = withContext(Dispatchers.IO) {
         val query = GameQuery(
             id = if (!id.isNullOrBlank()) Optional.Present(id) else Optional.Absent,
             slug = if (!slug.isNullOrBlank()) Optional.Present(slug) else Optional.Absent,

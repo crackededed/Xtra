@@ -58,8 +58,8 @@ import com.github.andreyasadchy.xtra.databinding.ActivityMainBinding
 import com.github.andreyasadchy.xtra.model.ui.Clip
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.model.ui.Stream
-import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.model.ui.Tag
+import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
@@ -85,6 +85,7 @@ import com.github.andreyasadchy.xtra.util.toast
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.google.android.material.color.MaterialColors
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Timer
@@ -141,6 +142,8 @@ class MainActivity : AppCompatActivity() {
     var settingsResultLauncher: ActivityResultLauncher<Intent>? = null
     var loginResultLauncher: ActivityResultLauncher<Intent>? = null
     var logoutResultLauncher: ActivityResultLauncher<Intent>? = null
+
+    private var deeplinkJob: Job? = null
 
     //Lifecycle methods
 
@@ -410,7 +413,8 @@ class MainActivity : AppCompatActivity() {
                                 TwitchApiHelper.getHelixHeaders(this),
                                 prefs.getBoolean(C.ENABLE_INTEGRITY, false),
                             )
-                            lifecycleScope.launch {
+                            deeplinkJob?.cancel()
+                            deeplinkJob = lifecycleScope.launch {
                                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                                     viewModel.video.collectLatest { video ->
                                         if (video != null) {
@@ -474,22 +478,46 @@ class MainActivity : AppCompatActivity() {
                     }
                     url.contains("twitch.tv/directory/category/") -> {
                         val slug = url.substringAfter("twitch.tv/directory/category/").takeIf { it.isNotBlank() }?.let { it.substringBefore("?", it.substringBefore("/")) }
-                        val tl = url.substringAfter("?tl=").takeIf { it.isNotBlank() }?.substringBefore("&")
+                        val tl = url.substringAfter("?tl=", "").takeIf { it.isNotBlank() }?.substringBefore("&")
+                        viewModel.game.value = null
                         if (!slug.isNullOrBlank()) {
-                            playerFragment?.minimize()
-                            navController.navigate(
-                                if (prefs.getBoolean(C.UI_GAMEPAGER, true)) {
-                                    GamePagerFragmentDirections.actionGlobalGamePagerFragment(
-                                        gameSlug = slug,
-                                        tags = tl?.let { arrayOf( Uri.decode(it)) }
-                                    )
-                                } else {
-                                    GameMediaFragmentDirections.actionGlobalGameMediaFragment(
-                                        gameSlug = slug,
-                                        tags = tl?.let { arrayOf(Uri.decode(it)) }
-                                    )
-                                }
+                            viewModel.loadGame(
+                                slug,
+                                prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                TwitchApiHelper.getGQLHeaders(this),
+                                TwitchApiHelper.getHelixHeaders(this),
+                                prefs.getBoolean(C.ENABLE_INTEGRITY, false),
                             )
+                            deeplinkJob?.cancel()
+                            deeplinkJob = lifecycleScope.launch {
+                                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                                    viewModel.game.collectLatest { game ->
+                                        if (game != null) {
+                                            if (!game.gameId.isNullOrBlank() || !game.gameName.isNullOrBlank()) {
+                                                playerFragment?.minimize()
+                                                navController.navigate(
+                                                    if (prefs.getBoolean(C.UI_GAMEPAGER, true)) {
+                                                        GamePagerFragmentDirections.actionGlobalGamePagerFragment(
+                                                            gameId = game.gameId,
+                                                            gameName = game.gameName,
+                                                            gameSlug = game.gameSlug,
+                                                            tags = tl?.let { arrayOf(Uri.decode(it)) }
+                                                        )
+                                                    } else {
+                                                        GameMediaFragmentDirections.actionGlobalGameMediaFragment(
+                                                            gameId = game.gameId,
+                                                            gameName = game.gameName,
+                                                            gameSlug = game.gameSlug,
+                                                            tags = tl?.let { arrayOf(Uri.decode(it)) }
+                                                        )
+                                                    }
+                                                )
+                                            }
+                                            viewModel.game.value = null
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     url.contains("twitch.tv/directory/game/") -> {
@@ -530,12 +558,22 @@ class MainActivity : AppCompatActivity() {
                             lifecycleScope.launch {
                                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                                     viewModel.tag.collectLatest { tag ->
-                                        playerFragment?.minimize()
-                                        navController.navigate(
-                                            GamesFragmentDirections.actionGlobalGamesFragment(
-                                                tags = tag?.let { arrayOf(Tag(id = it.id, name = it.name)) }
-                                            )
-                                        )
+                                        if (tag != null) {
+                                            if (tag.id != null && tag.name != null) {
+                                                playerFragment?.minimize()
+                                                navController.navigate(
+                                                    GamesFragmentDirections.actionGlobalGamesFragment(
+                                                        tags = arrayOf(
+                                                            Tag(
+                                                                id = tag.id,
+                                                                name = tag.name
+                                                            )
+                                                        )
+                                                    )
+                                                )
+                                            }
+                                            viewModel.tag.value = null
+                                        }
                                     }
                                 }
                             }

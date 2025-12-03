@@ -21,6 +21,7 @@ import androidx.work.workDataOf
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.model.VideoPosition
 import com.github.andreyasadchy.xtra.model.ui.Clip
+import com.github.andreyasadchy.xtra.model.ui.Game
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.model.ui.User
@@ -93,6 +94,7 @@ class MainViewModel @Inject constructor(
     val video = MutableStateFlow<Video?>(null)
     val clip = MutableStateFlow<Clip?>(null)
     val user = MutableStateFlow<User?>(null)
+    val game = MutableStateFlow<Game?>(null)
     val tag = MutableStateFlow<Tag?>(null)
 
     val updateUrl = MutableSharedFlow<String?>()
@@ -274,6 +276,47 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun loadGame(gameSlug: String, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
+        if (game.value == null) {
+            viewModelScope.launch {
+                game.value = try {
+                    val response = graphQLRepository.loadQueryGame(networkLibrary, gqlHeaders, slug = gameSlug)
+                    if (enableIntegrity && integrity.value == null) {
+                        response.errors?.find { it.message == "failed integrity check" }?.let {
+                            integrity.value = "refresh"
+                            return@launch
+                        }
+                    }
+                    response.data!!.game?.let {
+                        Game(
+                            gameId = it.id,
+                            gameName = it.displayName,
+                            gameSlug = it.slug
+                        )
+                    }
+                } catch (e: Exception) {
+                    if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                        try {
+                            helixRepository.getGames(
+                                networkLibrary = networkLibrary,
+                                headers = helixHeaders,
+                                names = listOf(gameSlug),
+                            ).data.firstOrNull()?.let {
+                                Game(
+                                    gameId = it.id,
+                                    gameName = it.name,
+                                    boxArtUrl = it.boxArtUrl
+                                )
+                            }
+                        } catch (e: Exception) {
+                            null
+                        }
+                    } else null
+                }
+
+            }
+        }
+    }
     fun loadTag(tagId: String, networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
         if (tag.value == null) {
             viewModelScope.launch {

@@ -361,7 +361,6 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
 
     private fun updateGameLayout(game: Game) {
         with(binding) {
-            val activity = requireActivity() as MainActivity
             val context = requireContext()
             if (game.boxArt != null) {
                 gameImage.visible()
