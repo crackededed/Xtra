@@ -24,7 +24,6 @@ import com.github.andreyasadchy.xtra.SearchGamesQuery
 import com.github.andreyasadchy.xtra.SearchStreamsQuery
 import com.github.andreyasadchy.xtra.SearchVideosQuery
 import com.github.andreyasadchy.xtra.StreamPlaybackAccessTokenQuery
-import com.github.andreyasadchy.xtra.TagQuery
 import com.github.andreyasadchy.xtra.TeamQuery
 import com.github.andreyasadchy.xtra.TopGamesQuery
 import com.github.andreyasadchy.xtra.TopStreamsQuery
@@ -83,7 +82,6 @@ import com.github.andreyasadchy.xtra.model.gql.search.SearchStreamTagsResponse
 import com.github.andreyasadchy.xtra.model.gql.search.SearchVideosResponse
 import com.github.andreyasadchy.xtra.model.gql.stream.StreamsResponse
 import com.github.andreyasadchy.xtra.model.gql.stream.ViewerCountResponse
-import com.github.andreyasadchy.xtra.model.gql.tag.TagHandlerTagResponse
 import com.github.andreyasadchy.xtra.model.gql.team.TeamLandingMemberListResponse
 import com.github.andreyasadchy.xtra.model.gql.team.TeamsLandingBodyResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoGamesResponse
@@ -1734,27 +1732,5 @@ class GraphQLRepository @Inject constructor(
         }.toString()
 
         json.decodeFromString<TeamLandingMemberListResponse>(sendPersistedQuery(networkLibrary, headers, body))
-    }
-
-    suspend fun loadQueryTag(networkLibrary: String?, headers: Map<String, String>, id: String): ApolloResponse<TagQuery.Data> = withContext(Dispatchers.IO) {
-        val query = TagQuery(
-            id = id
-        )
-        sendQuery(networkLibrary, headers, query)
-    }
-    suspend fun loadTagHandlerTag(networkLibrary: String?, headers: Map<String, String>, id: String): TagHandlerTagResponse = withContext(Dispatchers.IO) {
-        val body = buildJsonObject {
-            putJsonObject("extensions") {
-                putJsonObject("persistedQuery") {
-                    put("sha256Hash", "bb28b8b7b08b55ce39d25ba8bfb0aa6c9fad53b8a89f8b4377f59db405c3fb26")
-                    put("version", 1)
-                }
-            }
-            put("operationName", "TagHandlerTag")
-            putJsonObject("variables") {
-                put("id", id)
-            }
-        }.toString()
-        json.decodeFromString<TagHandlerTagResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 }

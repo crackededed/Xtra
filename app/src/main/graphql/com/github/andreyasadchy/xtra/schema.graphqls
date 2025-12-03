@@ -10,14 +10,13 @@ type Query {
     searchUsers(userQuery: String!, first: Int, after: Cursor): SearchUserConnection
     streamPlaybackAccessToken(channelName: String!, params: PlaybackAccessTokenParams!): PlaybackAccessToken
     streams(first: Int, after: Cursor, options: StreamOptions): StreamConnection
+    team(name: String!): Team
     user(id: ID, login: String, lookupType: UserLookupType): User
     userResultByID(id: ID!): UserResult
     userResultByLogin(login: String!): UserResult
     users(ids: [ID!], logins: [String!]): [User]
     video(id: ID): Video
     videoPlaybackAccessToken(id: ID!, params: PlaybackAccessTokenParams!): PlaybackAccessToken
-    contentTag(id: ID!): Tag
-    team(name: String!): Team
 }
 
 type Badge {
@@ -33,6 +32,11 @@ type Broadcast {
 
 type BroadcastSettings {
     title: String
+}
+
+type Channel {
+    id: ID
+    socialMedias: [SocialMedia!]
 }
 
 type ChannelNotificationSettings {
@@ -262,6 +266,13 @@ type SearchUserEdge {
     node: User
 }
 
+type SocialMedia {
+    id: ID
+    name: String,
+    title: String
+    url: String
+}
+
 type Stream {
     broadcaster: User
     createdAt: Time
@@ -288,6 +299,17 @@ type Tag {
     id: ID
     localizedName: String
     scope: TagScope
+}
+
+type Team {
+    id: ID
+    backgroundImageURL: String
+    bannerURL: String
+    description: String
+    displayName: String
+    logoURL: String
+    name: String
+    owner: User
 }
 
 type User {
@@ -359,29 +381,6 @@ type VideoConnection {
 type VideoEdge {
     cursor: Cursor
     node: Video
-}
-
-type Team {
-    id: ID
-    backgroundImageURL: String
-    bannerURL: String
-    description: String
-    displayName: String
-    logoURL: String
-    name: String
-    owner: User
-}
-
-type Channel {
-    id: ID
-    socialMedias: [SocialMedia!]
-}
-
-type SocialMedia {
-    id: ID
-    name: String,
-    title: String
-    url: String
 }
 
 input GameClipsInput {
