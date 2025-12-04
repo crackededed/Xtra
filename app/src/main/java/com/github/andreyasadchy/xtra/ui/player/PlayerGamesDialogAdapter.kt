@@ -44,6 +44,13 @@ class PlayerGamesDialogAdapter(
                 val context = fragment.requireContext()
                 root.setOnClickListener {
                     item?.vodPosition?.let { position ->
+                        if (item.gameId != null && item.gameSlug != null && item.gameName != null) {
+                            (fragment.parentFragment as? PlayerFragment)?.updateCategoryInfo(
+                                gameId = item.gameId,
+                                gameSlug = item.gameSlug,
+                                gameName = item.gameName
+                            )
+                        }
                         (fragment.parentFragment as? PlayerFragment)?.seek(position.toLong())
                     }
                     (fragment as? PlayerGamesDialog)?.dismiss()
