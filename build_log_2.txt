@@ -1,0 +1,699 @@
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:dataBindingMergeDependencyArtifactsDebug UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:extractDebugSupportedLocales UP-TO-DATE
+> Task :app:generateDebugLocaleConfig UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:dataBindingGenBaseClassesDebug UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateSafeArgsDebug UP-TO-DATE
+> Task :app:checkApolloVersions UP-TO-DATE
+> Task :app:generateServiceApolloOptions UP-TO-DATE
+> Task :app:generateServiceApolloSources UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+
+> Task :app:compileDebugKotlin
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/chat/ChatFragment.kt:1313:46 Unresolved reference 'minimize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/main/MainActivity.kt:475:45 Unresolved reference 'minimize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/main/MainActivity.kt:492:45 Unresolved reference 'minimize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/main/MainActivity.kt:521:65 Unresolved reference 'minimize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/main/MainActivity.kt:583:51 Unresolved reference 'maximize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/main/MainActivity.kt:660:33 Unresolved reference 'maximize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/main/MainActivity.kt:674:36 Unresolved reference 'minimize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/main/MainActivity.kt:690:40 Unresolved reference 'minimize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/CustomPlaybackService.kt:138:40 Unresolved reference 'notification_playback_channel_name'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/CustomPlaybackService.kt:141:54 Unresolved reference 'notification_playback_channel_description'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:63:1 Class 'ExoPlayerFragment' is not abstract and does not implement abstract members:
+fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: Int?): Unit
+fun onIntegrityDialogCallback(callback: String?): Unit
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:90:50 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:97:46 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:110:50 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:117:46 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:128:50 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:170:69 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:171:61 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:184:146 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:185:82 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:217:41 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:226:57 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:234:58 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:235:45 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:237:54 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:238:45 Unresolved reference 'CHAT_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:255:62 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:263:46 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:313:86 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:329:74 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:345:33 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:376:33 Unresolved reference 'VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:420:29 Unresolved reference 'minimize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:516:71 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:517:72 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:518:76 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:536:54 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:557:71 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:558:72 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:559:76 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:576:33 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:598:71 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:599:72 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:600:76 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:616:33 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:625:51 Unresolved reference 'KEY_OFFLINE_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:638:67 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:639:68 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:640:72 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:795:25 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:810:25 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:820:69 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:828:25 Unresolved reference 'CHAT_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:836:65 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:901:17 Unresolved reference 'savePosition'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:906:42 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:909:41 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:920:73 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:944:47 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:945:50 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:946:55 Unresolved reference 'KEY_UPLOAD_DATE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:947:53 Unresolved reference 'KEY_DURATION'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:948:54 Unresolved reference 'KEY_VIDEO_TYPE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:949:63 Unresolved reference 'KEY_VIDEO_ANIMATED_PREVIEW'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:950:54 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:951:57 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:952:56 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:953:56 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:954:54 Unresolved reference 'KEY_THUMBNAIL'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:955:51 Unresolved reference 'KEY_GAME_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:956:53 Unresolved reference 'KEY_GAME_SLUG'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:957:53 Unresolved reference 'KEY_GAME_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:967:9 Unresolved reference 'savePosition'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:983:17 Unresolved reference 'savePosition'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:989:70 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:992:45 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:1003:77 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:1030:30 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:1039:26 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:1047:29 Unresolved reference 'getStreamArguments'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:1053:29 Unresolved reference 'getVideoArguments'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:1059:29 Unresolved reference 'getClipArguments'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/ExoPlayerFragment.kt:1065:29 Unresolved reference 'getOfflineVideoArguments'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:54:1 Class 'Media3Fragment' is not abstract and does not implement abstract members:
+fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: Int?): Unit
+fun onIntegrityDialogCallback(callback: String?): Unit
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:84:42 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:91:38 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:104:42 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:111:38 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:122:42 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:164:61 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:165:53 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:178:138 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:179:74 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:202:45 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:211:61 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:219:62 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:220:49 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:222:58 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:223:49 Unresolved reference 'CHAT_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:240:66 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:251:38 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:311:90 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:327:78 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:346:25 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:386:25 Unresolved reference 'VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:448:33 Unresolved reference 'minimize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:493:75 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:494:82 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:495:82 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:511:82 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:512:79 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:513:86 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:514:86 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:524:33 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:537:79 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:538:86 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:539:86 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:549:33 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:562:79 Unresolved reference 'KEY_OFFLINE_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:564:79 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:565:86 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:566:86 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:737:25 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:752:25 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:768:69 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:776:25 Unresolved reference 'CHAT_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:790:65 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:855:17 Unresolved reference 'savePosition'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:866:42 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:869:41 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:880:73 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:915:59 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:916:62 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:917:67 Unresolved reference 'KEY_UPLOAD_DATE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:918:65 Unresolved reference 'KEY_DURATION'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:919:66 Unresolved reference 'KEY_VIDEO_TYPE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:920:75 Unresolved reference 'KEY_VIDEO_ANIMATED_PREVIEW'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:921:66 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:922:69 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:923:68 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:924:68 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:925:66 Unresolved reference 'KEY_THUMBNAIL'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:926:63 Unresolved reference 'KEY_GAME_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:927:65 Unresolved reference 'KEY_GAME_SLUG'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:928:65 Unresolved reference 'KEY_GAME_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:941:9 Unresolved reference 'savePosition'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:954:17 Unresolved reference 'savePosition'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:966:70 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:969:45 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:980:77 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:1012:30 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:1021:26 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:1029:29 Unresolved reference 'getStreamArguments'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:1035:29 Unresolved reference 'getVideoArguments'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:1041:29 Unresolved reference 'getClipArguments'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/Media3Fragment.kt:1047:29 Unresolved reference 'getOfflineVideoArguments'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:148:13 Unresolved reference 'minimize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:177:50 Unresolved reference 'KEY_TYPE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:178:26 Unresolved reference 'OFFLINE_VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:200:9 Cannot infer type for type parameter 'R'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:322:29 Unresolved reference 'cycleChatMode'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:392:29 Unresolved reference 'minimize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:423:33 Unresolved reference 'maximize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:625:65 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:626:64 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:642:74 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:643:77 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:644:76 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:647:25 Unresolved reference 'minimize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:650:62 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:655:61 Unresolved reference 'KEY_GAME_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:663:75 Unresolved reference 'KEY_GAME_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:664:77 Unresolved reference 'KEY_GAME_SLUG'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:669:75 Unresolved reference 'KEY_GAME_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:670:77 Unresolved reference 'KEY_GAME_SLUG'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:675:25 Unresolved reference 'minimize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:680:51 Unresolved reference 'minimize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:693:50 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:696:43 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:725:34 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:810:54 Unresolved reference 'KEY_STARTED_AT'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:822:54 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:823:54 Unresolved reference 'KEY_GAME_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:824:54 Unresolved reference 'KEY_GAME_SLUG'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:825:54 Unresolved reference 'KEY_GAME_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:827:65 Unresolved reference 'KEY_VIEWER_COUNT'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:834:34 Unresolved reference 'VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:867:55 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:883:34 Unresolved reference 'CLIP'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:923:45 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:945:64 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:950:72 Unresolved reference 'KEY_VOD_OFFSET'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:961:82 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:962:85 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:963:84 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:964:88 Unresolved reference 'KEY_PROFILE_IMAGE_URL'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:965:91 Unresolved reference 'KEY_VIDEO_ANIMATED_PREVIEW'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:979:34 Unresolved reference 'OFFLINE_VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:984:76 Unresolved reference 'KEY_URL'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:985:59 Cannot infer type for type parameter 'K'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:985:59 Cannot infer type for type parameter 'V'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:985:59 Inapplicable candidate(s): fun <K, V> mapOf(vararg pairs: Pair<K, V>): Map<K, V>
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:987:41 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:987:60 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:987:60 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1014:55 Unresolved reference 'showDownloadDialog'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1028:78 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1039:70 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1040:70 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1041:70 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1044:70 Unresolved reference 'KEY_STARTED_AT'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1092:32 Unresolved reference 'createChatFragment'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1094:97 Argument type mismatch: actual type is 'Any', but 'Fragment' was expected.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1098:13 Unresolved reference 'setupFloatingChatInteraction'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1262:25 Unresolved reference 'onSleepTimerChanged'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1276:21 Unresolved reference 'onSleepTimerChanged'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1291:17 Unresolved reference 'REQUEST_CODE_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1305:21 Unresolved reference 'REQUEST_CODE_SPEED'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1319:50 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1325:38 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1332:38 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1344:38 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1438:58 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1494:21 Unresolved reference 'minimize'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1504:34 Unresolved reference 'CHAT_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1510:38 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1522:38 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1531:52 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1532:50 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1533:55 Unresolved reference 'KEY_UPLOAD_DATE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1534:53 Unresolved reference 'KEY_DURATION'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1535:49 Unresolved reference 'KEY_VIDEO_TYPE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1536:63 Unresolved reference 'KEY_VIDEO_ANIMATED_PREVIEW'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1537:54 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1538:57 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1539:56 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1540:56 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1541:54 Unresolved reference 'KEY_THUMBNAIL'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1542:51 Unresolved reference 'KEY_GAME_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1543:53 Unresolved reference 'KEY_GAME_SLUG'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1544:53 Unresolved reference 'KEY_GAME_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1554:21 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1554:82 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1555:21 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1555:88 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1556:21 Unresolved reference 'CHAT_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1556:87 Unresolved reference 'CHAT_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1560:13 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1560:74 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1561:70 Unresolved reference 'AUTO_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1562:13 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1562:80 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1563:13 Unresolved reference 'CHAT_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1563:79 Unresolved reference 'CHAT_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1572:62 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1572:90 Unresolved reference 'CHAT_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1766:27 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1766:60 Unresolved reference 'CHAT_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1783:33 Unresolved reference 'REQUEST_CODE_AUDIO_ONLY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1795:37 Unresolved reference 'REQUEST_CODE_PLAY_PAUSE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1807:37 Unresolved reference 'REQUEST_CODE_PLAY_PAUSE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1832:42 Unresolved reference 'KEY_TYPE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1832:55 Unresolved reference 'OFFLINE_VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1835:46 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1836:46 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1842:30 Unresolved reference 'VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1843:60 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1859:13 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1863:62 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1864:65 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1865:61 Unresolved reference 'KEY_VIEWER_COUNT'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1877:13 Unresolved reference 'VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1879:59 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1886:55 Unresolved reference 'KEY_IGNORE_SAVED_POSITION'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1887:144 Unresolved reference 'KEY_OFFSET'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1888:55 Unresolved reference 'KEY_IGNORE_SAVED_POSITION'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1889:52 Unresolved reference 'KEY_OFFSET'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1895:13 Unresolved reference 'CLIP'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1899:55 Unresolved reference 'KEY_CLIP_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1903:13 Unresolved reference 'OFFLINE_VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1905:81 Unresolved reference 'KEY_OFFLINE_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1916:38 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1944:62 Unresolved reference 'KEY_VIDEO_ANIMATED_PREVIEW'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1945:42 Unresolved reference 'KEY_VIDEO_ANIMATED_PREVIEW'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1946:114 Unresolved reference 'KEY_VIDEO_TYPE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1955:25 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1955:56 Unresolved reference 'AUDIO_ONLY_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1979:56 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1993:17 Unresolved reference 'isInPictureInPictureMode'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:1997:38 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2024:5 Modifier 'override' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2029:5 Modifier 'protected' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2031:13 Unresolved reference 'VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2033:50 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2040:13 Unresolved reference 'OFFLINE_VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2043:86 Unresolved reference 'KEY_OFFLINE_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2053:30 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2121:30 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2164:17 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2167:59 Unresolved reference 'KEY_STREAM_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2168:62 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2169:66 Unresolved reference 'KEY_STARTED_AT'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2170:66 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2171:69 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2172:68 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2173:68 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2174:66 Unresolved reference 'KEY_THUMBNAIL'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2175:63 Unresolved reference 'KEY_GAME_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2176:65 Unresolved reference 'KEY_GAME_SLUG'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2177:65 Unresolved reference 'KEY_GAME_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2183:17 Unresolved reference 'VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2186:17 Unresolved reference 'CLIP'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2189:63 Unresolved reference 'KEY_CLIP_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2190:62 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2191:67 Unresolved reference 'KEY_UPLOAD_DATE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2192:65 Unresolved reference 'KEY_DURATION'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2193:64 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2194:63 Unresolved reference 'KEY_VOD_OFFSET'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2195:66 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2196:69 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2197:68 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2198:68 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2199:66 Unresolved reference 'KEY_THUMBNAIL'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2200:63 Unresolved reference 'KEY_GAME_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2201:65 Unresolved reference 'KEY_GAME_SLUG'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2202:65 Unresolved reference 'KEY_GAME_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2240:5 Modifier 'override' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2242:13 Unresolved reference 'REQUEST_CODE_QUALITY'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2247:13 Unresolved reference 'REQUEST_CODE_SPEED'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2259:5 Modifier 'override' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2265:58 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2284:62 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2285:62 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2293:72 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2304:62 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2305:62 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2324:67 Unresolved reference 'KEY_CLIP_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2329:62 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2330:62 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2339:58 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2340:58 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2341:58 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2344:58 Unresolved reference 'KEY_STARTED_AT'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2351:58 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2363:5 Modifier 'protected' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2364:16 Inapplicable candidate(s): fun bundleOf(vararg pairs: Pair<String, Any?>): Bundle
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2365:13 Unresolved reference 'KEY_TYPE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2365:22 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2365:22 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2365:25 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2366:13 Unresolved reference 'KEY_STREAM_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2366:27 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2366:27 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2367:13 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2367:23 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2367:23 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2368:13 Unresolved reference 'KEY_VIEWER_COUNT'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2368:30 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2368:30 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2369:13 Unresolved reference 'KEY_STARTED_AT'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2369:28 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2369:28 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2370:13 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2370:28 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2370:28 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2371:13 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2371:31 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2371:31 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2372:13 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2372:30 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2372:30 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2373:13 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2373:30 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2373:30 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2374:13 Unresolved reference 'KEY_THUMBNAIL'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2374:27 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2374:27 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2375:13 Unresolved reference 'KEY_GAME_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2375:25 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2375:25 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2376:13 Unresolved reference 'KEY_GAME_SLUG'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2376:27 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2376:27 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2377:13 Unresolved reference 'KEY_GAME_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2377:27 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2377:27 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2381:5 Modifier 'protected' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2382:16 Inapplicable candidate(s): fun bundleOf(vararg pairs: Pair<String, Any?>): Bundle
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2383:13 Unresolved reference 'KEY_TYPE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2383:22 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2383:22 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2383:25 Unresolved reference 'VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2384:13 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2384:26 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2384:26 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2385:13 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2385:23 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2385:23 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2386:13 Unresolved reference 'KEY_UPLOAD_DATE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2386:29 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2386:29 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2387:13 Unresolved reference 'KEY_DURATION'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2387:26 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2387:26 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2388:13 Unresolved reference 'KEY_OFFSET'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2388:24 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2388:24 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2389:13 Unresolved reference 'KEY_IGNORE_SAVED_POSITION'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2389:39 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2389:39 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2390:13 Unresolved reference 'KEY_VIDEO_TYPE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2390:28 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2390:28 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2391:13 Unresolved reference 'KEY_VIDEO_ANIMATED_PREVIEW'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2391:40 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2391:40 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2392:13 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2392:28 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2392:28 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2393:13 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2393:31 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2393:31 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2394:13 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2394:30 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2394:30 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2395:13 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2395:30 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2395:30 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2396:13 Unresolved reference 'KEY_THUMBNAIL'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2396:27 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2396:27 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2397:13 Unresolved reference 'KEY_GAME_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2397:25 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2397:25 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2398:13 Unresolved reference 'KEY_GAME_SLUG'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2398:27 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2398:27 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2399:13 Unresolved reference 'KEY_GAME_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2399:27 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2399:27 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2403:5 Modifier 'protected' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2404:16 Inapplicable candidate(s): fun bundleOf(vararg pairs: Pair<String, Any?>): Bundle
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2405:13 Unresolved reference 'KEY_TYPE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2405:22 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2405:22 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2405:25 Unresolved reference 'CLIP'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2406:13 Unresolved reference 'KEY_CLIP_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2406:25 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2406:25 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2407:13 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2407:23 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2407:23 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2408:13 Unresolved reference 'KEY_UPLOAD_DATE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2408:29 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2408:29 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2409:13 Unresolved reference 'KEY_DURATION'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2409:26 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2409:26 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2410:13 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2410:26 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2410:26 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2411:13 Unresolved reference 'KEY_VIDEO_ANIMATED_PREVIEW'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2411:40 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2411:40 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2412:13 Unresolved reference 'KEY_VOD_OFFSET'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2412:28 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2412:28 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2413:13 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2413:28 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2413:28 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2414:13 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2414:31 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2414:31 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2415:13 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2415:30 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2415:30 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2416:13 Unresolved reference 'KEY_PROFILE_IMAGE_URL'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2416:35 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2416:35 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2417:13 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2417:30 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2417:30 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2418:13 Unresolved reference 'KEY_THUMBNAIL'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2418:27 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2418:27 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2419:13 Unresolved reference 'KEY_GAME_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2419:25 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2419:25 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2420:13 Unresolved reference 'KEY_GAME_SLUG'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2420:27 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2420:27 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2421:13 Unresolved reference 'KEY_GAME_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2421:27 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2421:27 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2425:5 Modifier 'protected' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2426:16 Inapplicable candidate(s): fun bundleOf(vararg pairs: Pair<String, Any?>): Bundle
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2427:13 Unresolved reference 'KEY_TYPE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2427:22 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2427:22 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2427:25 Unresolved reference 'OFFLINE_VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2428:13 Unresolved reference 'KEY_OFFLINE_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2428:34 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2428:34 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2429:13 Unresolved reference 'KEY_TITLE'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2429:23 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2429:23 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2430:13 Unresolved reference 'KEY_URL'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2430:21 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2430:21 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2431:13 Unresolved reference 'KEY_CHAT_URL'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2431:26 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2431:26 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2432:13 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2432:28 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2432:28 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2433:13 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2433:31 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2433:31 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2434:13 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2434:30 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2434:30 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2435:13 Unresolved reference 'KEY_CHANNEL_LOGO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2435:30 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2435:30 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2436:13 Unresolved reference 'KEY_GAME_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2436:25 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2436:25 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2437:13 Unresolved reference 'KEY_GAME_SLUG'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2437:27 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2437:27 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2438:13 Unresolved reference 'KEY_GAME_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2438:27 Cannot infer type for type parameter 'A'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2438:27 Cannot infer type for type parameter 'B'. Specify it explicitly.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2442:5 Modifier 'override' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2447:5 Unresolved reference 'companion'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2447:14 Syntax error: Unexpected tokens (use ';' to separate expressions on the same line).
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2448:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2449:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2450:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2452:17 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2453:17 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2454:17 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2455:17 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2457:18 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2458:18 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2459:18 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2460:18 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2462:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2463:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2464:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2465:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2466:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2467:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2468:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2469:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2470:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2471:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2472:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2473:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2474:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2475:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2476:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2477:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2478:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2479:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2480:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2481:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2482:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2483:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2484:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2485:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2486:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2487:19 Const 'val' is only allowed on top level, in named objects, or in companion objects.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2490:5 Modifier 'private' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2492:13 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2493:46 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2494:46 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2495:46 Unresolved reference 'KEY_CHANNEL_NAME'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2496:46 Unresolved reference 'KEY_STREAM_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2498:13 Unresolved reference 'VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2499:46 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2500:46 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2501:46 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2504:13 Unresolved reference 'CLIP'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2505:46 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2506:46 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2507:46 Unresolved reference 'KEY_VIDEO_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2508:43 Unresolved reference 'KEY_VOD_OFFSET'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2510:13 Unresolved reference 'OFFLINE_VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2511:46 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2512:46 Unresolved reference 'KEY_CHANNEL_LOGIN'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2513:46 Unresolved reference 'KEY_CHAT_URL'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2522:5 Modifier 'private' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2525:44 Unresolved reference 'restoreFloatingChatPosition'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2544:25 Unresolved reference 'saveFloatingChatPosition'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2577:25 Unresolved reference 'saveFloatingChatPosition'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2585:17 Unresolved reference 'toggleHighVisibility'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2590:5 Modifier 'private' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2597:13 Unresolved reference 'toggleFloatingChat'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2606:5 Modifier 'private' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2627:13 Unresolved reference 'restoreFloatingChatPosition'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2636:5 Modifier 'private' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2637:54 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2648:5 Modifier 'private' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2649:54 Unresolved reference 'KEY_CHANNEL_ID'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2667:5 Modifier 'private' is not applicable to 'local function'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerFragment.kt:2681:2 Syntax error: Expecting '}'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerSettingsDialog.kt:58:45 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerSettingsDialog.kt:71:45 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerSettingsDialog.kt:132:45 Unresolved reference 'VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerSettingsDialog.kt:140:45 Unresolved reference 'OFFLINE_VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerSettingsDialog.kt:143:58 Unresolved reference 'showDownloadDialog'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerSettingsDialog.kt:147:45 Unresolved reference 'CLIP'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerSettingsDialog.kt:204:46 Unresolved reference 'STREAM'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/PlayerSettingsDialog.kt:204:84 Unresolved reference 'VIDEO'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/SleepTimerDialog.kt:51:54 Unresolved reference 'onSleepTimerChanged'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/player/SleepTimerDialog.kt:70:58 Unresolved reference 'onSleepTimerChanged'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/view/CustomPlayerView.kt:8:43 Unresolved reference 'isClick'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/view/CustomPlayerView.kt:26:16 Unresolved reference 'isClick'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/view/SlidingLayout.kt:25:43 Unresolved reference 'isClick'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/view/SlidingLayout.kt:151:33 Unresolved reference 'isClick'.
+e: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/app/src/main/java/com/github/andreyasadchy/xtra/ui/view/SlidingLayout.kt:252:46 Unresolved reference 'DEBUG_SECONDVIEW'.
+
+> Task :app:compileDebugKotlin FAILED
+
+[Incubating] Problems report is available at: file:///C:/Users/tizzi/Documents/Xtra_Floating-master/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.2.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 16s
+40 actionable tasks: 1 executed, 39 up-to-date

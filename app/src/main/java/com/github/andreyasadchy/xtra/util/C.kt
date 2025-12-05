@@ -217,6 +217,8 @@ object C {
     const val CHAT_SHOW_STV_BADGES = "chat_show_stv_badges"
     const val CHAT_SHOW_PERSONAL_EMOTES = "chat_show_personal_emotes"
     const val CHAT_STV_LIVE_UPDATES = "chat_stv_live_updates"
+    const val FLOATING_CHAT_TRANSPARENCY = "floating_chat_transparency"
+    const val FLOATING_CHAT_HIGH_VISIBILITY = "floating_chat_high_visibility"
     const val TOKEN_XDEVICEID = "token_xdeviceid"
     const val TOKEN_RANDOM_DEVICEID = "token_random_deviceid"
     const val TOKEN_PLAYERTYPE = "token_playertype"

@@ -67,6 +67,7 @@ class ChatAdapter(
     private val translateMessage: (ChatMessage, String?) -> Unit,
     private val showLanguageDownloadDialog: (ChatMessage, String) -> Unit,
     private val channelId: String?,
+    private val useHighVisibility: Boolean = false,
 ) : RecyclerView.Adapter<ChatAdapter.ViewHolder>() {
 
     var messages: MutableList<ChatMessage>? = null
@@ -253,6 +254,13 @@ class ChatAdapter(
             textView.apply {
                 text = formattedMessage
                 textSize = messageTextSize
+                if (useHighVisibility) {
+                    setShadowLayer(6f, 2f, 2f, android.graphics.Color.BLACK)
+                    typeface = android.graphics.Typeface.DEFAULT_BOLD
+                } else {
+                    setShadowLayer(0f, 0f, 0f, 0)
+                    typeface = android.graphics.Typeface.DEFAULT
+                }
                 if (chatMessage.isReply) {
                     movementMethod = null
                     maxLines = 2

@@ -131,6 +131,16 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     private var backgroundColor: Int? = null
     private var backgroundVisible = false
 
+    // Floating Chat Properties
+    private var isFloatingChatEnabled = false
+    private var dX = 0f
+    private var dY = 0f
+    private var initialWidth = 0
+    private var initialHeight = 0
+    private var initialTouchX = 0f
+    private var initialTouchY = 0f
+    private var isResizing = false
+
     protected lateinit var prefs: SharedPreferences
 
     private val backPressedCallback = object : OnBackPressedCallback(true) {
@@ -309,11 +319,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
                     override fun onDoubleTap(e: MotionEvent): Boolean {
                         return if (doubleTap && !isPortrait && isMaximized) {
-                            if (chatLayout.isVisible) {
-                                hideChat()
-                            } else {
-                                showChat()
-                            }
+                            cycleChatMode()
                             true
                         } else {
                             false
@@ -1083,43 +1089,32 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             if (currentChatFragment != null) {
                 chatFragment = currentChatFragment
             } else {
-                val fragment = when (videoType) {
-                    STREAM -> ChatFragment.newInstance(
-                        requireArguments().getString(KEY_CHANNEL_ID),
-                        requireArguments().getString(KEY_CHANNEL_LOGIN),
-                        requireArguments().getString(KEY_CHANNEL_NAME),
-                        requireArguments().getString(KEY_STREAM_ID)
-                    )
-                    VIDEO -> ChatFragment.newInstance(
-                        requireArguments().getString(KEY_CHANNEL_ID),
-                        requireArguments().getString(KEY_CHANNEL_LOGIN),
-                        requireArguments().getString(KEY_VIDEO_ID),
-                        0
-                    )
-                    CLIP -> ChatFragment.newInstance(
-                        requireArguments().getString(KEY_CHANNEL_ID),
-                        requireArguments().getString(KEY_CHANNEL_LOGIN),
-                        requireArguments().getString(KEY_VIDEO_ID),
-                        requireArguments().getInt(KEY_VOD_OFFSET).takeIf { it != -1 }
-                    )
-                    OFFLINE_VIDEO -> ChatFragment.newLocalInstance(
-                        requireArguments().getString(KEY_CHANNEL_ID),
-                        requireArguments().getString(KEY_CHANNEL_LOGIN),
-                        requireArguments().getString(KEY_CHAT_URL)
-                    )
-                    else -> null
-                }
+                val fragment = createChatFragment(false)
                 if (fragment != null) {
                     childFragmentManager.beginTransaction().replace(R.id.chatFragmentContainer, fragment).commit()
                 }
                 chatFragment = fragment
             }
+            setupFloatingChatInteraction()
         }
     }
 
     private fun initLayout() {
         with(binding) {
             if (isPortrait) {
+                // Hide floating chat in portrait mode
+                if (isFloatingChatEnabled) {
+                    isFloatingChatEnabled = false
+                    floatingChatRoot.gone()
+                    if (chatFragment != null) {
+                        childFragmentManager.beginTransaction().remove(chatFragment!!).commitNow()
+                    }
+                    val fragment = createChatFragment(false)
+                    if (fragment != null) {
+                        childFragmentManager.beginTransaction().replace(R.id.chatFragmentContainer, fragment).commitNow()
+                        chatFragment = fragment
+                    }
+                }
                 requireActivity().window.decorView.setOnSystemUiVisibilityChangeListener(null)
                 showStatusBar()
                 playerLayout.updateLayoutParams<FrameLayout.LayoutParams> {
@@ -1259,6 +1254,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                             toggleChat.setImageResource(R.drawable.baseline_speaker_notes_black_24)
                             toggleChat.setOnClickListener { showChat() }
                         }
+                    }
+                    if (!prefs.getBoolean(C.CHAT_DISABLE, false)) {
+                        toggleFloatingChat.visible()
+                        toggleFloatingChat.setOnClickListener { toggleFloatingChat() }
                     }
                 }
             }
@@ -2517,5 +2516,214 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         protected const val KEY_GAME_ID = "gameId"
         protected const val KEY_GAME_SLUG = "gameSlug"
         protected const val KEY_GAME_NAME = "gameName"
+    }
+
+    private fun createChatFragment(isFloating: Boolean): ChatFragment? {
+        val fragment = when (videoType) {
+            STREAM -> ChatFragment.newInstance(
+                requireArguments().getString(KEY_CHANNEL_ID),
+                requireArguments().getString(KEY_CHANNEL_LOGIN),
+                requireArguments().getString(KEY_CHANNEL_NAME),
+                requireArguments().getString(KEY_STREAM_ID)
+            )
+            VIDEO -> ChatFragment.newInstance(
+                requireArguments().getString(KEY_CHANNEL_ID),
+                requireArguments().getString(KEY_CHANNEL_LOGIN),
+                requireArguments().getString(KEY_VIDEO_ID),
+                0
+            )
+            CLIP -> ChatFragment.newInstance(
+                requireArguments().getString(KEY_CHANNEL_ID),
+                requireArguments().getString(KEY_CHANNEL_LOGIN),
+                requireArguments().getString(KEY_VIDEO_ID),
+                requireArguments().getInt(KEY_VOD_OFFSET).takeIf { it != -1 }
+            )
+            OFFLINE_VIDEO -> ChatFragment.newLocalInstance(
+                requireArguments().getString(KEY_CHANNEL_ID),
+                requireArguments().getString(KEY_CHANNEL_LOGIN),
+                requireArguments().getString(KEY_CHAT_URL)
+            )
+            else -> null
+        }
+        fragment?.arguments?.putBoolean("isFloatingMode", isFloating)
+        return fragment
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupFloatingChatInteraction() {
+        with(binding) {
+            floatingChatRoot.doOnLayout {
+                if (isFloatingChatEnabled) restoreFloatingChatPosition()
+            }
+
+            dragHandleZone.setOnTouchListener { _, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        dX = floatingChatRoot.x - event.rawX
+                        dY = floatingChatRoot.y - event.rawY
+                        true
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        floatingChatRoot.animate()
+                            .x(event.rawX + dX)
+                            .y(event.rawY + dY)
+                            .setDuration(0)
+                            .start()
+                        true
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        saveFloatingChatPosition()
+                        true
+                    }
+                    else -> false
+                }
+            }
+
+            resizeHandleZone.setOnTouchListener { _, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        initialWidth = floatingChatRoot.width
+                        initialHeight = floatingChatRoot.height
+                        initialTouchX = event.rawX
+                        initialTouchY = event.rawY
+                        isResizing = true
+                        true
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        if (isResizing) {
+                            val deltaX = event.rawX - initialTouchX
+                            val deltaY = event.rawY - initialTouchY
+                            val newWidth = (initialWidth + deltaX).toInt().coerceAtLeast(200)
+                            val newHeight = (initialHeight + deltaY).toInt().coerceAtLeast(200)
+                            
+                            // Update size - top-left corner stays fixed, bottom-right follows finger
+                            floatingChatRoot.updateLayoutParams {
+                                width = newWidth
+                                height = newHeight
+                            }
+                        }
+                        true
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        isResizing = false
+                        saveFloatingChatPosition()
+                        true
+                    }
+                    else -> false
+                }
+            }
+
+            highVisibilityToggle.setOnClickListener {
+                toggleHighVisibility()
+            }
+        }
+    }
+
+    private fun cycleChatMode() {
+        if (!isChatOpen && !isFloatingChatEnabled) {
+            // Hidden -> Show sidebar chat
+            showChat()
+        } else if (isChatOpen && !isFloatingChatEnabled) {
+            // Sidebar -> Enable floating chat
+            toggleFloatingChat()
+        } else {
+            // Floating -> Hide chat completely
+            isFloatingChatEnabled = false
+            binding.floatingChatRoot.gone()
+            // Move chat fragment back to sidebar container for next time
+            if (chatFragment != null) {
+                childFragmentManager.beginTransaction().remove(chatFragment!!).commitNow()
+                val fragment = createChatFragment(false)
+                if (fragment != null) {
+                    childFragmentManager.beginTransaction().replace(R.id.chatFragmentContainer, fragment).commitNow()
+                    chatFragment = fragment
+                }
+            }
+            isChatOpen = false
+            hideChatLayout()
+            prefs.edit { putBoolean(C.KEY_CHAT_OPENED, false) }
+        }
+    }
+
+    private fun toggleFloatingChat() {
+        if (isPortrait) return
+
+        isFloatingChatEnabled = !isFloatingChatEnabled
+
+        if (chatFragment != null) {
+            childFragmentManager.beginTransaction().remove(chatFragment!!).commitNow()
+        }
+
+        val containerId = if (isFloatingChatEnabled) R.id.floating_chat_container else R.id.chatFragmentContainer
+
+        val fragment = createChatFragment(isFloatingChatEnabled)
+        if (fragment != null) {
+            childFragmentManager.beginTransaction().replace(containerId, fragment).commitNow()
+            chatFragment = fragment
+        }
+
+        if (isFloatingChatEnabled) {
+            // Hide sidebar chat and reset player margin
+            binding.chatLayout.gone()
+            binding.playerLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                marginEnd = 0
+            }
+            binding.floatingChatRoot.visible()
+            restoreFloatingChatPosition()
+            // Apply transparency to the container background, not the whole view
+            val transparency = prefs.getInt(C.FLOATING_CHAT_TRANSPARENCY, 100)
+            val alpha = (transparency * 255 / 100).coerceIn(0, 255)
+            binding.floatingChatContainer.setBackgroundColor(Color.argb(alpha, 0, 0, 0))
+        } else {
+            binding.floatingChatRoot.gone()
+            // Restore sidebar chat with proper layout
+            isChatOpen = true
+            showChatLayout()
+        }
+    }
+
+    private fun saveFloatingChatPosition() {
+        val channelId = requireArguments().getString(KEY_CHANNEL_ID) ?: return
+        with(binding.floatingChatRoot) {
+            prefs.edit {
+                putFloat("floating_chat_x_$channelId", x)
+                putFloat("floating_chat_y_$channelId", y)
+                putInt("floating_chat_w_$channelId", width)
+                putInt("floating_chat_h_$channelId", height)
+            }
+        }
+    }
+
+    private fun restoreFloatingChatPosition() {
+        val channelId = requireArguments().getString(KEY_CHANNEL_ID) ?: return
+        val x = prefs.getFloat("floating_chat_x_$channelId", -1f)
+        val y = prefs.getFloat("floating_chat_y_$channelId", -1f)
+        val w = prefs.getInt("floating_chat_w_$channelId", -1)
+        val h = prefs.getInt("floating_chat_h_$channelId", -1)
+
+        if (x != -1f && y != -1f) {
+            binding.floatingChatRoot.x = x
+            binding.floatingChatRoot.y = y
+        }
+        if (w != -1 && h != -1) {
+            binding.floatingChatRoot.updateLayoutParams {
+                width = w
+                height = h
+            }
+        }
+    }
+
+    private fun toggleHighVisibility() {
+        val current = prefs.getBoolean(C.FLOATING_CHAT_HIGH_VISIBILITY, false)
+        prefs.edit { putBoolean(C.FLOATING_CHAT_HIGH_VISIBILITY, !current) }
+
+        if (isFloatingChatEnabled && chatFragment != null) {
+            childFragmentManager.beginTransaction().remove(chatFragment!!).commitNow()
+            val fragment = createChatFragment(true)
+            if (fragment != null) {
+                childFragmentManager.beginTransaction().replace(R.id.floating_chat_container, fragment).commitNow()
+                chatFragment = fragment
+            }
+        }
     }
 }

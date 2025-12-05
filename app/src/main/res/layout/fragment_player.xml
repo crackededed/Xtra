@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/playerBackground"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -89,4 +91,61 @@
         </com.github.andreyasadchy.xtra.ui.view.ChatLayout>
 
     </FrameLayout>
-</LinearLayout>
+    <RelativeLayout
+        android:id="@+id/floating_chat_root"
+        android:layout_width="200dp"
+        android:layout_height="300dp"
+        android:visibility="gone"
+        android:elevation="10dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        tools:visibility="visible">
+
+        <FrameLayout
+            android:id="@+id/floating_chat_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#80000000"
+            android:layout_above="@+id/drag_handle_zone" />
+
+        <LinearLayout
+            android:id="@+id/drag_handle_zone"
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:background="#CC000000"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:layout_alignParentBottom="true">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/ic_drag_handle"
+                app:tint="#FFFFFF" />
+            
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageButton
+                android:id="@+id/highVisibilityToggle"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="?android:selectableItemBackgroundBorderless"
+                android:padding="4dp"
+                android:src="@drawable/ic_visibility_high"
+                android:contentDescription="@string/floating_chat_high_visibility"
+                app:tint="#FFFFFF" />
+
+            <ImageView
+                android:id="@+id/resize_handle_zone"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:padding="4dp"
+                android:src="@drawable/ic_resize_handle"
+                app:tint="#FFFFFF" />
+        </LinearLayout>
+    </RelativeLayout>
+</RelativeLayout>

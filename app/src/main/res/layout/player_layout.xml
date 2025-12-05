@@ -342,6 +342,16 @@
             tools:visibility="visible" />
 
         <ImageButton
+            android:id="@+id/toggleFloatingChat"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/baseline_picture_in_picture_black_24"
+            android:visibility="gone"
+            app:tint="@android:color/white"
+            tools:visibility="visible" />
+
+        <ImageButton
             android:id="@+id/fullscreen"
             android:layout_width="40dp"
             android:layout_height="40dp"
