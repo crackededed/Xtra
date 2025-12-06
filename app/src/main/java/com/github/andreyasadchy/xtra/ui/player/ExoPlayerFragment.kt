@@ -887,7 +887,7 @@ class ExoPlayerFragment : PlayerFragment() {
                             }
                         }
                     }
-                    if (prefs.getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") {
+                    if (prefs.getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved" && viewModel.saveQuality) {
                         prefs.edit { putString(C.PLAYER_QUALITY, quality.key) }
                     }
                 }
