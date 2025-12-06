@@ -88,6 +88,7 @@ object C {
     const val UI_GAME_TABS = "ui_game_tabs"
     const val UI_SEARCH_TABS = "ui_search_tabs"
     const val UI_NAME_DISPLAY = "ui_name_display"
+    const val UI_STORE_RECENT_SEARCHES = "ui_store_recent_searches"
     const val UI_THEME_ROUNDED_CORNERS = "ui_theme_rounded_corners"
     const val UI_THEME_FOLLOW_SYSTEM = "ui_theme_follow_system"
     const val UI_THEME_DARK_ON = "ui_theme_dark_on"
@@ -292,5 +293,4 @@ object C {
     const val ENABLE_INTEGRITY = "enable_integrity"
     const val USE_WEBVIEW_INTEGRITY = "use_webview_integrity"
     const val GET_ALL_GQL_HEADERS = "get_all_gql_headers"
-    const val STORE_RECENT_SEARCHES = "ui_store_recent_searches"
 }

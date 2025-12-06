@@ -48,9 +48,7 @@ class SearchPagerFragment : BaseNetworkFragment(), FragmentHost {
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!
     private val viewModel: SearchPagerViewModel by viewModels()
-    private var recentSearchesFragment: RecentSearchesFragment? = null
     private var firstLaunch = true
-    private var suppressQueryChange = false
 
     override val currentFragment: Fragment?
         get() = childFragmentManager.findFragmentByTag("f${binding.viewPager.currentItem}")
@@ -58,7 +56,6 @@ class SearchPagerFragment : BaseNetworkFragment(), FragmentHost {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         firstLaunch = savedInstanceState == null
-        setSearchHistoryFragment()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -237,51 +234,24 @@ class SearchPagerFragment : BaseNetworkFragment(), FragmentHost {
             }
 
             override fun onQueryTextChange(newText: String): Boolean {
-                if (suppressQueryChange)
-                    return false
                 job?.cancel()
                 if (newText.isNotEmpty()) {
-                    binding.viewPager.visibility = View.VISIBLE
-                    binding.tabLayout.visibility = View.VISIBLE
-                    binding.recentSearchesContainer.visibility = View.GONE
                     job = lifecycleScope.launch {
                         delay(750)
                         withResumed {
                             (currentFragment as? Searchable)?.search(newText)
-                            if (requireContext().prefs().getBoolean(C.STORE_RECENT_SEARCHES, true)) {
-                                viewModel.saveRecentSearch(newText)
-                            }
                         }
                     }
                 } else {
                     (currentFragment as? Searchable)?.search(newText) //might be null on rotation, so as?
-
-                    binding.viewPager.visibility = View.GONE
-                    binding.tabLayout.visibility = View.GONE
-                    setSearchHistoryFragment()
-                    binding.recentSearchesContainer.visibility = View.VISIBLE
                 }
                 return false
             }
         })
     }
 
-    fun setSelectedQuery(query: String) {
-        // In case the selected item has the same query as the searchView.
-        binding.searchView.setQuery(null, false)
-
+    fun setQuery(query: String?) {
         binding.searchView.setQuery(query, true)
-    }
-
-    fun setInsertedQuery(query: String) {
-        suppressQueryChange = true
-        binding.searchView.setQuery(query, false)
-        suppressQueryChange = false
-    }
-
-    private fun setSearchHistoryFragment() {
-        recentSearchesFragment = RecentSearchesFragment()
-        childFragmentManager.beginTransaction().replace(R.id.recentSearchesContainer, recentSearchesFragment!!).commit()
     }
 
     private var userResult: Pair<Int?, String?>? = null

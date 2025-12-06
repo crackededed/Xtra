@@ -93,6 +93,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun deleteRecentSearches() {
+        viewModelScope.launch {
+            recentSearchRepository.deleteAll()
+        }
+    }
+
     fun importDownloads() {
         viewModelScope.launch(Dispatchers.IO) {
             val chatFiles = mutableMapOf<String, String>()
@@ -464,12 +470,6 @@ class SettingsViewModel @Inject constructor(
             } else {
                 WorkManager.getInstance(applicationContext).cancelUniqueWork("live_notifications")
             }
-        }
-    }
-
-    fun deleteRecentSearches() {
-        viewModelScope.launch {
-            recentSearchRepository.deleteAll()
         }
     }
 }

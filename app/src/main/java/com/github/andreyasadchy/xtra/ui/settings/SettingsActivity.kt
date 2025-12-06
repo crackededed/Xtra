@@ -575,6 +575,7 @@ class SettingsActivity : AppCompatActivity() {
 
     class UiSettingsFragment : MaterialPreferenceFragment() {
         private val viewModel: SettingsViewModel by activityViewModels()
+
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.ui_preferences, rootKey)
             val changeListener = Preference.OnPreferenceChangeListener { _, _ ->
