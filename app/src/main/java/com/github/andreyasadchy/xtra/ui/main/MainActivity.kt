@@ -65,6 +65,7 @@ import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.player.ExoPlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.Media3Fragment
 import com.github.andreyasadchy.xtra.ui.player.PlayerFragment
+import com.github.andreyasadchy.xtra.ui.team.TeamFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.DisplayUtils
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
@@ -448,6 +449,17 @@ class MainActivity : AppCompatActivity() {
                                         gameName = Uri.decode(name)
                                     )
                                 }
+                            )
+                        }
+                    }
+                    url.contains("twitch.tv/team/") -> {
+                        val teamName = url.substringAfter("twitch.tv/team/").takeIf { it.isNotBlank() }?.let { it.substringBefore("?", it.substringBefore("/")) }
+                        if (!teamName.isNullOrBlank()) {
+                            playerFragment?.minimize()
+                            navController.navigate(
+                                TeamFragmentDirections.actionGlobalTeamFragment(
+                                    teamName = teamName
+                                )
                             )
                         }
                     }

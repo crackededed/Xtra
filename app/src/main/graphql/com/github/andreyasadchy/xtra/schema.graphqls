@@ -10,6 +10,7 @@ type Query {
     searchUsers(userQuery: String!, first: Int, after: Cursor): SearchUserConnection
     streamPlaybackAccessToken(channelName: String!, params: PlaybackAccessTokenParams!): PlaybackAccessToken
     streams(first: Int, after: Cursor, options: StreamOptions): StreamConnection
+    team(name: String!): Team
     user(id: ID, login: String, lookupType: UserLookupType): User
     userResultByID(id: ID!): UserResult
     userResultByLogin(login: String!): UserResult
@@ -31,6 +32,10 @@ type Broadcast {
 
 type BroadcastSettings {
     title: String
+}
+
+type Channel {
+    socialMedias: [SocialMedia!]
 }
 
 type ChannelNotificationSettings {
@@ -108,6 +113,14 @@ type ClipVideoQuality {
     frameRate: Float
     quality: String
     sourceURL: String
+}
+
+type DefaultPanel implements Panel {
+    description: String
+    id: ID
+    imageURL: String
+    linkURL: String
+    title: String
 }
 
 type Emote {
@@ -260,6 +273,11 @@ type SearchUserEdge {
     node: User
 }
 
+type SocialMedia {
+    title: String
+    url: String
+}
+
 type Stream {
     broadcaster: User
     createdAt: Time
@@ -282,16 +300,33 @@ type StreamEdge {
     node: Stream
 }
 
+type SubscriptionProduct {
+    name: String
+    tier: String
+}
+
 type Tag {
     id: ID
     localizedName: String
     scope: TagScope
 }
 
+type Team {
+    bannerURL: String
+    description: String
+    displayName: String
+    liveMembers(first: Int, after: Cursor): UserConnection
+    logoURL: String
+    members(first: Int, after: Cursor, metricsRevealedFilter: MemberMetricsRevealedParams): UserConnection
+    name: String
+    owner: User
+}
+
 type User {
     bannerImageURL: String
     broadcastBadges: [Badge]
     broadcastSettings: BroadcastSettings,
+    channel: Channel
     cheer: CheerInfo
     clips(first: Int, after: Cursor, criteria: UserClipsInput): ClipConnection
     createdAt: Time
@@ -307,16 +342,30 @@ type User {
     id: ID
     login: String
     lastBroadcast: Broadcast
+    panels(hideExtensions: Boolean): [Panel]
+    primaryTeam: Team
     profileImageURL(width: Int): String
     roles: UserRoles
     self: UserSelfConnection
     stream: Stream
+    subscriptionProducts: [SubscriptionProduct]
     videos(first: Int, after: Cursor, types: [BroadcastType!], sort: VideoSort): VideoConnection
+}
+
+type UserConnection {
+    edges: [UserEdge]
+    pageInfo: PageInfo
+    totalCount: Int
 }
 
 type UserDoesNotExist {
     key: String!
     reason: String!
+}
+
+type UserEdge {
+    cursor: Cursor
+    node: User
 }
 
 type UserError {
@@ -355,6 +404,10 @@ type VideoConnection {
 type VideoEdge {
     cursor: Cursor
     node: Video
+}
+
+interface Panel {
+    id: ID
 }
 
 input GameClipsInput {
@@ -482,6 +535,13 @@ enum Language {
     VI
     ZH
     ZH_HK
+}
+
+enum MemberMetricsRevealedParams {
+    NONE
+    STATS
+    REVENUE
+    STATS_AND_REVENUE
 }
 
 enum SearchIndex {

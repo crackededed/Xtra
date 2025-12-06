@@ -1,6 +1,7 @@
 package com.github.andreyasadchy.xtra.ui.login
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
 import android.view.ViewGroup
@@ -168,11 +169,13 @@ class LoginActivity : AppCompatActivity() {
                 this@LoginActivity.getAlertDialogBuilder()
                     .setMessage(getString(R.string.login_problem_solution))
                     .setPositiveButton(R.string.log_in) { _, _ ->
-                        val intent = Intent(Intent.ACTION_VIEW, helixAuthUrl.toUri())
-                        if (intent.resolveActivity(packageManager) != null) {
-                            webView.reload()
+                        try {
+                            val intent = Intent(Intent.ACTION_VIEW, helixAuthUrl.toUri()).apply {
+                                addCategory(Intent.CATEGORY_BROWSABLE)
+                            }
                             startActivity(intent)
-                        } else {
+                            webView.reload()
+                        } catch (e: ActivityNotFoundException) {
                             toast(R.string.no_browser_found)
                         }
                     }

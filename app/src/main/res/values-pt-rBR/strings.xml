@@ -720,4 +720,9 @@
     <string name="deletion_date">Deletion date</string>
     <string name="creation_date">Creation date</string>
     <string name="saved_date">Saved date</string>
+    <string name="about">About</string>
+    <string name="team">Team: %s</string>
+    <string name="members">%s members</string>
+    <string name="owner">Owner: %s</string>
+    <string name="original_name">Original name: %s</string>
 </resources>

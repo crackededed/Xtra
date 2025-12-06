@@ -60,6 +60,8 @@ android {
 
 dependencies {
     implementation(libs.material)
+    implementation(libs.markwon.core)
+    implementation(libs.markwon.linkify)
 
     implementation(libs.activity)
     implementation(libs.appcompat)
