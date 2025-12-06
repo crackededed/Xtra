@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/search"
+        android:icon="@drawable/baseline_search_black_24"
+        android:title="@string/search"
+        app:iconTint="?attr/colorControlNormal"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/settings"
+        android:title="@string/settings" />
+    <item
+        android:id="@+id/login"
+        android:title="@string/log_in" />
+    <item
+        android:id="@+id/share"
+        android:title="@string/share" />
+</menu>

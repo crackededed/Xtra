@@ -23,8 +23,12 @@ import com.github.andreyasadchy.xtra.SearchGamesQuery
 import com.github.andreyasadchy.xtra.SearchStreamsQuery
 import com.github.andreyasadchy.xtra.SearchVideosQuery
 import com.github.andreyasadchy.xtra.StreamPlaybackAccessTokenQuery
+import com.github.andreyasadchy.xtra.TeamLiveMembersQuery
+import com.github.andreyasadchy.xtra.TeamMembersQuery
+import com.github.andreyasadchy.xtra.TeamQuery
 import com.github.andreyasadchy.xtra.TopGamesQuery
 import com.github.andreyasadchy.xtra.TopStreamsQuery
+import com.github.andreyasadchy.xtra.UserAboutQuery
 import com.github.andreyasadchy.xtra.UserBadgesQuery
 import com.github.andreyasadchy.xtra.UserChannelPageQuery
 import com.github.andreyasadchy.xtra.UserCheerEmotesQuery
@@ -336,6 +340,31 @@ class GraphQLRepository @Inject constructor(
         sendQuery(networkLibrary, headers, query)
     }
 
+    suspend fun loadQueryTeam(networkLibrary: String?, headers: Map<String, String>, name: String): ApolloResponse<TeamQuery.Data> = withContext(Dispatchers.IO) {
+        val query = TeamQuery(
+            name = name,
+        )
+        sendQuery(networkLibrary, headers, query)
+    }
+
+    suspend fun loadQueryTeamLiveMembers(networkLibrary: String?, headers: Map<String, String>, name: String, first: Int?, after: String?): ApolloResponse<TeamLiveMembersQuery.Data> = withContext(Dispatchers.IO) {
+        val query = TeamLiveMembersQuery(
+            name = name,
+            first = Optional.Present(first),
+            after = Optional.Present(after),
+        )
+        sendQuery(networkLibrary, headers, query)
+    }
+
+    suspend fun loadQueryTeamMembers(networkLibrary: String?, headers: Map<String, String>, name: String, first: Int?, after: String?): ApolloResponse<TeamMembersQuery.Data> = withContext(Dispatchers.IO) {
+        val query = TeamMembersQuery(
+            name = name,
+            first = Optional.Present(first),
+            after = Optional.Present(after),
+        )
+        sendQuery(networkLibrary, headers, query)
+    }
+
     suspend fun loadQueryTopGames(networkLibrary: String?, headers: Map<String, String>, tags: List<String>?, first: Int?, after: String?): ApolloResponse<TopGamesQuery.Data> = withContext(Dispatchers.IO) {
         val query = TopGamesQuery(
             tags = Optional.Present(tags),
@@ -358,6 +387,14 @@ class GraphQLRepository @Inject constructor(
 
     suspend fun loadQueryUser(networkLibrary: String?, headers: Map<String, String>, id: String? = null, login: String? = null): ApolloResponse<UserQuery.Data> = withContext(Dispatchers.IO) {
         val query = UserQuery(
+            id = if (!id.isNullOrBlank()) Optional.Present(id) else Optional.Absent,
+            login = if (!login.isNullOrBlank()) Optional.Present(login) else Optional.Absent,
+        )
+        sendQuery(networkLibrary, headers, query)
+    }
+
+    suspend fun loadQueryUserAbout(networkLibrary: String?, headers: Map<String, String>, id: String?, login: String?): ApolloResponse<UserAboutQuery.Data> = withContext(Dispatchers.IO) {
+        val query = UserAboutQuery(
             id = if (!id.isNullOrBlank()) Optional.Present(id) else Optional.Absent,
             login = if (!login.isNullOrBlank()) Optional.Present(login) else Optional.Absent,
         )
