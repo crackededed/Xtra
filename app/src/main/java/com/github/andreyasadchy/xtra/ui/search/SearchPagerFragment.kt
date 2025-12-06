@@ -250,6 +250,10 @@ class SearchPagerFragment : BaseNetworkFragment(), FragmentHost {
         })
     }
 
+    fun setQuery(query: String?) {
+        binding.searchView.setQuery(query, true)
+    }
+
     private var userResult: Pair<Int?, String?>? = null
 
     private fun viewUserResult() {

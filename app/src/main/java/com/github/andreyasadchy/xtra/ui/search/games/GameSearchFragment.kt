@@ -24,6 +24,8 @@ import com.github.andreyasadchy.xtra.ui.common.GamesAdapter
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.games.GamesFragmentDirections
+import com.github.andreyasadchy.xtra.ui.search.RecentSearchAdapter
+import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragment
 import com.github.andreyasadchy.xtra.ui.search.Searchable
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
@@ -39,6 +41,7 @@ class GameSearchFragment : PagedListFragment(), Searchable {
     private val binding get() = _binding!!
     private val viewModel: GameSearchViewModel by viewModels()
     private lateinit var pagingAdapter: PagingDataAdapter<Game, out RecyclerView.ViewHolder>
+    private var recentSearchAdapter = RecentSearchAdapter({ (parentFragment as? SearchPagerFragment)?.setQuery(it.query) }, { viewModel.deleteRecentSearch(it) })
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = CommonRecyclerViewLayoutBinding.inflate(inflater, container, false)
@@ -78,6 +81,13 @@ class GameSearchFragment : PagedListFragment(), Searchable {
                     pagingAdapter.loadStateFlow.collectLatest { loadState ->
                         progressBar.isVisible = loadState.refresh is LoadState.Loading && pagingAdapter.itemCount == 0
                         nothingHere.isVisible = loadState.refresh !is LoadState.Loading && pagingAdapter.itemCount == 0 && viewModel.query.value.isNotBlank()
+                        if (viewModel.query.value.isBlank() && requireContext().prefs().getBoolean(C.UI_STORE_RECENT_SEARCHES, true)) {
+                            recyclerView.adapter = recentSearchAdapter
+                        } else {
+                            if (recyclerView.adapter is RecentSearchAdapter) {
+                                recyclerView.adapter = pagingAdapter
+                            }
+                        }
                         if ((loadState.refresh as? LoadState.Error ?:
                             loadState.append as? LoadState.Error ?:
                             loadState.prepend as? LoadState.Error)?.error?.message == "failed integrity check" &&
@@ -86,6 +96,15 @@ class GameSearchFragment : PagedListFragment(), Searchable {
                         ) {
                             IntegrityDialog.show(childFragmentManager, "refresh")
                         }
+                    }
+                }
+            }
+        }
+        if (requireContext().prefs().getBoolean(C.UI_STORE_RECENT_SEARCHES, true)) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.recentSearches.collectLatest {
+                        recentSearchAdapter.submitList(it)
                     }
                 }
             }
@@ -100,6 +119,9 @@ class GameSearchFragment : PagedListFragment(), Searchable {
 
     override fun search(query: String) {
         viewModel.setQuery(query)
+        if (requireContext().prefs().getBoolean(C.UI_STORE_RECENT_SEARCHES, true)) {
+            viewModel.saveRecentSearch(query)
+        }
     }
 
     override fun onNetworkRestored() {
