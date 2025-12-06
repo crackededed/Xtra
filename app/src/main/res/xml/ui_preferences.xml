@@ -167,4 +167,17 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="ui_store_recent_searches"
+        android:title="@string/store_recent_searches"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <Preference
+        android:key="delete_recent_searches"
+        android:title="@string/delete_recent_searches"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
 </androidx.preference.PreferenceScreen>
