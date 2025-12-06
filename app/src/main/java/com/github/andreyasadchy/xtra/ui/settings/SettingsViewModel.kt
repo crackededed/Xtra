@@ -30,6 +30,7 @@ import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.repository.NotificationUsersRepository
 import com.github.andreyasadchy.xtra.repository.OfflineRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
+import com.github.andreyasadchy.xtra.repository.RecentSearchRepository
 import com.github.andreyasadchy.xtra.repository.ShownNotificationsRepository
 import com.github.andreyasadchy.xtra.ui.main.LiveNotificationWorker
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
@@ -72,6 +73,7 @@ class SettingsViewModel @Inject constructor(
     @param:ApplicationContext private val applicationContext: Context,
     private val playerRepository: PlayerRepository,
     private val offlineRepository: OfflineRepository,
+    private val recentSearchRepository: RecentSearchRepository,
     private val shownNotificationsRepository: ShownNotificationsRepository,
     private val notificationUsersRepository: NotificationUsersRepository,
     private val graphQLRepository: GraphQLRepository,
@@ -90,6 +92,12 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             playerRepository.deleteVideoPositions()
             offlineRepository.deletePositions()
+        }
+    }
+
+    fun deleteRecentSearches() {
+        viewModelScope.launch {
+            recentSearchRepository.deleteAll()
         }
     }
 
