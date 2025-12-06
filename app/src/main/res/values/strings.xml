@@ -734,4 +734,7 @@
     <string name="store_recent_searches">Store recent searches</string>
     <string name="delete_recent_searches">Delete recent searches</string>
     <string name="delete_recent_searches_message">Are you sure you want to delete all recent searches?</string>
+    <string name="deletion_date">Deletion date</string>
+    <string name="creation_date">Creation date</string>
+    <string name="saved_date">Saved date</string>
 </resources>
