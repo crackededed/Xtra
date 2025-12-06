@@ -120,6 +120,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     private var startTranslationX = 0f
     private var startTranslationY = 0f
     private var statusBarSwipe = false
+    private var chatStatusBarSwipe = false
     private var isAnimating = false
     private var moveAnimation: ViewPropertyAnimator? = null
     protected var useController = true
@@ -579,7 +580,25 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 true
             }
             chatTouchView.setOnTouchListener { _, event ->
-                event.actionMasked == MotionEvent.ACTION_DOWN && !isPortrait && event.y <= 100
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> {
+                        chatStatusBarSwipe = !isPortrait && event.y <= 100
+                        chatLinearLayout.dispatchTouchEvent(event)
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        if (chatStatusBarSwipe) {
+                            chatLinearLayout.dispatchTouchEvent(
+                                MotionEvent.obtain(event).apply {
+                                    action = MotionEvent.ACTION_CANCEL
+                                }
+                            )
+                        } else {
+                            chatLinearLayout.dispatchTouchEvent(event)
+                        }
+                    }
+                    else -> chatLinearLayout.dispatchTouchEvent(event)
+                }
+                true
             }
             with(playerControls) {
                 root.setOnTouchListener { _, event ->
