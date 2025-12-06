@@ -10,6 +10,7 @@ import com.github.andreyasadchy.xtra.db.LocalFollowsChannelDao
 import com.github.andreyasadchy.xtra.db.LocalFollowsGameDao
 import com.github.andreyasadchy.xtra.db.NotificationUsersDao
 import com.github.andreyasadchy.xtra.db.RecentEmotesDao
+import com.github.andreyasadchy.xtra.db.RecentSearchDao
 import com.github.andreyasadchy.xtra.db.SavedFiltersDao
 import com.github.andreyasadchy.xtra.db.ShownNotificationsDao
 import com.github.andreyasadchy.xtra.db.SortChannelDao
@@ -23,6 +24,7 @@ import com.github.andreyasadchy.xtra.repository.LocalFollowChannelRepository
 import com.github.andreyasadchy.xtra.repository.LocalFollowGameRepository
 import com.github.andreyasadchy.xtra.repository.NotificationUsersRepository
 import com.github.andreyasadchy.xtra.repository.OfflineRepository
+import com.github.andreyasadchy.xtra.repository.RecentSearchRepository
 import com.github.andreyasadchy.xtra.repository.SavedFiltersRepository
 import com.github.andreyasadchy.xtra.repository.ShownNotificationsRepository
 import com.github.andreyasadchy.xtra.repository.SortChannelRepository
@@ -85,6 +87,10 @@ class DatabaseModule {
 
     @Singleton
     @Provides
+    fun providesRecentSearchRepository(recentSearchDao: RecentSearchDao): RecentSearchRepository = RecentSearchRepository(recentSearchDao)
+
+    @Singleton
+    @Provides
     fun providesVideosDao(database: AppDatabase): VideosDao = database.videos()
 
     @Singleton
@@ -134,6 +140,10 @@ class DatabaseModule {
     @Singleton
     @Provides
     fun providesSavedFiltersDao(database: AppDatabase): SavedFiltersDao = database.savedFiltersDao()
+
+    @Singleton
+    @Provides
+    fun providesRecentSearchDao(database: AppDatabase): RecentSearchDao = database.recentSearchDao()
 
     @Singleton
     @Provides
@@ -324,6 +334,11 @@ class DatabaseModule {
                 object : Migration(31, 32) {
                     override fun migrate(db: SupportSQLiteDatabase) {
                         db.execSQL("CREATE TABLE IF NOT EXISTS filters (id INTEGER NOT NULL, gameId TEXT, gameSlug TEXT, gameName TEXT, tags TEXT, languages TEXT, PRIMARY KEY (id))")
+                    }
+                },
+                object : Migration(32, 33) {
+                    override fun migrate(db: SupportSQLiteDatabase) {
+                        db.execSQL("CREATE TABLE IF NOT EXISTS recent_search (id INTEGER NOT NULL, query TEXT NOT NULL, type TEXT NOT NULL, lastSearched INTEGER NOT NULL, PRIMARY KEY (id))")
                     }
                 },
             )

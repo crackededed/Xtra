@@ -11,12 +11,14 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import com.github.andreyasadchy.xtra.model.ui.Bookmark
+import com.github.andreyasadchy.xtra.model.ui.RecentSearch
 import com.github.andreyasadchy.xtra.model.ui.User
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.repository.BookmarksRepository
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
+import com.github.andreyasadchy.xtra.repository.RecentSearchRepository
 import com.github.andreyasadchy.xtra.repository.datasource.SearchVideosDataSource
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.HttpEngineUtils
@@ -46,6 +48,7 @@ import kotlin.coroutines.suspendCoroutine
 @HiltViewModel
 class VideoSearchViewModel @Inject constructor(
     @ApplicationContext applicationContext: Context,
+    private val recentSearchRepository: RecentSearchRepository,
     playerRepository: PlayerRepository,
     private val bookmarksRepository: BookmarksRepository,
     private val graphQLRepository: GraphQLRepository,
@@ -58,6 +61,7 @@ class VideoSearchViewModel @Inject constructor(
 
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query
+    val recentSearches = recentSearchRepository.loadRecentSearchFlow(RecentSearch.TYPE_VIDEO)
     val positions = playerRepository.loadVideoPositions()
     val bookmarks = bookmarksRepository.loadBookmarksFlow()
 
@@ -85,6 +89,23 @@ class VideoSearchViewModel @Inject constructor(
     fun setQuery(newQuery: String) {
         if (_query.value != newQuery) {
             _query.value = newQuery
+        }
+    }
+
+    fun saveRecentSearch(query: String) {
+        if (query.isNotBlank()) {
+            viewModelScope.launch {
+                recentSearchRepository.getItem(query, RecentSearch.TYPE_VIDEO)?.let {
+                    recentSearchRepository.delete(it)
+                }
+                recentSearchRepository.save(RecentSearch(query, RecentSearch.TYPE_VIDEO, System.currentTimeMillis()))
+            }
+        }
+    }
+
+    fun deleteRecentSearch(item: RecentSearch) {
+        viewModelScope.launch {
+            recentSearchRepository.delete(item)
         }
     }
 

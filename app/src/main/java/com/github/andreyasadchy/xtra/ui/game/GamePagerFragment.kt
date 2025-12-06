@@ -61,6 +61,7 @@ import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -250,6 +251,11 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
             }
             if (tabs.size <= 1) {
                 tabLayout.gone()
+            } else {
+                if (tabs.size >= 5) {
+                    tabLayout.tabGravity = TabLayout.GRAVITY_CENTER
+                    tabLayout.tabMode = TabLayout.MODE_SCROLLABLE
+                }
             }
             val adapter = GamePagerAdapter(this@GamePagerFragment, tabs)
             viewPager.adapter = adapter

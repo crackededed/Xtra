@@ -3,6 +3,7 @@ package com.github.andreyasadchy.xtra.ui.main
 import android.app.ActivityOptions
 import android.app.PictureInPictureParams
 import android.app.admin.DevicePolicyManager
+import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -69,6 +70,7 @@ import com.github.andreyasadchy.xtra.ui.games.GamesFragmentDirections
 import com.github.andreyasadchy.xtra.ui.player.ExoPlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.Media3Fragment
 import com.github.andreyasadchy.xtra.ui.player.PlayerFragment
+import com.github.andreyasadchy.xtra.ui.team.TeamFragmentDirections
 import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.DisplayUtils
@@ -261,13 +263,15 @@ class MainActivity : AppCompatActivity() {
                             .setMessage(getString(R.string.update_message))
                             .setPositiveButton(getString(R.string.yes)) { _, _ ->
                                 if (prefs.getBoolean(C.UPDATE_USE_BROWSER, false)) {
-                                    val intent = Intent(Intent.ACTION_VIEW, it.toUri())
-                                    if (intent.resolveActivity(packageManager) != null) {
+                                    try {
+                                        val intent = Intent(Intent.ACTION_VIEW, it.toUri()).apply {
+                                            addCategory(Intent.CATEGORY_BROWSABLE)
+                                        }
+                                        startActivity(intent)
                                         tokenPrefs().edit {
                                             putLong(C.UPDATE_LAST_CHECKED, System.currentTimeMillis())
                                         }
-                                        startActivity(intent)
-                                    } else {
+                                    } catch (e: ActivityNotFoundException) {
                                         toast(R.string.no_browser_found)
                                     }
                                 } else {
@@ -581,6 +585,17 @@ class MainActivity : AppCompatActivity() {
                             playerFragment?.minimize()
                             navController.navigate(
                                 GamesFragmentDirections.actionGlobalGamesFragment()
+                            )
+                        }
+                    }
+                    url.contains("twitch.tv/team/") -> {
+                        val teamName = url.substringAfter("twitch.tv/team/").takeIf { it.isNotBlank() }?.let { it.substringBefore("?", it.substringBefore("/")) }
+                        if (!teamName.isNullOrBlank()) {
+                            playerFragment?.minimize()
+                            navController.navigate(
+                                TeamFragmentDirections.actionGlobalTeamFragment(
+                                    teamName = teamName
+                                )
                             )
                         }
                     }

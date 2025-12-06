@@ -1,0 +1,27 @@
+query UserAbout($id: ID, $login: String) {
+    user(id: $id, login: $login, lookupType: ALL) {
+        channel {
+            socialMedias {
+                title
+                url
+            }
+        }
+        description
+        panels(hideExtensions: true) {
+            ... on DefaultPanel {
+                description
+                imageURL
+                linkURL
+                title
+            }
+        }
+        primaryTeam {
+            displayName
+            name
+        }
+        subscriptionProducts {
+            name
+            tier
+        }
+    }
+}
