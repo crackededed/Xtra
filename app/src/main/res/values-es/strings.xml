@@ -722,4 +722,7 @@
     <string name="store_recent_searches">Almacenar búsquedas recientes</string>
     <string name="delete_recent_searches">Eliminar búsquedas recientes</string>
     <string name="delete_recent_searches_message">¿Estás seguro de que deseas eliminar las búsquedas recientes?</string>
+    <string name="deletion_date">Deletion date</string>
+    <string name="creation_date">Creation date</string>
+    <string name="saved_date">Saved date</string>
 </resources>
