@@ -30,7 +30,7 @@ android {
         minSdk = 23
         targetSdk = 36
         versionCode = 121
-        versionName = "2.51.0"
+        versionName = "2.51.6"
     }
 
     buildTypes {
@@ -67,7 +67,7 @@ android {
 }
 
 dependencies {
-    implementation("com.google.android.gms:play-services-cronet:18.1.1")
+    implementation("com.google.android.gms:play-services-cronet:18.1.0")
     implementation("com.google.mlkit:language-id:17.0.6")
     implementation("com.google.mlkit:translate:17.0.3")
 
@@ -78,7 +78,6 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.coordinatorlayout)
     implementation(libs.core.ktx)
-    implementation(libs.customview)
     implementation(libs.fragment.ktx)
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.navigation.fragment)

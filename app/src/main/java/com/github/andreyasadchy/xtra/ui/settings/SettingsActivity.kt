@@ -1402,7 +1402,7 @@ class SettingsActivity : AppCompatActivity() {
                     view.addView(TextView(requireContext()).apply {
                         text = item.first
                         layoutParams = LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.WRAP_CONTENT
                         ).apply {
                             setMargins(context.convertDpToPixels(20F), context.convertDpToPixels(3F), context.convertDpToPixels(20F), context.convertDpToPixels(3F))

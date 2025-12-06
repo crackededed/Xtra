@@ -537,14 +537,23 @@ class PlaybackService : MediaSessionService() {
                             }
                             GET_QUALITIES -> {
                                 val playlist = (session.player.currentManifest as? HlsManifest)?.multivariantPlaylist
-                                val variants = playlist?.variants?.mapNotNull { variant ->
-                                    playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.let { variant to it }
+                                val names = playlist?.variants?.mapNotNull { it.format.label }?.toTypedArray()
+                                if (!names.isNullOrEmpty()) {
+                                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundleOf(
+                                        NAMES to names,
+                                        CODECS to playlist.variants.map { it.format.codecs }.toTypedArray(),
+                                        URLS to playlist.variants.map { it.url.toString() }.toTypedArray(),
+                                    )))
+                                } else {
+                                    val variants = playlist?.variants?.mapNotNull { variant ->
+                                        playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.let { variant to it }
+                                    }
+                                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundleOf(
+                                        NAMES to variants?.map { it.second }?.toTypedArray(),
+                                        CODECS to variants?.map { it.first.format.codecs }?.toTypedArray(),
+                                        URLS to variants?.map { it.first.url.toString() }?.toTypedArray(),
+                                    )))
                                 }
-                                Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundleOf(
-                                    NAMES to variants?.map { it.second }?.toTypedArray(),
-                                    CODECS to variants?.map { it.first.format.codecs }?.toTypedArray(),
-                                    URLS to variants?.map { it.first.url.toString() }?.toTypedArray(),
-                                )))
                             }
                             GET_DURATION -> {
                                 Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundleOf(

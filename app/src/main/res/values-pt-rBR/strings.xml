@@ -396,7 +396,6 @@
     <string name="followed_games">Jogos seguidos</string>
     <string name="irc_msgid_highlighted_message">Mensagem destacada</string>
     <string name="irc_msgid_announcement">Anúncio</string>
-    <string name="debug_secondview">Usar aplicativo no modo PiP</string>
     <string name="add_bookmark">Adicionar ao marcardores</string>
     <string name="show_vod_time_left">Mostrar tempo marcado deixado em vods</string>
     <string name="vod_time_left">Auto excluído em %s</string>
@@ -713,8 +712,6 @@
     <string name="add_tag">Add tag</string>
     <string name="save_filters">Save filters</string>
     <string name="delete_filter_message">Are you sure you want to delete this filter?</string>
-    <string name="delete_recent_search_item">Are you sure you want to delete this search?</string>
-    <string name="store_recent_searches">Store recent searches</string>
-    <string name="delete_recent_searches">Delete recent searches</string>
-    <string name="delete_recent_searches_message">Are you sure you want to delete all recent searches?</string>
+    <string name="use_custom_playback_service">Use custom playback service</string>
+    <string name="move_player_freely">Move minimized player freely</string>
 </resources>

@@ -3,6 +3,7 @@
     <string name="app_name" translatable="false">Xtra</string>
     <string name="notification_downloads_channel_id" translatable="false">xtra_downloads_channel</string>
     <string name="notification_live_channel_id" translatable="false">xtra_live_channel</string>
+    <string name="notification_playback_channel_id" translatable="false">xtra_playback_channel</string>
     <string name="lang_de" translatable="false">Deutsch</string>
     <string name="lang_en" translatable="false">English</string>
     <string name="lang_es" translatable="false">Español</string>
@@ -412,7 +413,6 @@
     <string name="followed_games">Followed games</string>
     <string name="irc_msgid_highlighted_message">Highlighted message</string>
     <string name="irc_msgid_announcement">Announcement</string>
-    <string name="debug_secondview">Movable in app PIP</string>
     <string name="add_bookmark">Add bookmark</string>
     <string name="show_vod_time_left">Show time left on bookmarked vods</string>
     <string name="vod_time_left">Auto deleted in %s</string>
@@ -729,8 +729,6 @@
     <string name="add_tag">Add tag</string>
     <string name="save_filters">Save filters</string>
     <string name="delete_filter_message">Are you sure you want to delete this filter?</string>
-    <string name="delete_recent_search_item">Are you sure you want to delete this search?</string>
-    <string name="store_recent_searches">Store recent searches</string>
-    <string name="delete_recent_searches">Delete recent searches</string>
-    <string name="delete_recent_searches_message">Are you sure you want to delete all recent searches?</string>
+    <string name="use_custom_playback_service">Use custom playback service</string>
+    <string name="move_player_freely">Move minimized player freely</string>
 </resources>
