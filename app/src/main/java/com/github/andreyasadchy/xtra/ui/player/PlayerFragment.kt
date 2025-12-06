@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
@@ -14,7 +13,6 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.Icon
-import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
@@ -95,7 +93,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.math.max
-import kotlin.text.toIntOrNull
 
 @OptIn(UnstableApi::class)
 @AndroidEntryPoint
@@ -1589,55 +1586,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         )
     }
 
-    private fun preferredQuality(): String? {
-        val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-        var defaultQuality = prefs.getString(C.PLAYER_DEFAULTQUALITY, "saved")?.substringBefore(" ")
-
-        if (!connectivityManager.isActiveNetworkMetered) return defaultQuality
-
-        if (defaultQuality == "saved") {
-            defaultQuality = prefs.getString(C.PLAYER_QUALITY, "720p60")?.substringBefore(" ")
-        }
-
-        // Do not save the selected quality when using mobile data.
-        viewModel.saveQuality = false
-
-        val mobileQuality = prefs.getString(C.LIMIT_QUALITY_MOBILE_DATA, "no_limit")?.substringBefore(" ")
-
-        if (mobileQuality == "no_limit") return defaultQuality
-
-        if (defaultQuality == "auto") return mobileQuality
-
-        return when (mobileQuality) {
-            AUDIO_ONLY_QUALITY, CHAT_ONLY_QUALITY -> mobileQuality
-            else -> findLowerQuality(mobileQuality, defaultQuality)
-        }
-    }
-
-
-    private fun findLowerQuality(qualityString1: String?, qualityString2: String?): String? {
-        if (qualityString1 == null) return qualityString2
-        if (qualityString2 == null) return qualityString1
-
-        val (resolution1, fps1) = extractQualityInfo(qualityString1)
-        val (resolution2, fps2) = extractQualityInfo(qualityString2)
-
-        return when {
-            resolution1 < resolution2 || (resolution1 == resolution2 && fps1 < fps2) -> qualityString1
-            else -> qualityString2
-        }
-    }
-
-    private fun extractQualityInfo(qualityString: String): Pair<Int, Int> {
-        val quality = qualityString.split("p")
-        val resolution = quality.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 0
-        val fps = quality.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
-        return resolution to fps
-    }
-
     protected fun setDefaultQuality() {
-        val defaultQuality = preferredQuality()
+        val defaultQuality = prefs.getString(C.PLAYER_DEFAULTQUALITY, "saved")?.substringBefore(" ")
         viewModel.quality = when (defaultQuality) {
             "saved" -> {
                 val savedQuality = prefs.getString(C.PLAYER_QUALITY, "720p60")?.substringBefore(" ")

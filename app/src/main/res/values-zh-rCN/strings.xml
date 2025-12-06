@@ -726,5 +726,4 @@
     <string name="owner">Owner: %s</string>
     <string name="original_name">Original name: %s</string>
     <string name="followersCount">Show followers count on games</string>
-    <string name="limit_quality_mobile_data">Limit player quality on mobile data</string>
 </resources>

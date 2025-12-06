@@ -112,7 +112,6 @@ class PlayerViewModel @Inject constructor(
     var updateQualities = false
     var started = false
     var restoreQuality = false
-    var saveQuality = true
     var resume = false
     var hidden = false
     val loaded = MutableStateFlow(false)
