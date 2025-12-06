@@ -1,6 +1,5 @@
 package com.github.andreyasadchy.xtra.db
 
-import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -11,9 +10,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface BookmarksDao {
-
-    @Query("SELECT * FROM bookmarks")
-    fun getAllPagingSource(): PagingSource<Int, Bookmark>
 
     @Query("SELECT * FROM bookmarks")
     fun getAllFlow(): Flow<List<Bookmark>>

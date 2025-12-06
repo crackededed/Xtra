@@ -714,6 +714,10 @@
     <string name="delete_filter_message">Möchtest du diesen Filter wirklich löschen?</string>
     <string name="use_custom_playback_service">Use custom playback service</string>
     <string name="move_player_freely">Move minimized player freely</string>
-    <string name="about">About</string>
-    <string name="team">Team:</string>
+    <string name="store_recent_searches">Store recent searches</string>
+    <string name="delete_recent_searches">Delete recent searches</string>
+    <string name="delete_recent_searches_message">Are you sure you want to delete all recent searches?</string>
+    <string name="deletion_date">Deletion date</string>
+    <string name="creation_date">Creation date</string>
+    <string name="saved_date">Saved date</string>
 </resources>

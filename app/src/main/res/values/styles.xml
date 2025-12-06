@@ -204,12 +204,6 @@
         <item name="android:layout_height">50dp</item>
     </style>
 
-    <style name="ChatView">
-        <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">0dp</item>
-        <item name="android:background">?android:colorBackground</item>
-    </style>
-
     <style name="ChatMessageBannerOverlay">
         <item name="cornerSizeBottomLeft">0dp</item>
         <item name="cornerSizeBottomRight">0dp</item>

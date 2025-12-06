@@ -29,7 +29,7 @@ class PlayerGamesDialogAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = FragmentGamesListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return ViewHolder(binding, fragment)
+        return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -38,14 +38,13 @@ class PlayerGamesDialogAdapter(
 
     inner class ViewHolder(
         private val binding: FragmentGamesListItemBinding,
-        private val fragment: Fragment,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: Game?) {
             with(binding) {
                 val context = fragment.requireContext()
                 root.setOnClickListener {
                     item?.vodPosition?.let { position ->
-                        (fragment as? PlayerGamesDialog)?.listener?.seek(position.toLong())
+                        (fragment.parentFragment as? PlayerFragment)?.seek(position.toLong())
                     }
                     (fragment as? PlayerGamesDialog)?.dismiss()
                 }
