@@ -35,6 +35,7 @@ import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.reduceDragSensitivity
+import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
@@ -106,6 +107,11 @@ class SearchPagerFragment : BaseNetworkFragment(), FragmentHost {
             }
             if (tabs.size <= 1) {
                 tabLayout.gone()
+            } else {
+                if (tabs.size >= 5) {
+                    tabLayout.tabGravity = TabLayout.GRAVITY_CENTER
+                    tabLayout.tabMode = TabLayout.MODE_SCROLLABLE
+                }
             }
             val adapter = SearchPagerAdapter(this@SearchPagerFragment, tabs)
             viewPager.adapter = adapter

@@ -726,9 +726,7 @@ class ChatViewModel @Inject constructor(
                     onRoomState = onRoomState,
                 ).apply { connect() }
             }
-        }
-
-        else {
+        } else {
             val gqlToken = gqlHeaders[C.HEADER_TOKEN]?.removePrefix("OAuth ")
             val helixToken = helixHeaders[C.HEADER_TOKEN]?.removePrefix("Bearer ")
             if (applicationContext.prefs().getBoolean(C.CHAT_USE_WEBSOCKET, false)) {

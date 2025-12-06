@@ -71,6 +71,7 @@ import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -432,6 +433,11 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
             }
             if (tabs.size <= 1) {
                 tabLayout.gone()
+            } else {
+                if (tabs.size >= 5) {
+                    tabLayout.tabGravity = TabLayout.GRAVITY_CENTER
+                    tabLayout.tabMode = TabLayout.MODE_SCROLLABLE
+                }
             }
             val adapter = ChannelPagerAdapter(this@ChannelPagerFragment, args, tabs)
             viewPager.adapter = adapter

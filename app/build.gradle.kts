@@ -72,6 +72,8 @@ dependencies {
     implementation("com.google.mlkit:translate:17.0.3")
 
     implementation(libs.material)
+    implementation(libs.markwon.core)
+    implementation(libs.markwon.linkify)
 
     implementation(libs.activity)
     implementation(libs.appcompat)
@@ -86,8 +88,6 @@ dependencies {
     implementation(libs.preference.ktx)
     implementation(libs.recyclerview)
     implementation(libs.room.runtime)
-    implementation(libs.core)
-    implementation(libs.linkify)
     ksp(libs.room.compiler)
     implementation(libs.room.paging)
     implementation(libs.swiperefreshlayout)

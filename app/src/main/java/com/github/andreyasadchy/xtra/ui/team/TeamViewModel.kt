@@ -8,8 +8,6 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import com.github.andreyasadchy.xtra.model.ui.Team
-import com.github.andreyasadchy.xtra.model.ui.TeamMember
-import com.github.andreyasadchy.xtra.model.ui.User
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.datasource.TeamMembersDataSource
 import com.github.andreyasadchy.xtra.util.C
@@ -19,7 +17,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,100 +30,53 @@ class TeamViewModel @Inject constructor(
     val integrity = MutableStateFlow<String?>(null)
 
     private val args = TeamFragmentArgs.fromSavedStateHandle(savedStateHandle)
+    val team = MutableStateFlow<Team?>(null)
 
-    private val _team = MutableStateFlow<Team?>(null)
-    val team: StateFlow<Team?> = _team
+    private var isLoading = false
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow = Pager(
         PagingConfig(pageSize = 30, prefetchDistance = 10, initialLoadSize = 30)
     ) {
         TeamMembersDataSource(
-                teamName = args.teamName,
-                gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext),
-                graphQLRepository = graphQLRepository,
-                enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-            )
+            teamName = args.teamName,
+            gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext),
+            graphQLRepository = graphQLRepository,
+            enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+            networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+        )
     }.flow.cachedIn(viewModelScope)
 
-    fun loadTeam(
-        networkLibrary: String?,
-        gqlHeaders: Map<String, String>,
-        enableIntegrity: Boolean
-    ) {
-        if (_team.value == null) {
+    fun loadTeamInfo(teamName: String?, networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
+        if (teamName != null && team.value == null && !isLoading) {
+            isLoading = true
             viewModelScope.launch {
-                _team.value = try {
-                    val response =
-                        graphQLRepository.loadQueryTeam(
-                            networkLibrary,
-                            gqlHeaders,
-                            name = args.teamName
-                        )
+                val response = try {
+                    val response = graphQLRepository.loadQueryTeam(networkLibrary, gqlHeaders, teamName)
                     if (enableIntegrity && integrity.value == null) {
                         response.errors?.find { it.message == "failed integrity check" }?.let {
                             integrity.value = "refresh"
+                            isLoading = false
                             return@launch
                         }
                     }
-                    response.data!!.team?.let {
+                    response.data!!.team?.let { team ->
                         Team(
-                            id = it.id,
-                            backgroundImageURL = it.backgroundImageURL,
-                            bannerURL = it.bannerURL,
-                            description = it.description,
-                            displayName = it.displayName,
-                            logoURL = it.logoURL,
-                            owner = it.owner?.let { owner ->
-                                User(
-                                    channelId = owner.id,
-                                    channelLogin = owner.login
-                                )
-                            }
+                            displayName = team.displayName,
+                            description = team.description,
+                            logoUrl = team.logoURL,
+                            bannerUrl = team.bannerURL,
+                            memberCount = team.members?.totalCount,
+                            ownerLogin = team.owner?.login,
+                            ownerName = team.owner?.displayName,
                         )
                     }
                 } catch (e: Exception) {
-                    try {
-                        val response =
-                            graphQLRepository.loadTeamsLandingBody(
-                                networkLibrary,
-                                gqlHeaders,
-                                args.teamName
-                            )
-                        if (enableIntegrity && integrity.value == null) {
-                            response.errors?.find { it.message == "failed integrity check" }?.let {
-                                integrity.value = "refresh"
-                                return@launch
-                            }
-                        }
-                        response.data!!.team.let {
-                            Team(
-                                id = it.id,
-                                backgroundImageURL = it.backgroundImageURL,
-                                bannerURL = it.bannerURL,
-                                description = it.description,
-                                displayName = it.displayName,
-                                logoURL = it.logoURL,
-                                owner = it.owner?.let { owner ->
-                                    User(
-                                        channelId = owner.id,
-                                        channelLogin = owner.login
-                                    )
-                                }
-                            )
-                        }
-                    } catch (e: Exception) {
-                        null
-                    }
+                    null
                 }
+                team.value = response
+                isLoading = false
             }
-        }
-    }
-
-    fun retry(networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
-        if (_team.value == null) {
-            loadTeam(networkLibrary, gqlHeaders, enableIntegrity)
         }
     }
 }

@@ -47,8 +47,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
-                <data android:host="clips.twitch.tv" />
-                <data android:host="m.twitch.tv" />
+                <data android:host="*.twitch.tv" />
                 <data android:host="twitch.tv" />
             </intent-filter>
         </activity>
@@ -114,12 +113,4 @@
             </intent-filter>
         </receiver>
     </application>
-
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <category android:name="android.intent.category.BROWSABLE" />
-            <data android:scheme="https" />
-        </intent>
-    </queries>
 </manifest>

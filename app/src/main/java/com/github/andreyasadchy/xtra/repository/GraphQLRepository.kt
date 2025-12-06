@@ -13,7 +13,6 @@ import com.apollographql.apollo.api.json.jsonReader
 import com.apollographql.apollo.api.json.writeObject
 import com.apollographql.apollo.api.parseResponse
 import com.github.andreyasadchy.xtra.BadgesQuery
-import com.github.andreyasadchy.xtra.ChannelAboutUserQuery
 import com.github.andreyasadchy.xtra.ClipUrlsQuery
 import com.github.andreyasadchy.xtra.GameBoxArtQuery
 import com.github.andreyasadchy.xtra.GameClipsQuery
@@ -24,9 +23,12 @@ import com.github.andreyasadchy.xtra.SearchGamesQuery
 import com.github.andreyasadchy.xtra.SearchStreamsQuery
 import com.github.andreyasadchy.xtra.SearchVideosQuery
 import com.github.andreyasadchy.xtra.StreamPlaybackAccessTokenQuery
+import com.github.andreyasadchy.xtra.TeamLiveMembersQuery
+import com.github.andreyasadchy.xtra.TeamMembersQuery
 import com.github.andreyasadchy.xtra.TeamQuery
 import com.github.andreyasadchy.xtra.TopGamesQuery
 import com.github.andreyasadchy.xtra.TopStreamsQuery
+import com.github.andreyasadchy.xtra.UserAboutQuery
 import com.github.andreyasadchy.xtra.UserBadgesQuery
 import com.github.andreyasadchy.xtra.UserChannelPageQuery
 import com.github.andreyasadchy.xtra.UserCheerEmotesQuery
@@ -48,8 +50,6 @@ import com.github.andreyasadchy.xtra.VideoPlaybackAccessTokenQuery
 import com.github.andreyasadchy.xtra.VideoQuery
 import com.github.andreyasadchy.xtra.model.gql.ErrorResponse
 import com.github.andreyasadchy.xtra.model.gql.channel.ChannelClipsResponse
-import com.github.andreyasadchy.xtra.model.gql.channel.ChannelPanelsResponse
-import com.github.andreyasadchy.xtra.model.gql.channel.ChannelRootAboutPanelResponse
 import com.github.andreyasadchy.xtra.model.gql.channel.ChannelSuggestedResponse
 import com.github.andreyasadchy.xtra.model.gql.channel.ChannelVideosResponse
 import com.github.andreyasadchy.xtra.model.gql.channel.ChannelViewerListResponse
@@ -82,8 +82,6 @@ import com.github.andreyasadchy.xtra.model.gql.search.SearchStreamTagsResponse
 import com.github.andreyasadchy.xtra.model.gql.search.SearchVideosResponse
 import com.github.andreyasadchy.xtra.model.gql.stream.StreamsResponse
 import com.github.andreyasadchy.xtra.model.gql.stream.ViewerCountResponse
-import com.github.andreyasadchy.xtra.model.gql.team.TeamLandingMemberListResponse
-import com.github.andreyasadchy.xtra.model.gql.team.TeamsLandingBodyResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoGamesResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoMessagesResponse
 import com.github.andreyasadchy.xtra.type.BadgeImageSize
@@ -341,6 +339,31 @@ class GraphQLRepository @Inject constructor(
         sendQuery(networkLibrary, headers, query)
     }
 
+    suspend fun loadQueryTeam(networkLibrary: String?, headers: Map<String, String>, name: String): ApolloResponse<TeamQuery.Data> = withContext(Dispatchers.IO) {
+        val query = TeamQuery(
+            name = name,
+        )
+        sendQuery(networkLibrary, headers, query)
+    }
+
+    suspend fun loadQueryTeamLiveMembers(networkLibrary: String?, headers: Map<String, String>, name: String, first: Int?, after: String?): ApolloResponse<TeamLiveMembersQuery.Data> = withContext(Dispatchers.IO) {
+        val query = TeamLiveMembersQuery(
+            name = name,
+            first = Optional.Present(first),
+            after = Optional.Present(after),
+        )
+        sendQuery(networkLibrary, headers, query)
+    }
+
+    suspend fun loadQueryTeamMembers(networkLibrary: String?, headers: Map<String, String>, name: String, first: Int?, after: String?): ApolloResponse<TeamMembersQuery.Data> = withContext(Dispatchers.IO) {
+        val query = TeamMembersQuery(
+            name = name,
+            first = Optional.Present(first),
+            after = Optional.Present(after),
+        )
+        sendQuery(networkLibrary, headers, query)
+    }
+
     suspend fun loadQueryTopGames(networkLibrary: String?, headers: Map<String, String>, tags: List<String>?, first: Int?, after: String?): ApolloResponse<TopGamesQuery.Data> = withContext(Dispatchers.IO) {
         val query = TopGamesQuery(
             tags = Optional.Present(tags),
@@ -363,6 +386,14 @@ class GraphQLRepository @Inject constructor(
 
     suspend fun loadQueryUser(networkLibrary: String?, headers: Map<String, String>, id: String? = null, login: String? = null): ApolloResponse<UserQuery.Data> = withContext(Dispatchers.IO) {
         val query = UserQuery(
+            id = if (!id.isNullOrBlank()) Optional.Present(id) else Optional.Absent,
+            login = if (!login.isNullOrBlank()) Optional.Present(login) else Optional.Absent,
+        )
+        sendQuery(networkLibrary, headers, query)
+    }
+
+    suspend fun loadQueryUserAbout(networkLibrary: String?, headers: Map<String, String>, id: String?, login: String?): ApolloResponse<UserAboutQuery.Data> = withContext(Dispatchers.IO) {
+        val query = UserAboutQuery(
             id = if (!id.isNullOrBlank()) Optional.Present(id) else Optional.Absent,
             login = if (!login.isNullOrBlank()) Optional.Present(login) else Optional.Absent,
         )
@@ -763,48 +794,6 @@ class GraphQLRepository @Inject constructor(
             }
         } else headers
         json.decodeFromString<ChannelSuggestedResponse>(sendPersistedQuery(networkLibrary, headers, body))
-    }
-
-    suspend fun loadChannelPanels(networkLibrary: String?, headers: Map<String, String>, channelId: String?): ChannelPanelsResponse = withContext(Dispatchers.IO) {
-        val body = buildJsonObject {
-            putJsonObject("extensions") {
-                putJsonObject("persistedQuery") {
-                    put("sha256Hash", "06d5b518ba3b016ebe62000151c9a81f162f2a1430eb1cf9ad0678ba56d0a768")
-                    put("version", 1)
-                }
-            }
-            put("operationName", "ChannelPanels")
-            putJsonObject("variables") {
-                put("id", channelId)
-            }
-        }.toString()
-        json.decodeFromString<ChannelPanelsResponse>(sendPersistedQuery(networkLibrary, headers, body))
-    }
-
-    suspend fun loadQueryChannelAboutUser(networkLibrary: String?, headers: Map<String, String>, id: String? = null, login: String? = null): ApolloResponse<ChannelAboutUserQuery.Data> = withContext(Dispatchers.IO) {
-        val query = ChannelAboutUserQuery(
-            id = if (!id.isNullOrBlank()) Optional.Present(id) else Optional.Absent,
-            login = if (!login.isNullOrBlank()) Optional.Present(login) else Optional.Absent,
-        )
-        sendQuery(networkLibrary, headers, query)
-    }
-
-    suspend fun loadChannelRootAboutPanel(networkLibrary: String?, headers: Map<String, String>, channelLogin: String?): ChannelRootAboutPanelResponse = withContext(Dispatchers.IO) {
-        val body = buildJsonObject {
-            putJsonObject("extensions") {
-                putJsonObject("persistedQuery") {
-                    put("sha256Hash", "0df42c4d26990ec1216d0b815c92cc4a4a806e25b352b66ac1dd91d5a1d59b80")
-                    put("version", 1)
-                }
-            }
-            put("operationName", "ChannelRoot_AboutPanel")
-            putJsonObject("variables") {
-                put("channelLogin", channelLogin)
-                put("skipSchedule", false)
-                put("includeIsDJ", true)
-            }
-        }.toString()
-        json.decodeFromString<ChannelRootAboutPanelResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
     suspend fun loadChannelVideos(networkLibrary: String?, headers: Map<String, String>, channelLogin: String?, type: String?, sort: String?, limit: Int?, cursor: String?): ChannelVideosResponse = withContext(Dispatchers.IO) {
@@ -1688,49 +1677,5 @@ class GraphQLRepository @Inject constructor(
             }
         }.toString()
         json.decodeFromString<ErrorResponse>(sendPersistedQuery(networkLibrary, headers, body))
-    }
-
-    suspend fun loadQueryTeam(networkLibrary: String?, headers: Map<String, String>, name: String): ApolloResponse<TeamQuery.Data> = withContext(Dispatchers.IO) {
-        val query = TeamQuery(
-            name = name
-        )
-        sendQuery(networkLibrary, headers, query)
-    }
-
-    suspend fun loadTeamsLandingBody(networkLibrary: String?, headers: Map<String, String>, teamName: String): TeamsLandingBodyResponse = withContext(Dispatchers.IO) {
-        val body = buildJsonObject {
-            putJsonObject("extensions") {
-                putJsonObject("persistedQuery") {
-                    put("sha256Hash", "289f1df5b41a742d1101fbbcbc7c2d68551864548c32e01ff103a5431e07e2b5")
-                    put("version", 1)
-                }
-            }
-            put("operationName", "TeamsLandingBody")
-            putJsonObject("variables") {
-                put("teamName", teamName)
-            }
-        }.toString()
-        json.decodeFromString<TeamsLandingBodyResponse>(sendPersistedQuery(networkLibrary, headers, body))
-    }
-
-    suspend fun loadTeamLandingMemberList(networkLibrary: String?, headers: Map<String, String>, teamName: String, withLiveMembers: Boolean, withMembers: Boolean, liveMembersCursor: String?, membersCursor: String?): TeamLandingMemberListResponse = withContext(Dispatchers.IO) {
-        val body = buildJsonObject {
-            putJsonObject("extensions") {
-                putJsonObject("persistedQuery") {
-                    put("sha256Hash", "ee7d5bb7aeb195ac05164b6f306f1eb51db407c59f4398cbaa7901a3c3ba833d")
-                    put("version", 1)
-                }
-            }
-            put("operationName", "TeamLandingMemberList")
-            putJsonObject("variables") {
-                put("teamName", teamName)
-                put("withLiveMembers", withLiveMembers)
-                put("withMembers", withMembers)
-                put("liveMembersCursor", liveMembersCursor)
-                put("membersCursor", membersCursor)
-            }
-        }.toString()
-
-        json.decodeFromString<TeamLandingMemberListResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 }

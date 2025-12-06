@@ -15,8 +15,7 @@
             android:id="@+id/collapsingToolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed"
-            app:scrimVisibleHeightTrigger="147dp">
+            app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed">
 
             <LinearLayout
                 android:id="@+id/toolbarContainer"
@@ -27,11 +26,9 @@
                 android:orientation="vertical">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/userLayout"
+                    android:id="@+id/teamLayout"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-
-                    tools:visibility="visible">
+                    android:layout_height="wrap_content">
 
                     <ImageView
                         android:id="@+id/bannerImage"
@@ -85,6 +82,26 @@
                             android:visibility="gone"
                             tools:text="@sample/games.json/top/game/name"
                             tools:visibility="visible" />
+
+                        <TextView
+                            android:id="@+id/teamMembers"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?attr/textAppearanceBodyMedium"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:visibility="gone"
+                            tools:text="123456 members"
+                            tools:visibility="visible" />
+
+                        <TextView
+                            android:id="@+id/teamOwner"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?attr/textAppearanceBodyMedium"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:visibility="gone"
+                            tools:text="@string/owner"
+                            tools:visibility="visible" />
                     </LinearLayout>
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
@@ -93,9 +110,9 @@
                     android:id="@+id/teamDescription"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:maxLines="3"
                     android:padding="7dp"
                     android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:maxLines="3"
                     android:textColor="?android:attr/textColorSecondary"
                     android:visibility="gone"
                     tools:text="@sample/streams.json/streams/channel/status"
@@ -115,11 +132,11 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <com.github.andreyasadchy.xtra.ui.view.GridRecyclerView
-        android:id="@+id/recycler_view"
+        android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:clipToPadding="false"
-        tools:listitem="@layout/fragment_streams_list_item_compact"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:listitem="@layout/fragment_streams_list_item_compact" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

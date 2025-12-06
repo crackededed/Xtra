@@ -35,7 +35,6 @@ type BroadcastSettings {
 }
 
 type Channel {
-    id: ID
     socialMedias: [SocialMedia!]
 }
 
@@ -114,6 +113,14 @@ type ClipVideoQuality {
     frameRate: Float
     quality: String
     sourceURL: String
+}
+
+type DefaultPanel implements Panel {
+    description: String
+    id: ID
+    imageURL: String
+    linkURL: String
+    title: String
 }
 
 type Emote {
@@ -267,8 +274,6 @@ type SearchUserEdge {
 }
 
 type SocialMedia {
-    id: ID
-    name: String,
     title: String
     url: String
 }
@@ -295,6 +300,11 @@ type StreamEdge {
     node: Stream
 }
 
+type SubscriptionProduct {
+    name: String
+    tier: String
+}
+
 type Tag {
     id: ID
     localizedName: String
@@ -302,12 +312,12 @@ type Tag {
 }
 
 type Team {
-    id: ID
-    backgroundImageURL: String
     bannerURL: String
     description: String
     displayName: String
+    liveMembers(first: Int, after: Cursor): UserConnection
     logoURL: String
+    members(first: Int, after: Cursor, metricsRevealedFilter: MemberMetricsRevealedParams): UserConnection
     name: String
     owner: User
 }
@@ -332,17 +342,30 @@ type User {
     id: ID
     login: String
     lastBroadcast: Broadcast
-    profileImageURL(width: Int): String
+    panels(hideExtensions: Boolean): [Panel]
     primaryTeam: Team
+    profileImageURL(width: Int): String
     roles: UserRoles
     self: UserSelfConnection
     stream: Stream
+    subscriptionProducts: [SubscriptionProduct]
     videos(first: Int, after: Cursor, types: [BroadcastType!], sort: VideoSort): VideoConnection
+}
+
+type UserConnection {
+    edges: [UserEdge]
+    pageInfo: PageInfo
+    totalCount: Int
 }
 
 type UserDoesNotExist {
     key: String!
     reason: String!
+}
+
+type UserEdge {
+    cursor: Cursor
+    node: User
 }
 
 type UserError {
@@ -381,6 +404,10 @@ type VideoConnection {
 type VideoEdge {
     cursor: Cursor
     node: Video
+}
+
+interface Panel {
+    id: ID
 }
 
 input GameClipsInput {
@@ -508,6 +535,13 @@ enum Language {
     VI
     ZH
     ZH_HK
+}
+
+enum MemberMetricsRevealedParams {
+    NONE
+    STATS
+    REVENUE
+    STATS_AND_REVENUE
 }
 
 enum SearchIndex {

@@ -188,7 +188,8 @@
         <argument
             android:name="teamName"
             app:argType="string"
-            app:nullable="false" />
+            app:nullable="true"
+            android:defaultValue="@null" />
     </fragment>
     <action
         android:id="@+id/action_global_teamFragment"

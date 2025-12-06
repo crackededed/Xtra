@@ -8,23 +8,22 @@
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/titleText"
+        android:id="@+id/title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Sample panel text"
-        android:textAppearance="?attr/textAppearanceTitleLarge"
+        android:layout_marginBottom="12dp"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
         android:textStyle="bold"
         android:visibility="gone"
-        android:textIsSelectable="true"
-        android:layout_marginBottom="6dp"
+        tools:text="title"
         tools:visibility="visible" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/imageLayout"
         android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
         android:visibility="gone"
-        android:layout_height="wrap_content"
         tools:visibility="visible">
 
         <ImageView
@@ -33,21 +32,22 @@
             android:layout_height="wrap_content"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
-            tools:src="@tools:sample/backgrounds/scenic"
-            app:layout_constraintWidth_percent="0.75"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent="0.75"
+            tools:src="@tools:sample/backgrounds/scenic" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView
-        android:id="@+id/descriptionText"
+        android:id="@+id/description"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Sample panel description"
-        android:textAppearance="?attr/textAppearanceBody2"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="?android:attr/textColorSecondary"
         android:visibility="gone"
+        tools:text="description"
         tools:visibility="visible" />
 
 </LinearLayout>
