@@ -1081,7 +1081,7 @@ class GraphQLRepository @Inject constructor(
         val body = buildJsonObject {
             putJsonObject("extensions") {
                 putJsonObject("persistedQuery") {
-                    put("sha256Hash", "af523cd8807a390830351eb5362633a2c718d6b5cd05494a894af86770c817d6")
+                    put("sha256Hash", "65ac84241dfe071efc00be7aebcc4064eec8164acb477a2e4a06e56dceb66013")
                     put("version", 1)
                 }
             }
