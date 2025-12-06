@@ -3,6 +3,7 @@ package com.github.andreyasadchy.xtra.ui.settings
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.admin.DevicePolicyManager
+import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -473,12 +474,14 @@ class SettingsActivity : AppCompatActivity() {
                                 !requireContext().prefs().getBoolean(C.UPDATE_USE_BROWSER, false) &&
                                 !requireContext().packageManager.canRequestPackageInstalls()
                             ) {
-                                val intent = Intent(
-                                    Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                                    Uri.parse("package:${requireContext().packageName}")
-                                )
-                                if (intent.resolveActivity(requireContext().packageManager) != null) {
-                                    requireContext().startActivity(intent)
+                                try {
+                                    val intent = Intent(
+                                        Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                                        Uri.parse("package:${requireContext().packageName}")
+                                    )
+                                    startActivity(intent)
+                                } catch (e: ActivityNotFoundException) {
+
                                 }
                             }
                             requireActivity().getAlertDialogBuilder()
@@ -486,13 +489,15 @@ class SettingsActivity : AppCompatActivity() {
                                 .setMessage(getString(R.string.update_message))
                                 .setPositiveButton(getString(R.string.yes)) { _, _ ->
                                     if (requireContext().prefs().getBoolean(C.UPDATE_USE_BROWSER, false)) {
-                                        val intent = Intent(Intent.ACTION_VIEW, it.toUri())
-                                        if (intent.resolveActivity(requireContext().packageManager) != null) {
+                                        try {
+                                            val intent = Intent(Intent.ACTION_VIEW, it.toUri()).apply {
+                                                addCategory(Intent.CATEGORY_BROWSABLE)
+                                            }
+                                            requireContext().startActivity(intent)
                                             requireContext().tokenPrefs().edit {
                                                 putLong(C.UPDATE_LAST_CHECKED, System.currentTimeMillis())
                                             }
-                                            requireContext().startActivity(intent)
-                                        } else {
+                                        } catch (e: ActivityNotFoundException) {
                                             requireContext().toast(R.string.no_browser_found)
                                         }
                                     } else {
@@ -714,6 +719,7 @@ class SettingsActivity : AppCompatActivity() {
                             "1" -> getString(R.string.videos)
                             "2" -> getString(R.string.clips)
                             "3" -> getString(R.string.chat)
+                            "4" -> getString(R.string.about)
                             else -> getString(R.string.videos)
                         },
                         default = split[1] != "0",
@@ -1308,12 +1314,14 @@ class SettingsActivity : AppCompatActivity() {
                     !requireContext().prefs().getBoolean(C.UPDATE_USE_BROWSER, false) &&
                     !requireContext().packageManager.canRequestPackageInstalls()
                 ) {
-                    val intent = Intent(
-                        Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                        Uri.parse("package:${requireContext().packageName}")
-                    )
-                    if (intent.resolveActivity(requireContext().packageManager) != null) {
-                        requireContext().startActivity(intent)
+                    try {
+                        val intent = Intent(
+                            Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                            Uri.parse("package:${requireContext().packageName}")
+                        )
+                        startActivity(intent)
+                    } catch (e: ActivityNotFoundException) {
+
                     }
                 }
                 true
@@ -1331,12 +1339,14 @@ class SettingsActivity : AppCompatActivity() {
                     requireContext().prefs().getBoolean(C.UPDATE_CHECK_ENABLED, false) &&
                     !requireContext().packageManager.canRequestPackageInstalls()
                 ) {
-                    val intent = Intent(
-                        Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                        Uri.parse("package:${requireContext().packageName}")
-                    )
-                    if (intent.resolveActivity(requireContext().packageManager) != null) {
-                        requireContext().startActivity(intent)
+                    try {
+                        val intent = Intent(
+                            Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                            Uri.parse("package:${requireContext().packageName}")
+                        )
+                        startActivity(intent)
+                    } catch (e: ActivityNotFoundException) {
+
                     }
                 }
                 true

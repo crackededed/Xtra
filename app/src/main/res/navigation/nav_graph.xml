@@ -182,4 +182,16 @@
     <action
         android:id="@+id/action_global_channelPagerFragment"
         app:destination="@id/channelPagerFragment" />
+    <fragment
+        android:id="@+id/teamFragment"
+        android:name="com.github.andreyasadchy.xtra.ui.team.TeamFragment">
+        <argument
+            android:name="teamName"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+    <action
+        android:id="@+id/action_global_teamFragment"
+        app:destination="@id/teamFragment" />
 </navigation>
