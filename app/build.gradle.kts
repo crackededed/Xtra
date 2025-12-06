@@ -30,7 +30,7 @@ android {
         minSdk = 16
         targetSdk = 36
         versionCode = 121
-        versionName = "2.51.6"
+        versionName = "2.52.0"
     }
 
     buildTypes {
@@ -88,6 +88,7 @@ android {
             "androidx.room:room-compiler:2.6.1",
             "androidx.room:room-paging:2.6.1",
             "androidx.room:room-runtime:2.6.1",
+            "androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01",
             "androidx.viewpager2:viewpager2:1.1.0-beta02",
             "androidx.webkit:webkit:1.9.0-alpha01",
             "androidx.work:work-runtime:2.9.1",
