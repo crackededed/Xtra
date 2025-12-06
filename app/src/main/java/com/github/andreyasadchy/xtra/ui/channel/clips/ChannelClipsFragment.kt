@@ -117,6 +117,7 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
         sortBar.root.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
                 VideosSortDialog.newInstance(
+                    sort = VideosSortDialog.SORT_VIEWS,
                     period = viewModel.period,
                     saved = args.channelId?.let { viewModel.getSortChannel(it) } != null
                 ).show(childFragmentManager, null)
