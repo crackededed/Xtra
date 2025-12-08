@@ -1,0 +1,32 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ "floating-chat-new" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and Lint
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug
+
+    - name: Run Lint
+      run: ./gradlew lintDebug
