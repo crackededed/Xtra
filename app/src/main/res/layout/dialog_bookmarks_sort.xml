@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="?attr/dialogPadding">
+
+        <RadioGroup
+            android:id="@+id/sort"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:text="@string/sort"
+                android:textAppearance="?attr/textAppearanceTitleSmall"
+                android:textStyle="bold" />
+
+            <RadioButton
+                android:id="@+id/deletion_date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/deletion_date" />
+
+            <RadioButton
+                android:id="@+id/creation_date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/creation_date" />
+
+            <RadioButton
+                android:id="@+id/saved_date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/saved_date" />
+        </RadioGroup>
+
+        <RadioGroup
+            android:id="@+id/order"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:text="@string/order"
+                android:textAppearance="?attr/textAppearanceTitleSmall"
+                android:textStyle="bold" />
+
+            <RadioButton
+                android:id="@+id/newest_first"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/descending" />
+
+            <RadioButton
+                android:id="@+id/oldest_first"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/ascending" />
+
+        </RadioGroup>
+
+        <Button
+            android:id="@+id/saveDefault"
+            style="?attr/bottomSheetButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/save_default" />
+
+        <Button
+            android:id="@+id/apply"
+            style="?attr/bottomSheetButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/apply" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

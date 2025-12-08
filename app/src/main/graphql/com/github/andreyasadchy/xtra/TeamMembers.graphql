@@ -1,0 +1,36 @@
+query TeamMembers($name: String!, $first: Int, $after: Cursor) {
+    team(name: $name) {
+        members(first: $first, after: $after) {
+            edges {
+                cursor
+                node {
+                    id
+                    login
+                    displayName
+                    profileImageURL(width: 300)
+                    stream {
+                        broadcaster {
+                            broadcastSettings {
+                                title
+                            }
+                        }
+                        createdAt
+                        game {
+                            id
+                            displayName
+                            slug
+                        }
+                        id
+                        freeformTags {
+                            name
+                        }
+                        viewersCount
+                    }
+                }
+            }
+            pageInfo {
+                hasNextPage
+            }
+        }
+    }
+}

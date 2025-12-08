@@ -6,10 +6,8 @@ import android.os.Build
 import android.os.ext.SdkExtensions
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.cachedIn
 import com.github.andreyasadchy.xtra.model.ui.Bookmark
+import com.github.andreyasadchy.xtra.model.ui.SortChannel
 import com.github.andreyasadchy.xtra.model.ui.User
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.model.ui.VodBookmarkIgnoredUser
@@ -17,6 +15,7 @@ import com.github.andreyasadchy.xtra.repository.BookmarksRepository
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
+import com.github.andreyasadchy.xtra.repository.SortChannelRepository
 import com.github.andreyasadchy.xtra.repository.VodBookmarkIgnoredUsersRepository
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.HttpEngineUtils
@@ -24,7 +23,9 @@ import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
 import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -42,6 +43,7 @@ class BookmarksViewModel @Inject internal constructor(
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
     private val bookmarksRepository: BookmarksRepository,
+    private val sortChannelRepository: SortChannelRepository,
     playerRepository: PlayerRepository,
     private val vodBookmarkIgnoredUsersRepository: VodBookmarkIgnoredUsersRepository,
     private val httpEngine: Lazy<HttpEngine>?,
@@ -57,11 +59,18 @@ class BookmarksViewModel @Inject internal constructor(
     private var updatedUsers = false
     private var updatedVideos = false
 
-    val flow = Pager(
-        PagingConfig(pageSize = 30, prefetchDistance = 3, initialLoadSize = 30),
-    ) {
-        bookmarksRepository.loadBookmarksPagingSource()
-    }.flow.cachedIn(viewModelScope)
+    val filter = MutableStateFlow<Filter?>(null)
+    val sortText = MutableStateFlow<CharSequence?>(null)
+
+    val sort: String
+        get() = filter.value?.sort ?: BookmarksSortDialog.SORT_SAVED_AT
+    val order: String
+        get() = filter.value?.order ?: BookmarksSortDialog.ORDER_DESC
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val flow = filter.flatMapLatest { filter ->
+        bookmarksRepository.loadBookmarksFlow()
+    }
 
     fun delete(bookmark: Bookmark) {
         viewModelScope.launch {
@@ -404,4 +413,21 @@ class BookmarksViewModel @Inject internal constructor(
             }
         }
     }
+
+    suspend fun getSortChannel(id: String): SortChannel? {
+        return sortChannelRepository.getById(id)
+    }
+
+    suspend fun saveSortChannel(item: SortChannel) {
+        sortChannelRepository.save(item)
+    }
+
+    fun setFilter(sort: String?, order: String?) {
+        filter.value = Filter(sort, order)
+    }
+
+    class Filter(
+        val sort: String?,
+        val order: String?,
+    )
 }

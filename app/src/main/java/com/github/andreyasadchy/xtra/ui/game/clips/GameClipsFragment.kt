@@ -121,6 +121,7 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
         sortBar.root.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
                 VideosSortDialog.newInstance(
+                    sort = VideosSortDialog.SORT_VIEWS,
                     period = viewModel.period,
                     languages = viewModel.languages,
                     saved = args.gameId?.let { viewModel.getSortGame(it) } != null

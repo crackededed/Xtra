@@ -7,8 +7,8 @@ import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil3.imageLoader
 import coil3.request.CachePolicy
@@ -39,7 +39,7 @@ class BookmarksAdapter(
     private val showDownloadDialog: (Video) -> Unit,
     private val vodIgnoreUser: (String) -> Unit,
     private val deleteVideo: (Bookmark) -> Unit,
-) : PagingDataAdapter<Bookmark, BookmarksAdapter.PagingViewHolder>(
+) : ListAdapter<Bookmark, BookmarksAdapter.PagingViewHolder>(
     object : DiffUtil.ItemCallback<Bookmark>() {
         override fun areItemsTheSame(oldItem: Bookmark, newItem: Bookmark): Boolean =
             oldItem.id == newItem.id

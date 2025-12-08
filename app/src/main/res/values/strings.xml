@@ -734,4 +734,15 @@
     <string name="floating_chat_transparency" translatable="false">Floating chat opacity</string>
     <string name="floating_chat_button" translatable="false">Floating chat button</string>
     <string name="floating_chat_high_visibility" translatable="false">High visibility mode</string>
+    <string name="store_recent_searches">Store recent searches</string>
+    <string name="delete_recent_searches">Delete recent searches</string>
+    <string name="delete_recent_searches_message">Are you sure you want to delete all recent searches?</string>
+    <string name="deletion_date">Deletion date</string>
+    <string name="creation_date">Creation date</string>
+    <string name="saved_date">Saved date</string>
+    <string name="about">About</string>
+    <string name="team">Team: %s</string>
+    <string name="members">%s members</string>
+    <string name="owner">Owner: %s</string>
+    <string name="original_name">Original name: %s</string>
 </resources>

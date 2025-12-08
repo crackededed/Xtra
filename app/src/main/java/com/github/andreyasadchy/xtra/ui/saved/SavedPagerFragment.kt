@@ -36,6 +36,7 @@ import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.reduceDragSensitivity
 import com.github.andreyasadchy.xtra.util.tokenPrefs
+import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -162,6 +163,11 @@ class SavedPagerFragment : Fragment(), Scrollable, FragmentHost {
             }
             if (tabs.size <= 1) {
                 tabLayout.gone()
+            } else {
+                if (tabs.size >= 5) {
+                    tabLayout.tabGravity = TabLayout.GRAVITY_CENTER
+                    tabLayout.tabMode = TabLayout.MODE_SCROLLABLE
+                }
             }
             val adapter = SavedPagerAdapter(this@SavedPagerFragment, tabs)
             viewPager.adapter = adapter
