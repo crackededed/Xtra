@@ -733,7 +733,11 @@
     <string name="move_player_freely">Move minimized player freely</string>
     <string name="floating_chat_transparency" translatable="false">Floating chat opacity</string>
     <string name="floating_chat_button" translatable="false">Floating chat button</string>
+    <string name="floating_chat_enabled" translatable="false">Enable floating chat</string>
+    <string name="floating_chat_enabled_summary" translatable="false">Allow floating chat mode when double-tapping video</string>
     <string name="floating_chat_high_visibility" translatable="false">High visibility mode</string>
+    <string name="floating_chat_drag" translatable="false">Drag to move chat</string>
+    <string name="floating_chat_resize" translatable="false">Drag to resize chat</string>
     <string name="store_recent_searches">Store recent searches</string>
     <string name="delete_recent_searches">Delete recent searches</string>
     <string name="delete_recent_searches_message">Are you sure you want to delete all recent searches?</string>

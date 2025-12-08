@@ -155,6 +155,13 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
+        android:key="player_floating_chat_button"
+        android:title="@string/floating_chat_button"
+        android:icon="@drawable/baseline_chat_bubble_outline_black_24"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
         android:key="player_fullscreen"
         android:title="@string/fullscreen"
         android:icon="@drawable/baseline_fullscreen_black_24"

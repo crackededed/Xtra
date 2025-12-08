@@ -120,6 +120,7 @@
                 android:layout_height="24dp"
                 android:layout_marginStart="8dp"
                 android:src="@drawable/ic_drag_handle"
+                android:contentDescription="@string/floating_chat_drag"
                 app:tint="#FFFFFF" />
             
             <View
@@ -143,6 +144,7 @@
                 android:layout_height="32dp"
                 android:padding="4dp"
                 android:src="@drawable/ic_resize_handle"
+                android:contentDescription="@string/floating_chat_resize"
                 app:tint="#FFFFFF" />
         </LinearLayout>
     </RelativeLayout>

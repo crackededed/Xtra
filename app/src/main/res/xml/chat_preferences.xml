@@ -346,6 +346,14 @@
         app:singleLineTitle="false" />
 
     <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="floating_chat_enabled"
+        android:title="@string/floating_chat_enabled"
+        android:summary="@string/floating_chat_enabled_summary"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="floating_chat_high_visibility"
         android:title="@string/floating_chat_high_visibility"

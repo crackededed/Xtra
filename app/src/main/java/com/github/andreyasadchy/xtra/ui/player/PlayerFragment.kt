@@ -1274,7 +1274,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                             toggleChat.setOnClickListener { showChat() }
                         }
                     }
-                    if (!prefs.getBoolean(C.CHAT_DISABLE, false)) {
+                    // Show floating chat button only if enabled in settings and chat is not disabled
+                    if (prefs.getBoolean(C.PLAYER_FLOATING_CHAT_BUTTON, true) && !prefs.getBoolean(C.CHAT_DISABLE, false)) {
                         toggleFloatingChat.visible()
                         toggleFloatingChat.setOnClickListener { toggleFloatingChat() }
                     }
@@ -1666,6 +1667,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     )
                     start()
                 }
+                // Also show floating chat controls if floating chat is active
+                if (isFloatingChatEnabled) {
+                    binding.dragHandleZone.animate().alpha(1f).setDuration(250).start()
+                }
             } else {
                 binding.playerControls.root.removeCallbacks(controllerHideAction)
                 if (controllerAutoHide && controllerHideOnTouch && !binding.playerControls.progressBar.isPressed) {
@@ -1678,6 +1683,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 binding.playerControls.root.removeCallbacks(controllerHideAction)
                 binding.playerControls.root.alpha = 1f
                 binding.playerControls.root.visible()
+                // Also show floating chat controls if floating chat is active
+                if (isFloatingChatEnabled) {
+                    binding.dragHandleZone.alpha = 1f
+                }
                 if (controllerAutoHide && controllerHideOnTouch && !binding.playerControls.progressBar.isPressed) {
                     binding.playerControls.root.postDelayed(controllerHideAction, 3000)
                 }
@@ -1705,11 +1714,19 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 )
                 start()
             }
+            // Also hide floating chat controls if floating chat is active
+            if (isFloatingChatEnabled) {
+                binding.dragHandleZone.animate().alpha(0f).setDuration(250).start()
+            }
         } else {
             if (force) {
                 controllerAnimation?.cancel()
                 binding.playerControls.root.alpha = 0f
                 binding.playerControls.root.gone()
+                // Also hide floating chat controls if floating chat is active
+                if (isFloatingChatEnabled) {
+                    binding.dragHandleZone.alpha = 0f
+                }
             }
         }
     }
@@ -2590,11 +2607,9 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         true
                     }
                     MotionEvent.ACTION_MOVE -> {
-                        floatingChatRoot.animate()
-                            .x(event.rawX + dX)
-                            .y(event.rawY + dY)
-                            .setDuration(0)
-                            .start()
+                        // Direct property assignment is more efficient than animate() with duration 0
+                        floatingChatRoot.x = event.rawX + dX
+                        floatingChatRoot.y = event.rawY + dY
                         true
                     }
                     MotionEvent.ACTION_UP -> {
@@ -2619,8 +2634,16 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         if (isResizing) {
                             val deltaX = event.rawX - initialTouchX
                             val deltaY = event.rawY - initialTouchY
-                            val newWidth = (initialWidth + deltaX).toInt().coerceAtLeast(200)
-                            val newHeight = (initialHeight + deltaY).toInt().coerceAtLeast(200)
+                            
+                            // DPI-aware min/max constraints
+                            val density = resources.displayMetrics.density
+                            val minSizePx = (150 * density).toInt() // 150dp minimum
+                            val parent = floatingChatRoot.parent as? View
+                            val maxWidthPx = ((parent?.width ?: 800) * 0.6).toInt() // 60% max width
+                            val maxHeightPx = ((parent?.height ?: 600) * 0.8).toInt() // 80% max height
+                            
+                            val newWidth = (initialWidth + deltaX).toInt().coerceIn(minSizePx, maxWidthPx)
+                            val newHeight = (initialHeight + deltaY).toInt().coerceIn(minSizePx, maxHeightPx)
                             
                             // Update size - top-left corner stays fixed, bottom-right follows finger
                             floatingChatRoot.updateLayoutParams {
@@ -2646,12 +2669,20 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     }
 
     private fun cycleChatMode() {
+        // Check if floating chat is enabled in settings
+        val floatingChatAllowed = prefs.getBoolean(C.FLOATING_CHAT_ENABLED, true)
+        
         if (!isChatOpen && !isFloatingChatEnabled) {
             // Hidden -> Show sidebar chat
             showChat()
         } else if (isChatOpen && !isFloatingChatEnabled) {
-            // Sidebar -> Enable floating chat
-            toggleFloatingChat()
+            // Sidebar -> Enable floating chat (if allowed) or hide chat
+            if (floatingChatAllowed) {
+                toggleFloatingChat()
+            } else {
+                // Skip floating mode, go directly to hidden
+                hideChat()
+            }
         } else {
             // Floating -> Hide chat completely
             isFloatingChatEnabled = false
@@ -2694,14 +2725,21 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             binding.playerLayout.updateLayoutParams<FrameLayout.LayoutParams> {
                 marginEnd = 0
             }
+            // Show with fade-in animation
+            binding.floatingChatRoot.alpha = 0f
             binding.floatingChatRoot.visible()
+            binding.floatingChatRoot.animate().alpha(1f).setDuration(200).start()
+            // Start with drag handle hidden (synced with player controls)
+            binding.dragHandleZone.alpha = if (binding.playerControls.root.isVisible) 1f else 0f
             restoreFloatingChatPosition()
             // Apply transparency to the container background, not the whole view
             val transparency = prefs.getInt(C.FLOATING_CHAT_TRANSPARENCY, 100)
             val alpha = (transparency * 255 / 100).coerceIn(0, 255)
             binding.floatingChatContainer.setBackgroundColor(Color.argb(alpha, 0, 0, 0))
         } else {
-            binding.floatingChatRoot.gone()
+            // Hide with fade-out animation
+            binding.floatingChatRoot.animate().alpha(0f).setDuration(200)
+                .withEndAction { binding.floatingChatRoot.gone() }.start()
             // Restore sidebar chat with proper layout
             isChatOpen = true
             showChatLayout()
@@ -2727,21 +2765,39 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         val w = prefs.getInt("floating_chat_w_$channelId", -1)
         val h = prefs.getInt("floating_chat_h_$channelId", -1)
 
-        if (x != -1f && y != -1f) {
-            binding.floatingChatRoot.x = x
-            binding.floatingChatRoot.y = y
-        } else {
-            // Default position: top-right corner with some margin
-            binding.floatingChatRoot.doOnLayout {
-                val parentWidth = (binding.floatingChatRoot.parent as? View)?.width ?: 0
-                binding.floatingChatRoot.x = (parentWidth - binding.floatingChatRoot.width - 16).toFloat()
-                binding.floatingChatRoot.y = 16f
-            }
+        // DPI-aware default sizing - larger for tablets
+        val density = resources.displayMetrics.density
+        val screenWidthDp = resources.configuration.screenWidthDp
+        val isTablet = resources.configuration.smallestScreenWidthDp >= 600
+        val defaultWidthDp = if (isTablet) 300 else 200
+        val defaultHeightDp = if (isTablet) 400 else 280
+        val defaultWidthPx = (defaultWidthDp * density).toInt()
+        val defaultHeightPx = (defaultHeightDp * density).toInt()
+
+        // Apply saved size or use defaults
+        binding.floatingChatRoot.updateLayoutParams {
+            width = if (w != -1) w else defaultWidthPx
+            height = if (h != -1) h else defaultHeightPx
         }
-        if (w != -1 && h != -1) {
-            binding.floatingChatRoot.updateLayoutParams {
-                width = w
-                height = h
+
+        binding.floatingChatRoot.doOnLayout {
+            val parent = binding.floatingChatRoot.parent as? View ?: return@doOnLayout
+            val parentWidth = parent.width
+            val parentHeight = parent.height
+            val chatWidth = binding.floatingChatRoot.width
+            val chatHeight = binding.floatingChatRoot.height
+
+            if (x != -1f && y != -1f) {
+                // Clamp position to keep chat within screen bounds
+                val clampedX = x.coerceIn(0f, (parentWidth - chatWidth).coerceAtLeast(0).toFloat())
+                val clampedY = y.coerceIn(0f, (parentHeight - chatHeight).coerceAtLeast(0).toFloat())
+                binding.floatingChatRoot.x = clampedX
+                binding.floatingChatRoot.y = clampedY
+            } else {
+                // Default position: top-right corner with some margin
+                val marginPx = (16 * density).toInt()
+                binding.floatingChatRoot.x = (parentWidth - chatWidth - marginPx).coerceAtLeast(0).toFloat()
+                binding.floatingChatRoot.y = marginPx.toFloat()
             }
         }
     }
