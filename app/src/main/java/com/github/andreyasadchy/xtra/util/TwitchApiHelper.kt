@@ -283,6 +283,14 @@ object TwitchApiHelper {
         }
     }
 
+    fun formatFollowersCount(context: Context, count: Int, truncate: Boolean): String {
+        return if (count > 1000 && truncate) {
+            context.getString(R.string.followers, formatCountIfMoreThanAThousand(count))
+        } else {
+            context.resources.getQuantityString(R.plurals.followers, count, count)
+        }
+    }
+
     fun formatCount(count: Int, truncate: Boolean): String {
         return if (count > 1000 && truncate) {
             formatCountIfMoreThanAThousand(count)

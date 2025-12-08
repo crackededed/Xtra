@@ -28,4 +28,8 @@
         <item quantity="one">Tag : %s</item>
         <item quantity="other">Tags : %s</item>
     </plurals>
+    <plurals name="followers">
+        <item quantity="one">%s follow</item>
+        <item quantity="other">@string/followers</item>
+    </plurals>
 </resources>

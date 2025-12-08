@@ -127,6 +127,13 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
+        android:key="ui_followerscount"
+        android:title="@string/followersCount"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
         android:key="ui_broadcasterscount"
         android:title="@string/broadcastersCount"
         app:iconSpaceReserved="false"

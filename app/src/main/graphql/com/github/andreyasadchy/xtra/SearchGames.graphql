@@ -6,6 +6,7 @@ query SearchGames($query: String!, $first: Int, $after: Cursor) {
                 boxArtURL
                 broadcastersCount
                 displayName
+                followersCount
                 id
                 slug
                 tags(tagType: CONTENT) {

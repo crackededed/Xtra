@@ -64,6 +64,7 @@ object C {
     const val COMPACT_STREAMS = "compactStreamsV2"
     const val UI_ROUNDUSERIMAGE = "ui_rounduserimage"
     const val UI_TRUNCATEVIEWCOUNT = "ui_truncateviewcount"
+    const val UI_FOLLOWERSCOUNT = "ui_followerscount"
     const val UI_BROADCASTERSCOUNT = "ui_broadcasterscount"
     const val UI_STARTONFOLLOWED = "ui_startonfollowed"
     const val UI_GAMEPAGER = "ui_gamepager"

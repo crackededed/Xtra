@@ -100,6 +100,12 @@ class GamesAdapter(
                     } else {
                         viewers.gone()
                     }
+                    if (item.followersCount != null && context.prefs().getBoolean(C.UI_FOLLOWERSCOUNT, true)) {
+                        followersCount.visible()
+                        followersCount.text = TwitchApiHelper.formatFollowersCount(context, item.followersCount!!, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                    } else {
+                        followersCount.gone()
+                    }
                     if (item.broadcastersCount != null && context.prefs().getBoolean(C.UI_BROADCASTERSCOUNT, true)) {
                         broadcastersCount.visible()
                         broadcastersCount.text = context.resources.getQuantityString(R.plurals.broadcasters, item.broadcastersCount!!, item.broadcastersCount)

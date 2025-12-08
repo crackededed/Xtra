@@ -12,6 +12,7 @@ class Game(
     val boxArtUrl: String? = null,
 
     var viewersCount: Int? = null,
+    var followersCount: Int? = null,
     var broadcastersCount: Int? = null,
     var tags: List<Tag>? = null,
     val vodPosition: Int? = null,

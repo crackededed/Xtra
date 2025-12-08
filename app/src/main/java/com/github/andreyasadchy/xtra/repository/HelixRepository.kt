@@ -4,6 +4,7 @@ import android.net.http.HttpEngine
 import android.net.http.UrlResponseInfo
 import android.os.Build
 import android.os.ext.SdkExtensions
+import android.util.Log
 import com.github.andreyasadchy.xtra.model.helix.channel.ChannelSearchResponse
 import com.github.andreyasadchy.xtra.model.helix.chat.BadgesResponse
 import com.github.andreyasadchy.xtra.model.helix.chat.ChatUsersResponse
@@ -60,6 +61,7 @@ class HelixRepository @Inject constructor(
         }.takeIf { it.isNotEmpty() }?.let {
             it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
         } ?: ""
+        Log.i("QUERY", query)
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->

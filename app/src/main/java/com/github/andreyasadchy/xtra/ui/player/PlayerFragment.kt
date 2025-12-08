@@ -1508,6 +1508,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 gone()
             }
         }
+        updateCategoryInfo(gameId, gameSlug, gameName)
+    }
+
+    fun updateCategoryInfo(gameId: String?, gameSlug: String?, gameName: String?) {
         binding.playerControls.category.apply {
             if (!gameName.isNullOrBlank() && prefs.getBoolean(C.PLAYER_CATEGORY, true)) {
                 text = gameName
