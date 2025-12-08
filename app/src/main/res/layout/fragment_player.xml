@@ -97,8 +97,6 @@
         android:layout_height="300dp"
         android:visibility="gone"
         android:elevation="10dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
         tools:visibility="visible">
 
         <FrameLayout

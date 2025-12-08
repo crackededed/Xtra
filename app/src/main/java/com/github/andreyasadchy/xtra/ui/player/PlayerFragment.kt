@@ -2081,6 +2081,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     fun minimize() {
         with(binding) {
             isMaximized = false
+            // Hide floating chat when minimizing - it should only appear in fullscreen
+            if (isFloatingChatEnabled) {
+                floatingChatRoot.gone()
+            }
             if (videoType == STREAM && chatFragment?.emoteMenuIsVisible() == true) {
                 chatFragment?.toggleBackPressedCallback(false)
             }
@@ -2160,7 +2164,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 chatLayout.visible()
             } else {
                 hideStatusBar()
-                if (isChatOpen) {
+                // Show floating chat again if it was enabled
+                if (isFloatingChatEnabled) {
+                    floatingChatRoot.visible()
+                } else if (isChatOpen) {
                     showChatLayout()
                 }
             }
@@ -2704,6 +2711,13 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         if (x != -1f && y != -1f) {
             binding.floatingChatRoot.x = x
             binding.floatingChatRoot.y = y
+        } else {
+            // Default position: top-right corner with some margin
+            binding.floatingChatRoot.doOnLayout {
+                val parentWidth = (binding.floatingChatRoot.parent as? View)?.width ?: 0
+                binding.floatingChatRoot.x = (parentWidth - binding.floatingChatRoot.width - 16).toFloat()
+                binding.floatingChatRoot.y = 16f
+            }
         }
         if (w != -1 && h != -1) {
             binding.floatingChatRoot.updateLayoutParams {
