@@ -1266,19 +1266,15 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     }
                     if (prefs.getBoolean(C.PLAYER_CHATTOGGLE, true) && !prefs.getBoolean(C.CHAT_DISABLE, false)) {
                         toggleChat.visible()
-                        if (isChatOpen) {
-                            toggleChat.setImageResource(R.drawable.baseline_speaker_notes_off_black_24)
-                            toggleChat.setOnClickListener { hideChat() }
-                        } else {
-                            toggleChat.setImageResource(R.drawable.baseline_speaker_notes_black_24)
-                            toggleChat.setOnClickListener { showChat() }
+                        updateChatButtonIcon()
+                        
+                        toggleChat.setOnClickListener { 
+                            cycleChatMode()
+                            updateChatButtonIcon()
                         }
                     }
-                    // Show floating chat button only if enabled in settings and chat is not disabled
-                    if (prefs.getBoolean(C.PLAYER_FLOATING_CHAT_BUTTON, true) && !prefs.getBoolean(C.CHAT_DISABLE, false)) {
-                        toggleFloatingChat.visible()
-                        toggleFloatingChat.setOnClickListener { toggleFloatingChat() }
-                    }
+                    // Separate floating chat button is now hidden as functionality is merged
+                    toggleFloatingChat.gone()
                 }
             }
         }
@@ -1397,8 +1393,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         if (prefs.getBoolean(C.PLAYER_CHATTOGGLE, true)) {
             binding.playerControls.toggleChat.apply {
                 visible()
-                setImageResource(R.drawable.baseline_speaker_notes_black_24)
-                setOnClickListener { showChat() }
+                updateChatButtonIcon()
             }
         }
         prefs.edit { putBoolean(C.KEY_CHAT_OPENED, false) }
@@ -1410,8 +1405,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         if (prefs.getBoolean(C.PLAYER_CHATTOGGLE, true)) {
             binding.playerControls.toggleChat.apply {
                 visible()
-                setImageResource(R.drawable.baseline_speaker_notes_off_black_24)
-                setOnClickListener { hideChat() }
+                updateChatButtonIcon()
             }
         }
         prefs.edit { putBoolean(C.KEY_CHAT_OPENED, true) }
@@ -1654,6 +1648,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                             override fun onAnimationStart(animation: Animator) {
                                 controllerIsAnimating = true
                                 binding.playerControls.root.visible()
+                                updateChatButtonIcon()
                             }
 
                             override fun onAnimationEnd(animation: Animator) {
@@ -1683,6 +1678,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 binding.playerControls.root.removeCallbacks(controllerHideAction)
                 binding.playerControls.root.alpha = 1f
                 binding.playerControls.root.visible()
+                updateChatButtonIcon()
                 // Also show floating chat controls if floating chat is active
                 if (isFloatingChatEnabled) {
                     binding.dragHandleZone.alpha = 1f
@@ -2608,8 +2604,17 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     }
                     MotionEvent.ACTION_MOVE -> {
                         // Direct property assignment is more efficient than animate() with duration 0
-                        floatingChatRoot.x = event.rawX + dX
-                        floatingChatRoot.y = event.rawY + dY
+                        val parent = floatingChatRoot.parent as? View
+                        val parentWidth = parent?.width ?: 0
+                        val parentHeight = parent?.height ?: 0
+                        val viewWidth = floatingChatRoot.width
+                        val viewHeight = floatingChatRoot.height
+
+                        val newX = (event.rawX + dX).coerceIn(0f, (parentWidth - viewWidth).coerceAtLeast(0).toFloat())
+                        val newY = (event.rawY + dY).coerceIn(0f, (parentHeight - viewHeight).coerceAtLeast(0).toFloat())
+
+                        floatingChatRoot.x = newX
+                        floatingChatRoot.y = newY
                         true
                     }
                     MotionEvent.ACTION_UP -> {
@@ -2664,6 +2669,20 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
             highVisibilityToggle.setOnClickListener {
                 toggleHighVisibility()
+            }
+        }
+    }
+
+    private fun updateChatButtonIcon() {
+        if (prefs.getBoolean(C.PLAYER_CHATTOGGLE, true)) {
+            binding.playerControls.toggleChat.apply {
+                if (isFloatingChatEnabled) {
+                    setImageResource(R.drawable.baseline_chat_bubble_outline_black_24)
+                } else if (isChatOpen) {
+                    setImageResource(R.drawable.baseline_speaker_notes_off_black_24)
+                } else {
+                    setImageResource(R.drawable.baseline_speaker_notes_black_24)
+                }
             }
         }
     }
@@ -2744,6 +2763,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             isChatOpen = true
             showChatLayout()
         }
+        updateChatButtonIcon()
     }
 
     private fun saveFloatingChatPosition() {

@@ -349,7 +349,7 @@
             android:src="@drawable/baseline_chat_bubble_outline_black_24"
             android:visibility="gone"
             app:tint="@android:color/white"
-            tools:visibility="visible" />
+            tools:visibility="gone" />
 
         <ImageButton
             android:id="@+id/fullscreen"

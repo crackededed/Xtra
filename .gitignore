@@ -61,3 +61,8 @@ fastlane/test_output
 fastlane/readme.md
 
 /.kotlin/
+build_log_2.txt
+build_log_4.txt
+build_log_3.txt
+build_log.txt
+.gitignore

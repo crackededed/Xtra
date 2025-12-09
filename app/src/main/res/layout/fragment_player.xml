@@ -134,7 +134,7 @@
                 android:layout_height="32dp"
                 android:background="?android:selectableItemBackgroundBorderless"
                 android:padding="4dp"
-                android:src="@drawable/ic_visibility_high"
+                android:src="@drawable/ic_contrast"
                 android:contentDescription="@string/floating_chat_high_visibility"
                 app:tint="#FFFFFF" />
 
