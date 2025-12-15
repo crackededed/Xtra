@@ -962,7 +962,7 @@ class Media3Fragment : PlayerFragment() {
                     )
                     viewModel.usingProxy = false
                 }
-                if (prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO, true)) {
+                if (keepPlayingInBackground()) {
                     if (player.playWhenReady && viewModel.quality != AUDIO_ONLY_QUALITY) {
                         viewModel.restoreQuality = true
                         viewModel.previousQuality = viewModel.quality

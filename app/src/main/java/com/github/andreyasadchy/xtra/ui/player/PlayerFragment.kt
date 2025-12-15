@@ -3,9 +3,11 @@ package com.github.andreyasadchy.xtra.ui.player
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
+import android.app.KeyguardManager
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
@@ -15,6 +17,7 @@ import android.graphics.Color
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.os.SystemClock
 import android.text.format.DateFormat
 import android.text.format.DateUtils
@@ -2069,6 +2072,20 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             } else {
                 useController = true
             }
+        }
+    }
+
+    fun keepPlayingInBackground(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && requireActivity().isInPictureInPictureMode) {
+            val isLocked = (requireContext().getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager).isKeyguardLocked
+            val isScreenOff = !(requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager).isInteractive()
+            return if (isLocked || isScreenOff) {
+                prefs.getBoolean(C.PLAYER_PIP_BACKGROUND_AUDIO, true)
+            } else {
+                prefs.getBoolean(C.PLAYER_PIP_CLOSED_AUDIO, true)
+            }
+        } else {
+            return prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO, true)
         }
     }
 

@@ -156,6 +156,8 @@ object C {
     const val PLAYER_BACKGROUND_PLAYBACK = "player_background_playback"
     const val PLAYER_PICTURE_IN_PICTURE = "player_picture_in_picture"
     const val PLAYER_BACKGROUND_AUDIO = "player_background_audio"
+    const val PLAYER_PIP_BACKGROUND_AUDIO = "player_pip_background_audio"
+    const val PLAYER_PIP_CLOSED_AUDIO = "player_pip_closed_audio"
     const val PLAYER_DISABLE_BACKGROUND_VIDEO = "player_disable_background_video"
     const val PLAYER_USE_BACKGROUND_AUDIO_TRACK = "player_use_background_audio_track"
     const val PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED = "player_keep_screen_on_when_paused"

@@ -960,7 +960,16 @@ class MainActivity : AppCompatActivity() {
                             "1:${if (defaultSavedPage == "1") "1" else "0"}:1"
                     putString(C.UI_SAVED_TABS, list)
                 }
-                putInt(C.SETTINGS_VERSION, 11)
+            }
+        }
+        if (version < 12) {
+            viewModel.deleteOldImages()
+            prefs.edit {
+                prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO, true).let {
+                    putBoolean(C.PLAYER_PIP_CLOSED_AUDIO, it)
+                    putBoolean(C.PLAYER_PIP_BACKGROUND_AUDIO, it)
+                }
+                putInt(C.SETTINGS_VERSION, 12)
             }
         }
     }

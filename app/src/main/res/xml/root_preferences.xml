@@ -57,6 +57,20 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_pip_background_audio"
+        android:title="@string/player_pip_background_audio"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_pip_closed_audio"
+        android:title="@string/player_pip_closed_audio"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
     <Preference
         android:key="player_settings"
         android:title="@string/player_settings"
