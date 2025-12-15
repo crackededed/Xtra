@@ -15,6 +15,7 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.Icon
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
@@ -1585,12 +1586,18 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         )
     }
 
-    private fun preferredQuality(): String? {
+    private fun isNetworkMeteredOrCellular() : Boolean {
         val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        return connectivityManager.isActiveNetworkMetered ||
+                (networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true)
+    }
+
+    private fun preferredQuality(): String? {
 
         var defaultQuality = prefs.getString(C.PLAYER_DEFAULTQUALITY, "saved")?.substringBefore(" ")
 
-        if (!connectivityManager.isActiveNetworkMetered) return defaultQuality
+        if (!isNetworkMeteredOrCellular()) return defaultQuality
 
         if (defaultQuality == "saved") {
             defaultQuality = prefs.getString(C.PLAYER_QUALITY, "720p60")?.substringBefore(" ")
