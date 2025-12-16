@@ -292,17 +292,37 @@ class SettingsActivity : AppCompatActivity() {
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                findPreference<ListPreference>(C.UI_LANGUAGE)?.isVisible = false
+                findPreference<Preference>(C.UI_LANGUAGE_13_OR_UP)?.apply {
+                    isVisible = true
+                    summaryProvider = Preference.SummaryProvider<Preference> {
+                        val locales = AppCompatDelegate.getApplicationLocales()
+                        if (locales.isEmpty) {
+                            getString(R.string.lang_auto)
+                        }
+                        locales.get(0)?.displayName ?: getString(R.string.lang_auto)
+                    }
+                    setOnPreferenceClickListener{_ ->
+                        val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS).setData(
+                            Uri.fromParts("package", requireContext().packageName, null)
+                        )
+                        startActivity(intent)
+                        true
+                    }
+                }
+            }
             findPreference<ListPreference>(C.UI_LANGUAGE)?.apply {
-                val lang = AppCompatDelegate.getApplicationLocales()
-                if (lang.isEmpty) {
+                val locales = AppCompatDelegate.getApplicationLocales()
+                if (locales.isEmpty) {
                     setValueIndex(findIndexOfValue("auto"))
                 } else {
                     try {
-                        setValueIndex(findIndexOfValue(lang.toLanguageTags()))
+                        setValueIndex(findIndexOfValue(locales.toLanguageTags()))
                     } catch (e: Exception) {
                         try {
                             setValueIndex(findIndexOfValue(
-                                lang.toLanguageTags().substringBefore("-").let {
+                                locales.toLanguageTags().substringBefore("-").let {
                                     when (it) {
                                         "id" -> "in"
                                         "pt" -> "pt-BR"
@@ -318,13 +338,11 @@ class SettingsActivity : AppCompatActivity() {
                 }
                 setOnPreferenceChangeListener { _, value ->
                     AppCompatDelegate.setApplicationLocales(
-                        LocaleListCompat.forLanguageTags(
-                            if (value.toString() == "auto") {
-                                null
-                            } else {
-                                value.toString()
-                            }
-                        )
+                        if (value.toString() == "auto") {
+                            LocaleListCompat.getEmptyLocaleList()
+                        } else {
+                            LocaleListCompat.forLanguageTags(value.toString())
+                        }
                     )
                     true
                 }

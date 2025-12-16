@@ -71,6 +71,7 @@ object C {
     const val UI_FOLLOWPAGER = "ui_followpager"
     const val UI_SAVED_DEFAULT_PAGE = "ui_saved_default_page"
     const val UI_SAVEDPAGER = "ui_savedpager"
+    const val UI_LANGUAGE_13_OR_UP = "ui_language_13_or_up"
     const val UI_LANGUAGE = "ui_language"
     const val UI_CUTOUTMODE = "ui_cutoutmode"
     const val UI_DRAW_BEHIND_CUTOUTS = "ui_draw_behind_cutouts"
