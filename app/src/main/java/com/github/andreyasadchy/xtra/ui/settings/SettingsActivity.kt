@@ -371,6 +371,8 @@ class SettingsActivity : AppCompatActivity() {
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !requireActivity().packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
                 findPreference<SwitchPreferenceCompat>(C.PLAYER_PICTURE_IN_PICTURE)?.isVisible = false
+                findPreference<SwitchPreferenceCompat>(C.PLAYER_PIP_BACKGROUND_AUDIO)?.isVisible = false
+                findPreference<SwitchPreferenceCompat>(C.PLAYER_PIP_CLOSED_AUDIO)?.isVisible = false
             }
             findPreference<Preference>("player_settings")?.setOnPreferenceClickListener {
                 requireActivity().findViewById<AppBarLayout>(R.id.appBar)?.setExpanded(true)
