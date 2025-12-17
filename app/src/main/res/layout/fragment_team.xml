@@ -131,12 +131,11 @@
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <com.github.andreyasadchy.xtra.ui.view.GridRecyclerView
-        android:id="@+id/recyclerView"
+    <include
+        android:id="@+id/recyclerViewLayout"
+        layout="@layout/common_recycler_view_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clipToPadding="false"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        tools:listitem="@layout/fragment_streams_list_item_compact" />
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
