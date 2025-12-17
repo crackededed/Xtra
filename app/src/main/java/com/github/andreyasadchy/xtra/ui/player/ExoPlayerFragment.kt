@@ -254,6 +254,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                         }
                                         .toMap()
                                     setDefaultQuality()
+                                    changePlayerMode()
                                     if (viewModel.quality == AUDIO_ONLY_QUALITY) {
                                         changeQuality(viewModel.quality)
                                     }
@@ -316,6 +317,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                                                 }.build()
+                                                                binding.playerSurface.gone()
                                                             }
                                                             player.volume = 0f
                                                         }
@@ -332,6 +334,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                                     player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                                         setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                                                     }.build()
+                                                    binding.playerSurface.visible()
                                                 }
                                                 player.volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
                                             }
@@ -439,6 +442,18 @@ class ExoPlayerFragment : PlayerFragment() {
                         if (!prefs.getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
                             requireView().keepScreenOn = player.isPlaying
                         }
+                        if (player.isPlaying) {
+                            updateProgress()
+                        }
+                        if (Util.shouldShowPlayButton(player)) {
+                            binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
+                            binding.playerControls.playPause.visible()
+                        } else {
+                            binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
+                            if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
+                                binding.playerControls.playPause.gone()
+                            }
+                        }
                     }
                     if ((isInitialized || !enableNetworkCheck) && !viewModel.started) {
                         startPlayer()
@@ -535,6 +550,7 @@ class ExoPlayerFragment : PlayerFragment() {
             player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                 setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
             }.build()
+            binding.playerSurface.visible()
             val newId = requireArguments().getString(KEY_VIDEO_ID)?.toLongOrNull()
             val position = if (playbackService?.videoId == newId && player.currentMediaItem != null) {
                 player.currentPosition
@@ -579,10 +595,12 @@ class ExoPlayerFragment : PlayerFragment() {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                 }.build()
+                binding.playerSurface.gone()
             } else {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                 }.build()
+                binding.playerSurface.visible()
             }
             playbackService?.videoId = null
             playbackService?.offlineVideoId = null
@@ -619,10 +637,12 @@ class ExoPlayerFragment : PlayerFragment() {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                 }.build()
+                binding.playerSurface.gone()
             } else {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                 }.build()
+                binding.playerSurface.visible()
             }
             val newId = requireArguments().getInt(KEY_OFFLINE_VIDEO_ID).takeIf { it != 0 }
             val position = if (playbackService?.offlineVideoId == newId && player.currentMediaItem != null) {
@@ -808,6 +828,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                 setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                                 clearOverridesOfType(androidx.media3.common.C.TRACK_TYPE_VIDEO)
                             }.build()
+                            binding.playerSurface.visible()
                         }
                         AUDIO_ONLY_QUALITY -> {
                             if (viewModel.usingProxy) {
@@ -817,6 +838,7 @@ class ExoPlayerFragment : PlayerFragment() {
                             player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                 setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                             }.build()
+                            binding.playerSurface.gone()
                             quality.value.second?.let {
                                 val position = player.currentPosition
                                 if (viewModel.qualities.containsKey(AUTO_QUALITY)) {
@@ -847,6 +869,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                 } ?: player.prepare()
                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
+                                    binding.playerSurface.visible()
                                     if (!player.currentTracks.isEmpty) {
                                         player.currentTracks.groups.find { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO }?.let {
                                             val selectedQuality = quality.key.split("p")
@@ -886,6 +909,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                                 }.build()
+                                binding.playerSurface.visible()
                             }
                         }
                     }
@@ -915,6 +939,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                 }.build()
+                                binding.playerSurface.gone()
                             }
                             if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
                                 quality.value.second?.let {
@@ -1007,6 +1032,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                     player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                         setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                     }.build()
+                                    binding.playerSurface.gone()
                                 }
                                 if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
                                     quality.value.second?.let {

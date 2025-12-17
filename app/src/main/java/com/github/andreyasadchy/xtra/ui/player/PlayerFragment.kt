@@ -946,6 +946,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                         }
                                         .toMap()
                                     setDefaultQuality()
+                                    changePlayerMode()
                                     val quality = viewModel.qualities.entries.find { it.key == viewModel.quality }
                                     (quality?.value?.second ?: viewModel.qualities.values.firstOrNull()?.second)?.let {
                                         startClip(it)
@@ -1000,6 +1001,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                         AUDIO_ONLY_QUALITY to Pair(requireContext().getString(R.string.audio_only), null)
                                     )
                                     setDefaultQuality()
+                                    changePlayerMode()
                                     startOfflineVideo(url, it)
                                     viewModel.savedOfflineVideoPosition.value = null
                                 }
@@ -1616,7 +1618,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         }
     }
 
-    private fun changePlayerMode() {
+    fun changePlayerMode() {
         with(binding) {
             if (canEnterPictureInPicture()) {
                 if (!controllerHideOnTouch && !controllerIsAnimating && controllerAutoHide && !binding.playerControls.progressBar.isPressed) {
@@ -1632,6 +1634,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             } else {
                 controllerHideOnTouch = false
                 showController(true)
+                updateProgress()
                 requireView().keepScreenOn = true
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
                     requireActivity().packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
@@ -2069,7 +2072,9 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     hideChatLayout()
                 }
                 useController = false
-                hideController(true)
+                controllerAnimation?.cancel()
+                binding.playerControls.root.alpha = 0f
+                binding.playerControls.root.gone()
                 // player dialog
                 (childFragmentManager.findFragmentByTag("closeOnPip") as? BottomSheetDialogFragment)?.dismiss()
                 // player chat message dialog
@@ -2185,6 +2190,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             useController = true
             if (!controllerHideOnTouch) {
                 showController(true)
+                updateProgress()
             }
             if (isPortrait) {
                 chatLayout.visible()
