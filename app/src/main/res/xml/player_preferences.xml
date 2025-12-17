@@ -17,6 +17,20 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="false"
+        android:key="player_background_audio_pip_closed"
+        android:title="@string/use_background_audio_pip_closed"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_background_audio_pip_locked"
+        android:title="@string/use_background_audio_pip_locked"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
         android:key="player_keep_screen_on_when_paused"
         android:title="@string/keep_screen_on_when_paused"
         app:iconSpaceReserved="false"

@@ -689,9 +689,7 @@
     <string name="enabled_setting">Enabled</string>
     <string name="disabled_setting">Disabled</string>
     <string name="use_webp_images">Use WEBP images</string>
-    <string name="use_background_audio">Play audio in the background of the app</string>
-    <string name="player_pip_background_audio">Play audio in the background when locking screen in PiP Mode</string>
-    <string name="player_pip_closed_audio">Play audio in the background when closing PiP</string>
+    <string name="use_background_audio">Play audio in the background</string>
     <string name="avoid_rounded_corners">Avoid rounded screen corners</string>
     <string name="api_web_gql_token">Web GQL token</string>
     <string name="use_new_pubsub">Use new PubSub url</string>
@@ -744,4 +742,7 @@
     <string name="members">%s members</string>
     <string name="owner">Owner: %s</string>
     <string name="original_name">Original name: %s</string>
+    <string name="use_background_audio_locked">Play audio in the background when locking the screen</string>
+    <string name="use_background_audio_pip_closed">Play audio in the background when closing PiP</string>
+    <string name="use_background_audio_pip_locked">Play audio in the background when locking the screen in PiP mode</string>
 </resources>

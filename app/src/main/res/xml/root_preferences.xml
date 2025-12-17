@@ -59,15 +59,8 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
-        android:key="player_pip_background_audio"
-        android:title="@string/player_pip_background_audio"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="true"
-        android:key="player_pip_closed_audio"
-        android:title="@string/player_pip_closed_audio"
+        android:key="player_background_audio_locked"
+        android:title="@string/use_background_audio_locked"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
