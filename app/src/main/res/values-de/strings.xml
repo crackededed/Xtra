@@ -725,4 +725,7 @@
     <string name="members">%s Mitglieder</string>
     <string name="owner">Eigentümer: %s</string>
     <string name="original_name">Ursprünglicher Name: %s</string>
+    <string name="use_background_audio_locked">Play audio in the background when locking the screen</string>
+    <string name="use_background_audio_pip_closed">Play audio in the background when closing PiP</string>
+    <string name="use_background_audio_pip_locked">Play audio in the background when locking the screen in PiP mode</string>
 </resources>
