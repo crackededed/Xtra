@@ -1,6 +1,7 @@
 package com.github.andreyasadchy.xtra.ui.saved.downloads
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.ContentResolver
 import android.content.Intent
 import android.os.Build
@@ -229,13 +230,13 @@ class DownloadsFragment : PagedListFragment(), Scrollable {
                     type = "*/*"
                 })
             } else {
-                val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-                    addCategory(Intent.CATEGORY_OPENABLE)
-                    type = "*/*"
-                }
-                if (intent.resolveActivity(requireActivity().packageManager) != null) {
+                try {
+                    val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "*/*"
+                    }
                     chatFileResultLauncher?.launch(intent)
-                } else {
+                } catch (e: ActivityNotFoundException) {
                     requireContext().toast(R.string.no_file_manager_found)
                 }
             }

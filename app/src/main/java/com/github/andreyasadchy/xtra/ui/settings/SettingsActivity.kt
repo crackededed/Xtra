@@ -479,13 +479,13 @@ class SettingsActivity : AppCompatActivity() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     backupResultLauncher?.launch(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE))
                 } else {
-                    val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-                        addCategory(Intent.CATEGORY_OPENABLE)
-                        type = "*/*"
-                    }
-                    if (intent.resolveActivity(requireActivity().packageManager) != null) {
+                    try {
+                        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                            type = "*/*"
+                        }
                         backupResultLauncher?.launch(intent)
-                    } else {
+                    } catch (e: ActivityNotFoundException) {
                         requireContext().toast(R.string.no_file_manager_found)
                     }
                 }
@@ -499,16 +499,16 @@ class SettingsActivity : AppCompatActivity() {
                         putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
                     })
                 } else {
-                    val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-                        addCategory(Intent.CATEGORY_OPENABLE)
-                        type = "*/*"
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                    try {
+                        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                            type = "*/*"
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                                putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                            }
                         }
-                    }
-                    if (intent.resolveActivity(requireActivity().packageManager) != null) {
                         restoreResultLauncher?.launch(intent)
-                    } else {
+                    } catch (e: ActivityNotFoundException) {
                         requireContext().toast(R.string.no_file_manager_found)
                     }
                 }
