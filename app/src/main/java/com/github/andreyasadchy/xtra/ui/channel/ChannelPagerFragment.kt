@@ -654,7 +654,12 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
             if (stream?.viewerCount != null) {
                 streamLayout.visible()
                 viewers.visible()
-                viewers.text = TwitchApiHelper.formatViewersCount(requireContext(), stream.viewerCount ?: 0, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                val count = stream.viewerCount ?: 0
+                viewers.text = requireContext().resources.getQuantityString(
+                    R.plurals.viewers,
+                    count,
+                    TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                )
             } else {
                 viewers.gone()
             }
@@ -719,7 +724,12 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
             }
             if (user.followersCount != null) {
                 userFollowers.visible()
-                userFollowers.text = requireContext().getString(R.string.followers, TwitchApiHelper.formatCount(user.followersCount, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true)))
+                val count = user.followersCount
+                userFollowers.text = requireContext().resources.getQuantityString(
+                    R.plurals.followers,
+                    count,
+                    TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                )
                 if (user.bannerImageURL != null) {
                     userFollowers.setTextColor(Color.LTGRAY)
                     userFollowers.setShadowLayer(4f, 0f, 0f, Color.BLACK)

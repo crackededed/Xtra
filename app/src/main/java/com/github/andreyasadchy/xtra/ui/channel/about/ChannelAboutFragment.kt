@@ -163,7 +163,7 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.CallbackList
                     viewModel.originalName.collectLatest {
                         if (!it.isNullOrBlank()) {
                             originalName.visible()
-                            originalName.text = requireContext().getString(R.string.original_name, it)
+                            originalName.text = requireContext().getString(R.string.old_username, it)
                         }
                     }
                 }

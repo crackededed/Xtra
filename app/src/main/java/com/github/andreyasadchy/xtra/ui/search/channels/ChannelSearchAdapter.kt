@@ -91,7 +91,12 @@ class ChannelSearchAdapter(
                     }
                     if (item.followersCount != null) {
                         userFollowers.visible()
-                        userFollowers.text = context.getString(R.string.followers, TwitchApiHelper.formatCount(item.followersCount, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true)))
+                        val count = item.followersCount
+                        userFollowers.text = context.resources.getQuantityString(
+                            R.plurals.followers,
+                            count,
+                            TwitchApiHelper.formatCount(count, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                        )
                     } else {
                         userFollowers.gone()
                     }

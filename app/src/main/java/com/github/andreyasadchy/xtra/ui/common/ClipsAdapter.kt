@@ -90,7 +90,12 @@ class ClipsAdapter(
                     }
                     if (item.viewCount != null) {
                         views.visible()
-                        views.text = TwitchApiHelper.formatViewsCount(context, item.viewCount, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                        val count = item.viewCount
+                        views.text = context.resources.getQuantityString(
+                            R.plurals.views,
+                            count,
+                            TwitchApiHelper.formatCount(count, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                        )
                     } else {
                         views.gone()
                     }
