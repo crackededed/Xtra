@@ -21,7 +21,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
-import androidx.paging.LoadState
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil3.imageLoader
@@ -34,8 +33,9 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentTeamBinding
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.model.ui.Team
-import com.github.andreyasadchy.xtra.ui.common.BaseNetworkFragment
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
+import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
+import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.login.LoginActivity
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragmentDirections
@@ -58,7 +58,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class TeamFragment : BaseNetworkFragment(), IntegrityDialog.CallbackListener {
+class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackListener {
 
     private var _binding: FragmentTeamBinding? = null
     private val binding get() = _binding!!
@@ -77,28 +77,6 @@ class TeamFragment : BaseNetworkFragment(), IntegrityDialog.CallbackListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.integrity.collectLatest {
-                    if (it != null &&
-                        it != "done" &&
-                        requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false) &&
-                        requireContext().prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, true)
-                    ) {
-                        IntegrityDialog.show(childFragmentManager, it)
-                        viewModel.integrity.value = "done"
-                    }
-                }
-            }
-        }
-        pagingAdapter = TeamMembersAdapter(this, {
-            findNavController().navigate(
-                TopStreamsFragmentDirections.actionGlobalTopFragment(
-                    tags = arrayOf(it)
-                )
-            )
-        })
-        binding.recyclerView.adapter = pagingAdapter
         with(binding) {
             val activity = requireActivity() as MainActivity
             if (activity.isInLandscapeOrientation) {
@@ -158,12 +136,20 @@ class TeamFragment : BaseNetworkFragment(), IntegrityDialog.CallbackListener {
                     topMargin = insets.top
                 }
                 if (activity.findViewById<LinearLayout>(R.id.navBarContainer)?.isVisible == false) {
-                    val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-                    recyclerView.updatePadding(bottom = insets.bottom)
+                    val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+                    recyclerViewLayout.recyclerView.updatePadding(bottom = systemBars.bottom)
                 }
-                windowInsets
+                WindowInsetsCompat.CONSUMED
             }
         }
+        pagingAdapter = TeamMembersAdapter(this) {
+            findNavController().navigate(
+                TopStreamsFragmentDirections.actionGlobalTopFragment(
+                    tags = arrayOf(it)
+                )
+            )
+        }
+        setAdapter(binding.recyclerViewLayout.recyclerView, pagingAdapter)
     }
 
     override fun initialize() {
@@ -189,25 +175,12 @@ class TeamFragment : BaseNetworkFragment(), IntegrityDialog.CallbackListener {
                 }
             }
         }
-        viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                pagingAdapter.loadStateFlow.collectLatest { loadState ->
-                    if ((loadState.refresh as? LoadState.Error ?:
-                        loadState.append as? LoadState.Error ?:
-                        loadState.prepend as? LoadState.Error)?.error?.message == "failed integrity check" &&
-                        requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false) &&
-                        requireContext().prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, true)
-                    ) {
-                        IntegrityDialog.show(childFragmentManager, "refresh")
-                    }
-                }
+        initializeAdapter(binding.recyclerViewLayout, pagingAdapter)
+        if (requireContext().prefs().getBoolean(C.UI_SCROLLTOP, true)) {
+            binding.recyclerViewLayout.scrollTop.setOnClickListener {
+                scrollToTop()
+                it.gone()
             }
-        }
-        if (requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false) &&
-            requireContext().prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, true) &&
-            TwitchApiHelper.isIntegrityTokenExpired(requireContext())
-        ) {
-            IntegrityDialog.show(childFragmentManager, "refresh")
         }
     }
 
@@ -303,6 +276,13 @@ class TeamFragment : BaseNetworkFragment(), IntegrityDialog.CallbackListener {
             } else {
                 teamDescription.gone()
             }
+        }
+    }
+
+    override fun scrollToTop() {
+        with(binding) {
+            appBar.setExpanded(true, true)
+            recyclerViewLayout.recyclerView.scrollToPosition(0)
         }
     }
 
