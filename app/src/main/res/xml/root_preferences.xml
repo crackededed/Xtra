@@ -57,6 +57,13 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_background_audio_locked"
+        android:title="@string/use_background_audio_locked"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
     <Preference
         android:key="player_settings"
         android:title="@string/player_settings"
