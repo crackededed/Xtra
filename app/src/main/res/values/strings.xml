@@ -100,8 +100,6 @@
     <string name="source_vod_start">Start: %s</string>
     <string name="source_vod_end">End: %s</string>
     <string name="stream_ended">The stream has ended</string>
-    <string name="viewers_count">%s viewers</string>
-    <string name="views">%s views</string>
     <string name="download_pending">Pending</string>
     <string name="downloading_progress">Downloading: %d%%</string>
     <string name="pause">Pause</string>
@@ -197,7 +195,6 @@
     <string name="timestamps">Show timestamps</string>
     <string name="timestamp_format">Timestamp format</string>
     <string name="created_at">Created at %s</string>
-    <string name="followers">%s followers</string>
     <string name="user_partner">Partner</string>
     <string name="user_affiliate">Affiliate</string>
     <string name="user_staff">Staff</string>
@@ -739,10 +736,9 @@
     <string name="saved_date">Saved date</string>
     <string name="about">About</string>
     <string name="team">Team: %s</string>
-    <string name="members">%s members</string>
     <string name="owner">Owner: %s</string>
-    <string name="original_name">Original name: %s</string>
     <string name="use_background_audio_locked">Play audio in the background when locking the screen</string>
     <string name="use_background_audio_pip_closed">Play audio in the background when closing PiP</string>
     <string name="use_background_audio_pip_locked">Play audio in the background when locking the screen in PiP mode</string>
+    <string name="old_username">Old name: %s</string>
 </resources>

@@ -64,7 +64,7 @@
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?android:attr/textColorSecondary"
             android:visibility="gone"
-            tools:text="@string/original_name"
+            tools:text="@string/old_username"
             tools:visibility="visible" />
 
         <com.github.andreyasadchy.xtra.ui.view.GridRecyclerView

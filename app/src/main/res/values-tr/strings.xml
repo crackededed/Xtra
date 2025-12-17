@@ -84,8 +84,6 @@
     <string name="source_vod_start">Başlangıç: %s</string>
     <string name="source_vod_end">Bitiş: %s</string>
     <string name="stream_ended">Yayın sona erdi</string>
-    <string name="viewers_count">%s izleyici</string>
-    <string name="views">%s izlenme</string>
     <string name="download_pending">Beklemede</string>
     <string name="downloading_progress">İndiriliyor: %d%%</string>
     <string name="pause">Duraklat</string>
@@ -181,7 +179,6 @@
     <string name="timestamps">Zaman damgalarını göster</string>
     <string name="timestamp_format">Zaman damgası formatı</string>
     <string name="created_at">Oluşturulma tarihi: %s</string>
-    <string name="followers">%s takipçi</string>
     <string name="user_partner">Partner</string>
     <string name="user_affiliate">İştirak</string>
     <string name="user_staff">Çalışan</string>
@@ -723,10 +720,9 @@
     <string name="saved_date">Saved date</string>
     <string name="about">About</string>
     <string name="team">Team: %s</string>
-    <string name="members">%s members</string>
     <string name="owner">Owner: %s</string>
-    <string name="original_name">Original name: %s</string>
     <string name="use_background_audio_locked">Play audio in the background when locking the screen</string>
     <string name="use_background_audio_pip_closed">Play audio in the background when closing PiP</string>
     <string name="use_background_audio_pip_locked">Play audio in the background when locking the screen in PiP mode</string>
+    <string name="old_username">Old name: %s</string>
 </resources>
