@@ -967,7 +967,14 @@ class Media3Fragment : PlayerFragment() {
                     )
                     viewModel.usingProxy = false
                 }
-                val isInteractive = (requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager).isInteractive
+                val isInteractive = (requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager).let {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+                        it.isInteractive
+                    } else {
+                        @Suppress("DEPRECATION")
+                        it.isScreenOn
+                    }
+                }
                 val isInPIPMode = when {
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> requireActivity().isInPictureInPictureMode
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> !useController && isMaximized
