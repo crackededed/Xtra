@@ -83,8 +83,6 @@
     <string name="source_vod_start">Start: %s</string>
     <string name="source_vod_end">Ende: %s</string>
     <string name="stream_ended">Die Übertragung ist zu Ende</string>
-    <string name="viewers_count">%s Zuschauer</string>
-    <string name="views">%s Aufrufe</string>
     <string name="download_pending">Ausstehend</string>
     <string name="downloading_progress">Lädt herunter: %d%%</string>
     <string name="pause">Pause</string>
@@ -180,7 +178,6 @@
     <string name="timestamps">Zeitstempel anzeigen</string>
     <string name="timestamp_format">Zeitstempelformat</string>
     <string name="created_at">Erstellt am %s</string>
-    <string name="followers">%s Follower</string>
     <string name="user_partner">Partner*in</string>
     <string name="user_affiliate">Partner</string>
     <string name="user_staff">Mitarbeiter*in</string>
@@ -722,10 +719,9 @@
     <string name="saved_date">Speicherdatum</string>
     <string name="about">Über</string>
     <string name="team">Team: %s</string>
-    <string name="members">%s Mitglieder</string>
     <string name="owner">Eigentümer: %s</string>
-    <string name="original_name">Ursprünglicher Name: %s</string>
     <string name="use_background_audio_locked">Play audio in the background when locking the screen</string>
-    <string name="use_background_audio_pip_closed">Play audio in the background when closing PiP</string>
-    <string name="use_background_audio_pip_locked">Play audio in the background when locking the screen in PiP mode</string>
+    <string name="use_background_audio_pip_closed">Audio im Hintergrund abspielen, wenn das BiB geschlossen wird</string>
+    <string name="use_background_audio_pip_locked">Audio im Hintergrund abspielen, wenn im BiB Modus gesperrt wird</string>
+    <string name="old_username">Old name: %s</string>
 </resources>

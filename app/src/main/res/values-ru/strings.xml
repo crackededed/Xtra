@@ -83,8 +83,6 @@
     <string name="source_vod_start">Начало: %s</string>
     <string name="source_vod_end">Конец: %s</string>
     <string name="stream_ended">Трансляция завершилась</string>
-    <string name="viewers_count">%s зрителей</string>
-    <string name="views">%s просмотров</string>
     <string name="download_pending">Ожидание</string>
     <string name="downloading_progress">Скачивание: %d%%</string>
     <string name="pause">Пауза</string>
@@ -180,7 +178,6 @@
     <string name="timestamps">Показывать метки времени</string>
     <string name="timestamp_format">Формат метки времени</string>
     <string name="created_at">Создан %s</string>
-    <string name="followers">%s отслеживающих</string>
     <string name="user_partner">Партнёр</string>
     <string name="user_affiliate">Компаньон</string>
     <string name="user_staff">Персонал</string>
@@ -722,10 +719,9 @@
     <string name="saved_date">Дата сохранения</string>
     <string name="about">Описание</string>
     <string name="team">Команда: %s</string>
-    <string name="members">%s участников</string>
     <string name="owner">Владелец: %s</string>
-    <string name="original_name">Оригинальное название: %s</string>
     <string name="use_background_audio_locked">Play audio in the background when locking the screen</string>
     <string name="use_background_audio_pip_closed">Play audio in the background when closing PiP</string>
     <string name="use_background_audio_pip_locked">Play audio in the background when locking the screen in PiP mode</string>
+    <string name="old_username">Old name: %s</string>
 </resources>

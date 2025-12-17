@@ -162,7 +162,12 @@ class StreamsAdapter(
                     }
                     if (item.viewerCount != null) {
                         viewers.visible()
-                        viewers.text = TwitchApiHelper.formatViewersCount(context, item.viewerCount ?: 0, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                        val count = item.viewerCount ?: 0
+                        viewers.text = context.resources.getQuantityString(
+                            R.plurals.viewers,
+                            count,
+                            TwitchApiHelper.formatCount(count, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                        )
                     } else {
                         viewers.gone()
                     }

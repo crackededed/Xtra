@@ -2,11 +2,11 @@
 <resources>
     <plurals name="views">
         <item quantity="one">%s görüntülenme</item>
-        <item quantity="other">@string/views</item>
+        <item quantity="other">%s izlenme</item>
     </plurals>
     <plurals name="viewers">
         <item quantity="one">%s izleyici</item>
-        <item quantity="other">@string/viewers_count</item>
+        <item quantity="other">%s izleyici</item>
     </plurals>
     <plurals name="hours">
         <item quantity="one">%d saat</item>
@@ -17,8 +17,8 @@
         <item quantity="other">%d dakika</item>
     </plurals>
     <plurals name="broadcasters">
-        <item quantity="one">%d yayıncı</item>
-        <item quantity="other">%d yayıncı</item>
+        <item quantity="one">%s yayıncı</item>
+        <item quantity="other">%s yayıncı</item>
     </plurals>
     <plurals name="languages">
         <item quantity="one">Language: %s</item>
@@ -27,5 +27,13 @@
     <plurals name="tags">
         <item quantity="one">Tag: %s</item>
         <item quantity="other">Tags: %s</item>
+    </plurals>
+    <plurals name="followers">
+        <item quantity="one">%s follower</item>
+        <item quantity="other">%s takipçi</item>
+    </plurals>
+    <plurals name="members">
+        <item quantity="one">%s member</item>
+        <item quantity="other">%s members</item>
     </plurals>
 </resources>

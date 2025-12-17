@@ -25,10 +25,10 @@
         <item quantity="other">%d минут</item>
     </plurals>
     <plurals name="broadcasters">
-        <item quantity="one">%d стример</item>
-        <item quantity="few">%d стримера</item>
-        <item quantity="many">%d стримеров</item>
-        <item quantity="other">%d стримеров</item>
+        <item quantity="one">%s стример</item>
+        <item quantity="few">%s стримера</item>
+        <item quantity="many">%s стримеров</item>
+        <item quantity="other">%s стримеров</item>
     </plurals>
     <plurals name="languages">
         <item quantity="one">Language: %s</item>
@@ -41,5 +41,17 @@
         <item quantity="few">Tags: %s</item>
         <item quantity="many">Tags: %s</item>
         <item quantity="other">Tags: %s</item>
+    </plurals>
+    <plurals name="followers">
+        <item quantity="one">%s follower</item>
+        <item quantity="few">%s отслеживающих</item>
+        <item quantity="many">%s отслеживающих</item>
+        <item quantity="other">%s отслеживающих</item>
+    </plurals>
+    <plurals name="members">
+        <item quantity="one">%s member</item>
+        <item quantity="few">%s участников</item>
+        <item quantity="many">%s участников</item>
+        <item quantity="other">%s участников</item>
     </plurals>
 </resources>
