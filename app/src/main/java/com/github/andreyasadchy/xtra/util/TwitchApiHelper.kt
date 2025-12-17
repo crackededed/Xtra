@@ -1,6 +1,10 @@
 package com.github.andreyasadchy.xtra.util
 
 import android.content.Context
+import android.icu.number.Notation
+import android.icu.number.NumberFormatter
+import android.icu.number.Precision
+import android.icu.text.CompactDecimalFormat
 import android.os.Build
 import android.text.format.DateUtils
 import androidx.appcompat.app.AppCompatDelegate
@@ -9,6 +13,8 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.XtraApp
 import org.json.JSONObject
 import java.lang.Integer.parseInt
+import java.math.RoundingMode
+import java.text.NumberFormat
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.time.Duration
@@ -267,42 +273,44 @@ object TwitchApiHelper {
         return DateUtils.formatDateTime(context, date, format)
     }
 
-    fun formatViewsCount(context: Context, count: Int, truncate: Boolean): String {
-        return if (count > 1000 && truncate) {
-            context.getString(R.string.views, formatCountIfMoreThanAThousand(count))
+    fun formatCount(count: Int, compact: Boolean): String {
+        return if (compact) {
+            when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+                    NumberFormatter.withLocale(Locale.getDefault())
+                        .notation(Notation.compactShort())
+                        .precision(Precision.maxFraction(1))
+                        .roundingMode(RoundingMode.DOWN)
+                        .format(count)
+                        .toString()
+                }
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> {
+                    val format = CompactDecimalFormat.getInstance(Locale.getDefault(), CompactDecimalFormat.CompactStyle.SHORT)
+                    format.maximumFractionDigits = 1
+                    format.roundingMode = RoundingMode.DOWN.ordinal
+                    format.format(count)
+                }
+                else -> {
+                    if (count > 1000) {
+                        val divider: Int
+                        val suffix = if (count.toString().length < 7) {
+                            divider = 1000
+                            "K"
+                        } else {
+                            divider = 1_000_000
+                            "M"
+                        }
+                        val truncated = count / (divider / 10)
+                        val hasDecimal = truncated / 10.0 != (truncated / 10).toDouble()
+                        if (hasDecimal) "${truncated / 10.0}$suffix" else "${truncated / 10}$suffix"
+                    } else {
+                        count.toString()
+                    }
+                }
+            }
         } else {
-            context.resources.getQuantityString(R.plurals.views, count, count)
+            NumberFormat.getInstance().format(count)
         }
-    }
-
-    fun formatViewersCount(context: Context, count: Int, truncate: Boolean): String {
-        return if (count > 1000 && truncate) {
-            context.getString(R.string.viewers_count, formatCountIfMoreThanAThousand(count))
-        } else {
-            context.resources.getQuantityString(R.plurals.viewers, count, count)
-        }
-    }
-
-    fun formatCount(count: Int, truncate: Boolean): String {
-        return if (count > 1000 && truncate) {
-            formatCountIfMoreThanAThousand(count)
-        } else {
-            count.toString()
-        }
-    }
-
-    private fun formatCountIfMoreThanAThousand(count: Int): String {
-        val divider: Int
-        val suffix = if (count.toString().length < 7) {
-            divider = 1000
-            "K"
-        } else {
-            divider = 1_000_000
-            "M"
-        }
-        val truncated = count / (divider / 10)
-        val hasDecimal = truncated / 10.0 != (truncated / 10).toDouble()
-        return if (hasDecimal) "${truncated / 10.0}$suffix" else "${truncated / 10}$suffix"
     }
 
     fun addTokenPrefixGQL(token: String) = "OAuth $token"

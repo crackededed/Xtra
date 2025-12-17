@@ -2,30 +2,47 @@
 <resources>
     <plurals name="views">
         <item quantity="one">%s vista</item>
-        <item quantity="other">@string/views</item>
+        <item quantity="many">%s vistas</item>
+        <item quantity="other">%s vistas</item>
     </plurals>
     <plurals name="viewers">
         <item quantity="one">%s espectador</item>
-        <item quantity="other">@string/viewers_count</item>
+        <item quantity="many">%s espectadores</item>
+        <item quantity="other">%s espectadores</item>
     </plurals>
     <plurals name="hours">
         <item quantity="one">%d hora</item>
+        <item quantity="many">%d horas</item>
         <item quantity="other">%d horas</item>
     </plurals>
     <plurals name="minutes">
         <item quantity="one">%d minuto</item>
+        <item quantity="many">%d minutos</item>
         <item quantity="other">%d minutos</item>
     </plurals>
     <plurals name="broadcasters">
-        <item quantity="one">%d transmisor</item>
-        <item quantity="other">%d transmisores</item>
+        <item quantity="one">%s transmisor</item>
+        <item quantity="many">%s transmisores</item>
+        <item quantity="other">%s transmisores</item>
     </plurals>
     <plurals name="languages">
         <item quantity="one">Idioma: %s</item>
+        <item quantity="many">Idiomas: %s</item>
         <item quantity="other">Idiomas: %s</item>
     </plurals>
     <plurals name="tags">
         <item quantity="one">Etiqueta: %s</item>
+        <item quantity="many">Etiquetas: %s</item>
         <item quantity="other">Etiquetas: %s</item>
+    </plurals>
+    <plurals name="followers">
+        <item quantity="one">%s follower</item>
+        <item quantity="many">%s seguidores</item>
+        <item quantity="other">%s seguidores</item>
+    </plurals>
+    <plurals name="members">
+        <item quantity="one">%s member</item>
+        <item quantity="many">%s members</item>
+        <item quantity="other">%s members</item>
     </plurals>
 </resources>

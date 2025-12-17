@@ -83,8 +83,6 @@
     <string name="source_vod_start">開始：%s</string>
     <string name="source_vod_end">結束：%s</string>
     <string name="stream_ended">直播已結束</string>
-    <string name="viewers_count">%s 觀眾</string>
-    <string name="views">%s 觀看</string>
     <string name="download_pending">擱置</string>
     <string name="downloading_progress">正在下載：%d%%</string>
     <string name="pause">暫停</string>
@@ -180,7 +178,6 @@
     <string name="timestamps">顯示時間戳記</string>
     <string name="timestamp_format">時間戳記格式</string>
     <string name="created_at">建立於 %s</string>
-    <string name="followers">%s 追隨者</string>
     <string name="user_partner">合作夥伴</string>
     <string name="user_affiliate">實況盟友</string>
     <string name="user_staff">工作人員</string>
@@ -722,10 +719,9 @@
     <string name="saved_date">Saved date</string>
     <string name="about">About</string>
     <string name="team">Team: %s</string>
-    <string name="members">%s members</string>
     <string name="owner">Owner: %s</string>
-    <string name="original_name">Original name: %s</string>
     <string name="use_background_audio_locked">Play audio in the background when locking the screen</string>
     <string name="use_background_audio_pip_closed">Play audio in the background when closing PiP</string>
     <string name="use_background_audio_pip_locked">Play audio in the background when locking the screen in PiP mode</string>
+    <string name="old_username">Old name: %s</string>
 </resources>

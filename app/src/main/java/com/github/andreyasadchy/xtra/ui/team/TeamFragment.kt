@@ -225,7 +225,12 @@ class TeamFragment : BaseNetworkFragment(), IntegrityDialog.CallbackListener {
             }
             if (team.memberCount != null) {
                 teamMembers.visible()
-                teamMembers.text = requireContext().getString(R.string.members, TwitchApiHelper.formatCount(team.memberCount, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true)))
+                val count = team.memberCount
+                teamMembers.text = requireContext().resources.getQuantityString(
+                    R.plurals.members,
+                    count,
+                    TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                )
                 if (team.bannerUrl != null) {
                     teamMembers.setTextColor(Color.LTGRAY)
                     teamMembers.setShadowLayer(4f, 0f, 0f, Color.BLACK)

@@ -1,31 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <plurals name="views">
-        <item quantity="one">%s 觀看</item>
-        <item quantity="other">@string/views</item>
+        <item quantity="other">%s 觀看</item>
     </plurals>
     <plurals name="viewers">
-        <item quantity="one">%s 觀眾</item>
-        <item quantity="other">@string/viewers_count</item>
+        <item quantity="other">%s 觀眾</item>
     </plurals>
     <plurals name="hours">
-        <item quantity="one">%d 小時</item>
         <item quantity="other">%d 小時</item>
     </plurals>
     <plurals name="minutes">
-        <item quantity="one">%d 分鐘</item>
         <item quantity="other">%d 分鐘</item>
     </plurals>
     <plurals name="broadcasters">
-        <item quantity="one">%d 實況主</item>
-        <item quantity="other">%d 實況主</item>
+        <item quantity="other">%s 實況主</item>
     </plurals>
     <plurals name="languages">
-        <item quantity="one">Language: %s</item>
         <item quantity="other">Languages: %s</item>
     </plurals>
     <plurals name="tags">
-        <item quantity="one">Tag: %s</item>
         <item quantity="other">Tags: %s</item>
+    </plurals>
+    <plurals name="followers">
+        <item quantity="other">%s 追隨者</item>
+    </plurals>
+    <plurals name="members">
+        <item quantity="other">%s members</item>
     </plurals>
 </resources>
