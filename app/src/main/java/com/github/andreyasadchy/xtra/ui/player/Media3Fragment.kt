@@ -3,7 +3,10 @@ package com.github.andreyasadchy.xtra.ui.player
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ComponentName
+import android.content.Context
+import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.text.format.DateUtils
 import android.util.Log
 import android.widget.HorizontalScrollView
@@ -941,7 +944,16 @@ class Media3Fragment : PlayerFragment() {
                     )
                     viewModel.usingProxy = false
                 }
-                if (prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO, true)) {
+                val isInteractive = (requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager).isInteractive
+                val isInPIPMode = when {
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> requireActivity().isInPictureInPictureMode
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> !useController && isMaximized
+                    else -> false
+                }
+                if ((!isInPIPMode && isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO, true))
+                    || (!isInPIPMode && !isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
+                    || (isInPIPMode && isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, false))
+                    || (isInPIPMode && !isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
                     if (player.playWhenReady && viewModel.quality != AUDIO_ONLY_QUALITY) {
                         viewModel.restoreQuality = true
                         viewModel.previousQuality = viewModel.quality

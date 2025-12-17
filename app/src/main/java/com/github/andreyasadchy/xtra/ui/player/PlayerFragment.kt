@@ -109,7 +109,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     protected var videoType: String? = null
     private var isPortrait = false
-    private var isMaximized = true
+    var isMaximized = true
     private var isChatOpen = true
     private var isKeyboardShown = false
     private var resizeMode = 0
@@ -1924,7 +1924,12 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     override fun onResume() {
         super.onResume()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && requireActivity().isInPictureInPictureMode) {
+        val isInPIPMode = when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> requireActivity().isInPictureInPictureMode
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> !useController && isMaximized
+            else -> false
+        }
+        if (isInPIPMode) {
             if (isPortrait) {
                 binding.chatLayout.gone()
             } else {
@@ -2099,7 +2104,12 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             } else {
                 disableBackground()
             }
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !requireActivity().isInPictureInPictureMode) {
+            val isInPIPMode = when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> requireActivity().isInPictureInPictureMode
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> !useController && isMaximized
+                else -> false
+            }
+            if (!isInPIPMode) {
                 chatLayout.hideKeyboard()
                 chatLayout.clearFocus()
                 initLayout()
