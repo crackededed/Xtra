@@ -451,9 +451,7 @@ class Media3Fragment : PlayerFragment() {
                 if (!prefs.getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
                     requireView().keepScreenOn = player.isPlaying
                 }
-                if (player.isPlaying) {
-                    updateProgress()
-                }
+                updateProgress()
                 if (Util.shouldShowPlayButton(player)) {
                     binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
                     binding.playerControls.playPause.visible()
