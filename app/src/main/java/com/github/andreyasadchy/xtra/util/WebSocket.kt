@@ -170,20 +170,61 @@ class WebSocket(
         val length = secondByte and LENGTH_BIT
         val frameLength = when (length) {
             PAYLOAD_SHORT -> {
-                val array = ByteArray(2)
-                inputStream?.read(array)
+                val size = 2
+                val array = ByteArray(size)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    inputStream?.readNBytes(array, 0, size)
+                } else {
+                    inputStream?.let {
+                        var offset = 0
+                        while (offset < size) {
+                            val count = it.read(array, 0 + offset, size - offset)
+                            if (count < 0) {
+                                break
+                            }
+                            offset += count
+                        }
+                    }
+                }
                 ByteBuffer.wrap(array).short.toInt()
             }
             PAYLOAD_LONG -> {
-                val array = ByteArray(8)
-                inputStream?.read(array)
+                val size = 8
+                val array = ByteArray(size)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    inputStream?.readNBytes(array, 0, size)
+                } else {
+                    inputStream?.let {
+                        var offset = 0
+                        while (offset < size) {
+                            val count = it.read(array, 0 + offset, size - offset)
+                            if (count < 0) {
+                                break
+                            }
+                            offset += count
+                        }
+                    }
+                }
                 ByteBuffer.wrap(array).long.toInt()
             }
             else -> length
         }
         val data = ByteArray(frameLength)
         if (frameLength > 0) {
-            inputStream?.read(data)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                inputStream?.readNBytes(data, 0, frameLength)
+            } else {
+                inputStream?.let {
+                    var offset = 0
+                    while (offset < frameLength) {
+                        val count = it.read(data, 0 + offset, frameLength - offset)
+                        if (count < 0) {
+                            break
+                        }
+                        offset += count
+                    }
+                }
+            }
         }
         if (isControlFrame) {
             when (opcode) {
