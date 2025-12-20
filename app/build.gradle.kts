@@ -29,8 +29,8 @@ android {
         applicationId = "com.github.andreyasadchy.xtra"
         minSdk = 23
         targetSdk = 36
-        versionCode = 313
-        versionName = "2.52.1"
+        versionCode = 314
+        versionName = "2.52.2"
     }
 
     buildTypes {
