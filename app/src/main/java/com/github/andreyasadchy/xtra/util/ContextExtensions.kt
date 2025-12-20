@@ -13,6 +13,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.res.use
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -26,6 +27,7 @@ import org.chromium.net.UrlResponseInfo
 import org.chromium.net.apihelpers.ByteArrayCronetCallback
 import org.chromium.net.apihelpers.CronetRequestCompletionListener
 import java.io.IOException
+import java.util.Locale
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -56,6 +58,17 @@ val Context.displayDensity
     get() = this.resources.displayMetrics.density
 
 fun Activity.applyTheme() {
+    // On Android 15, wrong language is used when multiple languages are set in device settings
+    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+        val lang = AppCompatDelegate.getApplicationLocales()
+        resources.configuration.setLocale(
+            if (!lang.isEmpty) {
+                Locale.forLanguageTag(lang.toLanguageTags())
+            } else {
+                Locale.getDefault()
+            }
+        )
+    }
     val theme = if (prefs().getBoolean(C.UI_THEME_FOLLOW_SYSTEM, false)) {
         when (resources.configuration.uiMode.and(Configuration.UI_MODE_NIGHT_MASK)) {
             Configuration.UI_MODE_NIGHT_YES -> prefs().getString(C.UI_THEME_DARK_ON, "0")!!
