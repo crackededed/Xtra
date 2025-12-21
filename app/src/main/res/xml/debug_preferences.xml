@@ -56,6 +56,16 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <ListPreference
+        android:defaultValue="ExoPlayer"
+        android:entries="@array/playerEntries"
+        android:entryValues="@array/playerEntries"
+        android:key="player"
+        android:summary="%s"
+        android:title="@string/player"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="debug_eventsub_chat"
