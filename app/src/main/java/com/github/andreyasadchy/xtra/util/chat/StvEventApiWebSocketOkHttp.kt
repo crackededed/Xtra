@@ -316,7 +316,7 @@ class StvEventApiWebSocketOkHttp(
                             url3x = urls.getOrNull(2) ?: if (urls.isEmpty()) "https:${template}/3x.webp" else null,
                             url4x = urls.getOrNull(3) ?: if (urls.isEmpty()) "https:${template}/4x.webp" else null,
                             format = urls.getOrNull(0)?.substringAfterLast(".") ?: "webp",
-                            isAnimated = if (!objectData.isNull("animated")) objectData.optBoolean("animated") else null ?: true,
+                            isAnimated = if (!objectData.isNull("animated")) objectData.optBoolean("animated") else true,
                             isOverlayEmote = objectData.optInt("flags") == 1,
                             thirdParty = true,
                         )

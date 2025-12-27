@@ -9,31 +9,28 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
 import android.graphics.drawable.Icon
+import android.media.AudioAttributes
 import android.media.MediaMetadata
+import android.media.MediaPlayer
+import android.media.PlaybackParams
 import android.media.audiofx.DynamicsProcessing
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
+import android.net.wifi.WifiManager
 import android.os.Binder
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
-import androidx.media3.common.AudioAttributes
-import androidx.media3.common.MediaItem
-import androidx.media3.common.PlaybackException
-import androidx.media3.common.PlaybackParameters
-import androidx.media3.common.Player
-import androidx.media3.common.Timeline
+import androidx.core.net.toUri
 import androidx.media3.common.util.BitmapLoader
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.common.util.Util
 import androidx.media3.datasource.DataSourceBitmapLoader
-import androidx.media3.exoplayer.DefaultLoadControl
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.CacheBitmapLoader
 import androidx.media3.session.DefaultMediaNotificationProvider
 import com.github.andreyasadchy.xtra.R
@@ -54,7 +51,7 @@ import kotlin.concurrent.scheduleAtFixedRate
 
 @OptIn(UnstableApi::class)
 @AndroidEntryPoint
-class ExoPlayerService : Service() {
+class MediaPlayerService : Service() {
 
     @Inject
     lateinit var playerRepository: PlayerRepository
@@ -62,17 +59,28 @@ class ExoPlayerService : Service() {
     @Inject
     lateinit var offlineRepository: OfflineRepository
 
-    var player: ExoPlayer? = null
+    var player: MediaPlayer? = null
+    private var wifiLock: WifiManager.WifiLock? = null
     private var session: MediaSession? = null
     private var notificationManager: NotificationManager? = null
     private var applicationHandler: Handler? = null
     private var bitmapLoader: BitmapLoader? = null
     private var metadataBitmapCallback: FutureCallback<Bitmap>? = null
     private var notificationBitmapCallback: FutureCallback<Bitmap>? = null
+    var title: String? = null
+    var channelName: String? = null
+    var channelLogo: String? = null
+    var seekPosition: Long? = null
+    var preparedListener: MediaPlayer.OnPreparedListener? = null
+    var seekCompleteListener: MediaPlayer.OnSeekCompleteListener? = null
+    var completionListener: MediaPlayer.OnCompletionListener? = null
+    var infoListener: MediaPlayer.OnInfoListener? = null
+    var errorListener: MediaPlayer.OnErrorListener? = null
+    var pauseListener: (() -> Unit)? = null
+    var speedListener: ((Float) -> Unit)? = null
 
     private var dynamicsProcessing: DynamicsProcessing? = null
     private var background = false
-    var proxyMediaPlaylist = false
     var videoId: Long? = null
     var offlineVideoId: Int? = null
     private var sleepTimer: Timer? = null
@@ -82,126 +90,165 @@ class ExoPlayerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        val player = ExoPlayer.Builder(this).apply {
-            setLoadControl(
-                DefaultLoadControl.Builder().apply {
-                    setBufferDurationsMs(
-                        prefs().getString(C.PLAYER_BUFFER_MIN, "15000")?.toIntOrNull() ?: 15000,
-                        prefs().getString(C.PLAYER_BUFFER_MAX, "50000")?.toIntOrNull() ?: 50000,
-                        prefs().getString(C.PLAYER_BUFFER_PLAYBACK, "2000")?.toIntOrNull() ?: 2000,
-                        prefs().getString(C.PLAYER_BUFFER_REBUFFER, "2000")?.toIntOrNull() ?: 2000
-                    )
-                }.build()
-            )
-            setAudioAttributes(AudioAttributes.DEFAULT, prefs().getBoolean(C.PLAYER_AUDIO_FOCUS, false))
-            setHandleAudioBecomingNoisy(prefs().getBoolean(C.PLAYER_HANDLE_AUDIO_BECOMING_NOISY, true))
-            setSeekBackIncrementMs(prefs().getString(C.PLAYER_REWIND, "10000")?.toLongOrNull() ?: 10000)
-            setSeekForwardIncrementMs(prefs().getString(C.PLAYER_FORWARD, "10000")?.toLongOrNull() ?: 10000)
-        }.build()
+        val player = MediaPlayer().apply {
+            setWakeMode(this@MediaPlayerService, PowerManager.PARTIAL_WAKE_LOCK)
+        }
         this.player = player
-        player.addListener(
-            object : Player.Listener {
-                override fun onAudioSessionIdChanged(audioSessionId: Int) {
-                    dynamicsProcessing?.let {
-                        it.release()
-                        dynamicsProcessing = null
-                    }
-                    if (prefs().getBoolean(C.PLAYER_AUDIO_COMPRESSOR, false)) {
-                        reinitializeDynamicsProcessing(audioSessionId)
-                    }
+        player.setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MOVIE)
+                .build()
+        )
+        player.setOnPreparedListener { player ->
+            seekPosition?.let {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    player?.seekTo(it, MediaPlayer.SEEK_CLOSEST)
+                } else {
+                    player?.seekTo(it.toInt())
                 }
-
-                override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                    updatePlaybackState()
-                    updateMetadata()
-                }
-
-                override fun onMediaMetadataChanged(mediaMetadata: androidx.media3.common.MediaMetadata) {
-                    updateMetadata()
-                    updateNotification()
-                }
-
-                override fun onTimelineChanged(timeline: Timeline, reason: Int) {
-                    updateMetadata()
-                    updateNotification()
-                }
-
-                override fun onAvailableCommandsChanged(availableCommands: Player.Commands) {
-                    updatePlaybackState()
-                }
-
-                override fun onPlayerError(error: PlaybackException) {
-                    updatePlaybackState()
-                    if (background) {
-                        player.prepare()
-                    }
-                }
-
-                override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                seekPosition = null
+            }
+            player.start()
+            updateMetadata()
+            updatePlayingState()
+            preparedListener?.onPrepared(player)
+        }
+        player.setOnSeekCompleteListener { player ->
+            updatePlaybackState()
+            updateNotification()
+            seekCompleteListener?.onSeekComplete(player)
+        }
+        player.setOnCompletionListener { player ->
+            updatePlaybackState()
+            updateNotification()
+            completionListener?.onCompletion(player)
+        }
+        player.setOnInfoListener { mp, what, extra ->
+            when (what) {
+                MediaPlayer.MEDIA_INFO_BUFFERING_START, MediaPlayer.MEDIA_INFO_BUFFERING_END -> {
                     updatePlaybackState()
                     updateNotification()
-                }
-
-                override fun onPlaybackSuppressionReasonChanged(playbackSuppressionReason: Int) {
-                    updatePlaybackState()
-                }
-
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    updatePlaybackState()
-                    updateNotification()
-                }
-
-                override fun onIsPlayingChanged(isPlaying: Boolean) {
-                    updatePlaybackState()
-                    if (isPlaying) {
-                        if (savePositionTimer == null && (videoId != null || offlineVideoId != null)) {
-                            savePositionTimer = Timer().apply {
-                                scheduleAtFixedRate(30000, 30000) {
-                                    Handler(Looper.getMainLooper()).post {
-                                        updateSavedPosition()
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        savePositionTimer?.cancel()
-                        savePositionTimer = null
-                        updateSavedPosition()
-                    }
-                }
-
-                override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) {
-                    updatePlaybackState()
-                }
-
-                override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
-                    updatePlaybackState()
                 }
             }
-        )
-        val session = MediaSession(this, "ExoPlayerService")
+            infoListener?.onInfo(mp, what, extra)
+            return@setOnInfoListener true
+        }
+        player.setOnErrorListener { mp, what, extra ->
+            updatePlaybackState(true)
+            updateNotification()
+            errorListener?.onError(mp, what, extra)
+            return@setOnErrorListener true
+        }
+        val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+        wifiLock = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_LOW_LATENCY, "MediaPlayer:WifiLock")
+        } else {
+            @Suppress("DEPRECATION")
+            wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "MediaPlayer:WifiLock")
+        }
+        wifiLock?.acquire()
+        val rewindMs = prefs().getString(C.PLAYER_REWIND, "10000")?.toLongOrNull() ?: 10000
+        val fastForwardMs = prefs().getString(C.PLAYER_FORWARD, "10000")?.toLongOrNull() ?: 10000
+        val session = MediaSession(this, "MediaPlayerService")
         this.session = session
         session.setCallback(
             object : MediaSession.Callback() {
-                override fun onPrepare() = player.prepare()
+                override fun onPrepare() = player.prepareAsync()
 
                 override fun onPlay() {
-                    Util.handlePlayPauseButtonAction(player)
+                    if (player.isPlaying) {
+                        player.pause()
+                    } else {
+                        player.start()
+                    }
+                    updatePlayingState()
+                    pauseListener?.invoke()
                 }
 
-                override fun onPause() = player.pause()
-                override fun onSkipToNext() = player.seekForward()
-                override fun onSkipToPrevious() = player.seekBack()
-                override fun onFastForward() = player.seekForward()
-                override fun onRewind() = player.seekBack()
-                override fun onStop() = player.stop()
-                override fun onSeekTo(pos: Long) = player.seekTo(pos)
-                override fun onSetPlaybackSpeed(speed: Float) = player.setPlaybackSpeed(speed)
+                override fun onPause() {
+                    player.pause()
+                    updatePlayingState()
+                    pauseListener?.invoke()
+                }
+
+                override fun onSkipToNext() {
+                    val position = player.currentPosition + fastForwardMs
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
+                    } else {
+                        player.seekTo(position.toInt())
+                    }
+                }
+
+                override fun onSkipToPrevious() {
+                    val position = player.currentPosition - rewindMs
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
+                    } else {
+                        player.seekTo(position.toInt())
+                    }
+                }
+
+                override fun onFastForward() {
+                    val position = player.currentPosition + fastForwardMs
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
+                    } else {
+                        player.seekTo(position.toInt())
+                    }
+                }
+
+                override fun onRewind() {
+                    val position = player.currentPosition - rewindMs
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
+                    } else {
+                        player.seekTo(position.toInt())
+                    }
+                }
+
+                override fun onStop() {
+                    player.stop()
+                    updatePlayingState()
+                    pauseListener?.invoke()
+                }
+
+                override fun onSeekTo(pos: Long) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        player.seekTo(pos, MediaPlayer.SEEK_CLOSEST)
+                    } else {
+                        player.seekTo(pos.toInt())
+                    }
+                }
+
+                override fun onSetPlaybackSpeed(speed: Float) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        val params = PlaybackParams()
+                        params.speed = speed
+                        player.playbackParams = params
+                        speedListener?.invoke(speed)
+                    }
+                }
 
                 override fun onCustomAction(action: String, extras: Bundle?) {
                     when (action) {
-                        INTENT_REWIND -> player.seekBack()
-                        INTENT_FAST_FORWARD -> player.seekForward()
+                        INTENT_REWIND -> {
+                            val position = player.currentPosition - rewindMs
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
+                            } else {
+                                player.seekTo(position.toInt())
+                            }
+                        }
+                        INTENT_FAST_FORWARD -> {
+                            val position = player.currentPosition + fastForwardMs
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
+                            } else {
+                                player.seekTo(position.toInt())
+                            }
+                        }
                     }
                 }
             }
@@ -225,47 +272,30 @@ class ExoPlayerService : Service() {
         applicationHandler = Handler(mainLooper)
     }
 
-    private fun updatePlaybackState() {
+    private fun updatePlaybackState(error: Boolean = false) {
         player?.let { player ->
-            val isLive = player.isCurrentMediaItemLive
+            val isLive = !error && player.duration == -1
             session?.setPlaybackState(
                 PlaybackState.Builder().apply {
                     setState(
-                        when (player.playbackState) {
-                            Player.STATE_IDLE -> PlaybackState.STATE_NONE
-                            Player.STATE_BUFFERING -> {
-                                if (Util.shouldShowPlayButton(player)) {
-                                    PlaybackState.STATE_PAUSED
-                                } else {
-                                    PlaybackState.STATE_BUFFERING
-                                }
-                            }
-                            Player.STATE_READY -> {
-                                if (Util.shouldShowPlayButton(player)) {
-                                    PlaybackState.STATE_PAUSED
-                                } else {
-                                    PlaybackState.STATE_PLAYING
-                                }
-                            }
-                            Player.STATE_ENDED -> PlaybackState.STATE_STOPPED
-                            else -> PlaybackState.STATE_NONE
+                        if (!player.isPlaying) {
+                            PlaybackState.STATE_PAUSED
+                        } else {
+                            PlaybackState.STATE_PLAYING
                         },
                         if (!isLive) {
-                            player.currentPosition
+                            player.currentPosition.toLong()
                         } else {
                             -1
                         },
                         if (player.isPlaying && !isLive) {
-                            player.playbackParameters.speed
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                player.playbackParams.speed
+                            } else {
+                                1f
+                            }
                         } else {
                             0f
-                        }
-                    )
-                    setBufferedPosition(
-                        if (!isLive) {
-                            player.bufferedPosition
-                        } else {
-                            -1
                         }
                     )
                     setActions(
@@ -295,17 +325,17 @@ class ExoPlayerService : Service() {
                             }
                         }
                     )
-                    addCustomAction(INTENT_REWIND, ContextCompat.getString(this@ExoPlayerService, R.string.rewind), androidx.media3.session.R.drawable.media3_icon_rewind)
-                    addCustomAction(INTENT_FAST_FORWARD, ContextCompat.getString(this@ExoPlayerService, R.string.forward), androidx.media3.session.R.drawable.media3_icon_fast_forward)
+                    addCustomAction(INTENT_REWIND, ContextCompat.getString(this@MediaPlayerService, R.string.rewind), androidx.media3.session.R.drawable.media3_icon_rewind)
+                    addCustomAction(INTENT_FAST_FORWARD, ContextCompat.getString(this@MediaPlayerService, R.string.forward), androidx.media3.session.R.drawable.media3_icon_fast_forward)
                 }.build()
             )
         }
     }
 
     private fun updateMetadata() {
-        val bitmap = player?.currentMediaItem?.mediaMetadata?.let { metadata ->
+        val bitmap = channelLogo?.let { channelLogo ->
             val loader = bitmapLoader ?: CacheBitmapLoader(DataSourceBitmapLoader(this)).also { bitmapLoader = it }
-            loader.loadBitmapFromMetadata(metadata)?.let { bitmapFuture ->
+            loader.loadBitmap(channelLogo.toUri()).let { bitmapFuture ->
                 metadataBitmapCallback = null
                 if (bitmapFuture.isDone) {
                     try {
@@ -336,29 +366,22 @@ class ExoPlayerService : Service() {
         player?.let { player ->
             session?.setMetadata(
                 MediaMetadata.Builder().apply {
-                    putText(MediaMetadata.METADATA_KEY_TITLE, player.currentMediaItem?.mediaMetadata?.title)
-                    putText(MediaMetadata.METADATA_KEY_ARTIST, player.currentMediaItem?.mediaMetadata?.artist)
+                    putText(MediaMetadata.METADATA_KEY_TITLE, title)
+                    putText(MediaMetadata.METADATA_KEY_ARTIST, channelName)
                     if (bitmap != null) {
                         putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, bitmap)
                         putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, bitmap)
                     }
-                    putLong(
-                        MediaMetadata.METADATA_KEY_DURATION,
-                        if (!player.isCurrentMediaItemLive) {
-                            player.duration
-                        } else {
-                            -1
-                        }
-                    )
+                    putLong(MediaMetadata.METADATA_KEY_DURATION, player.duration.toLong())
                 }.build()
             )
         }
     }
 
     private fun updateNotification() {
-        val bitmap = player?.currentMediaItem?.mediaMetadata?.let { metadata ->
+        val bitmap = channelLogo?.let { channelLogo ->
             val loader = bitmapLoader ?: CacheBitmapLoader(DataSourceBitmapLoader(this)).also { bitmapLoader = it }
-            loader.loadBitmapFromMetadata(metadata)?.let { bitmapFuture ->
+            loader.loadBitmap(channelLogo.toUri()).let { bitmapFuture ->
                 notificationBitmapCallback = null
                 if (bitmapFuture.isDone) {
                     try {
@@ -393,8 +416,8 @@ class ExoPlayerService : Service() {
                 @Suppress("DEPRECATION")
                 Notification.Builder(this)
             }.apply {
-                setContentTitle(player.currentMediaItem?.mediaMetadata?.title)
-                setContentText(player.currentMediaItem?.mediaMetadata?.artist)
+                setContentTitle(title)
+                setContentText(channelName)
                 setSmallIcon(R.drawable.notification_icon)
                 if (bitmap != null) {
                     setLargeIcon(bitmap)
@@ -403,7 +426,13 @@ class ExoPlayerService : Service() {
                 setVisibility(Notification.VISIBILITY_PUBLIC)
                 setOngoing(false)
                 setOnlyAlertOnce(true)
-                if (player.isPlaying && player.playbackParameters.speed == 1f) {
+                if (player.isPlaying &&
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        player.playbackParams.speed
+                    } else {
+                        1f
+                    } == 1f
+                ) {
                     setWhen(System.currentTimeMillis() - player.currentPosition)
                     setShowWhen(true)
                     setUsesChronometer(true)
@@ -415,9 +444,9 @@ class ExoPlayerService : Service() {
                 )
                 setContentIntent(
                     PendingIntent.getActivity(
-                        this@ExoPlayerService,
+                        this@MediaPlayerService,
                         REQUEST_CODE_RESUME,
-                        Intent(this@ExoPlayerService, MainActivity::class.java).apply {
+                        Intent(this@MediaPlayerService, MainActivity::class.java).apply {
                             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
                             action = MainActivity.INTENT_OPEN_PLAYER
                         },
@@ -427,27 +456,27 @@ class ExoPlayerService : Service() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     addAction(
                         Notification.Action.Builder(
-                            Icon.createWithResource(this@ExoPlayerService, androidx.media3.session.R.drawable.media3_icon_rewind),
-                            ContextCompat.getString(this@ExoPlayerService, R.string.rewind),
+                            Icon.createWithResource(this@MediaPlayerService, androidx.media3.session.R.drawable.media3_icon_rewind),
+                            ContextCompat.getString(this@MediaPlayerService, R.string.rewind),
                             PendingIntent.getService(
-                                this@ExoPlayerService,
+                                this@MediaPlayerService,
                                 REQUEST_CODE_REWIND,
-                                Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
+                                Intent(this@MediaPlayerService, ExoPlayerService::class.java).apply {
                                     action = INTENT_REWIND
                                 },
                                 PendingIntent.FLAG_IMMUTABLE
                             )
                         ).build()
                     )
-                    if (Util.shouldShowPlayButton(player)) {
+                    if (!player.isPlaying) {
                         addAction(
                             Notification.Action.Builder(
-                                Icon.createWithResource(this@ExoPlayerService, androidx.media3.session.R.drawable.media3_icon_play),
-                                ContextCompat.getString(this@ExoPlayerService, R.string.resume),
+                                Icon.createWithResource(this@MediaPlayerService, androidx.media3.session.R.drawable.media3_icon_play),
+                                ContextCompat.getString(this@MediaPlayerService, R.string.resume),
                                 PendingIntent.getService(
-                                    this@ExoPlayerService,
+                                    this@MediaPlayerService,
                                     REQUEST_CODE_PLAY_PAUSE,
-                                    Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
+                                    Intent(this@MediaPlayerService, ExoPlayerService::class.java).apply {
                                         action = INTENT_PLAY_PAUSE
                                     },
                                     PendingIntent.FLAG_IMMUTABLE
@@ -457,12 +486,12 @@ class ExoPlayerService : Service() {
                     } else {
                         addAction(
                             Notification.Action.Builder(
-                                Icon.createWithResource(this@ExoPlayerService, androidx.media3.session.R.drawable.media3_icon_pause),
-                                ContextCompat.getString(this@ExoPlayerService, R.string.pause),
+                                Icon.createWithResource(this@MediaPlayerService, androidx.media3.session.R.drawable.media3_icon_pause),
+                                ContextCompat.getString(this@MediaPlayerService, R.string.pause),
                                 PendingIntent.getService(
-                                    this@ExoPlayerService,
+                                    this@MediaPlayerService,
                                     REQUEST_CODE_PLAY_PAUSE,
-                                    Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
+                                    Intent(this@MediaPlayerService, ExoPlayerService::class.java).apply {
                                         action = INTENT_PLAY_PAUSE
                                     },
                                     PendingIntent.FLAG_IMMUTABLE
@@ -472,12 +501,12 @@ class ExoPlayerService : Service() {
                     }
                     addAction(
                         Notification.Action.Builder(
-                            Icon.createWithResource(this@ExoPlayerService, androidx.media3.session.R.drawable.media3_icon_fast_forward),
-                            ContextCompat.getString(this@ExoPlayerService, R.string.forward),
+                            Icon.createWithResource(this@MediaPlayerService, androidx.media3.session.R.drawable.media3_icon_fast_forward),
+                            ContextCompat.getString(this@MediaPlayerService, R.string.forward),
                             PendingIntent.getService(
-                                this@ExoPlayerService,
+                                this@MediaPlayerService,
                                 REQUEST_CODE_FAST_FORWARD,
-                                Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
+                                Intent(this@MediaPlayerService, ExoPlayerService::class.java).apply {
                                     action = INTENT_FAST_FORWARD
                                 },
                                 PendingIntent.FLAG_IMMUTABLE
@@ -488,26 +517,26 @@ class ExoPlayerService : Service() {
                     addAction(
                         Notification.Action.Builder(
                             androidx.media3.session.R.drawable.media3_icon_rewind,
-                            ContextCompat.getString(this@ExoPlayerService, R.string.rewind),
+                            ContextCompat.getString(this@MediaPlayerService, R.string.rewind),
                             PendingIntent.getService(
-                                this@ExoPlayerService,
+                                this@MediaPlayerService,
                                 REQUEST_CODE_REWIND,
-                                Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
+                                Intent(this@MediaPlayerService, ExoPlayerService::class.java).apply {
                                     action = INTENT_REWIND
                                 },
                                 PendingIntent.FLAG_IMMUTABLE
                             )
                         ).build()
                     )
-                    if (Util.shouldShowPlayButton(player)) {
+                    if (!player.isPlaying) {
                         addAction(
                             Notification.Action.Builder(
                                 androidx.media3.session.R.drawable.media3_icon_play,
-                                ContextCompat.getString(this@ExoPlayerService, R.string.resume),
+                                ContextCompat.getString(this@MediaPlayerService, R.string.resume),
                                 PendingIntent.getService(
-                                    this@ExoPlayerService,
+                                    this@MediaPlayerService,
                                     REQUEST_CODE_PLAY_PAUSE,
-                                    Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
+                                    Intent(this@MediaPlayerService, ExoPlayerService::class.java).apply {
                                         action = INTENT_PLAY_PAUSE
                                     },
                                     PendingIntent.FLAG_IMMUTABLE
@@ -518,11 +547,11 @@ class ExoPlayerService : Service() {
                         addAction(
                             Notification.Action.Builder(
                                 androidx.media3.session.R.drawable.media3_icon_pause,
-                                ContextCompat.getString(this@ExoPlayerService, R.string.pause),
+                                ContextCompat.getString(this@MediaPlayerService, R.string.pause),
                                 PendingIntent.getService(
-                                    this@ExoPlayerService,
+                                    this@MediaPlayerService,
                                     REQUEST_CODE_PLAY_PAUSE,
-                                    Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
+                                    Intent(this@MediaPlayerService, ExoPlayerService::class.java).apply {
                                         action = INTENT_PLAY_PAUSE
                                     },
                                     PendingIntent.FLAG_IMMUTABLE
@@ -533,11 +562,11 @@ class ExoPlayerService : Service() {
                     addAction(
                         Notification.Action.Builder(
                             androidx.media3.session.R.drawable.media3_icon_fast_forward,
-                            ContextCompat.getString(this@ExoPlayerService, R.string.forward),
+                            ContextCompat.getString(this@MediaPlayerService, R.string.forward),
                             PendingIntent.getService(
-                                this@ExoPlayerService,
+                                this@MediaPlayerService,
                                 REQUEST_CODE_FAST_FORWARD,
-                                Intent(this@ExoPlayerService, ExoPlayerService::class.java).apply {
+                                Intent(this@MediaPlayerService, ExoPlayerService::class.java).apply {
                                     action = INTENT_FAST_FORWARD
                                 },
                                 PendingIntent.FLAG_IMMUTABLE
@@ -564,8 +593,9 @@ class ExoPlayerService : Service() {
                 schedule(duration) {
                     Handler(Looper.getMainLooper()).post {
                         savePosition()
-                        player?.clearMediaItems()
-                        player?.playWhenReady = false
+                        player?.pause()
+                        updatePlayingState()
+                        pauseListener?.invoke()
                         stopSelf()
                     }
                 }
@@ -617,25 +647,47 @@ class ExoPlayerService : Service() {
 
     private fun savePosition() {
         player?.let { player ->
-            if (!player.currentTracks.isEmpty && prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+            if (player.duration != -1 && prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
                 videoId?.let {
                     runBlocking {
-                        playerRepository.saveVideoPosition(VideoPosition(it, player.currentPosition))
+                        playerRepository.saveVideoPosition(VideoPosition(it, player.currentPosition.toLong()))
                     }
                 } ?:
                 offlineVideoId?.let {
                     runBlocking {
-                        offlineRepository.updateVideoPosition(it, player.currentPosition)
+                        offlineRepository.updateVideoPosition(it, player.currentPosition.toLong())
                     }
                 }
             }
         }
     }
 
+    fun updatePlayingState() {
+        updatePlaybackState()
+        updateNotification()
+        player?.let { player ->
+            if (player.isPlaying) {
+                if (savePositionTimer == null && (videoId != null || offlineVideoId != null)) {
+                    savePositionTimer = Timer().apply {
+                        scheduleAtFixedRate(30000, 30000) {
+                            Handler(Looper.getMainLooper()).post {
+                                updateSavedPosition()
+                            }
+                        }
+                    }
+                }
+            } else {
+                savePositionTimer?.cancel()
+                savePositionTimer = null
+                updateSavedPosition()
+            }
+        }
+    }
+
     private fun updateSavedPosition() {
         player?.let { player ->
-            if (!player.currentTracks.isEmpty && prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
-                val currentPosition = player.currentPosition
+            if (player.duration != -1 && prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+                val currentPosition = player.currentPosition.toLong()
                 val savedPosition = lastSavedPosition
                 if (savedPosition == null || currentPosition - savedPosition !in 0..2000) {
                     lastSavedPosition = currentPosition
@@ -656,9 +708,39 @@ class ExoPlayerService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            INTENT_REWIND -> player?.seekBack()
-            INTENT_PLAY_PAUSE -> Util.handlePlayPauseButtonAction(player)
-            INTENT_FAST_FORWARD -> player?.seekForward()
+            INTENT_REWIND -> {
+                player?.let { player ->
+                    val rewindMs = prefs().getString(C.PLAYER_REWIND, "10000")?.toLongOrNull() ?: 10000
+                    val position = player.currentPosition - rewindMs
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
+                    } else {
+                        player.seekTo(position.toInt())
+                    }
+                }
+            }
+            INTENT_PLAY_PAUSE -> {
+                player?.let { player ->
+                    if (player.isPlaying) {
+                        player.pause()
+                    } else {
+                        player.start()
+                    }
+                    updatePlayingState()
+                    pauseListener?.invoke()
+                }
+            }
+            INTENT_FAST_FORWARD -> {
+                player?.let { player ->
+                    val fastForwardMs = prefs().getString(C.PLAYER_FORWARD, "10000")?.toLongOrNull() ?: 10000
+                    val position = player.currentPosition + fastForwardMs
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
+                    } else {
+                        player.seekTo(position.toInt())
+                    }
+                }
+            }
         }
         return START_STICKY
     }
@@ -668,17 +750,19 @@ class ExoPlayerService : Service() {
     }
 
     inner class ServiceBinder : Binder() {
-        fun getService() = this@ExoPlayerService
+        fun getService() = this@MediaPlayerService
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         savePosition()
-        player?.clearMediaItems()
-        player?.playWhenReady = false
+        player?.pause()
+        updatePlayingState()
+        pauseListener?.invoke()
         stopSelf()
     }
 
     override fun onDestroy() {
+        wifiLock?.release()
         player?.release()
         session?.release()
         metadataBitmapCallback = null
