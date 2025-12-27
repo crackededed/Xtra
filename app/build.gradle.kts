@@ -101,6 +101,7 @@ android {
 }
 
 dependencies {
+    ksp("org.jetbrains.kotlin:kotlin-metadata-jvm:2.3.0")
     implementation("androidx.multidex:multidex:2.0.1")
     implementation("androidx.room:room-ktx:2.6.1")
     implementation("androidx.media:media:1.6.0")

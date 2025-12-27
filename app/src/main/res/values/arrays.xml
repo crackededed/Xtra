@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string-array name="playerEntries">
+        <item>ExoPlayer</item>
+        <item>MediaPlayer</item>
+    </string-array>
+
     <string-array name="networkLibraryEntries">
         <item>HttpEngine</item>
         <item>Cronet</item>

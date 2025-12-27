@@ -155,7 +155,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             or View.SYSTEM_UI_FLAG_FULLSCREEN)
 
     open fun startStream(url: String?) {}
-    open fun startVideo(url: String?, playbackPosition: Long?) {}
+    open fun startVideo(url: String?, playbackPosition: Long?, multivariantPlaylist: Boolean) {}
     open fun startClip(url: String?) {}
     open fun startOfflineVideo(url: String?, position: Long) {}
     open fun getCurrentPosition(): Long? = null
@@ -871,7 +871,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         repeatOnLifecycle(Lifecycle.State.STARTED) {
                             viewModel.videoResult.collectLatest {
                                 if (it != null) {
-                                    startVideo(it, viewModel.playbackPosition)
+                                    startVideo(it, viewModel.playbackPosition, true)
                                     viewModel.videoResult.value = null
                                 }
                             }
@@ -1878,7 +1878,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     fun reconnect() = chatFragment?.reconnect()
 
-    fun secondViewIsHidden() = !binding.chatLayout.isVisible
+    fun secondViewIsHidden() = !binding.chatLayout.isVisible && isMaximized
 
     fun canEnterPictureInPicture(): Boolean {
         val quality = if (viewModel.restoreQuality) {
@@ -2097,7 +2097,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 viewModel.quality = qualities.keys.firstOrNull()
                 qualities.values.firstOrNull()?.second
             }?.let { url ->
-                startVideo(url, playbackPosition)
+                startVideo(url, playbackPosition, false)
             }
         } else {
             viewModel.playbackPosition = playbackPosition

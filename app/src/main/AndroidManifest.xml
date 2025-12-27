@@ -64,6 +64,10 @@
             android:foregroundServiceType="mediaPlayback" />
 
         <service
+            android:name=".ui.player.MediaPlayerService"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <service
             android:name=".ui.player.PlaybackService"
             android:foregroundServiceType="mediaPlayback"
             android:exported="true">

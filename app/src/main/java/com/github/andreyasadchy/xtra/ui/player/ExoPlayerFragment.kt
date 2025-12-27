@@ -514,7 +514,7 @@ class ExoPlayerFragment : PlayerFragment() {
         }
     }
 
-    override fun startVideo(url: String?, playbackPosition: Long?) {
+    override fun startVideo(url: String?, playbackPosition: Long?, multivariantPlaylist: Boolean) {
         player?.let { player ->
             player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                 setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)

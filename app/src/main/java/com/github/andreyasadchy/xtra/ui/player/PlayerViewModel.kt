@@ -241,6 +241,65 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
+    suspend fun loadPlaylist(url: String, networkLibrary: String?, proxyMultivariantPlaylist: Boolean = false, proxyHost: String? = null, proxyPort: Int? = null, proxyUser: String? = null, proxyPassword: String? = null): Pair<String?, Int?>? = withContext(Dispatchers.IO) {
+        try {
+            val useProxy = !useCustomProxy && proxyMultivariantPlaylist && !proxyHost.isNullOrBlank() && proxyPort != null
+            when {
+                networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null && !useProxy -> {
+                    val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                        httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
+                    }
+                    if (response.first.httpStatusCode in 200..299) {
+                        String(response.second) to null
+                    } else {
+                        null to response.first.httpStatusCode
+                    }
+                }
+                networkLibrary == "Cronet" && cronetEngine != null && !useProxy -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        val request = UrlRequestCallbacks.forStringBody(RedirectHandlers.alwaysFollow())
+                        cronetEngine.get().newUrlRequestBuilder(url, request.callback, cronetExecutor).build().start()
+                        val response = request.future.get()
+                        if (response.urlResponseInfo.httpStatusCode in 200..299) {
+                            (response.responseBody as String) to null
+                        } else {
+                            null to response.urlResponseInfo.httpStatusCode
+                        }
+                    } else {
+                        val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                            cronetEngine.get().newUrlRequestBuilder(url, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
+                        }
+                        if (response.first.httpStatusCode in 200..299) {
+                            String(response.second) to null
+                        } else {
+                            null to response.first.httpStatusCode
+                        }
+                    }
+                }
+                else -> {
+                    okHttpClient.newBuilder().apply {
+                        if (useProxy) {
+                            proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
+                            if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                                proxyAuthenticator { _, response ->
+                                    response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
+                                }
+                            }
+                        }
+                    }.build().newCall(Request.Builder().url(url).build()).execute().use { response ->
+                        if (response.isSuccessful) {
+                            response.body.string() to null
+                        } else {
+                            null to response.code()
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     fun loadStreamResult(networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, supportedCodecs: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean) {
         if (streamResult.value == null) {
             viewModelScope.launch {
