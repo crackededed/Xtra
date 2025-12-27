@@ -30,7 +30,7 @@ android {
         minSdk = 21
         targetSdk = 36
         versionCode = 121
-        versionName = "2.52.2"
+        versionName = "2.52.3"
     }
 
     buildTypes {
@@ -70,9 +70,14 @@ android {
             "androidx.hilt:hilt-compiler:1.3.0-alpha02",
             "androidx.hilt:hilt-work:1.3.0-alpha02",
             "androidx.lifecycle:lifecycle-viewmodel:2.10.0-alpha01",
+            "androidx.media3:media3-exoplayer:1.8.0",
+            "androidx.media3:media3-exoplayer-hls:1.8.0",
+            "androidx.media3:media3-session:1.8.0",
+            "androidx.media3:media3-ui:1.8.0",
             "androidx.room:room-compiler:2.8.0-rc01",
             "androidx.room:room-paging:2.8.0-rc01",
             "androidx.room:room-runtime:2.8.0-rc01",
+            "androidx.webkit:webkit:1.15.0-alpha01",
             "androidx.work:work-runtime:2.10.5",
             "org.chromium.net:cronet-api:119.6045.31",
         ))
@@ -80,6 +85,7 @@ android {
 }
 
 dependencies {
+    ksp("org.jetbrains.kotlin:kotlin-metadata-jvm:2.3.0")
     implementation("io.github.abdallahmehiz:mpv-android-lib:0.1.10")
     implementation("com.google.android.gms:play-services-cronet:18.1.0")
     implementation("com.google.mlkit:language-id:17.0.6")

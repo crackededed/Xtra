@@ -239,7 +239,7 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    suspend fun loadPlaylist(url: String, networkLibrary: String?, proxyMultivariantPlaylist: Boolean = false, proxyHost: String? = null, proxyPort: Int? = null, proxyUser: String? = null, proxyPassword: String? = null): String? = withContext(Dispatchers.IO) {
+    suspend fun loadPlaylist(url: String, networkLibrary: String?, proxyMultivariantPlaylist: Boolean = false, proxyHost: String? = null, proxyPort: Int? = null, proxyUser: String? = null, proxyPassword: String? = null): Pair<String?, Int?>? = withContext(Dispatchers.IO) {
         try {
             val useProxy = !useCustomProxy && proxyMultivariantPlaylist && !proxyHost.isNullOrBlank() && proxyPort != null
             when {
@@ -248,8 +248,10 @@ class PlayerViewModel @Inject constructor(
                         httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                     }
                     if (response.first.httpStatusCode in 200..299) {
-                        String(response.second)
-                    } else null
+                        String(response.second) to null
+                    } else {
+                        null to response.first.httpStatusCode
+                    }
                 }
                 networkLibrary == "Cronet" && cronetEngine != null && !useProxy -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -257,15 +259,19 @@ class PlayerViewModel @Inject constructor(
                         cronetEngine.get().newUrlRequestBuilder(url, request.callback, cronetExecutor).build().start()
                         val response = request.future.get()
                         if (response.urlResponseInfo.httpStatusCode in 200..299) {
-                            response.responseBody as String
-                        } else null
+                            (response.responseBody as String) to null
+                        } else {
+                            null to response.urlResponseInfo.httpStatusCode
+                        }
                     } else {
                         val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
                             cronetEngine.get().newUrlRequestBuilder(url, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                         }
                         if (response.first.httpStatusCode in 200..299) {
-                            String(response.second)
-                        } else null
+                            String(response.second) to null
+                        } else {
+                            null to response.first.httpStatusCode
+                        }
                     }
                 }
                 else -> {
@@ -280,8 +286,10 @@ class PlayerViewModel @Inject constructor(
                         }
                     }.build().newCall(Request.Builder().url(url).build()).execute().use { response ->
                         if (response.isSuccessful) {
-                            response.body.string()
-                        } else null
+                            response.body.string() to null
+                        } else {
+                            null to response.code
+                        }
                     }
                 }
             }

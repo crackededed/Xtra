@@ -68,6 +68,7 @@ import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.player.ExoPlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.Media3Fragment
+import com.github.andreyasadchy.xtra.ui.player.MediaPlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.MpvFragment
 import com.github.andreyasadchy.xtra.ui.player.PlayerFragment
 import com.github.andreyasadchy.xtra.ui.team.TeamFragmentDirections
@@ -620,6 +621,7 @@ class MainActivity : AppCompatActivity() {
     fun startStream(stream: Stream) {
         val fragment = when (prefs.getString(C.PLAYER, "ExoPlayer")) {
             "mpv" -> MpvFragment.newInstance(stream)
+            "MediaPlayer" -> MediaPlayerFragment.newInstance(stream)
             else -> {
                 if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
                     ExoPlayerFragment.newInstance(stream)
@@ -634,6 +636,7 @@ class MainActivity : AppCompatActivity() {
     fun startVideo(video: Video, offset: Long?, ignoreSavedPosition: Boolean = false) {
         val fragment = when (prefs.getString(C.PLAYER, "ExoPlayer")) {
             "mpv" -> MpvFragment.newInstance(video, offset, ignoreSavedPosition)
+            "MediaPlayer" -> MediaPlayerFragment.newInstance(video, offset, ignoreSavedPosition)
             else -> {
                 if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
                     ExoPlayerFragment.newInstance(video, offset, ignoreSavedPosition)
@@ -648,6 +651,7 @@ class MainActivity : AppCompatActivity() {
     fun startClip(clip: Clip) {
         val fragment = when (prefs.getString(C.PLAYER, "ExoPlayer")) {
             "mpv" -> MpvFragment.newInstance(clip)
+            "MediaPlayer" -> MediaPlayerFragment.newInstance(clip)
             else -> {
                 if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
                     ExoPlayerFragment.newInstance(clip)
@@ -662,6 +666,7 @@ class MainActivity : AppCompatActivity() {
     fun startOfflineVideo(video: OfflineVideo) {
         val fragment = when (prefs.getString(C.PLAYER, "ExoPlayer")) {
             "mpv" -> MpvFragment.newInstance(video)
+            "MediaPlayer" -> MediaPlayerFragment.newInstance(video)
             else -> {
                 if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
                     ExoPlayerFragment.newInstance(video)

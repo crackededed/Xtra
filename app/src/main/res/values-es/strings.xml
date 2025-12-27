@@ -132,7 +132,6 @@
     <string name="never">Nunca</string>
     <string name="blue">Azul</string>
     <string name="rounduserimage">Imágenes de perfil circulares</string>
-    <string name="truncated_view_counts">Recuentos de vistas truncado</string>
     <string name="broadcastersCount">Mostrar recuento de transmisiones en "juegos"</string>
     <string name="startonfollowed">Iniciar en la página de "Siguiendo"</string>
     <string name="when_logged_in">Al tener una sesión iniciada</string>
@@ -626,10 +625,10 @@
     <string name="prediction_title">Predicción actual: %s</string>
     <string name="prediction_locked">Bloqueado</string>
     <string name="prediction_refunded">Reembolsado</string>
-    <string name="poll_choice">%1$d%% (%2$d): %3$s</string>
-    <string name="poll_choice_winner">🏆%1$d%% (%2$d): %3$s</string>
-    <string name="prediction_outcome">%1$d%% (%2$d💎, %3$d👥): %4$s</string>
-    <string name="prediction_outcome_winner">🏆%1$d%% (%2$d💎, %3$d👥): %4$s</string>
+    <string name="poll_choice">%1$d%% (%2$s): %3$s</string>
+    <string name="poll_choice_winner">🏆%1$d%% (%2$s): %3$s</string>
+    <string name="prediction_outcome">%1$d%% (%2$s💎, %3$s👥): %4$s</string>
+    <string name="prediction_outcome_winner">🏆%1$d%% (%2$s💎, %3$s👥): %4$s</string>
     <string name="api_token_settings">Configuración del token de API</string>
     <string name="download_settings">Descargas</string>
     <string name="update_settings">Actualizar configuraciónes</string>
@@ -729,4 +728,7 @@
     <string name="use_background_audio_pip_closed">Play audio in the background when closing PiP</string>
     <string name="use_background_audio_pip_locked">Play audio in the background when locking the screen in PiP mode</string>
     <string name="old_username">Old name: %s</string>
+    <string name="default_cellular_quality">Default player quality on cellular network</string>
+    <string name="player">Player</string>
+    <string name="compact_number_formatting">Compact number formatting</string>
 </resources>

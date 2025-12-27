@@ -33,7 +33,7 @@ class AutoCompleteAdapter<T>(
     objects: MutableList<T?>
 ): ArrayAdapter<T?>(context, resource, textViewResourceId) {
 
-    private val mLock = Object()
+    private val mLock = Any()
     private var mObjects = objects
     private var mOriginalValues: MutableList<T?>? = null
     private var mNotifyOnChange = true

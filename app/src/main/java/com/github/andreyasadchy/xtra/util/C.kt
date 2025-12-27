@@ -138,6 +138,7 @@ object C {
     const val PLAYER_MENU_RELOAD_EMOTES = "player_menu_reload_emotes"
     const val PLAYER_USE_VIDEOPOSITIONS = "player_use_videopositions"
     const val PLAYER_DEFAULTQUALITY = "player_defaultquality"
+    const val PLAYER_DEFAULT_CELLULAR_QUALITY = "player_default_cellular_quality"
     const val PLAYER_QUALITY = "player_quality"
     const val PLAYER_VOLUME = "player_volume"
     const val PLAYER_SPEED = "player_speed"

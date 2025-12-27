@@ -3,6 +3,7 @@
     <string-array name="playerEntries">
         <item>mpv</item>
         <item>ExoPlayer</item>
+        <item>MediaPlayer</item>
     </string-array>
 
     <string-array name="networkLibraryEntries">

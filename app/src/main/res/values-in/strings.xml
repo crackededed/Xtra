@@ -125,7 +125,6 @@
     <string name="never">Tidak pernah</string>
     <string name="blue">Biru</string>
     <string name="rounduserimage">Lingkari gambar profil</string>
-    <string name="truncated_view_counts">Singkat jumlah penonton</string>
     <string name="broadcastersCount">Tampilkan banyaknya penyiar di game</string>
     <string name="startonfollowed">Mulai di halaman mengikuti</string>
     <string name="when_logged_in">Saat masuk</string><![CDATA[Saat masuk/string>
@@ -622,10 +621,10 @@
     <string name="prediction_title">Current prediction: %s</string>
     <string name="prediction_locked">Locked</string>
     <string name="prediction_refunded">Refunded</string>
-    <string name="poll_choice">%1$d%% (%2$d): %3$s</string>
-    <string name="poll_choice_winner">🏆%1$d%% (%2$d): %3$s</string>
-    <string name="prediction_outcome">%1$d%% (%2$d💎, %3$d👥): %4$s</string>
-    <string name="prediction_outcome_winner">🏆%1$d%% (%2$d💎, %3$d👥): %4$s</string>
+    <string name="poll_choice">%1$d%% (%2$s): %3$s</string>
+    <string name="poll_choice_winner">🏆%1$d%% (%2$s): %3$s</string>
+    <string name="prediction_outcome">%1$d%% (%2$s💎, %3$s👥): %4$s</string>
+    <string name="prediction_outcome_winner">🏆%1$d%% (%2$s💎, %3$s👥): %4$s</string>
     <string name="api_token_settings">Api token settings</string>
     <string name="download_settings">Downloads</string>
     <string name="update_settings">Update settings</string>
@@ -725,4 +724,7 @@
     <string name="use_background_audio_pip_closed">Play audio in the background when closing PiP</string>
     <string name="use_background_audio_pip_locked">Play audio in the background when locking the screen in PiP mode</string>
     <string name="old_username">Old name: %s</string>
+    <string name="default_cellular_quality">Default player quality on cellular network</string>
+    <string name="player">Player</string>
+    <string name="compact_number_formatting">Compact number formatting</string>
 </resources>
