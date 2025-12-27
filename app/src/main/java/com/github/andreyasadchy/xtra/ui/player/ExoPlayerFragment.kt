@@ -6,6 +6,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
@@ -911,7 +913,14 @@ class ExoPlayerFragment : PlayerFragment() {
                             }
                         }
                     }
-                    if (prefs.getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") {
+                    val cellular = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                        val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                        networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
+                    } else {
+                        false
+                    }
+                    if ((!cellular && prefs.getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") || (cellular && prefs.getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
                         prefs.edit { putString(C.PLAYER_QUALITY, quality.key) }
                     }
                 }
