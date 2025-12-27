@@ -741,4 +741,5 @@
     <string name="use_background_audio_pip_closed">Play audio in the background when closing PiP</string>
     <string name="use_background_audio_pip_locked">Play audio in the background when locking the screen in PiP mode</string>
     <string name="old_username">Old name: %s</string>
+    <string name="default_cellular_quality">Default player quality on cellular network</string>
 </resources>

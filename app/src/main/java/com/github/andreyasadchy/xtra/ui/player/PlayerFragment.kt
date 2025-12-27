@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
@@ -13,6 +14,8 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.Icon
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
@@ -1624,7 +1627,18 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     }
 
     protected fun setDefaultQuality() {
-        val defaultQuality = prefs.getString(C.PLAYER_DEFAULTQUALITY, "saved")?.substringBefore(" ")
+        val cellular = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+            networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
+        } else {
+            false
+        }
+        val defaultQuality = if (cellular) {
+            prefs.getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved")
+        } else {
+            prefs.getString(C.PLAYER_DEFAULTQUALITY, "saved")
+        }?.substringBefore(" ")
         viewModel.quality = when (defaultQuality) {
             "saved" -> {
                 val savedQuality = prefs.getString(C.PLAYER_QUALITY, "720p60")?.substringBefore(" ")

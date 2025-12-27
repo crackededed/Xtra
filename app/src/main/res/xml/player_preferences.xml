@@ -60,6 +60,16 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <ListPreference
+        android:defaultValue="saved"
+        android:entries="@array/playerQualityEntries"
+        android:entryValues="@array/playerQualityValues"
+        android:key="player_default_cellular_quality"
+        android:summary="%s"
+        android:title="@string/default_cellular_quality"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="player_rounded_corner_padding"
