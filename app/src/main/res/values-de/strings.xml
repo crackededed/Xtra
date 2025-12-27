@@ -724,4 +724,5 @@
     <string name="use_background_audio_pip_closed">Audio im Hintergrund abspielen, wenn das BiB geschlossen wird</string>
     <string name="use_background_audio_pip_locked">Audio im Hintergrund abspielen, wenn im BiB Modus gesperrt wird</string>
     <string name="old_username">Old name: %s</string>
+    <string name="default_cellular_quality">Default player quality on cellular network</string>
 </resources>
