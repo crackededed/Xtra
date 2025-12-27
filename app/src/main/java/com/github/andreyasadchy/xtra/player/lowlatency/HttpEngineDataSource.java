@@ -18,6 +18,8 @@ package com.github.andreyasadchy.xtra.player.lowlatency;
 import static android.net.http.UrlRequest.REQUEST_PRIORITY_MEDIUM;
 import static androidx.media3.common.util.Util.castNonNull;
 import static androidx.media3.datasource.HttpUtil.buildRangeRequestHeader;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Math.min;
 
 import android.net.Uri;
@@ -37,13 +39,11 @@ import androidx.annotation.RequiresExtension;
 import androidx.annotation.VisibleForTesting;
 import androidx.media3.common.C;
 import androidx.media3.common.PlaybackException;
-import androidx.media3.common.util.Assertions;
 import androidx.media3.common.util.Clock;
 import androidx.media3.common.util.ConditionVariable;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.common.util.Util;
 import androidx.media3.datasource.BaseDataSource;
-import androidx.media3.datasource.DataSource;
 import androidx.media3.datasource.DataSourceException;
 import androidx.media3.datasource.DataSpec;
 import androidx.media3.datasource.HttpDataSource;
@@ -129,7 +129,7 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
      *     sure response handling is a fast operation when using a direct executor.
      */
     public Factory(HttpEngine httpEngine, Executor executor, @Nullable Call.Factory multivariantPlaylistProxyClient, @Nullable Call.Factory mediaPlaylistProxyClient, Function0<Boolean> proxyMediaPlaylist) {
-      this.httpEngine = Assertions.checkNotNull(httpEngine);
+      this.httpEngine = checkNotNull(httpEngine);
       this.executor = executor;
       this.multivariantPlaylistProxyClient = multivariantPlaylistProxyClient; // xtra: proxy
       this.mediaPlaylistProxyClient = mediaPlaylistProxyClient;
@@ -411,8 +411,8 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
       @Nullable Predicate<String> contentTypePredicate,
       boolean keepPostFor302Redirects) {
     super(/* isNetwork= */ true);
-    this.httpEngine = Assertions.checkNotNull(httpEngine);
-    this.executor = Assertions.checkNotNull(executor);
+    this.httpEngine = checkNotNull(httpEngine);
+    this.executor = checkNotNull(executor);
     this.multivariantPlaylistProxyClient = multivariantPlaylistProxyClient; // xtra: proxy
     this.mediaPlaylistProxyClient = mediaPlaylistProxyClient;
     this.proxyMediaPlaylist = proxyMediaPlaylist;
@@ -480,8 +480,8 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
   @UnstableApi
   @Override
   public long open(DataSpec dataSpec) throws HttpDataSourceException {
-    Assertions.checkNotNull(dataSpec);
-    Assertions.checkState(!transferStarted);
+    checkNotNull(dataSpec);
+    checkState(!transferStarted);
 
     operation.close();
     resetConnectTimeout();
@@ -545,7 +545,7 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
     }
 
     // Check for a valid response code.
-    UrlResponseInfo responseInfo = Assertions.checkNotNull(this.responseInfo);
+    UrlResponseInfo responseInfo = checkNotNull(this.responseInfo);
     int responseCode = responseInfo.getHttpStatusCode();
     Map<String, List<String>> responseHeaders = responseInfo.getHeaders().getAsMap();
     if (responseCode < 200 || responseCode > 299) {
@@ -622,7 +622,7 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
   @UnstableApi
   @Override
   public int read(byte[] buffer, int offset, int length) throws HttpDataSourceException {
-    Assertions.checkState(transferStarted);
+    checkState(transferStarted);
 
     if (length == 0) {
       return 0;
@@ -645,7 +645,7 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
 
       // The operation didn't time out, fail or finish, and therefore data must have been read.
       readBuffer.flip();
-      Assertions.checkState(readBuffer.hasRemaining());
+      checkState(readBuffer.hasRemaining());
     }
 
     // Ensure we read up to bytesRemaining, in case this was a Range request with finite end, but
@@ -693,7 +693,7 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
    */
   @UnstableApi
   public int read(ByteBuffer buffer) throws HttpDataSourceException {
-    Assertions.checkState(transferStarted);
+    checkState(transferStarted);
 
     if (!buffer.isDirect()) {
       throw new IllegalArgumentException("Passed buffer is not a direct ByteBuffer");
@@ -727,7 +727,7 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
     }
 
     // The operation didn't time out, fail or finish, and therefore data must have been read.
-    Assertions.checkState(readLength > buffer.remaining());
+    checkState(readLength > buffer.remaining());
     int bytesRead = readLength - buffer.remaining();
     if (bytesRemaining != C.LENGTH_UNSET) {
       bytesRemaining -= bytesRead;
@@ -877,7 +877,7 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
         } else {
           // The operation didn't time out, fail or finish, and therefore data must have been read.
           readBuffer.flip();
-          Assertions.checkState(readBuffer.hasRemaining());
+          checkState(readBuffer.hasRemaining());
           int bytesSkipped = (int) Math.min(readBuffer.remaining(), bytesToSkip);
           readBuffer.position(readBuffer.position() + bytesSkipped);
           bytesToSkip -= bytesSkipped;
@@ -1026,7 +1026,7 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
     try {
       this.response = executeCall(call);
       response = this.response;
-      responseBody = Assertions.checkNotNull(response.body());
+      responseBody = checkNotNull(response.body());
       responseByteStream = responseBody.byteStream();
     } catch (IOException e) {
       throw HttpDataSourceException.createForIOException(
@@ -1049,7 +1049,7 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
 
       byte[] errorResponseBody;
       try {
-        errorResponseBody = ByteStreams.toByteArray(Assertions.checkNotNull(responseByteStream));
+        errorResponseBody = ByteStreams.toByteArray(checkNotNull(responseByteStream));
       } catch (IOException e) {
         errorResponseBody = Util.EMPTY_BYTE_ARRAY;
       }
@@ -1174,7 +1174,7 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
 
   private void closeConnectionQuietly() {
     if (response != null) {
-      Assertions.checkNotNull(response.body()).close();
+      checkNotNull(response.body()).close();
     }
     responseByteStream = null;
   }
@@ -1239,7 +1239,7 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
       if (isClosed) {
         return;
       }
-      DataSpec dataSpec = Assertions.checkNotNull(currentDataSpec);
+      DataSpec dataSpec = checkNotNull(currentDataSpec);
       int responseCode = info.getHttpStatusCode();
       if (dataSpec.httpMethod == DataSpec.HTTP_METHOD_POST) {
         // The industry standard is to disregard POST redirects when the status code is 307 or
