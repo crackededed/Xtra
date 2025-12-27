@@ -127,7 +127,6 @@
     <string name="never">永不</string>
     <string name="blue">蓝色</string>
     <string name="rounduserimage">圆形个人档案图片</string>
-    <string name="truncated_view_counts">简易的观看数量</string>
     <string name="broadcastersCount">在游戏项目上显示主播数量</string>
     <string name="startonfollowed">开始于关注页面</string>
     <string name="when_logged_in">登录时</string>
@@ -621,10 +620,10 @@
     <string name="prediction_title">Current prediction: %s</string>
     <string name="prediction_locked">Locked</string>
     <string name="prediction_refunded">Refunded</string>
-    <string name="poll_choice">%1$d%% (%2$d): %3$s</string>
-    <string name="poll_choice_winner">🏆%1$d%% (%2$d): %3$s</string>
-    <string name="prediction_outcome">%1$d%% (%2$d💎, %3$d👥): %4$s</string>
-    <string name="prediction_outcome_winner">🏆%1$d%% (%2$d💎, %3$d👥): %4$s</string>
+    <string name="poll_choice">%1$d%% (%2$s): %3$s</string>
+    <string name="poll_choice_winner">🏆%1$d%% (%2$s): %3$s</string>
+    <string name="prediction_outcome">%1$d%% (%2$s💎, %3$s👥): %4$s</string>
+    <string name="prediction_outcome_winner">🏆%1$d%% (%2$s💎, %3$s👥): %4$s</string>
     <string name="api_token_settings">Api token settings</string>
     <string name="download_settings">Downloads</string>
     <string name="update_settings">Update settings</string>
@@ -726,4 +725,5 @@
     <string name="old_username">Old name: %s</string>
     <string name="default_cellular_quality">Default player quality on cellular network</string>
     <string name="player">Player</string>
+    <string name="compact_number_formatting">Compact number formatting</string>
 </resources>

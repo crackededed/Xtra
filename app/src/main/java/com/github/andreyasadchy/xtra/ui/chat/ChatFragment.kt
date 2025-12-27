@@ -66,6 +66,7 @@ import com.google.mlkit.nl.translate.TranslatorOptions
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -704,21 +705,21 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                             "ACTIVE" -> {
                                                 pollLayout.visible()
                                                 pollTitle.text = requireContext().getString(R.string.poll_title, poll.title)
-                                                pollChoices.text = poll.choices?.map {
+                                                pollChoices.text = poll.choices?.joinToString("\n") {
                                                     requireContext().getString(
                                                         R.string.poll_choice,
                                                         (((it.totalVotes ?: 0).toLong() * 100.0) / max((poll.totalVotes ?: 0), 1)).roundToInt(),
-                                                        it.totalVotes,
+                                                        it.totalVotes?.let { NumberFormat.getInstance().format(it) },
                                                         it.title
                                                     )
-                                                }?.joinToString("\n")
+                                                }
                                                 pollStatus.visible()
                                             }
                                             "COMPLETED", "TERMINATED" -> {
                                                 pollLayout.visible()
                                                 pollTitle.text = requireContext().getString(R.string.poll_title, poll.title)
                                                 val winningTotal = poll.choices?.maxOfOrNull { it.totalVotes ?: 0 } ?: 0
-                                                pollChoices.text = poll.choices?.map {
+                                                pollChoices.text = poll.choices?.joinToString("\n") {
                                                     requireContext().getString(
                                                         if (winningTotal == it.totalVotes) {
                                                             R.string.poll_choice_winner
@@ -726,10 +727,10 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                                             R.string.poll_choice
                                                         },
                                                         (((it.totalVotes ?: 0).toLong() * 100.0) / max((poll.totalVotes ?: 0), 1)).roundToInt(),
-                                                        it.totalVotes,
+                                                        it.totalVotes?.let { NumberFormat.getInstance().format(it) },
                                                         it.title
                                                     )
-                                                }?.joinToString("\n")
+                                                }
                                                 pollStatus.gone()
                                                 viewModel.pollSecondsLeft.value = null
                                                 viewModel.pollTimer?.cancel()
@@ -789,30 +790,30 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                                 predictionLayout.visible()
                                                 predictionTitle.text = requireContext().getString(R.string.prediction_title, prediction.title)
                                                 val totalPoints = prediction.outcomes?.sumOf { it.totalPoints?.toLong() ?: 0 } ?: 0
-                                                predictionOutcomes.text = prediction.outcomes?.map {
+                                                predictionOutcomes.text = prediction.outcomes?.joinToString("\n") {
                                                     requireContext().getString(
                                                         R.string.prediction_outcome,
                                                         (((it.totalPoints ?: 0).toLong() * 100.0) / max(totalPoints, 1)).roundToInt(),
-                                                        it.totalPoints,
-                                                        it.totalUsers,
+                                                        it.totalPoints?.let { NumberFormat.getInstance().format(it) },
+                                                        it.totalUsers?.let { NumberFormat.getInstance().format(it) },
                                                         it.title
                                                     )
-                                                }?.joinToString("\n")
+                                                }
                                                 predictionStatus.visible()
                                             }
                                             "LOCKED" -> {
                                                 predictionLayout.visible()
                                                 predictionTitle.text = requireContext().getString(R.string.prediction_title, prediction.title)
                                                 val totalPoints = prediction.outcomes?.sumOf { it.totalPoints?.toLong() ?: 0 } ?: 0
-                                                predictionOutcomes.text = prediction.outcomes?.map {
+                                                predictionOutcomes.text = prediction.outcomes?.joinToString("\n") {
                                                     requireContext().getString(
                                                         R.string.prediction_outcome,
                                                         (((it.totalPoints ?: 0).toLong() * 100.0) / max(totalPoints, 1)).roundToInt(),
-                                                        it.totalPoints,
-                                                        it.totalUsers,
+                                                        it.totalPoints?.let { NumberFormat.getInstance().format(it) },
+                                                        it.totalUsers?.let { NumberFormat.getInstance().format(it) },
                                                         it.title
                                                     )
-                                                }?.joinToString("\n")
+                                                }
                                                 viewModel.predictionSecondsLeft.value = null
                                                 viewModel.predictionTimer?.cancel()
                                                 viewModel.startPredictionTimeout { predictionLayout.gone() }
@@ -824,7 +825,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                                 predictionTitle.text = requireContext().getString(R.string.prediction_title, prediction.title)
                                                 val resolved = prediction.status == "RESOLVED" || prediction.status == "RESOLVE_PENDING"
                                                 val totalPoints = prediction.outcomes?.sumOf { it.totalPoints?.toLong() ?: 0 } ?: 0
-                                                predictionOutcomes.text = prediction.outcomes?.map {
+                                                predictionOutcomes.text = prediction.outcomes?.joinToString("\n") {
                                                     requireContext().getString(
                                                         if (resolved && prediction.winningOutcomeId != null && prediction.winningOutcomeId == it.id) {
                                                             R.string.prediction_outcome_winner
@@ -832,11 +833,11 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                                             R.string.prediction_outcome
                                                         },
                                                         (((it.totalPoints ?: 0).toLong() * 100.0) / max(totalPoints, 1)).roundToInt(),
-                                                        it.totalPoints,
-                                                        it.totalUsers,
+                                                        it.totalPoints?.let { NumberFormat.getInstance().format(it) },
+                                                        it.totalUsers?.let { NumberFormat.getInstance().format(it) },
                                                         it.title
                                                     )
-                                                }?.joinToString("\n")
+                                                }
                                                 viewModel.predictionSecondsLeft.value = null
                                                 viewModel.predictionTimer?.cancel()
                                                 viewModel.startPredictionTimeout { predictionLayout.gone() }
