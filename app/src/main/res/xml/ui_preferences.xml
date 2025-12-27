@@ -107,7 +107,7 @@
     <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="ui_truncateviewcount"
-        android:title="@string/truncated_view_counts"
+        android:title="@string/compact_number_formatting"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
