@@ -64,6 +64,7 @@ import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.player.ExoPlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.Media3Fragment
+import com.github.andreyasadchy.xtra.ui.player.MediaPlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.PlayerFragment
 import com.github.andreyasadchy.xtra.ui.team.TeamFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
@@ -531,37 +532,57 @@ class MainActivity : AppCompatActivity() {
 //Navigation listeners
 
     fun startStream(stream: Stream) {
-        val fragment = if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
-            ExoPlayerFragment.newInstance(stream)
-        } else {
-            Media3Fragment.newInstance(stream)
+        val fragment = when (prefs.getString(C.PLAYER, "ExoPlayer")) {
+            "MediaPlayer" -> MediaPlayerFragment.newInstance(stream)
+            else -> {
+                if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+                    ExoPlayerFragment.newInstance(stream)
+                } else {
+                    Media3Fragment.newInstance(stream)
+                }
+            }
         }
         startPlayer(fragment)
     }
 
     fun startVideo(video: Video, offset: Long?, ignoreSavedPosition: Boolean = false) {
-        val fragment = if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
-            ExoPlayerFragment.newInstance(video, offset, ignoreSavedPosition)
-        } else {
-            Media3Fragment.newInstance(video, offset, ignoreSavedPosition)
+        val fragment = when (prefs.getString(C.PLAYER, "ExoPlayer")) {
+            "MediaPlayer" -> MediaPlayerFragment.newInstance(video, offset, ignoreSavedPosition)
+            else -> {
+                if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+                    ExoPlayerFragment.newInstance(video, offset, ignoreSavedPosition)
+                } else {
+                    Media3Fragment.newInstance(video, offset, ignoreSavedPosition)
+                }
+            }
         }
         startPlayer(fragment)
     }
 
     fun startClip(clip: Clip) {
-        val fragment = if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
-            ExoPlayerFragment.newInstance(clip)
-        } else {
-            Media3Fragment.newInstance(clip)
+        val fragment = when (prefs.getString(C.PLAYER, "ExoPlayer")) {
+            "MediaPlayer" -> MediaPlayerFragment.newInstance(clip)
+            else -> {
+                if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+                    ExoPlayerFragment.newInstance(clip)
+                } else {
+                    Media3Fragment.newInstance(clip)
+                }
+            }
         }
         startPlayer(fragment)
     }
 
     fun startOfflineVideo(video: OfflineVideo) {
-        val fragment = if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
-            ExoPlayerFragment.newInstance(video)
-        } else {
-            Media3Fragment.newInstance(video)
+        val fragment = when (prefs.getString(C.PLAYER, "ExoPlayer")) {
+            "MediaPlayer" -> MediaPlayerFragment.newInstance(video)
+            else -> {
+                if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+                    ExoPlayerFragment.newInstance(video)
+                } else {
+                    Media3Fragment.newInstance(video)
+                }
+            }
         }
         startPlayer(fragment)
     }
