@@ -66,6 +66,26 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <ListPreference
+        android:defaultValue="auto"
+        android:entries="@array/mpvDecoderEntries"
+        android:entryValues="@array/mpvDecoderValues"
+        android:key="mpv_hwdec"
+        android:summary="%s"
+        android:title="@string/mpv_hardware_decoder"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <ListPreference
+        android:defaultValue="gpu-next"
+        android:entries="@array/mpvDriverEntries"
+        android:entryValues="@array/mpvDriverEntries"
+        android:key="mpv_vo"
+        android:summary="%s"
+        android:title="@string/mpv_video_driver"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="debug_eventsub_chat"

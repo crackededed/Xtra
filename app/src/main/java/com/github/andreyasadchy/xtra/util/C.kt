@@ -286,6 +286,8 @@ object C {
     const val LIVE_NOTIFICATIONS_ENABLED = "live_notifications_enabled"
     const val NETWORK_LIBRARY = "network_library"
     const val PLAYER = "player"
+    const val MPV_HWDEC = "mpv_hwdec"
+    const val MPV_VO = "mpv_vo"
     const val DEBUG_CHAT_FULLMSG = "debug_chat_fullmsg"
     const val DEBUG_API_COMMANDS = "debug_api_commands"
     const val DEBUG_API_CHAT_MESSAGES = "debug_api_chat_messages"

@@ -743,4 +743,6 @@
     <string name="default_cellular_quality">Default player quality on cellular network</string>
     <string name="player">Player</string>
     <string name="compact_number_formatting">Compact number formatting</string>
+    <string name="mpv_hardware_decoder">mpv: Hardware decoder</string>
+    <string name="mpv_video_driver">mpv: Video output driver</string>
 </resources>

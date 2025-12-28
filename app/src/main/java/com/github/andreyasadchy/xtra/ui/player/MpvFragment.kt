@@ -4,6 +4,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
@@ -24,10 +26,14 @@ import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.gone
+import com.github.andreyasadchy.xtra.util.isNetworkAvailable
+import com.github.andreyasadchy.xtra.util.shortToast
+import com.github.andreyasadchy.xtra.util.toast
 import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.MPVNode
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONException
@@ -54,7 +60,7 @@ class MpvFragment : PlayerFragment() {
 
             override fun surfaceCreated(holder: SurfaceHolder) {
                 surfaceCreated = true
-                if (viewModel.started && playbackService != null) {
+                if (viewModel.started && binding.playerSurface.isVisible && playbackService != null) {
                     MPVLib.attachSurface(holder.surface)
                 }
             }
@@ -73,7 +79,7 @@ class MpvFragment : PlayerFragment() {
                 if (view != null) {
                     val binder = service as MpvService.ServiceBinder
                     playbackService = binder.getService()
-                    if (surfaceCreated) {
+                    if (surfaceCreated && binding.playerSurface.isVisible) {
                         MPVLib.attachSurface(binding.playerSurface.holder.surface)
                     }
                     val listener = object : MPVLib.EventObserver {
@@ -96,6 +102,9 @@ class MpvFragment : PlayerFragment() {
                                             }
                                             setPipActions(!value)
                                             updateProgress()
+                                            if (!prefs.getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
+                                                requireView().keepScreenOn = !value
+                                            }
                                             controllerAutoHide = !value
                                             if (videoType != STREAM && useController) {
                                                 showController()
@@ -118,6 +127,9 @@ class MpvFragment : PlayerFragment() {
                                             binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
                                             updateProgress()
                                         }
+                                        "speed" -> {
+                                            chatFragment?.updateSpeed(value.toFloat())
+                                        }
                                     }
                                 }
                             }
@@ -129,6 +141,9 @@ class MpvFragment : PlayerFragment() {
                             activity?.runOnUiThread {
                                 if (playbackService != null) {
                                     when (eventId) {
+                                        MPVLib.MpvEvent.MPV_EVENT_FILE_LOADED -> {
+                                            chatFragment?.startReplayChatLoad()
+                                        }
                                         MPVLib.MpvEvent.MPV_EVENT_SEEK -> {
                                             updateProgress()
                                             MPVLib.getPropertyDouble("time-pos/full")?.times(1000)?.toLong()?.let { chatFragment?.updatePosition(it) }
@@ -141,6 +156,7 @@ class MpvFragment : PlayerFragment() {
                     MPVLib.addObserver(listener)
                     MPVLib.observeProperty("pause", MPVLib.MpvFormat.MPV_FORMAT_FLAG)
                     MPVLib.observeProperty("duration", MPVLib.MpvFormat.MPV_FORMAT_DOUBLE)
+                    MPVLib.observeProperty("speed", MPVLib.MpvFormat.MPV_FORMAT_DOUBLE)
                     playerListener = listener
                     if (viewModel.restoreQuality) {
                         viewModel.restoreQuality = false
@@ -213,7 +229,7 @@ class MpvFragment : PlayerFragment() {
                 playbackService?.title = requireArguments().getString(KEY_TITLE)
                 playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
                 playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_LOGO)
-                val playlist = viewModel.loadPlaylist(
+                val response = viewModel.loadPlaylist(
                     url = url,
                     networkLibrary = prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
                     proxyMultivariantPlaylist = prefs.getBoolean(C.PROXY_MULTIVARIANT_PLAYLIST, false),
@@ -222,6 +238,36 @@ class MpvFragment : PlayerFragment() {
                     proxyUser = prefs.getString(C.PROXY_USER, null),
                     proxyPassword = prefs.getString(C.PROXY_PASSWORD, null),
                 )
+                val playlist = response?.first
+                val responseCode = response?.second
+                if (responseCode != null && requireContext().isNetworkAvailable) {
+                    when {
+                        responseCode == 404 -> {
+                            requireContext().toast(R.string.stream_ended)
+                        }
+                        viewModel.useCustomProxy && responseCode >= 400 -> {
+                            requireContext().toast(R.string.proxy_error)
+                            viewModel.useCustomProxy = false
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                delay(1500L)
+                                try {
+                                    restartPlayer()
+                                } catch (e: Exception) {
+                                }
+                            }
+                        }
+                        else -> {
+                            requireContext().shortToast(R.string.player_error)
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                delay(1500L)
+                                try {
+                                    restartPlayer()
+                                } catch (e: Exception) {
+                                }
+                            }
+                        }
+                    }
+                }
                 if (!playlist.isNullOrBlank()) {
                     val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList().ifEmpty {
                         Regex("NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
@@ -286,81 +332,105 @@ class MpvFragment : PlayerFragment() {
         }
     }
 
-    override fun startVideo(url: String?, playbackPosition: Long?) {
+    override fun startVideo(url: String?, playbackPosition: Long?, multivariantPlaylist: Boolean) {
         if (playbackService != null && url != null) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                val newId = requireArguments().getString(KEY_VIDEO_ID)?.toLongOrNull()
-                val position = if (playbackService?.videoId == newId && MPVLib.getPropertyString("path") != null) {
-                    MPVLib.getPropertyDouble("time-pos/full")?.times(1000)?.toLong() ?: 0
-                } else {
-                    playbackPosition ?: 0
-                }
-                playbackService?.videoId = newId
-                playbackService?.offlineVideoId = null
-                playbackService?.title = requireArguments().getString(KEY_TITLE)
-                playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
-                playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_LOGO)
-                val playlist = viewModel.loadPlaylist(url, prefs.getString(C.NETWORK_LIBRARY, "OkHttp"))
-                if (!playlist.isNullOrBlank()) {
-                    val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList().ifEmpty {
-                        Regex("NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+            if (multivariantPlaylist) {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    if (surfaceCreated) {
+                        MPVLib.attachSurface(binding.playerSurface.holder.surface)
                     }
-                    val codecStrings = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
-                    val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
-                    playlist.lines().filter { it.startsWith("#EXT-X-SESSION-DATA") }.let { list ->
-                        if (list.isNotEmpty()) {
-                            val url = urls.firstOrNull()?.takeIf { it.contains("/index-") }
-                            val variantId = Regex("STABLE-VARIANT-ID=\"(.+?)\"").find(playlist)?.groups?.get(1)?.value
-                            if (url != null && variantId != null) {
-                                list.forEach { line ->
-                                    val id = Regex("DATA-ID=\"(.+?)\"").find(line)?.groups?.get(1)?.value
-                                    if (id == "com.amazon.ivs.unavailable-media") {
-                                        val value = Regex("VALUE=\"(.+?)\"").find(line)?.groups?.get(1)?.value
-                                        if (value != null) {
-                                            val bytes = try {
-                                                Base64.decode(value, Base64.DEFAULT)
-                                            } catch (e: IllegalArgumentException) {
-                                                null
-                                            }
-                                            if (bytes != null) {
-                                                val string = String(bytes)
-                                                val array = try {
-                                                    JSONArray(string)
-                                                } catch (e: JSONException) {
+                    binding.playerSurface.visible()
+                    val newId = requireArguments().getString(KEY_VIDEO_ID)?.toLongOrNull()
+                    val position = if (playbackService?.videoId == newId && MPVLib.getPropertyString("path") != null) {
+                        MPVLib.getPropertyDouble("time-pos/full")?.times(1000)?.toLong() ?: 0
+                    } else {
+                        playbackPosition ?: 0
+                    }
+                    playbackService?.videoId = newId
+                    playbackService?.offlineVideoId = null
+                    playbackService?.title = requireArguments().getString(KEY_TITLE)
+                    playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
+                    playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_LOGO)
+                    val response = viewModel.loadPlaylist(url, prefs.getString(C.NETWORK_LIBRARY, "OkHttp"))
+                    val playlist = response?.first
+                    val responseCode = response?.second
+                    if (responseCode != null && requireContext().isNetworkAvailable) {
+                        val skipAccessToken = prefs.getString(C.TOKEN_SKIP_VIDEO_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2
+                        when {
+                            skipAccessToken == 1 && viewModel.shouldRetry && responseCode != 0 -> {
+                                viewModel.shouldRetry = false
+                                playVideo(false, MPVLib.getPropertyDouble("time-pos/full")?.times(1000)?.toLong())
+                            }
+                            skipAccessToken == 2 && viewModel.shouldRetry && responseCode != 0 -> {
+                                viewModel.shouldRetry = false
+                                playVideo(true, MPVLib.getPropertyDouble("time-pos/full")?.times(1000)?.toLong())
+                            }
+                            responseCode == 403 -> {
+                                requireContext().toast(R.string.video_subscribers_only)
+                            }
+                        }
+                    }
+                    if (!playlist.isNullOrBlank()) {
+                        val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList().ifEmpty {
+                            Regex("NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                        }
+                        val codecStrings = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                        val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
+                        playlist.lines().filter { it.startsWith("#EXT-X-SESSION-DATA") }.let { list ->
+                            if (list.isNotEmpty()) {
+                                val url = urls.firstOrNull()?.takeIf { it.contains("/index-") }
+                                val variantId = Regex("STABLE-VARIANT-ID=\"(.+?)\"").find(playlist)?.groups?.get(1)?.value
+                                if (url != null && variantId != null) {
+                                    list.forEach { line ->
+                                        val id = Regex("DATA-ID=\"(.+?)\"").find(line)?.groups?.get(1)?.value
+                                        if (id == "com.amazon.ivs.unavailable-media") {
+                                            val value = Regex("VALUE=\"(.+?)\"").find(line)?.groups?.get(1)?.value
+                                            if (value != null) {
+                                                val bytes = try {
+                                                    Base64.decode(value, Base64.DEFAULT)
+                                                } catch (e: IllegalArgumentException) {
                                                     null
                                                 }
-                                                if (array != null) {
-                                                    for (i in 0 until array.length()) {
-                                                        val obj = array.optJSONObject(i)
-                                                        if (obj != null) {
-                                                            var skip = false
-                                                            val filterReasons = obj.optJSONArray("FILTER_REASONS")
-                                                            if (filterReasons != null) {
-                                                                for (filterIndex in 0 until filterReasons.length()) {
-                                                                    val filter = filterReasons.optString(filterIndex)
-                                                                    if (filter == "FR_CODEC_NOT_REQUESTED") {
-                                                                        skip = true
-                                                                        break
+                                                if (bytes != null) {
+                                                    val string = String(bytes)
+                                                    val array = try {
+                                                        JSONArray(string)
+                                                    } catch (e: JSONException) {
+                                                        null
+                                                    }
+                                                    if (array != null) {
+                                                        for (i in 0 until array.length()) {
+                                                            val obj = array.optJSONObject(i)
+                                                            if (obj != null) {
+                                                                var skip = false
+                                                                val filterReasons = obj.optJSONArray("FILTER_REASONS")
+                                                                if (filterReasons != null) {
+                                                                    for (filterIndex in 0 until filterReasons.length()) {
+                                                                        val filter = filterReasons.optString(filterIndex)
+                                                                        if (filter == "FR_CODEC_NOT_REQUESTED") {
+                                                                            skip = true
+                                                                            break
+                                                                        }
                                                                     }
                                                                 }
-                                                            }
-                                                            if (!skip) {
-                                                                val name = obj.optString("IVS_NAME")
-                                                                val codec = obj.optString("CODECS")
-                                                                val newVariantId = obj.optString("STABLE-VARIANT-ID")
-                                                                if (!name.isNullOrBlank() && !newVariantId.isNullOrBlank()) {
-                                                                    names.add(name)
-                                                                    if (!codec.isNullOrBlank()) {
-                                                                        codecStrings.add(codec)
-                                                                    }
-                                                                    urls.add(url.replace(
-                                                                        "$variantId/index-",
-                                                                        if (urls.find { it.contains("chunked/index-") } == null && newVariantId != "audio_only") {
-                                                                            "chunked/index-"
-                                                                        } else {
-                                                                            "$newVariantId/index-"
+                                                                if (!skip) {
+                                                                    val name = obj.optString("IVS_NAME")
+                                                                    val codec = obj.optString("CODECS")
+                                                                    val newVariantId = obj.optString("STABLE-VARIANT-ID")
+                                                                    if (!name.isNullOrBlank() && !newVariantId.isNullOrBlank()) {
+                                                                        names.add(name)
+                                                                        if (!codec.isNullOrBlank()) {
+                                                                            codecStrings.add(codec)
                                                                         }
-                                                                    ))
+                                                                        urls.add(url.replace(
+                                                                            "$variantId/index-",
+                                                                            if (urls.find { it.contains("chunked/index-") } == null && newVariantId != "audio_only") {
+                                                                                "chunked/index-"
+                                                                            } else {
+                                                                                "$newVariantId/index-"
+                                                                            }
+                                                                        ))
+                                                                    }
                                                                 }
                                                             }
                                                         }
@@ -372,75 +442,106 @@ class MpvFragment : PlayerFragment() {
                                 }
                             }
                         }
-                    }
-                    val codecs = codecStrings.map { codec ->
-                        codec.substringBefore('.').let {
-                            when (it) {
-                                "av01" -> "AV1"
-                                "hev1" -> "H.265"
-                                "avc1" -> "H.264"
-                                else -> it
+                        val codecs = codecStrings.map { codec ->
+                            codec.substringBefore('.').let {
+                                when (it) {
+                                    "av01" -> "AV1"
+                                    "hev1" -> "H.265"
+                                    "avc1" -> "H.264"
+                                    else -> it
+                                }
                             }
-                        }
-                    }.takeUnless { it.all { it == "H.264" || it == "mp4a" } }
-                    if (names.isNotEmpty() && urls.isNotEmpty()) {
-                        val map = mutableMapOf<String, Pair<String, String?>>()
-                        names.forEachIndexed { index, quality ->
-                            urls.getOrNull(index)?.let { url ->
-                                when {
-                                    quality.equals("source", true) -> {
-                                        val quality = requireContext().getString(R.string.source)
-                                        map["source"] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
-                                    }
-                                    quality.startsWith("audio", true) -> {
-                                        map[AUDIO_ONLY_QUALITY] = Pair(requireContext().getString(R.string.audio_only), url)
-                                    }
-                                    else -> {
-                                        map[quality] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
+                        }.takeUnless { it.all { it == "H.264" || it == "mp4a" } }
+                        if (names.isNotEmpty() && urls.isNotEmpty()) {
+                            val map = mutableMapOf<String, Pair<String, String?>>()
+                            names.forEachIndexed { index, quality ->
+                                urls.getOrNull(index)?.let { url ->
+                                    when {
+                                        quality.equals("source", true) -> {
+                                            val quality = requireContext().getString(R.string.source)
+                                            map["source"] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
+                                        }
+                                        quality.startsWith("audio", true) -> {
+                                            map[AUDIO_ONLY_QUALITY] = Pair(requireContext().getString(R.string.audio_only), url)
+                                        }
+                                        else -> {
+                                            map[quality] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
+                                        }
                                     }
                                 }
                             }
-                        }
-                        if (!map.containsKey(AUDIO_ONLY_QUALITY)) {
-                            map[AUDIO_ONLY_QUALITY] = Pair(requireContext().getString(R.string.audio_only), null)
-                        }
-                        if (videoType == STREAM) {
-                            map[CHAT_ONLY_QUALITY] = Pair(requireContext().getString(R.string.chat_only), null)
-                        }
-                        viewModel.qualities = map.toList()
-                            .sortedByDescending {
-                                it.first.substringAfter("p", "").takeWhile { it.isDigit() }.toIntOrNull()
+                            if (!map.containsKey(AUDIO_ONLY_QUALITY)) {
+                                map[AUDIO_ONLY_QUALITY] = Pair(requireContext().getString(R.string.audio_only), null)
                             }
-                            .sortedByDescending {
-                                it.first.substringBefore("p", "").takeWhile { it.isDigit() }.toIntOrNull()
+                            if (videoType == STREAM) {
+                                map[CHAT_ONLY_QUALITY] = Pair(requireContext().getString(R.string.chat_only), null)
                             }
-                            .sortedByDescending {
-                                it.first == "source"
+                            viewModel.qualities = map.toList()
+                                .sortedByDescending {
+                                    it.first.substringAfter("p", "").takeWhile { it.isDigit() }.toIntOrNull()
+                                }
+                                .sortedByDescending {
+                                    it.first.substringBefore("p", "").takeWhile { it.isDigit() }.toIntOrNull()
+                                }
+                                .sortedByDescending {
+                                    it.first == "source"
+                                }
+                                .toMap()
+                            setDefaultQuality()
+                            changePlayerMode()
+                            viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
+                                quality.value.second?.let { MPVLib.command("loadfile", it) }
                             }
-                            .toMap()
-                        setDefaultQuality()
-                        changePlayerMode()
-                        viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
-                            quality.value.second?.let { MPVLib.command("loadfile", it) }
+                            viewModel.loaded.value = true
                         }
-                        viewModel.loaded.value = true
                     }
+                    MPVLib.setPropertyInt("volume", prefs.getInt(C.PLAYER_VOLUME, 100))
+                    MPVLib.setPropertyFloat("speed", prefs.getFloat(C.PLAYER_SPEED, 1f))
+                    playbackService?.seekPosition = position
                 }
+            } else {
+                if (surfaceCreated) {
+                    MPVLib.attachSurface(binding.playerSurface.holder.surface)
+                }
+                binding.playerSurface.visible()
+                val newId = requireArguments().getString(KEY_VIDEO_ID)?.toLongOrNull()
+                val position = if (playbackService?.videoId == newId && MPVLib.getPropertyString("path") != null) {
+                    MPVLib.getPropertyDouble("time-pos/full")?.times(1000)?.toLong() ?: 0
+                } else {
+                    playbackPosition ?: 0
+                }
+                playbackService?.videoId = newId
+                playbackService?.offlineVideoId = null
+                playbackService?.title = requireArguments().getString(KEY_TITLE)
+                playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
+                playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_LOGO)
+                MPVLib.command("loadfile", url)
                 MPVLib.setPropertyInt("volume", prefs.getInt(C.PLAYER_VOLUME, 100))
                 MPVLib.setPropertyFloat("speed", prefs.getFloat(C.PLAYER_SPEED, 1f))
                 playbackService?.seekPosition = position
+                viewModel.loaded.value = true
             }
         }
     }
 
     override fun startClip(url: String?) {
-        if (playbackService != null) {
+        if (playbackService != null && url != null) {
+            val quality = viewModel.qualities.entries.find { it.key == viewModel.quality }
+            if (quality?.key == AUDIO_ONLY_QUALITY) {
+                MPVLib.detachSurface()
+                binding.playerSurface.gone()
+            } else {
+                if (surfaceCreated) {
+                    MPVLib.attachSurface(binding.playerSurface.holder.surface)
+                }
+                binding.playerSurface.visible()
+            }
             playbackService?.videoId = null
             playbackService?.offlineVideoId = null
             playbackService?.title = requireArguments().getString(KEY_TITLE)
             playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
             playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_LOGO)
-            url?.let { MPVLib.command("loadfile", it) }
+            MPVLib.command("loadfile", url)
             viewModel.loaded.value = true
             MPVLib.setPropertyInt("volume", prefs.getInt(C.PLAYER_VOLUME, 100))
             MPVLib.setPropertyFloat("speed", prefs.getFloat(C.PLAYER_SPEED, 1f))
@@ -448,7 +549,17 @@ class MpvFragment : PlayerFragment() {
     }
 
     override fun startOfflineVideo(url: String?, position: Long) {
-        if (playbackService != null) {
+        if (playbackService != null && url != null) {
+            val quality = viewModel.qualities.entries.find { it.key == viewModel.quality }
+            if (quality?.key == AUDIO_ONLY_QUALITY) {
+                MPVLib.detachSurface()
+                binding.playerSurface.gone()
+            } else {
+                if (surfaceCreated) {
+                    MPVLib.attachSurface(binding.playerSurface.holder.surface)
+                }
+                binding.playerSurface.visible()
+            }
             val newId = requireArguments().getInt(KEY_OFFLINE_VIDEO_ID).takeIf { it != 0 }
             val position = if (playbackService?.offlineVideoId == newId && MPVLib.getPropertyString("path") != null) {
                 MPVLib.getPropertyDouble("time-pos/full")?.times(1000)?.toLong() ?: 0
@@ -460,7 +571,7 @@ class MpvFragment : PlayerFragment() {
             playbackService?.title = requireArguments().getString(KEY_TITLE)
             playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
             playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_LOGO)
-            url?.let { MPVLib.command("loadfile", it) }
+            MPVLib.command("loadfile", url)
             viewModel.loaded.value = true
             MPVLib.setPropertyInt("volume", prefs.getInt(C.PLAYER_VOLUME, 100))
             MPVLib.setPropertyFloat("speed", prefs.getFloat(C.PLAYER_SPEED, 1f))
@@ -484,6 +595,9 @@ class MpvFragment : PlayerFragment() {
         if (playbackService != null) {
             val paused = MPVLib.getPropertyBoolean("pause") == true
             MPVLib.setPropertyBoolean("pause", !paused)
+            if (MPVLib.getPropertyBoolean("eof-reached") == true) {
+                MPVLib.command("seek", "0", "absolute")
+            }
         }
     }
 
@@ -552,6 +666,8 @@ class MpvFragment : PlayerFragment() {
             if (playbackService != null) {
                 when (quality.key) {
                     AUDIO_ONLY_QUALITY -> {
+                        MPVLib.detachSurface()
+                        binding.playerSurface.gone()
                         quality.value.second?.let {
                             val position = MPVLib.getPropertyDouble("time-pos/full")?.times(1000)?.toLong()
                             MPVLib.command("loadfile", it)
@@ -563,13 +679,26 @@ class MpvFragment : PlayerFragment() {
                     }
                     else -> {
                         if (MPVLib.getPropertyString("path") != quality.value.second) {
-                            val position = MPVLib.getPropertyDouble("time-pos/full")?.times(1000)?.toLong()
-                            quality.value.second?.let { MPVLib.command("loadfile", it) }
-                            playbackService?.seekPosition = position
+                            quality.value.second?.let {
+                                val position = MPVLib.getPropertyDouble("time-pos/full")?.times(1000)?.toLong()
+                                MPVLib.command("loadfile", it)
+                                playbackService?.seekPosition = position
+                            }
                         }
+                        if (surfaceCreated) {
+                            MPVLib.attachSurface(binding.playerSurface.holder.surface)
+                        }
+                        binding.playerSurface.visible()
                     }
                 }
-                if (prefs.getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") {
+                val cellular = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                    val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                    networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
+                } else {
+                    false
+                }
+                if ((!cellular && prefs.getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") || (cellular && prefs.getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
                     prefs.edit { putString(C.PLAYER_QUALITY, quality.key) }
                 }
             }
@@ -584,6 +713,10 @@ class MpvFragment : PlayerFragment() {
                 viewModel.previousQuality = viewModel.quality
                 viewModel.quality = AUDIO_ONLY_QUALITY
                 viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
+                    if (prefs.getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
+                        MPVLib.detachSurface()
+                        binding.playerSurface.gone()
+                    }
                     if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
                         quality.value.second?.let {
                             val position = MPVLib.getPropertyDouble("time-pos/full")?.times(1000)?.toLong()
@@ -671,6 +804,10 @@ class MpvFragment : PlayerFragment() {
                     viewModel.previousQuality = viewModel.quality
                     viewModel.quality = AUDIO_ONLY_QUALITY
                     viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
+                        if (prefs.getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
+                            MPVLib.detachSurface()
+                            binding.playerSurface.gone()
+                        }
                         if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
                             quality.value.second?.let {
                                 val position = MPVLib.getPropertyDouble("time-pos/full")?.times(1000)?.toLong()

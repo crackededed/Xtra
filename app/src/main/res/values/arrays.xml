@@ -6,6 +6,26 @@
         <item>MediaPlayer</item>
     </string-array>
 
+    <string-array name="mpvDecoderEntries">
+        <item>auto</item>
+        <item>mediacodec</item>
+        <item>mediacodec-copy</item>
+        <item>Software</item>
+    </string-array>
+
+    <string-array name="mpvDecoderValues">
+        <item>auto</item>
+        <item>mediacodec</item>
+        <item>mediacodec-copy</item>
+        <item>no</item>
+    </string-array>
+
+    <string-array name="mpvDriverEntries">
+        <item>gpu-next</item>
+        <item>gpu</item>
+        <item>mediacodec_embed</item>
+    </string-array>
+
     <string-array name="networkLibraryEntries">
         <item>HttpEngine</item>
         <item>Cronet</item>

@@ -26,3 +26,5 @@
     public static *** d(...);
     public static *** v(...);
 }
+
+-keep,allowoptimization class is.xyz.mpv.** { public protected *; }

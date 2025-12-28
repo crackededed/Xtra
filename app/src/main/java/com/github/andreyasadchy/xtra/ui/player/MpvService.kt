@@ -1,5 +1,6 @@
 package com.github.andreyasadchy.xtra.ui.player
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -12,12 +13,14 @@ import android.graphics.drawable.Icon
 import android.media.MediaMetadata
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
+import android.net.wifi.WifiManager
 import android.os.Binder
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -42,6 +45,7 @@ import kotlinx.coroutines.runBlocking
 import java.util.Timer
 import javax.inject.Inject
 import kotlin.concurrent.schedule
+import kotlin.concurrent.scheduleAtFixedRate
 
 @OptIn(UnstableApi::class)
 @AndroidEntryPoint
@@ -53,6 +57,9 @@ class MpvService : Service() {
     @Inject
     lateinit var offlineRepository: OfflineRepository
 
+    private var playerListener: MPVLib.EventObserver? = null
+    private var wakeLock: PowerManager.WakeLock? = null
+    private var wifiLock: WifiManager.WifiLock? = null
     private var session: MediaSession? = null
     private var notificationManager: NotificationManager? = null
     private var applicationHandler: Handler? = null
@@ -72,12 +79,22 @@ class MpvService : Service() {
     private var lastSavedPosition: Long? = null
     private var savePositionTimer: Timer? = null
 
+    @SuppressLint("WakelockTimeout")
     override fun onCreate() {
+        super.onCreate()
+        val videoDriver = prefs().getString(C.MPV_VO, "gpu-next") ?: "gpu-next"
         MPVLib.create(this)
+        MPVLib.setOptionString("vo", videoDriver)
         MPVLib.setOptionString("gpu-context", "android")
         MPVLib.setOptionString("opengl-es", "yes")
         MPVLib.setOptionString("profile", "fast")
-        MPVLib.setOptionString("hwdec", "auto")
+        MPVLib.setOptionString("hwdec",
+            if (videoDriver == "mediacodec_embed") {
+                "mediacodec"
+            } else {
+                prefs().getString(C.MPV_HWDEC, "auto") ?: "auto"
+            }
+        )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             MPVLib.setOptionString("demuxer-max-bytes", "64MiB")
             MPVLib.setOptionString("demuxer-max-back-bytes", "64MiB")
@@ -90,51 +107,85 @@ class MpvService : Service() {
         MPVLib.setOptionString("keep-open", "yes")
         MPVLib.setOptionString("idle", "yes")
         MPVLib.init()
-        MPVLib.addObserver(
-            object : MPVLib.EventObserver {
-                override fun eventProperty(property: String) {}
-                override fun eventProperty(property: String, value: Long) {}
+        val listener = object : MPVLib.EventObserver {
+            override fun eventProperty(property: String) {}
+            override fun eventProperty(property: String, value: Long) {}
 
-                override fun eventProperty(property: String, value: Boolean) {
-                    when (property) {
-                        "pause" -> {
-                            if (MPVLib.getPropertyBoolean("idle-active") == false) {
-                                updatePlaybackState()
-                                updateNotification()
-                            }
-                        }
-                    }
-                }
-
-                override fun eventProperty(property: String, value: String) {}
-                override fun eventProperty(property: String, value: Double) {}
-                override fun eventProperty(property: String, value: MPVNode) {}
-
-                override fun event(eventId: Int) {
-                    when (eventId) {
-                        MPVLib.MpvEvent.MPV_EVENT_FILE_LOADED -> {
-                            updateMetadata()
-                        }
-                        MPVLib.MpvEvent.MPV_EVENT_SEEK -> {
+            override fun eventProperty(property: String, value: Boolean) {
+                when (property) {
+                    "pause" -> {
+                        if (MPVLib.getPropertyBoolean("idle-active") == false) {
                             updatePlaybackState()
                             updateNotification()
-                        }
-                        MPVLib.MpvEvent.MPV_EVENT_PLAYBACK_RESTART -> {
-                            seekPosition?.let {
-                                MPVLib.setPropertyDouble("time-pos", (it / 1000.0))
-                                seekPosition = null
+                            if (!value) {
+                                if (savePositionTimer == null && (videoId != null || offlineVideoId != null)) {
+                                    savePositionTimer = Timer().apply {
+                                        scheduleAtFixedRate(30000, 30000) {
+                                            Handler(Looper.getMainLooper()).post {
+                                                updateSavedPosition()
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                savePositionTimer?.cancel()
+                                savePositionTimer = null
+                                updateSavedPosition()
                             }
                         }
                     }
                 }
             }
-        )
+
+            override fun eventProperty(property: String, value: String) {}
+            override fun eventProperty(property: String, value: Double) {}
+            override fun eventProperty(property: String, value: MPVNode) {}
+
+            override fun event(eventId: Int) {
+                when (eventId) {
+                    MPVLib.MpvEvent.MPV_EVENT_FILE_LOADED -> {
+                        updateMetadata()
+                        updatePlaybackState()
+                        updateNotification()
+                    }
+                    MPVLib.MpvEvent.MPV_EVENT_SEEK -> {
+                        updatePlaybackState()
+                        updateNotification()
+                    }
+                    MPVLib.MpvEvent.MPV_EVENT_PLAYBACK_RESTART -> {
+                        seekPosition?.let {
+                            MPVLib.setPropertyDouble("time-pos", (it / 1000.0))
+                            seekPosition = null
+                        }
+                    }
+                }
+            }
+        }
+        MPVLib.addObserver(listener)
         MPVLib.observeProperty("pause", MPVLib.MpvFormat.MPV_FORMAT_FLAG)
+        playerListener = listener
+        val powerManager = applicationContext.getSystemService(POWER_SERVICE) as PowerManager
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Mpv:WakeLock")
+        val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+        wakeLock?.acquire()
+        wifiLock = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_LOW_LATENCY, "Mpv:WifiLock")
+        } else {
+            @Suppress("DEPRECATION")
+            wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "Mpv:WifiLock")
+        }
+        wifiLock?.acquire()
         val session = MediaSession(this, "MpvService")
         this.session = session
         session.setCallback(
             object : MediaSession.Callback() {
-                override fun onPlay() = MPVLib.setPropertyBoolean("pause", false)
+                override fun onPlay() {
+                    MPVLib.setPropertyBoolean("pause", false)
+                    if (MPVLib.getPropertyBoolean("eof-reached") == true) {
+                        MPVLib.command("seek", "0", "absolute")
+                    }
+                }
+
                 override fun onPause() = MPVLib.setPropertyBoolean("pause", true)
 
                 override fun onSkipToNext() {
@@ -245,7 +296,11 @@ class MpvService : Service() {
             loader.loadBitmap(channelLogo.toUri()).let { bitmapFuture ->
                 metadataBitmapCallback = null
                 if (bitmapFuture.isDone) {
-                    bitmapFuture.get()
+                    try {
+                        bitmapFuture.get()
+                    } catch (e: Exception) {
+                        null
+                    }
                 } else {
                     val callback = object : FutureCallback<Bitmap> {
                         override fun onSuccess(result: Bitmap?) {
@@ -288,7 +343,11 @@ class MpvService : Service() {
             loader.loadBitmap(channelLogo.toUri()).let { bitmapFuture ->
                 notificationBitmapCallback = null
                 if (bitmapFuture.isDone) {
-                    bitmapFuture.get()
+                    try {
+                        bitmapFuture.get()
+                    } catch (e: Exception) {
+                        null
+                    }
                 } else {
                     val callback = object : FutureCallback<Bitmap> {
                         override fun onSuccess(result: Bitmap?) {
@@ -496,7 +555,7 @@ class MpvService : Service() {
     }
 
     private fun savePosition() {
-        if (prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+        if (MPVLib.getPropertyBoolean("idle-active") == false && prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
             videoId?.let {
                 runBlocking {
                     val currentPosition = MPVLib.getPropertyDouble("time-pos/full")?.times(1000)?.toLong() ?: 0
@@ -513,7 +572,7 @@ class MpvService : Service() {
     }
 
     private fun updateSavedPosition() {
-        if (prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+        if (MPVLib.getPropertyBoolean("idle-active") == false && prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
             val currentPosition = MPVLib.getPropertyDouble("time-pos/full")?.times(1000)?.toLong() ?: 0
             val savedPosition = lastSavedPosition
             if (savedPosition == null || currentPosition - savedPosition !in 0..2000) {
@@ -541,6 +600,9 @@ class MpvService : Service() {
             INTENT_PLAY_PAUSE -> {
                 val paused = MPVLib.getPropertyBoolean("pause") == true
                 MPVLib.setPropertyBoolean("pause", !paused)
+                if (MPVLib.getPropertyBoolean("eof-reached") == true) {
+                    MPVLib.command("seek", "0", "absolute")
+                }
             }
             INTENT_FAST_FORWARD -> {
                 val fastForwardMs = prefs().getString(C.PLAYER_FORWARD, "10000")?.toLongOrNull() ?: 10000
@@ -564,6 +626,12 @@ class MpvService : Service() {
     }
 
     override fun onDestroy() {
+        playerListener?.let {
+            MPVLib.removeObserver(it)
+        }
+        playerListener = null
+        wakeLock?.release()
+        wifiLock?.release()
         MPVLib.destroy()
         session?.release()
         metadataBitmapCallback = null
