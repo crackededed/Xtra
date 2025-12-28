@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [ minSdk21 ]
+    branches: [ mpv ]
 
 jobs:
   build:
@@ -25,19 +25,3 @@ jobs:
       with:
         name: apk
         path: app/build/outputs/apk/release/*.apk
-
-    - name: Update tag
-      run: |
-        git tag -f api21
-        git push -f origin tag api21
-
-    - name: Delete release
-      continue-on-error: true
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: gh release delete api21 -y
-
-    - name: Create release
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: gh release create api21 --title "Android 5 release" --notes "This release is for devices running Android 5" --latest=false 'app/build/outputs/apk/release/*.apk'
