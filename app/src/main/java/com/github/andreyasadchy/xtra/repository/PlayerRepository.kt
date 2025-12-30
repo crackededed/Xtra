@@ -432,7 +432,7 @@ class PlayerRepository @Inject constructor(
             }
         }
         if (!pageResponse.isNullOrBlank()) {
-            val settingsRegex = Regex("(https://assets.twitch.tv/config/settings.*?.js|https://static.twitchcdn.net/config/settings.*?js)")
+            val settingsRegex = Regex("https://[\\w.]+/config/settings\\..+?\\.js")
             val settingsUrl = settingsRegex.find(pageResponse)?.value
             val settingsResponse = settingsUrl?.let {
                 when {
@@ -462,7 +462,7 @@ class PlayerRepository @Inject constructor(
                 }
             }
             if (!settingsResponse.isNullOrBlank()) {
-                val spadeRegex = Regex("\"spade_url\":\"(.*?)\"")
+                val spadeRegex = Regex("\"(?:beacon_url|spade_url)\":\"(.*?)\"")
                 val spadeUrl = spadeRegex.find(settingsResponse)?.groups?.get(1)?.value
                 if (!spadeUrl.isNullOrBlank()) {
                     val body = buildJsonObject {
