@@ -30,10 +30,10 @@
     </plurals>
     <plurals name="followers">
         <item quantity="one">%s follower</item>
-        <item quantity="other">%s Follower</item>
+        <item quantity="other">%s followers</item>
     </plurals>
     <plurals name="members">
-        <item quantity="one">%s member</item>
+        <item quantity="one">%s Mitglied</item>
         <item quantity="other">%s Mitglieder</item>
     </plurals>
 </resources>
