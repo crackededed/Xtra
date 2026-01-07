@@ -21,7 +21,9 @@ import androidx.work.workDataOf
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.model.VideoPosition
 import com.github.andreyasadchy.xtra.model.ui.Clip
+import com.github.andreyasadchy.xtra.model.ui.Game
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
+import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.model.ui.User
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.repository.AuthRepository
@@ -90,13 +92,15 @@ class MainViewModel @Inject constructor(
     var sleepTimer: Timer? = null
     var sleepTimerEndTime = 0L
 
-    val video = MutableStateFlow<Video?>(null)
+    val video = MutableStateFlow<Pair<Video?, Long?>?>(null)
     val clip = MutableStateFlow<Clip?>(null)
     val user = MutableStateFlow<User?>(null)
+    val game = MutableStateFlow<Pair<Game?, String?>?>(null)
+    val tag = MutableStateFlow<Tag?>(null)
 
     val updateUrl = MutableSharedFlow<String?>()
 
-    fun loadVideo(videoId: String?, offset: Long?, saveVideoPositions: Boolean, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
+    fun loadVideo(videoId: String?, offset: Long?, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
         if (video.value == null) {
             viewModelScope.launch {
                 val item = try {
@@ -149,14 +153,13 @@ class MainViewModel @Inject constructor(
                         }
                     } else null
                 }
-                if (item != null && saveVideoPositions) {
-                    videoId?.toLongOrNull()?.let { id ->
-                        playerRepository.saveVideoPosition(VideoPosition(id, offset ?: 0))
-                    }
-                }
-                video.value = item
+                video.value = item to offset
             }
         }
+    }
+
+    suspend fun savePosition(id: Long, position: Long) {
+        playerRepository.saveVideoPosition(VideoPosition(id, position))
     }
 
     fun loadClip(clipId: String?, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
@@ -268,6 +271,91 @@ class MainViewModel @Inject constructor(
                             null
                         }
                     } else null
+                }
+            }
+        }
+    }
+
+    fun loadGame(gameSlug: String? = null, gameName: String? = null, tag: String?, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
+        if (game.value == null) {
+            viewModelScope.launch {
+                game.value = try {
+                    val response = graphQLRepository.loadQueryGame(
+                        networkLibrary = networkLibrary,
+                        headers = gqlHeaders,
+                        slug = gameSlug,
+                        name = gameName.takeIf { gameSlug.isNullOrBlank() },
+                    )
+                    if (enableIntegrity && integrity.value == null) {
+                        response.errors?.find { it.message == "failed integrity check" }?.let {
+                            integrity.value = "refresh"
+                            return@launch
+                        }
+                    }
+                    response.data!!.game?.let {
+                        Game(
+                            gameId = it.id,
+                            gameSlug = it.slug,
+                            gameName = it.displayName,
+                        )
+                    }
+                } catch (e: Exception) {
+                    if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank() && !gameName.isNullOrBlank()) {
+                        try {
+                            helixRepository.getGames(
+                                networkLibrary = networkLibrary,
+                                headers = helixHeaders,
+                                names = listOf(gameName)
+                            ).data.firstOrNull()?.let {
+                                Game(
+                                    gameId = it.id,
+                                    gameName = it.name,
+                                )
+                            }
+                        } catch (e: Exception) {
+                            null
+                        }
+                    } else null
+                } to tag
+            }
+        }
+    }
+
+    fun loadTag(tagId: String, networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
+        if (tag.value == null) {
+            viewModelScope.launch {
+                tag.value = try {
+                    val response = graphQLRepository.loadQueryTag(networkLibrary, gqlHeaders, tagId)
+                    if (enableIntegrity && integrity.value == null) {
+                        response.errors?.find { it.message == "failed integrity check" }?.let {
+                            integrity.value = "refresh"
+                            return@launch
+                        }
+                    }
+                    response.data!!.contentTag?.let {
+                        Tag(
+                            id = tagId,
+                            name = it.localizedName,
+                        )
+                    }
+                } catch (e: Exception) {
+                    try {
+                        val response = graphQLRepository.loadTag(networkLibrary, gqlHeaders, tagId)
+                        if (enableIntegrity && integrity.value == null) {
+                            response.errors?.find { it.message == "failed integrity check" }?.let {
+                                integrity.value = "refresh"
+                                return@launch
+                            }
+                        }
+                        response.data!!.contentTag.let {
+                            Tag(
+                                id = tagId,
+                                name = it.localizedName,
+                            )
+                        }
+                    } catch (e: Exception) {
+                        null
+                    }
                 }
             }
         }
