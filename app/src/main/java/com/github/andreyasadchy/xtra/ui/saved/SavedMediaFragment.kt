@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
@@ -36,7 +37,6 @@ import com.github.andreyasadchy.xtra.ui.saved.filters.FiltersFragment
 import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.settings.SettingsActivity
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.DownloadUtils
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.gone
@@ -47,6 +47,7 @@ import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
 
 @AndroidEntryPoint
 class SavedMediaFragment : Fragment(), Scrollable, FragmentHost {
@@ -80,7 +81,17 @@ class SavedMediaFragment : Fragment(), Scrollable, FragmentHost {
                     result.data?.data?.let {
                         val isShared = it.scheme == ContentResolver.SCHEME_CONTENT
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && isShared) {
-                            val storage = DownloadUtils.getAvailableStorage(requireContext())
+                            val storage = ContextCompat.getExternalFilesDirs(requireContext(), ".downloads").mapIndexedNotNull { index, file ->
+                                file?.absolutePath?.let { path ->
+                                    if (index == 0) {
+                                        requireContext().getString(R.string.internal_storage) to path
+                                    } else {
+                                        path.substringBefore("/Android/data", "").takeIf { it.isNotBlank() }?.let {
+                                            it.substringAfterLast(File.separatorChar) to path
+                                        }
+                                    }
+                                }
+                            }
                             val uri = Uri.decode(it.path).substringAfter("/document/")
                             val storageName = uri.substringBefore(":")
                             val storagePath = if (storageName.equals("primary", true)) {
@@ -91,7 +102,7 @@ class SavedMediaFragment : Fragment(), Scrollable, FragmentHost {
                                 } else {
                                     storage.firstOrNull()
                                 }
-                            }?.path?.substringBefore("/Android/data") ?: "/storage/emulated/0"
+                            }?.second?.substringBefore("/Android/data") ?: "/storage/emulated/0"
                             val path = uri.substringAfter(":").substringBeforeLast("/")
                             val fullUri = "$storagePath/$path"
                             viewModel.saveFolders(fullUri)

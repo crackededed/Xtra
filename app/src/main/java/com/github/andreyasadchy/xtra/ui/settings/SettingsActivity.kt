@@ -25,6 +25,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.content.res.use
 import androidx.core.net.toUri
@@ -66,7 +67,6 @@ import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.util.AdminReceiver
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.DisplayUtils
-import com.github.andreyasadchy.xtra.util.DownloadUtils
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.applyTheme
 import com.github.andreyasadchy.xtra.util.convertDpToPixels
@@ -87,6 +87,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.chromium.net.CronetProvider
+import java.io.File
 import java.util.Collections
 import java.util.Locale
 
@@ -276,7 +277,17 @@ class SettingsActivity : AppCompatActivity() {
                         result.data?.data?.let {
                             val isShared = it.scheme == ContentResolver.SCHEME_CONTENT
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && isShared) {
-                                val storage = DownloadUtils.getAvailableStorage(requireContext())
+                                val storage = ContextCompat.getExternalFilesDirs(requireContext(), ".downloads").mapIndexedNotNull { index, file ->
+                                    file?.absolutePath?.let { path ->
+                                        if (index == 0) {
+                                            requireContext().getString(R.string.internal_storage) to path
+                                        } else {
+                                            path.substringBefore("/Android/data", "").takeIf { it.isNotBlank() }?.let {
+                                                it.substringAfterLast(File.separatorChar) to path
+                                            }
+                                        }
+                                    }
+                                }
                                 val uri = Uri.decode(it.path).substringAfter("/document/")
                                 val storageName = uri.substringBefore(":")
                                 val storagePath = if (storageName.equals("primary", true)) {
@@ -287,7 +298,7 @@ class SettingsActivity : AppCompatActivity() {
                                     } else {
                                         storage.firstOrNull()
                                     }
-                                }?.path?.substringBefore("/Android/data") ?: "/storage/emulated/0"
+                                }?.second?.substringBefore("/Android/data") ?: "/storage/emulated/0"
                                 val path = uri.substringAfter(":").substringBeforeLast("/")
                                 val fullUri = "$storagePath/$path"
                                 viewModel.backupSettings(fullUri)

@@ -6,6 +6,7 @@ import android.content.ContentResolver
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +15,7 @@ import android.widget.LinearLayout
 import android.widget.RadioButton
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
@@ -42,7 +44,6 @@ import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.download.StreamDownloadWorker
 import com.github.andreyasadchy.xtra.ui.download.VideoDownloadWorker
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.DownloadUtils
 import com.github.andreyasadchy.xtra.util.convertDpToPixels
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.gone
@@ -52,6 +53,7 @@ import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.io.File
 
 @AndroidEntryPoint
 class DownloadsFragment : PagedListFragment(), Scrollable {
@@ -186,18 +188,36 @@ class DownloadsFragment : PagedListFragment(), Scrollable {
                 .show()
         }, {
             if (it.url?.toUri()?.scheme == ContentResolver.SCHEME_CONTENT) {
-                val storage = DownloadUtils.getAvailableStorage(requireContext())
+                val storage = ContextCompat.getExternalFilesDirs(requireContext(), ".downloads").mapIndexedNotNull { index, file ->
+                    file?.absolutePath?.let { path ->
+                        if (index == 0) {
+                            requireContext().getString(R.string.internal_storage) to path
+                        } else {
+                            path.substringBefore("/Android/data", "").takeIf { it.isNotBlank() }?.let {
+                                it.substringAfterLast(File.separatorChar) to path
+                            }
+                        }
+                    }
+                }
                 val binding = StorageSelectionBinding.inflate(layoutInflater).apply {
                     storageSpinner.gone()
-                    if (DownloadUtils.isExternalStorageAvailable) {
+                    if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED) {
                         appStorageLayout.visible()
-                        for (s in storage) {
-                            radioGroup.addView(RadioButton(context).apply {
-                                id = s.id
-                                text = s.name
-                            })
+                        storage.forEachIndexed { index, pair ->
+                            radioGroup.addView(
+                                RadioButton(requireContext()).apply {
+                                    id = index
+                                    text = pair.first
+                                }
+                            )
                         }
-                        radioGroup.check(if (storage.size == 1) 0 else requireContext().prefs().getInt(C.DOWNLOAD_STORAGE, 0))
+                        radioGroup.check(
+                            if (storage.size == 1) {
+                                0
+                            } else {
+                                requireContext().prefs().getInt(C.DOWNLOAD_STORAGE, 0)
+                            }
+                        )
                     } else {
                         noStorageDetected.apply {
                             visible()
@@ -213,7 +233,7 @@ class DownloadsFragment : PagedListFragment(), Scrollable {
                         val checked = binding.radioGroup.checkedRadioButtonId
                         storage.getOrNull(checked)?.let { storage ->
                             requireContext().prefs().edit { putInt(C.DOWNLOAD_STORAGE, checked) }
-                            viewModel.moveToAppStorage(storage.path, it)
+                            viewModel.moveToAppStorage(storage.second, it)
                         }
                     }
                     .setNegativeButton(getString(android.R.string.cancel), null)
