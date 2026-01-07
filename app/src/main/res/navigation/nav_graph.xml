@@ -93,6 +93,11 @@
             app:nullable="true"
             android:defaultValue="@null" />
         <argument
+            android:name="boxArt"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
             android:name="tags"
             app:argType="string[]"
             app:nullable="true"
@@ -125,6 +130,11 @@
             android:defaultValue="@null" />
         <argument
             android:name="gameName"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="boxArt"
             app:argType="string"
             app:nullable="true"
             android:defaultValue="@null" />
