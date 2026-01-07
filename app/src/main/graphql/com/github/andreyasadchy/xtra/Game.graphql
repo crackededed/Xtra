@@ -1,7 +1,15 @@
 query Game($id: ID, $slug: String, $name: String) {
     game(id: $id, slug: $slug, name: $name) {
+        boxArtURL
+        broadcastersCount
         displayName
+        followersCount
         id
         slug
+        tags(tagType: CONTENT) {
+            id
+            localizedName
+        }
+        viewersCount
     }
 }
