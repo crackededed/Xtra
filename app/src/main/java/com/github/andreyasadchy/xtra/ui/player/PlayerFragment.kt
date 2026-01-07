@@ -397,7 +397,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                     object : AnimatorListenerAdapter() {
                                         override fun onAnimationEnd(animation: Animator) {
                                             setListener(null)
-                                            if (slidingLayout.translationY < touchSlop) {
+                                            if (this@PlayerFragment.view != null && slidingLayout.translationY < touchSlop) {
                                                 enableBackground()
                                             }
                                         }
@@ -1709,13 +1709,15 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         object : AnimatorListenerAdapter() {
                             override fun onAnimationStart(animation: Animator) {
                                 controllerIsAnimating = true
-                                binding.playerControls.root.visible()
+                                if (view != null) {
+                                    binding.playerControls.root.visible()
+                                }
                             }
 
                             override fun onAnimationEnd(animation: Animator) {
                                 controllerIsAnimating = false
                                 setListener(null)
-                                if (controllerAutoHide && controllerHideOnTouch && !binding.playerControls.progressBar.isPressed) {
+                                if (view != null && controllerAutoHide && controllerHideOnTouch && !binding.playerControls.progressBar.isPressed) {
                                     binding.playerControls.root.postDelayed(controllerHideAction, 3000)
                                 }
                             }
@@ -1756,7 +1758,9 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         override fun onAnimationEnd(animation: Animator) {
                             controllerIsAnimating = false
                             setListener(null)
-                            binding.playerControls.root.gone()
+                            if (view != null) {
+                                binding.playerControls.root.gone()
+                            }
                         }
                     }
                 )
@@ -2230,7 +2234,9 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         object : AnimatorListenerAdapter() {
                             override fun onAnimationStart(animation: Animator) {
                                 isAnimating = true
-                                disableBackground()
+                                if (view != null) {
+                                    disableBackground()
+                                }
                             }
 
                             override fun onAnimationEnd(animation: Animator) {
@@ -2298,7 +2304,9 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         override fun onAnimationEnd(animation: Animator) {
                             isAnimating = false
                             setListener(null)
-                            enableBackground()
+                            if (view != null) {
+                                enableBackground()
+                            }
                             activePointerId = -1
                         }
                     }
