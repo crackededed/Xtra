@@ -1,0 +1,7 @@
+query Game($id: ID, $slug: String, $name: String) {
+    game(id: $id, slug: $slug, name: $name) {
+        displayName
+        id
+        slug
+    }
+}

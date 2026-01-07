@@ -16,6 +16,7 @@ import com.github.andreyasadchy.xtra.BadgesQuery
 import com.github.andreyasadchy.xtra.ClipUrlsQuery
 import com.github.andreyasadchy.xtra.GameBoxArtQuery
 import com.github.andreyasadchy.xtra.GameClipsQuery
+import com.github.andreyasadchy.xtra.GameQuery
 import com.github.andreyasadchy.xtra.GameStreamsQuery
 import com.github.andreyasadchy.xtra.GameVideosQuery
 import com.github.andreyasadchy.xtra.SearchChannelsQuery
@@ -23,6 +24,7 @@ import com.github.andreyasadchy.xtra.SearchGamesQuery
 import com.github.andreyasadchy.xtra.SearchStreamsQuery
 import com.github.andreyasadchy.xtra.SearchVideosQuery
 import com.github.andreyasadchy.xtra.StreamPlaybackAccessTokenQuery
+import com.github.andreyasadchy.xtra.TagQuery
 import com.github.andreyasadchy.xtra.TeamLiveMembersQuery
 import com.github.andreyasadchy.xtra.TeamMembersQuery
 import com.github.andreyasadchy.xtra.TeamQuery
@@ -82,6 +84,7 @@ import com.github.andreyasadchy.xtra.model.gql.search.SearchStreamTagsResponse
 import com.github.andreyasadchy.xtra.model.gql.search.SearchVideosResponse
 import com.github.andreyasadchy.xtra.model.gql.stream.StreamsResponse
 import com.github.andreyasadchy.xtra.model.gql.stream.ViewerCountResponse
+import com.github.andreyasadchy.xtra.model.gql.tag.TagResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoGamesResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoMessagesResponse
 import com.github.andreyasadchy.xtra.type.BadgeImageSize
@@ -249,6 +252,15 @@ class GraphQLRepository @Inject constructor(
         sendQuery(networkLibrary, headers, query)
     }
 
+    suspend fun loadQueryGame(networkLibrary: String?, headers: Map<String, String>, id: String? = null, slug: String? = null, name: String? = null): ApolloResponse<GameQuery.Data> = withContext(Dispatchers.IO) {
+        val query = GameQuery(
+            id = if (!id.isNullOrBlank()) Optional.Present(id) else Optional.Absent,
+            slug = if (!slug.isNullOrBlank()) Optional.Present(slug) else Optional.Absent,
+            name = if (!name.isNullOrBlank()) Optional.Present(name) else Optional.Absent,
+        )
+        sendQuery(networkLibrary, headers, query)
+    }
+
     suspend fun loadQueryGameBoxArt(networkLibrary: String?, headers: Map<String, String>, id: String? = null, name: String? = null): ApolloResponse<GameBoxArtQuery.Data> = withContext(Dispatchers.IO) {
         val query = GameBoxArtQuery(
             id = if (!id.isNullOrBlank()) Optional.Present(id) else Optional.Absent,
@@ -336,6 +348,13 @@ class GraphQLRepository @Inject constructor(
 
     suspend fun loadQueryStreamPlaybackAccessToken(networkLibrary: String?, headers: Map<String, String>, login: String, platform: String, playerType: String): ApolloResponse<StreamPlaybackAccessTokenQuery.Data> = withContext(Dispatchers.IO) {
         val query = StreamPlaybackAccessTokenQuery(login, platform, playerType)
+        sendQuery(networkLibrary, headers, query)
+    }
+
+    suspend fun loadQueryTag(networkLibrary: String?, headers: Map<String, String>, id: String): ApolloResponse<TagQuery.Data> = withContext(Dispatchers.IO) {
+        val query = TagQuery(
+            id = id
+        )
         sendQuery(networkLibrary, headers, query)
     }
 
@@ -611,6 +630,22 @@ class GraphQLRepository @Inject constructor(
             }
         }.toString()
         json.decodeFromString<ClipVideoResponse>(sendPersistedQuery(networkLibrary, headers, body))
+    }
+
+    suspend fun loadTag(networkLibrary: String?, headers: Map<String, String>, id: String): TagResponse = withContext(Dispatchers.IO) {
+        val body = buildJsonObject {
+            putJsonObject("extensions") {
+                putJsonObject("persistedQuery") {
+                    put("sha256Hash", "bb28b8b7b08b55ce39d25ba8bfb0aa6c9fad53b8a89f8b4377f59db405c3fb26")
+                    put("version", 1)
+                }
+            }
+            put("operationName", "TagHandlerTag")
+            putJsonObject("variables") {
+                put("id", id)
+            }
+        }.toString()
+        json.decodeFromString<TagResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
     suspend fun loadTopGames(networkLibrary: String?, headers: Map<String, String>, tags: List<String>?, limit: Int?, cursor: String?): GamesResponse = withContext(Dispatchers.IO) {

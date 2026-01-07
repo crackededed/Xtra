@@ -2,6 +2,7 @@ type Query {
     badges: [Badge]
     cheerConfig: GlobalCheerConfig
     clip(slug: ID!): Clip
+    contentTag(id: ID!): Tag
     games(first: Int, after: Cursor, options: GameOptions): GameConnection
     game(id: ID, slug: String, name: String): Game
     searchCategories(query: String!, first: Int, after: Cursor): SearchCategoriesConnection
