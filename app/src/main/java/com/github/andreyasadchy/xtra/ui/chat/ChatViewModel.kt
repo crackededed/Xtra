@@ -661,7 +661,7 @@ class ChatViewModel @Inject constructor(
         val showClearChat = applicationContext.prefs().getBoolean(C.CHAT_SHOW_CLEARCHAT, true)
         val nameDisplay = applicationContext.prefs().getString(C.UI_NAME_DISPLAY, "0")
         val useApiChatMessages = applicationContext.prefs().getBoolean(C.DEBUG_API_CHAT_MESSAGES, true)
-        val useCustomWebSockets = applicationContext.prefs().getBoolean(C.DEBUG_USE_CUSTOM_WEBSOCKETS, false)
+        val useCustomWebSockets = applicationContext.prefs().getBoolean(C.DEBUG_USE_CUSTOM_WEBSOCKETS, true)
         val showWebSocketDebugInfo = applicationContext.prefs().getBoolean(C.DEBUG_WEBSOCKET_INFO, false)
         if (applicationContext.prefs().getBoolean(C.DEBUG_EVENTSUB_CHAT, false) && !helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
             val onWelcomeMessage: (String) -> Unit = { sessionId ->
@@ -729,7 +729,7 @@ class ChatViewModel @Inject constructor(
         } else {
             val gqlToken = gqlHeaders[C.HEADER_TOKEN]?.removePrefix("OAuth ")
             val helixToken = helixHeaders[C.HEADER_TOKEN]?.removePrefix("Bearer ")
-            if (applicationContext.prefs().getBoolean(C.CHAT_USE_WEBSOCKET, false)) {
+            if (applicationContext.prefs().getBoolean(C.CHAT_USE_WEBSOCKET, true)) {
                 if (useCustomWebSockets) {
                     chatReadWebSocket = ChatReadWebSocket(
                         loggedIn = isLoggedIn,

@@ -144,7 +144,7 @@
         app:singleLineTitle="false" />
 
     <SwitchPreferenceCompat
-        android:defaultValue="false"
+        android:defaultValue="true"
         android:key="chat_use_websocket"
         android:title="@string/use_websocket"
         app:iconSpaceReserved="false"
