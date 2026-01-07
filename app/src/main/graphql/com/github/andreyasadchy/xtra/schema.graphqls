@@ -183,6 +183,7 @@ type Game {
     broadcastersCount: Int
     clips(first: Int, after: Cursor, criteria: GameClipsInput): ClipConnection
     displayName: String
+    followersCount: Int
     id: ID
     slug: String
     streams(first: Int, after: Cursor, options: GameStreamOptions): StreamConnection

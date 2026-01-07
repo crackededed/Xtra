@@ -4,9 +4,12 @@ import android.net.http.HttpEngine
 import android.net.http.UrlResponseInfo
 import android.os.Build
 import android.os.ext.SdkExtensions
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.andreyasadchy.xtra.model.ui.Game
 import com.github.andreyasadchy.xtra.model.ui.LocalFollowGame
+import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.repository.LocalFollowGameRepository
@@ -41,14 +44,77 @@ class GamePagerViewModel @Inject constructor(
     private val cronetEngine: Lazy<CronetEngine>?,
     private val cronetExecutor: ExecutorService,
     private val okHttpClient: OkHttpClient,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     val integrity = MutableStateFlow<String?>(null)
 
+    private val args = GamePagerFragmentArgs.fromSavedStateHandle(savedStateHandle)
     private val _isFollowing = MutableStateFlow<Boolean?>(null)
     val isFollowing: StateFlow<Boolean?> = _isFollowing
     val follow = MutableStateFlow<Pair<Boolean, String?>?>(null)
     private var updatedLocalGame = false
+
+    private val _game = MutableStateFlow<Game?>(null)
+    val game: StateFlow<Game?> = _game
+
+    fun loadGame(networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
+        if (_game.value == null) {
+            viewModelScope.launch {
+                _game.value = try {
+                    val response = graphQLRepository.loadQueryGame(
+                        networkLibrary = networkLibrary,
+                        headers = gqlHeaders,
+                        id = args.gameId,
+                        slug = args.gameSlug.takeIf { args.gameId.isNullOrBlank() },
+                        name = args.gameName.takeIf { args.gameId.isNullOrBlank() && args.gameSlug.isNullOrBlank() },
+                    )
+                    if (enableIntegrity && integrity.value == null) {
+                        response.errors?.find { it.message == "failed integrity check" }?.let {
+                            integrity.value = "refresh"
+                            return@launch
+                        }
+                    }
+                    response.data!!.game?.let {
+                        Game(
+                            gameId = it.id,
+                            gameSlug = it.slug,
+                            gameName = it.displayName,
+                            boxArtUrl = it.boxArtURL,
+                            viewersCount = it.viewersCount,
+                            broadcastersCount = it.broadcastersCount,
+                            followersCount = it.followersCount,
+                            tags = it.tags?.map { tag ->
+                                Tag(
+                                    id = tag.id,
+                                    name = tag.localizedName
+                                )
+                            }
+                        )
+                    }
+                } catch (e: Exception) {
+                    if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                        try {
+                            helixRepository.getGames(
+                                networkLibrary = networkLibrary,
+                                headers = helixHeaders,
+                                ids = args.gameId?.let { listOf(it) },
+                                names = if (args.gameId.isNullOrBlank()) args.gameName?.let { listOf(it) } else null
+                            ).data.firstOrNull()?.let {
+                                Game(
+                                    gameId = it.id,
+                                    gameName = it.name,
+                                    boxArtUrl = it.boxArtUrl
+                                )
+                            }
+                        } catch (e: Exception) {
+                            null
+                        }
+                    } else null
+                }
+            }
+        }
+    }
 
     fun isFollowingGame(gameId: String?, gameName: String?, setting: Int, networkLibrary: String?, gqlHeaders: Map<String, String>) {
         if (_isFollowing.value == null) {

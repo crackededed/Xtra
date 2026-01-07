@@ -359,6 +359,7 @@ class MainActivity : AppCompatActivity() {
                                         gameId = game.gameId,
                                         gameSlug = game.gameSlug,
                                         gameName = game.gameName,
+                                        boxArt = game.boxArt,
                                         tags = tag?.let { arrayOf(it) },
                                     )
                                 } else {
@@ -366,6 +367,7 @@ class MainActivity : AppCompatActivity() {
                                         gameId = game.gameId,
                                         gameSlug = game.gameSlug,
                                         gameName = game.gameName,
+                                        boxArt = game.boxArt,
                                         tags = tag?.let { arrayOf(it) },
                                     )
                                 }

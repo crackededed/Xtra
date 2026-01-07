@@ -116,13 +116,14 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
         }
         with(binding) {
             val activity = requireActivity() as MainActivity
-            val isInLandscapeOrientation = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                (activity as? MainActivity)?.orientation == 2
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                if (activity.isInLandscapeOrientation) {
+                    appBar.setExpanded(false, false)
+                }
             } else {
-                activity.isInLandscapeOrientation
-            }
-            if (isInLandscapeOrientation) {
-                appBar.setExpanded(false, false)
+                if (activity.orientation == 2) {
+                    appBar.setExpanded(false, false)
+                }
             }
             if (viewModel.stream.value == null) {
                 watchLive.setOnClickListener {

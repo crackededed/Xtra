@@ -3,6 +3,7 @@ package com.github.andreyasadchy.xtra.ui.team
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -74,8 +75,14 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
         super.onViewCreated(view, savedInstanceState)
         with(binding) {
             val activity = requireActivity() as MainActivity
-            if (activity.isInLandscapeOrientation) {
-                appBar.setExpanded(false, false)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                if (activity.isInLandscapeOrientation) {
+                    appBar.setExpanded(false, false)
+                }
+            } else {
+                if (activity.orientation == 2) {
+                    appBar.setExpanded(false, false)
+                }
             }
             val isLoggedIn = !TwitchApiHelper.getGQLHeaders(requireContext(), true)[C.HEADER_TOKEN].isNullOrBlank() ||
                     !TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank()

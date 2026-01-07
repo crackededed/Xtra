@@ -297,6 +297,7 @@ class MainViewModel @Inject constructor(
                             gameId = it.id,
                             gameSlug = it.slug,
                             gameName = it.displayName,
+                            boxArtUrl = it.boxArtURL,
                         )
                     }
                 } catch (e: Exception) {
@@ -310,6 +311,7 @@ class MainViewModel @Inject constructor(
                                 Game(
                                     gameId = it.id,
                                     gameName = it.name,
+                                    boxArtUrl = it.boxArtUrl,
                                 )
                             }
                         } catch (e: Exception) {

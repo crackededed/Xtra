@@ -62,13 +62,15 @@ class GamesAdapter(
                                 GamePagerFragmentDirections.actionGlobalGamePagerFragment(
                                     gameId = item.gameId,
                                     gameSlug = item.gameSlug,
-                                    gameName = item.gameName
+                                    gameName = item.gameName,
+                                    boxArt = item.boxArt
                                 )
                             } else {
                                 GameMediaFragmentDirections.actionGlobalGameMediaFragment(
                                     gameId = item.gameId,
                                     gameSlug = item.gameSlug,
-                                    gameName = item.gameName
+                                    gameName = item.gameName,
+                                    boxArt = item.boxArt
                                 )
                             }
                         )
