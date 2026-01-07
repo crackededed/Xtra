@@ -42,12 +42,16 @@ class WebSocket(
     private var messageByteArray: ByteArray? = null
     private var useCompression = false
     private var nextFrameCompressed = false
+    private var connectionAttempt = 0
+    private var delayReconnect = false
     var isActive = true
 
     suspend fun start() = withContext(Dispatchers.IO) {
         do {
             try {
+                connectionAttempt += 1
                 connect()
+                connectionAttempt = 0
                 var end = false
                 while (!end) {
                     end = readNextFrame()
@@ -63,7 +67,15 @@ class WebSocket(
                 }
             }
             close()
-            delay(1000)
+            if (connectionAttempt >= 20) {
+                isActive = false
+            }
+            if (delayReconnect) {
+                delayReconnect = false
+                delay(60000)
+            } else {
+                delay(1000)
+            }
         } while (isActive)
     }
 
@@ -103,7 +115,11 @@ class WebSocket(
         var validated = false
         var line = reader.readLine()
         if (!line.startsWith("HTTP/1.1 101", true)) {
-            isActive = false
+            if (line.startsWith("HTTP/1.1 429", true)) {
+                delayReconnect = true
+            } else {
+                isActive = false
+            }
             throw Exception(line)
         }
         while (!line.isNullOrBlank()) {
