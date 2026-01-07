@@ -1,0 +1,5 @@
+query Tag($id: ID!) {
+    contentTag(id: $id) {
+        localizedName
+    }
+}
