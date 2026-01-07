@@ -186,7 +186,7 @@ class WebSocket(
                         }
                     }
                 }
-                ByteBuffer.wrap(array).short.toInt()
+                ByteBuffer.wrap(array).short.toInt() and 0xffff
             }
             PAYLOAD_LONG -> {
                 val size = 8
