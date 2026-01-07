@@ -105,7 +105,7 @@
                     <com.github.andreyasadchy.xtra.ui.view.StrictEditText
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:digits="0123456789:"
+                        android:digits="0123456789:."
                         android:imeOptions="flagNoFullscreen|actionNext"
                         android:inputType="number"
                         android:maxLength="8" />
@@ -129,7 +129,7 @@
                     <com.github.andreyasadchy.xtra.ui.view.StrictEditText
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:digits="0123456789:"
+                        android:digits="0123456789:."
                         android:imeOptions="flagNoFullscreen|actionDone"
                         android:inputType="number"
                         android:maxLength="8" />

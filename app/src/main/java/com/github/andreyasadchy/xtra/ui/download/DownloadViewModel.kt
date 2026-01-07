@@ -8,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.toast
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -303,7 +302,6 @@ class DownloadViewModel @Inject constructor(
                             integrity.value = "refresh"
                         }
                         if (e is IllegalAccessException) {
-                            applicationContext.toast(ContextCompat.getString(applicationContext, R.string.video_subscribers_only))
                             dismiss.value = true
                         }
                     }
