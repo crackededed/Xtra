@@ -13,6 +13,7 @@ class Game(
 
     var viewersCount: Int? = null,
     var broadcastersCount: Int? = null,
+    val followersCount: Int? = null,
     var tags: List<Tag>? = null,
     val vodPosition: Int? = null,
     val vodDuration: Int? = null,
