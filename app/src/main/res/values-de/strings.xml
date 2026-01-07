@@ -719,11 +719,11 @@
     <string name="about">Über</string>
     <string name="team">Team: %s</string>
     <string name="owner">Eigentümer: %s</string>
-    <string name="use_background_audio_locked">Play audio in the background when locking the screen</string>
+    <string name="use_background_audio_locked">Audio im Hintergrund abspielen, wenn der Bildschirm gesperrt wird</string>
     <string name="use_background_audio_pip_closed">Audio im Hintergrund abspielen, wenn das BiB geschlossen wird</string>
-    <string name="use_background_audio_pip_locked">Audio im Hintergrund abspielen, wenn im BiB Modus gesperrt wird</string>
-    <string name="old_username">Old name: %s</string>
-    <string name="default_cellular_quality">Default player quality on cellular network</string>
+    <string name="use_background_audio_pip_locked">Audio im Hintergrund abspielen, wenn der Bildschirm im BiB-Modus gesperrt wird</string>
+    <string name="old_username">alter Name: %s</string>
+    <string name="default_cellular_quality">Standard-Playerqualität im Mobilfunknetz</string>
     <string name="player">Player</string>
-    <string name="compact_number_formatting">Compact number formatting</string>
+    <string name="compact_number_formatting">Kompakte Zahlenformatierung</string>
 </resources>
