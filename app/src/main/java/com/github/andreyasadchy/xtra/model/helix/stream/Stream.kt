@@ -16,7 +16,6 @@ class Stream(
     val gameId: String? = null,
     @SerialName("game_name")
     val gameName: String? = null,
-    val type: String? = null,
     val title: String? = null,
     @SerialName("viewer_count")
     val viewerCount: Int? = null,

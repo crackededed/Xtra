@@ -46,6 +46,6 @@ class SearchChannelsResponse(
 
     @Serializable
     class Stream(
-        val type: String? = null,
+        val viewersCount: Int? = null,
     )
 }

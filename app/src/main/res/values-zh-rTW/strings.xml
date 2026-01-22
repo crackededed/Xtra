@@ -53,7 +53,6 @@
     <string name="permission_denied">所需的權限被拒絕</string>
     <string name="nothing_here">這裡什麼都沒有</string>
     <string name="watch_live">觀看實況</string>
-    <string name="watch_rerun">觀看重播</string>
     <string name="open_player">開啟播放器</string>
     <string name="error_stream">載入串流時發生錯誤</string>
     <string name="dark">深色</string>
@@ -147,7 +146,6 @@
     <string name="video_type_archive">過去的直播</string>
     <string name="video_type_highlight">精華片段</string>
     <string name="video_type_upload">上傳</string>
-    <string name="video_type_rerun">重播</string>
     <string name="all">所有</string>
     <string name="type">類型</string>
     <string name="room_emote">表情符號</string>

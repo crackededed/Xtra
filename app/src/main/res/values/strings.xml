@@ -70,7 +70,6 @@
     <string name="permission_denied">Required permissions were denied.</string>
     <string name="nothing_here">Nothing here</string>
     <string name="watch_live">Watch live</string>
-    <string name="watch_rerun">Watch rerun</string>
     <string name="open_player">Open player</string>
     <string name="error_stream">Error when loading stream</string>
     <string name="dark">Dark</string>
@@ -164,7 +163,6 @@
     <string name="video_type_archive">Past broadcast</string>
     <string name="video_type_highlight">Highlight</string>
     <string name="video_type_upload">Upload</string>
-    <string name="video_type_rerun">Rerun</string>
     <string name="all">All</string>
     <string name="type">Type</string>
     <string name="room_emote">Emote</string>

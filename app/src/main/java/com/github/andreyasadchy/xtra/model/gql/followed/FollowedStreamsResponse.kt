@@ -44,7 +44,6 @@ class FollowedStreamsResponse(
     class Stream(
         val id: String? = null,
         val game: Game? = null,
-        val type: String? = null,
         val title: String? = null,
         val viewersCount: Int? = null,
         val createdAt: String? = null,

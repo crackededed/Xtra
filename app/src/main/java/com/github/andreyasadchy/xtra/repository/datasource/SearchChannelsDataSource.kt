@@ -76,7 +76,7 @@ class SearchChannelsDataSource(
                     channelName = it.displayName,
                     profileImageUrl = it.profileImageURL,
                     followersCount = it.followers?.totalCount,
-                    type = it.stream?.type
+                    isLive = it.stream?.viewersCount != null
                 )
             }
         }
@@ -105,7 +105,7 @@ class SearchChannelsDataSource(
                     channelName = it.displayName,
                     profileImageUrl = it.profileImageURL,
                     followersCount = it.followers?.totalCount,
-                    type = it.stream?.type
+                    isLive = it.stream?.viewersCount != null
                 )
             }
         }

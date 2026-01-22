@@ -27,7 +27,6 @@ query UserChannelPage($id: ID, $login: String) {
             id
             previewImageURL
             title
-            type
             viewersCount
         }
     }

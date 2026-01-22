@@ -23,7 +23,6 @@ query TopStreams($sort: StreamSort, $tags: [String!], $languages: [Language!], $
                 freeformTags {
                     name
                 }
-                type
                 viewersCount
             }
         }

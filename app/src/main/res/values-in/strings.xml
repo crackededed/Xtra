@@ -53,7 +53,6 @@
     <string name="permission_denied">Izin yang diperlukan ditolak</string>
     <string name="nothing_here">Kosong</string>
     <string name="watch_live">Tonton Langsung</string>
-    <string name="watch_rerun">Tonton siaran ulang</string>
     <string name="open_player">Buka pemutar</string>
     <string name="error_stream">Terjadi kesalahan saat memuat stream</string>
     <string name="dark">Gelap</string>
@@ -146,7 +145,6 @@
     <string name="video_type_archive">Siaran terakhir</string>
     <string name="video_type_highlight">Sorotan</string>
     <string name="video_type_upload">Unggahan</string>
-    <string name="video_type_rerun">Pemutaran ulang</string>
     <string name="all">Semua</string>
     <string name="type">Tipe</string>
     <string name="room_emote">Emote</string>

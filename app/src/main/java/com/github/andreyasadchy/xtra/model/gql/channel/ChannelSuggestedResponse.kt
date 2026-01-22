@@ -50,7 +50,6 @@ class ChannelSuggestedResponse(
         val broadcaster: User? = null,
         val game: Game? = null,
         val viewersCount: Int? = null,
-        val type: String? = null,
         val freeformTags: List<Tag>? = null,
     )
 
