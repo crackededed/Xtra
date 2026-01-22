@@ -22,6 +22,7 @@ import kotlin.concurrent.scheduleAtFixedRate
 class HermesWebSocketOkHttp(
     private val channelId: String,
     private val userId: String?,
+    private val gqlClientId: String?,
     private val gqlToken: String?,
     private val collectPoints: Boolean,
     private val notifyPoints: Boolean,
@@ -48,7 +49,7 @@ class HermesWebSocketOkHttp(
 
     fun connect() {
         socket = client.newWebSocket(
-            Request.Builder().url("wss://hermes.twitch.tv/v1?clientId=kimne78kx3ncx6brgo4mv6wki5h1ko").build(),
+            Request.Builder().url("wss://hermes.twitch.tv/v1?clientId=${gqlClientId}").build(),
             HermesWebSocketListener()
         )
     }
