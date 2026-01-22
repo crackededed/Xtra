@@ -35,7 +35,6 @@ class GameStreamsResponse(
     class Stream(
         val id: String? = null,
         val broadcaster: User? = null,
-        val type: String? = null,
         val title: String? = null,
         val viewersCount: Int? = null,
         val createdAt: String? = null,

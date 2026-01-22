@@ -53,7 +53,6 @@
     <string name="permission_denied">Необходимые разрешения не были предоставлены</string>
     <string name="nothing_here">Здесь пусто</string>
     <string name="watch_live">Прямой эфир</string>
-    <string name="watch_rerun">Смотреть повтор</string>
     <string name="open_player">Открыть проигрыватель</string>
     <string name="error_stream">Ошибка при загрузке стрима</string>
     <string name="dark">Тёмная</string>
@@ -147,7 +146,6 @@
     <string name="video_type_archive">Прошедшая трансляция</string>
     <string name="video_type_highlight">Яркий момент</string>
     <string name="video_type_upload">Отправлено</string>
-    <string name="video_type_rerun">Повтор</string>
     <string name="all">Все</string>
     <string name="type">Тип</string>
     <string name="room_emote">Смайлы</string>

@@ -53,7 +53,6 @@
     <string name="permission_denied">Erforderliche Berechtigungen wurden verwehrt</string>
     <string name="nothing_here">Hier ist nichts</string>
     <string name="watch_live">Live ansehen</string>
-    <string name="watch_rerun">Wiederholung ansehen</string>
     <string name="open_player">Player öffnen</string>
     <string name="error_stream">Fehler beim Laden der Übertragung</string>
     <string name="dark">Dunkel</string>
@@ -147,7 +146,6 @@
     <string name="video_type_archive">Vergangene Streams</string>
     <string name="video_type_highlight">Highlight</string>
     <string name="video_type_upload">Hochladen</string>
-    <string name="video_type_rerun">Wiederholung</string>
     <string name="all">Alle</string>
     <string name="type">Typ</string>
     <string name="room_emote">Emote</string>

@@ -53,7 +53,6 @@
     <string name="permission_denied">必要な権限が拒否されました</string>
     <string name="nothing_here">何もありません</string>
     <string name="watch_live">ライブを視聴</string>
-    <string name="watch_rerun">再配信を視聴</string>
     <string name="open_player">プレーヤーを開く</string>
     <string name="error_stream">配信の読み込み中にエラーが発生しました</string>
     <string name="dark">ダーク</string>
@@ -147,7 +146,6 @@
     <string name="video_type_archive">過去の配信</string>
     <string name="video_type_highlight">ハイライト</string>
     <string name="video_type_upload">アップロード</string>
-    <string name="video_type_rerun">再配信</string>
     <string name="all">すべて</string>
     <string name="type">タイプ</string>
     <string name="room_emote">スタンプ限定</string>
