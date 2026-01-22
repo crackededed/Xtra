@@ -1,7 +1,6 @@
 package com.github.andreyasadchy.xtra.repository
 
 import android.net.http.HttpEngine
-import android.net.http.UrlResponseInfo
 import android.os.Build
 import android.os.ext.SdkExtensions
 import com.github.andreyasadchy.xtra.model.helix.channel.ChannelSearchResponse
@@ -62,7 +61,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/games${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -78,7 +77,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<GamesResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/games${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -106,7 +105,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/games/top${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -122,7 +121,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<GamesResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/games/top${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -154,7 +153,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/streams${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -170,7 +169,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<StreamsResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/streams${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -199,7 +198,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/streams/followed${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -215,7 +214,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<StreamsResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/streams/followed${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -248,7 +247,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/clips${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -264,7 +263,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<ClipsResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/clips${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -299,7 +298,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/videos${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -315,7 +314,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<VideosResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/videos${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -343,7 +342,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/users${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -359,7 +358,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<UsersResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/users${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -388,7 +387,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/search/categories${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -404,7 +403,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<GamesResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/search/categories${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -434,7 +433,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/search/channels${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -450,7 +449,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<ChannelSearchResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/search/channels${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -480,7 +479,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/channels/followed${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -496,7 +495,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<FollowsResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/channels/followed${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -526,7 +525,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/channels/followers${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -542,7 +541,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<FollowsResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/channels/followers${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -571,7 +570,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/emotes/user${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -587,7 +586,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<UserEmotesResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/emotes/user${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -614,7 +613,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/emotes/set${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -630,7 +629,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<EmoteSetsResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/emotes/set${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -652,7 +651,7 @@ class HelixRepository @Inject constructor(
     suspend fun getGlobalBadges(networkLibrary: String?, headers: Map<String, String>): BadgesResponse = withContext(Dispatchers.IO) {
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/badges/global", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -668,7 +667,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<BadgesResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/badges/global", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -695,7 +694,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/badges${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -711,7 +710,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<BadgesResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/badges${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -738,7 +737,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/bits/cheermotes${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -754,7 +753,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<CheerEmotesResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/bits/cheermotes${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -784,7 +783,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/chatters${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -800,7 +799,7 @@ class HelixRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<ChatUsersResponse>(response)
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/chatters${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -834,7 +833,7 @@ class HelixRepository @Inject constructor(
         }.toString()
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/eventsub/subscriptions", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
@@ -862,7 +861,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/eventsub/subscriptions", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                             addHeader("Content-Type", "application/json")
@@ -902,7 +901,7 @@ class HelixRepository @Inject constructor(
         }.toString()
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/messages", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
@@ -930,7 +929,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/messages", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                             addHeader("Content-Type", "application/json")
@@ -974,7 +973,7 @@ class HelixRepository @Inject constructor(
         }.toString()
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/announcements${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
@@ -1002,7 +1001,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/announcements${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                             addHeader("Content-Type", "application/json")
@@ -1049,7 +1048,7 @@ class HelixRepository @Inject constructor(
         }.toString()
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/moderation/bans${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
@@ -1077,7 +1076,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/moderation/bans${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                             addHeader("Content-Type", "application/json")
@@ -1118,7 +1117,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/moderation/bans${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("DELETE")
@@ -1144,7 +1143,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/moderation/bans${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                             setHttpMethod("DELETE")
@@ -1183,7 +1182,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/moderation/chat${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("DELETE")
@@ -1209,7 +1208,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/moderation/chat${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                             setHttpMethod("DELETE")
@@ -1246,7 +1245,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/color${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -1270,7 +1269,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/color${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -1306,7 +1305,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/color${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("PUT")
@@ -1332,7 +1331,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/color${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                             setHttpMethod("PUT")
@@ -1368,7 +1367,7 @@ class HelixRepository @Inject constructor(
         }.toString()
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/channels/commercial", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
@@ -1396,7 +1395,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/channels/commercial", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                             addHeader("Content-Type", "application/json")
@@ -1445,7 +1444,7 @@ class HelixRepository @Inject constructor(
         }.toString()
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/settings${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
@@ -1475,7 +1474,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/chat/settings${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                             addHeader("Content-Type", "application/json")
@@ -1514,7 +1513,7 @@ class HelixRepository @Inject constructor(
         }.toString()
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/streams/markers", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
@@ -1542,7 +1541,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/streams/markers", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                             addHeader("Content-Type", "application/json")
@@ -1582,7 +1581,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/moderation/moderators${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -1606,7 +1605,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/moderation/moderators${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -1642,7 +1641,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/moderation/moderators${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("DELETE")
@@ -1668,7 +1667,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/moderation/moderators${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                             setHttpMethod("DELETE")
@@ -1706,7 +1705,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/raids${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -1730,7 +1729,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/raids${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -1765,7 +1764,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/raids${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("DELETE")
@@ -1791,7 +1790,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/raids${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                             setHttpMethod("DELETE")
@@ -1829,7 +1828,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/channels/vips${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build().start()
@@ -1853,7 +1852,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/channels/vips${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                         }.build().start()
@@ -1889,7 +1888,7 @@ class HelixRepository @Inject constructor(
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/channels/vips${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("DELETE")
@@ -1915,7 +1914,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/channels/vips${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                             setHttpMethod("DELETE")
@@ -1956,7 +1955,7 @@ class HelixRepository @Inject constructor(
         }.toString()
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                val response = suspendCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/whispers${query}", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
@@ -1984,7 +1983,7 @@ class HelixRepository @Inject constructor(
                         response.responseBody as String
                     }
                 } else {
-                    val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    val response = suspendCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://api.twitch.tv/helix/whispers${query}", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             headers.forEach { addHeader(it.key, it.value) }
                             addHeader("Content-Type", "application/json")
