@@ -102,16 +102,16 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                     type = sortValues?.videoType,
                     languages = sortValues?.videoLanguages?.split(',')?.toTypedArray(),
                 )
-                viewModel.sortText.value = requireContext().getString(
+                viewModel.sortText.value = getString(
                     R.string.sort_and_type,
-                    requireContext().getString(
+                    getString(
                         when (viewModel.sort) {
                             VideosSortDialog.SORT_TIME -> R.string.upload_date
                             VideosSortDialog.SORT_VIEWS -> R.string.view_count
                             else -> R.string.view_count
                         }
                     ),
-                    requireContext().getString(
+                    getString(
                         when (viewModel.type) {
                             VideosSortDialog.VIDEO_TYPE_ARCHIVE -> R.string.video_type_archive
                             VideosSortDialog.VIDEO_TYPE_HIGHLIGHT -> R.string.video_type_highlight
@@ -121,7 +121,7 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                     )
                 )
                 viewModel.filtersText.value = if (viewModel.languages.isNotEmpty()) {
-                    requireContext().resources.getQuantityString(R.plurals.languages, viewModel.languages.size, viewModel.languages.joinToString())
+                    resources.getQuantityString(R.plurals.languages, viewModel.languages.size, viewModel.languages.joinToString())
                 } else null
             }
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -190,9 +190,9 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                     binding.scrollTop.visibility = View.GONE
                     pagingAdapter.submitData(PagingData.empty())
                     viewModel.setFilter(sort, period, type, languages)
-                    viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, typeText)
+                    viewModel.sortText.value = getString(R.string.sort_and_type, sortText, typeText)
                     viewModel.filtersText.value = if (languages.isNotEmpty()) {
-                        requireContext().resources.getQuantityString(R.plurals.languages, languages.size, languages.joinToString())
+                        resources.getQuantityString(R.plurals.languages, languages.size, languages.joinToString())
                     } else null
                 }
                 if (saveSort) {

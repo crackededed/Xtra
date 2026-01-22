@@ -132,7 +132,7 @@ class GamesFragment : PagedListFragment(), Scrollable, GamesSortDialog.OnFilter 
                 viewModel.filtersText.value = if (viewModel.tags.isNotEmpty()) {
                     buildString {
                         append(
-                            requireContext().resources.getQuantityString(
+                            resources.getQuantityString(
                                 R.plurals.tags,
                                 viewModel.tags.size,
                                 viewModel.tags.mapNotNull { it.name }.joinToString()
@@ -191,7 +191,7 @@ class GamesFragment : PagedListFragment(), Scrollable, GamesSortDialog.OnFilter 
             viewModel.setFilter(tags)
             viewModel.filtersText.value = buildString {
                 append(
-                    requireContext().resources.getQuantityString(
+                    resources.getQuantityString(
                         R.plurals.tags,
                         viewModel.tags.size,
                         viewModel.tags.mapNotNull { it.name }.joinToString()
@@ -208,7 +208,7 @@ class GamesFragment : PagedListFragment(), Scrollable, GamesSortDialog.OnFilter 
             viewModel.filtersText.value = if (viewModel.tags.isNotEmpty()) {
                 buildString {
                     append(
-                        requireContext().resources.getQuantityString(
+                        resources.getQuantityString(
                             R.plurals.tags,
                             viewModel.tags.size,
                             viewModel.tags.mapNotNull { it.name }.joinToString()

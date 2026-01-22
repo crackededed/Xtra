@@ -171,7 +171,7 @@ class DownloadsFragment : PagedListFragment(), Scrollable {
                 val storage = requireContext().getExternalFilesDirs(".downloads").mapIndexedNotNull { index, file ->
                     file?.absolutePath?.let { path ->
                         if (index == 0) {
-                            requireContext().getString(R.string.internal_storage) to path
+                            getString(R.string.internal_storage) to path
                         } else {
                             path.substringBefore("/Android/data", "").takeIf { it.isNotBlank() }?.let {
                                 it.substringAfterLast(File.separatorChar) to path
@@ -235,7 +235,7 @@ class DownloadsFragment : PagedListFragment(), Scrollable {
                 } else {
                     videoUrl.toUri()
                 }
-                requireContext().startActivity(Intent.createChooser(Intent().apply {
+                startActivity(Intent.createChooser(Intent().apply {
                     action = Intent.ACTION_SEND
                     setDataAndType(uri, requireContext().contentResolver.getType(uri))
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
