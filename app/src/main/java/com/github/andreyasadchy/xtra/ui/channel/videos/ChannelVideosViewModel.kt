@@ -2,7 +2,6 @@ package com.github.andreyasadchy.xtra.ui.channel.videos
 
 import android.content.Context
 import android.net.http.HttpEngine
-import android.net.http.UrlResponseInfo
 import android.os.Build
 import android.os.ext.SdkExtensions
 import androidx.lifecycle.SavedStateHandle
@@ -181,7 +180,7 @@ class ChannelVideosViewModel @Inject constructor(
                             try {
                                 when {
                                     networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                                        val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                                        val response = suspendCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
                                         if (response.first.httpStatusCode in 200..299) {
@@ -201,7 +200,7 @@ class ChannelVideosViewModel @Inject constructor(
                                                 }
                                             }
                                         } else {
-                                            val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                                            val response = suspendCoroutine { continuation ->
                                                 cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                                             }
                                             if (response.first.httpStatusCode in 200..299) {
@@ -238,7 +237,7 @@ class ChannelVideosViewModel @Inject constructor(
                             try {
                                 when {
                                     networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                                        val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                                        val response = suspendCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
                                         if (response.first.httpStatusCode in 200..299) {
@@ -258,7 +257,7 @@ class ChannelVideosViewModel @Inject constructor(
                                                 }
                                             }
                                         } else {
-                                            val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                                            val response = suspendCoroutine { continuation ->
                                                 cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                                             }
                                             if (response.first.httpStatusCode in 200..299) {

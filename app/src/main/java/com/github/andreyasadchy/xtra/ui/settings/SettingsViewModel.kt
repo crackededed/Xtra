@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageInstaller
 import android.net.Uri
 import android.net.http.HttpEngine
-import android.net.http.UrlResponseInfo
 import android.os.Build
 import android.os.ext.SdkExtensions
 import android.provider.DocumentsContract
@@ -280,7 +279,7 @@ class SettingsViewModel @Inject constructor(
                 try {
                     val response = when {
                         networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                            val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                            val response = suspendCoroutine { continuation ->
                                 httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                             }
                             json.decodeFromString<JsonObject>(String(response.second))
@@ -292,7 +291,7 @@ class SettingsViewModel @Inject constructor(
                                 val response = request.future.get().responseBody as String
                                 json.decodeFromString<JsonObject>(response)
                             } else {
-                                val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                                val response = suspendCoroutine { continuation ->
                                     cronetEngine.get().newUrlRequestBuilder(url, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                                 }
                                 json.decodeFromString<JsonObject>(String(response.second))
@@ -325,7 +324,7 @@ class SettingsViewModel @Inject constructor(
             try {
                 val response = when {
                     networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                        val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                        val response = suspendCoroutine { continuation ->
                             httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                         }
                         if (response.first.httpStatusCode in 200..299) {
@@ -341,7 +340,7 @@ class SettingsViewModel @Inject constructor(
                                 response.responseBody as ByteArray
                             } else null
                         } else {
-                            val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                            val response = suspendCoroutine { continuation ->
                                 cronetEngine.get().newUrlRequestBuilder(url, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                             }
                             if (response.first.httpStatusCode in 200..299) {
