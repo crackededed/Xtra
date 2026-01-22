@@ -126,7 +126,7 @@
     <string name="trouble_logging_in">Having trouble logging in?</string>
     <string name="login_problem_solution">You can log in using an external browser. After pressing \"Authorize\", a page with an error should appear. Copy the URL, return here and press the \"Enter URL\" button. Paste the URL and press \"Log in\".</string>
     <string name="no_browser_found">No browser app found</string>
-    <string name="browser_workaround">Your system browser is no longer supported. Please click the button below for a workaround.</string>
+    <string name="browser_workaround">Your system browser is no longer supported. Please press the button below for a workaround.</string>
     <string name="error">Error: %s</string>
     <string name="to_enter_url">Enter URL</string>
     <string name="enter_url">Enter URL</string>
@@ -193,7 +193,7 @@
     <string name="chat_firstmsg_visibility">First messages and redemptions with text</string>
     <string name="timestamps">Show timestamps</string>
     <string name="timestamp_format">Timestamp format</string>
-    <string name="created_at">Created: %s</string>
+    <string name="created_at">Created at %s</string>
     <string name="user_partner">Partner</string>
     <string name="user_affiliate">Affiliate</string>
     <string name="user_staff">Staff</string>
@@ -202,7 +202,7 @@
     <string name="recentMsg_enable">Load recent messages</string>
     <string name="recentMsg_limit">Recent message limit</string>
     <string name="last_broadcast_date">Last broadcast %s</string>
-    <string name="followed_at">Following since %s</string>
+    <string name="followed_at">Followed at %s</string>
     <string name="show_usernotice">Show user notices (subs, raids...)</string>
     <string name="show_clearmsg">Show deletions of single messages</string>
     <string name="show_clearchat">Show timeouts and bans</string>
@@ -694,7 +694,7 @@
     <string name="chat_badge_size">Badge size</string>
     <string name="overlay_emotes">Overlay emotes</string>
     <string name="network_library">Network library</string>
-    <string name="navigation_tabs">Main tabs</string>
+    <string name="navigation_tabs">Bottom navigation tabs</string>
     <string name="translate_chat_messages">Translate chat messages</string>
     <string name="downloaded_languages">Downloaded languages</string>
     <string name="translate_target_language">Target language</string>
