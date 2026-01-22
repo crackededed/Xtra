@@ -14,7 +14,6 @@ import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.ui.game.streams.GameStreamsFragment
 import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragment
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.gone
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.chip.Chip
@@ -72,7 +71,7 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SearchTagsDialog.OnTagSel
                     saveSortLayout.isVisible = parentFragment?.arguments?.getString(C.GAME_ID).isNullOrBlank() == false
                 }
                 is TopStreamsFragment -> {
-                    saveSortLayout.gone()
+                    saveSortLayout.visibility = View.GONE
                 }
             }
             val originalSortId = when (args.getString(SORT)) {
@@ -84,7 +83,7 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SearchTagsDialog.OnTagSel
             val originalTags = args.getStringArray(TAGS) ?: emptyArray()
             val originalLanguages = args.getStringArray(LANGUAGES) ?: emptyArray()
             if (!args.getBoolean(SAVED)) {
-                deleteSavedSort.gone()
+                deleteSavedSort.visibility = View.GONE
             }
             sort.check(originalSortId)
             selectedTags = originalTags.toMutableList()
@@ -117,7 +116,7 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SearchTagsDialog.OnTagSel
             }
             deleteSavedSort.setOnClickListener {
                 listener.deleteSavedSort()
-                deleteSavedSort.gone()
+                deleteSavedSort.visibility = View.GONE
             }
             saveDefault.setOnClickListener {
                 applyFilters(originalSortId, originalTags, originalLanguages, saveFilters = false, saveSort = false, saveDefault = true)

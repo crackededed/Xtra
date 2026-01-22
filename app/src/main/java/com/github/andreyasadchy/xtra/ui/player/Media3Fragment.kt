@@ -11,8 +11,10 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.text.format.DateUtils
 import android.util.Log
+import android.view.View
 import android.widget.HorizontalScrollView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
@@ -42,11 +44,6 @@ import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.isNetworkAvailable
-import com.github.andreyasadchy.xtra.util.shortToast
-import com.github.andreyasadchy.xtra.util.toast
-import com.github.andreyasadchy.xtra.util.visible
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import dagger.hilt.android.AndroidEntryPoint
@@ -83,11 +80,11 @@ class Media3Fragment : PlayerFragment() {
                     val showPlayButton = Util.shouldShowPlayButton(player)
                     if (showPlayButton) {
                         binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
-                        binding.playerControls.playPause.visible()
+                        binding.playerControls.playPause.visibility = View.VISIBLE
                     } else {
                         binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
                         if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
-                            binding.playerControls.playPause.gone()
+                            binding.playerControls.playPause.visibility = View.GONE
                         }
                     }
                     setPipActions(!showPlayButton)
@@ -103,11 +100,11 @@ class Media3Fragment : PlayerFragment() {
                     val showPlayButton = Util.shouldShowPlayButton(player)
                     if (showPlayButton) {
                         binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
-                        binding.playerControls.playPause.visible()
+                        binding.playerControls.playPause.visibility = View.VISIBLE
                     } else {
                         binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
                         if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
-                            binding.playerControls.playPause.gone()
+                            binding.playerControls.playPause.visibility = View.GONE
                         }
                     }
                     setPipActions(!showPlayButton)
@@ -121,11 +118,11 @@ class Media3Fragment : PlayerFragment() {
                 override fun onAvailableCommandsChanged(availableCommands: Player.Commands) {
                     if (Util.shouldShowPlayButton(player)) {
                         binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
-                        binding.playerControls.playPause.visible()
+                        binding.playerControls.playPause.visibility = View.VISIBLE
                     } else {
                         binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
                         if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
-                            binding.playerControls.playPause.gone()
+                            binding.playerControls.playPause.visibility = View.GONE
                         }
                     }
                     val duration = player?.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0
@@ -318,11 +315,11 @@ class Media3Fragment : PlayerFragment() {
                                                                     player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                                                         setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                                                     }.build()
-                                                                    binding.playerSurface.gone()
+                                                                    binding.playerSurface.visibility = View.GONE
                                                                 }
                                                                 player.volume = 0f
                                                             }
-                                                            requireContext().toast(R.string.waiting_ads)
+                                                            Toast.makeText(requireContext(), R.string.waiting_ads, Toast.LENGTH_LONG).show()
                                                         }
                                                     }
                                                 }
@@ -335,7 +332,7 @@ class Media3Fragment : PlayerFragment() {
                                                         player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                                             setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                                                         }.build()
-                                                        binding.playerSurface.visible()
+                                                        binding.playerSurface.visibility = View.VISIBLE
                                                     }
                                                     player.volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
                                                 }
@@ -359,13 +356,23 @@ class Media3Fragment : PlayerFragment() {
                                 result.addListener({
                                     if (result.get().resultCode == SessionResult.RESULT_SUCCESS) {
                                         val responseCode = result.get().extras.getInt(PlaybackService.RESULT)
-                                        if (requireContext().isNetworkAvailable) {
+                                        val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                                        val isNetworkAvailable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                            val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                                            networkCapabilities != null
+                                                    && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                                                    && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                                        } else @Suppress("DEPRECATION") {
+                                            val activeNetwork = connectivityManager.activeNetworkInfo ?: connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_VPN)
+                                            activeNetwork?.isConnectedOrConnecting == true
+                                        }
+                                        if (isNetworkAvailable) {
                                             when {
                                                 responseCode == 404 -> {
-                                                    requireContext().toast(R.string.stream_ended)
+                                                    Toast.makeText(requireContext(), R.string.stream_ended, Toast.LENGTH_LONG).show()
                                                 }
                                                 viewModel.useCustomProxy && responseCode >= 400 -> {
-                                                    requireContext().toast(R.string.proxy_error)
+                                                    Toast.makeText(requireContext(), R.string.proxy_error, Toast.LENGTH_LONG).show()
                                                     viewModel.useCustomProxy = false
                                                     viewLifecycleOwner.lifecycleScope.launch {
                                                         delay(1500L)
@@ -376,7 +383,7 @@ class Media3Fragment : PlayerFragment() {
                                                     }
                                                 }
                                                 else -> {
-                                                    requireContext().shortToast(R.string.player_error)
+                                                    Toast.makeText(requireContext(), R.string.player_error, Toast.LENGTH_SHORT).show()
                                                     viewLifecycleOwner.lifecycleScope.launch {
                                                         delay(1500L)
                                                         try {
@@ -399,7 +406,17 @@ class Media3Fragment : PlayerFragment() {
                                 result.addListener({
                                     if (result.get().resultCode == SessionResult.RESULT_SUCCESS) {
                                         val responseCode = result.get().extras.getInt(PlaybackService.RESULT)
-                                        if (requireContext().isNetworkAvailable) {
+                                        val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                                        val isNetworkAvailable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                            val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                                            networkCapabilities != null
+                                                    && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                                                    && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                                        } else @Suppress("DEPRECATION") {
+                                            val activeNetwork = connectivityManager.activeNetworkInfo ?: connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_VPN)
+                                            activeNetwork?.isConnectedOrConnecting == true
+                                        }
+                                        if (isNetworkAvailable) {
                                             val skipAccessToken = prefs.getString(C.TOKEN_SKIP_VIDEO_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2
                                             when {
                                                 skipAccessToken == 1 && viewModel.shouldRetry && responseCode != 0 -> {
@@ -411,10 +428,10 @@ class Media3Fragment : PlayerFragment() {
                                                     playVideo(true, player?.currentPosition)
                                                 }
                                                 responseCode == 403 -> {
-                                                    requireContext().toast(R.string.video_subscribers_only)
+                                                    Toast.makeText(requireContext(), R.string.video_subscribers_only, Toast.LENGTH_LONG).show()
                                                 }
                                                 else -> {
-                                                    requireContext().shortToast(R.string.player_error)
+                                                    Toast.makeText(requireContext(), R.string.player_error, Toast.LENGTH_SHORT).show()
                                                     viewLifecycleOwner.lifecycleScope.launch {
                                                         delay(1500L)
                                                         try {
@@ -479,11 +496,11 @@ class Media3Fragment : PlayerFragment() {
                 updateProgress()
                 if (Util.shouldShowPlayButton(player)) {
                     binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
-                    binding.playerControls.playPause.visible()
+                    binding.playerControls.playPause.visibility = View.VISIBLE
                 } else {
                     binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
                     if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
-                        binding.playerControls.playPause.gone()
+                        binding.playerControls.playPause.visibility = View.GONE
                     }
                 }
             }
@@ -521,7 +538,7 @@ class Media3Fragment : PlayerFragment() {
             player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                 setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
             }.build()
-            binding.playerSurface.visible()
+            binding.playerSurface.visibility = View.VISIBLE
             player.sendCustomCommand(
                 SessionCommand(
                     PlaybackService.START_VIDEO, bundleOf(
@@ -544,12 +561,12 @@ class Media3Fragment : PlayerFragment() {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                 }.build()
-                binding.playerSurface.gone()
+                binding.playerSurface.visibility = View.GONE
             } else {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                 }.build()
-                binding.playerSurface.visible()
+                binding.playerSurface.visibility = View.VISIBLE
             }
             player.sendCustomCommand(
                 SessionCommand(
@@ -571,12 +588,12 @@ class Media3Fragment : PlayerFragment() {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                 }.build()
-                binding.playerSurface.gone()
+                binding.playerSurface.visibility = View.GONE
             } else {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                 }.build()
-                binding.playerSurface.visible()
+                binding.playerSurface.visibility = View.VISIBLE
             }
             player.sendCustomCommand(
                 SessionCommand(
@@ -674,7 +691,7 @@ class Media3Fragment : PlayerFragment() {
         with(binding.playerControls) {
             val textTracks = player?.currentTracks?.groups?.find { it.type == androidx.media3.common.C.TRACK_TYPE_TEXT }
             if (textTracks != null && prefs.getBoolean(C.PLAYER_SUBTITLES, false)) {
-                subtitles.visible()
+                subtitles.visibility = View.VISIBLE
                 if (textTracks.isSelected) {
                     subtitles.setImageResource(androidx.media3.ui.R.drawable.exo_ic_subtitle_on)
                     subtitles.setOnClickListener {
@@ -689,7 +706,7 @@ class Media3Fragment : PlayerFragment() {
                     }
                 }
             } else {
-                subtitles.gone()
+                subtitles.visibility = View.GONE
             }
             (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setSubtitles(textTracks)
         }
@@ -771,7 +788,7 @@ class Media3Fragment : PlayerFragment() {
                                 setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                                 clearOverridesOfType(androidx.media3.common.C.TRACK_TYPE_VIDEO)
                             }.build()
-                            binding.playerSurface.visible()
+                            binding.playerSurface.visibility = View.VISIBLE
                         }
                         AUDIO_ONLY_QUALITY -> {
                             if (viewModel.usingProxy) {
@@ -787,7 +804,7 @@ class Media3Fragment : PlayerFragment() {
                             player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                 setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                             }.build()
-                            binding.playerSurface.gone()
+                            binding.playerSurface.visibility = View.GONE
                             quality.value.second?.let {
                                 val position = player.currentPosition
                                 if (viewModel.qualities.containsKey(AUTO_QUALITY)) {
@@ -824,7 +841,7 @@ class Media3Fragment : PlayerFragment() {
                                 } ?: player.prepare()
                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
-                                    binding.playerSurface.visible()
+                                    binding.playerSurface.visibility = View.VISIBLE
                                     if (!player.currentTracks.isEmpty) {
                                         player.currentTracks.groups.find { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO }?.let {
                                             val selectedQuality = quality.key.split("p")
@@ -864,7 +881,7 @@ class Media3Fragment : PlayerFragment() {
                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                                 }.build()
-                                binding.playerSurface.visible()
+                                binding.playerSurface.visibility = View.VISIBLE
                             }
                         }
                     }
@@ -907,7 +924,7 @@ class Media3Fragment : PlayerFragment() {
                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                 }.build()
-                                binding.playerSurface.gone()
+                                binding.playerSurface.visibility = View.GONE
                             }
                             if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
                                 quality.value.second?.let {
@@ -1017,7 +1034,7 @@ class Media3Fragment : PlayerFragment() {
                                     player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                         setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                     }.build()
-                                    binding.playerSurface.gone()
+                                    binding.playerSurface.visibility = View.GONE
                                 }
                                 if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
                                     quality.value.second?.let {

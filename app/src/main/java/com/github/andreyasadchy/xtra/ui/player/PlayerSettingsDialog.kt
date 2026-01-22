@@ -13,10 +13,8 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.PlayerSettingsBinding
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
-import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
@@ -56,7 +54,7 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
         val videoType = arguments.getString(TYPE)
         with(binding) {
             if (videoType != PlayerFragment.STREAM && requireContext().prefs().getBoolean(C.PLAYER_MENU_SPEED, false)) {
-                menuSpeed.visible()
+                menuSpeed.visibility = View.VISIBLE
                 menuSpeed.setOnClickListener {
                     (parentFragment as? PlayerFragment)?.showSpeedDialog()
                     dismiss()
@@ -64,20 +62,20 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                 setSpeed(arguments.getString(SPEED))
             }
             if (requireContext().prefs().getBoolean(C.PLAYER_MENU_QUALITY, false)) {
-                menuQuality.visible()
+                menuQuality.visibility = View.VISIBLE
                 menuQuality.setOnClickListener { dismiss() }
                 (parentFragment as? PlayerFragment)?.setQualityText()
             }
             if (videoType == PlayerFragment.STREAM) {
                 if (requireContext().prefs().getBoolean(C.PLAYER_MENU_VIEWER_LIST, true)) {
-                    menuViewerList.visible()
+                    menuViewerList.visibility = View.VISIBLE
                     menuViewerList.setOnClickListener {
                         (parentFragment as? PlayerFragment)?.openViewerList()
                         dismiss()
                     }
                 }
                 if (requireContext().prefs().getBoolean(C.PLAYER_MENU_RESTART, false)) {
-                    menuRestart.visible()
+                    menuRestart.visibility = View.VISIBLE
                     menuRestart.setOnClickListener {
                         (parentFragment as? PlayerFragment)?.restartPlayer()
                         dismiss()
@@ -88,7 +86,7 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                             (!TwitchApiHelper.getGQLHeaders(requireContext(), true)[C.HEADER_TOKEN].isNullOrBlank() ||
                                     !TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank())
                     if (isLoggedIn && requireContext().prefs().getBoolean(C.PLAYER_MENU_CHAT_BAR, true)) {
-                        menuChatBar.visible()
+                        menuChatBar.visibility = View.VISIBLE
                         if (requireContext().prefs().getBoolean(C.KEY_CHAT_BAR_VISIBLE, true)) {
                             menuChatBar.text = requireContext().getString(R.string.hide_chat_bar)
                         } else {
@@ -100,7 +98,7 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                         }
                     }
                     if (requireContext().prefs().getBoolean(C.PLAYER_MENU_CHAT_DISCONNECT, true)) {
-                        menuChatDisconnect.visible()
+                        menuChatDisconnect.visibility = View.VISIBLE
                         if ((parentFragment as? PlayerFragment)?.isActive() == true) {
                             menuChatDisconnect.text = requireContext().getString(R.string.disconnect_chat)
                             menuChatDisconnect.setOnClickListener {
@@ -117,12 +115,12 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                     }
                 }
                 if (requireContext().prefs().getBoolean(C.DEBUG_PLAYER_MENU_PLAYLIST_TAGS, false)) {
-                    menuMediaPlaylistTags.visible()
+                    menuMediaPlaylistTags.visibility = View.VISIBLE
                     menuMediaPlaylistTags.setOnClickListener {
                         (parentFragment as? PlayerFragment)?.showPlaylistTags(true)
                         dismiss()
                     }
-                    menuMultivariantPlaylistTags.visible()
+                    menuMultivariantPlaylistTags.visibility = View.VISIBLE
                     menuMultivariantPlaylistTags.setOnClickListener {
                         (parentFragment as? PlayerFragment)?.showPlaylistTags(false)
                         dismiss()
@@ -138,14 +136,14 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                 }
             }
             if (videoType != PlayerFragment.OFFLINE_VIDEO && requireContext().prefs().getBoolean(C.PLAYER_MENU_DOWNLOAD, true)) {
-                menuDownload.visible()
+                menuDownload.visibility = View.VISIBLE
                 menuDownload.setOnClickListener {
                     (parentFragment as? PlayerFragment)?.showDownloadDialog()
                     dismiss()
                 }
             }
             if (videoType != PlayerFragment.CLIP && requireContext().prefs().getBoolean(C.PLAYER_MENU_SLEEP, true)) {
-                menuTimer.visible()
+                menuTimer.visibility = View.VISIBLE
                 menuTimer.setOnClickListener {
                     (parentFragment as? PlayerFragment)?.showSleepTimerDialog()
                     dismiss()
@@ -153,14 +151,14 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
             }
             if ((parentFragment as? PlayerFragment)?.getIsPortrait() == false) {
                 if (requireContext().prefs().getBoolean(C.PLAYER_MENU_ASPECT, false)) {
-                    menuRatio.visible()
+                    menuRatio.visibility = View.VISIBLE
                     menuRatio.setOnClickListener {
                         (parentFragment as? PlayerFragment)?.setResizeMode()
                         dismiss()
                     }
                 }
                 if (requireContext().prefs().getBoolean(C.PLAYER_MENU_CHAT_TOGGLE, false)) {
-                    menuChatToggle.visible()
+                    menuChatToggle.visibility = View.VISIBLE
                     if (requireContext().prefs().getBoolean(C.KEY_CHAT_OPENED, true)) {
                         menuChatToggle.text = requireContext().getString(R.string.hide_chat)
                         menuChatToggle.setOnClickListener {
@@ -177,7 +175,7 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                 }
             }
             if (requireContext().prefs().getBoolean(C.PLAYER_MENU_VOLUME, false)) {
-                menuVolume.visible()
+                menuVolume.visibility = View.VISIBLE
                 menuVolume.setOnClickListener {
                     (parentFragment as? PlayerFragment)?.showVolumeDialog()
                     dismiss()
@@ -186,7 +184,7 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
             if (requireContext().prefs().getBoolean(C.CHAT_TRANSLATE, false) && Build.SUPPORTED_64_BIT_ABIS.firstOrNull() == "arm64-v8a") {
                 val translateAll = (parentFragment as? PlayerFragment)?.getTranslateAllMessages()
                 if (translateAll != null) {
-                    menuTranslateAll.visible()
+                    menuTranslateAll.visibility = View.VISIBLE
                     if (translateAll) {
                         menuTranslateAll.setOnClickListener {
                             (parentFragment as? PlayerFragment)?.deleteTranslateAllMessagesUser()
@@ -205,7 +203,7 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                 !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false) &&
                 requireContext().prefs().getBoolean(C.PLAYER_MENU_RELOAD_EMOTES, true)
             ) {
-                menuReloadEmotes.visible()
+                menuReloadEmotes.visibility = View.VISIBLE
                 menuReloadEmotes.setOnClickListener {
                     (parentFragment as? PlayerFragment)?.reloadEmotes()
                     dismiss()
@@ -217,7 +215,7 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
     fun setQuality(text: String?) {
         with(binding) {
             if (!text.isNullOrBlank() && menuQuality.isVisible) {
-                qualityValue.visible()
+                qualityValue.visibility = View.VISIBLE
                 qualityValue.text = text
                 menuQuality.setOnClickListener {
                     (parentFragment as? PlayerFragment)?.showQualityDialog()
@@ -230,7 +228,7 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
     fun setSpeed(text: String?) {
         with(binding) {
             if (!text.isNullOrBlank() && menuSpeed.isVisible) {
-                speedValue.visible()
+                speedValue.visibility = View.VISIBLE
                 speedValue.text = text
             }
         }
@@ -239,7 +237,7 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
     fun setVodGames() {
         with(binding) {
             if (requireContext().prefs().getBoolean(C.PLAYER_MENU_GAMES, false)) {
-                menuVodGames.visible()
+                menuVodGames.visibility = View.VISIBLE
                 menuVodGames.setOnClickListener {
                     (parentFragment as? PlayerFragment)?.showVodGames()
                     dismiss()
@@ -250,7 +248,7 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
 
     fun setBookmarkText(isBookmarked: Boolean) {
         with(binding) {
-            menuBookmark.visible()
+            menuBookmark.visibility = View.VISIBLE
             menuBookmark.text = requireContext().getString(if (isBookmarked) R.string.remove_bookmark else R.string.add_bookmark)
             menuBookmark.setOnClickListener {
                 (parentFragment as? PlayerFragment)?.saveBookmark()
@@ -262,7 +260,7 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
     fun setSubtitles(subtitles: Tracks.Group? = null) {
         with(binding) {
             if (subtitles != null && requireContext().prefs().getBoolean(C.PLAYER_MENU_SUBTITLES, true)) {
-                menuSubtitles.visible()
+                menuSubtitles.visibility = View.VISIBLE
                 if (subtitles.isSelected) {
                     menuSubtitles.text = requireContext().getString(R.string.hide_subtitles)
                     menuSubtitles.setOnClickListener {
@@ -279,7 +277,7 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                     }
                 }
             } else {
-                menuSubtitles.gone()
+                menuSubtitles.visibility = View.GONE
             }
         }
     }

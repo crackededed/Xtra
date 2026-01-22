@@ -22,8 +22,10 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.view.Menu
+import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -32,6 +34,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import androidx.core.content.res.use
 import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
 import androidx.core.view.ViewCompat
@@ -74,17 +77,10 @@ import com.github.andreyasadchy.xtra.ui.player.PlayerFragment
 import com.github.andreyasadchy.xtra.ui.team.TeamFragmentDirections
 import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.DisplayUtils
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.applyTheme
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.isInPortraitOrientation
-import com.github.andreyasadchy.xtra.util.isLightTheme
-import com.github.andreyasadchy.xtra.util.isNetworkAvailable
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.shortToast
-import com.github.andreyasadchy.xtra.util.toast
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.google.android.material.color.MaterialColors
 import dagger.hilt.android.AndroidEntryPoint
@@ -173,7 +169,7 @@ class MainActivity : AppCompatActivity() {
         applyTheme()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setNavBarColor(isInPortraitOrientation)
+        setNavBarColor(resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
         val ignoreCutouts = prefs.getBoolean(C.UI_DRAW_BEHIND_CUTOUTS, false)
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
             val insets = if (ignoreCutouts) {
@@ -207,23 +203,44 @@ class MainActivity : AppCompatActivity() {
 
         var initialized = savedInstanceState != null
         initNavigation()
-        if (!initialized && !isNetworkAvailable) {
-            initialized = true
-            shortToast(R.string.no_connection)
+        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (!initialized) {
+            val isNetworkAvailable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                networkCapabilities != null
+                        && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                        && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+            } else @Suppress("DEPRECATION") {
+                val activeNetwork = connectivityManager.activeNetworkInfo ?: connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_VPN)
+                activeNetwork?.isConnectedOrConnecting == true
+            }
+            if (!isNetworkAvailable) {
+                initialized = true
+                Toast.makeText(this, R.string.no_connection, Toast.LENGTH_SHORT).show()
+            }
         }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.checkNetworkStatus.collectLatest {
                     if (it) {
-                        val online = isNetworkAvailable
-                        if (viewModel.isNetworkAvailable.value != online) {
-                            viewModel.isNetworkAvailable.value = online
+                        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+                        val isNetworkAvailable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                            networkCapabilities != null
+                                    && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                                    && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                        } else @Suppress("DEPRECATION") {
+                            val activeNetwork = connectivityManager.activeNetworkInfo ?: connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_VPN)
+                            activeNetwork?.isConnectedOrConnecting == true
+                        }
+                        if (viewModel.isNetworkAvailable.value != isNetworkAvailable) {
+                            viewModel.isNetworkAvailable.value = isNetworkAvailable
                             if (initialized) {
-                                shortToast(if (online) R.string.connection_restored else R.string.no_connection)
+                                Toast.makeText(this@MainActivity, if (isNetworkAvailable) R.string.connection_restored else R.string.no_connection, Toast.LENGTH_SHORT).show()
                             } else {
                                 initialized = true
                             }
-                            if (online) {
+                            if (isNetworkAvailable) {
                                 if (!TwitchApiHelper.checkedValidation && prefs.getBoolean(C.VALIDATE_TOKENS, true)) {
                                     viewModel.validate(
                                         prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
@@ -270,7 +287,7 @@ class MainActivity : AppCompatActivity() {
                                             putLong(C.UPDATE_LAST_CHECKED, System.currentTimeMillis())
                                         }
                                     } catch (e: ActivityNotFoundException) {
-                                        toast(R.string.no_browser_found)
+                                        Toast.makeText(this@MainActivity, R.string.no_browser_found, Toast.LENGTH_LONG).show()
                                     }
                                 } else {
                                     viewModel.downloadUpdate(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), it)
@@ -286,7 +303,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         connectivityManager.registerNetworkCallback(
             NetworkRequest.Builder().apply {
                 addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
@@ -436,10 +452,16 @@ class MainActivity : AppCompatActivity() {
                 window.navigationBarColor = if (isPortrait && binding.navBarContainer.isVisible) {
                     Color.TRANSPARENT
                 } else {
+                    val isLightTheme = obtainStyledAttributes(intArrayOf(androidx.appcompat.R.attr.isLightTheme)).use {
+                        it.getBoolean(0, false)
+                    }
                     ContextCompat.getColor(this, if (!isLightTheme) R.color.darkScrim else R.color.lightScrim)
                 }
             }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
+                val isLightTheme = obtainStyledAttributes(intArrayOf(androidx.appcompat.R.attr.isLightTheme)).use {
+                    it.getBoolean(0, false)
+                }
                 @Suppress("DEPRECATION")
                 if (!isLightTheme) {
                     window.navigationBarColor = if (isPortrait && binding.navBarContainer.isVisible) {
@@ -450,6 +472,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             else -> {
+                val isLightTheme = obtainStyledAttributes(intArrayOf(androidx.appcompat.R.attr.isLightTheme)).use {
+                    it.getBoolean(0, false)
+                }
                 @Suppress("DEPRECATION")
                 if (!isLightTheme) {
                     if (isPortrait && binding.navBarContainer.isVisible) {
@@ -920,7 +945,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             } else {
-                binding.navBarContainer.gone()
+                binding.navBarContainer.visibility = View.GONE
             }
             setupWithNavController(navController)
             setOnItemSelectedListener {
@@ -958,7 +983,10 @@ class MainActivity : AppCompatActivity() {
         }
         if (version < 1) {
             prefs.edit {
-                putInt(C.LANDSCAPE_CHAT_WIDTH, DisplayUtils.calculateLandscapeWidthByPercent(this@MainActivity, 30))
+                val width = resources.displayMetrics.widthPixels
+                val height = resources.displayMetrics.heightPixels
+                val chatWidth = ((if (height > width) height else width) * (30 / 100f)).toInt()
+                putInt(C.LANDSCAPE_CHAT_WIDTH, chatWidth)
                 if (resources.getBoolean(R.bool.isTablet)) {
                     putString(C.PORTRAIT_COLUMN_COUNT, "2")
                     putString(C.LANDSCAPE_COLUMN_COUNT, "3")

@@ -1,5 +1,9 @@
 package com.github.andreyasadchy.xtra.ui.common
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -8,7 +12,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.github.andreyasadchy.xtra.ui.main.MainViewModel
-import com.github.andreyasadchy.xtra.util.isNetworkAvailable
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -35,7 +38,22 @@ abstract class BaseNetworkFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (enableNetworkCheck) {
-            lastIsOnlineState = savedInstanceState?.getBoolean(LAST_KEY) ?: requireContext().isNetworkAvailable
+            lastIsOnlineState = savedInstanceState?.getBoolean(LAST_KEY).let {
+                if (it == null) {
+                    val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                        networkCapabilities != null
+                                && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                                && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                    } else @Suppress("DEPRECATION") {
+                        val activeNetwork = connectivityManager.activeNetworkInfo ?: connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_VPN)
+                        activeNetwork?.isConnectedOrConnecting == true
+                    }
+                } else {
+                    it
+                }
+            }
             shouldRestore = savedInstanceState?.getBoolean(RESTORE_KEY) == true
             created = savedInstanceState?.getBoolean(CREATED_KEY) == true
         }

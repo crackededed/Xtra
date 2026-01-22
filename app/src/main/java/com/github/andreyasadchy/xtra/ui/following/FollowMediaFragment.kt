@@ -30,10 +30,8 @@ import com.github.andreyasadchy.xtra.ui.settings.SettingsActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
-import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 
 class FollowMediaFragment : Fragment(), Scrollable, FragmentHost {
@@ -118,7 +116,7 @@ class FollowMediaFragment : Fragment(), Scrollable, FragmentHost {
                 }
             }
             if (tabs.size > 1) {
-                spinner.visible()
+                spinner.visibility = View.VISIBLE
             }
             (spinner.editText as? MaterialAutoCompleteTextView)?.apply {
                 setSimpleItems(tabs.map {
@@ -165,7 +163,11 @@ class FollowMediaFragment : Fragment(), Scrollable, FragmentHost {
                         appBar.setLiftable(false)
                         appBar.background = null
                     }
-                    (f as? Sortable)?.setupSortBar(sortBar) ?: sortBar.root.gone()
+                    if (f is Sortable) {
+                        f.setupSortBar(sortBar)
+                    } else {
+                        sortBar.root.visibility = View.GONE
+                    }
                 }
             }, false)
             ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->

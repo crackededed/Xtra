@@ -2,16 +2,10 @@ package com.github.andreyasadchy.xtra.util
 
 import android.app.Activity
 import android.content.Context
-import android.content.ContextWrapper
 import android.content.SharedPreferences
 import android.content.res.Configuration
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Build
-import android.util.TypedValue
 import android.view.WindowManager
-import android.widget.Toast
-import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.res.use
@@ -32,30 +26,9 @@ import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-val Context.isNetworkAvailable
-    get() = getConnectivityManager(this).let { connectivityManager ->
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-            networkCapabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
-                    networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-        } else @Suppress("DEPRECATION") {
-            val activeNetwork = connectivityManager.activeNetworkInfo ?: connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_VPN)
-            activeNetwork?.isConnectedOrConnecting == true
-        }
-    }
-
-private fun getConnectivityManager(context: Context) = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
 fun Context.prefs(): SharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
 
 fun Context.tokenPrefs(): SharedPreferences = getSharedPreferences("prefs2", Context.MODE_PRIVATE)
-
-fun Context.convertDpToPixels(dp: Float) =  TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, this.resources.displayMetrics).toInt()
-
-fun Context.convertPixelsToDp(pixels: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_PX, pixels, this.resources.displayMetrics).toInt()
-
-val Context.displayDensity
-    get() = this.resources.displayMetrics.density
 
 fun Activity.applyTheme() {
     // On Android 15, wrong language is used when multiple languages are set in device settings
@@ -130,7 +103,9 @@ fun Activity.applyTheme() {
             }
         )
     }
-    val isLightTheme = this.isLightTheme
+    val isLightTheme = obtainStyledAttributes(intArrayOf(androidx.appcompat.R.attr.isLightTheme)).use {
+        it.getBoolean(0, false)
+    }
     WindowInsetsControllerCompat(window, window.decorView).run {
         isAppearanceLightStatusBars = isLightTheme
         isAppearanceLightNavigationBars = isLightTheme
@@ -151,41 +126,6 @@ fun Context.getAlertDialogBuilder(): AlertDialog.Builder {
     } else {
         AlertDialog.Builder(this)
     }
-}
-
-fun Context.getActivity(): Activity? {
-    return when (this) {
-        is Activity -> this
-        is ContextWrapper -> this.baseContext.getActivity()
-        else -> null
-    }
-}
-
-val Context.isLightTheme
-    get() = obtainStyledAttributes(intArrayOf(androidx.appcompat.R.attr.isLightTheme)).use {
-        it.getBoolean(0, false)
-    }
-
-val Context.isInPortraitOrientation
-    get() = resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
-
-val Context.isInLandscapeOrientation
-    get() = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-fun Context.toast(@StringRes resId: Int) {
-    Toast.makeText(this, resId, Toast.LENGTH_LONG).show()
-}
-
-fun Context.shortToast(@StringRes resId: Int) {
-    Toast.makeText(this, resId, Toast.LENGTH_SHORT).show()
-}
-
-fun Context.toast(text: CharSequence) {
-    Toast.makeText(this, text, Toast.LENGTH_LONG).show()
-}
-
-fun Context.shortToast(text: CharSequence) {
-    Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
 }
 
 fun getByteArrayCronetCallback(continuation: Continuation<Pair<UrlResponseInfo, ByteArray>>): ByteArrayCronetCallback {

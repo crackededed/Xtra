@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
+import android.util.TypedValue
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
@@ -12,8 +14,10 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import androidx.core.content.res.use
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -29,15 +33,9 @@ import com.github.andreyasadchy.xtra.repository.AuthRepository
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.applyTheme
-import com.github.andreyasadchy.xtra.util.convertDpToPixels
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.isLightTheme
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.shortToast
-import com.github.andreyasadchy.xtra.util.toast
 import com.github.andreyasadchy.xtra.util.tokenPrefs
-import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.slider.Slider
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -163,8 +161,8 @@ class LoginActivity : AppCompatActivity() {
                     "&client_id=${helixClientId}" +
                     "&redirect_uri=${helixRedirect}" +
                     "&scope=${URLEncoder.encode(helixScopes.joinToString(" "), Charsets.UTF_8.name())}"
-            webViewContainer.visible()
-            textZoom.visible()
+            webViewContainer.visibility = View.VISIBLE
+            textZoom.visibility = View.VISIBLE
             havingTrouble.setOnClickListener {
                 this@LoginActivity.getAlertDialogBuilder()
                     .setMessage(getString(R.string.login_problem_solution))
@@ -176,7 +174,7 @@ class LoginActivity : AppCompatActivity() {
                             startActivity(intent)
                             webView.reload()
                         } catch (e: ActivityNotFoundException) {
-                            toast(R.string.no_browser_found)
+                            Toast.makeText(this@LoginActivity, R.string.no_browser_found, Toast.LENGTH_LONG).show()
                         }
                     }
                     .setNeutralButton(R.string.to_enter_url) { _, _ ->
@@ -190,7 +188,7 @@ class LoginActivity : AppCompatActivity() {
                             .setTitle(R.string.enter_url)
                             .setView(LinearLayout(this@LoginActivity).apply {
                                 addView(editText)
-                                val padding = convertDpToPixels(20f)
+                                val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20f, resources.displayMetrics).toInt()
                                 setPadding(padding, 0, padding, 0)
                             })
                             .setPositiveButton(R.string.log_in) { _, _ ->
@@ -206,14 +204,14 @@ class LoginActivity : AppCompatActivity() {
                                                     helixToken = token
                                                     done()
                                                 } else {
-                                                    shortToast(R.string.invalid_url)
+                                                    Toast.makeText(this@LoginActivity, R.string.invalid_url, Toast.LENGTH_SHORT).show()
                                                 }
                                             }
                                         } else {
-                                            shortToast(R.string.invalid_url)
+                                            Toast.makeText(this@LoginActivity, R.string.invalid_url, Toast.LENGTH_SHORT).show()
                                         }
                                     } else {
-                                        shortToast(R.string.invalid_url)
+                                        Toast.makeText(this@LoginActivity, R.string.invalid_url, Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             }
@@ -231,7 +229,7 @@ class LoginActivity : AppCompatActivity() {
                     .setTitle(getString(R.string.text_size))
                     .setView(LinearLayout(this@LoginActivity).apply {
                         addView(slider)
-                        val padding = convertDpToPixels(10f)
+                        val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10f, resources.displayMetrics).toInt()
                         setPadding(padding, 0, padding, 0)
                     })
                     .setPositiveButton(getString(android.R.string.ok)) { _, _ ->
@@ -241,6 +239,9 @@ class LoginActivity : AppCompatActivity() {
                     .show()
             }
             CookieManager.getInstance().removeAllCookies(null)
+            val isLightTheme = obtainStyledAttributes(intArrayOf(androidx.appcompat.R.attr.isLightTheme)).use {
+                it.getBoolean(0, false)
+            }
             @Suppress("DEPRECATION")
             if (!isLightTheme) {
                 if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
@@ -437,9 +438,9 @@ class LoginActivity : AppCompatActivity() {
                     val token = matcher.group(1)
                     if (!token.isNullOrBlank() && !tokens.contains(token)) {
                         tokens.add(token)
-                        webViewContainer.gone()
-                        textZoom.gone()
-                        progressBar.visible()
+                        webViewContainer.visibility = View.GONE
+                        textZoom.visibility = View.GONE
+                        progressBar.visibility = View.VISIBLE
                         lifecycleScope.launch {
                             val valid = validateHelixToken(networkLibrary, helixClientId, token)
                             if (apiSetting == 0) {
@@ -453,9 +454,9 @@ class LoginActivity : AppCompatActivity() {
                                 } else {
                                     val loaded = loadGQLAuthUrl(networkLibrary, gqlClientId, gqlRedirect)
                                     if (loaded) {
-                                        webViewContainer.visible()
-                                        textZoom.visible()
-                                        progressBar.gone()
+                                        webViewContainer.visibility = View.VISIBLE
+                                        textZoom.visibility = View.VISIBLE
+                                        progressBar.visibility = View.GONE
                                     } else {
                                         done()
                                     }
@@ -504,7 +505,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun error() {
         with(binding) {
-            toast(R.string.connection_error)
+            Toast.makeText(this@LoginActivity, R.string.connection_error, Toast.LENGTH_LONG).show()
             CookieManager.getInstance().removeAllCookies(null)
             tokens = mutableListOf()
             userId = null
@@ -512,9 +513,9 @@ class LoginActivity : AppCompatActivity() {
             helixToken = null
             gqlToken = null
             webGQLToken = null
-            webViewContainer.visible()
-            textZoom.visible()
-            progressBar.gone()
+            webViewContainer.visibility = View.VISIBLE
+            textZoom.visibility = View.VISIBLE
+            progressBar.visibility = View.GONE
         }
     }
 

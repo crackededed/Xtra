@@ -1,6 +1,7 @@
 package com.github.andreyasadchy.xtra.ui.search.channels
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -19,9 +20,7 @@ import com.github.andreyasadchy.xtra.model.ui.User
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 
 class ChannelSearchAdapter(
     private val fragment: Fragment,
@@ -61,7 +60,7 @@ class ChannelSearchAdapter(
                         )
                     }
                     if (item.channelLogo != null) {
-                        userImage.visible()
+                        userImage.visibility = View.VISIBLE
                         fragment.requireContext().imageLoader.enqueue(
                             ImageRequest.Builder(fragment.requireContext()).apply {
                                 data(item.channelLogo)
@@ -73,10 +72,10 @@ class ChannelSearchAdapter(
                             }.build()
                         )
                     } else {
-                        userImage.gone()
+                        userImage.visibility = View.GONE
                     }
                     if (item.channelName != null) {
-                        userName.visible()
+                        userName.visibility = View.VISIBLE
                         userName.text = if (item.channelLogin != null && !item.channelLogin.equals(item.channelName, true)) {
                             when (context.prefs().getString(C.UI_NAME_DISPLAY, "0")) {
                                 "0" -> "${item.channelName}(${item.channelLogin})"
@@ -87,10 +86,10 @@ class ChannelSearchAdapter(
                             item.channelName
                         }
                     } else {
-                        userName.gone()
+                        userName.visibility = View.GONE
                     }
                     if (item.followersCount != null) {
-                        userFollowers.visible()
+                        userFollowers.visibility = View.VISIBLE
                         val count = item.followersCount
                         userFollowers.text = context.resources.getQuantityString(
                             R.plurals.followers,
@@ -98,17 +97,17 @@ class ChannelSearchAdapter(
                             TwitchApiHelper.formatCount(count, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
                         )
                     } else {
-                        userFollowers.gone()
+                        userFollowers.visibility = View.GONE
                     }
                     if (!item.type.isNullOrBlank() || item.isLive == true) {
-                        typeText.visible()
+                        typeText.visibility = View.VISIBLE
                         if (item.type == "rerun") {
                             typeText.text = context.getString(R.string.video_type_rerun)
                         } else {
                             typeText.text = context.getString(R.string.live)
                         }
                     } else {
-                        typeText.gone()
+                        typeText.visibility = View.GONE
                     }
                 }
             }

@@ -18,9 +18,7 @@ import com.github.andreyasadchy.xtra.model.ui.ChannelViewerList
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
@@ -89,55 +87,55 @@ class PlayerViewerListDialog : BottomSheetDialogFragment(), IntegrityDialog.Call
                     viewModel.viewerList.collectLatest { fullList ->
                         if (fullList != null) {
                             if (fullList.broadcasters.isNotEmpty()) {
-                                broadcasterText.visible()
-                                broadcasterList.visible()
+                                broadcasterText.visibility = View.VISIBLE
+                                broadcasterList.visibility = View.VISIBLE
                                 broadcasterList.adapter = Adapter(context, fullList.broadcasters)
                             } else {
-                                broadcasterText.gone()
-                                broadcasterList.gone()
+                                broadcasterText.visibility = View.GONE
+                                broadcasterList.visibility = View.GONE
                             }
                             if (fullList.moderators.isNotEmpty()) {
-                                moderatorsText.visible()
+                                moderatorsText.visibility = View.VISIBLE
                                 moderatorsList.apply {
-                                    visible()
+                                    visibility = View.VISIBLE
                                     adapter = Adapter(context, moderatorsListItems)
                                 }
                                 loadItems(fullList, moderatorsList)
                             } else {
-                                moderatorsText.gone()
-                                moderatorsList.gone()
+                                moderatorsText.visibility = View.GONE
+                                moderatorsList.visibility = View.GONE
                             }
                             if (fullList.vips.isNotEmpty()) {
-                                vipsText.visible()
+                                vipsText.visibility = View.VISIBLE
                                 vipsList.apply {
-                                    visible()
+                                    visibility = View.VISIBLE
                                     adapter = Adapter(context, vipsListItems)
                                 }
                                 if (fullList.moderators.size <= 100) {
                                     loadItems(fullList, vipsList)
                                 }
                             } else {
-                                vipsText.gone()
-                                vipsList.gone()
+                                vipsText.visibility = View.GONE
+                                vipsList.visibility = View.GONE
                             }
                             if (fullList.viewers.isNotEmpty()) {
-                                viewersText.visible()
+                                viewersText.visibility = View.VISIBLE
                                 viewersList.apply {
-                                    visible()
+                                    visibility = View.VISIBLE
                                     adapter = Adapter(context, viewerListItems)
                                 }
                                 if ((fullList.moderators.size + fullList.vips.size) <= 100) {
                                     loadItems(fullList, viewersList)
                                 }
                             } else {
-                                viewersText.gone()
-                                viewersList.gone()
+                                viewersText.visibility = View.GONE
+                                viewersList.visibility = View.GONE
                             }
                             if (fullList.count != null) {
-                                userCount.visible()
+                                userCount.visibility = View.VISIBLE
                                 userCount.text = requireContext().getString(R.string.user_count, TwitchApiHelper.formatCount(fullList.count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true)))
                             } else {
-                                userCount.gone()
+                                userCount.visibility = View.GONE
                             }
                             scrollView.viewTreeObserver.addOnScrollChangedListener {
                                 if (!scrollView.canScrollVertically(1)) {
