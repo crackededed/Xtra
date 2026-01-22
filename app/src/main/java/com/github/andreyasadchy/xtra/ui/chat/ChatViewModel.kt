@@ -977,16 +977,22 @@ class ChatViewModel @Inject constructor(
                 }
             }
             val useNewPubSub = applicationContext.prefs().getBoolean(C.DEBUG_USE_NEW_PUBSUB, true)
-            val webGQLToken = applicationContext.tokenPrefs().getString(C.GQL_TOKEN_WEB, null)
-            if (useNewPubSub && (accountId.isNullOrBlank() || !collectPoints || !webGQLToken.isNullOrBlank() || enableIntegrity)) {
+            val gqlWebClientId = applicationContext.prefs().getString(C.GQL_CLIENT_ID_WEB, "kimne78kx3ncx6brgo4mv6wki5h1ko")
+            val gqlWebToken = applicationContext.tokenPrefs().getString(C.GQL_TOKEN_WEB, null)
+            if (useNewPubSub && (accountId.isNullOrBlank() || !collectPoints || !gqlWebToken.isNullOrBlank() || enableIntegrity)) {
                 if (useCustomWebSockets) {
                     hermesWebSocket = HermesWebSocket(
                         channelId = channelId,
                         userId = accountId,
+                        gqlClientId = if (enableIntegrity) {
+                            gqlHeaders[C.HEADER_CLIENT_ID]
+                        } else {
+                            gqlWebClientId
+                        },
                         gqlToken = if (enableIntegrity) {
                             gqlHeaders[C.HEADER_TOKEN]?.removePrefix("OAuth ")
                         } else {
-                            webGQLToken
+                            gqlWebToken
                         },
                         collectPoints = collectPoints,
                         notifyPoints = applicationContext.prefs().getBoolean(C.CHAT_POINTS_NOTIFY, false),
@@ -1019,10 +1025,15 @@ class ChatViewModel @Inject constructor(
                     hermesWebSocketOkHttp = HermesWebSocketOkHttp(
                         channelId = channelId,
                         userId = accountId,
+                        gqlClientId = if (enableIntegrity) {
+                            gqlHeaders[C.HEADER_CLIENT_ID]
+                        } else {
+                            gqlWebClientId
+                        },
                         gqlToken = if (enableIntegrity) {
                             gqlHeaders[C.HEADER_TOKEN]?.removePrefix("OAuth ")
                         } else {
-                            webGQLToken
+                            gqlWebToken
                         },
                         collectPoints = collectPoints,
                         notifyPoints = applicationContext.prefs().getBoolean(C.CHAT_POINTS_NOTIFY, false),
