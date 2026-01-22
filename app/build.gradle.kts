@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
@@ -29,7 +30,7 @@ android {
         minSdk = 23
         targetSdk = 36
         versionCode = 121
-        versionName = "2.53.1"
+        versionName = "2.53.2"
     }
 
     buildTypes {
