@@ -12,13 +12,6 @@
         app:singleLineTitle="false" />
 
     <SwitchPreferenceCompat
-        android:defaultValue="true"
-        android:key="ui_theme_rounded_corners"
-        android:title="@string/rounded_corners"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="ui_theme_follow_system"
         android:title="@string/follow_system_theme"
@@ -42,6 +35,30 @@
         android:key="ui_theme_dark_off"
         android:summary="%s"
         android:title="@string/dark_theme_off"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <ListPreference
+        android:defaultValue="0"
+        android:entries="@array/roundedCornerEntries"
+        android:entryValues="@array/roundedCornerValues"
+        android:key="ui_theme_rounded_corners_v2"
+        android:summary="%s"
+        android:title="@string/rounded_corners"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="ui_theme_reduced_padding"
+        android:title="@string/reduced_padding"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="ui_theme_compact_text"
+        android:title="@string/compact_text"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
