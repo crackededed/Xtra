@@ -19,6 +19,132 @@
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
 
+    <style name="DarkThemeReducedPadding" parent="BaseDarkThemeReducedPadding">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="LightThemeReducedPadding" parent="BaseLightThemeReducedPadding">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="AmoledThemeReducedPadding" parent="BaseAmoledThemeReducedPadding">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="BlueThemeReducedPadding" parent="BaseBlueThemeReducedPadding">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="DarkThemeCompactText" parent="BaseDarkThemeCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="LightThemeCompactText" parent="BaseLightThemeCompactText">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="AmoledThemeCompactText" parent="BaseAmoledThemeCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="BlueThemeCompactText" parent="BaseBlueThemeCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="DarkThemeReducedPaddingCompactText" parent="BaseDarkThemeReducedPaddingCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="LightThemeReducedPaddingCompactText" parent="BaseLightThemeReducedPaddingCompactText">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="AmoledThemeReducedPaddingCompactText" parent="BaseAmoledThemeReducedPaddingCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="BlueThemeReducedPaddingCompactText" parent="BaseBlueThemeReducedPaddingCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="DarkThemeSmallCorners" parent="BaseDarkThemeSmallCorners">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="LightThemeSmallCorners" parent="BaseLightThemeSmallCorners">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="AmoledThemeSmallCorners" parent="BaseAmoledThemeSmallCorners">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="BlueThemeSmallCorners" parent="BaseBlueThemeSmallCorners">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="DarkThemeSmallCornersReducedPadding" parent="BaseDarkThemeSmallCornersReducedPadding">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="LightThemeSmallCornersReducedPadding" parent="BaseLightThemeSmallCornersReducedPadding">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="AmoledThemeSmallCornersReducedPadding" parent="BaseAmoledThemeSmallCornersReducedPadding">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="BlueThemeSmallCornersReducedPadding" parent="BaseBlueThemeSmallCornersReducedPadding">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="DarkThemeSmallCornersCompactText" parent="BaseDarkThemeSmallCornersCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="LightThemeSmallCornersCompactText" parent="BaseLightThemeSmallCornersCompactText">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="AmoledThemeSmallCornersCompactText" parent="BaseAmoledThemeSmallCornersCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="BlueThemeSmallCornersCompactText" parent="BaseBlueThemeSmallCornersCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="DarkThemeSmallCornersReducedPaddingCompactText" parent="BaseDarkThemeSmallCornersReducedPaddingCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="LightThemeSmallCornersReducedPaddingCompactText" parent="BaseLightThemeSmallCornersReducedPaddingCompactText">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="AmoledThemeSmallCornersReducedPaddingCompactText" parent="BaseAmoledThemeSmallCornersReducedPaddingCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="BlueThemeSmallCornersReducedPaddingCompactText" parent="BaseBlueThemeSmallCornersReducedPaddingCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
     <style name="DarkThemeNoCorners" parent="BaseDarkThemeNoCorners">
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
@@ -34,6 +160,60 @@
     </style>
 
     <style name="BlueThemeNoCorners" parent="BaseBlueThemeNoCorners">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="DarkThemeNoCornersReducedPadding" parent="BaseDarkThemeNoCornersReducedPadding">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="LightThemeNoCornersReducedPadding" parent="BaseLightThemeNoCornersReducedPadding">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="AmoledThemeNoCornersReducedPadding" parent="BaseAmoledThemeNoCornersReducedPadding">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="BlueThemeNoCornersReducedPadding" parent="BaseBlueThemeNoCornersReducedPadding">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="DarkThemeNoCornersCompactText" parent="BaseDarkThemeNoCornersCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="LightThemeNoCornersCompactText" parent="BaseLightThemeNoCornersCompactText">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="AmoledThemeNoCornersCompactText" parent="BaseAmoledThemeNoCornersCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="BlueThemeNoCornersCompactText" parent="BaseBlueThemeNoCornersCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="DarkThemeNoCornersReducedPaddingCompactText" parent="BaseDarkThemeNoCornersReducedPaddingCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="LightThemeNoCornersReducedPaddingCompactText" parent="BaseLightThemeNoCornersReducedPaddingCompactText">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="AmoledThemeNoCornersReducedPaddingCompactText" parent="BaseAmoledThemeNoCornersReducedPaddingCompactText">
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="BlueThemeNoCornersReducedPaddingCompactText" parent="BaseBlueThemeNoCornersReducedPaddingCompactText">
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
 

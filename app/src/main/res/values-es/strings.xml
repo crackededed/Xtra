@@ -729,4 +729,7 @@
     <string name="default_cellular_quality">Default player quality on cellular network</string>
     <string name="player">Player</string>
     <string name="compact_number_formatting">Compact number formatting</string>
+    <string name="less_rounded_corners">Less rounded</string>
+    <string name="reduced_padding">Reduced padding</string>
+    <string name="compact_text">Compact text</string>
 </resources>

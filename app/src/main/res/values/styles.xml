@@ -6,6 +6,8 @@
         <item name="sortBarTextColor">?android:textColorSecondary</item>
         <item name="dialogPadding">8dp</item>
         <item name="dialogLayoutPadding">8dp</item>
+        <item name="tabLayoutHeight">48dp</item>
+        <item name="bottomNavigationHeight">80dp</item>
         <item name="cardStyle">@style/Card</item>
         <item name="bottomSheetButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
         <item name="elevatedButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
@@ -25,6 +27,8 @@
         <item name="sortBarTextColor">?android:textColorSecondary</item>
         <item name="dialogPadding">8dp</item>
         <item name="dialogLayoutPadding">8dp</item>
+        <item name="tabLayoutHeight">48dp</item>
+        <item name="bottomNavigationHeight">80dp</item>
         <item name="cardStyle">@style/Card</item>
         <item name="bottomSheetButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
         <item name="elevatedButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
@@ -50,6 +54,8 @@
         <item name="sortBarTextColor">?android:textColorSecondary</item>
         <item name="dialogPadding">8dp</item>
         <item name="dialogLayoutPadding">8dp</item>
+        <item name="tabLayoutHeight">48dp</item>
+        <item name="bottomNavigationHeight">80dp</item>
         <item name="cardStyle">@style/CardAmoled</item>
         <item name="bottomSheetButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
         <item name="elevatedButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
@@ -80,6 +86,8 @@
         <item name="sortBarTextColor">?android:textColorSecondary</item>
         <item name="dialogPadding">8dp</item>
         <item name="dialogLayoutPadding">8dp</item>
+        <item name="tabLayoutHeight">48dp</item>
+        <item name="bottomNavigationHeight">80dp</item>
         <item name="cardStyle">@style/Card</item>
         <item name="bottomSheetButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
         <item name="elevatedButtonStyle">@style/Widget.Material3.Button.ElevatedButton</item>
@@ -92,6 +100,670 @@
         <item name="preferenceTheme">@style/prefDark</item>
         <item name="android:navigationBarColor">@color/darkScrim</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="BaseDarkThemeReducedPadding" parent="BaseDarkTheme">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigation</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+    </style>
+
+    <style name="BaseLightThemeReducedPadding" parent="BaseLightTheme">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigation</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+    </style>
+
+    <style name="BaseAmoledThemeReducedPadding" parent="BaseAmoledTheme">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigationAmoled</item>
+        <item name="cardStyle">@style/CompactCardAmoled</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+    </style>
+
+    <style name="BaseBlueThemeReducedPadding" parent="BaseBlueTheme">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigationBlue</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+    </style>
+
+    <style name="CompactToolbar" parent="Widget.Material3.Toolbar">
+        <item name="maxButtonHeight">42dp</item>
+    </style>
+
+    <style name="CompactBottomNavigation" parent="Widget.Material3.BottomNavigationView">
+        <item name="itemPaddingTop">6dp</item>
+        <item name="itemPaddingBottom">6dp</item>
+        <item name="activeIndicatorLabelPadding">2dp</item>
+        <item name="itemActiveIndicatorStyle">@style/CompactActiveIndicator</item>
+    </style>
+
+    <style name="CompactBottomNavigationAmoled" parent="Widget.Material3.BottomNavigationView">
+        <item name="itemPaddingTop">6dp</item>
+        <item name="itemPaddingBottom">6dp</item>
+        <item name="activeIndicatorLabelPadding">2dp</item>
+        <item name="itemActiveIndicatorStyle">@style/CompactActiveIndicator</item>
+        <item name="materialThemeOverlay">@style/BottomNavigationOverlayAmoled</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <style name="CompactBottomNavigationBlue" parent="Widget.Material3.BottomNavigationView">
+        <item name="itemPaddingTop">6dp</item>
+        <item name="itemPaddingBottom">6dp</item>
+        <item name="activeIndicatorLabelPadding">2dp</item>
+        <item name="itemActiveIndicatorStyle">@style/CompactActiveIndicator</item>
+        <item name="materialThemeOverlay">@style/BottomNavigationOverlayBlue</item>
+    </style>
+
+    <style name="CompactActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:height">28dp</item>
+    </style>
+
+    <style name="CompactCard" parent="Widget.Material3.CardView.Elevated">
+        <item name="android:layout_margin">4dp</item>
+    </style>
+
+    <style name="CompactCardAmoled" parent="Widget.Material3.CardView.Elevated">
+        <item name="materialThemeOverlay">@style/CardOverlayAmoled</item>
+        <item name="android:layout_margin">4dp</item>
+    </style>
+
+    <style name="CompactRadioButton" parent="Widget.Material3.CompoundButton.RadioButton">
+        <item name="android:padding">10dp</item>
+        <item name="android:minWidth">24dp</item>
+        <item name="android:minHeight">24dp</item>
+    </style>
+
+    <style name="CompactCheckBox" parent="Widget.Material3.CompoundButton.CheckBox">
+        <item name="android:padding">10dp</item>
+        <item name="android:minWidth">24dp</item>
+        <item name="android:minHeight">24dp</item>
+    </style>
+
+    <style name="BaseDarkThemeCompactText" parent="BaseDarkTheme">
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseLightThemeCompactText" parent="BaseLightTheme">
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseAmoledThemeCompactText" parent="BaseAmoledTheme">
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseBlueThemeCompactText" parent="BaseBlueTheme">
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="CompactTextDisplayLarge" parent="TextAppearance.Material3.DisplayLarge">
+        <item name="android:letterSpacing">0</item>
+        <item name="lineHeight">59sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">59sp</item>
+    </style>
+
+    <style name="CompactTextDisplayMedium" parent="TextAppearance.Material3.DisplayMedium">
+        <item name="android:letterSpacing">0</item>
+        <item name="lineHeight">47sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">47sp</item>
+    </style>
+
+    <style name="CompactTextDisplaySmall" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="android:letterSpacing">0</item>
+        <item name="lineHeight">38sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">38sp</item>
+    </style>
+
+    <style name="CompactTextHeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:letterSpacing">0</item>
+        <item name="lineHeight">34sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">34sp</item>
+    </style>
+
+    <style name="CompactTextHeadlineMedium" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:letterSpacing">0</item>
+        <item name="lineHeight">30sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">30sp</item>
+    </style>
+
+    <style name="CompactTextHeadlineSmall" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:letterSpacing">0</item>
+        <item name="lineHeight">26sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">26sp</item>
+    </style>
+
+    <style name="CompactTextTitleLarge" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:letterSpacing">0</item>
+        <item name="lineHeight">24sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">24sp</item>
+    </style>
+
+    <style name="CompactTextTitleMedium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:letterSpacing">0</item>
+        <item name="lineHeight">18sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">18sp</item>
+    </style>
+
+    <style name="CompactTextTitleSmall" parent="TextAppearance.Material3.TitleSmall">
+        <item name="android:letterSpacing">0</item>
+        <item name="lineHeight">16sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">16sp</item>
+    </style>
+
+    <style name="CompactTextBodyLarge" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:letterSpacing">0</item>
+        <item name="lineHeight">18sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">18sp</item>
+    </style>
+
+    <style name="CompactTextBodyMedium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:letterSpacing">0</item>
+        <item name="lineHeight">16sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">16sp</item>
+    </style>
+
+    <style name="CompactTextBodySmall" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:letterSpacing">0</item>
+        <item name="lineHeight">14sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">14sp</item>
+    </style>
+
+    <style name="CompactTextLabelLarge" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:letterSpacing">0</item>
+        <item name="lineHeight">16sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">16sp</item>
+    </style>
+
+    <style name="CompactTextLabelMedium" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:letterSpacing">0</item>
+        <item name="lineHeight">14sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">14sp</item>
+    </style>
+
+    <style name="CompactTextLabelSmall" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:letterSpacing">0</item>
+        <item name="lineHeight">13sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">13sp</item>
+    </style>
+
+    <style name="BaseDarkThemeReducedPaddingCompactText" parent="BaseDarkTheme">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigation</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseLightThemeReducedPaddingCompactText" parent="BaseLightTheme">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigation</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseAmoledThemeReducedPaddingCompactText" parent="BaseAmoledTheme">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigationAmoled</item>
+        <item name="cardStyle">@style/CompactCardAmoled</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseBlueThemeReducedPaddingCompactText" parent="BaseBlueTheme">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigationBlue</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseDarkThemeSmallCorners" parent="BaseDarkTheme">
+        <item name="shapeAppearanceCornerExtraSmall">@style/CompactExtraSmallCorner</item>
+        <item name="shapeAppearanceCornerSmall">@style/CompactSmallCorner</item>
+        <item name="shapeAppearanceCornerMedium">@style/CompactMediumComponent</item>
+        <item name="shapeAppearanceCornerLarge">@style/CompactLargeComponent</item>
+        <item name="shapeAppearanceCornerExtraLarge">@style/CompactExtraLargeCorner</item>
+        <item name="shapeAppearanceSmallComponent">@style/CompactSmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/CompactMediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/CompactLargeComponent</item>
+    </style>
+
+    <style name="BaseLightThemeSmallCorners" parent="BaseLightTheme">
+        <item name="shapeAppearanceCornerExtraSmall">@style/CompactExtraSmallCorner</item>
+        <item name="shapeAppearanceCornerSmall">@style/CompactSmallCorner</item>
+        <item name="shapeAppearanceCornerMedium">@style/CompactMediumComponent</item>
+        <item name="shapeAppearanceCornerLarge">@style/CompactLargeComponent</item>
+        <item name="shapeAppearanceCornerExtraLarge">@style/CompactExtraLargeCorner</item>
+        <item name="shapeAppearanceSmallComponent">@style/CompactSmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/CompactMediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/CompactLargeComponent</item>
+    </style>
+
+    <style name="BaseAmoledThemeSmallCorners" parent="BaseAmoledTheme">
+        <item name="shapeAppearanceCornerExtraSmall">@style/CompactExtraSmallCorner</item>
+        <item name="shapeAppearanceCornerSmall">@style/CompactSmallCorner</item>
+        <item name="shapeAppearanceCornerMedium">@style/CompactMediumComponent</item>
+        <item name="shapeAppearanceCornerLarge">@style/CompactLargeComponent</item>
+        <item name="shapeAppearanceCornerExtraLarge">@style/CompactExtraLargeCorner</item>
+        <item name="shapeAppearanceSmallComponent">@style/CompactSmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/CompactMediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/CompactLargeComponent</item>
+    </style>
+
+    <style name="BaseBlueThemeSmallCorners" parent="BaseBlueTheme">
+        <item name="shapeAppearanceCornerExtraSmall">@style/CompactExtraSmallCorner</item>
+        <item name="shapeAppearanceCornerSmall">@style/CompactSmallCorner</item>
+        <item name="shapeAppearanceCornerMedium">@style/CompactMediumComponent</item>
+        <item name="shapeAppearanceCornerLarge">@style/CompactLargeComponent</item>
+        <item name="shapeAppearanceCornerExtraLarge">@style/CompactExtraLargeCorner</item>
+        <item name="shapeAppearanceSmallComponent">@style/CompactSmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/CompactMediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/CompactLargeComponent</item>
+    </style>
+
+    <style name="CompactExtraSmallCorner" parent="ShapeAppearance.Material3.Corner.ExtraSmall">
+        <item name="cornerFamily">?attr/shapeCornerFamily</item>
+        <item name="cornerSize">4dp</item>
+    </style>
+
+    <style name="CompactSmallCorner" parent="ShapeAppearance.Material3.Corner.Small">
+        <item name="cornerFamily">?attr/shapeCornerFamily</item>
+        <item name="cornerSize">6dp</item>
+    </style>
+
+    <style name="CompactMediumCorner" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerFamily">?attr/shapeCornerFamily</item>
+        <item name="cornerSize">9dp</item>
+    </style>
+
+    <style name="CompactLargeCorner" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerFamily">?attr/shapeCornerFamily</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="CompactExtraLargeCorner" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
+        <item name="cornerFamily">?attr/shapeCornerFamily</item>
+        <item name="cornerSize">14dp</item>
+    </style>
+
+    <style name="CompactSmallComponent" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerSize">2dp</item>
+    </style>
+
+    <style name="CompactMediumComponent" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerSize">4dp</item>
+    </style>
+
+    <style name="CompactLargeComponent" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerSize">4dp</item>
+    </style>
+
+    <style name="BaseDarkThemeSmallCornersReducedPadding" parent="BaseDarkThemeSmallCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigation</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+    </style>
+
+    <style name="BaseLightThemeSmallCornersReducedPadding" parent="BaseLightThemeSmallCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigation</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+    </style>
+
+    <style name="BaseAmoledThemeSmallCornersReducedPadding" parent="BaseAmoledThemeSmallCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigationAmoled</item>
+        <item name="cardStyle">@style/CompactCardAmoled</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+    </style>
+
+    <style name="BaseBlueThemeSmallCornersReducedPadding" parent="BaseBlueThemeSmallCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigationBlue</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+    </style>
+
+    <style name="BaseDarkThemeSmallCornersCompactText" parent="BaseDarkThemeSmallCorners">
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseLightThemeSmallCornersCompactText" parent="BaseLightThemeSmallCorners">
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseAmoledThemeSmallCornersCompactText" parent="BaseAmoledThemeSmallCorners">
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseBlueThemeSmallCornersCompactText" parent="BaseBlueThemeSmallCorners">
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseDarkThemeSmallCornersReducedPaddingCompactText" parent="BaseDarkThemeSmallCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigation</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseLightThemeSmallCornersReducedPaddingCompactText" parent="BaseLightThemeSmallCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigation</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseAmoledThemeSmallCornersReducedPaddingCompactText" parent="BaseAmoledThemeSmallCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigationAmoled</item>
+        <item name="cardStyle">@style/CompactCardAmoled</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseBlueThemeSmallCornersReducedPaddingCompactText" parent="BaseBlueThemeSmallCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigationBlue</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
     </style>
 
     <style name="BaseDarkThemeNoCorners" parent="BaseDarkTheme">
@@ -142,14 +814,277 @@
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Material3.Corner.None</item>
     </style>
 
+    <style name="BaseDarkThemeNoCornersReducedPadding" parent="BaseDarkThemeNoCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigation</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+    </style>
+
+    <style name="BaseLightThemeNoCornersReducedPadding" parent="BaseLightThemeNoCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigation</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+    </style>
+
+    <style name="BaseAmoledThemeNoCornersReducedPadding" parent="BaseAmoledThemeNoCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigationAmoled</item>
+        <item name="cardStyle">@style/CompactCardAmoled</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+    </style>
+
+    <style name="BaseBlueThemeNoCornersReducedPadding" parent="BaseBlueThemeNoCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigationBlue</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+    </style>
+
+    <style name="BaseDarkThemeNoCornersCompactText" parent="BaseDarkThemeNoCorners">
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseLightThemeNoCornersCompactText" parent="BaseLightThemeNoCorners">
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseAmoledThemeNoCornersCompactText" parent="BaseAmoledThemeNoCorners">
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseBlueThemeNoCornersCompactText" parent="BaseBlueThemeNoCorners">
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseDarkThemeNoCornersReducedPaddingCompactText" parent="BaseDarkThemeNoCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigation</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseLightThemeNoCornersReducedPaddingCompactText" parent="BaseLightThemeNoCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigation</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseAmoledThemeNoCornersReducedPaddingCompactText" parent="BaseAmoledThemeNoCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigationAmoled</item>
+        <item name="cardStyle">@style/CompactCardAmoled</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
+    <style name="BaseBlueThemeNoCornersReducedPaddingCompactText" parent="BaseBlueThemeNoCorners">
+        <item name="actionBarSize">42dp</item>
+        <item name="toolbarStyle">@style/CompactToolbar</item>
+        <item name="tabLayoutHeight">42dp</item>
+        <item name="bottomNavigationHeight">55dp</item>
+        <item name="bottomNavigationStyle">@style/CompactBottomNavigationBlue</item>
+        <item name="cardStyle">@style/CompactCard</item>
+        <item name="radioButtonStyle">@style/CompactRadioButton</item>
+        <item name="checkboxStyle">@style/CompactCheckBox</item>
+        <item name="textAppearanceDisplayLarge">@style/CompactTextDisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/CompactTextDisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/CompactTextDisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/CompactTextHeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/CompactTextHeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/CompactTextHeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/CompactTextTitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/CompactTextTitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/CompactTextTitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/CompactTextBodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/CompactTextBodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/CompactTextBodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/CompactTextLabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/CompactTextLabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/CompactTextLabelSmall</item>
+    </style>
+
     <style name="DarkTheme" parent="BaseDarkTheme" />
     <style name="LightTheme" parent="BaseLightTheme" />
     <style name="AmoledTheme" parent="BaseAmoledTheme" />
     <style name="BlueTheme" parent="BaseBlueTheme" />
+    <style name="DarkThemeReducedPadding" parent="BaseDarkThemeReducedPadding" />
+    <style name="LightThemeReducedPadding" parent="BaseLightThemeReducedPadding" />
+    <style name="AmoledThemeReducedPadding" parent="BaseAmoledThemeReducedPadding" />
+    <style name="BlueThemeReducedPadding" parent="BaseBlueThemeReducedPadding" />
+    <style name="DarkThemeCompactText" parent="BaseDarkThemeCompactText" />
+    <style name="LightThemeCompactText" parent="BaseLightThemeCompactText" />
+    <style name="AmoledThemeCompactText" parent="BaseAmoledThemeCompactText" />
+    <style name="BlueThemeCompactText" parent="BaseBlueThemeCompactText" />
+    <style name="DarkThemeReducedPaddingCompactText" parent="BaseDarkThemeReducedPaddingCompactText" />
+    <style name="LightThemeReducedPaddingCompactText" parent="BaseLightThemeReducedPaddingCompactText" />
+    <style name="AmoledThemeReducedPaddingCompactText" parent="BaseAmoledThemeReducedPaddingCompactText" />
+    <style name="BlueThemeReducedPaddingCompactText" parent="BaseBlueThemeReducedPaddingCompactText" />
+
+    <style name="DarkThemeSmallCorners" parent="BaseDarkThemeSmallCorners" />
+    <style name="LightThemeSmallCorners" parent="BaseLightThemeSmallCorners" />
+    <style name="AmoledThemeSmallCorners" parent="BaseAmoledThemeSmallCorners" />
+    <style name="BlueThemeSmallCorners" parent="BaseBlueThemeSmallCorners" />
+    <style name="DarkThemeSmallCornersReducedPadding" parent="BaseDarkThemeSmallCornersReducedPadding" />
+    <style name="LightThemeSmallCornersReducedPadding" parent="BaseLightThemeSmallCornersReducedPadding" />
+    <style name="AmoledThemeSmallCornersReducedPadding" parent="BaseAmoledThemeSmallCornersReducedPadding" />
+    <style name="BlueThemeSmallCornersReducedPadding" parent="BaseBlueThemeSmallCornersReducedPadding" />
+    <style name="DarkThemeSmallCornersCompactText" parent="BaseDarkThemeSmallCornersCompactText" />
+    <style name="LightThemeSmallCornersCompactText" parent="BaseLightThemeSmallCornersCompactText" />
+    <style name="AmoledThemeSmallCornersCompactText" parent="BaseAmoledThemeSmallCornersCompactText" />
+    <style name="BlueThemeSmallCornersCompactText" parent="BaseBlueThemeSmallCornersCompactText" />
+    <style name="DarkThemeSmallCornersReducedPaddingCompactText" parent="BaseDarkThemeSmallCornersReducedPaddingCompactText" />
+    <style name="LightThemeSmallCornersReducedPaddingCompactText" parent="BaseLightThemeSmallCornersReducedPaddingCompactText" />
+    <style name="AmoledThemeSmallCornersReducedPaddingCompactText" parent="BaseAmoledThemeSmallCornersReducedPaddingCompactText" />
+    <style name="BlueThemeSmallCornersReducedPaddingCompactText" parent="BaseBlueThemeSmallCornersReducedPaddingCompactText" />
+
     <style name="DarkThemeNoCorners" parent="BaseDarkThemeNoCorners" />
     <style name="LightThemeNoCorners" parent="BaseLightThemeNoCorners" />
     <style name="AmoledThemeNoCorners" parent="BaseAmoledThemeNoCorners" />
     <style name="BlueThemeNoCorners" parent="BaseBlueThemeNoCorners" />
+    <style name="DarkThemeNoCornersReducedPadding" parent="BaseDarkThemeNoCornersReducedPadding" />
+    <style name="LightThemeNoCornersReducedPadding" parent="BaseLightThemeNoCornersReducedPadding" />
+    <style name="AmoledThemeNoCornersReducedPadding" parent="BaseAmoledThemeNoCornersReducedPadding" />
+    <style name="BlueThemeNoCornersReducedPadding" parent="BaseBlueThemeNoCornersReducedPadding" />
+    <style name="DarkThemeNoCornersCompactText" parent="BaseDarkThemeNoCornersCompactText" />
+    <style name="LightThemeNoCornersCompactText" parent="BaseLightThemeNoCornersCompactText" />
+    <style name="AmoledThemeNoCornersCompactText" parent="BaseAmoledThemeNoCornersCompactText" />
+    <style name="BlueThemeNoCornersCompactText" parent="BaseBlueThemeNoCornersCompactText" />
+    <style name="DarkThemeNoCornersReducedPaddingCompactText" parent="BaseDarkThemeNoCornersReducedPaddingCompactText" />
+    <style name="LightThemeNoCornersReducedPaddingCompactText" parent="BaseLightThemeNoCornersReducedPaddingCompactText" />
+    <style name="AmoledThemeNoCornersReducedPaddingCompactText" parent="BaseAmoledThemeNoCornersReducedPaddingCompactText" />
+    <style name="BlueThemeNoCornersReducedPaddingCompactText" parent="BaseBlueThemeNoCornersReducedPaddingCompactText" />
+
     <style name="AppCompatDarkTheme" parent="BaseAppCompatDarkTheme" />
     <style name="AppCompatLightTheme" parent="BaseAppCompatLightTheme" />
     <style name="AppCompatAmoledTheme" parent="BaseAppCompatAmoledTheme" />
@@ -315,6 +1250,8 @@
         <item name="sortBarTextColor">?attr/colorControlNormal</item>
         <item name="dialogPadding">5dp</item>
         <item name="dialogLayoutPadding">0dp</item>
+        <item name="tabLayoutHeight">48dp</item>
+        <item name="bottomNavigationHeight">56dp</item>
         <item name="cardStyle">@style/MaterialCard</item>
         <item name="bottomSheetButtonStyle">@style/MaterialButton</item>
         <item name="elevatedButtonStyle">@style/MaterialElevatedButton</item>
@@ -372,6 +1309,8 @@
         <item name="sortBarTextColor">?attr/colorControlNormal</item>
         <item name="dialogPadding">5dp</item>
         <item name="dialogLayoutPadding">0dp</item>
+        <item name="tabLayoutHeight">48dp</item>
+        <item name="bottomNavigationHeight">56dp</item>
         <item name="cardStyle">@style/MaterialCard</item>
         <item name="bottomSheetButtonStyle">@style/MaterialButton</item>
         <item name="elevatedButtonStyle">@style/MaterialElevatedButton</item>
@@ -431,6 +1370,8 @@
         <item name="sortBarTextColor">?attr/colorControlNormal</item>
         <item name="dialogPadding">5dp</item>
         <item name="dialogLayoutPadding">0dp</item>
+        <item name="tabLayoutHeight">48dp</item>
+        <item name="bottomNavigationHeight">56dp</item>
         <item name="cardStyle">@style/MaterialCard</item>
         <item name="bottomSheetButtonStyle">@style/MaterialButton</item>
         <item name="elevatedButtonStyle">@style/MaterialElevatedButton</item>
@@ -488,6 +1429,8 @@
         <item name="sortBarTextColor">?attr/colorControlNormal</item>
         <item name="dialogPadding">5dp</item>
         <item name="dialogLayoutPadding">0dp</item>
+        <item name="tabLayoutHeight">48dp</item>
+        <item name="bottomNavigationHeight">56dp</item>
         <item name="cardStyle">@style/MaterialCard</item>
         <item name="bottomSheetButtonStyle">@style/MaterialButton</item>
         <item name="elevatedButtonStyle">@style/MaterialElevatedButton</item>
