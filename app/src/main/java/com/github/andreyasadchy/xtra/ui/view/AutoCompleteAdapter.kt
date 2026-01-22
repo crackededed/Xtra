@@ -22,7 +22,6 @@ import com.github.andreyasadchy.xtra.model.chat.Chatter
 import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 import java.util.Collections
 import java.util.regex.Pattern
 
@@ -46,7 +45,7 @@ class AutoCompleteAdapter<T>(
         when (item) {
             is Emote -> {
                 view.findViewById<ImageView>(R.id.image)?.let {
-                    it.visible()
+                    it.visibility = View.VISIBLE
                     if (imageLibrary == "0" || (imageLibrary == "1" && !item.format.equals("webp", true))) {
                         context.imageLoader.enqueue(
                             ImageRequest.Builder(context).apply {

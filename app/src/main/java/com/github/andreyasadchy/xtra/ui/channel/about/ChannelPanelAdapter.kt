@@ -3,7 +3,9 @@ package com.github.andreyasadchy.xtra.ui.channel.about
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil
@@ -16,9 +18,6 @@ import coil3.request.target
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentChannelPanelListItemBinding
 import com.github.andreyasadchy.xtra.model.ui.ChannelPanel
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.toast
-import com.github.andreyasadchy.xtra.util.visible
 import io.noties.markwon.Markwon
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import io.noties.markwon.linkify.LinkifyPlugin
@@ -60,13 +59,13 @@ class ChannelPanelAdapter(
                 if (item != null) {
                     val context = fragment.requireContext()
                     if (item.title != null) {
-                        title.visible()
+                        title.visibility = View.VISIBLE
                         title.text = item.title
                     } else {
-                        title.gone()
+                        title.visibility = View.GONE
                     }
                     if (item.imageUrl != null) {
-                        imageLayout.visible()
+                        imageLayout.visibility = View.VISIBLE
                         context.imageLoader.enqueue(
                             ImageRequest.Builder(context).apply {
                                 data(item.imageUrl)
@@ -82,18 +81,18 @@ class ChannelPanelAdapter(
                                     }
                                     context.startActivity(intent)
                                 } catch (e: ActivityNotFoundException) {
-                                    context.toast(R.string.no_browser_found)
+                                    Toast.makeText(context, R.string.no_browser_found, Toast.LENGTH_LONG).show()
                                 }
                             }
                         }
                     } else {
-                        imageLayout.gone()
+                        imageLayout.visibility = View.GONE
                     }
                     if (item.description != null) {
-                        description.visible()
+                        description.visibility = View.VISIBLE
                         markwon.setMarkdown(description, item.description)
                     } else {
-                        description.gone()
+                        description.visibility = View.GONE
                     }
                 }
             }

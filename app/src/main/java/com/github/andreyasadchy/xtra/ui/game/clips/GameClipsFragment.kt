@@ -31,8 +31,6 @@ import com.github.andreyasadchy.xtra.ui.common.Sortable
 import com.github.andreyasadchy.xtra.ui.common.VideosSortDialog
 import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentArgs
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -117,7 +115,7 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
     }
 
     override fun setupSortBar(sortBar: SortBarBinding) {
-        sortBar.root.visible()
+        sortBar.root.visibility = View.VISIBLE
         sortBar.root.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
                 VideosSortDialog.newInstance(
@@ -139,10 +137,10 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.filtersText.collectLatest {
                     if (it != null) {
-                        sortBar.filtersText.visible()
+                        sortBar.filtersText.visibility = View.VISIBLE
                         sortBar.filtersText.text = it
                     } else {
-                        sortBar.filtersText.gone()
+                        sortBar.filtersText.visibility = View.GONE
                     }
                 }
             }
@@ -153,7 +151,7 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
                 if (changed) {
-                    binding.scrollTop.gone()
+                    binding.scrollTop.visibility = View.GONE
                     pagingAdapter.submitData(PagingData.empty())
                     viewModel.setFilter(period, languages)
                     viewModel.sortText.value = requireContext().getString(R.string.sort_and_period, sortText, periodText)

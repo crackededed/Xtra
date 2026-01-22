@@ -27,7 +27,6 @@ import com.github.andreyasadchy.xtra.ui.settings.SettingsActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.reduceDragSensitivity
 import com.github.andreyasadchy.xtra.util.tokenPrefs
@@ -117,7 +116,7 @@ class FollowPagerFragment : Fragment(), Scrollable, FragmentHost {
                 }
             }
             if (tabs.size <= 1) {
-                tabLayout.gone()
+                tabLayout.visibility = View.GONE
             } else {
                 if (tabs.size >= 5) {
                     tabLayout.tabGravity = TabLayout.GRAVITY_CENTER
@@ -147,7 +146,11 @@ class FollowPagerFragment : Fragment(), Scrollable, FragmentHost {
                                 appBar.setLiftable(false)
                                 appBar.background = null
                             }
-                            (fragment as? Sortable)?.setupSortBar(sortBar) ?: sortBar.root.gone()
+                            if (fragment is Sortable) {
+                                fragment.setupSortBar(sortBar)
+                            } else {
+                                sortBar.root.visibility = View.GONE
+                            }
                         }
                     }
                 }

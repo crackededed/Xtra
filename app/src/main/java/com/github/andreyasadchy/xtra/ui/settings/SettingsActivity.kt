@@ -2,6 +2,7 @@ package com.github.andreyasadchy.xtra.ui.settings
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.admin.DeviceAdminReceiver
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Intent
@@ -9,6 +10,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.ext.SdkExtensions
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -56,17 +58,12 @@ import com.github.andreyasadchy.xtra.databinding.ActivitySettingsBinding
 import com.github.andreyasadchy.xtra.model.ui.SettingsDragListItem
 import com.github.andreyasadchy.xtra.model.ui.SettingsSearchItem
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
-import com.github.andreyasadchy.xtra.util.AdminReceiver
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.DisplayUtils
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.applyTheme
-import com.github.andreyasadchy.xtra.util.convertDpToPixels
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
-import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.appbar.AppBarLayout
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
@@ -172,7 +169,7 @@ class SettingsActivity : AppCompatActivity() {
         val recyclerView = RecyclerView(this).apply {
             layoutManager = LinearLayoutManager(this@SettingsActivity)
             adapter = listAdapter
-            val padding = convertDpToPixels(10f)
+            val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10F, resources.displayMetrics).toInt()
             setPadding(0, padding, 0, 0)
         }
         listAdapter.setDefault = { item ->
@@ -208,11 +205,11 @@ class SettingsActivity : AppCompatActivity() {
         with(binding) {
             if (showSearch) {
                 toolbar.menu.findItem(R.id.search).isVisible = false
-                searchView.visible()
+                searchView.visibility = View.VISIBLE
             } else {
                 toolbar.menu.findItem(R.id.search).isVisible = true
                 searchView.setQuery(null, false)
-                searchView.gone()
+                searchView.visibility = View.GONE
             }
         }
     }
@@ -776,7 +773,9 @@ class SettingsActivity : AppCompatActivity() {
             findPreference<SeekBarPreference>("chatWidth")?.apply {
                 setOnPreferenceChangeListener { _, newValue ->
                     (requireActivity() as? SettingsActivity)?.setResult()
-                    val chatWidth = DisplayUtils.calculateLandscapeWidthByPercent(requireActivity(), newValue as Int)
+                    val width = resources.displayMetrics.widthPixels
+                    val height = resources.displayMetrics.heightPixels
+                    val chatWidth = ((if (height > width) height else width) * (newValue as Int / 100f)).toInt()
                     requireContext().prefs().edit { putInt(C.LANDSCAPE_CHAT_WIDTH, chatWidth) }
                     true
                 }
@@ -871,12 +870,16 @@ class SettingsActivity : AppCompatActivity() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.player_button_preferences, rootKey)
             findPreference<SwitchPreferenceCompat>("sleep_timer_lock")?.setOnPreferenceChangeListener { _, newValue ->
-                if (newValue == true && !(requireContext().getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager).isAdminActive(ComponentName(requireContext(), AdminReceiver::class.java))) {
-                    requireContext().startActivity(
-                        Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
-                            putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, ComponentName(requireContext(), AdminReceiver::class.java))
-                        }
-                    )
+                if (newValue == true) {
+                    val devicePolicyManager = requireContext().getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
+                    val admin = ComponentName(requireContext(), DeviceAdminReceiver::class.java)
+                    if (!devicePolicyManager.isAdminActive(admin)) {
+                        requireContext().startActivity(
+                            Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
+                                putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, admin)
+                            }
+                        )
+                    }
                 }
                 true
             }
@@ -1223,7 +1226,9 @@ class SettingsActivity : AppCompatActivity() {
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.WRAP_CONTENT
                         ).apply {
-                            setMargins(context.convertDpToPixels(20F), context.convertDpToPixels(3F), context.convertDpToPixels(20F), context.convertDpToPixels(3F))
+                            val horizontalMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20f, resources.displayMetrics).toInt()
+                            val verticalMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 3f, resources.displayMetrics).toInt()
+                            setMargins(horizontalMargin, verticalMargin, horizontalMargin, verticalMargin)
                         }
                         context.obtainStyledAttributes(intArrayOf(com.google.android.material.R.attr.textAppearanceTitleMedium)).use {
                             TextViewCompat.setTextAppearance(this, it.getResourceId(0, 0))
@@ -1275,7 +1280,8 @@ class SettingsActivity : AppCompatActivity() {
                     .setTitle(preference.title)
                     .setView(NestedScrollView(requireContext()).apply {
                         addView(view)
-                        setPadding(0, context.convertDpToPixels(10F), 0, 0)
+                        val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10f, resources.displayMetrics).toInt()
+                        setPadding(0, padding, 0, 0)
                     })
                     .setPositiveButton(getString(android.R.string.ok)) { _, _ ->
                         requireContext().prefs().edit {

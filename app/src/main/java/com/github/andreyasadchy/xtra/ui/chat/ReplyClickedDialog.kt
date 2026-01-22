@@ -17,9 +17,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.databinding.DialogChatMessageClickBinding
 import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
@@ -109,7 +107,7 @@ class ReplyClickedDialog : BottomSheetDialogFragment() {
                 }
             }
             if (requireContext().prefs().getBoolean(C.DEBUG_CHAT_FULLMSG, false)) {
-                copyFullMsg.visible()
+                copyFullMsg.visibility = View.VISIBLE
             }
         }
     }
@@ -118,22 +116,22 @@ class ReplyClickedDialog : BottomSheetDialogFragment() {
         with(binding) {
             if (requireArguments().getBoolean(KEY_MESSAGING) && (!chatMessage.userId.isNullOrBlank() || !chatMessage.userLogin.isNullOrBlank())) {
                 if (!chatMessage.id.isNullOrBlank()) {
-                    reply.visible()
+                    reply.visibility = View.VISIBLE
                     reply.setOnClickListener {
                         listener.onReplyClicked(chatMessage.id, chatMessage.userLogin, chatMessage.userName, chatMessage.message)
                         dismiss()
                     }
                 } else {
-                    reply.gone()
+                    reply.visibility = View.GONE
                 }
                 if (!chatMessage.message.isNullOrBlank()) {
-                    copyMessage.visible()
+                    copyMessage.visibility = View.VISIBLE
                     copyMessage.setOnClickListener {
                         listener.onCopyMessageClicked(chatMessage.message)
                         dismiss()
                     }
                 } else {
-                    copyMessage.gone()
+                    copyMessage.visibility = View.GONE
                 }
             }
             val clipboard = getSystemService(requireContext(), ClipboardManager::class.java)

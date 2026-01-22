@@ -31,8 +31,6 @@ import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.common.Sortable
 import com.github.andreyasadchy.xtra.ui.common.VideosSortDialog
 import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -113,7 +111,7 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
     }
 
     override fun setupSortBar(sortBar: SortBarBinding) {
-        sortBar.root.visible()
+        sortBar.root.visibility = View.VISIBLE
         sortBar.root.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
                 VideosSortDialog.newInstance(
@@ -136,7 +134,7 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
                 if (changed) {
-                    binding.scrollTop.gone()
+                    binding.scrollTop.visibility = View.GONE
                     pagingAdapter.submitData(PagingData.empty())
                     viewModel.setFilter(period)
                     viewModel.sortText.value = requireContext().getString(R.string.sort_and_period, sortText, periodText)

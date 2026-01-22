@@ -25,7 +25,6 @@ import com.github.andreyasadchy.xtra.ui.common.FragmentHost
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.common.Sortable
-import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -93,7 +92,7 @@ class FollowedChannelsFragment : PagedListFragment(), Scrollable, Sortable, Foll
     }
 
     override fun setupSortBar(sortBar: SortBarBinding) {
-        sortBar.root.visible()
+        sortBar.root.visibility = View.VISIBLE
         sortBar.root.setOnClickListener {
             FollowedChannelsSortDialog.newInstance(
                 sort = viewModel.sort,

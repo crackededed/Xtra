@@ -1,6 +1,7 @@
 package com.github.andreyasadchy.xtra.ui.player
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil
@@ -14,8 +15,6 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentGamesListItemBinding
 import com.github.andreyasadchy.xtra.model.ui.Game
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.visible
 
 class PlayerGamesDialogAdapter(
     private val fragment: Fragment,
@@ -49,7 +48,7 @@ class PlayerGamesDialogAdapter(
                     (fragment as? PlayerGamesDialog)?.dismiss()
                 }
                 if (item?.boxArt != null) {
-                    gameImage.visible()
+                    gameImage.visibility = View.VISIBLE
                     fragment.requireContext().imageLoader.enqueue(
                         ImageRequest.Builder(fragment.requireContext()).apply {
                             data(item.boxArt)
@@ -58,27 +57,27 @@ class PlayerGamesDialogAdapter(
                         }.build()
                     )
                 } else {
-                    gameImage.gone()
+                    gameImage.visibility = View.GONE
                 }
                 if (item?.gameName != null) {
-                    gameName.visible()
+                    gameName.visibility = View.VISIBLE
                     gameName.text = item.gameName
                 } else {
-                    gameName.gone()
+                    gameName.visibility = View.GONE
                 }
                 val position = item?.vodPosition?.div(1000)?.toString()?.let { TwitchApiHelper.getDurationFromSeconds(context, it, true) }
                 if (!position.isNullOrBlank()) {
-                    viewers.visible()
+                    viewers.visibility = View.VISIBLE
                     viewers.text = context.getString(R.string.position, position)
                 } else {
-                    viewers.gone()
+                    viewers.visibility = View.GONE
                 }
                 val duration = item?.vodDuration?.div(1000)?.toString()?.let { TwitchApiHelper.getDurationFromSeconds(context, it, true) }
                 if (!duration.isNullOrBlank()) {
-                    broadcastersCount.visible()
+                    broadcastersCount.visibility = View.VISIBLE
                     broadcastersCount.text = context.getString(R.string.duration, duration)
                 } else {
-                    broadcastersCount.gone()
+                    broadcastersCount.visibility = View.GONE
                 }
             }
         }

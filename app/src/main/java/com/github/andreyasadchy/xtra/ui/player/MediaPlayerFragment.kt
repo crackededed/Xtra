@@ -14,6 +14,8 @@ import android.os.PowerManager
 import android.text.format.DateUtils
 import android.util.Base64
 import android.view.SurfaceHolder
+import android.view.View
+import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.core.content.edit
 import androidx.core.net.toUri
@@ -28,11 +30,6 @@ import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.isNetworkAvailable
-import com.github.andreyasadchy.xtra.util.shortToast
-import com.github.andreyasadchy.xtra.util.toast
-import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -93,8 +90,8 @@ class MediaPlayerFragment : PlayerFragment() {
                     }
                     playbackService?.infoListener = MediaPlayer.OnInfoListener { _, what, _ ->
                         when (what) {
-                            MediaPlayer.MEDIA_INFO_BUFFERING_START -> binding.bufferingIndicator.visible()
-                            MediaPlayer.MEDIA_INFO_BUFFERING_END -> binding.bufferingIndicator.gone()
+                            MediaPlayer.MEDIA_INFO_BUFFERING_START -> binding.bufferingIndicator.visibility = View.VISIBLE
+                            MediaPlayer.MEDIA_INFO_BUFFERING_END -> binding.bufferingIndicator.visibility = View.GONE
                         }
                         return@OnInfoListener true
                     }
@@ -140,11 +137,11 @@ class MediaPlayerFragment : PlayerFragment() {
                         updateProgress()
                         if (!player.isPlaying) {
                             binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
-                            binding.playerControls.playPause.visible()
+                            binding.playerControls.playPause.visibility = View.VISIBLE
                         } else {
                             binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
                             if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
-                                binding.playerControls.playPause.gone()
+                                binding.playerControls.playPause.visibility = View.GONE
                             }
                         }
                     }
@@ -172,11 +169,11 @@ class MediaPlayerFragment : PlayerFragment() {
             val isPlaying = player.isPlaying
             if (!isPlaying) {
                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
-                binding.playerControls.playPause.visible()
+                binding.playerControls.playPause.visibility = View.VISIBLE
             } else {
                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
                 if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
-                    binding.playerControls.playPause.gone()
+                    binding.playerControls.playPause.visibility = View.GONE
                 }
             }
             setPipActions(isPlaying)
@@ -218,13 +215,18 @@ class MediaPlayerFragment : PlayerFragment() {
                     )
                     val playlist = response?.first
                     val responseCode = response?.second
-                    if (responseCode != null && requireContext().isNetworkAvailable) {
+                    val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                    val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                    val isNetworkAvailable = networkCapabilities != null
+                            && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                            && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                    if (responseCode != null && isNetworkAvailable) {
                         when {
                             responseCode == 404 -> {
-                                requireContext().toast(R.string.stream_ended)
+                                Toast.makeText(requireContext(), R.string.stream_ended, Toast.LENGTH_LONG).show()
                             }
                             viewModel.useCustomProxy && responseCode >= 400 -> {
-                                requireContext().toast(R.string.proxy_error)
+                                Toast.makeText(requireContext(), R.string.proxy_error, Toast.LENGTH_LONG).show()
                                 viewModel.useCustomProxy = false
                                 viewLifecycleOwner.lifecycleScope.launch {
                                     delay(1500L)
@@ -235,7 +237,7 @@ class MediaPlayerFragment : PlayerFragment() {
                                 }
                             }
                             else -> {
-                                requireContext().shortToast(R.string.player_error)
+                                Toast.makeText(requireContext(), R.string.player_error, Toast.LENGTH_SHORT).show()
                                 viewLifecycleOwner.lifecycleScope.launch {
                                     delay(1500L)
                                     try {
@@ -326,7 +328,7 @@ class MediaPlayerFragment : PlayerFragment() {
                         if (surfaceCreated) {
                             player.setDisplay(binding.playerSurface.holder)
                         }
-                        binding.playerSurface.visible()
+                        binding.playerSurface.visibility = View.VISIBLE
                         val newId = requireArguments().getString(KEY_VIDEO_ID)?.toLongOrNull()
                         val position = if (playbackService?.videoId == newId && player.duration != -1) {
                             player.currentPosition.toLong().takeIf { it > 0 } ?: playbackPosition ?: 0
@@ -341,7 +343,12 @@ class MediaPlayerFragment : PlayerFragment() {
                         val response = viewModel.loadPlaylist(url, prefs.getString(C.NETWORK_LIBRARY, "OkHttp"))
                         val playlist = response?.first
                         val responseCode = response?.second
-                        if (responseCode != null && requireContext().isNetworkAvailable) {
+                        val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                        val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                        val isNetworkAvailable = networkCapabilities != null
+                                && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                                && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                        if (responseCode != null && isNetworkAvailable) {
                             val skipAccessToken = prefs.getString(C.TOKEN_SKIP_VIDEO_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2
                             when {
                                 skipAccessToken == 1 && viewModel.shouldRetry && responseCode != 0 -> {
@@ -353,7 +360,7 @@ class MediaPlayerFragment : PlayerFragment() {
                                     playVideo(true, player.currentPosition.toLong())
                                 }
                                 responseCode == 403 -> {
-                                    requireContext().toast(R.string.video_subscribers_only)
+                                    Toast.makeText(requireContext(), R.string.video_subscribers_only, Toast.LENGTH_LONG).show()
                                 }
                             }
                         }
@@ -497,7 +504,7 @@ class MediaPlayerFragment : PlayerFragment() {
                     if (surfaceCreated) {
                         player.setDisplay(binding.playerSurface.holder)
                     }
-                    binding.playerSurface.visible()
+                    binding.playerSurface.visibility = View.VISIBLE
                     val newId = requireArguments().getString(KEY_VIDEO_ID)?.toLongOrNull()
                     val position = if (playbackService?.videoId == newId && player.duration != -1) {
                         player.currentPosition.toLong().takeIf { it > 0 } ?: playbackPosition ?: 0
@@ -530,12 +537,12 @@ class MediaPlayerFragment : PlayerFragment() {
                 val quality = viewModel.qualities.entries.find { it.key == viewModel.quality }
                 if (quality?.key == AUDIO_ONLY_QUALITY) {
                     player.setDisplay(null)
-                    binding.playerSurface.gone()
+                    binding.playerSurface.visibility = View.GONE
                 } else {
                     if (surfaceCreated) {
                         player.setDisplay(binding.playerSurface.holder)
                     }
-                    binding.playerSurface.visible()
+                    binding.playerSurface.visibility = View.VISIBLE
                 }
                 playbackService?.videoId = null
                 playbackService?.offlineVideoId = null
@@ -561,12 +568,12 @@ class MediaPlayerFragment : PlayerFragment() {
                 val quality = viewModel.qualities.entries.find { it.key == viewModel.quality }
                 if (quality?.key == AUDIO_ONLY_QUALITY) {
                     player.setDisplay(null)
-                    binding.playerSurface.gone()
+                    binding.playerSurface.visibility = View.GONE
                 } else {
                     if (surfaceCreated) {
                         player.setDisplay(binding.playerSurface.holder)
                     }
-                    binding.playerSurface.visible()
+                    binding.playerSurface.visibility = View.VISIBLE
                 }
                 val newId = requireArguments().getInt(KEY_OFFLINE_VIDEO_ID).takeIf { it != 0 }
                 val position = if (playbackService?.offlineVideoId == newId && player.duration != -1) {
@@ -699,7 +706,7 @@ class MediaPlayerFragment : PlayerFragment() {
                 when (quality.key) {
                     AUDIO_ONLY_QUALITY -> {
                         player.setDisplay(null)
-                        binding.playerSurface.gone()
+                        binding.playerSurface.visibility = View.GONE
                         quality.value.second?.let {
                             val position = player.currentPosition.toLong()
                             player.reset()
@@ -732,7 +739,7 @@ class MediaPlayerFragment : PlayerFragment() {
                         if (surfaceCreated) {
                             player.setDisplay(binding.playerSurface.holder)
                         }
-                        binding.playerSurface.visible()
+                        binding.playerSurface.visibility = View.VISIBLE
                     }
                 }
                 val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -756,7 +763,7 @@ class MediaPlayerFragment : PlayerFragment() {
                     viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
                         if (prefs.getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
                             player.setDisplay(null)
-                            binding.playerSurface.gone()
+                            binding.playerSurface.visibility = View.GONE
                         }
                         if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
                             quality.value.second?.let {
@@ -857,7 +864,7 @@ class MediaPlayerFragment : PlayerFragment() {
                         viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
                             if (prefs.getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
                                 player.setDisplay(null)
-                                binding.playerSurface.gone()
+                                binding.playerSurface.visibility = View.GONE
                             }
                             if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
                                 quality.value.second?.let {

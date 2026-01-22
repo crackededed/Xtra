@@ -44,11 +44,8 @@ import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.isInLandscapeOrientation
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
-import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.color.MaterialColors
 import dagger.hilt.android.AndroidEntryPoint
 import io.noties.markwon.Markwon
@@ -79,7 +76,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
         super.onViewCreated(view, savedInstanceState)
         with(binding) {
             val activity = requireActivity() as MainActivity
-            if (activity.isInLandscapeOrientation) {
+            if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 appBar.setExpanded(false, false)
             }
             val isLoggedIn = !TwitchApiHelper.getGQLHeaders(requireContext(), true)[C.HEADER_TOKEN].isNullOrBlank() ||
@@ -179,7 +176,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
         if (requireContext().prefs().getBoolean(C.UI_SCROLLTOP, true)) {
             binding.recyclerViewLayout.scrollTop.setOnClickListener {
                 scrollToTop()
-                it.gone()
+                it.visibility = View.GONE
             }
         }
     }
@@ -187,17 +184,17 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
     private fun updateTeamLayout(team: Team) {
         with(binding) {
             if (!team.displayName.isNullOrBlank()) {
-                teamName.visible()
+                teamName.visibility = View.VISIBLE
                 teamName.text = team.displayName
                 if (team.bannerUrl != null) {
                     teamName.setTextColor(Color.LTGRAY)
                     teamName.setShadowLayer(4f, 0f, 0f, Color.BLACK)
                 }
             } else {
-                teamName.gone()
+                teamName.visibility = View.GONE
             }
             if (team.memberCount != null) {
-                teamMembers.visible()
+                teamMembers.visibility = View.VISIBLE
                 val count = team.memberCount
                 teamMembers.text = requireContext().resources.getQuantityString(
                     R.plurals.members,
@@ -209,10 +206,10 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
                     teamMembers.setShadowLayer(4f, 0f, 0f, Color.BLACK)
                 }
             } else {
-                teamMembers.gone()
+                teamMembers.visibility = View.GONE
             }
             if (!team.ownerName.isNullOrBlank() || !team.ownerLogin.isNullOrBlank()) {
-                teamOwner.visible()
+                teamOwner.visibility = View.VISIBLE
                 teamOwner.text = requireContext().getString(
                     R.string.owner,
                     if (team.ownerLogin != null && !team.ownerLogin.equals(team.ownerName, true)) {
@@ -230,10 +227,10 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
                     teamOwner.setShadowLayer(4f, 0f, 0f, Color.BLACK)
                 }
             } else {
-                teamOwner.gone()
+                teamOwner.visibility = View.GONE
             }
             if (team.logoUrl != null) {
-                logoImage.visible()
+                logoImage.visibility = View.VISIBLE
                 requireContext().imageLoader.enqueue(
                     ImageRequest.Builder(requireContext()).apply {
                         data(team.logoUrl)
@@ -245,10 +242,10 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
                     }.build()
                 )
             } else {
-                logoImage.gone()
+                logoImage.visibility = View.GONE
             }
             if (team.bannerUrl != null) {
-                bannerImage.visible()
+                bannerImage.visibility = View.VISIBLE
                 requireContext().imageLoader.enqueue(
                     ImageRequest.Builder(requireContext()).apply {
                         data(team.bannerUrl)
@@ -257,10 +254,10 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
                     }.build()
                 )
             } else {
-                bannerImage.gone()
+                bannerImage.visibility = View.GONE
             }
             if (!team.description.isNullOrBlank()) {
-                teamDescription.visible()
+                teamDescription.visibility = View.VISIBLE
                 val markwon = Markwon.builder(requireContext())
                     .usePlugin(SoftBreakAddsNewLinePlugin.create())
                     .usePlugin(LinkifyPlugin.create())
@@ -274,7 +271,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
                     }
                 }
             } else {
-                teamDescription.gone()
+                teamDescription.visibility = View.GONE
             }
         }
     }

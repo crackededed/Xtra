@@ -1,11 +1,14 @@
 package com.github.andreyasadchy.xtra.ui.game
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.constraintlayout.helper.widget.Flow
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -50,14 +53,9 @@ import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.settings.SettingsActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.convertDpToPixels
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.isInLandscapeOrientation
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.shortToast
 import com.github.andreyasadchy.xtra.util.tokenPrefs
-import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
@@ -106,19 +104,19 @@ class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
         }
         with(binding) {
             val activity = requireActivity() as MainActivity
-            if (activity.isInLandscapeOrientation) {
+            if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 appBar.setExpanded(false, false)
             }
             if (args.gameName != null) {
-                gameLayout.visible()
-                gameName.visible()
+                gameLayout.visibility = View.VISIBLE
+                gameName.visibility = View.VISIBLE
                 gameName.text = args.gameName
             } else {
-                gameName.gone()
+                gameName.visibility = View.GONE
             }
             if (args.boxArt != null) {
-                gameLayout.visible()
-                gameImage.visible()
+                gameLayout.visibility = View.VISIBLE
+                gameImage.visibility = View.VISIBLE
                 requireContext().imageLoader.enqueue(
                     ImageRequest.Builder(requireContext()).apply {
                         data(args.boxArt)
@@ -127,7 +125,7 @@ class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                     }.build()
                 )
             } else {
-                gameImage.gone()
+                gameImage.visibility = View.GONE
             }
             val isLoggedIn = !TwitchApiHelper.getGQLHeaders(requireContext(), true)[C.HEADER_TOKEN].isNullOrBlank() ||
                     !TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank()
@@ -221,12 +219,12 @@ class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                                 val following = pair.first
                                 val errorMessage = pair.second
                                 if (!errorMessage.isNullOrBlank()) {
-                                    requireContext().shortToast(errorMessage)
+                                    Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
                                 } else {
                                     if (following) {
-                                        requireContext().shortToast(requireContext().getString(R.string.now_following, args.gameName))
+                                        Toast.makeText(requireContext(), getString(R.string.now_following, args.gameName), Toast.LENGTH_SHORT).show()
                                     } else {
-                                        requireContext().shortToast(requireContext().getString(R.string.unfollowed, args.gameName))
+                                        Toast.makeText(requireContext(), getString(R.string.unfollowed, args.gameName), Toast.LENGTH_SHORT).show()
                                     }
                                 }
                                 viewModel.follow.value = null
@@ -260,7 +258,7 @@ class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                 }
             }
             if (tabs.size > 1) {
-                spinner.visible()
+                spinner.visibility = View.VISIBLE
             }
             (spinner.editText as? MaterialAutoCompleteTextView)?.apply {
                 setSimpleItems(tabs.map {
@@ -303,7 +301,7 @@ class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                             collapsingToolbar.scrimVisibleHeightTrigger = toolbarHeight + 1
                         }
                     } else {
-                        sortBar.root.gone()
+                        sortBar.root.visibility = View.GONE
                         toolbarContainer2.doOnLayout {
                             toolbarContainer.layoutParams = (toolbarContainer.layoutParams as CollapsingToolbarLayout.LayoutParams).apply { bottomMargin = toolbarContainer2.height }
                             val toolbarHeight = toolbarContainer.marginTop + toolbarContainer.marginBottom
@@ -364,8 +362,8 @@ class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
     private fun updateGameLayout(game: Game?) {
         with(binding) {
             if (!gameImage.isVisible && game?.boxArt != null) {
-                gameLayout.visible()
-                gameImage.visible()
+                gameLayout.visibility = View.VISIBLE
+                gameImage.visibility = View.VISIBLE
                 requireContext().imageLoader.enqueue(
                     ImageRequest.Builder(requireContext()).apply {
                         data(game.boxArt)
@@ -375,12 +373,12 @@ class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                 )
             }
             if (game?.gameName != null && game.gameName != args.gameName) {
-                gameLayout.visible()
-                gameName.visible()
+                gameLayout.visibility = View.VISIBLE
+                gameName.visibility = View.VISIBLE
                 gameName.text = game.gameName
             }
             if (game?.viewersCount != null) {
-                viewers.visible()
+                viewers.visibility = View.VISIBLE
                 val count = game.viewersCount ?: 0
                 viewers.text = requireContext().resources.getQuantityString(
                     R.plurals.viewers,
@@ -388,10 +386,10 @@ class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                     TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
                 )
             } else {
-                viewers.gone()
+                viewers.visibility = View.GONE
             }
             if (game?.broadcastersCount != null && requireContext().prefs().getBoolean(C.UI_BROADCASTERSCOUNT, true)) {
-                broadcastersCount.visible()
+                broadcastersCount.visibility = View.VISIBLE
                 val count = game.broadcastersCount ?: 0
                 broadcastersCount.text = requireContext().resources.getQuantityString(
                     R.plurals.broadcasters,
@@ -399,10 +397,10 @@ class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                     TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
                 )
             } else {
-                broadcastersCount.gone()
+                broadcastersCount.visibility = View.GONE
             }
             if (game?.followersCount != null) {
-                followers.visible()
+                followers.visibility = View.VISIBLE
                 val count = game.followersCount
                 followers.text = requireContext().resources.getQuantityString(
                     R.plurals.followers,
@@ -410,11 +408,11 @@ class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                     TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
                 )
             } else {
-                followers.gone()
+                followers.visibility = View.GONE
             }
             if (!game?.tags.isNullOrEmpty() && requireContext().prefs().getBoolean(C.UI_TAGS, true)) {
                 tagsLayout.removeAllViews()
-                tagsLayout.visible()
+                tagsLayout.visibility = View.VISIBLE
                 val tagsFlowLayout = Flow(requireContext()).apply {
                     layoutParams = ConstraintLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -447,13 +445,13 @@ class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                             )
                         }
                     }
-                    val padding = requireContext().convertDpToPixels(5f)
+                    val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, resources.displayMetrics).toInt()
                     text.setPadding(padding, 0, padding, 0)
                     tagsLayout.addView(text)
                 }
                 tagsFlowLayout.referencedIds = ids.toIntArray()
             } else {
-                tagsLayout.gone()
+                tagsLayout.visibility = View.GONE
             }
         }
     }

@@ -33,9 +33,7 @@ import com.github.andreyasadchy.xtra.model.ui.User
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
@@ -154,7 +152,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
                                     selectedMessage.userName.isNullOrBlank() &&
                                     channelName.isNotBlank()
                                 ) {
-                                    reply.visible()
+                                    reply.visibility = View.VISIBLE
                                     reply.setOnClickListener {
                                         listener.onReplyClicked(
                                             selectedMessage.id,
@@ -191,7 +189,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
                                                         selectedMessage.userName.isNullOrBlank() &&
                                                         !user.channelName.isNullOrBlank()
                                                     ) {
-                                                        reply.visible()
+                                                        reply.visibility = View.VISIBLE
                                                         reply.setOnClickListener {
                                                             listener.onReplyClicked(
                                                                 selectedMessage.id,
@@ -206,7 +204,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
                                                 viewModel.user.value = Pair(null, false)
                                             } else {
                                                 if (error == true) {
-                                                    viewProfile.visible()
+                                                    viewProfile.visibility = View.VISIBLE
                                                 }
                                             }
                                         }
@@ -222,7 +220,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
                 }
             }
             if (requireContext().prefs().getBoolean(C.DEBUG_CHAT_FULLMSG, false)) {
-                copyFullMsg.visible()
+                copyFullMsg.visibility = View.VISIBLE
             }
         }
     }
@@ -231,22 +229,22 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
         with(binding) {
             if (requireArguments().getBoolean(KEY_MESSAGING) && (!chatMessage.userId.isNullOrBlank() || !chatMessage.userLogin.isNullOrBlank())) {
                 if (!chatMessage.id.isNullOrBlank()) {
-                    reply.visible()
+                    reply.visibility = View.VISIBLE
                     reply.setOnClickListener {
                         listener.onReplyClicked(chatMessage.id, chatMessage.userLogin, chatMessage.userName, chatMessage.message)
                         dismiss()
                     }
                 } else {
-                    reply.gone()
+                    reply.visibility = View.GONE
                 }
                 if (!chatMessage.message.isNullOrBlank()) {
-                    copyMessage.visible()
+                    copyMessage.visibility = View.VISIBLE
                     copyMessage.setOnClickListener {
                         listener.onCopyMessageClicked(chatMessage.message)
                         dismiss()
                     }
                 } else {
-                    copyMessage.gone()
+                    copyMessage.visibility = View.GONE
                 }
             }
             val clipboard = getSystemService(requireContext(), ClipboardManager::class.java)
@@ -264,8 +262,8 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
     private fun updateUserLayout(user: User) {
         with(binding) {
             if (user.bannerImageURL != null) {
-                userLayout.visible()
-                bannerImage.visible()
+                userLayout.visibility = View.VISIBLE
+                bannerImage.visibility = View.VISIBLE
                 this@MessageClickedDialog.requireContext().imageLoader.enqueue(
                     ImageRequest.Builder(this@MessageClickedDialog.requireContext()).apply {
                         data(user.bannerImageURL)
@@ -274,11 +272,11 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
                     }.build()
                 )
             } else {
-                bannerImage.gone()
+                bannerImage.visibility = View.GONE
             }
             if (user.channelLogo != null) {
-                userLayout.visible()
-                userImage.visible()
+                userLayout.visibility = View.VISIBLE
+                userImage.visibility = View.VISIBLE
                 this@MessageClickedDialog.requireContext().imageLoader.enqueue(
                     ImageRequest.Builder(this@MessageClickedDialog.requireContext()).apply {
                         data(user.channelLogo)
@@ -294,11 +292,11 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
                     dismiss()
                 }
             } else {
-                userImage.gone()
+                userImage.visibility = View.GONE
             }
             if (user.channelName != null) {
-                userLayout.visible()
-                userName.visible()
+                userLayout.visibility = View.VISIBLE
+                userName.visibility = View.VISIBLE
                 userName.text = if (user.channelLogin != null && !user.channelLogin.equals(user.channelName, true)) {
                     when (requireContext().prefs().getString(C.UI_NAME_DISPLAY, "0")) {
                         "0" -> "${user.channelName}(${user.channelLogin})"
@@ -317,32 +315,32 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
                     userName.setShadowLayer(4f, 0f, 0f, Color.BLACK)
                 }
             } else {
-                userName.gone()
+                userName.visibility = View.GONE
             }
             if (user.createdAt != null) {
-                userLayout.visible()
-                userCreated.visible()
+                userLayout.visibility = View.VISIBLE
+                userCreated.visibility = View.VISIBLE
                 userCreated.text = requireContext().getString(R.string.created_at, TwitchApiHelper.formatTimeString(requireContext(), user.createdAt))
                 if (user.bannerImageURL != null) {
                     userCreated.setTextColor(Color.LTGRAY)
                     userCreated.setShadowLayer(4f, 0f, 0f, Color.BLACK)
                 }
             } else {
-                userCreated.gone()
+                userCreated.visibility = View.GONE
             }
             if (user.followedAt != null) {
-                userLayout.visible()
-                userFollowed.visible()
+                userLayout.visibility = View.VISIBLE
+                userFollowed.visibility = View.VISIBLE
                 userFollowed.text = requireContext().getString(R.string.followed_at, TwitchApiHelper.formatTimeString(requireContext(), user.followedAt!!))
                 if (user.bannerImageURL != null) {
                     userFollowed.setTextColor(Color.LTGRAY)
                     userFollowed.setShadowLayer(4f, 0f, 0f, Color.BLACK)
                 }
             } else {
-                userFollowed.gone()
+                userFollowed.visibility = View.GONE
             }
             if (!userImage.isVisible && !userName.isVisible) {
-                viewProfile.visible()
+                viewProfile.visibility = View.VISIBLE
             }
         }
     }
