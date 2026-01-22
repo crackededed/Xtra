@@ -87,10 +87,10 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
                 viewModel.setFilter(
                     period = sortValues?.clipPeriod,
                 )
-                viewModel.sortText.value = requireContext().getString(
+                viewModel.sortText.value = getString(
                     R.string.sort_and_period,
-                    requireContext().getString(R.string.view_count),
-                    requireContext().getString(
+                    getString(R.string.view_count),
+                    getString(
                         when (viewModel.period) {
                             VideosSortDialog.PERIOD_DAY -> R.string.today
                             VideosSortDialog.PERIOD_WEEK -> R.string.this_week
@@ -137,7 +137,7 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
                     binding.scrollTop.visibility = View.GONE
                     pagingAdapter.submitData(PagingData.empty())
                     viewModel.setFilter(period)
-                    viewModel.sortText.value = requireContext().getString(R.string.sort_and_period, sortText, periodText)
+                    viewModel.sortText.value = getString(R.string.sort_and_period, sortText, periodText)
                 }
                 if (saveSort) {
                     args.channelId?.let { id ->
