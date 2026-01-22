@@ -141,13 +141,13 @@ class ImageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callback
             args.getString(IMAGE_SOURCE)?.let {
                 imageSource.visibility = View.VISIBLE
                 imageSource.text = when (it) {
-                    PERSONAL_STV -> requireContext().getString(R.string.personal_stv_emote)
-                    CHANNEL_STV -> requireContext().getString(R.string.channel_stv_emote)
-                    CHANNEL_BTTV -> requireContext().getString(R.string.channel_bttv_emote)
-                    CHANNEL_FFZ -> requireContext().getString(R.string.channel_ffz_emote)
-                    GLOBAL_STV -> requireContext().getString(R.string.global_stv_emote)
-                    GLOBAL_BTTV -> requireContext().getString(R.string.global_bttv_emote)
-                    GLOBAL_FFZ -> requireContext().getString(R.string.global_ffz_emote)
+                    PERSONAL_STV -> getString(R.string.personal_stv_emote)
+                    CHANNEL_STV -> getString(R.string.channel_stv_emote)
+                    CHANNEL_BTTV -> getString(R.string.channel_bttv_emote)
+                    CHANNEL_FFZ -> getString(R.string.channel_ffz_emote)
+                    GLOBAL_STV -> getString(R.string.global_stv_emote)
+                    GLOBAL_BTTV -> getString(R.string.global_bttv_emote)
+                    GLOBAL_FFZ -> getString(R.string.global_ffz_emote)
                     else -> it
                 }
             }
@@ -174,7 +174,7 @@ class ImageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callback
                                 when (emoteCard.type) {
                                     "SUBSCRIPTIONS" -> {
                                         imageSource.visibility = View.VISIBLE
-                                        imageSource.text = requireContext().getString(R.string.channel_sub_emote, name,
+                                        imageSource.text = getString(R.string.channel_sub_emote, name,
                                             when (emoteCard.subTier) {
                                                 "TIER_1" -> "1"
                                                 "TIER_2" -> "2"
@@ -185,11 +185,11 @@ class ImageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callback
                                     }
                                     "FOLLOWER" -> {
                                         imageSource.visibility = View.VISIBLE
-                                        imageSource.text = requireContext().getString(R.string.channel_follower_emote, name)
+                                        imageSource.text = getString(R.string.channel_follower_emote, name)
                                     }
                                     "BITS_BADGE_TIERS" -> {
                                         imageSource.visibility = View.VISIBLE
-                                        imageSource.text = requireContext().getString(R.string.bits_reward_emote, emoteCard.bitThreshold)
+                                        imageSource.text = getString(R.string.bits_reward_emote, emoteCard.bitThreshold)
                                     }
                                 }
                             }

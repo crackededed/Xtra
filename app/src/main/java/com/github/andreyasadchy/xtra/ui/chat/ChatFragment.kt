@@ -127,11 +127,11 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         enableTimestamps = requireContext().prefs().getBoolean(C.CHAT_TIMESTAMPS, false),
                         timestampFormat = requireContext().prefs().getString(C.CHAT_TIMESTAMP_FORMAT, "0"),
                         firstMsgVisibility = requireContext().prefs().getString(C.CHAT_FIRSTMSG_VISIBILITY, "0")?.toIntOrNull() ?: 0,
-                        firstChatMsg = requireContext().getString(R.string.chat_first),
-                        redeemedChatMsg = requireContext().getString(R.string.redeemed),
-                        redeemedNoMsg = requireContext().getString(R.string.user_redeemed),
-                        rewardChatMsg = requireContext().getString(R.string.chat_reward),
-                        replyMessage = requireContext().getString(R.string.replying_to_message),
+                        firstChatMsg = getString(R.string.chat_first),
+                        redeemedChatMsg = getString(R.string.redeemed),
+                        redeemedNoMsg = getString(R.string.user_redeemed),
+                        rewardChatMsg = getString(R.string.chat_reward),
+                        replyMessage = getString(R.string.replying_to_message),
                         useRandomColors = requireContext().prefs().getBoolean(C.CHAT_RANDOMCOLOR, true),
                         useReadableColors = requireContext().prefs().getBoolean(C.CHAT_THEME_ADAPTED_USERNAME_COLOR, true),
                         isLightTheme = requireContext().obtainStyledAttributes(intArrayOf(androidx.appcompat.R.attr.isLightTheme)).use {
@@ -312,7 +312,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         viewPager.reduceDragSensitivity()
                         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
                             tab.text = when (position) {
-                                0 -> requireContext().getString(R.string.recent_emotes)
+                                0 -> getString(R.string.recent_emotes)
                                 1 -> "Twitch"
                                 else -> "7TV/BTTV/FFZ"
                             }
@@ -516,11 +516,11 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                         when (roomState.followers) {
                                             "-1" -> textFollowers.visibility = View.GONE
                                             "0" -> {
-                                                textFollowers.text = requireContext().getString(R.string.room_followers)
+                                                textFollowers.text = getString(R.string.room_followers)
                                                 textFollowers.visibility = View.VISIBLE
                                             }
                                             else -> {
-                                                textFollowers.text = requireContext().getString(
+                                                textFollowers.text = getString(
                                                     R.string.room_followers_min,
                                                     TwitchApiHelper.getDurationFromSeconds(requireContext(), (roomState.followers.toInt() * 60).toString())
                                                 )
@@ -536,7 +536,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                         when (roomState.slow) {
                                             "0" -> textSlow.visibility = View.GONE
                                             else -> {
-                                                textSlow.text = requireContext().getString(
+                                                textSlow.text = getString(
                                                     R.string.room_slow,
                                                     TwitchApiHelper.getDurationFromSeconds(requireContext(), roomState.slow)
                                                 )
@@ -615,8 +615,8 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                         } else {
                                             raidLayout.visibility = View.VISIBLE
                                             raidLayout.setOnClickListener { viewModel.raidClicked.value = raid }
-                                            this@ChatFragment.requireContext().imageLoader.enqueue(
-                                                ImageRequest.Builder(this@ChatFragment.requireContext()).apply {
+                                            requireContext().imageLoader.enqueue(
+                                                ImageRequest.Builder(requireContext()).apply {
                                                     data(raid.targetLogo)
                                                     if (requireContext().prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
                                                         transformations(CircleCropTransformation())
@@ -629,7 +629,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                                 raidLayout.visibility = View.GONE
                                                 viewModel.raidClosed = true
                                             }
-                                            raidText.text = requireContext().getString(
+                                            raidText.text = getString(
                                                 R.string.raid_text,
                                                 if (raid.targetLogin != null && !raid.targetLogin.equals(raid.targetName, true)) {
                                                     when (requireContext().prefs().getString(C.UI_NAME_DISPLAY, "0")) {
@@ -693,9 +693,9 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                         when (poll.status) {
                                             "ACTIVE" -> {
                                                 pollLayout.visibility = View.VISIBLE
-                                                pollTitle.text = requireContext().getString(R.string.poll_title, poll.title)
+                                                pollTitle.text = getString(R.string.poll_title, poll.title)
                                                 pollChoices.text = poll.choices?.joinToString("\n") {
-                                                    requireContext().getString(
+                                                    getString(
                                                         R.string.poll_choice,
                                                         (((it.totalVotes ?: 0).toLong() * 100.0) / max((poll.totalVotes ?: 0), 1)).roundToInt(),
                                                         it.totalVotes?.let { NumberFormat.getInstance().format(it) },
@@ -706,10 +706,10 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                             }
                                             "COMPLETED", "TERMINATED" -> {
                                                 pollLayout.visibility = View.VISIBLE
-                                                pollTitle.text = requireContext().getString(R.string.poll_title, poll.title)
+                                                pollTitle.text = getString(R.string.poll_title, poll.title)
                                                 val winningTotal = poll.choices?.maxOfOrNull { it.totalVotes ?: 0 } ?: 0
                                                 pollChoices.text = poll.choices?.joinToString("\n") {
-                                                    requireContext().getString(
+                                                    getString(
                                                         if (winningTotal == it.totalVotes) {
                                                             R.string.poll_choice_winner
                                                         } else {
@@ -742,7 +742,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         repeatOnLifecycle(Lifecycle.State.STARTED) {
                             viewModel.pollSecondsLeft.collectLatest {
                                 if (it != null) {
-                                    pollStatus.text = requireContext().getString(R.string.remaining_time, DateUtils.formatElapsedTime(it.toLong()))
+                                    pollStatus.text = getString(R.string.remaining_time, DateUtils.formatElapsedTime(it.toLong()))
                                     if (it <= 0) {
                                         viewModel.pollSecondsLeft.value = null
                                     }
@@ -777,10 +777,10 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                         when (prediction.status) {
                                             "ACTIVE" -> {
                                                 predictionLayout.visibility = View.VISIBLE
-                                                predictionTitle.text = requireContext().getString(R.string.prediction_title, prediction.title)
+                                                predictionTitle.text = getString(R.string.prediction_title, prediction.title)
                                                 val totalPoints = prediction.outcomes?.sumOf { it.totalPoints?.toLong() ?: 0 } ?: 0
                                                 predictionOutcomes.text = prediction.outcomes?.joinToString("\n") {
-                                                    requireContext().getString(
+                                                    getString(
                                                         R.string.prediction_outcome,
                                                         (((it.totalPoints ?: 0).toLong() * 100.0) / max(totalPoints, 1)).roundToInt(),
                                                         it.totalPoints?.let { NumberFormat.getInstance().format(it) },
@@ -792,10 +792,10 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                             }
                                             "LOCKED" -> {
                                                 predictionLayout.visibility = View.VISIBLE
-                                                predictionTitle.text = requireContext().getString(R.string.prediction_title, prediction.title)
+                                                predictionTitle.text = getString(R.string.prediction_title, prediction.title)
                                                 val totalPoints = prediction.outcomes?.sumOf { it.totalPoints?.toLong() ?: 0 } ?: 0
                                                 predictionOutcomes.text = prediction.outcomes?.joinToString("\n") {
-                                                    requireContext().getString(
+                                                    getString(
                                                         R.string.prediction_outcome,
                                                         (((it.totalPoints ?: 0).toLong() * 100.0) / max(totalPoints, 1)).roundToInt(),
                                                         it.totalPoints?.let { NumberFormat.getInstance().format(it) },
@@ -807,15 +807,15 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                                 viewModel.predictionTimer?.cancel()
                                                 viewModel.startPredictionTimeout { predictionLayout.visibility = View.GONE }
                                                 predictionStatus.visibility = View.VISIBLE
-                                                predictionStatus.text = requireContext().getString(R.string.prediction_locked)
+                                                predictionStatus.text = getString(R.string.prediction_locked)
                                             }
                                             "CANCELED", "CANCEL_PENDING", "RESOLVED", "RESOLVE_PENDING" -> {
                                                 predictionLayout.visibility = View.VISIBLE
-                                                predictionTitle.text = requireContext().getString(R.string.prediction_title, prediction.title)
+                                                predictionTitle.text = getString(R.string.prediction_title, prediction.title)
                                                 val resolved = prediction.status == "RESOLVED" || prediction.status == "RESOLVE_PENDING"
                                                 val totalPoints = prediction.outcomes?.sumOf { it.totalPoints?.toLong() ?: 0 } ?: 0
                                                 predictionOutcomes.text = prediction.outcomes?.joinToString("\n") {
-                                                    requireContext().getString(
+                                                    getString(
                                                         if (resolved && prediction.winningOutcomeId != null && prediction.winningOutcomeId == it.id) {
                                                             R.string.prediction_outcome_winner
                                                         } else {
@@ -834,7 +834,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                                     predictionStatus.visibility = View.GONE
                                                 } else {
                                                     predictionStatus.visibility = View.VISIBLE
-                                                    predictionStatus.text = requireContext().getString(R.string.prediction_refunded)
+                                                    predictionStatus.text = getString(R.string.prediction_refunded)
                                                 }
                                             }
                                             else -> {
@@ -854,7 +854,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         repeatOnLifecycle(Lifecycle.State.STARTED) {
                             viewModel.predictionSecondsLeft.collectLatest {
                                 if (it != null) {
-                                    predictionStatus.text = requireContext().getString(R.string.remaining_time, DateUtils.formatElapsedTime(it.toLong()))
+                                    predictionStatus.text = getString(R.string.remaining_time, DateUtils.formatElapsedTime(it.toLong()))
                                     if (it <= 0) {
                                         viewModel.predictionSecondsLeft.value = null
                                     }
@@ -1255,7 +1255,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                     } else {
                         userName ?: userLogin
                     }
-                    requireContext().getString(R.string.replying_to_message, name, message)
+                    getString(R.string.replying_to_message, name, message)
                 }
                 replyClose.setOnClickListener {
                     replyView.visibility = View.GONE

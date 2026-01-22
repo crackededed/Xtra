@@ -86,19 +86,19 @@ class VideosSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialog.OnSe
                     sort.visibility = View.GONE
                     sortType.visibility = View.GONE
                     selectLanguages.visibility = View.GONE
-                    saveSort.text = requireContext().getString(R.string.save_sort_channel)
+                    saveSort.text = getString(R.string.save_sort_channel)
                     saveSortLayout.isVisible = parentFragment?.arguments?.getString(C.CHANNEL_ID).isNullOrBlank() == false
                 }
                 is GameClipsFragment -> {
                     sort.visibility = View.GONE
                     sortType.visibility = View.GONE
-                    saveSort.text = requireContext().getString(R.string.save_sort_game)
+                    saveSort.text = getString(R.string.save_sort_game)
                     saveSortLayout.isVisible = parentFragment?.arguments?.getString(C.GAME_ID).isNullOrBlank() == false
                 }
                 is ChannelVideosFragment -> {
                     period.visibility = View.GONE
                     selectLanguages.visibility = View.GONE
-                    saveSort.text = requireContext().getString(R.string.save_sort_channel)
+                    saveSort.text = getString(R.string.save_sort_channel)
                     saveSortLayout.isVisible = parentFragment?.arguments?.getString(C.CHANNEL_ID).isNullOrBlank() == false
                 }
                 is FollowedVideosFragment -> {
@@ -110,7 +110,7 @@ class VideosSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialog.OnSe
                     if (TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank()) {
                         period.visibility = View.GONE
                     }
-                    saveSort.text = requireContext().getString(R.string.save_sort_game)
+                    saveSort.text = getString(R.string.save_sort_game)
                     saveSortLayout.isVisible = parentFragment?.arguments?.getString(C.GAME_ID).isNullOrBlank() == false
                 }
             }

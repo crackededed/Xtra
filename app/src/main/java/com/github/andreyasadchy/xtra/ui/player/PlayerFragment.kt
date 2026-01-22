@@ -910,7 +910,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                     filtered.forEach {
                                         val quality = it.key.first.let { quality ->
                                             val quality = if (quality == "source") {
-                                                requireContext().getString(R.string.source)
+                                                getString(R.string.source)
                                             } else {
                                                 quality
                                             }
@@ -930,7 +930,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                         }
                                         map[it.key.first] = Pair(quality, it.value)
                                     }
-                                    map.put(AUDIO_ONLY_QUALITY, Pair(requireContext().getString(R.string.audio_only), null))
+                                    map.put(AUDIO_ONLY_QUALITY, Pair(getString(R.string.audio_only), null))
                                     viewModel.qualities = map.toList()
                                         .sortedByDescending {
                                             it.first.substringAfter("p", "").takeWhile { it.isDigit() }.toIntOrNull()
@@ -994,8 +994,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                 if (it != null) {
                                     val url = requireArguments().getString(KEY_URL)
                                     viewModel.qualities = mapOf(
-                                        "source" to Pair(requireContext().getString(R.string.source), url),
-                                        AUDIO_ONLY_QUALITY to Pair(requireContext().getString(R.string.audio_only), null)
+                                        "source" to Pair(getString(R.string.source), url),
+                                        AUDIO_ONLY_QUALITY to Pair(getString(R.string.audio_only), null)
                                     )
                                     setDefaultQuality()
                                     changePlayerMode()
@@ -1038,7 +1038,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                             viewModel.isFollowing.value?.let {
                                 if (it) {
                                     requireContext().getAlertDialogBuilder()
-                                        .setMessage(requireContext().getString(R.string.unfollow_channel, displayName))
+                                        .setMessage(getString(R.string.unfollow_channel, displayName))
                                         .setNegativeButton(getString(R.string.no), null)
                                         .setPositiveButton(getString(R.string.yes)) { _, _ ->
                                             viewModel.deleteFollowChannel(
@@ -1830,8 +1830,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     setActions(listOf(
                         RemoteAction(
                             Icon.createWithResource(requireContext(), R.drawable.baseline_audiotrack_black_24),
-                            requireContext().getString(R.string.audio_only),
-                            requireContext().getString(R.string.audio_only),
+                            getString(R.string.audio_only),
+                            getString(R.string.audio_only),
                             PendingIntent.getBroadcast(
                                 requireContext(),
                                 REQUEST_CODE_AUDIO_ONLY,
@@ -1842,8 +1842,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         if (playing) {
                             RemoteAction(
                                 Icon.createWithResource(requireContext(), R.drawable.baseline_pause_black_48),
-                                requireContext().getString(R.string.pause),
-                                requireContext().getString(R.string.pause),
+                                getString(R.string.pause),
+                                getString(R.string.pause),
                                 PendingIntent.getBroadcast(
                                     requireContext(),
                                     REQUEST_CODE_PLAY_PAUSE,
@@ -1854,8 +1854,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         } else {
                             RemoteAction(
                                 Icon.createWithResource(requireContext(), R.drawable.baseline_play_arrow_black_48),
-                                requireContext().getString(R.string.resume),
-                                requireContext().getString(R.string.resume),
+                                getString(R.string.resume),
+                                getString(R.string.resume),
                                 PendingIntent.getBroadcast(
                                     requireContext(),
                                     REQUEST_CODE_PLAY_PAUSE,
@@ -2006,13 +2006,13 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 val map = mutableMapOf<String, Pair<String, String?>>()
                 qualityMap.forEach {
                     when (it.key) {
-                        "source" -> map[it.key] = Pair(requireContext().getString(R.string.source), it.value)
-                        "audio_only" -> map[it.key] = Pair(requireContext().getString(R.string.audio_only), it.value)
+                        "source" -> map[it.key] = Pair(getString(R.string.source), it.value)
+                        "audio_only" -> map[it.key] = Pair(getString(R.string.audio_only), it.value)
                         else -> map[it.key] = Pair(it.key, it.value)
                     }
                 }
                 map.put(AUDIO_ONLY_QUALITY, map.remove(AUDIO_ONLY_QUALITY) //move audio option to bottom
-                    ?: Pair(requireContext().getString(R.string.audio_only), null))
+                    ?: Pair(getString(R.string.audio_only), null))
                 val qualities = map.toList()
                     .sortedByDescending {
                         it.first.substringAfter("p", "").takeWhile { it.isDigit() }.toIntOrNull()

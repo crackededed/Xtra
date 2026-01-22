@@ -152,8 +152,8 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                 if (it != null) {
                     userLayout.visibility = View.VISIBLE
                     userImage.visibility = View.VISIBLE
-                    this@ChannelPagerFragment.requireContext().imageLoader.enqueue(
-                        ImageRequest.Builder(this@ChannelPagerFragment.requireContext()).apply {
+                    requireContext().imageLoader.enqueue(
+                        ImageRequest.Builder(requireContext()).apply {
                             data(it)
                             if (requireContext().prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
                                 transformations(CircleCropTransformation())
@@ -214,7 +214,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                         viewModel.isFollowing.value?.let {
                             if (it) {
                                 requireContext().getAlertDialogBuilder()
-                                    .setMessage(requireContext().getString(R.string.unfollow_channel,
+                                    .setMessage(getString(R.string.unfollow_channel,
                                         if (args.channelLogin != null && !args.channelLogin.equals(args.channelName, true)) {
                                             when (requireContext().prefs().getString(C.UI_NAME_DISPLAY, "0")) {
                                                 "0" -> "${args.channelName}(${args.channelLogin})"
@@ -275,7 +275,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                         true
                     }
                     R.id.share -> {
-                        requireContext().startActivity(Intent.createChooser(Intent().apply {
+                        startActivity(Intent.createChooser(Intent().apply {
                             action = Intent.ACTION_SEND
                             putExtra(Intent.EXTRA_TEXT, "https://twitch.tv/${args.channelLogin}")
                             args.channelName?.let {
@@ -313,10 +313,10 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                             toolbar.menu.findItem(R.id.toggleNotifications)?.apply {
                                 if (it) {
                                     icon = ContextCompat.getDrawable(requireContext(), R.drawable.baseline_notifications_black_24)
-                                    title = requireContext().getString(R.string.disable_notifications)
+                                    title = getString(R.string.disable_notifications)
                                 } else {
                                     icon = ContextCompat.getDrawable(requireContext(), R.drawable.baseline_notifications_none_black_24)
-                                    title = requireContext().getString(R.string.enable_notifications)
+                                    title = getString(R.string.enable_notifications)
                                 }
                             }
                         }
@@ -353,10 +353,10 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                                 followButton?.apply {
                                     if (it) {
                                         icon = ContextCompat.getDrawable(requireContext(), R.drawable.baseline_favorite_black_24)
-                                        title = requireContext().getString(R.string.unfollow)
+                                        title = getString(R.string.unfollow)
                                     } else {
                                         icon = ContextCompat.getDrawable(requireContext(), R.drawable.baseline_favorite_border_black_24)
-                                        title = requireContext().getString(R.string.follow)
+                                        title = getString(R.string.follow)
                                     }
                                 }
                             }
@@ -572,7 +572,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                         TwitchApiHelper.formatTimeString(requireContext(), stream.user.lastBroadcast!!).let {
                             if (it != null)  {
                                 lastBroadcast.visibility = View.VISIBLE
-                                lastBroadcast.text = requireContext().getString(R.string.last_broadcast_date, it)
+                                lastBroadcast.text = getString(R.string.last_broadcast_date, it)
                             } else {
                                 lastBroadcast.visibility = View.GONE
                             }
@@ -584,8 +584,8 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                 if (it != null) {
                     userLayout.visibility = View.VISIBLE
                     userImage.visibility = View.VISIBLE
-                    this@ChannelPagerFragment.requireContext().imageLoader.enqueue(
-                        ImageRequest.Builder(this@ChannelPagerFragment.requireContext()).apply {
+                    requireContext().imageLoader.enqueue(
+                        ImageRequest.Builder(requireContext()).apply {
                             data(it)
                             if (requireContext().prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
                                 transformations(CircleCropTransformation())
@@ -660,7 +660,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                 streamLayout.visibility = View.VISIBLE
                 viewers.visibility = View.VISIBLE
                 val count = stream.viewerCount ?: 0
-                viewers.text = requireContext().resources.getQuantityString(
+                viewers.text = resources.getQuantityString(
                     R.plurals.viewers,
                     count,
                     TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
@@ -674,7 +674,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                         if (it != null) {
                             streamLayout.visibility = View.VISIBLE
                             uptime.visibility = View.VISIBLE
-                            uptime.text = requireContext().getString(R.string.uptime, it)
+                            uptime.text = getString(R.string.uptime, it)
                         } else {
                             uptime.visibility = View.GONE
                         }
@@ -689,8 +689,8 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
             if (!userImage.isVisible && user.channelLogo != null) {
                 userLayout.visibility = View.VISIBLE
                 userImage.visibility = View.VISIBLE
-                this@ChannelPagerFragment.requireContext().imageLoader.enqueue(
-                    ImageRequest.Builder(this@ChannelPagerFragment.requireContext()).apply {
+                requireContext().imageLoader.enqueue(
+                    ImageRequest.Builder(requireContext()).apply {
                         data(user.channelLogo)
                         if (requireContext().prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
                             transformations(CircleCropTransformation())
@@ -703,8 +703,8 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
             }
             if (user.bannerImageURL != null) {
                 bannerImage.visibility = View.VISIBLE
-                this@ChannelPagerFragment.requireContext().imageLoader.enqueue(
-                    ImageRequest.Builder(this@ChannelPagerFragment.requireContext()).apply {
+                requireContext().imageLoader.enqueue(
+                    ImageRequest.Builder(requireContext()).apply {
                         data(user.bannerImageURL)
                         crossfade(true)
                         target(bannerImage)
@@ -719,7 +719,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
             }
             if (user.createdAt != null) {
                 userCreated.visibility = View.VISIBLE
-                userCreated.text = requireContext().getString(R.string.created_at, TwitchApiHelper.formatTimeString(requireContext(), user.createdAt))
+                userCreated.text = getString(R.string.created_at, TwitchApiHelper.formatTimeString(requireContext(), user.createdAt))
                 if (user.bannerImageURL != null) {
                     userCreated.setTextColor(Color.LTGRAY)
                     userCreated.setShadowLayer(4f, 0f, 0f, Color.BLACK)
@@ -730,7 +730,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
             if (user.followersCount != null) {
                 userFollowers.visibility = View.VISIBLE
                 val count = user.followersCount
-                userFollowers.text = requireContext().resources.getQuantityString(
+                userFollowers.text = resources.getQuantityString(
                     R.plurals.followers,
                     count,
                     TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
@@ -743,12 +743,12 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                 userFollowers.visibility = View.GONE
             }
             val broadcasterType = when (user.broadcasterType?.lowercase()) {
-                "partner" -> requireContext().getString(R.string.user_partner)
-                "affiliate" -> requireContext().getString(R.string.user_affiliate)
+                "partner" -> getString(R.string.user_partner)
+                "affiliate" -> getString(R.string.user_affiliate)
                 else -> null
             }
             val type = when (user.type?.lowercase()) {
-                "staff" -> requireContext().getString(R.string.user_staff)
+                "staff" -> getString(R.string.user_staff)
                 else -> null
             }
             val typeString = if (broadcasterType != null && type != null) "$broadcasterType, $type" else broadcasterType ?: type

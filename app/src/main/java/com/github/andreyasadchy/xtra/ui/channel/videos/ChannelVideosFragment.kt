@@ -98,16 +98,16 @@ class ChannelVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosS
                     sort = sortValues?.videoSort,
                     type = sortValues?.videoType,
                 )
-                viewModel.sortText.value = requireContext().getString(
+                viewModel.sortText.value = getString(
                     R.string.sort_and_type,
-                    requireContext().getString(
+                    getString(
                         when (viewModel.sort) {
                             VideosSortDialog.SORT_TIME -> R.string.upload_date
                             VideosSortDialog.SORT_VIEWS -> R.string.view_count
                             else -> R.string.upload_date
                         }
                     ),
-                    requireContext().getString(
+                    getString(
                         when (viewModel.type) {
                             VideosSortDialog.VIDEO_TYPE_ARCHIVE -> R.string.video_type_archive
                             VideosSortDialog.VIDEO_TYPE_HIGHLIGHT -> R.string.video_type_highlight
@@ -170,7 +170,7 @@ class ChannelVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosS
                     binding.scrollTop.visibility = View.GONE
                     pagingAdapter.submitData(PagingData.empty())
                     viewModel.setFilter(sort, type)
-                    viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, typeText)
+                    viewModel.sortText.value = getString(R.string.sort_and_type, sortText, typeText)
                 }
                 if (saveSort) {
                     args.channelId?.let { id ->

@@ -81,9 +81,9 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
                     tags = args.tags ?: sortValues?.streamTags?.split(',')?.toTypedArray(),
                     languages = args.languages ?: sortValues?.streamLanguages?.split(',')?.toTypedArray(),
                 )
-                viewModel.sortText.value = requireContext().getString(
+                viewModel.sortText.value = getString(
                     R.string.sort_by,
-                    requireContext().getString(
+                    getString(
                         when (viewModel.sort) {
                             SORT_VIEWERS -> R.string.viewers_high
                             SORT_VIEWERS_ASC -> R.string.viewers_low
@@ -96,7 +96,7 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
                     buildString {
                         if (viewModel.tags.isNotEmpty()) {
                             append(
-                                requireContext().resources.getQuantityString(
+                                resources.getQuantityString(
                                     R.plurals.tags,
                                     viewModel.tags.size,
                                     viewModel.tags.joinToString()
@@ -108,7 +108,7 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
                                 append(". ")
                             }
                             append(
-                                requireContext().resources.getQuantityString(
+                                resources.getQuantityString(
                                     R.plurals.languages,
                                     viewModel.languages.size,
                                     viewModel.languages.joinToString()
@@ -168,7 +168,7 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
             viewModel.filtersText.value = buildString {
                 if (viewModel.tags.isNotEmpty()) {
                     append(
-                        requireContext().resources.getQuantityString(
+                        resources.getQuantityString(
                             R.plurals.tags,
                             viewModel.tags.size,
                             viewModel.tags.joinToString()
@@ -180,7 +180,7 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
                         append(". ")
                     }
                     append(
-                        requireContext().resources.getQuantityString(
+                        resources.getQuantityString(
                             R.plurals.languages,
                             viewModel.languages.size,
                             viewModel.languages.joinToString()
@@ -197,12 +197,12 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
                 if (changed) {
                     pagingAdapter.submitData(PagingData.empty())
                     viewModel.setFilter(sort, tags, languages)
-                    viewModel.sortText.value = requireContext().getString(R.string.sort_by, sortText)
+                    viewModel.sortText.value = getString(R.string.sort_by, sortText)
                     viewModel.filtersText.value = if (viewModel.tags.isNotEmpty() || viewModel.languages.isNotEmpty()) {
                         buildString {
                             if (viewModel.tags.isNotEmpty()) {
                                 append(
-                                    requireContext().resources.getQuantityString(
+                                    resources.getQuantityString(
                                         R.plurals.tags,
                                         viewModel.tags.size,
                                         viewModel.tags.joinToString()
@@ -214,7 +214,7 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
                                     append(". ")
                                 }
                                 append(
-                                    requireContext().resources.getQuantityString(
+                                    resources.getQuantityString(
                                         R.plurals.languages,
                                         viewModel.languages.size,
                                         viewModel.languages.joinToString()

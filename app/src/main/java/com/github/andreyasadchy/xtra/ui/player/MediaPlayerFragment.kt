@@ -270,11 +270,11 @@ class MediaPlayerFragment : PlayerFragment() {
                                 urls.getOrNull(index)?.let { url ->
                                     when {
                                         quality.equals("source", true) -> {
-                                            val quality = requireContext().getString(R.string.source)
+                                            val quality = getString(R.string.source)
                                             map["source"] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
                                         }
                                         quality.startsWith("audio", true) -> {
-                                            map[AUDIO_ONLY_QUALITY] = Pair(requireContext().getString(R.string.audio_only), url)
+                                            map[AUDIO_ONLY_QUALITY] = Pair(getString(R.string.audio_only), url)
                                         }
                                         else -> {
                                             map[quality] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
@@ -283,10 +283,10 @@ class MediaPlayerFragment : PlayerFragment() {
                                 }
                             }
                             if (!map.containsKey(AUDIO_ONLY_QUALITY)) {
-                                map[AUDIO_ONLY_QUALITY] = Pair(requireContext().getString(R.string.audio_only), null)
+                                map[AUDIO_ONLY_QUALITY] = Pair(getString(R.string.audio_only), null)
                             }
                             if (videoType == STREAM) {
-                                map[CHAT_ONLY_QUALITY] = Pair(requireContext().getString(R.string.chat_only), null)
+                                map[CHAT_ONLY_QUALITY] = Pair(getString(R.string.chat_only), null)
                             }
                             viewModel.qualities = map.toList()
                                 .sortedByDescending {
@@ -452,11 +452,11 @@ class MediaPlayerFragment : PlayerFragment() {
                                     urls.getOrNull(index)?.let { url ->
                                         when {
                                             quality.equals("source", true) -> {
-                                                val quality = requireContext().getString(R.string.source)
+                                                val quality = getString(R.string.source)
                                                 map["source"] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
                                             }
                                             quality.startsWith("audio", true) -> {
-                                                map[AUDIO_ONLY_QUALITY] = Pair(requireContext().getString(R.string.audio_only), url)
+                                                map[AUDIO_ONLY_QUALITY] = Pair(getString(R.string.audio_only), url)
                                             }
                                             else -> {
                                                 map[quality] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
@@ -465,10 +465,10 @@ class MediaPlayerFragment : PlayerFragment() {
                                     }
                                 }
                                 if (!map.containsKey(AUDIO_ONLY_QUALITY)) {
-                                    map[AUDIO_ONLY_QUALITY] = Pair(requireContext().getString(R.string.audio_only), null)
+                                    map[AUDIO_ONLY_QUALITY] = Pair(getString(R.string.audio_only), null)
                                 }
                                 if (videoType == STREAM) {
-                                    map[CHAT_ONLY_QUALITY] = Pair(requireContext().getString(R.string.chat_only), null)
+                                    map[CHAT_ONLY_QUALITY] = Pair(getString(R.string.chat_only), null)
                                 }
                                 viewModel.qualities = map.toList()
                                     .sortedByDescending {

@@ -94,16 +94,16 @@ class FollowedVideosFragment : PagedListFragment(), Scrollable, Sortable, Videos
                     sort = sortValues?.videoSort,
                     type = sortValues?.videoType,
                 )
-                viewModel.sortText.value = requireContext().getString(
+                viewModel.sortText.value = getString(
                     R.string.sort_and_type,
-                    requireContext().getString(
+                    getString(
                         when (viewModel.sort) {
                             VideosSortDialog.SORT_TIME -> R.string.upload_date
                             VideosSortDialog.SORT_VIEWS -> R.string.view_count
                             else -> R.string.upload_date
                         }
                     ),
-                    requireContext().getString(R.string.all)
+                    getString(R.string.all)
                 )
             }
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -156,7 +156,7 @@ class FollowedVideosFragment : PagedListFragment(), Scrollable, Sortable, Videos
                     binding.scrollTop.visibility = View.GONE
                     pagingAdapter.submitData(PagingData.empty())
                     viewModel.setFilter(sort, type)
-                    viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, typeText)
+                    viewModel.sortText.value = getString(R.string.sort_and_type, sortText, typeText)
                 }
                 if (saveDefault) {
                     val item = viewModel.getSortChannel("followed_videos")?.apply {

@@ -303,7 +303,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
         val storage = requireContext().getExternalFilesDirs(".downloads").mapIndexedNotNull { index, file ->
             file?.absolutePath?.let { path ->
                 if (index == 0) {
-                    requireContext().getString(R.string.internal_storage) to path
+                    getString(R.string.internal_storage) to path
                 } else {
                     path.substringBefore("/Android/data", "").takeIf { it.isNotBlank() }?.let {
                         it.substringAfterLast(File.separatorChar) to path
@@ -325,7 +325,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                 val defaultFrom = DateUtils.formatElapsedTime(currentPosition / 1000L).let { if (it.length == 5) "00:$it" else it }
                 val totalTime = DateUtils.formatElapsedTime(totalDuration / 1000L)
                 val defaultTo = totalTime.let { if (it.length != 5) it else "00:$it" }
-                duration.text = requireContext().getString(R.string.duration, totalTime)
+                duration.text = getString(R.string.duration, totalTime)
                 timeTo.editText?.hint = defaultTo
                 timeFrom.editText?.hint = defaultFrom
                 timeFrom.editText?.doOnTextChanged { text, _, _, _ -> if (text?.length == 8) timeTo.requestFocus() }
