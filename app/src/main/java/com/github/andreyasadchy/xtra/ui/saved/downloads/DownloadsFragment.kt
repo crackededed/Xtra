@@ -5,6 +5,7 @@ import android.content.ContentResolver
 import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -41,11 +42,8 @@ import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.download.StreamDownloadWorker
 import com.github.andreyasadchy.xtra.ui.download.VideoDownloadWorker
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.convertDpToPixels
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -182,9 +180,9 @@ class DownloadsFragment : PagedListFragment(), Scrollable {
                     }
                 }
                 val binding = StorageSelectionBinding.inflate(layoutInflater).apply {
-                    storageSpinner.gone()
+                    storageSpinner.visibility = View.GONE
                     if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED) {
-                        appStorageLayout.visible()
+                        appStorageLayout.visibility = View.VISIBLE
                         storage.forEachIndexed { index, pair ->
                             radioGroup.addView(
                                 RadioButton(requireContext()).apply {
@@ -202,7 +200,7 @@ class DownloadsFragment : PagedListFragment(), Scrollable {
                         )
                     } else {
                         noStorageDetected.apply {
-                            visible()
+                            visibility = View.VISIBLE
                             layoutParams = layoutParams.apply {
                                 width = ViewGroup.LayoutParams.WRAP_CONTENT
                             }
@@ -253,7 +251,7 @@ class DownloadsFragment : PagedListFragment(), Scrollable {
             }
             val checkBoxView = LinearLayout(requireContext()).apply {
                 addView(checkBox)
-                val padding = requireContext().convertDpToPixels(20f)
+                val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20f, resources.displayMetrics).toInt()
                 setPadding(padding, 0, padding, 0)
             }
             requireActivity().getAlertDialogBuilder()

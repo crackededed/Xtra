@@ -30,9 +30,7 @@ import com.github.andreyasadchy.xtra.ui.common.VideosSortDialog
 import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -134,7 +132,7 @@ class FollowedVideosFragment : PagedListFragment(), Scrollable, Sortable, Videos
     }
 
     override fun setupSortBar(sortBar: SortBarBinding) {
-        sortBar.root.visible()
+        sortBar.root.visibility = View.VISIBLE
         sortBar.root.setOnClickListener {
             VideosSortDialog.newInstance(
                 sort = viewModel.sort,
@@ -155,7 +153,7 @@ class FollowedVideosFragment : PagedListFragment(), Scrollable, Sortable, Videos
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
                 if (changed) {
-                    binding.scrollTop.gone()
+                    binding.scrollTop.visibility = View.GONE
                     pagingAdapter.submitData(PagingData.empty())
                     viewModel.setFilter(sort, type)
                     viewModel.sortText.value = requireContext().getString(R.string.sort_and_type, sortText, typeText)

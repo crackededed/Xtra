@@ -43,10 +43,8 @@ import com.github.andreyasadchy.xtra.ui.settings.SettingsActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
-import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -195,11 +193,11 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
         if (enableScrollTopButton && requireContext().prefs().getBoolean(C.UI_SCROLLTOP, true)) {
             binding.recyclerViewLayout.scrollTop.setOnClickListener {
                 scrollToTop()
-                it.gone()
+                it.visibility = View.GONE
             }
         }
         with(binding) {
-            sortBar.root.visible()
+            sortBar.root.visibility = View.VISIBLE
             sortBar.root.setOnClickListener {
                 StreamsSortDialog.newInstance(
                     sort = viewModel.sort,
@@ -218,10 +216,10 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.filtersText.collectLatest {
                         if (it != null) {
-                            sortBar.filtersText.visible()
+                            sortBar.filtersText.visibility = View.VISIBLE
                             sortBar.filtersText.text = it
                         } else {
-                            sortBar.filtersText.gone()
+                            sortBar.filtersText.visibility = View.GONE
                         }
                     }
                 }

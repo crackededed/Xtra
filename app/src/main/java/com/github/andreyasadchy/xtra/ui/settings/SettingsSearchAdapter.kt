@@ -1,6 +1,7 @@
 package com.github.andreyasadchy.xtra.ui.settings
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -9,8 +10,6 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.databinding.SettingsSearchListItemBinding
 import com.github.andreyasadchy.xtra.model.ui.SettingsSearchItem
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.visible
 
 class SettingsSearchAdapter(
     private val fragment: Fragment,
@@ -45,28 +44,28 @@ class SettingsSearchAdapter(
                         fragment.findNavController().navigate(item.navDirections)
                     }
                     if (item.location != null) {
-                        preferenceLocation.visible()
+                        preferenceLocation.visibility = View.VISIBLE
                         preferenceLocation.text = item.location
                     } else {
-                        preferenceLocation.gone()
+                        preferenceLocation.visibility = View.GONE
                     }
                     if (item.title != null) {
-                        preferenceTitle.visible()
+                        preferenceTitle.visibility = View.VISIBLE
                         preferenceTitle.text = item.title
                     } else {
-                        preferenceTitle.gone()
+                        preferenceTitle.visibility = View.GONE
                     }
                     if (item.summary != null) {
-                        preferenceSummary.visible()
+                        preferenceSummary.visibility = View.VISIBLE
                         preferenceSummary.text = item.summary
                     } else {
-                        preferenceSummary.gone()
+                        preferenceSummary.visibility = View.GONE
                     }
                     if (item.value != null) {
-                        preferenceValue.visible()
+                        preferenceValue.visibility = View.VISIBLE
                         preferenceValue.text = item.value
                     } else {
-                        preferenceValue.gone()
+                        preferenceValue.visibility = View.GONE
                     }
                 }
             }

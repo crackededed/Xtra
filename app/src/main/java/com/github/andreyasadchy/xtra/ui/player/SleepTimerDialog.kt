@@ -1,6 +1,7 @@
 package com.github.andreyasadchy.xtra.ui.player
 
 import android.app.Dialog
+import android.app.admin.DeviceAdminReceiver
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
@@ -12,7 +13,6 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.DialogSleepTimerBinding
-import com.github.andreyasadchy.xtra.util.AdminReceiver
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
@@ -72,9 +72,9 @@ class SleepTimerDialog : DialogFragment() {
                 }
                 builder.setNeutralButton(android.R.string.cancel) { _, _ -> dismiss() }
             }
-            val receiver = ComponentName(requireContext(), AdminReceiver::class.java)
             val devicePolicyManager = requireContext().getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-            if (devicePolicyManager.isAdminActive(receiver)) {
+            val admin = ComponentName(requireContext(), DeviceAdminReceiver::class.java)
+            if (devicePolicyManager.isAdminActive(admin)) {
                 lockCheckbox.apply {
                     isChecked = requireContext().prefs().getBoolean(C.SLEEP_TIMER_LOCK, false)
                     text = context.getString(R.string.sleep_timer_lock)
@@ -84,11 +84,9 @@ class SleepTimerDialog : DialogFragment() {
                     isChecked = false
                     text = context.getString(R.string.sleep_timer_lock_permissions)
                     setOnClickListener {
-                        val intent = Intent(
-                            DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN
-                        ).putExtra(
-                            DevicePolicyManager.EXTRA_DEVICE_ADMIN, receiver
-                        )
+                        val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
+                            putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, admin)
+                        }
                         requireContext().startActivity(intent)
                         dismiss()
                     }

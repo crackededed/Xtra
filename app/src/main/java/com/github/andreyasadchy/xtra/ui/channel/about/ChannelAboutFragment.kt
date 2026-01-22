@@ -9,11 +9,13 @@ import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.StyleSpan
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.res.use
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
@@ -35,10 +37,7 @@ import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.team.TeamFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.convertDpToPixels
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.toast
-import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -76,7 +75,7 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.CallbackList
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.description.collectLatest {
                         if (!it.isNullOrBlank()) {
-                            description.visible()
+                            description.visibility = View.VISIBLE
                             description.text = it
                         }
                     }
@@ -86,7 +85,7 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.CallbackList
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.socialMedias.collectLatest { result ->
                         if (result != null) {
-                            socialMediaList.visible()
+                            socialMediaList.visibility = View.VISIBLE
                             socialMediaList.removeAllViews()
                             result.forEach {
                                 val title = it.first
@@ -105,7 +104,7 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.CallbackList
                                                             }
                                                             requireContext().startActivity(intent)
                                                         } catch (e: ActivityNotFoundException) {
-                                                            requireContext().toast(R.string.no_browser_found)
+                                                            Toast.makeText(requireContext(), R.string.no_browser_found, Toast.LENGTH_LONG).show()
                                                         }
                                                     }
                                                 }, 0, title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -119,7 +118,8 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.CallbackList
                                             context.obtainStyledAttributes(intArrayOf(com.google.android.material.R.attr.textAppearanceBodyMedium)).use {
                                                 TextViewCompat.setTextAppearance(this, it.getResourceId(0, 0))
                                             }
-                                            setPadding(0, 0, 0, context.convertDpToPixels(5f))
+                                            val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, resources.displayMetrics).toInt()
+                                            setPadding(0, 0, 0, padding)
                                         }
                                     )
                                 }
@@ -135,7 +135,7 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.CallbackList
                             val name = result.first
                             val displayName = result.second
                             if (!displayName.isNullOrBlank()) {
-                                team.visible()
+                                team.visibility = View.VISIBLE
                                 val string = requireContext().getString(R.string.team, displayName)
                                 val index = string.indexOf(displayName)
                                 val spannableString = SpannableString(string)
@@ -162,7 +162,7 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.CallbackList
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.originalName.collectLatest {
                         if (!it.isNullOrBlank()) {
-                            originalName.visible()
+                            originalName.visibility = View.VISIBLE
                             originalName.text = requireContext().getString(R.string.old_username, it)
                         }
                     }

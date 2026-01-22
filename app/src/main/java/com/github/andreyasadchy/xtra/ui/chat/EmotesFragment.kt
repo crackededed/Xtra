@@ -3,6 +3,7 @@ package com.github.andreyasadchy.xtra.ui.chat
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,7 +19,6 @@ import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.model.chat.RecentEmote
 import com.github.andreyasadchy.xtra.ui.view.GridAutofitLayoutManager
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.convertDpToPixels
 import com.github.andreyasadchy.xtra.util.prefs
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -58,7 +58,8 @@ class EmotesFragment : Fragment() {
         with(view as RecyclerView) {
             itemAnimator = null
             adapter = emotesAdapter
-            layoutManager = GridAutofitLayoutManager(context, context.convertDpToPixels(50f)).also { this@EmotesFragment.layoutManager = it }
+            val columnWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50f, resources.displayMetrics).toInt()
+            layoutManager = GridAutofitLayoutManager(context, columnWidth).also { this@EmotesFragment.layoutManager = it }
         }
         if (position == 1) {
             viewLifecycleOwner.lifecycleScope.launch {

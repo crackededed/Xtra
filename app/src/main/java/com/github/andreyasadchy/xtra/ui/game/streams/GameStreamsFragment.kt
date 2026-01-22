@@ -36,9 +36,7 @@ import com.github.andreyasadchy.xtra.ui.common.StreamsSortDialog.Companion.SORT_
 import com.github.andreyasadchy.xtra.ui.common.StreamsSortDialog.Companion.SORT_VIEWERS_ASC
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentArgs
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -130,7 +128,7 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
     }
 
     override fun setupSortBar(sortBar: SortBarBinding) {
-        sortBar.root.visible()
+        sortBar.root.visibility = View.VISIBLE
         sortBar.root.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
                 StreamsSortDialog.newInstance(
@@ -152,10 +150,10 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.filtersText.collectLatest {
                     if (it != null) {
-                        sortBar.filtersText.visible()
+                        sortBar.filtersText.visibility = View.VISIBLE
                         sortBar.filtersText.text = it
                     } else {
-                        sortBar.filtersText.gone()
+                        sortBar.filtersText.visibility = View.GONE
                     }
                 }
             }

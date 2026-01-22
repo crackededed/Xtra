@@ -105,7 +105,7 @@
         </provider>
 
         <receiver
-            android:name=".util.AdminReceiver"
+            android:name="android.app.admin.DeviceAdminReceiver"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_DEVICE_ADMIN"
             android:exported="false">

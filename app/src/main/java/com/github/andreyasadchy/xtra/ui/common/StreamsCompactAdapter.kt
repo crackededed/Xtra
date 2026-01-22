@@ -1,5 +1,6 @@
 package com.github.andreyasadchy.xtra.ui.common
 
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,10 +28,7 @@ import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.convertDpToPixels
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 
 class StreamsCompactAdapter(
     private val fragment: Fragment,
@@ -80,7 +78,7 @@ class StreamsCompactAdapter(
                         (fragment.activity as MainActivity).startStream(item)
                     }
                     if (item.channelLogo != null) {
-                        userImage.visible()
+                        userImage.visibility = View.VISIBLE
                         fragment.requireContext().imageLoader.enqueue(
                             ImageRequest.Builder(fragment.requireContext()).apply {
                                 data(item.channelLogo)
@@ -93,10 +91,10 @@ class StreamsCompactAdapter(
                         )
                         userImage.setOnClickListener(channelListener)
                     } else {
-                        userImage.gone()
+                        userImage.visibility = View.GONE
                     }
                     if (item.channelName != null) {
-                        username.visible()
+                        username.visibility = View.VISIBLE
                         username.text = if (item.channelLogin != null && !item.channelLogin.equals(item.channelName, true)) {
                             when (context.prefs().getString(C.UI_NAME_DISPLAY, "0")) {
                                 "0" -> "${item.channelName}(${item.channelLogin})"
@@ -108,13 +106,13 @@ class StreamsCompactAdapter(
                         }
                         username.setOnClickListener(channelListener)
                     } else {
-                        username.gone()
+                        username.visibility = View.GONE
                     }
                     if (item.title != null && item.title != "") {
-                        title.visible()
+                        title.visibility = View.VISIBLE
                         title.text = item.title?.trim()
                     } else {
-                        title.gone()
+                        title.visibility = View.GONE
                     }
                     if (showGame && item.gameName != null) {
                         val gameListener: (View) -> Unit = {
@@ -134,43 +132,43 @@ class StreamsCompactAdapter(
                                 }
                             )
                         }
-                        gameName.visible()
+                        gameName.visibility = View.VISIBLE
                         gameName.text = item.gameName
                         gameName.setOnClickListener(gameListener)
                     } else {
-                        gameName.gone()
+                        gameName.visibility = View.GONE
                     }
                     if (item.viewerCount != null) {
-                        viewers.visible()
+                        viewers.visibility = View.VISIBLE
                         viewers.text = TwitchApiHelper.formatCount(item.viewerCount ?: 0, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
                     } else {
-                        viewers.gone()
+                        viewers.visibility = View.GONE
                     }
                     if (item.type != null) {
                         val text = TwitchApiHelper.getType(context, item.type)
                         if (text != null) {
-                            type.visible()
+                            type.visibility = View.VISIBLE
                             type.text = text
                         } else {
-                            type.gone()
+                            type.visibility = View.GONE
                         }
                     } else {
-                        type.gone()
+                        type.visibility = View.GONE
                     }
                     if (context.prefs().getBoolean(C.UI_UPTIME, true) && item.startedAt != null) {
                         val text = TwitchApiHelper.getUptime(startedAt = item.startedAt)
                         if (text != null) {
-                            uptime.visible()
+                            uptime.visibility = View.VISIBLE
                             uptime.text = text
                         } else {
-                            uptime.gone()
+                            uptime.visibility = View.GONE
                         }
                     } else {
-                        uptime.gone()
+                        uptime.visibility = View.GONE
                     }
                     if (!item.tags.isNullOrEmpty() && context.prefs().getBoolean(C.UI_TAGS, true)) {
                         tagsLayout.removeAllViews()
-                        tagsLayout.visible()
+                        tagsLayout.visibility = View.VISIBLE
                         val tagsFlowLayout = Flow(context).apply {
                             layoutParams = ConstraintLayout.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -197,13 +195,13 @@ class StreamsCompactAdapter(
                             text.setOnClickListener {
                                 selectTag(tag)
                             }
-                            val padding = context.convertDpToPixels(5f)
+                            val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, context.resources.displayMetrics).toInt()
                             text.setPadding(padding, 0, padding, 0)
                             tagsLayout.addView(text)
                         }
                         tagsFlowLayout.referencedIds = ids.toIntArray()
                     } else {
-                        tagsLayout.gone()
+                        tagsLayout.visibility = View.GONE
                     }
                 }
             }

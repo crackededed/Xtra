@@ -27,7 +27,6 @@ import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
@@ -136,11 +135,11 @@ class ImageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callback
                     })
             }
             args.getString(IMAGE_NAME)?.let {
-                imageName.visible()
+                imageName.visibility = View.VISIBLE
                 imageName.text = it
             }
             args.getString(IMAGE_SOURCE)?.let {
-                imageSource.visible()
+                imageSource.visibility = View.VISIBLE
                 imageSource.text = when (it) {
                     PERSONAL_STV -> requireContext().getString(R.string.personal_stv_emote)
                     CHANNEL_STV -> requireContext().getString(R.string.channel_stv_emote)
@@ -174,7 +173,7 @@ class ImageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callback
                                 }
                                 when (emoteCard.type) {
                                     "SUBSCRIPTIONS" -> {
-                                        imageSource.visible()
+                                        imageSource.visibility = View.VISIBLE
                                         imageSource.text = requireContext().getString(R.string.channel_sub_emote, name,
                                             when (emoteCard.subTier) {
                                                 "TIER_1" -> "1"
@@ -185,11 +184,11 @@ class ImageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callback
                                         )
                                     }
                                     "FOLLOWER" -> {
-                                        imageSource.visible()
+                                        imageSource.visibility = View.VISIBLE
                                         imageSource.text = requireContext().getString(R.string.channel_follower_emote, name)
                                     }
                                     "BITS_BADGE_TIERS" -> {
-                                        imageSource.visible()
+                                        imageSource.visibility = View.VISIBLE
                                         imageSource.text = requireContext().getString(R.string.bits_reward_emote, emoteCard.bitThreshold)
                                     }
                                 }

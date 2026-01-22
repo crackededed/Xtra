@@ -13,8 +13,10 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.text.format.DateUtils
 import android.util.Log
+import android.view.View
 import android.widget.HorizontalScrollView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
@@ -51,11 +53,6 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.player.PlaybackService.CustomHlsPlaylistParserFactory
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.isNetworkAvailable
-import com.github.andreyasadchy.xtra.util.shortToast
-import com.github.andreyasadchy.xtra.util.toast
-import com.github.andreyasadchy.xtra.util.visible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -88,11 +85,11 @@ class ExoPlayerFragment : PlayerFragment() {
                             val showPlayButton = Util.shouldShowPlayButton(player)
                             if (showPlayButton) {
                                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
-                                binding.playerControls.playPause.visible()
+                                binding.playerControls.playPause.visibility = View.VISIBLE
                             } else {
                                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
                                 if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
-                                    binding.playerControls.playPause.gone()
+                                    binding.playerControls.playPause.visibility = View.GONE
                                 }
                             }
                             setPipActions(!showPlayButton)
@@ -108,11 +105,11 @@ class ExoPlayerFragment : PlayerFragment() {
                             val showPlayButton = Util.shouldShowPlayButton(player)
                             if (showPlayButton) {
                                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
-                                binding.playerControls.playPause.visible()
+                                binding.playerControls.playPause.visibility = View.VISIBLE
                             } else {
                                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
                                 if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
-                                    binding.playerControls.playPause.gone()
+                                    binding.playerControls.playPause.visibility = View.GONE
                                 }
                             }
                             setPipActions(!showPlayButton)
@@ -126,11 +123,11 @@ class ExoPlayerFragment : PlayerFragment() {
                         override fun onAvailableCommandsChanged(availableCommands: Player.Commands) {
                             if (Util.shouldShowPlayButton(player)) {
                                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
-                                binding.playerControls.playPause.visible()
+                                binding.playerControls.playPause.visibility = View.VISIBLE
                             } else {
                                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
                                 if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
-                                    binding.playerControls.playPause.gone()
+                                    binding.playerControls.playPause.visibility = View.GONE
                                 }
                             }
                             val duration = player?.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0
@@ -319,11 +316,11 @@ class ExoPlayerFragment : PlayerFragment() {
                                                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                                                 }.build()
-                                                                binding.playerSurface.gone()
+                                                                binding.playerSurface.visibility = View.GONE
                                                             }
                                                             player.volume = 0f
                                                         }
-                                                        requireContext().toast(R.string.waiting_ads)
+                                                        Toast.makeText(requireContext(), R.string.waiting_ads, Toast.LENGTH_LONG).show()
                                                     }
                                                 }
                                             }
@@ -336,7 +333,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                                     player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                                         setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                                                     }.build()
-                                                    binding.playerSurface.visible()
+                                                    binding.playerSurface.visibility = View.VISIBLE
                                                 }
                                                 player.volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
                                             }
@@ -351,13 +348,18 @@ class ExoPlayerFragment : PlayerFragment() {
                             when (videoType) {
                                 STREAM -> {
                                     val responseCode = (player?.playerError?.cause as? HttpDataSource.InvalidResponseCodeException)?.responseCode ?: 0
-                                    if (requireContext().isNetworkAvailable) {
+                                    val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                                    val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                                    val isNetworkAvailable = networkCapabilities != null
+                                            && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                                            && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                                    if (isNetworkAvailable) {
                                         when {
                                             responseCode == 404 -> {
-                                                requireContext().toast(R.string.stream_ended)
+                                                Toast.makeText(requireContext(), R.string.stream_ended, Toast.LENGTH_LONG).show()
                                             }
                                             viewModel.useCustomProxy && responseCode >= 400 -> {
-                                                requireContext().toast(R.string.proxy_error)
+                                                Toast.makeText(requireContext(), R.string.proxy_error, Toast.LENGTH_LONG).show()
                                                 viewModel.useCustomProxy = false
                                                 viewLifecycleOwner.lifecycleScope.launch {
                                                     delay(1500L)
@@ -368,7 +370,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                                 }
                                             }
                                             else -> {
-                                                requireContext().shortToast(R.string.player_error)
+                                                Toast.makeText(requireContext(), R.string.player_error, Toast.LENGTH_SHORT).show()
                                                 viewLifecycleOwner.lifecycleScope.launch {
                                                     delay(1500L)
                                                     try {
@@ -382,7 +384,12 @@ class ExoPlayerFragment : PlayerFragment() {
                                 }
                                 VIDEO -> {
                                     val responseCode = (error.cause as? HttpDataSource.InvalidResponseCodeException)?.responseCode ?: 0
-                                    if (requireContext().isNetworkAvailable) {
+                                    val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                                    val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                                    val isNetworkAvailable = networkCapabilities != null
+                                            && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                                            && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                                    if (isNetworkAvailable) {
                                         val skipAccessToken = prefs.getString(C.TOKEN_SKIP_VIDEO_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2
                                         when {
                                             skipAccessToken == 1 && viewModel.shouldRetry && responseCode != 0 -> {
@@ -394,10 +401,10 @@ class ExoPlayerFragment : PlayerFragment() {
                                                 playVideo(true, player?.currentPosition)
                                             }
                                             responseCode == 403 -> {
-                                                requireContext().toast(R.string.video_subscribers_only)
+                                                Toast.makeText(requireContext(), R.string.video_subscribers_only, Toast.LENGTH_LONG).show()
                                             }
                                             else -> {
-                                                requireContext().shortToast(R.string.player_error)
+                                                Toast.makeText(requireContext(), R.string.player_error, Toast.LENGTH_SHORT).show()
                                                 viewLifecycleOwner.lifecycleScope.launch {
                                                     delay(1500L)
                                                     try {
@@ -447,11 +454,11 @@ class ExoPlayerFragment : PlayerFragment() {
                         updateProgress()
                         if (Util.shouldShowPlayButton(player)) {
                             binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
-                            binding.playerControls.playPause.visible()
+                            binding.playerControls.playPause.visibility = View.VISIBLE
                         } else {
                             binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
                             if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
-                                binding.playerControls.playPause.gone()
+                                binding.playerControls.playPause.visibility = View.GONE
                             }
                         }
                     }
@@ -550,7 +557,7 @@ class ExoPlayerFragment : PlayerFragment() {
             player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                 setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
             }.build()
-            binding.playerSurface.visible()
+            binding.playerSurface.visibility = View.VISIBLE
             val newId = requireArguments().getString(KEY_VIDEO_ID)?.toLongOrNull()
             val position = if (playbackService?.videoId == newId && player.currentMediaItem != null) {
                 player.currentPosition
@@ -595,12 +602,12 @@ class ExoPlayerFragment : PlayerFragment() {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                 }.build()
-                binding.playerSurface.gone()
+                binding.playerSurface.visibility = View.GONE
             } else {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                 }.build()
-                binding.playerSurface.visible()
+                binding.playerSurface.visibility = View.VISIBLE
             }
             playbackService?.videoId = null
             playbackService?.offlineVideoId = null
@@ -637,12 +644,12 @@ class ExoPlayerFragment : PlayerFragment() {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                 }.build()
-                binding.playerSurface.gone()
+                binding.playerSurface.visibility = View.GONE
             } else {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                 }.build()
-                binding.playerSurface.visible()
+                binding.playerSurface.visibility = View.VISIBLE
             }
             val newId = requireArguments().getInt(KEY_OFFLINE_VIDEO_ID).takeIf { it != 0 }
             val position = if (playbackService?.offlineVideoId == newId && player.currentMediaItem != null) {
@@ -742,7 +749,7 @@ class ExoPlayerFragment : PlayerFragment() {
         with(binding.playerControls) {
             val textTracks = player?.currentTracks?.groups?.find { it.type == androidx.media3.common.C.TRACK_TYPE_TEXT }
             if (textTracks != null && prefs.getBoolean(C.PLAYER_SUBTITLES, false)) {
-                subtitles.visible()
+                subtitles.visibility = View.VISIBLE
                 if (textTracks.isSelected) {
                     subtitles.setImageResource(androidx.media3.ui.R.drawable.exo_ic_subtitle_on)
                     subtitles.setOnClickListener {
@@ -757,7 +764,7 @@ class ExoPlayerFragment : PlayerFragment() {
                     }
                 }
             } else {
-                subtitles.gone()
+                subtitles.visibility = View.GONE
             }
             (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setSubtitles(textTracks)
         }
@@ -828,7 +835,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                 setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                                 clearOverridesOfType(androidx.media3.common.C.TRACK_TYPE_VIDEO)
                             }.build()
-                            binding.playerSurface.visible()
+                            binding.playerSurface.visibility = View.VISIBLE
                         }
                         AUDIO_ONLY_QUALITY -> {
                             if (viewModel.usingProxy) {
@@ -838,7 +845,7 @@ class ExoPlayerFragment : PlayerFragment() {
                             player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                 setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                             }.build()
-                            binding.playerSurface.gone()
+                            binding.playerSurface.visibility = View.GONE
                             quality.value.second?.let {
                                 val position = player.currentPosition
                                 if (viewModel.qualities.containsKey(AUTO_QUALITY)) {
@@ -869,7 +876,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                 } ?: player.prepare()
                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
-                                    binding.playerSurface.visible()
+                                    binding.playerSurface.visibility = View.VISIBLE
                                     if (!player.currentTracks.isEmpty) {
                                         player.currentTracks.groups.find { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO }?.let {
                                             val selectedQuality = quality.key.split("p")
@@ -909,7 +916,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                                 }.build()
-                                binding.playerSurface.visible()
+                                binding.playerSurface.visibility = View.VISIBLE
                             }
                         }
                     }
@@ -942,7 +949,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                 }.build()
-                                binding.playerSurface.gone()
+                                binding.playerSurface.visibility = View.GONE
                             }
                             if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
                                 quality.value.second?.let {
@@ -1035,7 +1042,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                     player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                         setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                     }.build()
-                                    binding.playerSurface.gone()
+                                    binding.playerSurface.visibility = View.GONE
                                 }
                                 if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
                                     quality.value.second?.let {
