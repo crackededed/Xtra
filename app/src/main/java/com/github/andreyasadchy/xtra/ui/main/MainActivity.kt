@@ -1005,7 +1005,14 @@ class MainActivity : AppCompatActivity() {
                             "1:${if (defaultSavedPage == "1") "1" else "0"}:1"
                     putString(C.UI_SAVED_TABS, list)
                 }
-                putInt(C.SETTINGS_VERSION, 11)
+            }
+        }
+        if (version < 12) {
+            prefs.edit {
+                if (!prefs.getBoolean("ui_theme_rounded_corners", true)) {
+                    putString(C.UI_THEME_ROUNDED_CORNERS, "2")
+                }
+                putInt(C.SETTINGS_VERSION, 12)
             }
         }
     }

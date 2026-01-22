@@ -6,7 +6,57 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
+    <style name="LightThemeReducedPadding" parent="BaseLightThemeReducedPadding">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="LightThemeCompactText" parent="BaseLightThemeCompactText">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="LightThemeReducedPaddingCompactText" parent="BaseLightThemeReducedPaddingCompactText">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="LightThemeSmallCorners" parent="BaseLightThemeSmallCorners">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="LightThemeSmallCornersReducedPadding" parent="BaseLightThemeSmallCornersReducedPadding">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="LightThemeSmallCornersCompactText" parent="BaseLightThemeSmallCornersCompactText">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="LightThemeSmallCornersReducedPaddingCompactText" parent="BaseLightThemeSmallCornersReducedPaddingCompactText">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
     <style name="LightThemeNoCorners" parent="BaseLightThemeNoCorners">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="LightThemeNoCornersReducedPadding" parent="BaseLightThemeNoCornersReducedPadding">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="LightThemeNoCornersCompactText" parent="BaseLightThemeNoCornersCompactText">
+        <item name="android:navigationBarColor">@color/lightScrim</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="LightThemeNoCornersReducedPaddingCompactText" parent="BaseLightThemeNoCornersReducedPaddingCompactText">
         <item name="android:navigationBarColor">@color/lightScrim</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
