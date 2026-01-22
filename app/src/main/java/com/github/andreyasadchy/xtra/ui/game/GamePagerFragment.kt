@@ -145,7 +145,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                         viewModel.isFollowing.value?.let {
                             if (it) {
                                 requireContext().getAlertDialogBuilder()
-                                    .setMessage(requireContext().getString(R.string.unfollow_channel, args.gameName))
+                                    .setMessage(getString(R.string.unfollow_channel, args.gameName))
                                     .setNegativeButton(getString(R.string.no), null)
                                     .setPositiveButton(getString(R.string.yes)) { _, _ ->
                                         viewModel.deleteFollowGame(
@@ -207,10 +207,10 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                                 followButton?.apply {
                                     if (it) {
                                         icon = ContextCompat.getDrawable(requireContext(), R.drawable.baseline_favorite_black_24)
-                                        title = requireContext().getString(R.string.unfollow)
+                                        title = getString(R.string.unfollow)
                                     } else {
                                         icon = ContextCompat.getDrawable(requireContext(), R.drawable.baseline_favorite_border_black_24)
-                                        title = requireContext().getString(R.string.follow)
+                                        title = getString(R.string.follow)
                                     }
                                 }
                             }
@@ -387,7 +387,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
             if (game?.viewersCount != null) {
                 viewers.visibility = View.VISIBLE
                 val count = game.viewersCount ?: 0
-                viewers.text = requireContext().resources.getQuantityString(
+                viewers.text = resources.getQuantityString(
                     R.plurals.viewers,
                     count,
                     TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
@@ -398,7 +398,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
             if (game?.broadcastersCount != null && requireContext().prefs().getBoolean(C.UI_BROADCASTERSCOUNT, true)) {
                 broadcastersCount.visibility = View.VISIBLE
                 val count = game.broadcastersCount ?: 0
-                broadcastersCount.text = requireContext().resources.getQuantityString(
+                broadcastersCount.text = resources.getQuantityString(
                     R.plurals.broadcasters,
                     count,
                     TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
@@ -409,7 +409,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
             if (game?.followersCount != null) {
                 followers.visibility = View.VISIBLE
                 val count = game.followersCount
-                followers.text = requireContext().resources.getQuantityString(
+                followers.text = resources.getQuantityString(
                     R.plurals.followers,
                     count,
                     TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))

@@ -88,9 +88,9 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                     if (isLoggedIn && requireContext().prefs().getBoolean(C.PLAYER_MENU_CHAT_BAR, true)) {
                         menuChatBar.visibility = View.VISIBLE
                         if (requireContext().prefs().getBoolean(C.KEY_CHAT_BAR_VISIBLE, true)) {
-                            menuChatBar.text = requireContext().getString(R.string.hide_chat_bar)
+                            menuChatBar.text = getString(R.string.hide_chat_bar)
                         } else {
-                            menuChatBar.text = requireContext().getString(R.string.show_chat_bar)
+                            menuChatBar.text = getString(R.string.show_chat_bar)
                         }
                         menuChatBar.setOnClickListener {
                             (parentFragment as? PlayerFragment)?.toggleChatBar()
@@ -100,13 +100,13 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                     if (requireContext().prefs().getBoolean(C.PLAYER_MENU_CHAT_DISCONNECT, true)) {
                         menuChatDisconnect.visibility = View.VISIBLE
                         if ((parentFragment as? PlayerFragment)?.isActive() == true) {
-                            menuChatDisconnect.text = requireContext().getString(R.string.disconnect_chat)
+                            menuChatDisconnect.text = getString(R.string.disconnect_chat)
                             menuChatDisconnect.setOnClickListener {
                                 (parentFragment as? PlayerFragment)?.disconnect()
                                 dismiss()
                             }
                         } else {
-                            menuChatDisconnect.text = requireContext().getString(R.string.connect_chat)
+                            menuChatDisconnect.text = getString(R.string.connect_chat)
                             menuChatDisconnect.setOnClickListener {
                                 (parentFragment as? PlayerFragment)?.reconnect()
                                 dismiss()
@@ -160,13 +160,13 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                 if (requireContext().prefs().getBoolean(C.PLAYER_MENU_CHAT_TOGGLE, false)) {
                     menuChatToggle.visibility = View.VISIBLE
                     if (requireContext().prefs().getBoolean(C.KEY_CHAT_OPENED, true)) {
-                        menuChatToggle.text = requireContext().getString(R.string.hide_chat)
+                        menuChatToggle.text = getString(R.string.hide_chat)
                         menuChatToggle.setOnClickListener {
                             (parentFragment as? PlayerFragment)?.hideChat()
                             dismiss()
                         }
                     } else {
-                        menuChatToggle.text = requireContext().getString(R.string.show_chat)
+                        menuChatToggle.text = getString(R.string.show_chat)
                         menuChatToggle.setOnClickListener {
                             (parentFragment as? PlayerFragment)?.showChat()
                             dismiss()
@@ -249,7 +249,7 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
     fun setBookmarkText(isBookmarked: Boolean) {
         with(binding) {
             menuBookmark.visibility = View.VISIBLE
-            menuBookmark.text = requireContext().getString(if (isBookmarked) R.string.remove_bookmark else R.string.add_bookmark)
+            menuBookmark.text = getString(if (isBookmarked) R.string.remove_bookmark else R.string.add_bookmark)
             menuBookmark.setOnClickListener {
                 (parentFragment as? PlayerFragment)?.saveBookmark()
                 dismiss()
@@ -262,14 +262,14 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
             if (subtitles != null && requireContext().prefs().getBoolean(C.PLAYER_MENU_SUBTITLES, true)) {
                 menuSubtitles.visibility = View.VISIBLE
                 if (subtitles.isSelected) {
-                    menuSubtitles.text = requireContext().getString(R.string.hide_subtitles)
+                    menuSubtitles.text = getString(R.string.hide_subtitles)
                     menuSubtitles.setOnClickListener {
                         (parentFragment as? PlayerFragment)?.toggleSubtitles(false)
                         requireContext().prefs().edit { putBoolean(C.PLAYER_SUBTITLES_ENABLED, false) }
                         dismiss()
                     }
                 } else {
-                    menuSubtitles.text = requireContext().getString(R.string.show_subtitles)
+                    menuSubtitles.text = getString(R.string.show_subtitles)
                     menuSubtitles.setOnClickListener {
                         (parentFragment as? PlayerFragment)?.toggleSubtitles(true)
                         requireContext().prefs().edit { putBoolean(C.PLAYER_SUBTITLES_ENABLED, true) }

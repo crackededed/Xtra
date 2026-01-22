@@ -113,7 +113,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
                         true
                     }
                     R.id.share -> {
-                        requireContext().startActivity(Intent.createChooser(Intent().apply {
+                        startActivity(Intent.createChooser(Intent().apply {
                             action = Intent.ACTION_SEND
                             putExtra(Intent.EXTRA_TEXT, "https://twitch.tv/team/${args.teamName}")
                             args.teamName?.let {
@@ -200,7 +200,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
             if (team.memberCount != null) {
                 teamMembers.visibility = View.VISIBLE
                 val count = team.memberCount
-                teamMembers.text = requireContext().resources.getQuantityString(
+                teamMembers.text = resources.getQuantityString(
                     R.plurals.members,
                     count,
                     TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
@@ -214,7 +214,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
             }
             if (!team.ownerName.isNullOrBlank() || !team.ownerLogin.isNullOrBlank()) {
                 teamOwner.visibility = View.VISIBLE
-                teamOwner.text = requireContext().getString(
+                teamOwner.text = getString(
                     R.string.owner,
                     if (team.ownerLogin != null && !team.ownerLogin.equals(team.ownerName, true)) {
                         when (requireContext().prefs().getString(C.UI_NAME_DISPLAY, "0")) {

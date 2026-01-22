@@ -82,7 +82,7 @@ class SavedMediaFragment : Fragment(), Scrollable, FragmentHost {
                             val storage = ContextCompat.getExternalFilesDirs(requireContext(), ".downloads").mapIndexedNotNull { index, file ->
                                 file?.absolutePath?.let { path ->
                                     if (index == 0) {
-                                        requireContext().getString(R.string.internal_storage) to path
+                                        getString(R.string.internal_storage) to path
                                     } else {
                                         path.substringBefore("/Android/data", "").takeIf { it.isNotBlank() }?.let {
                                             it.substringAfterLast(File.separatorChar) to path

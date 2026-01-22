@@ -88,10 +88,10 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
                     period = sortValues?.clipPeriod,
                     languages = sortValues?.clipLanguages?.split(',')?.toTypedArray(),
                 )
-                viewModel.sortText.value = requireContext().getString(
+                viewModel.sortText.value = getString(
                     R.string.sort_and_period,
-                    requireContext().getString(R.string.view_count),
-                    requireContext().getString(
+                    getString(R.string.view_count),
+                    getString(
                         when (viewModel.period) {
                             VideosSortDialog.PERIOD_DAY -> R.string.today
                             VideosSortDialog.PERIOD_WEEK -> R.string.this_week
@@ -102,7 +102,7 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
                     )
                 )
                 viewModel.filtersText.value = if (viewModel.languages.isNotEmpty()) {
-                    requireContext().resources.getQuantityString(R.plurals.languages, viewModel.languages.size, viewModel.languages.joinToString())
+                    resources.getQuantityString(R.plurals.languages, viewModel.languages.size, viewModel.languages.joinToString())
                 } else null
             }
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -154,9 +154,9 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
                     binding.scrollTop.visibility = View.GONE
                     pagingAdapter.submitData(PagingData.empty())
                     viewModel.setFilter(period, languages)
-                    viewModel.sortText.value = requireContext().getString(R.string.sort_and_period, sortText, periodText)
+                    viewModel.sortText.value = getString(R.string.sort_and_period, sortText, periodText)
                     viewModel.filtersText.value = if (languages.isNotEmpty()) {
-                        requireContext().resources.getQuantityString(R.plurals.languages, languages.size, languages.joinToString())
+                        resources.getQuantityString(R.plurals.languages, languages.size, languages.joinToString())
                     } else null
                 }
                 if (saveSort) {

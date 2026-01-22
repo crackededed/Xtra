@@ -346,7 +346,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
             if (user.createdAt != null) {
                 userLayout.visibility = View.VISIBLE
                 userCreated.visibility = View.VISIBLE
-                userCreated.text = requireContext().getString(R.string.created_at, TwitchApiHelper.formatTimeString(requireContext(), user.createdAt))
+                userCreated.text = getString(R.string.created_at, TwitchApiHelper.formatTimeString(requireContext(), user.createdAt))
                 if (user.bannerImageURL != null) {
                     userCreated.setTextColor(Color.LTGRAY)
                     userCreated.setShadowLayer(4f, 0f, 0f, Color.BLACK)
@@ -357,7 +357,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
             if (user.followedAt != null) {
                 userLayout.visibility = View.VISIBLE
                 userFollowed.visibility = View.VISIBLE
-                userFollowed.text = requireContext().getString(R.string.followed_at, TwitchApiHelper.formatTimeString(requireContext(), user.followedAt!!))
+                userFollowed.text = getString(R.string.followed_at, TwitchApiHelper.formatTimeString(requireContext(), user.followedAt!!))
                 if (user.bannerImageURL != null) {
                     userFollowed.setTextColor(Color.LTGRAY)
                     userFollowed.setShadowLayer(4f, 0f, 0f, Color.BLACK)

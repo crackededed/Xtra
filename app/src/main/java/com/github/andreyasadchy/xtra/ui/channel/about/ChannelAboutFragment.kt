@@ -102,7 +102,7 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.CallbackList
                                                             val intent = Intent(Intent.ACTION_VIEW, url.toUri()).apply {
                                                                 addCategory(Intent.CATEGORY_BROWSABLE)
                                                             }
-                                                            requireContext().startActivity(intent)
+                                                            startActivity(intent)
                                                         } catch (e: ActivityNotFoundException) {
                                                             Toast.makeText(requireContext(), R.string.no_browser_found, Toast.LENGTH_LONG).show()
                                                         }
@@ -136,7 +136,7 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.CallbackList
                             val displayName = result.second
                             if (!displayName.isNullOrBlank()) {
                                 team.visibility = View.VISIBLE
-                                val string = requireContext().getString(R.string.team, displayName)
+                                val string = getString(R.string.team, displayName)
                                 val index = string.indexOf(displayName)
                                 val spannableString = SpannableString(string)
                                 spannableString.setSpan(StyleSpan(Typeface.BOLD), index, index + displayName.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -163,7 +163,7 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.CallbackList
                     viewModel.originalName.collectLatest {
                         if (!it.isNullOrBlank()) {
                             originalName.visibility = View.VISIBLE
-                            originalName.text = requireContext().getString(R.string.old_username, it)
+                            originalName.text = getString(R.string.old_username, it)
                         }
                     }
                 }

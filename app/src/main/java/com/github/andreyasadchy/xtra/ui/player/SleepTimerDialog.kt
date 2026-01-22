@@ -34,8 +34,7 @@ class SleepTimerDialog : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogSleepTimerBinding.inflate(layoutInflater)
-        val context = requireContext()
-        val builder = context.getAlertDialogBuilder()
+        val builder = requireContext().getAlertDialogBuilder()
             .setTitle(getString(R.string.sleep_timer))
             .setView(binding.root)
         with(binding) {
@@ -77,17 +76,17 @@ class SleepTimerDialog : DialogFragment() {
             if (devicePolicyManager.isAdminActive(admin)) {
                 lockCheckbox.apply {
                     isChecked = requireContext().prefs().getBoolean(C.SLEEP_TIMER_LOCK, false)
-                    text = context.getString(R.string.sleep_timer_lock)
+                    text = getString(R.string.sleep_timer_lock)
                 }
             } else {
                 lockCheckbox.apply {
                     isChecked = false
-                    text = context.getString(R.string.sleep_timer_lock_permissions)
+                    text = getString(R.string.sleep_timer_lock_permissions)
                     setOnClickListener {
                         val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
                             putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, admin)
                         }
-                        requireContext().startActivity(intent)
+                        startActivity(intent)
                         dismiss()
                     }
                 }
