@@ -67,7 +67,6 @@ object TwitchApiHelper {
             "archive" -> context.getString(R.string.video_type_archive)
             "highlight" -> context.getString(R.string.video_type_highlight)
             "upload" -> context.getString(R.string.video_type_upload)
-            "rerun" -> context.getString(R.string.video_type_rerun)
             else -> null
         }
     }

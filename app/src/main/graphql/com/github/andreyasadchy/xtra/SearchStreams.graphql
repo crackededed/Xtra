@@ -23,7 +23,6 @@ query SearchStreams($query: String!, $first: Int, $after: Cursor) {
                 freeformTags {
                     name
                 }
-                type
                 viewersCount
             }
         }

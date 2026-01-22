@@ -38,18 +38,6 @@
                 tools:visibility="visible" />
 
             <com.github.andreyasadchy.xtra.ui.view.TextWithShadow
-                android:id="@+id/type"
-                style="@style/ThumbnailItem"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="10dp"
-                android:layout_marginRight="10dp"
-                android:visibility="gone"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="Rerun"
-                tools:visibility="visible" />
-
-            <com.github.andreyasadchy.xtra.ui.view.TextWithShadow
                 android:id="@+id/uptime"
                 style="@style/ThumbnailItem"
                 android:layout_marginEnd="5dp"

@@ -138,17 +138,6 @@ class TeamMembersAdapter(
                         } else {
                             gameName.visibility = View.GONE
                         }
-                        if (item.type != null) {
-                            val text = TwitchApiHelper.getType(context, item.type)
-                            if (text != null) {
-                                type.visibility = View.VISIBLE
-                                type.text = text
-                            } else {
-                                type.visibility = View.GONE
-                            }
-                        } else {
-                            type.visibility = View.GONE
-                        }
                         if (context.prefs().getBoolean(C.UI_UPTIME, true) && item.startedAt != null) {
                             val text = TwitchApiHelper.getUptime(startedAt = item.startedAt)
                             if (text != null) {
@@ -202,7 +191,6 @@ class TeamMembersAdapter(
                         root.setOnClickListener(channelListener)
                         title.visibility = View.GONE
                         gameName.visibility = View.GONE
-                        type.visibility = View.GONE
                         uptime.visibility = View.GONE
                         tagsLayout.visibility = View.GONE
                     }

@@ -32,7 +32,6 @@ query UserFollowedStreams($first: Int, $after: Cursor) {
                         freeformTags {
                             name
                         }
-                        type
                         viewersCount
                     }
                 }

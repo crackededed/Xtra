@@ -566,22 +566,17 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
     private fun updateStreamLayout(stream: Stream?) {
         with(binding) {
             val activity = requireActivity() as MainActivity
-            if (stream?.type?.lowercase() == "rerun") {
-                watchLive.text = getString(R.string.watch_rerun)
+            if (stream?.viewerCount != null) {
+                watchLive.text = getString(R.string.watch_live)
                 watchLive.setOnClickListener { activity.startStream(stream) }
             } else {
-                if (stream?.viewerCount != null) {
-                    watchLive.text = getString(R.string.watch_live)
-                    watchLive.setOnClickListener { activity.startStream(stream) }
-                } else {
-                    if (stream?.user?.lastBroadcast != null) {
-                        TwitchApiHelper.formatTimeString(requireContext(), stream.user.lastBroadcast!!).let {
-                            if (it != null)  {
-                                lastBroadcast.visibility = View.VISIBLE
-                                lastBroadcast.text = getString(R.string.last_broadcast_date, it)
-                            } else {
-                                lastBroadcast.visibility = View.GONE
-                            }
+                if (stream?.user?.lastBroadcast != null) {
+                    TwitchApiHelper.formatTimeString(requireContext(), stream.user.lastBroadcast!!).let {
+                        if (it != null)  {
+                            lastBroadcast.visibility = View.VISIBLE
+                            lastBroadcast.text = getString(R.string.last_broadcast_date, it)
+                        } else {
+                            lastBroadcast.visibility = View.GONE
                         }
                     }
                 }
