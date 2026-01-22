@@ -1,12 +1,15 @@
 package com.github.andreyasadchy.xtra.ui.game
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.constraintlayout.helper.widget.Flow
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -29,6 +32,9 @@ import androidx.navigation.fragment.navArgs
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import androidx.viewpager2.widget.ViewPager2
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentGamePagerBinding
 import com.github.andreyasadchy.xtra.model.ui.Game
@@ -44,16 +50,10 @@ import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.settings.SettingsActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.convertDpToPixels
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.isInLandscapeOrientation
-import com.github.andreyasadchy.xtra.util.loadImage
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.reduceDragSensitivity
-import com.github.andreyasadchy.xtra.util.shortToast
 import com.github.andreyasadchy.xtra.util.tokenPrefs
-import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.tabs.TabLayout
@@ -82,7 +82,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentGamePagerBinding.inflate(inflater, container, false)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            binding.sortBar.root.visible()
+            binding.sortBar.root.visibility = View.VISIBLE
         }
         return binding.root
     }
@@ -106,7 +106,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
         with(binding) {
             val activity = requireActivity() as MainActivity
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                if (activity.isInLandscapeOrientation) {
+                if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                     appBar.setExpanded(false, false)
                 }
             } else {
@@ -115,21 +115,22 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                 }
             }
             if (args.gameName != null) {
-                gameLayout.visible()
-                gameName.visible()
+                gameLayout.visibility = View.VISIBLE
+                gameName.visibility = View.VISIBLE
                 gameName.text = args.gameName
             } else {
-                gameName.gone()
+                gameName.visibility = View.GONE
             }
             if (args.boxArt != null) {
-                gameLayout.visible()
-                gameImage.visible()
-                gameImage.loadImage(
-                    this@GamePagerFragment,
-                    args.boxArt,
-                )
+                gameLayout.visibility = View.VISIBLE
+                gameImage.visibility = View.VISIBLE
+                Glide.with(this@GamePagerFragment)
+                    .load(args.boxArt)
+                    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .into(gameImage)
             } else {
-                gameImage.gone()
+                gameImage.visibility = View.GONE
             }
             val isLoggedIn = !TwitchApiHelper.getGQLHeaders(requireContext(), true)[C.HEADER_TOKEN].isNullOrBlank() ||
                     !TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank()
@@ -223,12 +224,12 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                                 val following = pair.first
                                 val errorMessage = pair.second
                                 if (!errorMessage.isNullOrBlank()) {
-                                    requireContext().shortToast(errorMessage)
+                                    Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
                                 } else {
                                     if (following) {
-                                        requireContext().shortToast(requireContext().getString(R.string.now_following, args.gameName))
+                                        Toast.makeText(requireContext(), getString(R.string.now_following, args.gameName), Toast.LENGTH_SHORT).show()
                                     } else {
-                                        requireContext().shortToast(requireContext().getString(R.string.unfollowed, args.gameName))
+                                        Toast.makeText(requireContext(), getString(R.string.unfollowed, args.gameName), Toast.LENGTH_SHORT).show()
                                     }
                                 }
                                 viewModel.follow.value = null
@@ -262,7 +263,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                 }
             }
             if (tabs.size <= 1) {
-                tabLayout.gone()
+                tabLayout.visibility = View.GONE
             } else {
                 if (tabs.size >= 5) {
                     tabLayout.tabGravity = TabLayout.GRAVITY_CENTER
@@ -289,7 +290,7 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                                     collapsingToolbar.scrimVisibleHeightTrigger = toolbarHeight + 1
                                 }
                             } else {
-                                sortBar.root.gone()
+                                sortBar.root.visibility = View.GONE
                                 toolbarContainer2.doOnLayout {
                                     toolbarContainer.layoutParams = (toolbarContainer.layoutParams as CollapsingToolbarLayout.LayoutParams).apply { bottomMargin = toolbarContainer2.height }
                                     val toolbarHeight = toolbarContainer.marginTop + toolbarContainer.marginBottom
@@ -370,20 +371,21 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
     private fun updateGameLayout(game: Game?) {
         with(binding) {
             if (!gameImage.isVisible && game?.boxArt != null) {
-                gameLayout.visible()
-                gameImage.visible()
-                gameImage.loadImage(
-                    this@GamePagerFragment,
-                    game.boxArt,
-                )
+                gameLayout.visibility = View.VISIBLE
+                gameImage.visibility = View.VISIBLE
+                Glide.with(this@GamePagerFragment)
+                    .load(game.boxArt)
+                    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .into(gameImage)
             }
             if (game?.gameName != null && game.gameName != args.gameName) {
-                gameLayout.visible()
-                gameName.visible()
+                gameLayout.visibility = View.VISIBLE
+                gameName.visibility = View.VISIBLE
                 gameName.text = game.gameName
             }
             if (game?.viewersCount != null) {
-                viewers.visible()
+                viewers.visibility = View.VISIBLE
                 val count = game.viewersCount ?: 0
                 viewers.text = requireContext().resources.getQuantityString(
                     R.plurals.viewers,
@@ -391,10 +393,10 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                     TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
                 )
             } else {
-                viewers.gone()
+                viewers.visibility = View.GONE
             }
             if (game?.broadcastersCount != null && requireContext().prefs().getBoolean(C.UI_BROADCASTERSCOUNT, true)) {
-                broadcastersCount.visible()
+                broadcastersCount.visibility = View.VISIBLE
                 val count = game.broadcastersCount ?: 0
                 broadcastersCount.text = requireContext().resources.getQuantityString(
                     R.plurals.broadcasters,
@@ -402,10 +404,10 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                     TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
                 )
             } else {
-                broadcastersCount.gone()
+                broadcastersCount.visibility = View.GONE
             }
             if (game?.followersCount != null) {
-                followers.visible()
+                followers.visibility = View.VISIBLE
                 val count = game.followersCount
                 followers.text = requireContext().resources.getQuantityString(
                     R.plurals.followers,
@@ -413,11 +415,11 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                     TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
                 )
             } else {
-                followers.gone()
+                followers.visibility = View.GONE
             }
             if (!game?.tags.isNullOrEmpty() && requireContext().prefs().getBoolean(C.UI_TAGS, true)) {
                 tagsLayout.removeAllViews()
-                tagsLayout.visible()
+                tagsLayout.visibility = View.VISIBLE
                 val tagsFlowLayout = Flow(requireContext()).apply {
                     layoutParams = ConstraintLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -450,13 +452,13 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                             )
                         }
                     }
-                    val padding = requireContext().convertDpToPixels(5f)
+                    val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, resources.displayMetrics).toInt()
                     text.setPadding(padding, 0, padding, 0)
                     tagsLayout.addView(text)
                 }
                 tagsFlowLayout.referencedIds = ids.toIntArray()
             } else {
-                tagsLayout.gone()
+                tagsLayout.visibility = View.GONE
             }
         }
     }

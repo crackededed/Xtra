@@ -10,7 +10,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentVideosListItemBinding
 import com.github.andreyasadchy.xtra.model.VideoPosition
@@ -23,10 +25,7 @@ import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.loadImage
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 
 class BookmarksAdapter(
     private val fragment: Fragment,
@@ -132,21 +131,21 @@ class BookmarksAdapter(
                         )
                     }
                     root.setOnLongClickListener { deleteVideo(item); true }
-                    thumbnail.loadImage(
-                        fragment,
-                        item.thumbnail,
-                        diskCacheStrategy = DiskCacheStrategy.NONE
-                    )
+                    Glide.with(fragment)
+                        .load(item.thumbnail)
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .into(userImage)
                     if (item.createdAt != null) {
                         val text = TwitchApiHelper.formatTimeString(context, item.createdAt)
                         if (text != null) {
-                            date.visible()
+                            date.visibility = View.VISIBLE
                             date.text = text
                         } else {
-                            date.gone()
+                            date.visibility = View.GONE
                         }
                     } else {
-                        date.gone()
+                        date.visibility = View.GONE
                     }
                     if (item.type?.lowercase() == "archive" && userType != null && item.createdAt != null && context.prefs().getBoolean(C.UI_BOOKMARK_TIME_LEFT, true) && !ignore) {
                         val time = TwitchApiHelper.getVodTimeLeft(context, item.createdAt,
@@ -157,45 +156,49 @@ class BookmarksAdapter(
                             }
                         )
                         if (!time.isNullOrBlank()) {
-                            views.visible()
+                            views.visibility = View.VISIBLE
                             views.text = context.getString(R.string.vod_time_left, time)
                         } else {
-                            views.gone()
+                            views.visibility = View.GONE
                         }
                     } else {
-                        views.gone()
+                        views.visibility = View.GONE
                     }
                     if (getDuration != null) {
-                        duration.visible()
+                        duration.visibility = View.VISIBLE
                         duration.text = DateUtils.formatElapsedTime(getDuration)
                     } else {
-                        duration.gone()
+                        duration.visibility = View.GONE
                     }
                     if (item.type != null) {
                         val text = TwitchApiHelper.getType(context, item.type)
                         if (text != null) {
-                            type.visible()
+                            type.visibility = View.VISIBLE
                             type.text = text
                         } else {
-                            type.gone()
+                            type.visibility = View.GONE
                         }
                     } else {
-                        type.gone()
+                        type.visibility = View.GONE
                     }
                     if (item.userLogo != null) {
-                        userImage.visible()
-                        userImage.loadImage(
-                            fragment,
-                            item.userLogo,
-                            circle = context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true),
-                            diskCacheStrategy = DiskCacheStrategy.NONE,
-                        )
+                        userImage.visibility = View.VISIBLE
+                        Glide.with(fragment)
+                            .load(item.userLogo)
+                            .diskCacheStrategy(DiskCacheStrategy.NONE)
+                            .transition(DrawableTransitionOptions.withCrossFade())
+                            .apply {
+                                if (context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
+                                    circleCrop()
+                                }
+                            }
+                            .into(userImage)
                         userImage.setOnClickListener(channelListener)
                     } else {
-                        userImage.gone()
+                        userImage.visibility = View.GONE
                     }
                     if (item.userName != null) {
-                        username.visible()
+                        username.visibility = View.VISIBLE
                         username.text = if (item.userLogin != null && !item.userLogin.equals(item.userName, true)) {
                             when (context.prefs().getString(C.UI_NAME_DISPLAY, "0")) {
                                 "0" -> "${item.userName}(${item.userLogin})"
@@ -207,26 +210,26 @@ class BookmarksAdapter(
                         }
                         username.setOnClickListener(channelListener)
                     } else {
-                        username.gone()
+                        username.visibility = View.GONE
                     }
                     if (position != null && getDuration != null && getDuration > 0L) {
                         progressBar.progress = (position / (getDuration * 10)).toInt()
-                        progressBar.visible()
+                        progressBar.visibility = View.VISIBLE
                     } else {
-                        progressBar.gone()
+                        progressBar.visibility = View.GONE
                     }
                     if (item.title != null) {
-                        title.visible()
+                        title.visibility = View.VISIBLE
                         title.text = item.title.trim()
                     } else {
-                        title.gone()
+                        title.visibility = View.GONE
                     }
                     if (item.gameName != null) {
-                        gameName.visible()
+                        gameName.visibility = View.VISIBLE
                         gameName.text = item.gameName
                         gameName.setOnClickListener(gameListener)
                     } else {
-                        gameName.gone()
+                        gameName.visibility = View.GONE
                     }
                     options.setOnClickListener { it ->
                         PopupMenu(context, it).apply {

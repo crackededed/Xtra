@@ -19,9 +19,7 @@ import com.github.andreyasadchy.xtra.databinding.DialogChatMessageClickBinding
 import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.mlkit.nl.translate.TranslateLanguage
@@ -113,7 +111,7 @@ class ReplyClickedDialog : BottomSheetDialogFragment() {
                 }
             }
             if (requireContext().prefs().getBoolean(C.DEBUG_CHAT_FULLMSG, false)) {
-                copyFullMsg.visible()
+                copyFullMsg.visibility = View.VISIBLE
             }
         }
     }
@@ -122,22 +120,22 @@ class ReplyClickedDialog : BottomSheetDialogFragment() {
         with(binding) {
             if (requireArguments().getBoolean(KEY_MESSAGING) && (!chatMessage.userId.isNullOrBlank() || !chatMessage.userLogin.isNullOrBlank())) {
                 if (!chatMessage.id.isNullOrBlank()) {
-                    reply.visible()
+                    reply.visibility = View.VISIBLE
                     reply.setOnClickListener {
                         listener.onReplyClicked(chatMessage.id, chatMessage.userLogin, chatMessage.userName, chatMessage.message)
                         dismiss()
                     }
                 } else {
-                    reply.gone()
+                    reply.visibility = View.GONE
                 }
                 if (!chatMessage.message.isNullOrBlank()) {
-                    copyMessage.visible()
+                    copyMessage.visibility = View.VISIBLE
                     copyMessage.setOnClickListener {
                         listener.onCopyMessageClicked(chatMessage.message)
                         dismiss()
                     }
                 } else {
-                    copyMessage.gone()
+                    copyMessage.visibility = View.GONE
                 }
             }
             val clipboard = getSystemService(requireContext(), ClipboardManager::class.java)
@@ -150,11 +148,11 @@ class ReplyClickedDialog : BottomSheetDialogFragment() {
                 dismiss()
             }
             if (requireContext().prefs().getBoolean(C.CHAT_TRANSLATE, false) && (chatMessage.message != null || chatMessage.systemMsg != null) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Build.SUPPORTED_64_BIT_ABIS.firstOrNull() == "arm64-v8a") {
-                translateMessage.visible()
+                translateMessage.visibility = View.VISIBLE
                 translateMessage.setOnClickListener {
                     listener.onTranslateMessageClicked(chatMessage, null)
                 }
-                translateMessageSelectLanguage.visible()
+                translateMessageSelectLanguage.visibility = View.VISIBLE
                 translateMessageSelectLanguage.setOnClickListener {
                     val languages = TranslateLanguage.getAllLanguages()
                     val names = languages.map { Locale.forLanguageTag(it).displayName }.toTypedArray()
@@ -173,8 +171,8 @@ class ReplyClickedDialog : BottomSheetDialogFragment() {
                         .show()
                 }
             } else {
-                translateMessage.gone()
-                translateMessageSelectLanguage.gone()
+                translateMessage.visibility = View.GONE
+                translateMessageSelectLanguage.visibility = View.GONE
             }
         }
     }

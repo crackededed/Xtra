@@ -11,6 +11,7 @@ import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -39,11 +40,8 @@ import com.github.andreyasadchy.xtra.ui.settings.SettingsActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.toast
 import com.github.andreyasadchy.xtra.util.tokenPrefs
-import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import dagger.hilt.android.AndroidEntryPoint
@@ -201,7 +199,7 @@ class SavedMediaFragment : Fragment(), Scrollable, FragmentHost {
                                 }
                                 folderResultLauncher?.launch(intent)
                             } catch (e: ActivityNotFoundException) {
-                                requireContext().toast(R.string.no_file_manager_found)
+                                Toast.makeText(requireContext(), R.string.no_file_manager_found, Toast.LENGTH_LONG).show()
                             }
                         }
                         true
@@ -224,7 +222,7 @@ class SavedMediaFragment : Fragment(), Scrollable, FragmentHost {
                                 }
                                 fileResultLauncher?.launch(intent)
                             } catch (e: ActivityNotFoundException) {
-                                requireContext().toast(R.string.no_file_manager_found)
+                                Toast.makeText(requireContext(), R.string.no_file_manager_found, Toast.LENGTH_LONG).show()
                             }
                         }
                         true
@@ -257,7 +255,7 @@ class SavedMediaFragment : Fragment(), Scrollable, FragmentHost {
                 }
             }
             if (tabs.size > 1) {
-                spinner.visible()
+                spinner.visibility = View.VISIBLE
             }
             (spinner.editText as? MaterialAutoCompleteTextView)?.apply {
                 setSimpleItems(tabs.map {
@@ -310,7 +308,11 @@ class SavedMediaFragment : Fragment(), Scrollable, FragmentHost {
                         appBar.setLiftable(false)
                         appBar.background = null
                     }
-                    (f as? Sortable)?.setupSortBar(sortBar) ?: sortBar.root.gone()
+                    if (f is Sortable) {
+                        f.setupSortBar(sortBar)
+                    } else {
+                        sortBar.root.visibility = View.GONE
+                    }
                     toolbar.menu.findItem(R.id.importFolders).isVisible = f is DownloadsFragment
                     toolbar.menu.findItem(R.id.importFiles).isVisible = f is DownloadsFragment
                 }

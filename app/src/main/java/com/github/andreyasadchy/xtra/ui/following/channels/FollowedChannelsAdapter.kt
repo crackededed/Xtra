@@ -1,22 +1,23 @@
 package com.github.andreyasadchy.xtra.ui.following.channels
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentFollowedChannelsListItemBinding
 import com.github.andreyasadchy.xtra.model.ui.User
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.loadImage
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 
 class FollowedChannelsAdapter(
     private val fragment: Fragment,
@@ -56,17 +57,22 @@ class FollowedChannelsAdapter(
                         )
                     }
                     if (item.channelLogo != null) {
-                        userImage.visible()
-                        userImage.loadImage(
-                            fragment,
-                            item.channelLogo,
-                            circle = context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)
-                        )
+                        userImage.visibility = View.VISIBLE
+                        Glide.with(fragment)
+                            .load(item.channelLogo)
+                            .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                            .transition(DrawableTransitionOptions.withCrossFade())
+                            .apply {
+                                if (context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
+                                    circleCrop()
+                                }
+                            }
+                            .into(userImage)
                     } else {
-                        userImage.gone()
+                        userImage.visibility = View.GONE
                     }
                     if (item.channelName != null) {
-                        username.visible()
+                        username.visibility = View.VISIBLE
                         username.text = if (item.channelLogin != null && !item.channelLogin.equals(item.channelName, true)) {
                             when (context.prefs().getString(C.UI_NAME_DISPLAY, "0")) {
                                 "0" -> "${item.channelName}(${item.channelLogin})"
@@ -77,39 +83,39 @@ class FollowedChannelsAdapter(
                             item.channelName
                         }
                     } else {
-                        username.gone()
+                        username.visibility = View.GONE
                     }
                     if (item.lastBroadcast != null) {
                         val text = item.lastBroadcast?.let { TwitchApiHelper.formatTimeString(context, it) }
                         if (text != null) {
-                            userStream.visible()
+                            userStream.visibility = View.VISIBLE
                             userStream.text = context.getString(R.string.last_broadcast_date, text)
                         } else {
-                            userStream.gone()
+                            userStream.visibility = View.GONE
                         }
                     } else {
-                        userStream.gone()
+                        userStream.visibility = View.GONE
                     }
                     if (item.followedAt != null) {
                         val text = TwitchApiHelper.formatTimeString(context, item.followedAt!!)
                         if (text != null) {
-                            userFollowed.visible()
+                            userFollowed.visibility = View.VISIBLE
                             userFollowed.text = context.getString(R.string.followed_at, text)
                         } else {
-                            userFollowed.gone()
+                            userFollowed.visibility = View.GONE
                         }
                     } else {
-                        userFollowed.gone()
+                        userFollowed.visibility = View.GONE
                     }
                     if (item.followAccount) {
-                        twitchText.visible()
+                        twitchText.visibility = View.VISIBLE
                     } else {
-                        twitchText.gone()
+                        twitchText.visibility = View.GONE
                     }
                     if (item.followLocal) {
-                        localText.visible()
+                        localText.visibility = View.VISIBLE
                     } else {
-                        localText.gone()
+                        localText.visibility = View.GONE
                     }
                 }
             }

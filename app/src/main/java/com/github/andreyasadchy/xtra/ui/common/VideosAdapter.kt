@@ -11,7 +11,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentVideosListItemBinding
 import com.github.andreyasadchy.xtra.model.VideoPosition
@@ -23,10 +25,7 @@ import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.loadImage
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 
 class VideosAdapter(
     private val fragment: Fragment,
@@ -86,24 +85,24 @@ class VideosAdapter(
                         (fragment.activity as MainActivity).startVideo(item, position)
                     }
                     root.setOnLongClickListener { showDownloadDialog(item); true }
-                    thumbnail.loadImage(
-                        fragment,
-                        item.thumbnail,
-                        diskCacheStrategy = DiskCacheStrategy.NONE
-                    )
+                    Glide.with(fragment)
+                        .load(item.thumbnail)
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .into(thumbnail)
                     if (item.uploadDate != null) {
                         val text = TwitchApiHelper.formatTimeString(context, item.uploadDate)
                         if (text != null) {
-                            date.visible()
+                            date.visibility = View.VISIBLE
                             date.text = text
                         } else {
-                            date.gone()
+                            date.visibility = View.GONE
                         }
                     } else {
-                        date.gone()
+                        date.visibility = View.GONE
                     }
                     if (item.viewCount != null) {
-                        views.visible()
+                        views.visibility = View.VISIBLE
                         val count = item.viewCount
                         views.text = context.resources.getQuantityString(
                             R.plurals.views,
@@ -111,30 +110,30 @@ class VideosAdapter(
                             TwitchApiHelper.formatCount(count, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
                         )
                     } else {
-                        views.gone()
+                        views.visibility = View.GONE
                     }
                     if (getDuration != null) {
-                        duration.visible()
+                        duration.visibility = View.VISIBLE
                         duration.text = DateUtils.formatElapsedTime(getDuration)
                     } else {
-                        duration.gone()
+                        duration.visibility = View.GONE
                     }
                     if (item.type != null) {
                         val text = TwitchApiHelper.getType(context, item.type)
                         if (text != null) {
-                            type.visible()
+                            type.visibility = View.VISIBLE
                             type.text = text
                         } else {
-                            type.gone()
+                            type.visibility = View.GONE
                         }
                     } else {
-                        type.gone()
+                        type.visibility = View.GONE
                     }
                     if (position != null && getDuration != null && getDuration > 0L) {
                         progressBar.progress = (position / (getDuration * 10)).toInt()
-                        progressBar.visible()
+                        progressBar.visibility = View.VISIBLE
                     } else {
-                        progressBar.gone()
+                        progressBar.visibility = View.GONE
                     }
                     if (showChannel) {
                         val channelListener: (View) -> Unit = {
@@ -148,18 +147,23 @@ class VideosAdapter(
                             )
                         }
                         if (item.channelLogo != null) {
-                            userImage.visible()
-                            userImage.loadImage(
-                                fragment,
-                                item.channelLogo,
-                                circle = context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)
-                            )
+                            userImage.visibility = View.VISIBLE
+                            Glide.with(fragment)
+                                .load(item.channelLogo)
+                                .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                                .transition(DrawableTransitionOptions.withCrossFade())
+                                .apply {
+                                    if (context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
+                                        circleCrop()
+                                    }
+                                }
+                                .into(userImage)
                             userImage.setOnClickListener(channelListener)
                         } else {
-                            userImage.gone()
+                            userImage.visibility = View.GONE
                         }
                         if (item.channelName != null) {
-                            username.visible()
+                            username.visibility = View.VISIBLE
                             username.text = if (item.channelLogin != null && !item.channelLogin.equals(item.channelName, true)) {
                                 when (context.prefs().getString(C.UI_NAME_DISPLAY, "0")) {
                                     "0" -> "${item.channelName}(${item.channelLogin})"
@@ -171,17 +175,17 @@ class VideosAdapter(
                             }
                             username.setOnClickListener(channelListener)
                         } else {
-                            username.gone()
+                            username.visibility = View.GONE
                         }
                     } else {
-                        userImage.gone()
-                        username.gone()
+                        userImage.visibility = View.GONE
+                        username.visibility = View.GONE
                     }
                     if (item.title != null && item.title != "") {
-                        title.visible()
+                        title.visibility = View.VISIBLE
                         title.text = item.title.trim()
                     } else {
-                        title.gone()
+                        title.visibility = View.GONE
                     }
                     if (showGame && item.gameName != null) {
                         val gameListener: (View) -> Unit = {
@@ -201,11 +205,11 @@ class VideosAdapter(
                                 }
                             )
                         }
-                        gameName.visible()
+                        gameName.visibility = View.VISIBLE
                         gameName.text = item.gameName
                         gameName.setOnClickListener(gameListener)
                     } else {
-                        gameName.gone()
+                        gameName.visibility = View.GONE
                     }
                     options.setOnClickListener { it ->
                         PopupMenu(context, it).apply {

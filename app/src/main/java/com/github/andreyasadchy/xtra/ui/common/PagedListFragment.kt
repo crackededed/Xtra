@@ -2,6 +2,7 @@ package com.github.andreyasadchy.xtra.ui.common
 
 import android.content.res.Configuration
 import android.os.Build
+import android.view.View
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -14,7 +15,6 @@ import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
 import com.github.andreyasadchy.xtra.ui.view.GridRecyclerView
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -96,7 +96,7 @@ abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.Callba
                 })
                 scrollTop.setOnClickListener {
                     (parentFragment as? Scrollable)?.scrollToTop()
-                    it.gone()
+                    it.visibility = View.GONE
                 }
             }
         }

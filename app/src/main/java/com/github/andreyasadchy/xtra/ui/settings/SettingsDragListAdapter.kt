@@ -3,6 +3,7 @@ package com.github.andreyasadchy.xtra.ui.settings
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -11,8 +12,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.SettingsDragListItemBinding
 import com.github.andreyasadchy.xtra.model.ui.SettingsDragListItem
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.visible
 
 class SettingsDragListAdapter : ListAdapter<SettingsDragListItem, SettingsDragListAdapter.ViewHolder>(
     object : DiffUtil.ItemCallback<SettingsDragListItem>() {
@@ -49,7 +48,7 @@ class SettingsDragListAdapter : ListAdapter<SettingsDragListItem, SettingsDragLi
                 }
                 text.text = item.text
                 if (setDefault != null) {
-                    setAsDefault.visible()
+                    setAsDefault.visibility = View.VISIBLE
                     setAsDefault.setOnClickListener {
                         setAsDefault.setImageResource(R.drawable.baseline_home_black_24)
                         setAsDefault.isClickable = false
@@ -63,9 +62,9 @@ class SettingsDragListAdapter : ListAdapter<SettingsDragListItem, SettingsDragLi
                         setAsDefault.isClickable = true
                     }
                 } else {
-                    setAsDefault.gone()
+                    setAsDefault.visibility = View.GONE
                 }
-                checkBox.visible()
+                checkBox.visibility = View.VISIBLE
                 checkBox.isChecked = item.enabled
                 checkBox.setOnCheckedChangeListener { buttonView, isChecked ->
                     item.enabled = isChecked

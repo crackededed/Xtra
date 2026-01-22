@@ -1,6 +1,8 @@
 package com.github.andreyasadchy.xtra.ui.following.games
 
+import android.util.TypedValue
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.constraintlayout.helper.widget.Flow
@@ -13,7 +15,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentFollowedGamesListItemBinding
 import com.github.andreyasadchy.xtra.model.ui.Game
@@ -22,11 +26,7 @@ import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.convertDpToPixels
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.loadImage
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 
 class FollowedGamesAdapter(
     private val fragment: Fragment,
@@ -77,23 +77,23 @@ class FollowedGamesAdapter(
                         )
                     }
                     if (item.boxArt != null) {
-                        gameImage.visible()
-                        gameImage.loadImage(
-                            fragment,
-                            item.boxArt,
-                            diskCacheStrategy = DiskCacheStrategy.NONE
-                        )
+                        gameImage.visibility = View.VISIBLE
+                        Glide.with(fragment)
+                            .load(item.boxArt)
+                            .diskCacheStrategy(DiskCacheStrategy.NONE)
+                            .transition(DrawableTransitionOptions.withCrossFade())
+                            .into(gameImage)
                     } else {
-                        gameImage.gone()
+                        gameImage.visibility = View.GONE
                     }
                     if (item.gameName != null) {
-                        gameName.visible()
+                        gameName.visibility = View.VISIBLE
                         gameName.text = item.gameName
                     } else {
-                        gameName.gone()
+                        gameName.visibility = View.GONE
                     }
                     if (item.viewersCount != null) {
-                        viewers.visible()
+                        viewers.visibility = View.VISIBLE
                         val count = item.viewersCount ?: 0
                         viewers.text = context.resources.getQuantityString(
                             R.plurals.viewers,
@@ -101,10 +101,10 @@ class FollowedGamesAdapter(
                             TwitchApiHelper.formatCount(count, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
                         )
                     } else {
-                        viewers.gone()
+                        viewers.visibility = View.GONE
                     }
                     if (item.broadcastersCount != null && context.prefs().getBoolean(C.UI_BROADCASTERSCOUNT, true)) {
-                        broadcastersCount.visible()
+                        broadcastersCount.visibility = View.VISIBLE
                         val count = item.broadcastersCount ?: 0
                         broadcastersCount.text = context.resources.getQuantityString(
                             R.plurals.broadcasters,
@@ -112,11 +112,11 @@ class FollowedGamesAdapter(
                             TwitchApiHelper.formatCount(count, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
                         )
                     } else {
-                        broadcastersCount.gone()
+                        broadcastersCount.visibility = View.GONE
                     }
                     if (!item.tags.isNullOrEmpty() && context.prefs().getBoolean(C.UI_TAGS, true)) {
                         tagsLayout.removeAllViews()
-                        tagsLayout.visible()
+                        tagsLayout.visibility = View.VISIBLE
                         val tagsFlowLayout = Flow(context).apply {
                             layoutParams = ConstraintLayout.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -145,23 +145,23 @@ class FollowedGamesAdapter(
                                     selectTag(tag)
                                 }
                             }
-                            val padding = context.convertDpToPixels(5f)
+                            val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, context.resources.displayMetrics).toInt()
                             text.setPadding(padding, 0, padding, 0)
                             tagsLayout.addView(text)
                         }
                         tagsFlowLayout.referencedIds = ids.toIntArray()
                     } else {
-                        tagsLayout.gone()
+                        tagsLayout.visibility = View.GONE
                     }
                     if (item.followAccount) {
-                        twitchText.visible()
+                        twitchText.visibility = View.VISIBLE
                     } else {
-                        twitchText.gone()
+                        twitchText.visibility = View.GONE
                     }
                     if (item.followLocal) {
-                        localText.visible()
+                        localText.visibility = View.VISIBLE
                     } else {
-                        localText.gone()
+                        localText.visibility = View.GONE
                     }
                 }
             }

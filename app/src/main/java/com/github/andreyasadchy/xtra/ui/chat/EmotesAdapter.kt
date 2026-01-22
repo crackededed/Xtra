@@ -7,10 +7,11 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.model.chat.Emote
-import com.github.andreyasadchy.xtra.util.loadImage
 
 class EmotesAdapter(
     private val fragment: Fragment,
@@ -38,16 +39,18 @@ class EmotesAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val emote = getItem(position)
         (holder.itemView as ImageView).apply {
-            loadImage(
-                fragment,
-                when (emoteQuality) {
-                    "4" -> emote.url4x ?: emote.url3x ?: emote.url2x ?: emote.url1x
-                    "3" -> emote.url3x ?: emote.url2x ?: emote.url1x
-                    "2" -> emote.url2x ?: emote.url1x
-                    else -> emote.url1x
-                },
-                diskCacheStrategy = DiskCacheStrategy.DATA
-            )
+            Glide.with(fragment)
+                .load(
+                    when (emoteQuality) {
+                        "4" -> emote.url4x ?: emote.url3x ?: emote.url2x ?: emote.url1x
+                        "3" -> emote.url3x ?: emote.url2x ?: emote.url1x
+                        "2" -> emote.url2x ?: emote.url1x
+                        else -> emote.url1x
+                    }
+                )
+                .diskCacheStrategy(DiskCacheStrategy.DATA)
+                .transition(DrawableTransitionOptions.withCrossFade())
+                .into(this)
             setOnClickListener { clickListener(emote) }
         }
     }

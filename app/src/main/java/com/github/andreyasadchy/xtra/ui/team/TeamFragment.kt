@@ -24,6 +24,9 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentTeamBinding
 import com.github.andreyasadchy.xtra.model.ui.Stream
@@ -39,12 +42,8 @@ import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.isInLandscapeOrientation
-import com.github.andreyasadchy.xtra.util.loadImage
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
-import com.github.andreyasadchy.xtra.util.visible
 import com.google.android.material.color.MaterialColors
 import dagger.hilt.android.AndroidEntryPoint
 import io.noties.markwon.Markwon
@@ -76,7 +75,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
         with(binding) {
             val activity = requireActivity() as MainActivity
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                if (activity.isInLandscapeOrientation) {
+                if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                     appBar.setExpanded(false, false)
                 }
             } else {
@@ -181,7 +180,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
         if (requireContext().prefs().getBoolean(C.UI_SCROLLTOP, true)) {
             binding.recyclerViewLayout.scrollTop.setOnClickListener {
                 scrollToTop()
-                it.gone()
+                it.visibility = View.GONE
             }
         }
     }
@@ -189,17 +188,17 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
     private fun updateTeamLayout(team: Team) {
         with(binding) {
             if (!team.displayName.isNullOrBlank()) {
-                teamName.visible()
+                teamName.visibility = View.VISIBLE
                 teamName.text = team.displayName
                 if (team.bannerUrl != null) {
                     teamName.setTextColor(Color.LTGRAY)
                     teamName.setShadowLayer(4f, 0f, 0f, Color.BLACK)
                 }
             } else {
-                teamName.gone()
+                teamName.visibility = View.GONE
             }
             if (team.memberCount != null) {
-                teamMembers.visible()
+                teamMembers.visibility = View.VISIBLE
                 val count = team.memberCount
                 teamMembers.text = requireContext().resources.getQuantityString(
                     R.plurals.members,
@@ -211,10 +210,10 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
                     teamMembers.setShadowLayer(4f, 0f, 0f, Color.BLACK)
                 }
             } else {
-                teamMembers.gone()
+                teamMembers.visibility = View.GONE
             }
             if (!team.ownerName.isNullOrBlank() || !team.ownerLogin.isNullOrBlank()) {
-                teamOwner.visible()
+                teamOwner.visibility = View.VISIBLE
                 teamOwner.text = requireContext().getString(
                     R.string.owner,
                     if (team.ownerLogin != null && !team.ownerLogin.equals(team.ownerName, true)) {
@@ -232,26 +231,35 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
                     teamOwner.setShadowLayer(4f, 0f, 0f, Color.BLACK)
                 }
             } else {
-                teamOwner.gone()
+                teamOwner.visibility = View.GONE
             }
             if (team.logoUrl != null) {
-                logoImage.visible()
-                logoImage.loadImage(
-                    this@TeamFragment,
-                    team.logoUrl,
-                    circle = requireContext().prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)
-                )
+                logoImage.visibility = View.VISIBLE
+                Glide.with(this@TeamFragment)
+                    .load(team.logoUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .apply {
+                        if (requireContext().prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
+                            circleCrop()
+                        }
+                    }
+                    .into(logoImage)
             } else {
-                logoImage.gone()
+                logoImage.visibility = View.GONE
             }
             if (team.bannerUrl != null) {
-                bannerImage.visible()
-                bannerImage.loadImage(this@TeamFragment, team.bannerUrl)
+                bannerImage.visibility = View.VISIBLE
+                Glide.with(this@TeamFragment)
+                    .load(team.bannerUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .into(bannerImage)
             } else {
-                bannerImage.gone()
+                bannerImage.visibility = View.GONE
             }
             if (!team.description.isNullOrBlank()) {
-                teamDescription.visible()
+                teamDescription.visibility = View.VISIBLE
                 val markwon = Markwon.builder(requireContext())
                     .usePlugin(SoftBreakAddsNewLinePlugin.create())
                     .usePlugin(LinkifyPlugin.create())
@@ -265,7 +273,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
                     }
                 }
             } else {
-                teamDescription.gone()
+                teamDescription.visibility = View.GONE
             }
         }
     }

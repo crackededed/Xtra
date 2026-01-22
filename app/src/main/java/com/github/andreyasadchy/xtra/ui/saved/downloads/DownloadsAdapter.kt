@@ -3,6 +3,7 @@ package com.github.andreyasadchy.xtra.ui.saved.downloads
 import android.content.ContentResolver
 import android.os.Build
 import android.text.format.DateUtils
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,7 +16,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentDownloadsListItemBinding
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
@@ -25,11 +28,7 @@ import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.convertDpToPixels
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.loadImage
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 import kotlin.math.min
 
 class DownloadsAdapter(
@@ -102,48 +101,52 @@ class DownloadsAdapter(
                         (fragment.activity as MainActivity).startOfflineVideo(item)
                     }
                     root.setOnLongClickListener { deleteVideo(item); true }
-                    thumbnail.loadImage(
-                        fragment,
-                        item.thumbnail,
-                        diskCacheStrategy = DiskCacheStrategy.NONE
-                    )
+                    Glide.with(fragment)
+                        .load(item.thumbnail)
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .into(userImage)
                     item.uploadDate?.let {
-                        date.visible()
+                        date.visibility = View.VISIBLE
                         date.text = context.getString(R.string.uploaded_date, TwitchApiHelper.formatTime(context, it))
                     } ?: {
-                        date.gone()
+                        date.visibility = View.GONE
                     }
                     if (item.downloadDate != null) {
-                        downloadDate.visible()
+                        downloadDate.visibility = View.VISIBLE
                         downloadDate.text = context.getString(R.string.downloaded_date, TwitchApiHelper.formatTime(context, item.downloadDate))
                     } else {
-                        downloadDate.gone()
+                        downloadDate.visibility = View.GONE
                     }
                     if (item.type != null) {
                         val text = TwitchApiHelper.getType(context, item.type)
                         if (text != null) {
-                            type.visible()
+                            type.visibility = View.VISIBLE
                             type.text = text
                         } else {
-                            type.gone()
+                            type.visibility = View.GONE
                         }
                     } else {
-                        type.gone()
+                        type.visibility = View.GONE
                     }
                     if (item.channelLogo != null) {
-                        userImage.visible()
-                        userImage.loadImage(
-                            fragment,
-                            item.channelLogo,
-                            circle = context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true),
-                            diskCacheStrategy = DiskCacheStrategy.NONE
-                        )
+                        userImage.visibility = View.VISIBLE
+                        Glide.with(fragment)
+                            .load(item.channelLogo)
+                            .diskCacheStrategy(DiskCacheStrategy.NONE)
+                            .transition(DrawableTransitionOptions.withCrossFade())
+                            .apply {
+                                if (context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
+                                    circleCrop()
+                                }
+                            }
+                            .into(userImage)
                         userImage.setOnClickListener(channelListener)
                     } else {
-                        userImage.gone()
+                        userImage.visibility = View.GONE
                     }
                     if (item.channelName != null) {
-                        username.visible()
+                        username.visibility = View.VISIBLE
                         username.text = if (item.channelLogin != null && !item.channelLogin.equals(item.channelName, true)) {
                             when (context.prefs().getString(C.UI_NAME_DISPLAY, "0")) {
                                 "0" -> "${item.channelName}(${item.channelLogin})"
@@ -155,51 +158,52 @@ class DownloadsAdapter(
                         }
                         username.setOnClickListener(channelListener)
                     } else {
-                        username.gone()
+                        username.visibility = View.GONE
                     }
                     item.name?.let {
-                        title.visible()
+                        title.visibility = View.VISIBLE
                         title.text = it.trim()
                     } ?: {
-                        title.gone()
+                        title.visibility = View.GONE
                     }
                     if (item.gameName != null) {
-                        gameName.visible()
+                        gameName.visibility = View.VISIBLE
                         gameName.text = item.gameName
                         gameName.setOnClickListener(gameListener)
                     } else {
-                        gameName.gone()
+                        gameName.visibility = View.GONE
                     }
                     item.duration?.let { itemDuration ->
-                        duration.visible()
+                        duration.visibility = View.VISIBLE
                         duration.text = DateUtils.formatElapsedTime(itemDuration / 1000L)
                         item.sourceStartPosition?.let { sourceStartPosition ->
-                            sourceStart.visible()
+                            sourceStart.visibility = View.VISIBLE
                             sourceStart.text = context.getString(R.string.source_vod_start, DateUtils.formatElapsedTime(sourceStartPosition / 1000L))
-                            sourceEnd.visible()
+                            sourceEnd.visibility = View.VISIBLE
                             sourceEnd.text = context.getString(R.string.source_vod_end, DateUtils.formatElapsedTime((sourceStartPosition + itemDuration) / 1000L))
                         } ?: {
-                            sourceStart.gone()
-                            sourceEnd.gone()
+                            sourceStart.visibility = View.GONE
+                            sourceEnd.visibility = View.GONE
                         }
                         if (context.prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true) && item.lastWatchPosition != null && itemDuration > 0L) {
                             progressBar.progress = (item.lastWatchPosition!!.toFloat() / itemDuration * 100).toInt()
-                            progressBar.visible()
+                            progressBar.visibility = View.VISIBLE
                         } else {
-                            progressBar.gone()
+                            progressBar.visibility = View.GONE
                         }
                     } ?: {
-                        duration.gone()
-                        sourceStart.gone()
-                        sourceEnd.gone()
-                        progressBar.gone()
+                        duration.visibility = View.GONE
+                        sourceStart.visibility = View.GONE
+                        sourceEnd.visibility = View.GONE
+                        progressBar.visibility = View.GONE
                     }
                     if (sourceEnd.isVisible && sourceStart.isVisible) {
                         val params = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.WRAP_CONTENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT
                         )
-                        params.setMargins(0, context.convertDpToPixels(5F), 0, 0)
+                        val margin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, context.resources.displayMetrics).toInt()
+                        params.setMargins(0, margin, 0, 0)
                         sourceEnd.layoutParams = params
                     }
                     if (type.isVisible && (sourceStart.isVisible || sourceEnd.isVisible)) {
@@ -207,7 +211,8 @@ class DownloadsAdapter(
                             LinearLayout.LayoutParams.WRAP_CONTENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT
                         )
-                        params.setMargins(0, context.convertDpToPixels(5F), 0, 0)
+                        val margin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, context.resources.displayMetrics).toInt()
+                        params.setMargins(0, margin, 0, 0)
                         type.layoutParams = params
                     }
                     options.setOnClickListener { it ->
@@ -262,7 +267,7 @@ class DownloadsAdapter(
                         }
                     }
                     if (item.status == OfflineVideo.STATUS_DOWNLOADED) {
-                        status.gone()
+                        status.visibility = View.GONE
                     } else {
                         downloadProgress.text = when (item.status) {
                             OfflineVideo.STATUS_DOWNLOADING -> {
@@ -282,12 +287,12 @@ class DownloadsAdapter(
                             else -> context.getString(R.string.download_pending)
                         }
                         if (item.downloadChat && item.status == OfflineVideo.STATUS_DOWNLOADING && !item.live) {
-                            chatDownloadProgress.visible()
+                            chatDownloadProgress.visibility = View.VISIBLE
                             chatDownloadProgress.text = context.getString(R.string.chat_downloading_progress, min(((item.chatProgress.toFloat() / item.maxChatProgress) * 100f).toInt(), 100))
                         } else {
-                            chatDownloadProgress.gone()
+                            chatDownloadProgress.visibility = View.GONE
                         }
-                        status.visible()
+                        status.visibility = View.VISIBLE
                         if (item.status == OfflineVideo.STATUS_DOWNLOADING ||
                             item.status == OfflineVideo.STATUS_BLOCKED ||
                             item.status == OfflineVideo.STATUS_QUEUED ||

@@ -1,14 +1,13 @@
 package com.github.andreyasadchy.xtra.ui.common
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.databinding.FragmentSearchChannelsListItemBinding
 import com.github.andreyasadchy.xtra.model.ui.Tag
-import com.github.andreyasadchy.xtra.util.gone
-import com.github.andreyasadchy.xtra.util.visible
 
 class SearchTagsAdapter(
     private val selectTag: (Tag) -> Unit,
@@ -36,10 +35,10 @@ class SearchTagsAdapter(
             with(binding) {
                 if (item != null) {
                     if (item.name != null) {
-                        userName.visible()
+                        userName.visibility = View.VISIBLE
                         userName.text = item.name
                     } else {
-                        userName.gone()
+                        userName.visibility = View.GONE
                     }
                     root.setOnClickListener {
                         selectTag(item)

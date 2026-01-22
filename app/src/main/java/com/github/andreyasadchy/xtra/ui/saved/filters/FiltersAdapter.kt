@@ -1,6 +1,7 @@
 package com.github.andreyasadchy.xtra.ui.saved.filters
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.Fragment
@@ -15,9 +16,7 @@ import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.gone
 import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.visible
 
 class FiltersAdapter(
     private val fragment: Fragment,
@@ -82,24 +81,24 @@ class FiltersAdapter(
                     }
                     root.setOnLongClickListener { deleteFilter(item); true }
                     if (item.gameName != null) {
-                        gameName.visible()
+                        gameName.visibility = View.VISIBLE
                         gameName.text = item.gameName
                     } else {
-                        gameName.gone()
+                        gameName.visibility = View.GONE
                     }
                     if (item.tags != null) {
                         val list = item.tags.split(',')
-                        tags.visible()
+                        tags.visibility = View.VISIBLE
                         tags.text = context.resources.getQuantityString(R.plurals.tags, list.size, list.joinToString())
                     } else {
-                        tags.gone()
+                        tags.visibility = View.GONE
                     }
                     if (item.languages != null) {
                         val list = item.languages.split(',')
-                        languages.visible()
+                        languages.visibility = View.VISIBLE
                         languages.text = context.resources.getQuantityString(R.plurals.languages, list.size, list.joinToString())
                     } else {
-                        languages.gone()
+                        languages.visibility = View.GONE
                     }
                     options.setOnClickListener { it ->
                         PopupMenu(context, it).apply {

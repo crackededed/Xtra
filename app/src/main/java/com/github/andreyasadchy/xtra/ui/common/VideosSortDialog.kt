@@ -17,7 +17,6 @@ import com.github.andreyasadchy.xtra.ui.game.clips.GameClipsFragment
 import com.github.andreyasadchy.xtra.ui.game.videos.GameVideosFragment
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.gone
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
@@ -84,32 +83,32 @@ class VideosSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialog.OnSe
             val args = requireArguments()
             when (parentFragment) {
                 is ChannelClipsFragment -> {
-                    sort.gone()
-                    sortType.gone()
-                    selectLanguages.gone()
+                    sort.visibility = View.GONE
+                    sortType.visibility = View.GONE
+                    selectLanguages.visibility = View.GONE
                     saveSort.text = requireContext().getString(R.string.save_sort_channel)
                     saveSortLayout.isVisible = parentFragment?.arguments?.getString(C.CHANNEL_ID).isNullOrBlank() == false
                 }
                 is GameClipsFragment -> {
-                    sort.gone()
-                    sortType.gone()
+                    sort.visibility = View.GONE
+                    sortType.visibility = View.GONE
                     saveSort.text = requireContext().getString(R.string.save_sort_game)
                     saveSortLayout.isVisible = parentFragment?.arguments?.getString(C.GAME_ID).isNullOrBlank() == false
                 }
                 is ChannelVideosFragment -> {
-                    period.gone()
-                    selectLanguages.gone()
+                    period.visibility = View.GONE
+                    selectLanguages.visibility = View.GONE
                     saveSort.text = requireContext().getString(R.string.save_sort_channel)
                     saveSortLayout.isVisible = parentFragment?.arguments?.getString(C.CHANNEL_ID).isNullOrBlank() == false
                 }
                 is FollowedVideosFragment -> {
-                    period.gone()
-                    selectLanguages.gone()
-                    saveSortLayout.gone()
+                    period.visibility = View.GONE
+                    selectLanguages.visibility = View.GONE
+                    saveSortLayout.visibility = View.GONE
                 }
                 is GameVideosFragment -> {
                     if (TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank()) {
-                        period.gone()
+                        period.visibility = View.GONE
                     }
                     saveSort.text = requireContext().getString(R.string.save_sort_game)
                     saveSortLayout.isVisible = parentFragment?.arguments?.getString(C.GAME_ID).isNullOrBlank() == false
@@ -136,7 +135,7 @@ class VideosSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialog.OnSe
             }
             val originalLanguages = args.getStringArray(LANGUAGES) ?: emptyArray()
             if (!args.getBoolean(SAVED)) {
-                deleteSavedSort.gone()
+                deleteSavedSort.visibility = View.GONE
             }
             sort.check(originalSortId)
             period.check(originalPeriodId)
@@ -148,7 +147,7 @@ class VideosSortDialog : BottomSheetDialogFragment(), SelectLanguagesDialog.OnSe
             }
             deleteSavedSort.setOnClickListener {
                 listener.deleteSavedSort()
-                deleteSavedSort.gone()
+                deleteSavedSort.visibility = View.GONE
             }
             saveDefault.setOnClickListener {
                 applyFilters(originalPeriodId, originalSortId, originalTypeId, originalLanguages, saveSort = false, saveDefault = true)
