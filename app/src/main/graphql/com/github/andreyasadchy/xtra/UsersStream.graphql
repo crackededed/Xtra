@@ -21,7 +21,6 @@ query UsersStream($ids: [ID!], $logins: [String!]) {
             freeformTags {
                 name
             }
-            type
             viewersCount
         }
     }

@@ -13,7 +13,6 @@ class Stream(
     var gameId: String? = null,
     var gameSlug: String? = null,
     var gameName: String? = null,
-    val type: String? = null,
     var title: String? = null,
     var viewerCount: Int? = null,
     var startedAt: String? = null,

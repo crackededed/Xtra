@@ -54,7 +54,6 @@
     <string name="permission_denied">Gerekli izinler reddedildi</string>
     <string name="nothing_here">Burada hiçbir şey yok</string>
     <string name="watch_live">Canlı izle</string>
-    <string name="watch_rerun">Tekrarı izle</string>
     <string name="open_player">Oynatıcıyı aç</string>
     <string name="error_stream">Yayın yüklenirken hata oluştu</string>
     <string name="dark">Koyu</string>
@@ -148,7 +147,6 @@
     <string name="video_type_archive">Geçmiş yayın</string>
     <string name="video_type_highlight">Öne çıkan</string>
     <string name="video_type_upload">Yükleme</string>
-    <string name="video_type_rerun">Tekrar</string>
     <string name="all">Tümü</string>
     <string name="type">Tür</string>
     <string name="room_emote">İfade</string>

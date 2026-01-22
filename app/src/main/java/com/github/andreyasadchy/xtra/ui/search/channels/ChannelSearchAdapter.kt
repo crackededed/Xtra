@@ -99,13 +99,9 @@ class ChannelSearchAdapter(
                     } else {
                         userFollowers.visibility = View.GONE
                     }
-                    if (!item.type.isNullOrBlank() || item.isLive == true) {
+                    if (item.isLive == true) {
                         typeText.visibility = View.VISIBLE
-                        if (item.type == "rerun") {
-                            typeText.text = context.getString(R.string.video_type_rerun)
-                        } else {
-                            typeText.text = context.getString(R.string.live)
-                        }
+                        typeText.text = context.getString(R.string.live)
                     } else {
                         typeText.visibility = View.GONE
                     }

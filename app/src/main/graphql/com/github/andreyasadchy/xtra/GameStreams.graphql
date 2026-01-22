@@ -19,7 +19,6 @@ query GameStreams($id: ID, $slug: String, $name: String, $sort: StreamSort, $tag
                     freeformTags {
                         name
                     }
-                    type
                     viewersCount
                 }
             }

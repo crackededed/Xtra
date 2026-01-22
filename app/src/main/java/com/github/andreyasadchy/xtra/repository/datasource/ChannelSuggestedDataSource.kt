@@ -31,7 +31,6 @@ class ChannelSuggestedDataSource(
                         gameId = it.game?.id,
                         gameSlug = it.game?.slug,
                         gameName = it.game?.displayName,
-                        type = it.type,
                         title = it.broadcaster?.broadcastSettings?.title,
                         viewerCount = it.viewersCount,
                         profileImageUrl = it.broadcaster?.profileImageURL,

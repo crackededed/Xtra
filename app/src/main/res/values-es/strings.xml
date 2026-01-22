@@ -58,7 +58,6 @@
     <string name="permission_denied">Se denegaron los permisos necesarios</string>
     <string name="nothing_here">Nada aquí</string>
     <string name="watch_live">Ver transmisión</string>
-    <string name="watch_rerun">Ver repetición</string>
     <string name="open_player">Abrir reproductor</string>
     <string name="error_stream">Error al cargar la transmisión</string>
     <string name="dark">Oscuro</string>
@@ -152,7 +151,6 @@
     <string name="video_type_archive">Transmisión anterior</string>
     <string name="video_type_highlight">Destacado</string>
     <string name="video_type_upload">Subida</string>
-    <string name="video_type_rerun">Volver a reproducir</string>
     <string name="all">Todo</string>
     <string name="type">Tipo</string>
     <string name="room_emote">Emote</string>

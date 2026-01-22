@@ -11,7 +11,7 @@ query SearchChannels($query: String!, $first: Int, $after: Cursor) {
                 login
                 profileImageURL(width: 300)
                 stream {
-                    type
+                    viewersCount
                 }
             }
         }
