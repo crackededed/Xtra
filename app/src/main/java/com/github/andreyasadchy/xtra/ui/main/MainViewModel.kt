@@ -830,7 +830,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun validate(networkLibrary: String?, gqlHeaders: Map<String, String>, webGQLToken: String?, helixHeaders: Map<String, String>, accountId: String?, accountLogin: String?, activity: Activity) {
+    fun validate(networkLibrary: String?, gqlHeaders: Map<String, String>, gqlWebClientId: String?, gqlWebToken: String?, helixHeaders: Map<String, String>, accountId: String?, accountLogin: String?, activity: Activity) {
         viewModelScope.launch {
             try {
                 val helixToken = helixHeaders[C.HEADER_TOKEN]
@@ -850,7 +850,7 @@ class MainViewModel @Inject constructor(
                 val gqlToken = gqlHeaders[C.HEADER_TOKEN]
                 if (!gqlToken.isNullOrBlank()) {
                     val response = authRepository.validate(networkLibrary, gqlToken)
-                    if (response.clientId.isNotBlank() && response.clientId == gqlHeaders[C.HEADER_CLIENT_ID]) {
+                    if (response.clientId.isNotBlank() && (response.clientId == gqlHeaders[C.HEADER_CLIENT_ID] || response.clientId == gqlWebClientId)) {
                         if ((!response.userId.isNullOrBlank() && response.userId != accountId) || (!response.login.isNullOrBlank() && response.login != accountLogin)) {
                             activity.tokenPrefs().edit {
                                 putString(C.USER_ID, response.userId?.takeIf { it.isNotBlank() } ?: accountId)
@@ -861,9 +861,9 @@ class MainViewModel @Inject constructor(
                         throw IllegalStateException("401")
                     }
                 }
-                if (!webGQLToken.isNullOrBlank()) {
-                    val response = authRepository.validate(networkLibrary, webGQLToken)
-                    if (response.clientId.isNotBlank() && response.clientId == "kimne78kx3ncx6brgo4mv6wki5h1ko") {
+                if (!gqlWebToken.isNullOrBlank()) {
+                    val response = authRepository.validate(networkLibrary, gqlWebToken)
+                    if (response.clientId.isNotBlank() && response.clientId == gqlWebClientId) {
                         if ((!response.userId.isNullOrBlank() && response.userId != accountId) || (!response.login.isNullOrBlank() && response.login != accountLogin)) {
                             activity.tokenPrefs().edit {
                                 putString(C.USER_ID, response.userId?.takeIf { it.isNotBlank() } ?: accountId)

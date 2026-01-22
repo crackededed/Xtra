@@ -249,6 +249,7 @@ object C {
     const val GQL_REDIRECT = "gql_redirect"
     const val GQL_CLIENT_ID2 = "gql_client_id2"
     const val GQL_REDIRECT2 = "gql_redirect2"
+    const val GQL_CLIENT_ID_WEB = "gql_client_id_web"
     const val VALIDATE_TOKENS = "validate_tokens"
     const val API_PREFS_GAMES = "api_prefs_games_v2"
     const val API_PREFS_STREAMS = "api_prefs_streams_v2"
