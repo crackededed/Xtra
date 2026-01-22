@@ -2,7 +2,6 @@ package com.github.andreyasadchy.xtra
 
 import android.app.Application
 import android.net.http.HttpEngine
-import android.net.http.UrlResponseInfo
 import android.os.Build
 import android.os.ext.SdkExtensions
 import androidx.hilt.work.HiltWorkerFactory
@@ -93,7 +92,7 @@ class XtraApp : Application(), Configuration.Provider, SingletonImageLoader.Fact
                                             buffer.readByteArray()
                                         }
                                         val requestMillis = System.currentTimeMillis()
-                                        val response = suspendCoroutine<Pair<UrlResponseInfo, ByteArray>> { continuation ->
+                                        val response = suspendCoroutine { continuation ->
                                             httpEngine!!.get().newUrlRequestBuilder(request.url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                                                 request.headers.asMap().forEach { entry ->
                                                     entry.value.forEach {
@@ -178,7 +177,7 @@ class XtraApp : Application(), Configuration.Provider, SingletonImageLoader.Fact
                                                 buffer.readByteArray()
                                             }
                                             val requestMillis = System.currentTimeMillis()
-                                            val response = suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                                            val response = suspendCoroutine { continuation ->
                                                 cronetEngine!!.get().newUrlRequestBuilder(request.url, getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                                                     request.headers.asMap().forEach { entry ->
                                                         entry.value.forEach {
