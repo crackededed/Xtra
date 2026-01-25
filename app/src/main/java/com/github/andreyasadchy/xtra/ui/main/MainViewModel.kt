@@ -861,7 +861,7 @@ class MainViewModel @Inject constructor(
                         throw IllegalStateException("401")
                     }
                 }
-                if (!gqlWebToken.isNullOrBlank()) {
+                if (!gqlWebToken.isNullOrBlank() && gqlWebToken != gqlToken) {
                     val response = authRepository.validate(networkLibrary, gqlWebToken)
                     if (response.clientId.isNotBlank() && response.clientId == gqlWebClientId) {
                         if ((!response.userId.isNullOrBlank() && response.userId != accountId) || (!response.login.isNullOrBlank() && response.login != accountLogin)) {
