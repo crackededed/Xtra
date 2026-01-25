@@ -794,6 +794,7 @@ class MediaPlayerFragment : PlayerFragment() {
         surfaceHolderCallback = null
         serviceConnection?.let { requireContext().unbindService(it) }
         serviceConnection = null
+        playbackService = null
     }
 
     override fun downloadVideo() {
