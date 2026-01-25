@@ -87,6 +87,7 @@ class LoginActivity : AppCompatActivity() {
             val oldHelixToken = helixHeaders[C.HEADER_TOKEN]?.removePrefix("Bearer ")
             val gqlHeaders = TwitchApiHelper.getGQLHeaders(this@LoginActivity, true)
             val oldGQLToken = gqlHeaders[C.HEADER_TOKEN]?.removePrefix("OAuth ")
+            val oldGQLWebToken = tokenPrefs().getString(C.GQL_TOKEN_WEB, null)
             if (!oldGQLToken.isNullOrBlank() || !oldHelixToken.isNullOrBlank()) {
                 TwitchApiHelper.checkedValidation = false
                 tokenPrefs().edit {
@@ -107,7 +108,7 @@ class LoginActivity : AppCompatActivity() {
                         }
                     }
                     val gqlClientId = gqlHeaders[C.HEADER_CLIENT_ID]
-                    if (!gqlClientId.isNullOrBlank() && !oldGQLToken.isNullOrBlank()) {
+                    if (!gqlClientId.isNullOrBlank() && !oldGQLToken.isNullOrBlank() && oldGQLToken != oldGQLWebToken) {
                         try {
                             authRepository.revoke(networkLibrary, "client_id=${gqlClientId}&token=${oldGQLToken}")
                         } catch (e: Exception) {
@@ -115,10 +116,9 @@ class LoginActivity : AppCompatActivity() {
                         }
                     }
                     val gqlWebClientId = prefs().getString(C.GQL_CLIENT_ID_WEB, "kimne78kx3ncx6brgo4mv6wki5h1ko")
-                    val gqlWebToken = tokenPrefs().getString(C.GQL_TOKEN_WEB, null)
-                    if (!gqlWebClientId.isNullOrBlank() && !gqlWebToken.isNullOrBlank()) {
+                    if (!gqlWebClientId.isNullOrBlank() && !oldGQLWebToken.isNullOrBlank()) {
                         try {
-                            authRepository.revoke(networkLibrary, "client_id=${gqlWebClientId}&token=${gqlWebToken}")
+                            authRepository.revoke(networkLibrary, "client_id=${gqlWebClientId}&token=${oldGQLWebToken}")
                         } catch (e: Exception) {
 
                         }
@@ -320,7 +320,11 @@ class LoginActivity : AppCompatActivity() {
                                     if (!clientId.isNullOrBlank() && clientId != gqlWebClientId) {
                                         readHeaders = false
                                         lifecycleScope.launch {
-                                            val valid = validateGQLToken(networkLibrary, gqlWebClientId, token)
+                                            val valid = if (token == gqlWebToken) {
+                                                true
+                                            } else {
+                                                validateGQLToken(networkLibrary, gqlWebClientId, token)
+                                            }
                                             if (valid) {
                                                 gqlClientId = clientId
                                                 gqlToken = token
