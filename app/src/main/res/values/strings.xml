@@ -92,7 +92,7 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="search">Search</string>
-    <string name="chat_replay_unavailable">Chat replay is unavailable.</string>
+    <string name="chat_replay_unavailable">Chat replay is unavailable</string>
     <string name="video_subscribers_only">This video is only available to subscribers.</string>
     <string name="player_error">Player error, retrying...</string>
     <string name="picture_in_picture">Picture-in-Picture</string>
