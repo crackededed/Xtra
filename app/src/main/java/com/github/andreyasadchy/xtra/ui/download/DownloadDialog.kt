@@ -353,7 +353,9 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                         }
                         setText(adapter.getItem(location).toString(), false)
                     }
-                    sharedPath = requireContext().prefs().getString(C.DOWNLOAD_SHARED_PATH, null)
+                    if (sharedPath == null) {
+                        sharedPath = requireContext().prefs().getString(C.DOWNLOAD_SHARED_PATH, null)
+                    }
                     when (location) {
                         0 -> {
                             sharedStorageLayout.visibility = View.VISIBLE
@@ -574,10 +576,13 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                         ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED &&
                         !requireActivity().prefs().getBoolean(C.DOWNLOAD_NOTIFICATION_REQUESTED, false)) {
                         requireActivity().prefs().edit { putBoolean(C.DOWNLOAD_NOTIFICATION_REQUESTED, true) }
+                        val activity = requireActivity()
                         requireActivity().getAlertDialogBuilder()
                             .setMessage(R.string.notification_permission_message)
                             .setTitle(R.string.notification_permission_title)
-                            .setPositiveButton(android.R.string.ok) { _, _ -> ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1) }
+                            .setPositiveButton(android.R.string.ok) { _, _ ->
+                                ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
+                            }
                             .setNegativeButton(android.R.string.cancel, null)
                             .show()
                     }
