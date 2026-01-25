@@ -26,3 +26,18 @@
     public static *** d(...);
     public static *** v(...);
 }
+
+# AGP 9
+-keep class com.google.mlkit.nl.languageid.** { *; }
+-keep class com.google.mlkit.nl.translate.NaturalLanguageTranslateRegistrar { *; }
+-keep class com.google.mlkit.nl.translate.RemoteConfigRegistrar { *; }
+-keep class com.google.mlkit.common.internal.CommonComponentRegistrar { *; }
+
+-keep class com.github.andreyasadchy.xtra.db.AppDatabase_Impl {
+    <init>();
+}
+
+# Needed for Android 6 when using AGP 9
+-keep class androidx.navigation.fragment.NavHostFragment {
+    *;
+}
