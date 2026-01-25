@@ -26,3 +26,8 @@
     public static *** d(...);
     public static *** v(...);
 }
+
+# Needed for Android 6 when using AGP 9
+-keep class androidx.navigation.fragment.NavHostFragment {
+    *;
+}
