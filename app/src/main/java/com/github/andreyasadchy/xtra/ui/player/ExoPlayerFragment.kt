@@ -986,6 +986,7 @@ class ExoPlayerFragment : PlayerFragment() {
         playerListener = null
         serviceConnection?.let { requireContext().unbindService(it) }
         serviceConnection = null
+        playbackService = null
     }
 
     override fun downloadVideo() {
