@@ -724,9 +724,9 @@
     <string name="default_cellular_quality">Standard-Playerqualität im Mobilfunknetz</string>
     <string name="player">Player</string>
     <string name="compact_number_formatting">Kompakte Zahlenformatierung</string>
-    <string name="less_rounded_corners">Less rounded</string>
-    <string name="reduced_padding">Reduced padding</string>
-    <string name="compact_text">Compact text</string>
-    <string name="next">Next</string>
-    <string name="tv_login_message">To get access to all features, you need to login as an Android TV device.\n\nFollow these steps:\n• Copy the code shown on the web page.\n• Press the \"Next\" button at the bottom.\n• Enter the code and press \"Activate\".\n• Press \"Authorize\".</string>
+    <string name="less_rounded_corners">Weniger abgerundet</string>
+    <string name="reduced_padding">Reduzierte Polsterung</string>
+    <string name="compact_text">Kompakter Text</string>
+    <string name="next">Weiter</string>
+    <string name="tv_login_message">Um Zugriff auf alle Funktionen zu erhalten, musst du dich als Android-TV-Gerät anmelden.\n\nFolge diesen Schritten:\n• Kopiere den auf der Webseite angezeigten Code.\n• Drücke unten auf die Schaltfläche \"Next\".\n• Gib den Code ein und drücke \"Activate\".\n• Drücke \"Authorize\".</string>
 </resources>
