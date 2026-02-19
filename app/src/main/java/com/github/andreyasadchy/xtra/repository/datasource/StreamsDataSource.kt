@@ -2,11 +2,11 @@ package com.github.andreyasadchy.xtra.repository.datasource
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import com.github.andreyasadchy.xtra.graphql.type.Language
+import com.github.andreyasadchy.xtra.graphql.type.StreamSort
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
-import com.github.andreyasadchy.xtra.type.Language
-import com.github.andreyasadchy.xtra.type.StreamSort
 import com.github.andreyasadchy.xtra.util.C
 
 class StreamsDataSource(

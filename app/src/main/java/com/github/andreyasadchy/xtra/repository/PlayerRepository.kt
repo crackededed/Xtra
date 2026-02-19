@@ -11,9 +11,11 @@ import com.apollographql.apollo.api.json.jsonReader
 import com.apollographql.apollo.api.json.writeObject
 import com.apollographql.apollo.api.parseResponse
 import com.github.andreyasadchy.xtra.BuildConfig
-import com.github.andreyasadchy.xtra.StreamPlaybackAccessTokenQuery
 import com.github.andreyasadchy.xtra.db.RecentEmotesDao
 import com.github.andreyasadchy.xtra.db.VideoPositionsDao
+import com.github.andreyasadchy.xtra.graphql.StreamPlaybackAccessTokenQuery
+import com.github.andreyasadchy.xtra.graphql.type.BadgeImageSize
+import com.github.andreyasadchy.xtra.graphql.type.EmoteType
 import com.github.andreyasadchy.xtra.model.VideoPosition
 import com.github.andreyasadchy.xtra.model.chat.CheerEmote
 import com.github.andreyasadchy.xtra.model.chat.Emote
@@ -29,8 +31,6 @@ import com.github.andreyasadchy.xtra.model.misc.RecentMessagesResponse
 import com.github.andreyasadchy.xtra.model.misc.StvChannelResponse
 import com.github.andreyasadchy.xtra.model.misc.StvGlobalResponse
 import com.github.andreyasadchy.xtra.model.misc.StvResponse
-import com.github.andreyasadchy.xtra.type.BadgeImageSize
-import com.github.andreyasadchy.xtra.type.EmoteType
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.HttpEngineUtils
 import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback

@@ -2,11 +2,11 @@ package com.github.andreyasadchy.xtra.repository.datasource
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import com.github.andreyasadchy.xtra.graphql.type.BroadcastType
+import com.github.andreyasadchy.xtra.graphql.type.VideoSort
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
-import com.github.andreyasadchy.xtra.type.BroadcastType
-import com.github.andreyasadchy.xtra.type.VideoSort
 import com.github.andreyasadchy.xtra.util.C
 
 class GameVideosDataSource(

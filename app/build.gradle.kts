@@ -148,8 +148,9 @@ ksp {
 }
 
 apollo {
+    @Suppress("ApolloEndpointNotConfigured")
     service("service") {
-        packageName.set("com.github.andreyasadchy.xtra")
+        packageName.set("com.github.andreyasadchy.xtra.graphql")
     }
 }
 

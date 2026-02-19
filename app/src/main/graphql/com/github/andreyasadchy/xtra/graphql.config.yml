@@ -1,8 +1,0 @@
-schema: schema.graphqls
-extensions:
-  endpoints:
-    Default GraphQL Endpoint:
-      url: https://gql.twitch.tv/gql/
-      headers:
-        Client-ID: kimne78kx3ncx6brgo4mv6wki5h1ko
-      introspect: false
