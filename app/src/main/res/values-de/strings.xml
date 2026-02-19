@@ -725,10 +725,10 @@
     <string name="reduced_padding">Reduzierte Polsterung</string>
     <string name="compact_text">Kompakter Text</string>
     <string name="next">Weiter</string>
-    <string name="tv_login_message">Um Zugriff auf alle Funktionen zu erhalten, musst du dich als Android-TV-Gerät anmelden.\n\nFolge diesen Schritten:\n• Kopiere den auf der Webseite angezeigten Code.\n• Drücke unten auf die Schaltfläche \"Next\".\n• Gib den Code ein und drücke \"Activate\".\n• Drücke \"Authorize\".</string>
-    <string name="open_url">Open URL</string>
-    <string name="external_login_message">You can log in using an external browser.\n\nFollow these steps:\n• Press \"Open URL\" to open the login page.\n• Login to your account and press \"Authorize\".\n• A page with an error should appear. Copy the URL of that page, paste the URL into the box below and press \"OK\".</string>
-    <string name="loading">Loading...</string>
-    <string name="copy_code">Copy code</string>
-    <string name="external_tv_login_message">To get access to all features, you need to login as an Android TV device.\n\nFollow these steps:\n• Copy the code shown on the screen.\n• Press the \"Open URL\" button.\n• Enter the code and press \"Activate\".\n• Press \"Authorize\".\n• Return to Xtra and press \"Next\".</string>
+    <string name="tv_login_message">Um Zugriff auf alle Funktionen zu erhalten, musst du dich als Android-TV-Gerät anmelden.\n\nFolge diesen Schritten:\n• Kopiere den auf der Webseite angezeigten Code.\n• Drücke unten auf die Schaltfläche \"Weiter\".\n• Gib den Code ein und drücke \"Aktivieren\".\n• Drücke \"Autorisieren\".</string>
+    <string name="open_url">URL öffnen</string>
+    <string name="external_login_message">Du kannst dich über einen externen Browser anmelden.\n\nFolge diesen Schritten:\n• Drücke \"URL öffnen\", um die Anmeldeseite zu öffnen.\n• Melde dich bei deinem Konto an und drücke \"Autorisieren\".\n• Es sollte eine Seite mit einer Fehlermeldung erscheinen. Kopiere die URL dieser Seite, füge sie in das untenstehende Feld ein und drücke \"OK\".</string>
+    <string name="loading">Wird geladen...</string>
+    <string name="copy_code">Code kopieren</string>
+    <string name="external_tv_login_message">Um Zugriff auf alle Funktionen zu erhalten, musst du dich als Android-TV-Gerät anmelden.\n\nFolge diesen Schritten:\n• Kopiere den auf dem Bildschirm angezeigten Code.\n• Drücke die Schaltfläche \"URL öffnen\".\n• Gib den Code ein und drücke \"Aktivieren\".\n• Drücke \"Autorisieren\".\n• Kehre zu Xtra zurück und drücke \"Weiter\".</string>
 </resources>
