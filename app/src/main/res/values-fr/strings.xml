@@ -666,7 +666,6 @@
     <string name="use_background_audio">Lire l\'audio en arrière-plan</string>
     <string name="avoid_rounded_corners">Ignorer les coins arrondis de l\'écran</string>
     <string name="api_web_gql_token"> token web GQL</string>
-    <string name="use_new_pubsub">Utiliser la nouvelle URL de PubSub</string>
     <string name="chat_size_modifier">Modifieur de taille</string>
     <string name="chat_emote_size">Taille de l\'emote</string>
     <string name="chat_badge_size">Taille du badge</string>
@@ -683,7 +682,6 @@
     <string name="download_language_model_message">Télécharger un modèle de langue pour %s ?</string>
     <string name="translate_from_selected">Traduire à partir de la langue sélectionnée</string>
     <string name="translate_all_messages">Traduire tous les messages sur cette chaîne</string>
-    <string name="use_custom_websockets">Utiliser des WebSockets personnalisés</string>
     <string name="show_more_websocket_info">Afficher plus d\'infos sur les WebSockets</string>
     <string name="websocket_connected">%s : connecté</string>
     <string name="websocket_disconnected">%1$s : déconnecté - %2$s</string>

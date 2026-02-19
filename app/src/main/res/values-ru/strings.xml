@@ -666,7 +666,6 @@
     <string name="use_background_audio">Проигрывать звук в фоне</string>
     <string name="avoid_rounded_corners">Избегать скруглённые углы экрана</string>
     <string name="api_web_gql_token">Токен веб GQL</string>
-    <string name="use_new_pubsub">Использовать новый адрес PubSub</string>
     <string name="chat_size_modifier">Модификатор размера</string>
     <string name="chat_emote_size">Размер смайлов</string>
     <string name="chat_badge_size">Размер значков</string>
@@ -683,7 +682,6 @@
     <string name="download_language_model_message">Скачать язык для %s?</string>
     <string name="translate_from_selected">Перевести с выбранного языка</string>
     <string name="translate_all_messages">Перевести все сообщения в этом канале</string>
-    <string name="use_custom_websockets">Использовать пользовательский WebSocket</string>
     <string name="show_more_websocket_info">Показать дополнительную информацию о WebSockets</string>
     <string name="websocket_connected">%s: Подключено</string>
     <string name="websocket_disconnected">%1$s: Отключено - %2$s</string>

@@ -28,8 +28,8 @@ android {
         applicationId = "com.github.andreyasadchy.xtra"
         minSdk = 23
         targetSdk = 36
-        versionCode = 323
-        versionName = "2.53.6"
+        versionCode = 324
+        versionName = "2.54.0"
     }
 
     buildTypes {
@@ -58,6 +58,8 @@ android {
 }
 
 dependencies {
+    implementation("com.google.guava:guava:33.3.1-android") // exoplayer
+
     implementation(libs.material)
     implementation(libs.markwon.core)
     implementation(libs.markwon.linkify)

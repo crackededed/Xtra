@@ -7,17 +7,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import kotlin.math.max
 
-class ChatReplayManagerLocal @Inject constructor(
+class ChatReplayManagerLocal(
     private val getCurrentPosition: () -> Long?,
     private val getCurrentSpeed: () -> Float?,
-    private val onMessage: (ChatMessage) -> Unit,
-    private val clearMessages: () -> Unit,
     private val coroutineScope: CoroutineScope,
+    private val listener: ChatReplayManager.Listener,
 ) {
-
     private var messages: List<ChatMessage> = emptyList()
     private var startTime = 0L
     private val list = mutableListOf<ChatMessage>()
@@ -51,7 +48,9 @@ class ChatReplayManagerLocal @Inject constructor(
         lastCheckedPosition = currentPosition
         playbackSpeed = getCurrentSpeed()
         list.clear()
-        clearMessages()
+        coroutineScope.launch {
+            listener.clearMessages()
+        }
         load(currentPosition + startTime)
     }
 
@@ -94,7 +93,7 @@ class ChatReplayManagerLocal @Inject constructor(
                     if (!isActive) {
                         break
                     }
-                    onMessage(
+                    listener.onChatMessage(
                         ChatMessage(
                             id = message.id,
                             userId = message.userId,
@@ -125,7 +124,9 @@ class ChatReplayManagerLocal @Inject constructor(
                 loadJob?.cancel()
                 messageJob?.cancel()
                 list.clear()
-                clearMessages()
+                coroutineScope.launch {
+                    listener.clearMessages()
+                }
                 load(position + startTime)
             } else {
                 messageJob?.cancel()
