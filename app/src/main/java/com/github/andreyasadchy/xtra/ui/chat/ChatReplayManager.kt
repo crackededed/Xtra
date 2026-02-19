@@ -12,10 +12,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import javax.inject.Inject
 import kotlin.math.max
 
-class ChatReplayManager @Inject constructor(
+class ChatReplayManager(
     private val networkLibrary: String?,
     private val gqlHeaders: Map<String, String>,
     private val graphQLRepository: GraphQLRepository,
@@ -25,12 +24,9 @@ class ChatReplayManager @Inject constructor(
     private val startTime: Long,
     private val getCurrentPosition: () -> Long?,
     private val getCurrentSpeed: () -> Float?,
-    private val onMessage: (ChatMessage) -> Unit,
-    private val clearMessages: () -> Unit,
-    private val getIntegrityToken: () -> Unit,
     private val coroutineScope: CoroutineScope,
+    private val listener: Listener,
 ) {
-
     private var cursor: String? = null
     private val list = mutableListOf<VideoChatMessage>()
     private var started = false
@@ -48,7 +44,9 @@ class ChatReplayManager @Inject constructor(
             lastCheckedPosition = currentPosition
             playbackSpeed = getCurrentSpeed()
             list.clear()
-            clearMessages()
+            coroutineScope.launch {
+                listener.clearMessages()
+            }
             load(currentPosition + startTime)
         }
     }
@@ -70,7 +68,7 @@ class ChatReplayManager @Inject constructor(
                 }
                 if (enableIntegrity) {
                     response.errors?.find { it.message == "failed integrity check" }?.let {
-                        getIntegrityToken()
+                        listener.getIntegrityToken()
                         isLoading = false
                         return@launch
                     }
@@ -146,7 +144,7 @@ class ChatReplayManager @Inject constructor(
                     if (!isActive) {
                         break
                     }
-                    onMessage(
+                    listener.onChatMessage(
                         ChatMessage(
                             id = message.id,
                             userId = message.userId,
@@ -175,7 +173,9 @@ class ChatReplayManager @Inject constructor(
                 loadJob?.cancel()
                 messageJob?.cancel()
                 list.clear()
-                clearMessages()
+                coroutineScope.launch {
+                    listener.clearMessages()
+                }
                 load(position + startTime)
             } else {
                 messageJob?.cancel()
@@ -191,5 +191,11 @@ class ChatReplayManager @Inject constructor(
             messageJob?.cancel()
             startJob()
         }
+    }
+
+    interface Listener {
+        suspend fun onChatMessage(message: ChatMessage) {}
+        suspend fun clearMessages() {}
+        suspend fun getIntegrityToken() {}
     }
 }

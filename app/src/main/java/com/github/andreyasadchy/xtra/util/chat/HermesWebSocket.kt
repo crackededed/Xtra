@@ -3,7 +3,10 @@ package com.github.andreyasadchy.xtra.util.chat
 import android.os.Build
 import com.github.andreyasadchy.xtra.util.WebSocket
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.time.Instant
@@ -25,23 +28,11 @@ class HermesWebSocket(
     private val gqlClientId: String?,
     private val gqlToken: String?,
     private val collectPoints: Boolean,
-    private val notifyPoints: Boolean,
     private val showRaids: Boolean,
     private val showPolls: Boolean,
     private val showPredictions: Boolean,
-    private val onConnect: (() -> Unit),
-    private val onDisconnect: ((String, String) -> Unit),
-    private val onPlaybackMessage: (JSONObject) -> Unit,
-    private val onStreamInfo: (JSONObject) -> Unit,
-    private val onRewardMessage: (JSONObject) -> Unit,
-    private val onPointsEarned: (JSONObject) -> Unit,
-    private val onClaimAvailable: () -> Unit,
-    private val onMinuteWatched: () -> Unit,
-    private val onRaidUpdate: (JSONObject, Boolean) -> Unit,
-    private val onPollUpdate: (JSONObject) -> Unit,
-    private val onPredictionUpdate: (JSONObject) -> Unit,
     private val trustManager: X509TrustManager?,
-    private val coroutineScope: CoroutineScope,
+    private val listener: Listener,
 ) {
     private var webSocket: WebSocket? = null
     private var pongTimer: Timer? = null
@@ -50,21 +41,22 @@ class HermesWebSocket(
     private var topics = emptyMap<String, String>()
     private val handledMessageIds = mutableListOf<String>()
 
-    fun connect() {
-        webSocket = WebSocket("wss://hermes.twitch.tv/v1?clientId=${gqlClientId}", trustManager, HermesWebSocketListener())
-        coroutineScope.launch {
+    fun connect(coroutineScope: CoroutineScope): Job {
+        webSocket = WebSocket("wss://hermes.twitch.tv/v1?clientId=${gqlClientId}", trustManager, WebSocketListener())
+        return coroutineScope.launch(Dispatchers.IO) {
             webSocket?.start()
         }
     }
 
-    suspend fun disconnect() {
+    suspend fun disconnect(job: Job?) = withContext(Dispatchers.IO) {
         pongTimer?.cancel()
         minuteWatchedTimer?.cancel()
         minuteWatchedTimer = null
-        webSocket?.stop()
+        job?.cancel()
+        webSocket?.disconnect()
     }
 
-    private fun subscribe() {
+    private suspend fun subscribe() = withContext(Dispatchers.IO) {
         if (!userId.isNullOrBlank() && !gqlToken.isNullOrBlank() && collectPoints) {
             val authenticate = JSONObject().apply {
                 put("id", UUID.randomUUID().toString().replace("-", "").substring(0, 21))
@@ -74,9 +66,7 @@ class HermesWebSocket(
                 })
                 put("timestamp", getCurrentTime())
             }.toString()
-            coroutineScope.launch {
-                webSocket?.write(authenticate)
-            }
+            webSocket?.write(authenticate)
         }
         topics = buildMap {
             put(UUID.randomUUID().toString().replace("-", "").substring(0, 21), "video-playback-by-id.$channelId")
@@ -110,9 +100,7 @@ class HermesWebSocket(
                 })
                 put("timestamp", getCurrentTime())
             }.toString()
-            coroutineScope.launch {
-                webSocket?.write(subscribe)
-            }
+            webSocket?.write(subscribe)
         }
     }
 
@@ -128,30 +116,46 @@ class HermesWebSocket(
         }
     }
 
-    private fun startPongTimer() {
+    private suspend fun startPongTimer() = withContext(Dispatchers.IO) {
         pongTimer = Timer().apply {
             schedule(timeout) {
-                coroutineScope.launch {
+                launch {
                     webSocket?.disconnect()
                 }
             }
         }
     }
 
-    private fun startMinuteWatchedTimer() {
+    private suspend fun startMinuteWatchedTimer() = withContext(Dispatchers.IO) {
         minuteWatchedTimer = Timer().apply {
             scheduleAtFixedRate(60000, 60000) {
-                onMinuteWatched()
+                launch {
+                    listener.onMinuteWatched()
+                }
             }
         }
     }
 
-    private inner class HermesWebSocketListener : WebSocket.Listener {
-        override fun onOpen(webSocket: WebSocket) {
-            onConnect()
+    interface Listener {
+        suspend fun onConnect() {}
+        suspend fun onPlaybackMessage(message: JSONObject) {}
+        suspend fun onStreamInfo(message: JSONObject) {}
+        suspend fun onRewardMessage(message: JSONObject) {}
+        suspend fun onPointsEarned(message: JSONObject) {}
+        suspend fun onClaimAvailable() {}
+        suspend fun onMinuteWatched() {}
+        suspend fun onRaidUpdate(message: JSONObject, openStream: Boolean) {}
+        suspend fun onPollUpdate(message: JSONObject) {}
+        suspend fun onPredictionUpdate(message: JSONObject) {}
+        suspend fun onDisconnect(message: String, fullMsg: String?) {}
+    }
+
+    private inner class WebSocketListener : WebSocket.Listener {
+        override suspend fun onConnect(webSocket: WebSocket) {
+            listener.onConnect()
         }
 
-        override fun onMessage(webSocket: WebSocket, message: String) {
+        override suspend fun onMessage(webSocket: WebSocket, message: String) {
             try {
                 val json = if (message.isNotBlank()) JSONObject(message) else null
                 val messageId = if (json?.isNull("id") == false) json.optString("id").takeIf { it.isNotBlank() } else null
@@ -159,10 +163,10 @@ class HermesWebSocket(
                     if (handledMessageIds.contains(messageId)) {
                         return
                     } else {
+                        handledMessageIds.add(messageId)
                         if (handledMessageIds.size > 200) {
                             handledMessageIds.removeAt(0)
                         }
-                        handledMessageIds.add(messageId)
                     }
                 }
                 when (json?.optString("type")) {
@@ -177,53 +181,31 @@ class HermesWebSocket(
                         val messageType = message?.optString("type")
                         if (topic != null && messageType != null) {
                             when {
-                                topic.startsWith("video-playback-by-id") -> onPlaybackMessage(message)
+                                topic.startsWith("video-playback-by-id") -> listener.onPlaybackMessage(message)
                                 topic.startsWith("broadcast-settings-update") -> {
                                     when {
-                                        messageType.startsWith("broadcast_settings_update") -> onStreamInfo(message)
+                                        messageType.startsWith("broadcast_settings_update") -> listener.onStreamInfo(message)
                                     }
                                 }
                                 topic.startsWith("community-points-channel") -> {
                                     when {
-                                        messageType.startsWith("reward-redeemed") -> onRewardMessage(message)
+                                        messageType.startsWith("reward-redeemed") -> listener.onRewardMessage(message)
                                     }
                                 }
                                 topic.startsWith("community-points-user") -> {
                                     when {
-                                        messageType.startsWith("points-earned") -> {
-                                            if (notifyPoints) {
-                                                val messageData = message.optJSONObject("data")
-                                                val messageChannelId = messageData?.optString("channel_id")
-                                                if (channelId == messageChannelId) {
-                                                    onPointsEarned(message)
-                                                }
-                                            }
-                                        }
-                                        messageType.startsWith("claim-available") -> {
-                                            if (collectPoints) {
-                                                onClaimAvailable()
-                                            }
-                                        }
+                                        messageType.startsWith("points-earned") -> listener.onPointsEarned(message)
+                                        messageType.startsWith("claim-available") -> listener.onClaimAvailable()
                                     }
                                 }
                                 topic.startsWith("raid") -> {
-                                    if (showRaids) {
-                                        when {
-                                            messageType.startsWith("raid_update") -> onRaidUpdate(message, false)
-                                            messageType.startsWith("raid_go") -> onRaidUpdate(message, true)
-                                        }
+                                    when {
+                                        messageType.startsWith("raid_update") -> listener.onRaidUpdate(message, false)
+                                        messageType.startsWith("raid_go") -> listener.onRaidUpdate(message, true)
                                     }
                                 }
-                                topic.startsWith("polls") -> {
-                                    if (showPolls) {
-                                        onPollUpdate(message)
-                                    }
-                                }
-                                topic.startsWith("predictions-channel") -> {
-                                    if (showPredictions) {
-                                        onPredictionUpdate(message)
-                                    }
-                                }
+                                topic.startsWith("polls") -> listener.onPollUpdate(message)
+                                topic.startsWith("predictions-channel") -> listener.onPredictionUpdate(message)
                             }
                         }
                     }
@@ -235,14 +217,14 @@ class HermesWebSocket(
                         //val reconnect = json.optJSONObject("reconnect")
                         //val reconnectUrl = if (reconnect?.isNull("url") == false) reconnect.optString("url").takeIf { it.isNotBlank() } else null
                         pongTimer?.cancel()
-                        coroutineScope.launch {
-                            webSocket.disconnect()
-                        }
+                        webSocket.disconnect()
                     }
                     "welcome" -> {
                         val welcome = json.optJSONObject("welcome")
                         if (welcome?.isNull("keepaliveSec") == false) {
-                            welcome.optInt("keepaliveSec").takeIf { it > 0 }?.let { timeout = it * 1000L }
+                            welcome.optInt("keepaliveSec").takeIf { it > 0 }?.let {
+                                timeout = it * 1000L
+                            }
                         }
                         pongTimer?.cancel()
                         startPongTimer()
@@ -257,8 +239,8 @@ class HermesWebSocket(
             }
         }
 
-        override fun onFailure(webSocket: WebSocket, throwable: Throwable) {
-            onDisconnect(throwable.toString(), throwable.stackTraceToString())
+        override suspend fun onDisconnect(webSocket: WebSocket, message: String, fullMsg: String?) {
+            listener.onDisconnect(message, fullMsg)
         }
     }
 }

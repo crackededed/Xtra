@@ -1,131 +1,116 @@
 package com.github.andreyasadchy.xtra.util.chat
 
 import android.os.Build
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.BufferedWriter
-import java.io.IOException
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.Socket
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
-
-private const val TAG = "ChatWriteIRC"
+import javax.net.ssl.X509TrustManager
 
 class ChatWriteIRC(
     private val useSSL: Boolean,
     private val userLogin: String?,
     private val userToken: String?,
-    channelName: String,
-    private val onSendMessageError: (String, String) -> Unit,
-    private val onNotice: (String) -> Unit,
-    private val onUserState: (String) -> Unit,
-) : Thread() {
-    private var socketOut: Socket? = null
-    private lateinit var readerOut: BufferedReader
-    private lateinit var writerOut: BufferedWriter
-    private val hashChannelName: String = "#$channelName"
-    private val messageSenderExecutor: Executor = Executors.newSingleThreadExecutor()
-    private var isActive = true
+    private val channelLogin: String,
+    private val trustManager: X509TrustManager?,
+    private val listener: ChatReadWebSocket.Listener,
+) {
+    private var socket: Socket? = null
+    private var reader: BufferedReader? = null
+    private var writer: BufferedWriter? = null
 
-    override fun run() {
-
-        fun handlePing(writer: BufferedWriter) {
-            write("PONG :tmi.twitch.tv", writer)
-            writer.flush()
-        }
-
-        do {
+    suspend fun start() = withContext(Dispatchers.IO) {
+        while (isActive) {
             try {
                 connect()
-                while (true) {
-                    val messageOut = readerOut.readLine()!!
-                    messageOut.run {
+                var line = reader?.readLine()
+                while (line != null) {
+                    line.run {
                         when {
-                            contains("PRIVMSG") -> {}
-                            contains("USERNOTICE") -> {}
-                            contains("CLEARMSG") -> {}
-                            contains("CLEARCHAT") -> {}
-                            contains("NOTICE") -> onNotice(this)
-                            contains("ROOMSTATE") -> {}
-                            contains("USERSTATE") -> onUserState(this)
-                            startsWith("PING") -> handlePing(writerOut)
+                            contains("PRIVMSG") -> listener.onChatMessage(this, false)
+                            contains("USERNOTICE") -> listener.onChatMessage(this, true)
+                            contains("CLEARMSG") -> listener.onClearMessage(this)
+                            contains("CLEARCHAT") -> listener.onClearChat(this)
+                            contains("NOTICE") -> listener.onNotice(this)
+                            contains("ROOMSTATE") -> listener.onRoomState(this)
+                            contains("USERSTATE") -> listener.onUserState(this)
+                            startsWith("PING") -> {
+                                write("PONG :tmi.twitch.tv")
+                                writer?.flush()
+                            }
                         }
                     }
+                    line = reader?.readLine()
                 }
-            } catch (e: IOException) {
-                Log.d(TAG, "Disconnecting from $hashChannelName")
-                close()
-                sleep(1000L)
             } catch (e: Exception) {
-                close()
-                sleep(1000L)
-            }
-        } while (isActive)
-    }
-
-    private fun connect() {
-        Log.d(TAG, "Connecting to Twitch IRC - SSL $useSSL")
-        try {
-            socketOut = if (useSSL) {
-                val socketFactory = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    SSLSocketFactory.getDefault()
-                } else {
-                    SSLContext.getDefault().socketFactory
+                if (socket?.isClosed != true && e.message != "Connection reset" && e.message != "recvfrom failed: ECONNRESET (Connection reset by peer)") {
+                    listener.onDisconnect(e.toString(), e.stackTraceToString())
                 }
-                socketFactory.createSocket("irc.twitch.tv", 6697)
-            } else {
-                Socket("irc.twitch.tv", 6667)
-            }.apply {
-                readerOut = BufferedReader(InputStreamReader(getInputStream()))
-                writerOut = BufferedWriter(OutputStreamWriter(getOutputStream()))
-                write("PASS oauth:$userToken", writerOut)
-                write("NICK $userLogin", writerOut)
             }
-            write("CAP REQ :twitch.tv/tags twitch.tv/commands", writerOut)
-            write("JOIN $hashChannelName", writerOut)
-            writerOut.flush()
-            Log.d(TAG, "Successfully connected to - $hashChannelName")
-        } catch (e: IOException) {
-            Log.e(TAG, "Error connecting to Twitch IRC", e)
-            throw e
+            close()
+            delay(1000)
         }
     }
 
-    suspend fun disconnect() = withContext(Dispatchers.IO) {
-        close()
-        isActive = false
-    }
-
-    private fun close() {
-        try {
-            socketOut?.close()
-        } catch (e: IOException) {
-            Log.e(TAG, "Error while closing socketOut", e)
+    private suspend fun connect() = withContext(Dispatchers.IO) {
+        socket = if (useSSL) {
+            val socketFactory = when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> SSLSocketFactory.getDefault()
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> SSLContext.getDefault().socketFactory
+                else -> {
+                    val sslContext = SSLContext.getInstance("TLSv1.3")
+                    sslContext.init(null, arrayOf(trustManager), null)
+                    sslContext.socketFactory
+                }
+            }
+            socketFactory.createSocket("irc.twitch.tv", 6697)
+        } else {
+            Socket("irc.twitch.tv", 6667)
         }
+        reader = BufferedReader(InputStreamReader(socket?.inputStream))
+        writer = BufferedWriter(OutputStreamWriter(socket?.outputStream))
+        write("CAP REQ :twitch.tv/tags twitch.tv/commands")
+        write("PASS oauth:$userToken")
+        write("NICK $userLogin")
+        write("JOIN #$channelLogin")
+        writer?.flush()
+        listener.onConnect()
     }
 
-    @Throws(IOException::class)
-    private fun write(message: String, vararg writers: BufferedWriter?) {
-        writers.forEach { it?.write(message + System.lineSeparator()) }
+    private suspend fun write(message: String) = withContext(Dispatchers.IO) {
+        writer?.write(message + System.lineSeparator())
     }
 
-    fun send(message: CharSequence, replyId: String?) {
-        messageSenderExecutor.execute {
+    suspend fun send(message: CharSequence, replyId: String?) = withContext(Dispatchers.IO) {
+        val reply = replyId?.let { "@reply-parent-msg-id=${it} " } ?: ""
+        write("${reply}PRIVMSG #$channelLogin :$message")
+        writer?.flush()
+    }
+
+    suspend fun disconnect(job: Job?) = withContext(Dispatchers.IO) {
+        job?.cancel()
+        if (socket?.isClosed == false) {
             try {
-                val reply = replyId?.let { "@reply-parent-msg-id=${it} " } ?: ""
-                write("${reply}PRIVMSG $hashChannelName :$message", writerOut)
-                writerOut.flush()
-                Log.d(TAG, "Sent message to $hashChannelName: $message")
+                socket?.close()
             } catch (e: Exception) {
-                Log.e(TAG, "Error sending message", e)
-                onSendMessageError(e.toString(), e.stackTraceToString())
+
             }
+        }
+    }
+
+    private suspend fun close() = withContext(Dispatchers.IO) {
+        try {
+            socket?.close()
+        } catch (e: Exception) {
+
         }
     }
 }

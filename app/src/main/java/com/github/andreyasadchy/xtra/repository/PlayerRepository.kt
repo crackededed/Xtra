@@ -587,7 +587,7 @@ class PlayerRepository @Inject constructor(
                 }
             }
         }
-        parseStvEmotes(response.emotes, useWebp)
+        parseStvEmotes(response.emotes, useWebp, Emote.GLOBAL_STV)
     }
 
     suspend fun loadStvEmotes(networkLibrary: String?, channelId: String, useWebp: Boolean): Pair<String?, List<Emote>> = withContext(Dispatchers.IO) {
@@ -627,10 +627,10 @@ class PlayerRepository @Inject constructor(
             }
         }
         val set = response.emoteSet
-        Pair(set.id, parseStvEmotes(set.emotes, useWebp))
+        Pair(set.id, parseStvEmotes(set.emotes, useWebp, Emote.CHANNEL_STV))
     }
 
-    private fun parseStvEmotes(response: List<StvResponse>, useWebp: Boolean): List<Emote> {
+    private fun parseStvEmotes(response: List<StvResponse>, useWebp: Boolean, source: Int): List<Emote> {
         return response.mapNotNull { emote ->
             emote.name?.takeIf { it.isNotBlank() }?.let { name ->
                 emote.data?.let { data ->
@@ -656,7 +656,7 @@ class PlayerRepository @Inject constructor(
                                 format = urls?.getOrNull(0)?.substringAfterLast(".") ?: "webp",
                                 isAnimated = data.animated != false,
                                 isOverlayEmote = emote.flags == 1,
-                                thirdParty = true,
+                                source = source,
                             )
                         }
                     }
@@ -789,7 +789,7 @@ class PlayerRepository @Inject constructor(
                 }
             }
         }
-        parseBttvEmotes(response, useWebp)
+        parseBttvEmotes(response, useWebp, Emote.GLOBAL_BTTV)
     }
 
     suspend fun loadBttvEmotes(networkLibrary: String?, channelId: String, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
@@ -832,11 +832,12 @@ class PlayerRepository @Inject constructor(
             response.entries.filter { it.key != "bots" && it.value is JsonArray }.map { entry ->
                 (entry.value as JsonArray).map { json.decodeFromJsonElement<BttvResponse>(it) }
             }.flatten(),
-            useWebp
+            useWebp,
+            Emote.CHANNEL_BTTV
         )
     }
 
-    private fun parseBttvEmotes(response: List<BttvResponse>, useWebp: Boolean): List<Emote> {
+    private fun parseBttvEmotes(response: List<BttvResponse>, useWebp: Boolean, source: Int): List<Emote> {
         val list = listOf("IceCold", "SoSnowy", "SantaHat", "TopHat", "CandyCane", "ReinDeer", "cvHazmat", "cvMask")
         return response.mapNotNull { emote ->
             emote.code?.takeIf { it.isNotBlank() }?.let { name ->
@@ -850,7 +851,7 @@ class PlayerRepository @Inject constructor(
                         format = if (useWebp) "webp" else null,
                         isAnimated = emote.animated != false,
                         isOverlayEmote = list.contains(name),
-                        thirdParty = true,
+                        source = source,
                     )
                 }
             }
@@ -894,7 +895,7 @@ class PlayerRepository @Inject constructor(
             }
         }
         response.sets.entries.filter { it.key.toIntOrNull()?.let { set -> response.globalSets.contains(set) } == true }.flatMap {
-            it.value.emoticons?.let { emotes -> parseFfzEmotes(emotes, useWebp) } ?: emptyList()
+            it.value.emoticons?.let { emotes -> parseFfzEmotes(emotes, useWebp, Emote.GLOBAL_FFZ) } ?: emptyList()
         }
     }
 
@@ -935,11 +936,11 @@ class PlayerRepository @Inject constructor(
             }
         }
         response.sets.entries.flatMap {
-            it.value.emoticons?.let { emotes -> parseFfzEmotes(emotes, useWebp) } ?: emptyList()
+            it.value.emoticons?.let { emotes -> parseFfzEmotes(emotes, useWebp, Emote.CHANNEL_FFZ) } ?: emptyList()
         }
     }
 
-    private fun parseFfzEmotes(response: List<FfzResponse.Emote>, useWebp: Boolean): List<Emote> {
+    private fun parseFfzEmotes(response: List<FfzResponse.Emote>, useWebp: Boolean, source: Int): List<Emote> {
         return response.mapNotNull { emote ->
             emote.name?.takeIf { it.isNotBlank() }?.let { name ->
                 val isAnimated = emote.animated != null
@@ -964,7 +965,7 @@ class PlayerRepository @Inject constructor(
                         url4x = urls.url4x,
                         format = if (isAnimated && useWebp) "webp" else null,
                         isAnimated = isAnimated,
-                        thirdParty = true,
+                        source = source,
                     )
                 }
             }

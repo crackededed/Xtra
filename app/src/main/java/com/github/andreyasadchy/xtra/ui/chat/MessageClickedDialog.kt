@@ -48,7 +48,7 @@ import java.util.Locale
 class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.CallbackListener {
 
     interface OnButtonClickListener {
-        fun onCreateMessageClickedChatAdapter(): MessageClickedChatAdapter
+        fun onCreateMessageClickedChatAdapter(): MessageClickedChatAdapter?
         fun onReplyClicked(replyId: String?, userLogin: String?, userName: String?, message: String?)
         fun onCopyMessageClicked(message: String)
         fun onViewProfileClicked(id: String?, login: String?, name: String?, channelLogo: String?)
@@ -78,6 +78,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
     private lateinit var listener: OnButtonClickListener
     var adapter: MessageClickedChatAdapter? = null
     private var isChatTouched = false
+    private var messageLimit: Int? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -135,7 +136,9 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
                 adapter.messageClickListener = { selectedMessage, previousSelectedMessage ->
                     updateButtons(selectedMessage)
                     previousSelectedMessage?.let {
-                        adapter.messages?.indexOf(it)?.takeIf { it != -1 }?.let {
+                        synchronized(adapter.messages) {
+                            adapter.messages.indexOf(it).takeIf { it != -1 }
+                        }?.let {
                             (recyclerView.layoutManager?.findViewByPosition(it) as? TextView)?.let {
                                 adapter.updateBackground(previousSelectedMessage, it)
                             } ?: adapter.notifyItemChanged(it)
@@ -144,7 +147,11 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
                 }
                 adapter.selectedMessage?.let { selectedMessage ->
                     updateButtons(selectedMessage)
-                    adapter.messages?.indexOf(selectedMessage)?.takeIf { it != -1 }?.let { binding.recyclerView.scrollToPosition(it) }
+                    synchronized(adapter.messages) {
+                        adapter.messages.indexOf(selectedMessage).takeIf { it != -1 }
+                    }?.let {
+                        binding.recyclerView.scrollToPosition(it)
+                    }
                     if (selectedMessage.userId != null || selectedMessage.userLogin != null) {
                         val targetId = requireArguments().getString(KEY_CHANNEL_ID)
                         val item = selectedMessage.userId?.let { savedUsers.find { it.first.channelId == selectedMessage.userId && it.second == targetId } }
@@ -378,19 +385,23 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
 
     fun updateUserMessages(userId: String) {
         adapter?.let { adapter ->
-            adapter.messages?.toList()?.let { messages ->
-                messages.filter { it.userId != null && it.userId == userId }.forEach { message ->
-                    messages.indexOf(message).takeIf { it != -1 }?.let {
-                        adapter.notifyItemChanged(it)
-                    }
+            synchronized(adapter.messages) {
+                adapter.messages.mapIndexedNotNull { index, message ->
+                    if (message.userId != null && message.userId == userId) {
+                        index
+                    } else null
                 }
+            }.forEach {
+                adapter.notifyItemChanged(it)
             }
         }
     }
 
     fun updateTranslation(chatMessage: ChatMessage, previousTranslation: String?) {
         adapter?.let { adapter ->
-            adapter.messages?.toList()?.indexOf(chatMessage)?.takeIf { it != -1 }?.let {
+            synchronized(adapter.messages) {
+                adapter.messages.indexOf(chatMessage).takeIf { it != -1 }
+            }?.let {
                 (binding.recyclerView.layoutManager?.findViewByPosition(it) as? TextView)?.let {
                     adapter.updateTranslation(chatMessage, it, previousTranslation)
                 } ?: adapter.notifyItemChanged(it)
@@ -398,9 +409,42 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
         }
     }
 
-    fun scrollToLastPosition() {
-        if (!isChatTouched && !shouldShowButton()) {
-            adapter?.messages?.let { binding.recyclerView.scrollToPosition(it.lastIndex) }
+    fun newMessage(message: ChatMessage) {
+        adapter?.let { adapter ->
+            if ((!adapter.userId.isNullOrBlank() && (message.userId == adapter.userId || message.replyParent?.userId == adapter.userId)) ||
+                (!adapter.userLogin.isNullOrBlank() && (message.userLogin == adapter.userLogin || message.replyParent?.userLogin == adapter.userLogin))) {
+                synchronized(adapter.messages) {
+                    if (adapter.messages.size >= (messageLimit ?: requireContext().prefs().getInt(C.CHAT_LIMIT, 600).also { messageLimit = it })) {
+                        adapter.messages.removeAt(0)
+                        adapter.notifyItemRemoved(0)
+                    }
+                    adapter.messages.add(message)
+                    val lastIndex = adapter.messages.lastIndex
+                    adapter.notifyItemInserted(lastIndex)
+                    if (!isChatTouched && !shouldShowButton()) {
+                        binding.recyclerView.scrollToPosition(lastIndex)
+                    }
+                }
+            }
+        }
+    }
+
+    fun addMessages(messages: List<ChatMessage>) {
+        adapter?.let { adapter ->
+            synchronized(adapter.messages) {
+                val left = (messageLimit ?: requireContext().prefs().getInt(C.CHAT_LIMIT, 600).also { messageLimit = it }) - adapter.messages.size
+                if (left > 0) {
+                    val items = messages.filter { message ->
+                        (!message.userId.isNullOrBlank() && (message.userId == adapter.userId || message.replyParent?.userId == adapter.userId)) ||
+                                (!message.userLogin.isNullOrBlank() && (message.userLogin == adapter.userLogin || message.replyParent?.userLogin == adapter.userLogin))
+                    }.takeLast(left)
+                    adapter.messages.addAll(0, items)
+                    adapter.notifyItemRangeInserted(0, items.size)
+                    if (!isChatTouched && !shouldShowButton()) {
+                        binding.recyclerView.scrollToPosition(adapter.messages.lastIndex)
+                    }
+                }
+            }
         }
     }
 

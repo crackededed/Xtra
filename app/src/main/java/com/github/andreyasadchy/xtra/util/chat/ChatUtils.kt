@@ -10,7 +10,6 @@ import com.github.andreyasadchy.xtra.model.chat.Reply
 import com.github.andreyasadchy.xtra.model.chat.RoomState
 import com.github.andreyasadchy.xtra.model.chat.TwitchEmote
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import kotlin.collections.set
 
 object ChatUtils {
 
@@ -111,7 +110,8 @@ object ChatUtils {
                 message = msg,
                 timestamp = prefixes["tmi-sent-ts"]?.toLong(),
                 fullMsg = message
-            ), prefixes["target-msg-id"]
+            ),
+            prefixes["target-msg-id"]
         )
     }
 
@@ -140,7 +140,7 @@ object ChatUtils {
         )
     }
 
-    fun parseNotice(context: Context, message: String): Pair<ChatMessage, Boolean> {
+    fun parseNotice(context: Context, message: String): Pair<ChatMessage, String?> {
         val parts = message.substring(1).split(" ".toRegex(), 2)
         val prefixes = splitAndMakeMap(parts[0], ";", "=")
         val messageInfo = parts[1]
@@ -150,7 +150,8 @@ object ChatUtils {
             ChatMessage(
                 systemMsg = TwitchApiHelper.getNoticeString(context, msgId, text),
                 fullMsg = message
-            ), msgId == "unraid_success"
+            ),
+            msgId
         )
     }
 

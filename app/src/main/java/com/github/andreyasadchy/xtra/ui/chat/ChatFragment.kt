@@ -76,14 +76,13 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
     private var _binding: FragmentChatBinding? = null
     private val binding get() = _binding!!
     private val viewModel: ChatViewModel by viewModels()
-    private lateinit var adapter: ChatAdapter
+    private var adapter: ChatAdapter? = null
 
     private var isChatTouched = false
     private var showChatStatus = false
     private var hasRecentEmotes = false
     private var messagingEnabled = false
 
-    private var autoCompleteList = mutableListOf<Any?>()
     private var autoCompleteAdapter: AutoCompleteAdapter<Any>? = null
 
     private val backPressedCallback = object : OnBackPressedCallback(true) {
@@ -134,8 +133,19 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                 !TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank())
                 val chatUrl = args.getString(KEY_CHAT_URL)
                 if (isLive || (args.getString(KEY_VIDEO_ID) != null && args.getInt(KEY_START_TIME) != -1) || chatUrl != null) {
+                    val enableMessaging = isLive && isLoggedIn
                     val sizeModifier = (requireContext().prefs().getInt(C.CHAT_SIZE_MODIFIER, 100).toFloat() / 100f)
                     adapter = ChatAdapter(
+                        messages = viewModel.chatMessages,
+                        localTwitchEmotes = viewModel.localTwitchEmotes,
+                        thirdPartyEmotes = viewModel.thirdPartyEmotes,
+                        globalBadges = viewModel.globalBadges,
+                        channelBadges = viewModel.channelBadges,
+                        cheerEmotes = viewModel.cheerEmotes,
+                        namePaints = viewModel.namePaints,
+                        stvBadges = viewModel.stvBadges,
+                        personalEmoteSets = viewModel.personalEmoteSets,
+                        stvUsers = viewModel.stvUsers,
                         enableTimestamps = requireContext().prefs().getBoolean(C.CHAT_TIMESTAMPS, false),
                         timestampFormat = requireContext().prefs().getString(C.CHAT_TIMESTAMP_FORMAT, "0"),
                         firstMsgVisibility = requireContext().prefs().getString(C.CHAT_FIRSTMSG_VISIBILITY, "0")?.toIntOrNull() ?: 0,
@@ -152,14 +162,8 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         nameDisplay = requireContext().prefs().getString(C.UI_NAME_DISPLAY, "0"),
                         useBoldNames = requireContext().prefs().getBoolean(C.CHAT_BOLDNAMES, false),
                         showNamePaints = requireContext().prefs().getBoolean(C.CHAT_SHOW_PAINTS, true),
-                        namePaintsList = viewModel.namePaints,
-                        paintUsersMap = viewModel.paintUsers,
                         showStvBadges = requireContext().prefs().getBoolean(C.CHAT_SHOW_STV_BADGES, true),
-                        stvBadgesList = viewModel.stvBadges,
-                        stvBadgeUsersMap = viewModel.stvBadgeUsers,
                         showPersonalEmotes = requireContext().prefs().getBoolean(C.CHAT_SHOW_PERSONAL_EMOTES, true),
-                        personalEmoteSetsMap = viewModel.personalEmoteSets,
-                        personalEmoteSetUsersMap = viewModel.personalEmoteSetUsers,
                         showSystemMessageEmotes = requireContext().prefs().getBoolean(C.CHAT_SYSTEM_MESSAGE_EMOTES, true),
                         chatUrl = chatUrl,
                         getEmoteBytes = viewModel::getEmoteBytes,
@@ -183,6 +187,22 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         translateMessage = this@ChatFragment::onTranslateMessageClicked,
                         showLanguageDownloadDialog = this@ChatFragment::showLanguageDownloadDialog,
                         channelId = channelId,
+                        loggedInUser = if (enableMessaging) accountLogin else null,
+                        messageClickListener = { channelId ->
+                            (requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(editText.windowToken, 0)
+                            editText.clearFocus()
+                            MessageClickedDialog.newInstance(enableMessaging, channelId).show(this@ChatFragment.childFragmentManager, "messageDialog")
+                        },
+                        replyClickListener = {
+                            (requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(editText.windowToken, 0)
+                            editText.clearFocus()
+                            ReplyClickedDialog.newInstance(enableMessaging).show(this@ChatFragment.childFragmentManager, "replyDialog")
+                        },
+                        imageClickListener = { url, name, format, isAnimated, source, thirdParty, emoteId ->
+                            (requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(editText.windowToken, 0)
+                            editText.clearFocus()
+                            ImageClickedDialog.newInstance(url, name, format, isAnimated, source, thirdParty, emoteId).show(this@ChatFragment.childFragmentManager, "imageDialog")
+                        },
                     )
                     recyclerView.let {
                         it.adapter = adapter
@@ -210,31 +230,14 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                     }
                     btnDown.setOnClickListener {
                         view.post {
-                            adapter.messages?.let { recyclerView.scrollToPosition(it.lastIndex) }
+                            val lastIndex = synchronized(viewModel.chatMessages) {
+                                viewModel.chatMessages.lastIndex
+                            }
+                            recyclerView.scrollToPosition(lastIndex)
                             it.visibility = View.GONE
                         }
                     }
-                    val enableMessaging = isLive && isLoggedIn
-                    adapter.messageClickListener = { channelId ->
-                        (requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(editText.windowToken, 0)
-                        editText.clearFocus()
-                        MessageClickedDialog.newInstance(enableMessaging, channelId).show(this@ChatFragment.childFragmentManager, "messageDialog")
-                    }
-                    adapter.replyClickListener = {
-                        (requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(editText.windowToken, 0)
-                        editText.clearFocus()
-                        ReplyClickedDialog.newInstance(enableMessaging).show(this@ChatFragment.childFragmentManager, "replyDialog")
-                    }
-                    adapter.imageClickListener = { url, name, source, format, isAnimated, thirdParty, emoteId ->
-                        (requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(editText.windowToken, 0)
-                        editText.clearFocus()
-                        ImageClickedDialog.newInstance(url, name, source, format, isAnimated, thirdParty, emoteId).show(this@ChatFragment.childFragmentManager, "imageDialog")
-                    }
                     if (enableMessaging) {
-                        adapter.loggedInUser = accountLogin
-                        messageDialog?.adapter?.loggedInUser = accountLogin
-                        replyDialog?.adapter?.loggedInUser = accountLogin
-                        addToAutoCompleteList(viewModel.chatters.values)
                         viewModel.loadRecentEmotes()
                         viewLifecycleOwner.lifecycleScope.launch {
                             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -245,28 +248,11 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                 }
                             }
                         }
-                        viewLifecycleOwner.lifecycleScope.launch {
-                            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                                viewModel.userEmotes.collectLatest {
-                                    addToAutoCompleteList(it)
-                                }
-                            }
-                        }
-                        viewLifecycleOwner.lifecycleScope.launch {
-                            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                                viewModel.newChatter.collectLatest {
-                                    if (it != null) {
-                                        addToAutoCompleteList(listOf(it))
-                                        viewModel.newChatter.value = null
-                                    }
-                                }
-                            }
-                        }
-                        autoCompleteAdapter = AutoCompleteAdapter<Any>(
+                        autoCompleteAdapter = AutoCompleteAdapter(
                             requireContext(),
                             R.layout.auto_complete_emotes_list_item,
                             R.id.name,
-                            autoCompleteList,
+                            viewModel.autoCompleteList,
                         ).apply {
                             setNotifyOnChange(false)
                             editText.setAdapter(this)
@@ -344,180 +330,6 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                     }
                     viewLifecycleOwner.lifecycleScope.launch {
                         repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.chatMessages.collect { list ->
-                                adapter.messages = list
-                                messageDialog?.adapter?.let { adapter ->
-                                    if (!adapter.userId.isNullOrBlank() || !adapter.userLogin.isNullOrBlank()) {
-                                        adapter.messages = list.filter {
-                                            (!adapter.userId.isNullOrBlank() && it.userId == adapter.userId) || (!adapter.userLogin.isNullOrBlank() && it.userLogin == adapter.userLogin)
-                                        }.toMutableList()
-                                    }
-                                }
-                                replyDialog?.adapter?.let { adapter ->
-                                    if (!adapter.threadParentId.isNullOrBlank()) {
-                                        adapter.messages = list.filter {
-                                            it.reply?.threadParentId == adapter.threadParentId || it.id == adapter.threadParentId
-                                        }.toMutableList()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.newMessage.collect { newMessage ->
-                                if (newMessage != null) {
-                                    adapter.messages?.apply {
-                                        adapter.notifyItemInserted(lastIndex)
-                                        val messageLimit = requireContext().prefs().getInt(C.CHAT_LIMIT, 600)
-                                        if (size >= (messageLimit + 1)) {
-                                            val removeCount = size - messageLimit
-                                            repeat(removeCount) {
-                                                removeAt(0)
-                                            }
-                                            adapter.notifyItemRangeRemoved(0, removeCount)
-                                        }
-                                        if (!isChatTouched && btnDown.isGone) {
-                                            recyclerView.scrollToPosition(lastIndex)
-                                        }
-                                    }
-                                    messageDialog?.adapter?.let { adapter ->
-                                        if ((!adapter.userId.isNullOrBlank() && newMessage.userId == adapter.userId) || (!adapter.userLogin.isNullOrBlank() && newMessage.userLogin == adapter.userLogin)) {
-                                            adapter.messages?.apply {
-                                                add(newMessage)
-                                                adapter.notifyItemInserted(lastIndex)
-                                                val messageLimit = requireContext().prefs().getInt(C.CHAT_LIMIT, 600)
-                                                if (size >= (messageLimit + 1)) {
-                                                    val removeCount = size - messageLimit
-                                                    repeat(removeCount) {
-                                                        removeAt(0)
-                                                    }
-                                                    adapter.notifyItemRangeRemoved(0, removeCount)
-                                                }
-                                                messageDialog?.scrollToLastPosition()
-                                            }
-                                        }
-                                    }
-                                    replyDialog?.adapter?.let { adapter ->
-                                        if (!adapter.threadParentId.isNullOrBlank() && newMessage.reply?.threadParentId == adapter.threadParentId) {
-                                            adapter.messages?.apply {
-                                                add(newMessage)
-                                                adapter.notifyItemInserted(lastIndex)
-                                                val messageLimit = requireContext().prefs().getInt(C.CHAT_LIMIT, 600)
-                                                if (size >= (messageLimit + 1)) {
-                                                    val removeCount = size - messageLimit
-                                                    repeat(removeCount) {
-                                                        removeAt(0)
-                                                    }
-                                                    adapter.notifyItemRangeRemoved(0, removeCount)
-                                                }
-                                                replyDialog?.scrollToLastPosition()
-                                            }
-                                        }
-                                    }
-                                    viewModel.newMessage.value = null
-                                }
-                            }
-                        }
-                    }
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.localTwitchEmotes.collectLatest {
-                                adapter.localTwitchEmotes = it
-                                messageDialog?.adapter?.localTwitchEmotes = it
-                                replyDialog?.adapter?.localTwitchEmotes = it
-                            }
-                        }
-                    }
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.globalStvEmotes.collectLatest {
-                                adapter.globalStvEmotes = it
-                                messageDialog?.adapter?.globalStvEmotes = it
-                                replyDialog?.adapter?.globalStvEmotes = it
-                                addToAutoCompleteList(it)
-                            }
-                        }
-                    }
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.channelStvEmotes.collectLatest {
-                                adapter.channelStvEmotes = it
-                                messageDialog?.adapter?.channelStvEmotes = it
-                                replyDialog?.adapter?.channelStvEmotes = it
-                                addToAutoCompleteList(it)
-                            }
-                        }
-                    }
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.globalBttvEmotes.collectLatest {
-                                adapter.globalBttvEmotes = it
-                                messageDialog?.adapter?.globalBttvEmotes = it
-                                replyDialog?.adapter?.globalBttvEmotes = it
-                                addToAutoCompleteList(it)
-                            }
-                        }
-                    }
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.channelBttvEmotes.collectLatest {
-                                adapter.channelBttvEmotes = it
-                                messageDialog?.adapter?.channelBttvEmotes = it
-                                replyDialog?.adapter?.channelBttvEmotes = it
-                                addToAutoCompleteList(it)
-                            }
-                        }
-                    }
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.globalFfzEmotes.collectLatest {
-                                adapter.globalFfzEmotes = it
-                                messageDialog?.adapter?.globalFfzEmotes = it
-                                replyDialog?.adapter?.globalFfzEmotes = it
-                                addToAutoCompleteList(it)
-                            }
-                        }
-                    }
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.channelFfzEmotes.collectLatest {
-                                adapter.channelFfzEmotes = it
-                                messageDialog?.adapter?.channelFfzEmotes = it
-                                replyDialog?.adapter?.channelFfzEmotes = it
-                                addToAutoCompleteList(it)
-                            }
-                        }
-                    }
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.globalBadges.collectLatest {
-                                adapter.globalBadges = it
-                                messageDialog?.adapter?.globalBadges = it
-                                replyDialog?.adapter?.globalBadges = it
-                            }
-                        }
-                    }
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.channelBadges.collectLatest {
-                                adapter.channelBadges = it
-                                messageDialog?.adapter?.channelBadges = it
-                                replyDialog?.adapter?.channelBadges = it
-                            }
-                        }
-                    }
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.cheerEmotes.collectLatest {
-                                adapter.cheerEmotes = it
-                                messageDialog?.adapter?.cheerEmotes = it
-                                replyDialog?.adapter?.cheerEmotes = it
-                            }
-                        }
-                    }
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        repeatOnLifecycle(Lifecycle.State.STARTED) {
                             viewModel.roomState.collectLatest { roomState ->
                                 if (roomState != null) {
                                     when (roomState.emote) {
@@ -577,20 +389,25 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         repeatOnLifecycle(Lifecycle.State.STARTED) {
                             viewModel.reloadMessages.collectLatest {
                                 if (it) {
-                                    adapter.messages?.let { adapter.notifyItemRangeChanged(0, it.size) }
-                                    messageDialog?.adapter?.let { adapter -> adapter.messages?.let { adapter.notifyItemRangeChanged(0, it.size) } }
-                                    replyDialog?.adapter?.let { adapter -> adapter.messages?.let { adapter.notifyItemRangeChanged(0, it.size) } }
+                                    adapter?.let { adapter ->
+                                        val size = synchronized(viewModel.chatMessages) {
+                                            viewModel.chatMessages.size
+                                        }
+                                        adapter.notifyItemRangeChanged(0, size)
+                                    }
+                                    messageDialog?.adapter?.let { adapter ->
+                                        val size = synchronized(adapter.messages) {
+                                            adapter.messages.size
+                                        }
+                                        adapter.notifyItemRangeChanged(0, size)
+                                    }
+                                    replyDialog?.adapter?.let { adapter ->
+                                        val size = synchronized(adapter.messages) {
+                                            adapter.messages.size
+                                        }
+                                        adapter.notifyItemRangeChanged(0, size)
+                                    }
                                     viewModel.reloadMessages.value = false
-                                }
-                            }
-                        }
-                    }
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.scrollDown.collectLatest {
-                                if (it) {
-                                    adapter.messages?.let { recyclerView.scrollToPosition(it.lastIndex) }
-                                    viewModel.scrollDown.value = false
                                 }
                             }
                         }
@@ -897,130 +714,68 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                     }
                     viewLifecycleOwner.lifecycleScope.launch {
                         repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.newPaint.collectLatest { paint ->
-                                if (paint != null) {
-                                    adapter.namePaints?.let { namePaints ->
-                                        namePaints.find { it.id == paint.id }?.let { namePaints.remove(it) }
-                                        namePaints.add(paint)
+                            viewModel.newMessage.collect { result ->
+                                val message = result.first
+                                val lastIndex = result.second
+                                val removeCount = result.third
+                                adapter?.let { adapter ->
+                                    adapter.notifyItemInserted(lastIndex)
+                                    if (removeCount > 0) {
+                                        synchronized(viewModel.chatMessages) {
+                                            repeat(removeCount) {
+                                                viewModel.chatMessages.removeAt(0)
+                                            }
+                                        }
+                                        adapter.notifyItemRangeRemoved(0, removeCount)
                                     }
-                                    messageDialog?.adapter?.namePaints?.let { namePaints ->
-                                        namePaints.find { it.id == paint.id }?.let { namePaints.remove(it) }
-                                        namePaints.add(paint)
+                                    if (!isChatTouched && binding.btnDown.isGone) {
+                                        binding.recyclerView.scrollToPosition(lastIndex - removeCount)
                                     }
-                                    replyDialog?.adapter?.namePaints?.let { namePaints ->
-                                        namePaints.find { it.id == paint.id }?.let { namePaints.remove(it) }
-                                        namePaints.add(paint)
-                                    }
-                                    viewModel.newPaint.value = null
                                 }
+                                messageDialog?.newMessage(message)
+                                replyDialog?.newMessage(message)
                             }
                         }
                     }
                     viewLifecycleOwner.lifecycleScope.launch {
                         repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.newPaintUser.collectLatest { pair ->
-                                if (pair != null) {
-                                    adapter.paintUsers?.let {
-                                        it.remove(pair.first)
-                                        it.put(pair.first, pair.second)
+                            viewModel.addMessages.collect { result ->
+                                val messages = result.first
+                                val lastIndex = result.second
+                                adapter?.let { adapter ->
+                                    adapter.notifyItemRangeInserted(0, messages.size)
+                                    if (!isChatTouched && binding.btnDown.isGone) {
+                                        binding.recyclerView.scrollToPosition(lastIndex)
                                     }
-                                    messageDialog?.adapter?.paintUsers?.let {
-                                        it.remove(pair.first)
-                                        it.put(pair.first, pair.second)
-                                    }
-                                    replyDialog?.adapter?.paintUsers?.let {
-                                        it.remove(pair.first)
-                                        it.put(pair.first, pair.second)
-                                    }
-                                    updateUserMessages(pair.first)
-                                    viewModel.newPaintUser.value = null
                                 }
+                                messageDialog?.addMessages(messages)
+                                replyDialog?.addMessages(messages)
                             }
                         }
                     }
                     viewLifecycleOwner.lifecycleScope.launch {
                         repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.newStvBadge.collectLatest { badge ->
-                                if (badge != null) {
-                                    adapter.stvBadges?.let { stvBadges ->
-                                        stvBadges.find { it.id == badge.id }?.let { stvBadges.remove(it) }
-                                        stvBadges.add(badge)
-                                    }
-                                    messageDialog?.adapter?.stvBadges?.let { stvBadges ->
-                                        stvBadges.find { it.id == badge.id }?.let { stvBadges.remove(it) }
-                                        stvBadges.add(badge)
-                                    }
-                                    replyDialog?.adapter?.stvBadges?.let { stvBadges ->
-                                        stvBadges.find { it.id == badge.id }?.let { stvBadges.remove(it) }
-                                        stvBadges.add(badge)
-                                    }
-                                    viewModel.newStvBadge.value = null
-                                }
+                            viewModel.removeMessages.collect { size ->
+                                adapter?.notifyItemRangeRemoved(0, size)
                             }
                         }
                     }
                     viewLifecycleOwner.lifecycleScope.launch {
                         repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.newStvBadgeUser.collectLatest { pair ->
-                                if (pair != null) {
-                                    adapter.stvBadgeUsers?.let {
-                                        it.remove(pair.first)
-                                        it.put(pair.first, pair.second)
+                            viewModel.updateUserMessages.collectLatest { userId ->
+                                adapter?.let { adapter ->
+                                    synchronized(viewModel.chatMessages) {
+                                        viewModel.chatMessages.mapIndexedNotNull { index, message ->
+                                            if (message.userId != null && message.userId == userId) {
+                                                index
+                                            } else null
+                                        }
+                                    }.forEach {
+                                        adapter.notifyItemChanged(it)
                                     }
-                                    messageDialog?.adapter?.stvBadgeUsers?.let {
-                                        it.remove(pair.first)
-                                        it.put(pair.first, pair.second)
-                                    }
-                                    replyDialog?.adapter?.stvBadgeUsers?.let {
-                                        it.remove(pair.first)
-                                        it.put(pair.first, pair.second)
-                                    }
-                                    updateUserMessages(pair.first)
-                                    viewModel.newStvBadgeUser.value = null
                                 }
-                            }
-                        }
-                    }
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.newPersonalEmoteSet.collectLatest { pair ->
-                                if (pair != null) {
-                                    adapter.personalEmoteSets?.let {
-                                        it.remove(pair.first)
-                                        it.put(pair.first, pair.second)
-                                    }
-                                    messageDialog?.adapter?.personalEmoteSets?.let {
-                                        it.remove(pair.first)
-                                        it.put(pair.first, pair.second)
-                                    }
-                                    replyDialog?.adapter?.personalEmoteSets?.let {
-                                        it.remove(pair.first)
-                                        it.put(pair.first, pair.second)
-                                    }
-                                    viewModel.newPersonalEmoteSet.value = null
-                                }
-                            }
-                        }
-                    }
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.newPersonalEmoteSetUser.collectLatest { pair ->
-                                if (pair != null) {
-                                    adapter.personalEmoteSetUsers?.let {
-                                        it.remove(pair.first)
-                                        it.put(pair.first, pair.second)
-                                    }
-                                    messageDialog?.adapter?.personalEmoteSetUsers?.let {
-                                        it.remove(pair.first)
-                                        it.put(pair.first, pair.second)
-                                    }
-                                    replyDialog?.adapter?.personalEmoteSetUsers?.let {
-                                        it.remove(pair.first)
-                                        it.put(pair.first, pair.second)
-                                    }
-                                    updateUserMessages(pair.first)
-                                    viewModel.newPersonalEmoteSetUser.value = null
-                                }
+                                messageDialog?.updateUserMessages(userId)
+                                replyDialog?.updateUserMessages(userId)
                             }
                         }
                     }
@@ -1029,7 +784,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                             repeatOnLifecycle(Lifecycle.State.STARTED) {
                                 viewModel.translateAllMessages.collectLatest {
                                     if (it != null) {
-                                        adapter.translateAllMessages = it
+                                        adapter?.translateAllMessages = it
                                         viewModel.translateAllMessages.value = null
                                     }
                                 }
@@ -1151,7 +906,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
     }
 
     fun getTranslateAllMessages(): Boolean {
-        return adapter.translateAllMessages
+        return viewModel.translateAllMessages.value == true
     }
 
     fun toggleTranslateAllMessages(enable: Boolean) {
@@ -1211,7 +966,10 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                     useApiChatMessages = requireContext().prefs().getBoolean(C.DEBUG_API_CHAT_MESSAGES, true),
                     enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                 )
-                adapter.messages?.let { recyclerView.scrollToPosition(it.lastIndex) }
+                val lastIndex = synchronized(viewModel.chatMessages) {
+                    viewModel.chatMessages.lastIndex
+                }
+                recyclerView.scrollToPosition(lastIndex)
                 true
             } else {
                 false
@@ -1219,37 +977,12 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
         }
     }
 
-    private fun addToAutoCompleteList(list: Collection<Any>?) {
-        if (!list.isNullOrEmpty()) {
-            if (messagingEnabled) {
-                val newItems = list.filter { it !in autoCompleteList }
-                autoCompleteAdapter?.addAll(newItems) ?: autoCompleteList.addAll(newItems)
-            }
-        }
+    override fun onCreateMessageClickedChatAdapter(): MessageClickedChatAdapter? {
+        return adapter?.createMessageClickedChatAdapter()
     }
 
-    private fun updateUserMessages(userId: String) {
-        try {
-            adapter.messages?.toList()?.let { messages ->
-                messages.filter { it.userId != null && it.userId == userId }.forEach { message ->
-                    messages.indexOf(message).takeIf { it != -1 }?.let {
-                        adapter.notifyItemChanged(it)
-                    }
-                }
-            }
-            messageDialog?.updateUserMessages(userId)
-            replyDialog?.updateUserMessages(userId)
-        } catch (e: NullPointerException) {
-
-        }
-    }
-
-    override fun onCreateMessageClickedChatAdapter(): MessageClickedChatAdapter {
-        return adapter.createMessageClickedChatAdapter(adapter.messages?.toList())
-    }
-
-    override fun onCreateReplyClickedChatAdapter(): ReplyClickedChatAdapter {
-        return adapter.createReplyClickedChatAdapter(adapter.messages?.toList())
+    override fun onCreateReplyClickedChatAdapter(): ReplyClickedChatAdapter? {
+        return adapter?.createReplyClickedChatAdapter()
     }
 
     override fun onReplyClicked(replyId: String?, userLogin: String?, userName: String?, message: String?) {
@@ -1328,17 +1061,17 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         chatMessage.translatedMessage = getString(R.string.translate_failed_id)
                         chatMessage.translationFailed = true
                         chatMessage.messageLanguage = null
-                        try {
-                            adapter.messages?.toList()?.indexOf(chatMessage)?.takeIf { it != -1 }?.let {
+                        adapter?.let { adapter ->
+                            synchronized(viewModel.chatMessages) {
+                                viewModel.chatMessages.indexOf(chatMessage).takeIf { it != -1 }
+                            }?.let {
                                 (binding.recyclerView.layoutManager?.findViewByPosition(it) as? TextView)?.let {
                                     adapter.updateTranslation(chatMessage, it, previousTranslation)
                                 } ?: adapter.notifyItemChanged(it)
                             }
-                            messageDialog?.updateTranslation(chatMessage, previousTranslation)
-                            replyDialog?.updateTranslation(chatMessage, previousTranslation)
-                        } catch (e: NullPointerException) {
-
                         }
+                        messageDialog?.updateTranslation(chatMessage, previousTranslation)
+                        replyDialog?.updateTranslation(chatMessage, previousTranslation)
                     }
             }
         }
@@ -1359,7 +1092,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         translators.remove(entry.key)
                         entry.value.close()
                     }
-                    translators.put(sourceLanguage, it)
+                    translators[sourceLanguage] = it
                 }
                 translator.translate(message)
                     .addOnSuccessListener { text ->
@@ -1368,17 +1101,17 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         chatMessage.translatedMessage = getString(R.string.translated_message, languageName, text)
                         chatMessage.translationFailed = false
                         chatMessage.messageLanguage = null
-                        try {
-                            adapter.messages?.toList()?.indexOf(chatMessage)?.takeIf { it != -1 }?.let {
+                        adapter?.let { adapter ->
+                            synchronized(viewModel.chatMessages) {
+                                viewModel.chatMessages.indexOf(chatMessage).takeIf { it != -1 }
+                            }?.let {
                                 (binding.recyclerView.layoutManager?.findViewByPosition(it) as? TextView)?.let {
                                     adapter.updateTranslation(chatMessage, it, previousTranslation)
                                 } ?: adapter.notifyItemChanged(it)
                             }
-                            messageDialog?.updateTranslation(chatMessage, previousTranslation)
-                            replyDialog?.updateTranslation(chatMessage, previousTranslation)
-                        } catch (e: NullPointerException) {
-
                         }
+                        messageDialog?.updateTranslation(chatMessage, previousTranslation)
+                        replyDialog?.updateTranslation(chatMessage, previousTranslation)
                     }
                     .addOnFailureListener {
                         val languageName = Locale.forLanguageTag(sourceLanguage).displayLanguage
@@ -1386,17 +1119,17 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         chatMessage.translatedMessage = getString(R.string.translate_failed, languageName)
                         chatMessage.translationFailed = true
                         chatMessage.messageLanguage = sourceLanguage
-                        try {
-                            adapter.messages?.toList()?.indexOf(chatMessage)?.takeIf { it != -1 }?.let {
+                        adapter?.let { adapter ->
+                            synchronized(viewModel.chatMessages) {
+                                viewModel.chatMessages.indexOf(chatMessage).takeIf { it != -1 }
+                            }?.let {
                                 (binding.recyclerView.layoutManager?.findViewByPosition(it) as? TextView)?.let {
                                     adapter.updateTranslation(chatMessage, it, previousTranslation)
                                 } ?: adapter.notifyItemChanged(it)
                             }
-                            messageDialog?.updateTranslation(chatMessage, previousTranslation)
-                            replyDialog?.updateTranslation(chatMessage, previousTranslation)
-                        } catch (e: NullPointerException) {
-
                         }
+                        messageDialog?.updateTranslation(chatMessage, previousTranslation)
+                        replyDialog?.updateTranslation(chatMessage, previousTranslation)
                     }
             }
         } else {
@@ -1404,17 +1137,17 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
             chatMessage.translatedMessage = getString(R.string.translate_failed_id)
             chatMessage.translationFailed = true
             chatMessage.messageLanguage = null
-            try {
-                adapter.messages?.toList()?.indexOf(chatMessage)?.takeIf { it != -1 }?.let {
+            adapter?.let { adapter ->
+                synchronized(viewModel.chatMessages) {
+                    viewModel.chatMessages.indexOf(chatMessage).takeIf { it != -1 }
+                }?.let {
                     (binding.recyclerView.layoutManager?.findViewByPosition(it) as? TextView)?.let {
                         adapter.updateTranslation(chatMessage, it, previousTranslation)
                     } ?: adapter.notifyItemChanged(it)
                 }
-                messageDialog?.updateTranslation(chatMessage, previousTranslation)
-                replyDialog?.updateTranslation(chatMessage, previousTranslation)
-            } catch (e: NullPointerException) {
-
             }
+            messageDialog?.updateTranslation(chatMessage, previousTranslation)
+            replyDialog?.updateTranslation(chatMessage, previousTranslation)
         }
     }
 
@@ -1436,7 +1169,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         translators.remove(entry.key)
                         entry.value.close()
                     }
-                    translators.put(sourceLanguage, it)
+                    translators[sourceLanguage] = it
                 }
                 translator.downloadModelIfNeeded()
                     .addOnSuccessListener {
@@ -1449,17 +1182,17 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                     chatMessage.translatedMessage = getString(R.string.translated_message, languageName, text)
                                     chatMessage.translationFailed = false
                                     chatMessage.messageLanguage = null
-                                    try {
-                                        adapter.messages?.toList()?.indexOf(chatMessage)?.takeIf { it != -1 }?.let {
+                                    adapter?.let { adapter ->
+                                        synchronized(viewModel.chatMessages) {
+                                            viewModel.chatMessages.indexOf(chatMessage).takeIf { it != -1 }
+                                        }?.let {
                                             (binding.recyclerView.layoutManager?.findViewByPosition(it) as? TextView)?.let {
                                                 adapter.updateTranslation(chatMessage, it, previousTranslation)
                                             } ?: adapter.notifyItemChanged(it)
                                         }
-                                        messageDialog?.updateTranslation(chatMessage, previousTranslation)
-                                        replyDialog?.updateTranslation(chatMessage, previousTranslation)
-                                    } catch (e: NullPointerException) {
-
                                     }
+                                    messageDialog?.updateTranslation(chatMessage, previousTranslation)
+                                    replyDialog?.updateTranslation(chatMessage, previousTranslation)
                                 }
                         }
                     }
