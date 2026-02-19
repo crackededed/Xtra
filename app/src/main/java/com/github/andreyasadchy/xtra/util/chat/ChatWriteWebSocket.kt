@@ -2,7 +2,10 @@ package com.github.andreyasadchy.xtra.util.chat
 
 import com.github.andreyasadchy.xtra.util.WebSocket
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Timer
 import javax.net.ssl.X509TrustManager
 import kotlin.concurrent.schedule
@@ -10,88 +13,79 @@ import kotlin.concurrent.schedule
 class ChatWriteWebSocket(
     private val userLogin: String?,
     private val userToken: String?,
-    private val channelName: String,
-    private val onConnect: (() -> Unit),
-    private val onDisconnect: ((String, String) -> Unit),
-    private val onNotice: (String) -> Unit,
-    private val onUserState: (String) -> Unit,
+    private val channelLogin: String,
     private val trustManager: X509TrustManager?,
-    private val coroutineScope: CoroutineScope,
+    private val listener: ChatReadWebSocket.Listener,
 ) {
     private var webSocket: WebSocket? = null
     private var pingTimer: Timer? = null
     private var pongTimer: Timer? = null
 
-    fun connect() {
-        webSocket = WebSocket("wss://irc-ws.chat.twitch.tv", trustManager, ChatWriteWebSocketListener())
-        coroutineScope.launch {
+    fun connect(coroutineScope: CoroutineScope): Job {
+        webSocket = WebSocket("wss://irc-ws.chat.twitch.tv", trustManager, WebSocketListener())
+        return coroutineScope.launch(Dispatchers.IO) {
             webSocket?.start()
         }
     }
 
-    suspend fun disconnect() {
+    suspend fun disconnect(job: Job?) = withContext(Dispatchers.IO) {
         pingTimer?.cancel()
         pongTimer?.cancel()
-        webSocket?.stop()
+        job?.cancel()
+        webSocket?.disconnect()
     }
 
-    private fun startPingTimer() {
+    private suspend fun startPingTimer() = withContext(Dispatchers.IO) {
         pingTimer = Timer().apply {
             schedule(270000) {
-                coroutineScope.launch {
+                launch {
                     webSocket?.write("PING")
+                    startPongTimer()
                 }
-                startPongTimer()
             }
         }
     }
 
-    private fun startPongTimer() {
+    private suspend fun startPongTimer() = withContext(Dispatchers.IO) {
         pongTimer = Timer().apply {
             schedule(10000) {
-                coroutineScope.launch {
+                launch {
                     webSocket?.disconnect()
                 }
             }
         }
     }
 
-    fun send(message: CharSequence, replyId: String?) {
+    suspend fun send(message: CharSequence, replyId: String?) = withContext(Dispatchers.IO) {
         val reply = replyId?.let { "@reply-parent-msg-id=${it} " } ?: ""
-        coroutineScope.launch {
-            webSocket?.write("${reply}PRIVMSG #$channelName :$message")
-        }
+        webSocket?.write("${reply}PRIVMSG #$channelLogin :$message")
     }
 
-    private inner class ChatWriteWebSocketListener : WebSocket.Listener {
-        override fun onOpen(webSocket: WebSocket) {
-            coroutineScope.launch {
-                webSocket.write("CAP REQ :twitch.tv/tags twitch.tv/commands")
-                webSocket.write("PASS oauth:$userToken")
-                webSocket.write("NICK $userLogin")
-                webSocket.write("JOIN #$channelName")
-            }
-            onConnect()
+    private inner class WebSocketListener : WebSocket.Listener {
+        override suspend fun onConnect(webSocket: WebSocket) {
+            webSocket.write("CAP REQ :twitch.tv/tags twitch.tv/commands")
+            webSocket.write("PASS oauth:$userToken")
+            webSocket.write("NICK $userLogin")
+            webSocket.write("JOIN #$channelLogin")
+            listener.onConnect()
             pingTimer?.cancel()
             pongTimer?.cancel()
             startPingTimer()
         }
 
-        override fun onMessage(webSocket: WebSocket, message: String) {
+        override suspend fun onMessage(webSocket: WebSocket, message: String) {
             message.removeSuffix("\r\n").split("\r\n").forEach {
                 it.run {
                     when {
-                        contains("PRIVMSG") -> {}
-                        contains("USERNOTICE") -> {}
-                        contains("CLEARMSG") -> {}
-                        contains("CLEARCHAT") -> {}
-                        contains("NOTICE") -> onNotice(this)
-                        contains("ROOMSTATE") -> {}
-                        contains("USERSTATE") -> onUserState(this)
+                        contains("PRIVMSG") -> listener.onChatMessage(this, false)
+                        contains("USERNOTICE") -> listener.onChatMessage(this, true)
+                        contains("CLEARMSG") -> listener.onClearMessage(this)
+                        contains("CLEARCHAT") -> listener.onClearChat(this)
+                        contains("NOTICE") -> listener.onNotice(this)
+                        contains("ROOMSTATE") -> listener.onRoomState(this)
+                        contains("USERSTATE") -> listener.onUserState(this)
                         startsWith("PING") -> {
-                            coroutineScope.launch {
-                                webSocket.write("PONG")
-                            }
+                            webSocket.write("PONG")
                         }
                         startsWith("PONG") -> {
                             pingTimer?.cancel()
@@ -101,17 +95,15 @@ class ChatWriteWebSocket(
                         startsWith("RECONNECT") -> {
                             pingTimer?.cancel()
                             pongTimer?.cancel()
-                            coroutineScope.launch {
-                                webSocket.disconnect()
-                            }
+                            webSocket.disconnect()
                         }
                     }
                 }
             }
         }
 
-        override fun onFailure(webSocket: WebSocket, throwable: Throwable) {
-            onDisconnect(throwable.toString(), throwable.stackTraceToString())
+        override suspend fun onDisconnect(webSocket: WebSocket, message: String, fullMsg: String?) {
+            listener.onDisconnect(message, fullMsg)
         }
     }
 }

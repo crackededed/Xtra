@@ -56,13 +56,17 @@ object PubSubUtils {
         )
     }
 
-    fun parsePointsEarned(message: JSONObject): PointsEarned {
+    fun parsePointsEarned(message: JSONObject): Pair<PointsEarned, String?> {
         val messageData = message.optJSONObject("data")
+        val messageChannelId = messageData?.optString("channel_id")
         val pointGain = messageData?.optJSONObject("point_gain")
-        return PointsEarned(
-            pointsGained = pointGain?.optInt("total_points"),
-            timestamp = if (messageData?.isNull("timestamp") == false) messageData.optString("timestamp").takeIf { it.isNotBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) } else null,
-            fullMsg = message.toString()
+        return Pair(
+            PointsEarned(
+                pointsGained = pointGain?.optInt("total_points"),
+                timestamp = if (messageData?.isNull("timestamp") == false) messageData.optString("timestamp").takeIf { it.isNotBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) } else null,
+                fullMsg = message.toString()
+            ),
+            messageChannelId
         )
     }
 

@@ -29,7 +29,7 @@ android {
         minSdk = 16
         targetSdk = 36
         versionCode = 121
-        versionName = "2.53.6"
+        versionName = "2.54.0"
     }
 
     buildTypes {
@@ -100,11 +100,10 @@ android {
 }
 
 dependencies {
-    ksp("org.jetbrains.kotlin:kotlin-metadata-jvm:2.3.0")
     implementation("androidx.multidex:multidex:2.0.1")
     implementation("androidx.room:room-ktx:2.6.1")
     implementation("androidx.media:media:1.6.0")
-    implementation("com.google.guava:guava:33.2.1-android")
+    implementation("com.google.guava:guava:33.2.1-android") // exoplayer
     implementation("com.google.android.gms:play-services-cronet:18.0.1")
     implementation("com.google.mlkit:language-id:17.0.1")
     implementation("com.google.mlkit:translate:16.1.2")

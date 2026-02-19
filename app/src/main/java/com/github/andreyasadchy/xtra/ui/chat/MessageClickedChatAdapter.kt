@@ -25,6 +25,7 @@ import com.github.andreyasadchy.xtra.model.chat.CheerEmote
 import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.model.chat.NamePaint
 import com.github.andreyasadchy.xtra.model.chat.StvBadge
+import com.github.andreyasadchy.xtra.model.chat.StvUser
 import com.github.andreyasadchy.xtra.model.chat.TwitchBadge
 import com.github.andreyasadchy.xtra.model.chat.TwitchEmote
 import com.github.andreyasadchy.xtra.ui.view.NamePaintImageSpan
@@ -32,6 +33,16 @@ import com.github.andreyasadchy.xtra.util.chat.ChatAdapterUtils
 import java.util.Random
 
 class MessageClickedChatAdapter(
+    messages: List<ChatMessage>,
+    private val localTwitchEmotes: List<TwitchEmote>,
+    private val thirdPartyEmotes: List<Emote>,
+    private val globalBadges: List<TwitchBadge>,
+    private val channelBadges: List<TwitchBadge>,
+    private val cheerEmotes: List<CheerEmote>,
+    private val namePaints: List<NamePaint>,
+    private val stvBadges: List<StvBadge>,
+    private val personalEmoteSets: Map<String, List<Emote>>,
+    private val stvUsers: List<StvUser>,
     private val enableTimestamps: Boolean,
     private val timestampFormat: String?,
     private val firstMsgVisibility: Int,
@@ -41,21 +52,15 @@ class MessageClickedChatAdapter(
     private val rewardChatMsg: String,
     private val replyMessage: String,
     private val replyClick: (ChatMessage) -> Unit,
-    private val imageClick: (String?, String?, String?, String?, Boolean?, Boolean?, String?) -> Unit,
+    private val imageClick: (String?, String?, String?, Boolean?, Int?, Boolean?, String?) -> Unit,
     private val useRandomColors: Boolean,
     private val useReadableColors: Boolean,
     private val isLightTheme: Boolean,
     private val nameDisplay: String?,
     private val useBoldNames: Boolean,
     private val showNamePaints: Boolean,
-    val namePaints: MutableList<NamePaint>?,
-    val paintUsers: MutableMap<String, String>?,
     private val showStvBadges: Boolean,
-    val stvBadges: MutableList<StvBadge>?,
-    val stvBadgeUsers: MutableMap<String, String>?,
     private val showPersonalEmotes: Boolean,
-    val personalEmoteSets: MutableMap<String, List<Emote>>?,
-    val personalEmoteSetUsers: MutableMap<String, String>?,
     private val showSystemMessageEmotes: Boolean,
     private val chatUrl: String?,
     private val getEmoteBytes: ((String, Pair<Long, Int>) -> ByteArray?)?,
@@ -71,46 +76,29 @@ class MessageClickedChatAdapter(
     private val translateAllMessages: Boolean,
     private val translateMessage: (ChatMessage, String?) -> Unit,
     private val showLanguageDownloadDialog: (ChatMessage, String) -> Unit,
-    messages: List<ChatMessage>?,
+    private val random: Random,
     private val userColors: HashMap<String, Int>,
     private val savedColors: HashMap<String, Int>,
-    var loggedInUser: String?,
-    var localTwitchEmotes: List<TwitchEmote>?,
-    var globalStvEmotes: List<Emote>?,
-    var channelStvEmotes: List<Emote>?,
-    var globalBttvEmotes: List<Emote>?,
-    var channelBttvEmotes: List<Emote>?,
-    var globalFfzEmotes: List<Emote>?,
-    var channelFfzEmotes: List<Emote>?,
-    var globalBadges: List<TwitchBadge>?,
-    var channelBadges: List<TwitchBadge>?,
-    var cheerEmotes: List<CheerEmote>?,
+    private val savedLocalTwitchEmotes: MutableMap<String, ByteArray>,
+    private val savedLocalBadges: MutableMap<String, ByteArray>,
+    private val savedLocalCheerEmotes: MutableMap<String, ByteArray>,
+    private val savedLocalEmotes: MutableMap<String, ByteArray>,
+    private val loggedInUser: String?,
     var selectedMessage: ChatMessage?,
 ) : RecyclerView.Adapter<MessageClickedChatAdapter.ViewHolder>() {
 
     val userId = selectedMessage?.userId
     val userLogin = selectedMessage?.userLogin
-    var messages: MutableList<ChatMessage>? =
-        if (!userId.isNullOrBlank() || !userLogin.isNullOrBlank()) {
-            messages?.filter {
+    val messages = if (!userId.isNullOrBlank() || !userLogin.isNullOrBlank()) {
+        synchronized(messages) {
+            messages.filter {
                 (!userId.isNullOrBlank() && (it.userId == userId || it.replyParent?.userId == userId)) ||
                         (!userLogin.isNullOrBlank() && (it.userLogin == userLogin || it.replyParent?.userLogin == userLogin))
-            }?.toMutableList()
-        } else {
-            null
-        } ?: selectedMessage?.let { mutableListOf(it) }
-        set(value) {
-            val oldSize = field?.size ?: 0
-            if (oldSize > 0) {
-                notifyItemRangeRemoved(0, oldSize)
-            }
-            field = value
+            }.toMutableList().ifEmpty { null }
         }
-    private val random = Random()
-    private val savedLocalTwitchEmotes = mutableMapOf<String, ByteArray>()
-    private val savedLocalBadges = mutableMapOf<String, ByteArray>()
-    private val savedLocalCheerEmotes = mutableMapOf<String, ByteArray>()
-    private val savedLocalEmotes = mutableMapOf<String, ByteArray>()
+    } else {
+        null
+    } ?: selectedMessage?.let { mutableListOf(it) } ?: mutableListOf()
 
     var messageClickListener: ((ChatMessage, ChatMessage?) -> Unit)? = null
 
@@ -119,15 +107,16 @@ class MessageClickedChatAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val chatMessage = messages?.get(position) ?: return
+        val chatMessage = synchronized(messages) {
+            messages.getOrNull(position)
+        } ?: return
         val result = ChatAdapterUtils.prepareChatMessage(
             chatMessage, holder.textView, enableTimestamps, timestampFormat, firstMsgVisibility, firstChatMsg, redeemedChatMsg, redeemedNoMsg,
-            rewardChatMsg, replyMessage, { url, name, source, format, isAnimated, thirdParty, emoteId -> imageClick(url, name, source, format, isAnimated, thirdParty, emoteId) },
-            useRandomColors, random, useReadableColors, isLightTheme, nameDisplay, useBoldNames, showNamePaints, namePaints, paintUsers,
-            showStvBadges, stvBadges, stvBadgeUsers, showPersonalEmotes, personalEmoteSets, personalEmoteSetUsers, showSystemMessageEmotes,
-            enableOverlayEmotes, loggedInUser, chatUrl, getEmoteBytes, userColors, savedColors, translateAllMessages, translateMessage,
-            showLanguageDownloadDialog, false, localTwitchEmotes, globalStvEmotes, channelStvEmotes, globalBttvEmotes, channelBttvEmotes, globalFfzEmotes,
-            channelFfzEmotes, globalBadges, channelBadges, cheerEmotes, savedLocalTwitchEmotes, savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes
+            rewardChatMsg, replyMessage, { url, name, format, isAnimated, source, thirdParty, emoteId -> imageClick(url, name, format, isAnimated, source, thirdParty, emoteId) },
+            useRandomColors, random, useReadableColors, isLightTheme, nameDisplay, useBoldNames, showNamePaints, namePaints, showStvBadges,
+            stvBadges, showPersonalEmotes, personalEmoteSets, stvUsers, showSystemMessageEmotes, enableOverlayEmotes, loggedInUser, chatUrl,
+            getEmoteBytes, userColors, savedColors, translateAllMessages, translateMessage, showLanguageDownloadDialog, false, localTwitchEmotes,
+            thirdPartyEmotes, globalBadges, channelBadges, cheerEmotes, savedLocalTwitchEmotes, savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes
         )
         if (chatMessage == selectedMessage) {
             holder.textView.setBackgroundResource(R.color.chatMessageSelected)
@@ -181,7 +170,9 @@ class MessageClickedChatAdapter(
         }
     }
 
-    override fun getItemCount(): Int = messages?.size ?: 0
+    override fun getItemCount(): Int = synchronized(messages) {
+        messages.size
+    }
 
     override fun onViewAttachedToWindow(holder: ViewHolder) {
         super.onViewAttachedToWindow(holder)
