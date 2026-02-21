@@ -95,6 +95,12 @@ class MediaPlayerFragment : PlayerFragment() {
                         }
                         return@OnInfoListener true
                     }
+                    playbackService?.videoSizeListener = MediaPlayer.OnVideoSizeChangedListener { _, width, height ->
+                        if (width > 0 && height > 0) {
+                            val aspectRatio = width.toFloat() / height
+                            binding.aspectRatioFrameLayout.setAspectRatio(aspectRatio)
+                        }
+                    }
                     playbackService?.errorListener = MediaPlayer.OnErrorListener { _, _, _ ->
                         updatePlayingState()
                         return@OnErrorListener true
@@ -787,6 +793,7 @@ class MediaPlayerFragment : PlayerFragment() {
         playbackService?.seekCompleteListener = null
         playbackService?.completionListener = null
         playbackService?.infoListener = null
+        playbackService?.videoSizeListener = null
         playbackService?.errorListener = null
         playbackService?.pauseListener = null
         playbackService?.speedListener = null
@@ -832,6 +839,7 @@ class MediaPlayerFragment : PlayerFragment() {
         playbackService?.seekCompleteListener = null
         playbackService?.completionListener = null
         playbackService?.infoListener = null
+        playbackService?.videoSizeListener = null
         playbackService?.errorListener = null
         playbackService?.pauseListener = null
         playbackService?.speedListener = null
@@ -896,6 +904,7 @@ class MediaPlayerFragment : PlayerFragment() {
         playbackService?.seekCompleteListener = null
         playbackService?.completionListener = null
         playbackService?.infoListener = null
+        playbackService?.videoSizeListener = null
         playbackService?.errorListener = null
         playbackService?.pauseListener = null
         playbackService?.speedListener = null
