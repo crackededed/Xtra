@@ -1183,9 +1183,6 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     }
                 }
                 aspectRatioFrameLayout.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                aspectRatioFrameLayout.updateLayoutParams<FrameLayout.LayoutParams> {
-                    gravity = Gravity.NO_GRAVITY
-                }
                 playerLayout.isPortrait = true
                 chatLayout.isPortrait = true
                 with(playerControls) {
@@ -1260,9 +1257,6 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     }
                 }
                 aspectRatioFrameLayout.resizeMode = resizeMode
-                aspectRatioFrameLayout.updateLayoutParams<FrameLayout.LayoutParams> {
-                    gravity = Gravity.CENTER
-                }
                 playerLayout.isPortrait = false
                 chatLayout.isPortrait = false
                 with(playerControls) {

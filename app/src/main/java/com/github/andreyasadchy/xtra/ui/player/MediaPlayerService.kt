@@ -75,6 +75,7 @@ class MediaPlayerService : Service() {
     var seekCompleteListener: MediaPlayer.OnSeekCompleteListener? = null
     var completionListener: MediaPlayer.OnCompletionListener? = null
     var infoListener: MediaPlayer.OnInfoListener? = null
+    var videoSizeListener: MediaPlayer.OnVideoSizeChangedListener? = null
     var errorListener: MediaPlayer.OnErrorListener? = null
     var pauseListener: (() -> Unit)? = null
     var speedListener: ((Float) -> Unit)? = null
@@ -133,6 +134,9 @@ class MediaPlayerService : Service() {
             }
             infoListener?.onInfo(mp, what, extra)
             return@setOnInfoListener true
+        }
+        player.setOnVideoSizeChangedListener { player, width, height ->
+            videoSizeListener?.onVideoSizeChanged(player, width, height)
         }
         player.setOnErrorListener { mp, what, extra ->
             updatePlaybackState(true)

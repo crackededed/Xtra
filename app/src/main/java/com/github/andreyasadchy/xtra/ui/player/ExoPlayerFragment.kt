@@ -33,6 +33,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
+import androidx.media3.common.VideoSize
 import androidx.media3.common.text.CueGroup
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
@@ -134,6 +135,13 @@ class ExoPlayerFragment : PlayerFragment() {
                             binding.playerControls.progressBar.setDuration(duration)
                             binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
                             updateProgress()
+                        }
+
+                        override fun onVideoSizeChanged(videoSize: VideoSize) {
+                            if (videoSize != VideoSize.UNKNOWN && player?.let { it.playbackState != Player.STATE_IDLE } == true) {
+                                val aspectRatio = (videoSize.width * videoSize.pixelWidthHeightRatio) / videoSize.height
+                                binding.aspectRatioFrameLayout.setAspectRatio(aspectRatio)
+                            }
                         }
 
                         override fun onCues(cueGroup: CueGroup) {
