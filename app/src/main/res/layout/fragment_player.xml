@@ -18,7 +18,8 @@
             <androidx.media3.ui.AspectRatioFrameLayout
                 android:id="@+id/aspectRatioFrameLayout"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:layout_gravity="center">
 
                 <SurfaceView
                     android:id="@+id/playerSurface"
