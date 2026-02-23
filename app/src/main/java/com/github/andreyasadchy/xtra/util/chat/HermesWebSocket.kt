@@ -43,6 +43,7 @@ class HermesWebSocket(
 
     fun connect(coroutineScope: CoroutineScope): Job {
         webSocket = WebSocket("wss://hermes.twitch.tv/v1?clientId=${gqlClientId}", trustManager, WebSocketListener())
+        webSocket?.coroutineScope = coroutineScope
         return coroutineScope.launch(Dispatchers.IO) {
             webSocket?.start()
         }
@@ -119,7 +120,7 @@ class HermesWebSocket(
     private suspend fun startPongTimer() = withContext(Dispatchers.IO) {
         pongTimer = Timer().apply {
             schedule(timeout) {
-                launch {
+                webSocket?.coroutineScope?.launch {
                     webSocket?.disconnect()
                 }
             }
@@ -129,7 +130,7 @@ class HermesWebSocket(
     private suspend fun startMinuteWatchedTimer() = withContext(Dispatchers.IO) {
         minuteWatchedTimer = Timer().apply {
             scheduleAtFixedRate(60000, 60000) {
-                launch {
+                webSocket?.coroutineScope?.launch {
                     listener.onMinuteWatched()
                 }
             }

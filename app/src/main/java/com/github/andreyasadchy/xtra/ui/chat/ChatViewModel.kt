@@ -770,10 +770,10 @@ class ChatViewModel @Inject constructor(
                 }
             }
         }
-        val collectPoints = applicationContext.prefs().getBoolean(C.CHAT_POINTS_COLLECT, true)
-        val gqlWebClientId = applicationContext.prefs().getString(C.GQL_CLIENT_ID_WEB, "kimne78kx3ncx6brgo4mv6wki5h1ko")
-        val gqlWebToken = applicationContext.tokenPrefs().getString(C.GQL_TOKEN_WEB, null)
-        if (usePubSub && !channelId.isNullOrBlank() && (accountId.isNullOrBlank() || !collectPoints || !gqlWebToken.isNullOrBlank() || enableIntegrity)) {
+        if (usePubSub && !channelId.isNullOrBlank()) {
+            val collectPoints = applicationContext.prefs().getBoolean(C.CHAT_POINTS_COLLECT, true)
+            val gqlWebClientId = applicationContext.prefs().getString(C.GQL_CLIENT_ID_WEB, "kimne78kx3ncx6brgo4mv6wki5h1ko")
+            val gqlWebToken = applicationContext.tokenPrefs().getString(C.GQL_TOKEN_WEB, null)
             val notifyPoints = applicationContext.prefs().getBoolean(C.CHAT_POINTS_NOTIFY, false)
             val showRaids = applicationContext.prefs().getBoolean(C.CHAT_RAIDS_SHOW, true)
             val showPolls = applicationContext.prefs().getBoolean(C.CHAT_POLLS_SHOW, true)
@@ -789,7 +789,9 @@ class ChatViewModel @Inject constructor(
                 gqlToken = if (enableIntegrity) {
                     gqlHeaders[C.HEADER_TOKEN]?.removePrefix("OAuth ")
                 } else {
-                    gqlWebToken
+                    if (!gqlWebToken.isNullOrBlank()) {
+                        gqlWebToken
+                    } else null
                 },
                 collectPoints = collectPoints,
                 showRaids = applicationContext.prefs().getBoolean(C.CHAT_RAIDS_SHOW, true),
