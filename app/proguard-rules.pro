@@ -33,6 +33,10 @@
 -keep class com.google.mlkit.nl.translate.RemoteConfigRegistrar { *; }
 -keep class com.google.mlkit.common.internal.CommonComponentRegistrar { *; }
 
+-keep class androidx.work.impl.WorkDatabase_Impl {
+    <init>();
+}
+
 -keep class com.github.andreyasadchy.xtra.db.AppDatabase_Impl {
     <init>();
 }
