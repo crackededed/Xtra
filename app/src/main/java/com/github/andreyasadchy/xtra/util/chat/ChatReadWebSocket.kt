@@ -22,6 +22,7 @@ class ChatReadWebSocket(
 
     fun connect(coroutineScope: CoroutineScope): Job {
         webSocket = WebSocket("wss://irc-ws.chat.twitch.tv", trustManager, WebSocketListener())
+        webSocket?.coroutineScope = coroutineScope
         return coroutineScope.launch(Dispatchers.IO) {
             webSocket?.start()
         }
@@ -37,7 +38,7 @@ class ChatReadWebSocket(
     private suspend fun startPingTimer() = withContext(Dispatchers.IO) {
         pingTimer = Timer().apply {
             schedule(270000) {
-                launch {
+                webSocket?.coroutineScope?.launch {
                     webSocket?.write("PING")
                     startPongTimer()
                 }
@@ -48,7 +49,7 @@ class ChatReadWebSocket(
     private suspend fun startPongTimer() = withContext(Dispatchers.IO) {
         pongTimer = Timer().apply {
             schedule(10000) {
-                launch {
+                webSocket?.coroutineScope?.launch {
                     webSocket?.disconnect()
                 }
             }
