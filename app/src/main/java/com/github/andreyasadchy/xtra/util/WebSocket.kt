@@ -2,6 +2,7 @@ package com.github.andreyasadchy.xtra.util
 
 import android.os.Build
 import android.util.Base64
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -48,6 +49,7 @@ class WebSocket(
     private var nextFrameCompressed = false
     private var connectionAttempt = 0
     private var delayReconnect = false
+    var coroutineScope: CoroutineScope? = null
 
     suspend fun start() = withContext(Dispatchers.IO) {
         while (isActive) {
@@ -165,7 +167,7 @@ class WebSocket(
         pingTimer = Timer().apply {
             schedule(270000) {
                 if (socket?.isClosed == false) {
-                    launch {
+                    coroutineScope?.launch {
                         writeControlFrame(OPCODE_PING, byteArrayOf())
                         startPongTimer()
                     }

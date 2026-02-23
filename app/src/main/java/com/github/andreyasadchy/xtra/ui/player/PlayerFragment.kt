@@ -1916,11 +1916,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     channelId = requireArguments().getString(KEY_CHANNEL_ID),
                     channelLogin = requireArguments().getString(KEY_CHANNEL_LOGIN),
                     viewerCount = requireArguments().getInt(KEY_VIEWER_COUNT).takeIf { it != -1 },
-                    loop = requireContext().prefs().getBoolean(C.CHAT_DISABLE, false) ||
-                            !requireContext().prefs().getBoolean(C.CHAT_PUBSUB_ENABLED, true) ||
-                            (requireContext().prefs().getBoolean(C.CHAT_POINTS_COLLECT, true) &&
-                                    !requireContext().tokenPrefs().getString(C.USER_ID, null).isNullOrBlank() &&
-                                    !TwitchApiHelper.getGQLHeaders(requireContext(), true)[C.HEADER_TOKEN].isNullOrBlank()),
+                    loop = requireContext().prefs().getBoolean(C.CHAT_DISABLE, false) || !requireContext().prefs().getBoolean(C.CHAT_PUBSUB_ENABLED, true),
                     networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                     helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext()),
                     gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),

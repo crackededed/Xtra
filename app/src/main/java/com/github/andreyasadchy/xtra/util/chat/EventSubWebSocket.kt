@@ -22,6 +22,7 @@ class EventSubWebSocket(
 
     fun connect(coroutineScope: CoroutineScope): Job {
         webSocket = WebSocket("wss://eventsub.wss.twitch.tv/ws", trustManager, WebSocketListener())
+        webSocket?.coroutineScope = coroutineScope
         return coroutineScope.launch(Dispatchers.IO) {
             webSocket?.start()
         }
@@ -36,7 +37,7 @@ class EventSubWebSocket(
     private suspend fun startPongTimer() = withContext(Dispatchers.IO) {
         pongTimer = Timer().apply {
             schedule(timeout) {
-                launch {
+                webSocket?.coroutineScope?.launch {
                     webSocket?.disconnect()
                 }
             }

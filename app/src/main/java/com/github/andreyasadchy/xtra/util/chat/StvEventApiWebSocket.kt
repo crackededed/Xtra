@@ -24,6 +24,7 @@ class StvEventApiWebSocket(
             listener = WebSocketListener(),
             headers = mapOf("User-Agent" to "Xtra/" + BuildConfig.VERSION_NAME)
         )
+        webSocket?.coroutineScope = coroutineScope
         return coroutineScope.launch(Dispatchers.IO) {
             webSocket?.start()
         }
