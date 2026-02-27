@@ -723,7 +723,7 @@
     <string name="reduced_padding">減少填充</string>
     <string name="compact_text">緊湊文字</string>
     <string name="next">下一步</string>
-    <string name="tv_login_message">若要存取所有功能，您需要登入為 Android TV 裝置。\n\n請遵從以下步驟：\n• 複製在網頁上顯示的 Code。\n• 按下在底部的「Next」安紐。\n• 輸入 Code 並按下「Activate」。\n• 按下「Authorize」。</string>
+    <string name="tv_login_message">若要存取所有功能，您需要登入為 Android TV 裝置。\n\n請遵從以下步驟：\n• 複製在網頁上顯示的 Code。\n• 按下在底部的「下一步」安紐。\n• 輸入 Code 並按下「Activate」。\n• 按下「Authorize」。</string>
     <string name="open_url">開啟 URL</string>
     <string name="external_login_message">您可使用外部瀏覽器登入。\n\n請遵從這些步驟：\n• 按下「開啟 URL」以開啟登入頁面。\n• 登入您的帳號並按下「Authorizet」。\n• 應該會出現一個包含錯誤的頁面。複製該頁面的網址，將網址貼到下方框並按下「確認」。</string>
     <string name="loading">正在載入...</string>
