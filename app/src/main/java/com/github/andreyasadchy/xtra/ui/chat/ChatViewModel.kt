@@ -99,6 +99,7 @@ class ChatViewModel @Inject constructor(
     private var pollTimeoutJob: Job? = null
     private var usedPredictionId: String? = null
     private var predictionTimeoutJob: Job? = null
+    private var started = false
     var autoReconnect = true
 
     private var chatReplayManager: ChatReplayManager? = null
@@ -716,6 +717,7 @@ class ChatViewModel @Inject constructor(
 
     fun startLiveChat(channelId: String?, channelLogin: String) {
         stopLiveChat()
+        started = true
         val gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext, true)
         val helixHeaders = TwitchApiHelper.getHelixHeaders(applicationContext)
         val networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp")
@@ -827,42 +829,45 @@ class ChatViewModel @Inject constructor(
     }
 
     fun stopLiveChat() {
-        if (chatReadIRC != null) {
-            MainScope().launch(Dispatchers.IO) {
-                chatReadIRC?.disconnect(chatReadJob)
-            }
-        } else {
-            if (chatReadWebSocket != null) {
+        if (started) {
+            started = false
+            if (chatReadIRC != null) {
                 MainScope().launch(Dispatchers.IO) {
-                    chatReadWebSocket?.disconnect(chatReadJob)
+                    chatReadIRC?.disconnect(chatReadJob)
                 }
             } else {
-                if (eventSub != null) {
+                if (chatReadWebSocket != null) {
                     MainScope().launch(Dispatchers.IO) {
-                        eventSub?.disconnect(chatReadJob)
+                        chatReadWebSocket?.disconnect(chatReadJob)
+                    }
+                } else {
+                    if (eventSub != null) {
+                        MainScope().launch(Dispatchers.IO) {
+                            eventSub?.disconnect(chatReadJob)
+                        }
                     }
                 }
             }
-        }
-        if (chatWriteIRC != null) {
-            MainScope().launch(Dispatchers.IO) {
-                chatWriteIRC?.disconnect(chatWriteJob)
-            }
-        } else {
-            if (chatWriteWebSocket != null) {
+            if (chatWriteIRC != null) {
                 MainScope().launch(Dispatchers.IO) {
-                    chatWriteWebSocket?.disconnect(chatWriteJob)
+                    chatWriteIRC?.disconnect(chatWriteJob)
+                }
+            } else {
+                if (chatWriteWebSocket != null) {
+                    MainScope().launch(Dispatchers.IO) {
+                        chatWriteWebSocket?.disconnect(chatWriteJob)
+                    }
                 }
             }
-        }
-        if (hermesWebSocket != null) {
-            MainScope().launch(Dispatchers.IO) {
-                hermesWebSocket?.disconnect(pubSubJob)
+            if (hermesWebSocket != null) {
+                MainScope().launch(Dispatchers.IO) {
+                    hermesWebSocket?.disconnect(pubSubJob)
+                }
             }
-        }
-        if (stvEventApi != null) {
-            MainScope().launch(Dispatchers.IO) {
-                stvEventApi?.disconnect(stvEventApiJob)
+            if (stvEventApi != null) {
+                MainScope().launch(Dispatchers.IO) {
+                    stvEventApi?.disconnect(stvEventApiJob)
+                }
             }
         }
     }
