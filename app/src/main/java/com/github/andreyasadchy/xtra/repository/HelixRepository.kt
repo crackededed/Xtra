@@ -53,11 +53,13 @@ class HelixRepository @Inject constructor(
 ) {
 
     suspend fun getGames(networkLibrary: String?, headers: Map<String, String>, ids: List<String>? = null, names: List<String>? = null): GamesResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            ids?.forEach { put("id", it) }
-            names?.forEach { put("name", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            ids?.forEach { add(Pair("id", it)) }
+            names?.forEach { add(Pair("name", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -97,11 +99,13 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getTopGames(networkLibrary: String?, headers: Map<String, String>, limit: Int?, offset: String?): GamesResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            limit?.let { put("first", it.toString()) }
-            offset?.let { put("after", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            limit?.let { add(Pair("first", it.toString())) }
+            offset?.let { add(Pair("after", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -141,15 +145,17 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getStreams(networkLibrary: String?, headers: Map<String, String>, ids: List<String>? = null, logins: List<String>? = null, gameId: String? = null, languages: List<String>? = null, limit: Int? = null, offset: String? = null): StreamsResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            ids?.forEach { put("user_id", it) }
-            logins?.forEach { put("user_login", it) }
-            gameId?.let { put("game_id", it) }
-            languages?.forEach { put("language", it) }
-            limit?.let { put("first", it.toString()) }
-            offset?.let { put("after", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            ids?.forEach { add(Pair("user_id", it)) }
+            logins?.forEach { add(Pair("user_login", it)) }
+            gameId?.let { add(Pair("game_id", it)) }
+            languages?.forEach { add(Pair("language", it)) }
+            limit?.let { add(Pair("first", it.toString())) }
+            offset?.let { add(Pair("after", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -189,12 +195,14 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getFollowedStreams(networkLibrary: String?, headers: Map<String, String>, userId: String?, limit: Int?, offset: String?): StreamsResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            userId?.let { put("user_id", it) }
-            limit?.let { put("first", it.toString()) }
-            offset?.let { put("after", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            userId?.let { add(Pair("user_id", it)) }
+            limit?.let { add(Pair("first", it.toString())) }
+            offset?.let { add(Pair("after", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -234,16 +242,18 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getClips(networkLibrary: String?, headers: Map<String, String>, ids: List<String>? = null, channelId: String? = null, gameId: String? = null, startedAt: String? = null, endedAt: String? = null, limit: Int? = null, offset: String? = null): ClipsResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            ids?.forEach { put("id", it) }
-            channelId?.let { put("broadcaster_id", it) }
-            gameId?.let { put("game_id", it) }
-            startedAt?.let { put("started_at", it) }
-            endedAt?.let { put("ended_at", it) }
-            limit?.let { put("first", it.toString()) }
-            offset?.let { put("after", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            ids?.forEach { add(Pair("id", it)) }
+            channelId?.let { add(Pair("broadcaster_id", it)) }
+            gameId?.let { add(Pair("game_id", it)) }
+            startedAt?.let { add(Pair("started_at", it)) }
+            endedAt?.let { add(Pair("ended_at", it)) }
+            limit?.let { add(Pair("first", it.toString())) }
+            offset?.let { add(Pair("after", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -283,18 +293,20 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getVideos(networkLibrary: String?, headers: Map<String, String>, ids: List<String>? = null, gameId: String? = null, channelId: String? = null, period: String? = null, broadcastType: String? = null, sort: String? = null, language: String? = null, limit: Int? = null, offset: String? = null): VideosResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            ids?.forEach { put("id", it) }
-            gameId?.let { put("game_id", it) }
-            channelId?.let { put("user_id", it) }
-            period?.let { put("period", it) }
-            broadcastType?.let { put("type", it) }
-            sort?.let { put("sort", it) }
-            language?.let { put("language", it) }
-            limit?.let { put("first", it.toString()) }
-            offset?.let { put("after", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            ids?.forEach { add(Pair("id", it)) }
+            gameId?.let { add(Pair("game_id", it)) }
+            channelId?.let { add(Pair("user_id", it)) }
+            period?.let { add(Pair("period", it)) }
+            broadcastType?.let { add(Pair("type", it)) }
+            sort?.let { add(Pair("sort", it)) }
+            language?.let { add(Pair("language", it)) }
+            limit?.let { add(Pair("first", it.toString())) }
+            offset?.let { add(Pair("after", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -334,11 +346,13 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getUsers(networkLibrary: String?, headers: Map<String, String>, ids: List<String>? = null, logins: List<String>? = null): UsersResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            ids?.forEach { put("id", it) }
-            logins?.forEach { put("login", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            ids?.forEach { add(Pair("id", it)) }
+            logins?.forEach { add(Pair("login", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -378,12 +392,14 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getSearchGames(networkLibrary: String?, headers: Map<String, String>, query: String?, limit: Int?, offset: String?): GamesResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            query?.let { put("query", it) }
-            limit?.let { put("first", it.toString()) }
-            offset?.let { put("after", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            query?.let { add(Pair("query", it)) }
+            limit?.let { add(Pair("first", it.toString())) }
+            offset?.let { add(Pair("after", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -423,13 +439,15 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getSearchChannels(networkLibrary: String?, headers: Map<String, String>, query: String?, limit: Int?, offset: String?, live: Boolean? = null): ChannelSearchResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            query?.let { put("query", it) }
-            limit?.let { put("first", it.toString()) }
-            offset?.let { put("after", it) }
-            live?.let { put("live_only", it.toString()) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            query?.let { add(Pair("query", it)) }
+            limit?.let { add(Pair("first", it.toString())) }
+            offset?.let { add(Pair("after", it)) }
+            live?.let { add(Pair("live_only", it.toString())) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -469,13 +487,15 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getUserFollows(networkLibrary: String?, headers: Map<String, String>, userId: String?, targetId: String? = null, limit: Int? = null, offset: String? = null): FollowsResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            userId?.let { put("user_id", it) }
-            targetId?.let { put("broadcaster_id", it) }
-            limit?.let { put("first", it.toString()) }
-            offset?.let { put("after", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            userId?.let { add(Pair("user_id", it)) }
+            targetId?.let { add(Pair("broadcaster_id", it)) }
+            limit?.let { add(Pair("first", it.toString())) }
+            offset?.let { add(Pair("after", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -515,13 +535,15 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getUserFollowers(networkLibrary: String?, headers: Map<String, String>, userId: String?, targetId: String? = null, limit: Int? = null, offset: String? = null): FollowsResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            targetId?.let { put("user_id", it) }
-            userId?.let { put("broadcaster_id", it) }
-            limit?.let { put("first", it.toString()) }
-            offset?.let { put("after", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            targetId?.let { add(Pair("user_id", it)) }
+            userId?.let { add(Pair("broadcaster_id", it)) }
+            limit?.let { add(Pair("first", it.toString())) }
+            offset?.let { add(Pair("after", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -561,12 +583,14 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getUserEmotes(networkLibrary: String?, headers: Map<String, String>, userId: String?, channelId: String?, offset: String?): UserEmotesResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            userId?.let { put("user_id", it) }
-            channelId?.let { put("broadcaster_id", it) }
-            offset?.let { put("after", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            userId?.let { add(Pair("user_id", it)) }
+            channelId?.let { add(Pair("broadcaster_id", it)) }
+            offset?.let { add(Pair("after", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -606,10 +630,12 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getEmotesFromSet(networkLibrary: String?, headers: Map<String, String>, setIds: List<String>): EmoteSetsResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            setIds.forEach { put("emote_set_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            setIds.forEach { add(Pair("emote_set_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -687,10 +713,12 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getChannelBadges(networkLibrary: String?, headers: Map<String, String>, userId: String?): BadgesResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            userId?.let { put("broadcaster_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            userId?.let { add(Pair("broadcaster_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -730,10 +758,12 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getCheerEmotes(networkLibrary: String?, headers: Map<String, String>, userId: String?): CheerEmotesResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            userId?.let { put("broadcaster_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            userId?.let { add(Pair("broadcaster_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -773,13 +803,15 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getChatters(networkLibrary: String?, headers: Map<String, String>, channelId: String?, userId: String?, limit: Int? = null, offset: String? = null): ChatUsersResponse = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            channelId?.let { put("broadcaster_id", it) }
-            userId?.let { put("moderator_id", it) }
-            limit?.let { put("first", it.toString()) }
-            offset?.let { put("after", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            channelId?.let { add(Pair("broadcaster_id", it)) }
+            userId?.let { add(Pair("moderator_id", it)) }
+            limit?.let { add(Pair("first", it.toString())) }
+            offset?.let { add(Pair("after", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -961,11 +993,13 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun sendAnnouncement(networkLibrary: String?, headers: Map<String, String>, channelId: String?, userId: String?, message: String?, color: String?): String? = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            channelId?.let { put("broadcaster_id", it) }
-            userId?.let { put("moderator_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            channelId?.let { add(Pair("broadcaster_id", it)) }
+            userId?.let { add(Pair("moderator_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         val body = buildJsonObject {
             put("message", message)
@@ -1033,11 +1067,13 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun banUser(networkLibrary: String?, headers: Map<String, String>, channelId: String?, userId: String?, targetId: String?, duration: String? = null, reason: String?): String? = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            channelId?.let { put("broadcaster_id", it) }
-            userId?.let { put("moderator_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            channelId?.let { add(Pair("broadcaster_id", it)) }
+            userId?.let { add(Pair("moderator_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         val body = buildJsonObject {
             putJsonObject("data") {
@@ -1108,12 +1144,14 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun unbanUser(networkLibrary: String?, headers: Map<String, String>, channelId: String?, userId: String?, targetId: String?): String? = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            channelId?.let { put("broadcaster_id", it) }
-            userId?.let { put("moderator_id", it) }
-            targetId?.let { put("user_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            channelId?.let { add(Pair("broadcaster_id", it)) }
+            userId?.let { add(Pair("moderator_id", it)) }
+            targetId?.let { add(Pair("user_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -1173,12 +1211,14 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun deleteMessages(networkLibrary: String?, headers: Map<String, String>, channelId: String?, userId: String?, messageId: String? = null): String? = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            channelId?.let { put("broadcaster_id", it) }
-            userId?.let { put("moderator_id", it) }
-            messageId?.let { put("message_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            channelId?.let { add(Pair("broadcaster_id", it)) }
+            userId?.let { add(Pair("moderator_id", it)) }
+            messageId?.let { add(Pair("message_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -1238,10 +1278,12 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun getChatColor(networkLibrary: String?, headers: Map<String, String>, userId: String?): String? = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            userId?.let { put("user_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            userId?.let { add(Pair("user_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -1297,11 +1339,13 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun updateChatColor(networkLibrary: String?, headers: Map<String, String>, userId: String?, color: String?): String? = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            userId?.let { put("user_id", it) }
-            color?.let { put("color", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            userId?.let { add(Pair("user_id", it)) }
+            color?.let { add(Pair("color", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -1427,11 +1471,13 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun updateChatSettings(networkLibrary: String?, headers: Map<String, String>, channelId: String?, userId: String?, emote: Boolean? = null, followers: Boolean? = null, followersDuration: Int? = null, slow: Boolean? = null, slowDuration: Int? = null, subs: Boolean? = null, unique: Boolean? = null): String? = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            channelId?.let { put("broadcaster_id", it) }
-            userId?.let { put("moderator_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            channelId?.let { add(Pair("broadcaster_id", it)) }
+            userId?.let { add(Pair("moderator_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         val body = buildJsonObject {
             emote?.let { put("emote_mode", it) }
@@ -1573,11 +1619,13 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun addModerator(networkLibrary: String?, headers: Map<String, String>, channelId: String?, targetId: String?): String? = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            channelId?.let { put("broadcaster_id", it) }
-            targetId?.let { put("user_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            channelId?.let { add(Pair("broadcaster_id", it)) }
+            targetId?.let { add(Pair("user_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -1633,11 +1681,13 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun removeModerator(networkLibrary: String?, headers: Map<String, String>, channelId: String?, targetId: String?): String? = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            channelId?.let { put("broadcaster_id", it) }
-            targetId?.let { put("user_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            channelId?.let { add(Pair("broadcaster_id", it)) }
+            targetId?.let { add(Pair("user_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -1697,11 +1747,13 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun startRaid(networkLibrary: String?, headers: Map<String, String>, channelId: String?, targetId: String?): String? = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            channelId?.let { put("from_broadcaster_id", it) }
-            targetId?.let { put("to_broadcaster_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            channelId?.let { add(Pair("from_broadcaster_id", it)) }
+            targetId?.let { add(Pair("to_broadcaster_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -1757,10 +1809,12 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun cancelRaid(networkLibrary: String?, headers: Map<String, String>, channelId: String?): String? = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            channelId?.let { put("broadcaster_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            channelId?.let { add(Pair("broadcaster_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -1820,11 +1874,13 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun addVip(networkLibrary: String?, headers: Map<String, String>, channelId: String?, targetId: String?): String? = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            channelId?.let { put("broadcaster_id", it) }
-            targetId?.let { put("user_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            channelId?.let { add(Pair("broadcaster_id", it)) }
+            targetId?.let { add(Pair("user_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -1880,11 +1936,13 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun removeVip(networkLibrary: String?, headers: Map<String, String>, channelId: String?, targetId: String?): String? = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            channelId?.let { put("broadcaster_id", it) }
-            targetId?.let { put("user_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            channelId?.let { add(Pair("broadcaster_id", it)) }
+            targetId?.let { add(Pair("user_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -1944,11 +2002,13 @@ class HelixRepository @Inject constructor(
     }
 
     suspend fun sendWhisper(networkLibrary: String?, headers: Map<String, String>, userId: String?, targetId: String?, message: String?): String? = withContext(Dispatchers.IO) {
-        val query = mutableMapOf<String, String>().apply {
-            userId?.let { put("from_user_id", it) }
-            targetId?.let { put("to_user_id", it) }
-        }.takeIf { it.isNotEmpty() }?.let {
-            it.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
+        val query = mutableListOf<Pair<String, String>>().apply {
+            userId?.let { add(Pair("from_user_id", it)) }
+            targetId?.let { add(Pair("to_user_id", it)) }
+        }.takeIf { it.isNotEmpty() }?.let { list ->
+            list.joinToString("&", "?") {
+                "${it.first}=${URLEncoder.encode(it.second, Charsets.UTF_8.name())}"
+            }
         } ?: ""
         val body = buildJsonObject {
             put("message", message)
