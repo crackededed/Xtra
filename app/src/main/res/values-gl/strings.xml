@@ -311,7 +311,7 @@
     <string name="irc_notice_usage_emote_only_off">Uso: \"/emoteonlyoff\" - Desactiva o modo só emotes.</string>
     <string name="irc_notice_usage_emote_only_on">Uso: \"/emoteonly\" - Activa o modo só emotes (só se poden usar emoticonos no chat). Usa \"/emoteonlyoff\" para desactivalo.</string>
     <string name="irc_notice_usage_followers_off">Uso: \"/followersoff\" - Desactiva o modo só seguidores.</string>
-    <string name="irc_notice_usage_followers_on">Uso: \"/followers [duración]\" - Activa o modo só seguidores (só poden falar os usuarios que leven seguindo durante 'duración'). Exemplos: \"30m\", \"1 semana\", \"5 días 12 horas\". Debe ser inferior a 3 meses.</string>
+    <string name="irc_notice_usage_followers_on">Uso: \"/followers [duración]\" - Activa o modo só seguidores (só poden falar os usuarios que leven seguindo durante \'duración\'). Exemplos: \"30m\", \"1 semana\", \"5 días 12 horas\". Debe ser inferior a 3 meses.</string>
     <string name="irc_notice_usage_help">Uso: \"/help\" - Lista os comandos dispoñibles nesta sala.</string>
     <string name="irc_notice_usage_host">Uso: \"/host &lt;channel&gt;\" - Fai host doutra canle. Usa \"/unhost\" para desactivar o modo host.</string>
     <string name="irc_notice_usage_marker">Uso: \"/marker &lt;comentario opcional&gt;\" - Engade un marcador á transmisión (cun comentario opcional, máximo 140 caracteres) no momento actual. Podes usar marcadores no Highlighter para editar máis facilmente.</string>
