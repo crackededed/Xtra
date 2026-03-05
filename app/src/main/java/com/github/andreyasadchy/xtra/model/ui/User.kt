@@ -26,5 +26,5 @@ class User(
 ) : Parcelable {
 
     val channelLogo: String?
-        get() = TwitchApiHelper.getTemplateUrl(profileImageUrl, "profileimage")
+        get() = TwitchApiHelper.getProfileImage(profileImageUrl)
 }

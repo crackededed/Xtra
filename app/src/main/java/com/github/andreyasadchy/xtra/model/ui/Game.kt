@@ -23,5 +23,5 @@ class Game(
 ) : Parcelable {
 
     val boxArt: String?
-        get() = TwitchApiHelper.getTemplateUrl(boxArtUrl, "game")
+        get() = TwitchApiHelper.getGameBoxArt(boxArtUrl)
 }
