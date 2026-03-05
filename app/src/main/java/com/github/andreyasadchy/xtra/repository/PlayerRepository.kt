@@ -433,7 +433,7 @@ class PlayerRepository @Inject constructor(
             }
         }
         if (!pageResponse.isNullOrBlank()) {
-            val settingsRegex = Regex("https://[\\w.]+/config/settings\\..+?\\.js")
+            val settingsRegex = Regex("https://[\\w.]+/config/settings\\.\\w+?\\.js")
             val settingsUrl = settingsRegex.find(pageResponse)?.value
             val settingsResponse = settingsUrl?.let {
                 when {
