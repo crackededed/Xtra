@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="views">
+        <item quantity="one">%s visualización</item>
+        <item quantity="other">%s visualizacións</item>
+    </plurals>
+    <plurals name="viewers">
+        <item quantity="one">%s espectador</item>
+        <item quantity="other">%s espectadores</item>
+    </plurals>
+    <plurals name="hours">
+        <item quantity="one">%d hora</item>
+        <item quantity="other">%d horas</item>
+    </plurals>
+    <plurals name="minutes">
+        <item quantity="one">%d minuto</item>
+        <item quantity="other">%d minutos</item>
+    </plurals>
+    <plurals name="broadcasters">
+        <item quantity="one">%s emisor</item>
+        <item quantity="other">%s emisores</item>
+    </plurals>
+    <plurals name="languages">
+        <item quantity="one">Idioma: %s</item>
+        <item quantity="other">Idiomas: %s</item>
+    </plurals>
+    <plurals name="tags">
+        <item quantity="one">Etiqueta: %s</item>
+        <item quantity="other">Etiquetas: %s</item>
+    </plurals>
+    <plurals name="followers">
+        <item quantity="one">%s seguidor</item>
+        <item quantity="other">%s seguidores</item>
+    </plurals>
+    <plurals name="members">
+        <item quantity="one">%s membro</item>
+        <item quantity="other">%s membros</item>
+    </plurals>
+</resources>
