@@ -32,35 +32,43 @@ import java.util.TimeZone
 
 object TwitchApiHelper {
 
+    private val imageSizeRegex = Regex("-\\d+x\\d+.")
     var checkedValidation = false
     var checkedUpdates = false
 
-    fun getTemplateUrl(url: String?, type: String): String? {
-        if (url.isNullOrBlank() || url.startsWith("https://vod-secure.twitch.tv/_404/404_processing")) {
-            return when (type) {
-                "game" -> "https://static-cdn.jtvnw.net/ttv-static/404_boxart.jpg"
-                "video" -> "https://vod-secure.twitch.tv/_404/404_processing_320x180.png"
-                else -> null
-            }
-        }
-        val width = when (type) {
-            "game" -> "285"
-            "video" -> "1280"
-            "profileimage" -> "300"
-            else -> ""
-        }
-        val height = when (type) {
-            "game" -> "380"
-            "video" -> "720"
-            "profileimage" -> "300"
-            else -> ""
-        }
+    fun getStreamThumbnail(url: String?): String? {
         return when {
-            type == "clip" -> url.replace(Regex("-\\d+x\\d+."), ".")
-            url.contains("%{width}") -> url.replace("%{width}", width).replace("%{height}", height)
-            url.contains("{width}") -> url.replace("{width}", width).replace("{height}", height)
-            else -> url.replace(Regex("-\\d+x\\d+."), "-${width}x${height}.")
+            url.isNullOrBlank() -> "https://static-cdn.jtvnw.net/ttv-static/404_preview-440x248.jpg"
+            url.contains("{width}x{height}") -> url.replace("{width}", "1280").replace("{height}", "720")
+            else -> url.replace(imageSizeRegex, "-1280x720.")
         }
+    }
+
+    fun getVideoThumbnail(url: String?): String? {
+        return when {
+            url.isNullOrBlank() || url.startsWith("https://vod-secure.twitch.tv/_404/404_processing") -> {
+                "https://vod-secure.twitch.tv/_404/404_processing_320x180.png"
+            }
+            url.contains("{width}x{height}") -> url.replace("{width}", "1280").replace("{height}", "720")
+            url.contains("%{width}x%{height}") -> url.replace("%{width}", "1280").replace("%{height}", "720")
+            else -> url.replace(imageSizeRegex, "-1280x720.")
+        }
+    }
+
+    fun getClipThumbnail(url: String?): String? {
+        return url?.replace(imageSizeRegex, "-1280x720.")
+    }
+
+    fun getGameBoxArt(url: String?): String? {
+        return when {
+            url.isNullOrBlank() -> "https://static-cdn.jtvnw.net/ttv-static/404_boxart.jpg"
+            url.contains("{width}x{height}") -> url.replace("{width}", "285").replace("{height}", "380")
+            else -> url.replace(imageSizeRegex, "-285x380.")
+        }
+    }
+
+    fun getProfileImage(url: String?): String? {
+        return url?.replace(imageSizeRegex, "-300x300.")
     }
 
     fun getType(context: Context, type: String?): String? {

@@ -13,5 +13,5 @@ class Raid(
 ) {
 
     val targetLogo: String?
-        get() = TwitchApiHelper.getTemplateUrl(targetProfileImage, "profileimage")
+        get() = TwitchApiHelper.getProfileImage(targetProfileImage)
 }
