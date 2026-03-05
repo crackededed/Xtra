@@ -369,7 +369,7 @@ object TwitchApiHelper {
 
     fun getNoticeString(context: Context, msgId: String?, message: String?): String? {
         val lang = AppCompatDelegate.getApplicationLocales().toLanguageTags().substringBefore("-")
-        return if (lang == "ar" || lang == "de" || lang == "es" || lang == "fr" || lang == "in" || lang == "it" || lang == "ja" || lang == "pt" || lang == "ru" || lang == "tr" || lang == "zh") {
+        return if (lang == "ar" || lang == "de" || lang == "es" || lang == "fr" || lang == "gl" || lang == "in" || lang == "it" || lang == "ja" || lang == "pt" || lang == "ru" || lang == "tr" || lang == "zh") {
             when (msgId) {
                 "already_banned" -> ContextCompat.getString(context, R.string.irc_notice_already_banned).format(
                     message?.substringBefore(" is already banned", "") ?: "")
