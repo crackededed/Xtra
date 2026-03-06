@@ -300,12 +300,12 @@ class ChannelPagerViewModel @Inject constructor(
         }
     }
 
-    fun saveFollowChannel(userId: String?, channelId: String?, channelLogin: String?, channelName: String?, setting: Int, notificationsEnabled: Boolean, networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
+    fun saveFollowChannel(userId: String?, channelId: String?, channelLogin: String?, channelName: String?, setting: Int, liveNotificationsEnabled: Boolean, disableNotifications: Boolean, networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
         viewModelScope.launch {
             try {
                 if (!channelId.isNullOrBlank()) {
                     if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank() && userId != channelId) {
-                        val errorMessage = graphQLRepository.loadFollowUser(networkLibrary, gqlHeaders, channelId).also { response ->
+                        val errorMessage = graphQLRepository.loadFollowUser(networkLibrary, gqlHeaders, channelId, disableNotifications).also { response ->
                             if (enableIntegrity && integrity.value == null) {
                                 response.errors?.find { it.message == "failed integrity check" }?.let {
                                     integrity.value = "follow"
@@ -318,8 +318,10 @@ class ChannelPagerViewModel @Inject constructor(
                         } else {
                             _isFollowing.value = true
                             follow.value = Pair(true, null)
-                            _notificationsEnabled.value = true
-                            if (notificationsEnabled) {
+                            if (!disableNotifications) {
+                                _notificationsEnabled.value = true
+                            }
+                            if (liveNotificationsEnabled) {
                                 _stream.value?.startedAt.takeUnless { it.isNullOrBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let {
                                     shownNotificationsRepository.saveList(listOf(ShownNotification(channelId, it)))
                                 }
@@ -329,9 +331,11 @@ class ChannelPagerViewModel @Inject constructor(
                         localFollowsChannel.saveFollow(LocalFollowChannel(channelId, channelLogin, channelName))
                         _isFollowing.value = true
                         follow.value = Pair(true, null)
-                        notificationUsersRepository.saveUser(NotificationUser(channelId))
-                        _notificationsEnabled.value = true
-                        if (notificationsEnabled) {
+                        if (!disableNotifications) {
+                            notificationUsersRepository.saveUser(NotificationUser(channelId))
+                            _notificationsEnabled.value = true
+                        }
+                        if (liveNotificationsEnabled) {
                             _stream.value?.startedAt.takeUnless { it.isNullOrBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let {
                                 shownNotificationsRepository.saveList(listOf(ShownNotification(channelId, it)))
                             }
