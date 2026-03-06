@@ -729,4 +729,5 @@
     <string name="loading">正在載入...</string>
     <string name="copy_code">複製 Code</string>
     <string name="external_tv_login_message">若要存取所有功能，您需要登入為 Android TV 裝置。\n\n請遵從以下步驟：\n• 複製在螢幕上顯示的 Code。\n• 按下「開啟 URL」按鈕。\n• 輸入 Code 並按下「啟動/Activate」。\n• 按下「授權/Authorize」。\n• 返回 Xtra 並按下「下一步」。</string>
+    <string name="activate_notifications_when_following">Activate notifications when following</string>
 </resources>

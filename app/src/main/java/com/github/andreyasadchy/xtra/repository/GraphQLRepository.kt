@@ -1219,7 +1219,7 @@ class GraphQLRepository @Inject constructor(
         json.decodeFromString<FollowedGamesResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
-    suspend fun loadFollowUser(networkLibrary: String?, headers: Map<String, String>, userId: String?): ErrorResponse = withContext(Dispatchers.IO) {
+    suspend fun loadFollowUser(networkLibrary: String?, headers: Map<String, String>, userId: String?, disableNotifications: Boolean): ErrorResponse = withContext(Dispatchers.IO) {
         val body = buildJsonObject {
             putJsonObject("extensions") {
                 putJsonObject("persistedQuery") {
@@ -1230,7 +1230,7 @@ class GraphQLRepository @Inject constructor(
             put("operationName", "FollowButton_FollowUser")
             putJsonObject("variables") {
                 putJsonObject("input") {
-                    put("disableNotifications", false)
+                    put("disableNotifications", disableNotifications)
                     put("targetID", userId)
                 }
             }
