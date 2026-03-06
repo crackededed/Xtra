@@ -14,13 +14,18 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.paging.PagingData
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
+import com.github.andreyasadchy.xtra.databinding.SortBarBinding
+import com.github.andreyasadchy.xtra.model.ui.SortChannel
 import com.github.andreyasadchy.xtra.model.ui.Stream
+import com.github.andreyasadchy.xtra.ui.common.FragmentHost
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
+import com.github.andreyasadchy.xtra.ui.common.Sortable
 import com.github.andreyasadchy.xtra.ui.common.StreamsAdapter
 import com.github.andreyasadchy.xtra.ui.common.StreamsCompactAdapter
 import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragmentDirections
@@ -31,7 +36,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class FollowedStreamsFragment : PagedListFragment(), Scrollable {
+class FollowedStreamsFragment : PagedListFragment(), Scrollable, Sortable, FollowedStreamsSortDialog.OnFilter {
 
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
@@ -74,13 +79,78 @@ class FollowedStreamsFragment : PagedListFragment(), Scrollable {
 
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
+            if (viewModel.filter.value == null) {
+                val sortValues = viewModel.getSortChannel("followed_stremas")
+                viewModel.setFilter(
+                    sort = sortValues?.videoSort,
+                    order = sortValues?.videoType,
+                )
+                viewModel.sortText.value = getString(
+                    R.string.sort_and_order,
+                    getString(
+                        when (viewModel.sort) {
+                            FollowedStreamsSortDialog.SORT_VIEWER_COUNT -> R.string.viewers
+                            FollowedStreamsSortDialog.SORT_STARTED_AT -> R.string.start_of_broadcast
+                            else -> R.string.viewers
+                        }
+                    ),
+                    getString(
+                        when (viewModel.order) {
+                            FollowedStreamsSortDialog.ORDER_DESC -> R.string.descending
+                            FollowedStreamsSortDialog.ORDER_ASC -> R.string.ascending
+                            else -> R.string.descending
+                        }
+                    )
+                )
+            }
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.flow.collectLatest { pagingData ->
                     pagingAdapter.submitData(pagingData)
                 }
             }
         }
-        initializeAdapter(binding, pagingAdapter, enableScrollTopButton = false)
+        initializeAdapter(binding, pagingAdapter)
+    }
+
+    override fun setupSortBar(sortBar: SortBarBinding) {
+        sortBar.root.visibility = View.VISIBLE
+        sortBar.root.setOnClickListener {
+            FollowedStreamsSortDialog.newInstance(
+                sort = viewModel.sort,
+                order = viewModel.order,
+            ).show(childFragmentManager, null)
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.sortText.collectLatest {
+                    sortBar.sortText.text = it
+                }
+            }
+        }
+    }
+
+    override fun onChange(sort: String, sortText: CharSequence, order: String, orderText: CharSequence, changed: Boolean, saveDefault: Boolean) {
+        if ((parentFragment as? FragmentHost)?.currentFragment == this) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                if (changed) {
+                    binding.scrollTop.visibility = View.GONE
+                    pagingAdapter.submitData(PagingData.empty())
+                    viewModel.setFilter(sort, order)
+                    viewModel.sortText.value = getString(R.string.sort_and_order, sortText, orderText)
+                }
+                if (saveDefault) {
+                    val item = viewModel.getSortChannel("followed_streams")?.apply {
+                        videoSort = sort
+                        videoType = order
+                    } ?: SortChannel(
+                        id = "followed_streams",
+                        videoSort = sort,
+                        videoType = order
+                    )
+                    viewModel.saveSortChannel(item)
+                }
+            }
+        }
     }
 
     override fun scrollToTop() {

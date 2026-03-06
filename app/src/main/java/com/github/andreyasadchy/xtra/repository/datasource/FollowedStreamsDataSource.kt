@@ -9,6 +9,8 @@ import com.github.andreyasadchy.xtra.repository.LocalFollowChannelRepository
 import com.github.andreyasadchy.xtra.util.C
 
 class FollowedStreamsDataSource(
+    private val sort: String,
+    private val order: String,
     private val userId: String?,
     private val localFollowsChannel: LocalFollowChannelRepository,
     private val gqlHeaders: Map<String, String>,
@@ -73,9 +75,19 @@ class FollowedStreamsDataSource(
                     list.add(stream)
                 }
             }
-            list.sortByDescending { it.viewerCount }
+            val sorted = if (order == "asc") {
+                when(sort) {
+                    "started_at" -> list.sortedWith(compareBy(nullsLast()) { it.startedAt })
+                    else -> list.sortedWith(compareBy(nullsLast()) { it.viewerCount })
+                }
+            } else {
+                when(sort) {
+                    "started_at" -> list.sortedWith(compareByDescending(nullsFirst()) { it.startedAt })
+                    else -> list.sortedWith(compareByDescending(nullsFirst()) { it.viewerCount })
+                }
+            }
             LoadResult.Page(
-                data = list,
+                data = sorted,
                 prevKey = null,
                 nextKey = result?.nextKey
             )
