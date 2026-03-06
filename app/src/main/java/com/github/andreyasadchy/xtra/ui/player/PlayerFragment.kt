@@ -844,9 +844,21 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 if (videoType == VIDEO) {
                     viewLifecycleOwner.lifecycleScope.launch {
                         repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.videoResult.collectLatest {
-                                if (it != null) {
-                                    startVideo(it, viewModel.playbackPosition, true)
+                            viewModel.videoResult.collectLatest { url ->
+                                if (url != null) {
+                                    startVideo(url, viewModel.playbackPosition, true)
+                                    viewModel.playbackPosition?.let { position ->
+                                        val currentGame = viewModel.gamesList.value
+                                            ?.filter { it.vodPosition != null && it.vodPosition <= position }
+                                            ?.maxByOrNull { it.vodPosition!! }
+                                        if (currentGame != null) {
+                                            updateCategoryInfo(
+                                                currentGame.gameId,
+                                                currentGame.gameSlug,
+                                                currentGame.gameName
+                                            )
+                                        }
+                                    }
                                     viewModel.videoResult.value = null
                                 }
                             }
@@ -858,18 +870,6 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                 if (it != null) {
                                     playVideo((prefs.getString(C.TOKEN_SKIP_VIDEO_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2) <= 1, it)
                                     viewModel.savedPosition.value = null
-                                }
-                            }
-                        }
-                    }
-                    if (requireContext().prefs().getBoolean(C.PLAYER_MENU_BOOKMARK, true)) {
-                        viewLifecycleOwner.lifecycleScope.launch {
-                            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                                viewModel.isBookmarked.collectLatest {
-                                    if (it != null) {
-                                        (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setBookmarkText(it)
-                                        viewModel.isBookmarked.value = null
-                                    }
                                 }
                             }
                         }
@@ -1508,6 +1508,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 visibility = View.GONE
             }
         }
+        updateCategoryInfo(gameId, gameSlug, gameName)
+    }
+
+    fun updateCategoryInfo(gameId: String?, gameSlug: String?, gameName: String?) {
         binding.playerControls.category.apply {
             if (!gameName.isNullOrBlank() && prefs.getBoolean(C.PLAYER_CATEGORY, true)) {
                 text = gameName
