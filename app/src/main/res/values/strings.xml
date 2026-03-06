@@ -728,7 +728,7 @@
     <string name="creation_date">Creation date</string>
     <string name="saved_date">Saved date</string>
     <string name="about">About</string>
-    <string name="team" translatable="false">Team: %s</string>
+    <string name="team">Team: %s</string>
     <string name="owner">Owner: %s</string>
     <string name="use_background_audio_locked">Play audio in the background when the screen is locked</string>
     <string name="use_background_audio_pip_closed">Play audio in the background when closing PiP</string>
