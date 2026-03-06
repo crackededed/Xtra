@@ -31,6 +31,13 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="ui_activate_notifications_when_following"
+        android:title="@string/activate_notifications_when_following"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
     <ListPreference
         android:defaultValue="1"
         android:entries="@array/followedEntries"
