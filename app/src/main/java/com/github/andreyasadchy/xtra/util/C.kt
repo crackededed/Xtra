@@ -75,6 +75,7 @@ object C {
     const val UI_CUTOUTMODE = "ui_cutoutmode"
     const val UI_DRAW_BEHIND_CUTOUTS = "ui_draw_behind_cutouts"
     const val UI_FOLLOW_BUTTON = "ui_follow_button"
+    const val UI_ACTIVATE_NOTIFICATIONS_WHEN_FOLLOWING = "ui_activate_notifications_when_following"
     const val UI_UPTIME = "ui_uptime"
     const val UI_TAGS = "ui_tags"
     const val UI_SCROLLTOP = "ui_scrolltop"
