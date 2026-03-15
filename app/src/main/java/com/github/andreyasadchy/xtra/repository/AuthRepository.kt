@@ -13,6 +13,7 @@ import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
 import com.github.andreyasadchy.xtra.util.toRequestBody
 import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
@@ -24,7 +25,6 @@ import org.chromium.net.apihelpers.UrlRequestCallbacks
 import java.util.concurrent.ExecutorService
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.coroutines.suspendCoroutine
 
 @Singleton
 class AuthRepository @Inject constructor(
@@ -38,7 +38,7 @@ class AuthRepository @Inject constructor(
     suspend fun validate(networkLibrary: String?, token: String): ValidationResponse = withContext(Dispatchers.IO) {
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine { continuation ->
+                val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/validate", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("Authorization", token)
                     }.build().start()
@@ -62,7 +62,7 @@ class AuthRepository @Inject constructor(
                         throw IllegalStateException("401")
                     }
                 } else {
-                    val response = suspendCoroutine { continuation ->
+                    val response = suspendCancellableCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/validate", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             addHeader("Authorization", token)
                         }.build().start()
@@ -92,7 +92,7 @@ class AuthRepository @Inject constructor(
     suspend fun revoke(networkLibrary: String?, body: String) = withContext(Dispatchers.IO) {
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                suspendCoroutine { continuation ->
+                suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/revoke", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("Content-Type", "application/x-www-form-urlencoded")
                         setUploadDataProvider(HttpEngineUtils.byteArrayUploadProvider(body.toByteArray()), cronetExecutor)
@@ -108,7 +108,7 @@ class AuthRepository @Inject constructor(
                     }.build().start()
                     request.future.get().responseBody as String
                 } else {
-                    suspendCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
+                    suspendCancellableCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/revoke", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             addHeader("Content-Type", "application/x-www-form-urlencoded")
                             setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor)
@@ -129,7 +129,7 @@ class AuthRepository @Inject constructor(
     suspend fun getDeviceCode(networkLibrary: String?, body: String): DeviceCodeResponse = withContext(Dispatchers.IO) {
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine { continuation ->
+                val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/device", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("Content-Type", "application/x-www-form-urlencoded")
                         setUploadDataProvider(HttpEngineUtils.byteArrayUploadProvider(body.toByteArray()), cronetExecutor)
@@ -147,7 +147,7 @@ class AuthRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<DeviceCodeResponse>(response)
                 } else {
-                    val response = suspendCoroutine { continuation ->
+                    val response = suspendCancellableCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/device", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             addHeader("Content-Type", "application/x-www-form-urlencoded")
                             setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor)
@@ -171,7 +171,7 @@ class AuthRepository @Inject constructor(
     suspend fun getToken(networkLibrary: String?, body: String): TokenResponse = withContext(Dispatchers.IO) {
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                val response = suspendCoroutine { continuation ->
+                val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/token", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("Content-Type", "application/x-www-form-urlencoded")
                         setUploadDataProvider(HttpEngineUtils.byteArrayUploadProvider(body.toByteArray()), cronetExecutor)
@@ -189,7 +189,7 @@ class AuthRepository @Inject constructor(
                     val response = request.future.get().responseBody as String
                     json.decodeFromString<TokenResponse>(response)
                 } else {
-                    val response = suspendCoroutine { continuation ->
+                    val response = suspendCancellableCoroutine { continuation ->
                         cronetEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/token", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                             addHeader("Content-Type", "application/x-www-form-urlencoded")
                             setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor)
