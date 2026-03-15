@@ -25,6 +25,7 @@ import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
 import com.github.andreyasadchy.xtra.util.prefs
 import dagger.Lazy
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.OkHttpClient
 import okio.Buffer
 import okio.buffer
@@ -35,7 +36,6 @@ import org.chromium.net.apihelpers.UploadDataProviders
 import org.chromium.net.apihelpers.UrlRequestCallbacks
 import java.util.concurrent.ExecutorService
 import javax.inject.Inject
-import kotlin.coroutines.suspendCoroutine
 
 
 @HiltAndroidApp
@@ -92,7 +92,7 @@ class XtraApp : Application(), Configuration.Provider, SingletonImageLoader.Fact
                                             buffer.readByteArray()
                                         }
                                         val requestMillis = System.currentTimeMillis()
-                                        val response = suspendCoroutine { continuation ->
+                                        val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine!!.get().newUrlRequestBuilder(request.url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
                                                 request.headers.asMap().forEach { entry ->
                                                     entry.value.forEach {
@@ -177,7 +177,7 @@ class XtraApp : Application(), Configuration.Provider, SingletonImageLoader.Fact
                                                 buffer.readByteArray()
                                             }
                                             val requestMillis = System.currentTimeMillis()
-                                            val response = suspendCoroutine { continuation ->
+                                            val response = suspendCancellableCoroutine { continuation ->
                                                 cronetEngine!!.get().newUrlRequestBuilder(request.url, getByteArrayCronetCallback(continuation), cronetExecutor).apply {
                                                     request.headers.asMap().forEach { entry ->
                                                         entry.value.forEach {
