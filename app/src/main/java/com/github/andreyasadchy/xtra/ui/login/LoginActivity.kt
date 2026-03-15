@@ -45,7 +45,6 @@ import com.google.android.material.textfield.TextInputLayout
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.json.JSONObject
-import java.net.URLEncoder
 import java.util.regex.Pattern
 import javax.inject.Inject
 import kotlin.math.roundToInt
@@ -161,11 +160,12 @@ class LoginActivity : AppCompatActivity() {
                 "user:read:follows", // streams/followed, channels/followed
                 "user:write:chat", // chat/messages
             )
-            val helixAuthUrl = "https://id.twitch.tv/oauth2/authorize" +
-                    "?response_type=token" +
-                    "&client_id=${helixClientId}" +
-                    "&redirect_uri=${helixRedirect}" +
-                    "&scope=${URLEncoder.encode(helixScopes.joinToString(" "), Charsets.UTF_8.name())}"
+            val helixAuthUrl = "https://id.twitch.tv/oauth2/authorize".toUri().buildUpon().apply {
+                appendQueryParameter("response_type", "token")
+                appendQueryParameter("client_id", helixClientId)
+                appendQueryParameter("redirect_uri", helixRedirect)
+                appendQueryParameter("scope", helixScopes.joinToString(" "))
+            }.build().toString()
             webView.visibility = View.VISIBLE
             textZoom.visibility = View.VISIBLE
             havingTrouble.visibility = View.VISIBLE
