@@ -877,12 +877,11 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
         }
         segmentByteRangeLength = C.LENGTH_UNSET;
       } else if (line.startsWith(TAG_TARGET_DURATION)) {
-        long target = parseIntAttr(line, REGEX_TARGET_DURATION) * C.MICROS_PER_SECOND;
-        if (target < 10) {
-          targetDurationUs = 2 * C.MICROS_PER_SECOND; // xtra: low latency
-        } else {
-          targetDurationUs = target;
+        int targetDurationSeconds = parseIntAttr(line, REGEX_TARGET_DURATION);
+        if (targetDurationSeconds < 10) {
+          targetDurationSeconds = 2; // xtra: low latency
         }
+        targetDurationUs = targetDurationSeconds * C.MICROS_PER_SECOND;
       } else if (line.startsWith(TAG_MEDIA_SEQUENCE)) {
         mediaSequence = parseLongAttr(line, REGEX_MEDIA_SEQUENCE);
         segmentMediaSequence = mediaSequence;
