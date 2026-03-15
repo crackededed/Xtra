@@ -5,6 +5,7 @@ import android.net.http.HttpEngine
 import android.os.Build
 import android.os.ext.SdkExtensions
 import android.util.Base64
+import androidx.core.net.toUri
 import com.apollographql.apollo.api.CustomScalarAdapters
 import com.apollographql.apollo.api.json.buildJsonString
 import com.apollographql.apollo.api.json.jsonReader
@@ -58,7 +59,6 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.net.InetSocketAddress
 import java.net.Proxy
-import java.net.URLEncoder
 import java.util.UUID
 import java.util.concurrent.ExecutorService
 import javax.inject.Inject
@@ -86,19 +86,18 @@ class PlayerRepository @Inject constructor(
                 loadStreamPlaybackAccessToken(networkLibrary, gqlHeaders.filterNot { it.key == C.HEADER_TOKEN }, channelLogin, randomDeviceId, xDeviceId, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity)
             } else token
         }
-        val query = mutableMapOf<String, String>().apply {
-            put("allow_source", "true")
-            put("allow_audio_only", "true")
-            put("fast_bread", "true") //low latency
-            put("p", Random.nextInt(9999999).toString())
+        "https://usher.ttvnw.net/api/v2/channel/hls/${channelLogin}.m3u8".toUri().buildUpon().apply {
+            appendQueryParameter("allow_source", "true")
+            appendQueryParameter("allow_audio_only", "true")
+            appendQueryParameter("fast_bread", "true") // low latency
+            appendQueryParameter("p", Random.nextInt(9999999).toString())
             if (supportedCodecs?.contains("av1", true) == true) {
-                put("platform", "web")
+                appendQueryParameter("platform", "web")
             }
-            accessToken.first?.let { put("sig", it) }
-            supportedCodecs?.let { put("supported_codecs", it) }
-            accessToken.second?.let { put("token", it) }
-        }.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
-        "https://usher.ttvnw.net/api/v2/channel/hls/${channelLogin}.m3u8${query}"
+            accessToken.first?.let { appendQueryParameter("sig", it) }
+            supportedCodecs?.let { appendQueryParameter("supported_codecs", it) }
+            accessToken.second?.let { appendQueryParameter("token", it) }
+        }.build().toString()
     }
 
     suspend fun loadStreamPlaylist(networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, supportedCodecs: String?, enableIntegrity: Boolean): String? = withContext(Dispatchers.IO) {
@@ -279,19 +278,19 @@ class PlayerRepository @Inject constructor(
                 }
             }
         }
-        val query = mutableMapOf<String, String>().apply {
-            put("allow_source", "true")
-            put("allow_audio_only", "true")
-            put("include_unavailable", "true")
-            put("p", Random.nextInt(9999999).toString())
+        val url = "https://usher.ttvnw.net/vod/v2/${videoId}.m3u8".toUri().buildUpon().apply {
+            appendQueryParameter("allow_source", "true")
+            appendQueryParameter("allow_audio_only", "true")
+            appendQueryParameter("include_unavailable", "true")
+            appendQueryParameter("p", Random.nextInt(9999999).toString())
             if (supportedCodecs?.contains("av1", true) == true) {
-                put("platform", "web")
+                appendQueryParameter("platform", "web")
             }
-            accessToken.first?.let { put("sig", it) }
-            supportedCodecs?.let { put("supported_codecs", it) }
-            accessToken.second?.let { put("token", it) }
-        }.map { "${it.key}=${URLEncoder.encode(it.value, Charsets.UTF_8.name())}" }.joinToString("&", "?")
-        "https://usher.ttvnw.net/vod/v2/${videoId}.m3u8${query}" to backupQualities
+            accessToken.first?.let { appendQueryParameter("sig", it) }
+            supportedCodecs?.let { appendQueryParameter("supported_codecs", it) }
+            accessToken.second?.let { appendQueryParameter("token", it) }
+        }.build().toString()
+        url to backupQualities
     }
 
     suspend fun loadVideoPlaylist(networkLibrary: String?, gqlHeaders: Map<String, String>, videoId: String?, playerType: String?, supportedCodecs: String?, enableIntegrity: Boolean): Pair<String?, List<String>> = withContext(Dispatchers.IO) {
