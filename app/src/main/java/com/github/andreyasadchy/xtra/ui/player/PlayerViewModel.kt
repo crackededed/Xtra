@@ -46,6 +46,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
@@ -63,7 +64,6 @@ import java.net.SocketAddress
 import java.net.URI
 import java.util.concurrent.ExecutorService
 import javax.inject.Inject
-import kotlin.coroutines.suspendCoroutine
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
@@ -185,7 +185,7 @@ class PlayerViewModel @Inject constructor(
         try {
             val playlist = when {
                 networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                    val response = suspendCoroutine { continuation ->
+                    val response = suspendCancellableCoroutine { continuation ->
                         httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                     }
                     response.second.inputStream().use {
@@ -201,7 +201,7 @@ class PlayerViewModel @Inject constructor(
                             PlaylistUtils.parseMediaPlaylist(it)
                         }
                     } else {
-                        val response = suspendCoroutine { continuation ->
+                        val response = suspendCancellableCoroutine { continuation ->
                             cronetEngine.get().newUrlRequestBuilder(url, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                         }
                         response.second.inputStream().use {
@@ -243,7 +243,7 @@ class PlayerViewModel @Inject constructor(
             val useProxy = !useCustomProxy && proxyMultivariantPlaylist && !proxyHost.isNullOrBlank() && proxyPort != null
             when {
                 networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null && !useProxy -> {
-                    val response = suspendCoroutine { continuation ->
+                    val response = suspendCancellableCoroutine { continuation ->
                         httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                     }
                     if (response.first.httpStatusCode in 200..299) {
@@ -263,7 +263,7 @@ class PlayerViewModel @Inject constructor(
                             null to response.urlResponseInfo.httpStatusCode
                         }
                     } else {
-                        val response = suspendCoroutine { continuation ->
+                        val response = suspendCancellableCoroutine { continuation ->
                             cronetEngine.get().newUrlRequestBuilder(url, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                         }
                         if (response.first.httpStatusCode in 200..299) {
@@ -490,7 +490,7 @@ class PlayerViewModel @Inject constructor(
                             try {
                                 when {
                                     networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                                        val response = suspendCoroutine { continuation ->
+                                        val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
                                         if (response.first.httpStatusCode in 200..299) {
@@ -510,7 +510,7 @@ class PlayerViewModel @Inject constructor(
                                                 }
                                             }
                                         } else {
-                                            val response = suspendCoroutine { continuation ->
+                                            val response = suspendCancellableCoroutine { continuation ->
                                                 cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                                             }
                                             if (response.first.httpStatusCode in 200..299) {
@@ -547,7 +547,7 @@ class PlayerViewModel @Inject constructor(
                             try {
                                 when {
                                     networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                                        val response = suspendCoroutine { continuation ->
+                                        val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
                                         if (response.first.httpStatusCode in 200..299) {
@@ -567,7 +567,7 @@ class PlayerViewModel @Inject constructor(
                                                 }
                                             }
                                         } else {
-                                            val response = suspendCoroutine { continuation ->
+                                            val response = suspendCancellableCoroutine { continuation ->
                                                 cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                                             }
                                             if (response.first.httpStatusCode in 200..299) {
