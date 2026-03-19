@@ -20,7 +20,7 @@ class Clip(
     @SerialName("created_at")
     val createdAt: String? = null,
     @SerialName("thumbnail_url")
-    val thumbnailUrl: String? = null,
+    val thumbnailURL: String? = null,
     val duration: Double? = null,
     @SerialName("vod_offset")
     val vodOffset: Int? = null,

@@ -34,10 +34,10 @@ class FollowedGamesAdapter(
 ) : PagingDataAdapter<Game, FollowedGamesAdapter.PagingViewHolder>(
     object : DiffUtil.ItemCallback<Game>() {
         override fun areItemsTheSame(oldItem: Game, newItem: Game): Boolean =
-            oldItem.gameId == newItem.gameId
+            oldItem.id == newItem.id
 
         override fun areContentsTheSame(oldItem: Game, newItem: Game): Boolean =
-            oldItem.viewersCount == newItem.viewersCount
+            oldItem.viewerCount == newItem.viewerCount
     }) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PagingViewHolder {
@@ -61,17 +61,17 @@ class FollowedGamesAdapter(
                         fragment.findNavController().navigate(
                             if (context.prefs().getBoolean(C.UI_GAMEPAGER, true)) {
                                 GamePagerFragmentDirections.actionGlobalGamePagerFragment(
-                                    gameId = item.gameId,
-                                    gameSlug = item.gameSlug,
-                                    gameName = item.gameName,
-                                    updateLocal = item.followLocal
+                                    gameId = item.id,
+                                    gameSlug = item.slug,
+                                    gameName = item.name,
+                                    updateLocal = item.localFollow
                                 )
                             } else {
                                 GameMediaFragmentDirections.actionGlobalGameMediaFragment(
-                                    gameId = item.gameId,
-                                    gameSlug = item.gameSlug,
-                                    gameName = item.gameName,
-                                    updateLocal = item.followLocal
+                                    gameId = item.id,
+                                    gameSlug = item.slug,
+                                    gameName = item.name,
+                                    updateLocal = item.localFollow
                                 )
                             }
                         )
@@ -86,15 +86,15 @@ class FollowedGamesAdapter(
                     } else {
                         gameImage.visibility = View.GONE
                     }
-                    if (item.gameName != null) {
+                    if (item.name != null) {
                         gameName.visibility = View.VISIBLE
-                        gameName.text = item.gameName
+                        gameName.text = item.name
                     } else {
                         gameName.visibility = View.GONE
                     }
-                    if (item.viewersCount != null) {
+                    if (item.viewerCount != null) {
                         viewers.visibility = View.VISIBLE
-                        val count = item.viewersCount ?: 0
+                        val count = item.viewerCount ?: 0
                         viewers.text = context.resources.getQuantityString(
                             R.plurals.viewers,
                             count,
@@ -103,9 +103,9 @@ class FollowedGamesAdapter(
                     } else {
                         viewers.visibility = View.GONE
                     }
-                    if (item.broadcastersCount != null && context.prefs().getBoolean(C.UI_BROADCASTERSCOUNT, true)) {
+                    if (item.broadcasterCount != null && context.prefs().getBoolean(C.UI_BROADCASTERSCOUNT, true)) {
                         broadcastersCount.visibility = View.VISIBLE
-                        val count = item.broadcastersCount ?: 0
+                        val count = item.broadcasterCount ?: 0
                         broadcastersCount.text = context.resources.getQuantityString(
                             R.plurals.broadcasters,
                             count,
@@ -153,12 +153,12 @@ class FollowedGamesAdapter(
                     } else {
                         tagsLayout.visibility = View.GONE
                     }
-                    if (item.followAccount) {
-                        twitchText.visibility = View.VISIBLE
+                    if (item.accountFollow) {
+                        accountText.visibility = View.VISIBLE
                     } else {
-                        twitchText.visibility = View.GONE
+                        accountText.visibility = View.GONE
                     }
-                    if (item.followLocal) {
+                    if (item.localFollow) {
                         localText.visibility = View.VISIBLE
                     } else {
                         localText.visibility = View.GONE

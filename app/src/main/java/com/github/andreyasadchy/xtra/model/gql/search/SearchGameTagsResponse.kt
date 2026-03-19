@@ -17,6 +17,5 @@ class SearchGameTagsResponse(
     class Tag(
         val id: String? = null,
         val localizedName: String? = null,
-        val scope: String? = null,
     )
 }

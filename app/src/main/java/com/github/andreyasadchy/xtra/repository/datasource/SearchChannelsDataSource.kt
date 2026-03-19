@@ -71,12 +71,12 @@ class SearchChannelsDataSource(
         val list = data.edges!!.mapNotNull { item ->
             item.node?.let {
                 User(
-                    channelId = it.id,
-                    channelLogin = it.login,
-                    channelName = it.displayName,
-                    profileImageUrl = it.profileImageURL,
-                    followersCount = it.followers?.totalCount,
-                    isLive = it.stream?.viewersCount != null
+                    id = it.id,
+                    login = it.login,
+                    name = it.displayName,
+                    profileImageURL = it.profileImageURL,
+                    followerCount = it.followers?.totalCount,
+                    isLive = it.stream?.viewersCount != null,
                 )
             }
         }
@@ -100,12 +100,12 @@ class SearchChannelsDataSource(
         val list = data.edges.map { item ->
             item.item.let {
                 User(
-                    channelId = it.id,
-                    channelLogin = it.login,
-                    channelName = it.displayName,
-                    profileImageUrl = it.profileImageURL,
-                    followersCount = it.followers?.totalCount,
-                    isLive = it.stream?.viewersCount != null
+                    id = it.id,
+                    login = it.login,
+                    name = it.displayName,
+                    profileImageURL = it.profileImageURL,
+                    followerCount = it.followers?.totalCount,
+                    isLive = it.stream?.viewersCount != null,
                 )
             }
         }
@@ -129,11 +129,11 @@ class SearchChannelsDataSource(
         )
         val list = response.data.map {
             User(
-                channelId = it.channelId,
-                channelLogin = it.channelLogin,
-                channelName = it.channelName,
-                profileImageUrl = it.profileImageUrl,
-                isLive = it.isLive
+                id = it.id,
+                login = it.login,
+                name = it.displayName,
+                profileImageURL = it.profileImageURL,
+                isLive = it.isLive,
             )
         }
         offset = response.pagination?.cursor

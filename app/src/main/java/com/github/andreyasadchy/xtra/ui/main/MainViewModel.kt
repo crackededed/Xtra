@@ -117,12 +117,12 @@ class MainViewModel @Inject constructor(
                                 channelId = it.owner?.id,
                                 channelLogin = it.owner?.login,
                                 channelName = it.owner?.displayName,
-                                type = it.broadcastType?.toString(),
+                                channelImageURL = it.owner?.profileImageURL,
                                 title = it.title,
-                                uploadDate = it.createdAt?.toString(),
-                                duration = it.lengthSeconds?.toString(),
-                                thumbnailUrl = it.previewThumbnailURL,
-                                profileImageUrl = it.owner?.profileImageURL,
+                                thumbnailURL = it.previewThumbnailURL,
+                                createdAt = it.createdAt?.toString(),
+                                durationSeconds = it.lengthSeconds,
+                                type = it.broadcastType?.toString(),
                                 animatedPreviewURL = it.animatedPreviewURL,
                             )
                         }
@@ -141,10 +141,10 @@ class MainViewModel @Inject constructor(
                                     channelLogin = it.channelLogin,
                                     channelName = it.channelName,
                                     title = it.title,
+                                    createdAt = it.createdAt,
+                                    thumbnailURL = it.thumbnailURL,
                                     viewCount = it.viewCount,
-                                    uploadDate = it.uploadDate,
-                                    duration = it.duration,
-                                    thumbnailUrl = it.thumbnailUrl,
+                                    durationSeconds = it.duration?.let { duration -> TwitchApiHelper.getDuration(duration) },
                                 )
                             }
                         } catch (e: Exception) {
@@ -183,16 +183,16 @@ class MainViewModel @Inject constructor(
                         channelId = user?.broadcaster?.id,
                         channelLogin = user?.broadcaster?.login,
                         channelName = user?.broadcaster?.displayName,
-                        profileImageUrl = user?.broadcaster?.profileImageURL,
+                        channelImageURL = user?.broadcaster?.profileImageURL,
+                        durationSeconds = clip?.durationSeconds,
                         videoId = clip?.video?.id,
-                        duration = clip?.durationSeconds,
-                        vodOffset = (clip?.videoOffsetSeconds ?: user?.videoOffsetSeconds).let {
+                        videoOffsetSeconds = (clip?.videoOffsetSeconds ?: user?.videoOffsetSeconds).let {
                             if (it != null && clip?.durationSeconds != null) {
-                                max(it - clip.durationSeconds.toInt(), 0)
+                                max(it - clip.durationSeconds, 0)
                             } else {
                                 it
                             }
-                        }
+                        },
                     )
                 } catch (e: Exception) {
                     if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
@@ -206,18 +206,18 @@ class MainViewModel @Inject constructor(
                                     id = it.id,
                                     channelId = it.channelId,
                                     channelName = it.channelName,
+                                    gameId = it.gameId,
+                                    title = it.title,
+                                    thumbnailURL = it.thumbnailURL,
+                                    createdAt = it.createdAt,
+                                    viewCount = it.viewCount,
+                                    durationSeconds = it.duration?.toInt(),
                                     videoId = it.videoId,
-                                    vodOffset = if (it.vodOffset != null && it.duration != null) {
+                                    videoOffsetSeconds = if (it.vodOffset != null && it.duration != null) {
                                         max(it.vodOffset - it.duration.toInt(), 0)
                                     } else {
                                         it.vodOffset
                                     },
-                                    gameId = it.gameId,
-                                    title = it.title,
-                                    viewCount = it.viewCount,
-                                    uploadDate = it.createdAt,
-                                    duration = it.duration,
-                                    thumbnailUrl = it.thumbnailUrl,
                                 )
                             }
                         } catch (e: Exception) {
@@ -242,10 +242,10 @@ class MainViewModel @Inject constructor(
                     }
                     response.data!!.user?.let {
                         User(
-                            channelId = it.id,
-                            channelLogin = it.login,
-                            channelName = it.displayName,
-                            profileImageUrl = it.profileImageURL
+                            id = it.id,
+                            login = it.login,
+                            name = it.displayName,
+                            profileImageURL = it.profileImageURL,
                         )
                     }
                 } catch (e: Exception) {
@@ -257,12 +257,12 @@ class MainViewModel @Inject constructor(
                                 logins = login?.let { listOf(it) }
                             ).data.firstOrNull()?.let {
                                 User(
-                                    channelId = it.channelId,
-                                    channelLogin = it.channelLogin,
-                                    channelName = it.channelName,
+                                    id = it.id,
+                                    login = it.login,
+                                    name = it.displayName,
+                                    profileImageURL = it.profileImageURL,
                                     type = it.type,
                                     broadcasterType = it.broadcasterType,
-                                    profileImageUrl = it.profileImageUrl,
                                     createdAt = it.createdAt,
                                 )
                             }
@@ -293,10 +293,10 @@ class MainViewModel @Inject constructor(
                     }
                     response.data!!.game?.let {
                         Game(
-                            gameId = it.id,
-                            gameSlug = it.slug,
-                            gameName = it.displayName,
-                            boxArtUrl = it.boxArtURL,
+                            id = it.id,
+                            slug = it.slug,
+                            name = it.displayName,
+                            boxArtURL = it.boxArtURL,
                         )
                     }
                 } catch (e: Exception) {
@@ -308,9 +308,9 @@ class MainViewModel @Inject constructor(
                                 names = listOf(gameName)
                             ).data.firstOrNull()?.let {
                                 Game(
-                                    gameId = it.id,
-                                    gameName = it.name,
-                                    boxArtUrl = it.boxArtUrl,
+                                    id = it.id,
+                                    name = it.name,
+                                    boxArtURL = it.boxArtURL,
                                 )
                             }
                         } catch (e: Exception) {
@@ -362,7 +362,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun downloadStream(networkLibrary: String?, filesDir: String, id: String?, title: String?, startedAt: String?, channelId: String?, channelLogin: String?, channelName: String?, channelLogo: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {
+    fun downloadStream(networkLibrary: String?, filesDir: String, id: String?, title: String?, createdAt: String?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {
         viewModelScope.launch {
             if (!channelLogin.isNullOrBlank()) {
                 val downloadedThumbnail = id.takeIf { !it.isNullOrBlank() }?.let { id ->
@@ -423,7 +423,7 @@ class MainViewModel @Inject constructor(
                     }
                 }
                 val downloadedLogo = channelId.takeIf { !it.isNullOrBlank() }?.let { id ->
-                    channelLogo.takeIf { !it.isNullOrBlank() }?.let {
+                    channelImage.takeIf { !it.isNullOrBlank() }?.let {
                         File(filesDir, "profile_pics").mkdir()
                         val path = filesDir + File.separator + "profile_pics" + File.separator + id
                         viewModelScope.launch(Dispatchers.IO) {
@@ -490,7 +490,7 @@ class MainViewModel @Inject constructor(
                         gameId = gameId,
                         gameSlug = gameSlug,
                         gameName = gameName,
-                        uploadDate = startedAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
+                        uploadDate = createdAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
                         downloadDate = System.currentTimeMillis(),
                         downloadPath = downloadPath,
                         status = OfflineVideo.STATUS_BLOCKED,
@@ -516,7 +516,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun downloadVideo(networkLibrary: String?, filesDir: String, id: String?, title: String?, uploadDate: String?, type: String?, channelId: String?, channelLogin: String?, channelName: String?, channelLogo: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, url: String, downloadPath: String, quality: String, from: Long, to: Long, downloadChat: Boolean, downloadChatEmotes: Boolean, playlistToFile: Boolean, wifiOnly: Boolean) {
+    fun downloadVideo(networkLibrary: String?, filesDir: String, id: String?, title: String?, createdAt: String?, type: String?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, url: String, downloadPath: String, quality: String, from: Long, to: Long, downloadChat: Boolean, downloadChatEmotes: Boolean, playlistToFile: Boolean, wifiOnly: Boolean) {
         viewModelScope.launch {
             val downloadedThumbnail = id.takeIf { !it.isNullOrBlank() }?.let { id ->
                 thumbnail.takeIf { !it.isNullOrBlank() }?.let {
@@ -576,7 +576,7 @@ class MainViewModel @Inject constructor(
                 }
             }
             val downloadedLogo = channelId.takeIf { !it.isNullOrBlank() }?.let { id ->
-                channelLogo.takeIf { !it.isNullOrBlank() }?.let {
+                channelImage.takeIf { !it.isNullOrBlank() }?.let {
                     File(filesDir, "profile_pics").mkdir()
                     val path = filesDir + File.separator + "profile_pics" + File.separator + id
                     viewModelScope.launch(Dispatchers.IO) {
@@ -644,7 +644,7 @@ class MainViewModel @Inject constructor(
                     gameId = gameId,
                     gameSlug = gameSlug,
                     gameName = gameName,
-                    uploadDate = uploadDate?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
+                    uploadDate = createdAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
                     downloadDate = System.currentTimeMillis(),
                     downloadPath = downloadPath,
                     fromTime = from,
@@ -674,7 +674,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun downloadClip(networkLibrary: String?, filesDir: String, clipId: String?, title: String?, uploadDate: String?, duration: Double?, videoId: String?, vodOffset: Int?, channelId: String?, channelLogin: String?, channelName: String?, channelLogo: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, url: String, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {
+    fun downloadClip(networkLibrary: String?, filesDir: String, clipId: String?, title: String?, createdAt: String?, durationSeconds: Int?, videoId: String?, videoOffsetSeconds: Int?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, url: String, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {
         viewModelScope.launch {
             val downloadedThumbnail = clipId.takeIf { !it.isNullOrBlank() }?.let { id ->
                 thumbnail.takeIf { !it.isNullOrBlank() }?.let {
@@ -734,7 +734,7 @@ class MainViewModel @Inject constructor(
                 }
             }
             val downloadedLogo = channelId.takeIf { !it.isNullOrBlank() }?.let { id ->
-                channelLogo.takeIf { !it.isNullOrBlank() }?.let {
+                channelImage.takeIf { !it.isNullOrBlank() }?.let {
                     File(filesDir, "profile_pics").mkdir()
                     val path = filesDir + File.separator + "profile_pics" + File.separator + id
                     viewModelScope.launch(Dispatchers.IO) {
@@ -793,7 +793,7 @@ class MainViewModel @Inject constructor(
             val videoId = offlineRepository.saveVideo(
                 OfflineVideo(
                     sourceUrl = url,
-                    sourceStartPosition = vodOffset?.toLong()?.times(1000L),
+                    sourceStartPosition = videoOffsetSeconds?.toLong()?.times(1000L),
                     name = title,
                     channelId = channelId,
                     channelLogin = channelLogin,
@@ -803,8 +803,8 @@ class MainViewModel @Inject constructor(
                     gameId = gameId,
                     gameSlug = gameSlug,
                     gameName = gameName,
-                    duration = duration?.toLong()?.times(1000L),
-                    uploadDate = uploadDate?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
+                    duration = durationSeconds?.times(1000L),
+                    uploadDate = createdAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
                     downloadDate = System.currentTimeMillis(),
                     downloadPath = downloadPath,
                     status = OfflineVideo.STATUS_BLOCKED,

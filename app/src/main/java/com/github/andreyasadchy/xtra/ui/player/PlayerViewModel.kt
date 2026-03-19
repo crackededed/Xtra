@@ -313,13 +313,13 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    fun loadStream(channelId: String?, channelLogin: String?, viewerCount: Int?, loop: Boolean, networkLibrary: String?, helixHeaders: Map<String, String>, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
+    fun loadStreamInfo(channelId: String?, channelLogin: String?, viewerCount: Int?, loop: Boolean, networkLibrary: String?, helixHeaders: Map<String, String>, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
         if (loop) {
             streamJob?.cancel()
             streamJob = viewModelScope.launch {
                 while (isActive) {
                     try {
-                        updateStream(channelId, channelLogin, networkLibrary, helixHeaders, gqlHeaders, enableIntegrity)
+                        updateStreamInfo(channelId, channelLogin, networkLibrary, helixHeaders, gqlHeaders, enableIntegrity)
                         delay(300000L)
                     } catch (e: Exception) {
                         if (e.message == "failed integrity check" && integrity.value == null) {
@@ -329,20 +329,22 @@ class PlayerViewModel @Inject constructor(
                     }
                 }
             }
-        } else if (viewerCount == null) {
-            viewModelScope.launch {
-                try {
-                    updateStream(channelId, channelLogin, networkLibrary, helixHeaders, gqlHeaders, enableIntegrity)
-                } catch (e: Exception) {
-                    if (e.message == "failed integrity check" && integrity.value == null) {
-                        integrity.value = "stream"
+        } else {
+            if (viewerCount == null) {
+                viewModelScope.launch {
+                    try {
+                        updateStreamInfo(channelId, channelLogin, networkLibrary, helixHeaders, gqlHeaders, enableIntegrity)
+                    } catch (e: Exception) {
+                        if (e.message == "failed integrity check" && integrity.value == null) {
+                            integrity.value = "stream"
+                        }
                     }
                 }
             }
         }
     }
 
-    private suspend fun updateStream(channelId: String?, channelLogin: String?, networkLibrary: String?, helixHeaders: Map<String, String>, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
+    private suspend fun updateStreamInfo(channelId: String?, channelLogin: String?, networkLibrary: String?, helixHeaders: Map<String, String>, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
         stream.value = try {
             val response = graphQLRepository.loadQueryUsersStream(
                 networkLibrary = networkLibrary,
@@ -359,15 +361,15 @@ class PlayerViewModel @Inject constructor(
                     channelId = channelId,
                     channelLogin = it.login,
                     channelName = it.displayName,
+                    channelImageURL = it.profileImageURL,
                     gameId = it.stream?.game?.id,
                     gameSlug = it.stream?.game?.slug,
                     gameName = it.stream?.game?.displayName,
                     title = it.stream?.broadcaster?.broadcastSettings?.title,
+                    thumbnailURL = it.stream?.previewImageURL,
+                    createdAt = it.stream?.createdAt?.toString(),
                     viewerCount = it.stream?.viewersCount,
-                    startedAt = it.stream?.createdAt?.toString(),
-                    thumbnailUrl = it.stream?.previewImageURL,
-                    profileImageUrl = it.profileImageURL,
-                    tags = it.stream?.freeformTags?.mapNotNull { tag -> tag.name }
+                    tags = it.stream?.freeformTags?.mapNotNull { tag -> tag.name },
                 )
             }
         } catch (e: Exception) {
@@ -388,10 +390,10 @@ class PlayerViewModel @Inject constructor(
                         gameId = it.gameId,
                         gameName = it.gameName,
                         title = it.title,
+                        thumbnailURL = it.thumbnailURL,
+                        createdAt = it.startedAt,
                         viewerCount = it.viewerCount,
-                        startedAt = it.startedAt,
-                        thumbnailUrl = it.thumbnailUrl,
-                        tags = it.tags
+                        tags = it.tags,
                     )
                 }
             } catch (e: Exception) {
@@ -402,7 +404,7 @@ class PlayerViewModel @Inject constructor(
                 response.data!!.user.stream?.let {
                     Stream(
                         id = it.id,
-                        viewerCount = it.viewersCount
+                        viewerCount = it.viewersCount,
                     )
                 }
             }
@@ -457,9 +459,9 @@ class PlayerViewModel @Inject constructor(
                     gamesList.value = response.data!!.video.moments.edges.map { item ->
                         item.node.let {
                             Game(
-                                gameId = it.details?.game?.id,
-                                gameName = it.details?.game?.displayName,
-                                boxArtUrl = it.details?.game?.boxArtURL,
+                                id = it.details?.game?.id,
+                                name = it.details?.game?.displayName,
+                                boxArtURL = it.details?.game?.boxArtURL,
                                 vodPosition = it.positionMilliseconds,
                                 vodDuration = it.durationMilliseconds,
                             )
@@ -478,7 +480,7 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    fun saveBookmark(filesDir: String, networkLibrary: String?, helixHeaders: Map<String, String>, gqlHeaders: Map<String, String>, videoId: String?, title: String?, uploadDate: String?, duration: String?, type: String?, animatedPreviewUrl: String?, channelId: String?, channelLogin: String?, channelName: String?, channelLogo: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?) {
+    fun saveBookmark(filesDir: String, networkLibrary: String?, helixHeaders: Map<String, String>, gqlHeaders: Map<String, String>, videoId: String?, title: String?, uploadDate: String?, durationSeconds: Int?, type: String?, animatedPreviewUrl: String?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?) {
         viewModelScope.launch {
             val item = videoId?.let { bookmarksRepository.getBookmarkByVideoId(it) }
             if (item != null) {
@@ -542,7 +544,7 @@ class PlayerViewModel @Inject constructor(
                     }
                 }
                 val downloadedLogo = channelId.takeIf { !it.isNullOrBlank() }?.let { id ->
-                    channelLogo.takeIf { !it.isNullOrBlank() }?.let {
+                    channelImage.takeIf { !it.isNullOrBlank() }?.let {
                         File(filesDir, "profile_pics").mkdir()
                         val path = filesDir + File.separator + "profile_pics" + File.separator + id
                         viewModelScope.launch(Dispatchers.IO) {
@@ -603,7 +605,7 @@ class PlayerViewModel @Inject constructor(
                         val response = graphQLRepository.loadQueryUsersType(networkLibrary, gqlHeaders, listOf(channelId))
                         response.data!!.users?.firstOrNull()?.let {
                             User(
-                                channelId = it.id,
+                                id = it.id,
                                 broadcasterType = when {
                                     it.roles?.isPartner == true -> "partner"
                                     it.roles?.isAffiliate == true -> "affiliate"
@@ -612,7 +614,7 @@ class PlayerViewModel @Inject constructor(
                                 type = when {
                                     it.roles?.isStaff == true -> "staff"
                                     else -> null
-                                }
+                                },
                             )
                         }
                     } catch (e: Exception) {
@@ -624,12 +626,12 @@ class PlayerViewModel @Inject constructor(
                                     ids = listOf(channelId)
                                 ).data.firstOrNull()?.let {
                                     User(
-                                        channelId = it.channelId,
-                                        channelLogin = it.channelLogin,
-                                        channelName = it.channelName,
+                                        id = it.id,
+                                        login = it.login,
+                                        name = it.displayName,
+                                        profileImageURL = it.profileImageURL,
                                         type = it.type,
                                         broadcasterType = it.broadcasterType,
-                                        profileImageUrl = it.profileImageUrl,
                                         createdAt = it.createdAt,
                                     )
                                 }
@@ -655,7 +657,7 @@ class PlayerViewModel @Inject constructor(
                         createdAt = uploadDate,
                         thumbnail = downloadedThumbnail,
                         type = type,
-                        duration = duration,
+                        duration = durationSeconds.toString(),
                         animatedPreviewURL = animatedPreviewUrl
                     )
                 )
@@ -714,7 +716,7 @@ class PlayerViewModel @Inject constructor(
                                     headers = helixHeaders,
                                     userId = userId,
                                     targetId = channelId,
-                                ).data.firstOrNull()?.channelId == channelId
+                                ).data.firstOrNull()?.id == channelId
                                 _isFollowing.value = following
                             }
                         } else {

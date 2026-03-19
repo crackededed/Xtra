@@ -43,8 +43,8 @@ class ShownNotificationsRepository @Inject constructor(
         }
         val liveList = list.mapNotNull { stream ->
             stream.channelId.takeUnless { it.isNullOrBlank() }?.let { channelId ->
-                stream.startedAt.takeUnless { it.isNullOrBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let { startedAt ->
-                    ShownNotification(channelId, startedAt)
+                stream.createdAt.takeUnless { it.isNullOrBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let { createdAt ->
+                    ShownNotification(channelId, createdAt)
                 }
             }
         }
@@ -74,15 +74,15 @@ class ShownNotificationsRepository @Inject constructor(
                             channelId = it.id,
                             channelLogin = it.login,
                             channelName = it.displayName,
+                            channelImageURL = it.profileImageURL,
                             gameId = it.stream?.game?.id,
                             gameSlug = it.stream?.game?.slug,
                             gameName = it.stream?.game?.displayName,
                             title = it.stream?.broadcaster?.broadcastSettings?.title,
+                            thumbnailURL = it.stream?.previewImageURL,
+                            createdAt = it.stream?.createdAt?.toString(),
                             viewerCount = it.stream?.viewersCount,
-                            startedAt = it.stream?.createdAt?.toString(),
-                            thumbnailUrl = it.stream?.previewImageURL,
-                            profileImageUrl = it.profileImageURL,
-                            tags = it.stream?.freeformTags?.mapNotNull { tag -> tag.name }
+                            tags = it.stream?.freeformTags?.mapNotNull { tag -> tag.name },
                         )
                     } else null
                 }
@@ -104,15 +104,15 @@ class ShownNotificationsRepository @Inject constructor(
                         channelId = it.id,
                         channelLogin = it.login,
                         channelName = it.displayName,
+                        channelImageURL = it.profileImageURL,
                         gameId = it.stream.game?.id,
                         gameSlug = it.stream.game?.slug,
                         gameName = it.stream.game?.displayName,
                         title = it.stream.broadcaster?.broadcastSettings?.title,
+                        thumbnailURL = it.stream.previewImageURL,
+                        createdAt = it.stream.createdAt?.toString(),
                         viewerCount = it.stream.viewersCount,
-                        startedAt = it.stream.createdAt?.toString(),
-                        thumbnailUrl = it.stream.previewImageURL,
-                        profileImageUrl = it.profileImageURL,
-                        tags = it.stream.freeformTags?.mapNotNull { tag -> tag.name }
+                        tags = it.stream.freeformTags?.mapNotNull { tag -> tag.name },
                     )
                 } else null
             }
@@ -142,16 +142,16 @@ class ShownNotificationsRepository @Inject constructor(
                     channelId = it.channelId,
                     channelLogin = it.channelLogin,
                     channelName = it.channelName,
+                    channelImageURL = it.channelId?.let { id ->
+                        users.find { user -> user.id == id }?.profileImageURL
+                    },
                     gameId = it.gameId,
                     gameName = it.gameName,
                     title = it.title,
+                    thumbnailURL = it.thumbnailURL,
+                    createdAt = it.startedAt,
                     viewerCount = it.viewerCount,
-                    startedAt = it.startedAt,
-                    thumbnailUrl = it.thumbnailUrl,
-                    profileImageUrl = it.channelId?.let { id ->
-                        users.find { user -> user.channelId == id }?.profileImageUrl
-                    },
-                    tags = it.tags
+                    tags = it.tags,
                 )
             } else null
         }

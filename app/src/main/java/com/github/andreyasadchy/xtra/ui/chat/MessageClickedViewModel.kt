@@ -37,13 +37,13 @@ class MessageClickedViewModel @Inject constructor(
                     }
                     response.data!!.user?.let {
                         User(
-                            channelId = it.id,
-                            channelLogin = it.login,
-                            channelName = it.displayName,
-                            profileImageUrl = it.profileImageURL,
+                            id = it.id,
+                            login = it.login,
+                            name = it.displayName,
+                            profileImageURL = it.profileImageURL,
                             bannerImageURL = it.bannerImageURL,
                             createdAt = it.createdAt?.toString(),
-                            followedAt = it.follow?.followedAt?.toString()
+                            followedAt = it.follow?.followedAt?.toString(),
                         )
                     }
                 } catch (e: Exception) {
@@ -56,12 +56,12 @@ class MessageClickedViewModel @Inject constructor(
                                 logins = if (channelId.isNullOrBlank()) channelLogin?.let { listOf(it) } else null
                             ).data.firstOrNull()?.let {
                                 User(
-                                    channelId = it.channelId,
-                                    channelLogin = it.channelLogin,
-                                    channelName = it.channelName,
+                                    id = it.id,
+                                    login = it.login,
+                                    name = it.displayName,
+                                    profileImageURL = it.profileImageURL,
                                     type = it.type,
                                     broadcasterType = it.broadcasterType,
-                                    profileImageUrl = it.profileImageUrl,
                                     createdAt = it.createdAt,
                                 )
                             }

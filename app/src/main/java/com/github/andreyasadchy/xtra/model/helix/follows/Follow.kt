@@ -6,11 +6,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 class Follow(
     @SerialName("broadcaster_id")
-    val channelId: String? = null,
+    val id: String? = null,
     @SerialName("broadcaster_login")
-    val channelLogin: String? = null,
+    val login: String? = null,
     @SerialName("broadcaster_name")
-    val channelName: String? = null,
+    val displayName: String? = null,
     @SerialName("followed_at")
     val followedAt: String? = null,
 )

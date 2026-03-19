@@ -132,7 +132,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                             channelId = args.channelId,
                             channelLogin = args.channelLogin,
                             channelName = args.channelName,
-                            profileImageUrl = args.channelLogo
+                            channelImageURL = args.channelImage,
                         )
                     )
                 }
@@ -154,7 +154,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                     userName.visibility = View.GONE
                 }
             }
-            args.channelLogo.let {
+            args.channelImage.let {
                 if (it != null) {
                     userLayout.visibility = View.VISIBLE
                     userImage.visibility = View.VISIBLE
@@ -294,18 +294,18 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                     }
                     R.id.download -> {
                         viewModel.stream.value?.let {
-                            DownloadDialog.newInstance(
+                            DownloadDialog.newStreamInstance(
                                 id = it.id,
-                                title = it.title,
-                                startedAt = it.startedAt,
                                 channelId = it.channelId,
                                 channelLogin = it.channelLogin,
                                 channelName = it.channelName,
-                                channelLogo = it.channelLogo,
-                                thumbnail = it.thumbnail,
+                                channelImage = it.channelImage,
                                 gameId = it.gameId,
                                 gameSlug = it.gameSlug,
                                 gameName = it.gameName,
+                                title = it.title,
+                                thumbnail = it.thumbnail,
+                                createdAt = it.createdAt,
                             ).show(childFragmentManager, null)
                         }
                         true
@@ -535,11 +535,6 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                 viewModel.stream.collectLatest { stream ->
                     if (stream != null) {
                         updateStreamLayout(stream)
-                        if (stream.user != null) {
-                            updateUserLayout(stream.user)
-                        } else {
-                            viewModel.loadUser(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"), TwitchApiHelper.getHelixHeaders(requireContext()))
-                        }
                     }
                 }
             }
@@ -570,19 +565,8 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
             if (stream?.viewerCount != null) {
                 watchLive.text = getString(R.string.watch_live)
                 watchLive.setOnClickListener { activity.startStream(stream) }
-            } else {
-                if (stream?.user?.lastBroadcast != null) {
-                    TwitchApiHelper.formatTimeString(requireContext(), stream.user.lastBroadcast!!).let {
-                        if (it != null)  {
-                            lastBroadcast.visibility = View.VISIBLE
-                            lastBroadcast.text = getString(R.string.last_broadcast_date, it)
-                        } else {
-                            lastBroadcast.visibility = View.GONE
-                        }
-                    }
-                }
             }
-            stream?.channelLogo.let {
+            stream?.channelImage.let {
                 if (it != null) {
                     userLayout.visibility = View.VISIBLE
                     userImage.visibility = View.VISIBLE
@@ -596,7 +580,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                             }
                         }
                         .into(userImage)
-                    requireArguments().putString(C.CHANNEL_PROFILEIMAGE, it)
+                    requireArguments().putString(C.CHANNEL_IMAGE, it)
                 } else {
                     userImage.visibility = View.GONE
                 }
@@ -614,7 +598,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                     } else {
                         it
                     }
-                    requireArguments().putString(C.CHANNEL_DISPLAYNAME, it)
+                    requireArguments().putString(C.CHANNEL_NAME, it)
                 }
             }
             stream?.channelLogin.let {
@@ -671,8 +655,8 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                 viewers.visibility = View.GONE
             }
             if (requireContext().prefs().getBoolean(C.UI_UPTIME, true)) {
-                if (stream?.startedAt != null) {
-                    TwitchApiHelper.getUptime(stream.startedAt).let {
+                if (stream?.createdAt != null) {
+                    TwitchApiHelper.getUptime(stream.createdAt).let {
                         if (it != null) {
                             streamLayout.visibility = View.VISIBLE
                             uptime.visibility = View.VISIBLE
@@ -688,11 +672,21 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
 
     private fun updateUserLayout(user: User) {
         with(binding) {
-            if (!userImage.isVisible && user.channelLogo != null) {
+            if (viewModel.stream.value?.viewerCount == null && user.lastBroadcast != null) {
+                TwitchApiHelper.formatTimeString(requireContext(), user.lastBroadcast!!).let {
+                    if (it != null)  {
+                        lastBroadcast.visibility = View.VISIBLE
+                        lastBroadcast.text = getString(R.string.last_broadcast_date, it)
+                    } else {
+                        lastBroadcast.visibility = View.GONE
+                    }
+                }
+            }
+            if (!userImage.isVisible && user.profileImage != null) {
                 userLayout.visibility = View.VISIBLE
                 userImage.visibility = View.VISIBLE
                 Glide.with(this@ChannelPagerFragment)
-                    .load(user.channelLogo)
+                    .load(user.profileImage)
                     .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .apply {
@@ -701,7 +695,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                         }
                     }
                     .into(userImage)
-                requireArguments().putString(C.CHANNEL_PROFILEIMAGE, user.channelLogo)
+                requireArguments().putString(C.CHANNEL_IMAGE, user.profileImage)
             }
             if (user.bannerImageURL != null) {
                 bannerImage.visibility = View.VISIBLE
@@ -727,9 +721,9 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
             } else {
                 userCreated.visibility = View.GONE
             }
-            if (user.followersCount != null) {
+            if (user.followerCount != null) {
                 userFollowers.visibility = View.VISIBLE
-                val count = user.followersCount
+                val count = user.followerCount
                 userFollowers.text = resources.getQuantityString(
                     R.plurals.followers,
                     count,
@@ -769,7 +763,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
     }
 
     override fun onNetworkRestored() {
-        viewModel.retry(
+        viewModel.loadStream(
             requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
             TwitchApiHelper.getGQLHeaders(requireContext()),
             TwitchApiHelper.getHelixHeaders(requireContext()),
@@ -783,7 +777,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     when (callback) {
                         "refresh" -> {
-                            viewModel.retry(
+                            viewModel.loadStream(
                                 requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                                 TwitchApiHelper.getGQLHeaders(requireContext()),
                                 TwitchApiHelper.getHelixHeaders(requireContext()),

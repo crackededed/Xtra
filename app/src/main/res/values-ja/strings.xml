@@ -160,7 +160,6 @@
     <string name="chat_first">初めてのチャット</string>
     <string name="chat_reward">チャンネルポイントの引き換え</string>
     <string name="always">常に</string>
-    <string name="twitch">Twitch</string>
     <string name="local">ローカル</string>
     <string name="days">日</string>
     <string name="seconds">秒</string>
@@ -730,4 +729,5 @@
     <string name="copy_code">Copy code</string>
     <string name="external_tv_login_message">To get access to all features, you need to login as an Android TV device.\n\nFollow these steps:\n• Copy the code shown on the screen.\n• Press the \"Open URL\" button.\n• Enter the code and press \"Activate\".\n• Press \"Authorize\".\n• Return to Xtra and press \"Next\".</string>
     <string name="activate_notifications_when_following">Activate notifications when following</string>
+    <string name="account">Account</string>
 </resources>

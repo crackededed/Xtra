@@ -84,7 +84,7 @@ class BookmarksAdapter(
                                 channelId = item.userId,
                                 channelLogin = item.userLogin,
                                 channelName = item.userName,
-                                channelLogo = item.userLogo,
+                                channelImage = item.userLogo,
                                 updateLocal = true
                             )
                         )
@@ -106,7 +106,7 @@ class BookmarksAdapter(
                             }
                         )
                     }
-                    val getDuration = item.duration?.let { TwitchApiHelper.getDuration(it) }
+                    val durationSeconds = item.duration?.let { duration -> duration.toIntOrNull() ?: TwitchApiHelper.getDuration(duration) }
                     val position = item.videoId?.toLongOrNull()?.let { id -> positions?.find { it.id == id }?.position }
                     val ignore = ignored?.find { it.userId == item.userId } != null
                     val userType = item.userType ?: item.userBroadcasterType
@@ -117,15 +117,15 @@ class BookmarksAdapter(
                                 channelId = item.userId,
                                 channelLogin = item.userLogin,
                                 channelName = item.userName,
-                                profileImageUrl = item.userLogo,
+                                channelImageURL = item.userLogo,
                                 gameId = item.gameId,
                                 gameSlug = item.gameSlug,
                                 gameName = item.gameName,
                                 title = item.title,
-                                uploadDate = item.createdAt,
-                                thumbnailUrl = item.thumbnail,
+                                thumbnailURL = item.thumbnail,
+                                createdAt = item.createdAt,
+                                durationSeconds = durationSeconds,
                                 type = item.type,
-                                duration = item.duration,
                                 animatedPreviewURL = item.animatedPreviewURL,
                             ), position
                         )
@@ -164,9 +164,9 @@ class BookmarksAdapter(
                     } else {
                         views.visibility = View.GONE
                     }
-                    if (getDuration != null) {
+                    if (durationSeconds != null) {
                         duration.visibility = View.VISIBLE
-                        duration.text = DateUtils.formatElapsedTime(getDuration)
+                        duration.text = DateUtils.formatElapsedTime(durationSeconds.toLong())
                     } else {
                         duration.visibility = View.GONE
                     }
@@ -212,8 +212,8 @@ class BookmarksAdapter(
                     } else {
                         username.visibility = View.GONE
                     }
-                    if (position != null && getDuration != null && getDuration > 0L) {
-                        progressBar.progress = (position / (getDuration * 10)).toInt()
+                    if (position != null && durationSeconds != null && durationSeconds > 0L) {
+                        progressBar.progress = (position / (durationSeconds * 10)).toInt()
                         progressBar.visibility = View.VISIBLE
                     } else {
                         progressBar.visibility = View.GONE
@@ -255,14 +255,14 @@ class BookmarksAdapter(
                                             channelId = item.userId,
                                             channelLogin = item.userLogin,
                                             channelName = item.userName,
-                                            profileImageUrl = item.userLogo,
+                                            channelImageURL = item.userLogo,
                                             gameId = item.gameId,
                                             gameName = item.gameName,
                                             title = item.title,
-                                            uploadDate = item.createdAt,
-                                            thumbnailUrl = item.thumbnail,
+                                            thumbnailURL = item.thumbnail,
+                                            createdAt = item.createdAt,
+                                            durationSeconds = durationSeconds,
                                             type = item.type,
-                                            duration = item.duration,
                                             animatedPreviewURL = item.animatedPreviewURL,
                                         )
                                     )

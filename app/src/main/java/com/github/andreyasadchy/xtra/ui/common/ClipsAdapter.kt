@@ -68,8 +68,8 @@ class ClipsAdapter(
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
                         .transition(DrawableTransitionOptions.withCrossFade())
                         .into(thumbnail)
-                    if (item.uploadDate != null) {
-                        val text = item.uploadDate.let { TwitchApiHelper.formatTimeString(context, it) }
+                    if (item.createdAt != null) {
+                        val text = item.createdAt.let { TwitchApiHelper.formatTimeString(context, it) }
                         if (text != null) {
                             date.visibility = View.VISIBLE
                             date.text = text
@@ -90,9 +90,9 @@ class ClipsAdapter(
                     } else {
                         views.visibility = View.GONE
                     }
-                    if (item.duration != null) {
+                    if (item.durationSeconds != null) {
                         duration.visibility = View.VISIBLE
-                        duration.text = DateUtils.formatElapsedTime(item.duration.toLong())
+                        duration.text = DateUtils.formatElapsedTime(item.durationSeconds.toLong())
                     } else {
                         duration.visibility = View.GONE
                     }
@@ -103,14 +103,14 @@ class ClipsAdapter(
                                     channelId = item.channelId,
                                     channelLogin = item.channelLogin,
                                     channelName = item.channelName,
-                                    channelLogo = item.channelLogo,
+                                    channelImage = item.channelImage,
                                 )
                             )
                         }
-                        if (item.channelLogo != null) {
+                        if (item.channelImage != null) {
                             userImage.visibility = View.VISIBLE
                             Glide.with(fragment)
-                                .load(item.channelLogo)
+                                .load(item.channelImage)
                                 .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                                 .transition(DrawableTransitionOptions.withCrossFade())
                                 .apply {

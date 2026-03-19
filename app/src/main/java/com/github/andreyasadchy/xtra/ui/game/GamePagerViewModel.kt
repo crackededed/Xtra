@@ -76,13 +76,13 @@ class GamePagerViewModel @Inject constructor(
                     }
                     response.data!!.game?.let {
                         Game(
-                            gameId = it.id,
-                            gameSlug = it.slug,
-                            gameName = it.displayName,
-                            boxArtUrl = it.boxArtURL,
-                            viewersCount = it.viewersCount,
-                            broadcastersCount = it.broadcastersCount,
-                            followersCount = it.followersCount,
+                            id = it.id,
+                            slug = it.slug,
+                            name = it.displayName,
+                            boxArtURL = it.boxArtURL,
+                            viewerCount = it.viewersCount,
+                            broadcasterCount = it.broadcastersCount,
+                            followerCount = it.followersCount,
                             tags = it.tags?.map { tag ->
                                 Tag(
                                     id = tag.id,
@@ -101,9 +101,9 @@ class GamePagerViewModel @Inject constructor(
                                 names = if (args.gameId.isNullOrBlank()) args.gameName?.let { listOf(it) } else null
                             ).data.firstOrNull()?.let {
                                 Game(
-                                    gameId = it.id,
-                                    gameName = it.name,
-                                    boxArtUrl = it.boxArtUrl
+                                    id = it.id,
+                                    name = it.name,
+                                    boxArtURL = it.boxArtURL
                                 )
                             }
                         } catch (e: Exception) {
@@ -172,7 +172,7 @@ class GamePagerViewModel @Inject constructor(
                                             networkLibrary = networkLibrary,
                                             headers = helixHeaders,
                                             ids = listOf(gameId)
-                                        ).data.firstOrNull()?.boxArtUrl
+                                        ).data.firstOrNull()?.boxArtURL
                                     } else null
                                 }.takeIf { !it.isNullOrBlank() }?.let { TwitchApiHelper.getGameBoxArt(it) }?.let {
                                     when {
@@ -283,7 +283,7 @@ class GamePagerViewModel @Inject constructor(
                                         networkLibrary = networkLibrary,
                                         headers = helixHeaders,
                                         ids = listOf(gameId)
-                                    ).data.firstOrNull()?.boxArtUrl
+                                    ).data.firstOrNull()?.boxArtURL
                                 } else null
                             }.takeIf { !it.isNullOrBlank() }?.let { TwitchApiHelper.getGameBoxArt(it) }?.let {
                                 when {

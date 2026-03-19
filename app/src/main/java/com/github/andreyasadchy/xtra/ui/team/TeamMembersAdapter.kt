@@ -66,15 +66,15 @@ class TeamMembersAdapter(
                                 channelId = item.channelId,
                                 channelLogin = item.channelLogin,
                                 channelName = item.channelName,
-                                channelLogo = item.channelLogo,
+                                channelImage = item.channelImage,
                                 streamId = item.id
                             )
                         )
                     }
-                    if (item.channelLogo != null) {
+                    if (item.channelImage != null) {
                         userImage.visibility = View.VISIBLE
                         Glide.with(fragment)
-                            .load(item.channelLogo)
+                            .load(item.channelImage)
                             .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .apply {
@@ -138,8 +138,8 @@ class TeamMembersAdapter(
                         } else {
                             gameName.visibility = View.GONE
                         }
-                        if (context.prefs().getBoolean(C.UI_UPTIME, true) && item.startedAt != null) {
-                            val text = TwitchApiHelper.getUptime(startedAt = item.startedAt)
+                        if (context.prefs().getBoolean(C.UI_UPTIME, true) && item.createdAt != null) {
+                            val text = TwitchApiHelper.getUptime(startedAt = item.createdAt)
                             if (text != null) {
                                 uptime.visibility = View.VISIBLE
                                 uptime.text = text

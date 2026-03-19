@@ -558,15 +558,15 @@ class StreamDownloadWorker @AssistedInject constructor(
                                         channelId = channelId,
                                         channelLogin = it.login,
                                         channelName = it.displayName,
+                                        channelImageURL = it.profileImageURL,
                                         gameId = it.stream?.game?.id,
                                         gameSlug = it.stream?.game?.slug,
                                         gameName = it.stream?.game?.displayName,
                                         title = it.stream?.broadcaster?.broadcastSettings?.title,
+                                        thumbnailURL = it.stream?.previewImageURL,
+                                        createdAt = it.stream?.createdAt?.toString(),
                                         viewerCount = it.stream?.viewersCount,
-                                        startedAt = it.stream?.createdAt?.toString(),
-                                        thumbnailUrl = it.stream?.previewImageURL,
-                                        profileImageUrl = it.profileImageURL,
-                                        tags = it.stream?.freeformTags?.mapNotNull { tag -> tag.name }
+                                        tags = it.stream?.freeformTags?.mapNotNull { tag -> tag.name },
                                     )
                                 }
                             } catch (e: Exception) {
@@ -587,10 +587,10 @@ class StreamDownloadWorker @AssistedInject constructor(
                                             gameId = it.gameId,
                                             gameName = it.gameName,
                                             title = it.title,
+                                            thumbnailURL = it.thumbnailURL,
+                                            createdAt = it.startedAt,
                                             viewerCount = it.viewerCount,
-                                            startedAt = it.startedAt,
-                                            thumbnailUrl = it.thumbnailUrl,
-                                            tags = it.tags
+                                            tags = it.tags,
                                         )
                                     }
                                 } catch (e: Exception) {
@@ -603,7 +603,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                                         response.data!!.user.stream?.let {
                                             Stream(
                                                 id = it.id,
-                                                viewerCount = it.viewersCount
+                                                viewerCount = it.viewersCount,
                                             )
                                         }
                                     } catch (e: Exception) {
@@ -676,7 +676,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                                     gameId = stream.gameId
                                     gameSlug = stream.gameSlug
                                     gameName = stream.gameName
-                                    uploadDate = stream.startedAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) }
+                                    uploadDate = stream.createdAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) }
                                 })
                                 attempt += 10
                             }

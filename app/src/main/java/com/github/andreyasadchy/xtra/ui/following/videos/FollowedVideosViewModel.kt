@@ -187,7 +187,7 @@ class FollowedVideosViewModel @Inject constructor(
                     }
                 }
                 val downloadedLogo = video.channelId.takeIf { !it.isNullOrBlank() }?.let { id ->
-                    video.channelLogo.takeIf { !it.isNullOrBlank() }?.let {
+                    video.channelImage.takeIf { !it.isNullOrBlank() }?.let {
                         File(filesDir, "profile_pics").mkdir()
                         val path = filesDir + File.separator + "profile_pics" + File.separator + id
                         viewModelScope.launch(Dispatchers.IO) {
@@ -248,7 +248,7 @@ class FollowedVideosViewModel @Inject constructor(
                         val response = graphQLRepository.loadQueryUsersType(networkLibrary, gqlHeaders, listOf(it))
                         response.data!!.users?.firstOrNull()?.let {
                             User(
-                                channelId = it.id,
+                                id = it.id,
                                 broadcasterType = when {
                                     it.roles?.isPartner == true -> "partner"
                                     it.roles?.isAffiliate == true -> "affiliate"
@@ -257,7 +257,7 @@ class FollowedVideosViewModel @Inject constructor(
                                 type = when {
                                     it.roles?.isStaff == true -> "staff"
                                     else -> null
-                                }
+                                },
                             )
                         }
                     } catch (e: Exception) {
@@ -269,12 +269,12 @@ class FollowedVideosViewModel @Inject constructor(
                                     ids = listOf(it)
                                 ).data.firstOrNull()?.let {
                                     User(
-                                        channelId = it.channelId,
-                                        channelLogin = it.channelLogin,
-                                        channelName = it.channelName,
+                                        id = it.id,
+                                        login = it.login,
+                                        name = it.displayName,
+                                        profileImageURL = it.profileImageURL,
                                         type = it.type,
                                         broadcasterType = it.broadcasterType,
-                                        profileImageUrl = it.profileImageUrl,
                                         createdAt = it.createdAt,
                                     )
                                 }
@@ -297,10 +297,10 @@ class FollowedVideosViewModel @Inject constructor(
                         gameSlug = video.gameSlug,
                         gameName = video.gameName,
                         title = video.title,
-                        createdAt = video.uploadDate,
+                        createdAt = video.createdAt,
                         thumbnail = downloadedThumbnail,
                         type = video.type,
-                        duration = video.duration,
+                        duration = video.durationSeconds?.toString(),
                         animatedPreviewURL = video.animatedPreviewURL
                     )
                 )

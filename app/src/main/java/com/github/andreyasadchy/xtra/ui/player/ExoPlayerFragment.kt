@@ -55,6 +55,7 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.player.PlaybackService.CustomHlsPlaylistParserFactory
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
+import com.github.andreyasadchy.xtra.util.prefs
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -90,7 +91,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                 binding.playerControls.playPause.visibility = View.VISIBLE
                             } else {
                                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
-                                if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
+                                if (videoType == STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
                                     binding.playerControls.playPause.visibility = View.GONE
                                 }
                             }
@@ -110,7 +111,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                 binding.playerControls.playPause.visibility = View.VISIBLE
                             } else {
                                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
-                                if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
+                                if (videoType == STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
                                     binding.playerControls.playPause.visibility = View.GONE
                                 }
                             }
@@ -128,7 +129,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                 binding.playerControls.playPause.visibility = View.VISIBLE
                             } else {
                                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
-                                if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
+                                if (videoType == STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
                                     binding.playerControls.playPause.visibility = View.GONE
                                 }
                             }
@@ -165,7 +166,7 @@ class ExoPlayerFragment : PlayerFragment() {
 
                         override fun onIsPlayingChanged(isPlaying: Boolean) {
                             updateProgress()
-                            if (!prefs.getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
+                            if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
                                 requireView().keepScreenOn = isPlaying
                             }
                         }
@@ -173,7 +174,7 @@ class ExoPlayerFragment : PlayerFragment() {
                         override fun onTracksChanged(tracks: Tracks) {
                             if (!tracks.isEmpty && !viewModel.loaded.value) {
                                 viewModel.loaded.value = true
-                                toggleSubtitles(prefs.getBoolean(C.PLAYER_SUBTITLES_ENABLED, false))
+                                toggleSubtitles(requireContext().prefs().getBoolean(C.PLAYER_SUBTITLES_ENABLED, false))
                             }
                             setSubtitlesButton()
                             if (!tracks.isEmpty) {
@@ -272,10 +273,10 @@ class ExoPlayerFragment : PlayerFragment() {
                                 }
                             }
                             if (videoType == STREAM) {
-                                val hideAds = prefs.getBoolean(C.PLAYER_HIDE_ADS, false)
-                                val useProxy = prefs.getBoolean(C.PROXY_MEDIA_PLAYLIST, true)
-                                        && !prefs.getString(C.PROXY_HOST, null).isNullOrBlank()
-                                        && prefs.getString(C.PROXY_PORT, null)?.toIntOrNull() != null
+                                val hideAds = requireContext().prefs().getBoolean(C.PLAYER_HIDE_ADS, false)
+                                val useProxy = requireContext().prefs().getBoolean(C.PROXY_MEDIA_PLAYLIST, true)
+                                        && !requireContext().prefs().getString(C.PROXY_HOST, null).isNullOrBlank()
+                                        && requireContext().prefs().getString(C.PROXY_PORT, null)?.toIntOrNull() != null
                                 if (hideAds || useProxy) {
                                     val playlist = (player?.currentManifest as? HlsManifest)?.mediaPlaylist
                                     val playingAds = playlist?.segments?.lastOrNull()?.let { segment ->
@@ -300,7 +301,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                                     viewLifecycleOwner.lifecycleScope.launch {
                                                         for (i in 0 until 10) {
                                                             delay(10000)
-                                                            if (!viewModel.checkPlaylist(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), playlist)) {
+                                                            if (!viewModel.checkPlaylist(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"), playlist)) {
                                                                 break
                                                             }
                                                         }
@@ -376,7 +377,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                         activeNetwork?.isConnectedOrConnecting == true
                                     }
                                     if (isNetworkAvailable) {
-                                        val skipAccessToken = prefs.getString(C.TOKEN_SKIP_VIDEO_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2
+                                        val skipAccessToken = requireContext().prefs().getString(C.TOKEN_SKIP_VIDEO_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2
                                         when {
                                             skipAccessToken == 1 && viewModel.shouldRetry && responseCode != 0 -> {
                                                 viewModel.shouldRetry = false
@@ -434,7 +435,7 @@ class ExoPlayerFragment : PlayerFragment() {
                         if (viewModel.started && player.currentMediaItem != null) {
                             chatFragment?.startReplayChatLoad()
                         }
-                        if (!prefs.getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
+                        if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
                             requireView().keepScreenOn = player.isPlaying
                         }
                         updateProgress()
@@ -443,7 +444,7 @@ class ExoPlayerFragment : PlayerFragment() {
                             binding.playerControls.playPause.visibility = View.VISIBLE
                         } else {
                             binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
-                            if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
+                            if (videoType == STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
                                 binding.playerControls.playPause.visibility = View.GONE
                             }
                         }
@@ -484,16 +485,16 @@ class ExoPlayerFragment : PlayerFragment() {
                     DefaultDataSource.Factory(
                         requireContext(),
                         viewModel.getDataSourceFactory(
-                            networkLibrary = prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
-                            proxyMultivariantPlaylist = prefs.getBoolean(C.PROXY_MULTIVARIANT_PLAYLIST, false),
-                            proxyMediaPlaylist = prefs.getBoolean(C.PROXY_MEDIA_PLAYLIST, true),
-                            proxyHost = prefs.getString(C.PROXY_HOST, null),
-                            proxyPort = prefs.getString(C.PROXY_PORT, null)?.toIntOrNull(),
-                            proxyUser = prefs.getString(C.PROXY_USER, null),
-                            proxyPassword = prefs.getString(C.PROXY_PASSWORD, null),
+                            networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                            proxyMultivariantPlaylist = requireContext().prefs().getBoolean(C.PROXY_MULTIVARIANT_PLAYLIST, false),
+                            proxyMediaPlaylist = requireContext().prefs().getBoolean(C.PROXY_MEDIA_PLAYLIST, true),
+                            proxyHost = requireContext().prefs().getString(C.PROXY_HOST, null),
+                            proxyPort = requireContext().prefs().getString(C.PROXY_PORT, null)?.toIntOrNull(),
+                            proxyUser = requireContext().prefs().getString(C.PROXY_USER, null),
+                            proxyPassword = requireContext().prefs().getString(C.PROXY_PASSWORD, null),
                             useProxy = { playbackService?.proxyMediaPlaylist == true }
                         ).apply {
-                            prefs.getString(C.PLAYER_STREAM_HEADERS, null)?.let {
+                            requireContext().prefs().getString(C.PLAYER_STREAM_HEADERS, null)?.let {
                                 try {
                                     val json = JSONObject(it)
                                     hashMapOf<String, String>().apply {
@@ -518,21 +519,21 @@ class ExoPlayerFragment : PlayerFragment() {
                         setUri(url?.toUri())
                         setMimeType(MimeTypes.APPLICATION_M3U8)
                         setLiveConfiguration(MediaItem.LiveConfiguration.Builder().apply {
-                            prefs.getString(C.PLAYER_LIVE_MIN_SPEED, "")?.toFloatOrNull()?.let { setMinPlaybackSpeed(it) }
-                            prefs.getString(C.PLAYER_LIVE_MAX_SPEED, "")?.toFloatOrNull()?.let { setMaxPlaybackSpeed(it) }
-                            prefs.getString(C.PLAYER_LIVE_TARGET_OFFSET, "2000")?.toLongOrNull()?.let { setTargetOffsetMs(it) }
+                            requireContext().prefs().getString(C.PLAYER_LIVE_MIN_SPEED, "")?.toFloatOrNull()?.let { setMinPlaybackSpeed(it) }
+                            requireContext().prefs().getString(C.PLAYER_LIVE_MAX_SPEED, "")?.toFloatOrNull()?.let { setMaxPlaybackSpeed(it) }
+                            requireContext().prefs().getString(C.PLAYER_LIVE_TARGET_OFFSET, "2000")?.toLongOrNull()?.let { setTargetOffsetMs(it) }
                         }.build())
                         setMediaMetadata(
                             MediaMetadata.Builder().apply {
                                 setTitle(requireArguments().getString(KEY_TITLE))
                                 setArtist(requireArguments().getString(KEY_CHANNEL_NAME))
-                                setArtworkUri(requireArguments().getString(KEY_CHANNEL_LOGO)?.toUri())
+                                setArtworkUri(requireArguments().getString(KEY_CHANNEL_IMAGE)?.toUri())
                             }.build()
                         )
                     }.build()
                 )
             )
-            player.volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
+            player.volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
             player.setPlaybackSpeed(1f)
             player.prepare()
             player.playWhenReady = true
@@ -557,7 +558,7 @@ class ExoPlayerFragment : PlayerFragment() {
                 HlsMediaSource.Factory(
                     DefaultDataSource.Factory(
                         requireContext(),
-                        viewModel.getDataSourceFactory(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"))
+                        viewModel.getDataSourceFactory(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"))
                     )
                 ).apply {
                     setPlaylistParserFactory(CustomHlsPlaylistParserFactory())
@@ -568,14 +569,14 @@ class ExoPlayerFragment : PlayerFragment() {
                             MediaMetadata.Builder().apply {
                                 setTitle(requireArguments().getString(KEY_TITLE))
                                 setArtist(requireArguments().getString(KEY_CHANNEL_NAME))
-                                setArtworkUri(requireArguments().getString(KEY_CHANNEL_LOGO)?.toUri())
+                                setArtworkUri(requireArguments().getString(KEY_CHANNEL_IMAGE)?.toUri())
                             }.build()
                         )
                     }.build()
                 )
             )
-            player.volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
-            player.setPlaybackSpeed(prefs.getFloat(C.PLAYER_SPEED, 1f))
+            player.volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
+            player.setPlaybackSpeed(requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f))
             player.prepare()
             player.playWhenReady = true
             player.seekTo(position)
@@ -602,7 +603,7 @@ class ExoPlayerFragment : PlayerFragment() {
                 ProgressiveMediaSource.Factory(
                     DefaultDataSource.Factory(
                         requireContext(),
-                        viewModel.getDataSourceFactory(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"))
+                        viewModel.getDataSourceFactory(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"))
                     )
                 ).createMediaSource(
                     MediaItem.Builder().apply {
@@ -611,14 +612,14 @@ class ExoPlayerFragment : PlayerFragment() {
                             MediaMetadata.Builder().apply {
                                 setTitle(requireArguments().getString(KEY_TITLE))
                                 setArtist(requireArguments().getString(KEY_CHANNEL_NAME))
-                                setArtworkUri(requireArguments().getString(KEY_CHANNEL_LOGO)?.toUri())
+                                setArtworkUri(requireArguments().getString(KEY_CHANNEL_IMAGE)?.toUri())
                             }.build()
                         )
                     }.build()
                 )
             )
-            player.volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
-            player.setPlaybackSpeed(prefs.getFloat(C.PLAYER_SPEED, 1f))
+            player.volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
+            player.setPlaybackSpeed(requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f))
             player.prepare()
             player.playWhenReady = true
         }
@@ -653,13 +654,13 @@ class ExoPlayerFragment : PlayerFragment() {
                         MediaMetadata.Builder().apply {
                             setTitle(requireArguments().getString(KEY_TITLE))
                             setArtist(requireArguments().getString(KEY_CHANNEL_NAME))
-                            setArtworkUri(requireArguments().getString(KEY_CHANNEL_LOGO)?.toUri())
+                            setArtworkUri(requireArguments().getString(KEY_CHANNEL_IMAGE)?.toUri())
                         }.build()
                     )
                 }.build()
             )
-            player.volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
-            player.setPlaybackSpeed(prefs.getFloat(C.PLAYER_SPEED, 1f))
+            player.volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
+            player.setPlaybackSpeed(requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f))
             player.prepare()
             player.playWhenReady = true
             player.seekTo(position)
@@ -735,19 +736,19 @@ class ExoPlayerFragment : PlayerFragment() {
     override fun setSubtitlesButton() {
         with(binding.playerControls) {
             val textTracks = player?.currentTracks?.groups?.find { it.type == androidx.media3.common.C.TRACK_TYPE_TEXT }
-            if (textTracks != null && prefs.getBoolean(C.PLAYER_SUBTITLES, false)) {
+            if (textTracks != null && requireContext().prefs().getBoolean(C.PLAYER_SUBTITLES, false)) {
                 subtitles.visibility = View.VISIBLE
                 if (textTracks.isSelected) {
                     subtitles.setImageResource(androidx.media3.ui.R.drawable.exo_ic_subtitle_on)
                     subtitles.setOnClickListener {
                         toggleSubtitles(false)
-                        prefs.edit { putBoolean(C.PLAYER_SUBTITLES_ENABLED, false) }
+                        requireContext().prefs().edit { putBoolean(C.PLAYER_SUBTITLES_ENABLED, false) }
                     }
                 } else {
                     subtitles.setImageResource(androidx.media3.ui.R.drawable.exo_ic_subtitle_off)
                     subtitles.setOnClickListener {
                         toggleSubtitles(true)
-                        prefs.edit { putBoolean(C.PLAYER_SUBTITLES_ENABLED, true) }
+                        requireContext().prefs().edit { putBoolean(C.PLAYER_SUBTITLES_ENABLED, true) }
                     }
                 }
             } else {
@@ -914,8 +915,8 @@ class ExoPlayerFragment : PlayerFragment() {
                     } else {
                         false
                     }
-                    if ((!cellular && prefs.getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") || (cellular && prefs.getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
-                        prefs.edit { putString(C.PLAYER_QUALITY, quality.key) }
+                    if ((!cellular && requireContext().prefs().getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") || (cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
+                        requireContext().prefs().edit { putString(C.PLAYER_QUALITY, quality.key) }
                     }
                 }
             }
@@ -936,13 +937,13 @@ class ExoPlayerFragment : PlayerFragment() {
                     viewModel.quality = AUDIO_ONLY_QUALITY
                     viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
                         player.currentMediaItem?.let { mediaItem ->
-                            if (prefs.getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
+                            if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                 }.build()
                                 binding.playerSurface.visibility = View.GONE
                             }
-                            if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
+                            if (requireContext().prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
                                 quality.value.second?.let {
                                     val position = player.currentPosition
                                     if (viewModel.qualities.containsKey(AUTO_QUALITY)) {
@@ -969,21 +970,21 @@ class ExoPlayerFragment : PlayerFragment() {
     override fun downloadVideo() {
         val totalDuration = (player?.currentManifest as? HlsManifest)?.mediaPlaylist?.durationUs?.div(1000)
         val qualities = viewModel.qualities.filter { !it.value.second.isNullOrBlank() }
-        DownloadDialog.newInstance(
+        DownloadDialog.newVideoInstance(
             id = requireArguments().getString(KEY_VIDEO_ID),
-            title = requireArguments().getString(KEY_TITLE),
-            uploadDate = requireArguments().getString(KEY_UPLOAD_DATE),
-            duration = requireArguments().getString(KEY_DURATION),
-            videoType = requireArguments().getString(KEY_VIDEO_TYPE),
-            animatedPreviewUrl = requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW),
             channelId = requireArguments().getString(KEY_CHANNEL_ID),
             channelLogin = requireArguments().getString(KEY_CHANNEL_LOGIN),
             channelName = requireArguments().getString(KEY_CHANNEL_NAME),
-            channelLogo = requireArguments().getString(KEY_CHANNEL_LOGO),
-            thumbnail = requireArguments().getString(KEY_THUMBNAIL),
+            channelImage = requireArguments().getString(KEY_CHANNEL_IMAGE),
             gameId = requireArguments().getString(KEY_GAME_ID),
             gameSlug = requireArguments().getString(KEY_GAME_SLUG),
             gameName = requireArguments().getString(KEY_GAME_NAME),
+            title = requireArguments().getString(KEY_TITLE),
+            thumbnail = requireArguments().getString(KEY_THUMBNAIL),
+            createdAt = requireArguments().getString(KEY_CREATED_AT),
+            durationSeconds = requireArguments().getInt(KEY_DURATION_SECONDS),
+            type = requireArguments().getString(KEY_VIDEO_TYPE),
+            animatedPreviewUrl = requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW),
             totalDuration = totalDuration,
             currentPosition = getCurrentPosition(),
             qualityKeys = qualities.keys.toTypedArray(),
@@ -1027,23 +1028,23 @@ class ExoPlayerFragment : PlayerFragment() {
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> !useController && isMaximized
                     else -> false
                 }
-                if ((!isInPIPMode && isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO, true))
-                    || (!isInPIPMode && !isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
-                    || (isInPIPMode && isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, false))
-                    || (isInPIPMode && !isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
+                if ((!isInPIPMode && isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true))
+                    || (!isInPIPMode && !isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
+                    || (isInPIPMode && isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, false))
+                    || (isInPIPMode && !isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
                     if (player.playWhenReady && viewModel.quality != AUDIO_ONLY_QUALITY) {
                         viewModel.restoreQuality = true
                         viewModel.previousQuality = viewModel.quality
                         viewModel.quality = AUDIO_ONLY_QUALITY
                         viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
                             player.currentMediaItem?.let { mediaItem ->
-                                if (prefs.getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
+                                if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
                                     player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                         setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                     }.build()
                                     binding.playerSurface.visibility = View.GONE
                                 }
-                                if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
+                                if (requireContext().prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
                                     quality.value.second?.let {
                                         val position = player.currentPosition
                                         if (viewModel.qualities.containsKey(AUTO_QUALITY)) {

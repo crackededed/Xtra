@@ -24,7 +24,7 @@ class FollowedChannelsAdapter(
 ) : PagingDataAdapter<User, FollowedChannelsAdapter.PagingViewHolder>(
     object : DiffUtil.ItemCallback<User>() {
         override fun areItemsTheSame(oldItem: User, newItem: User): Boolean =
-            oldItem.channelId == newItem.channelId
+            oldItem.id == newItem.id
 
         override fun areContentsTheSame(oldItem: User, newItem: User): Boolean = true
     }) {
@@ -49,17 +49,17 @@ class FollowedChannelsAdapter(
                     root.setOnClickListener {
                         fragment.findNavController().navigate(
                             ChannelPagerFragmentDirections.actionGlobalChannelPagerFragment(
-                                channelId = item.channelId,
-                                channelLogin = item.channelLogin,
-                                channelName = item.channelName,
-                                channelLogo = item.channelLogo,
+                                channelId = item.id,
+                                channelLogin = item.login,
+                                channelName = item.name,
+                                channelImage = item.profileImage,
                             )
                         )
                     }
-                    if (item.channelLogo != null) {
+                    if (item.profileImage != null) {
                         userImage.visibility = View.VISIBLE
                         Glide.with(fragment)
-                            .load(item.channelLogo)
+                            .load(item.profileImage)
                             .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .apply {
@@ -71,16 +71,16 @@ class FollowedChannelsAdapter(
                     } else {
                         userImage.visibility = View.GONE
                     }
-                    if (item.channelName != null) {
+                    if (item.name != null) {
                         username.visibility = View.VISIBLE
-                        username.text = if (item.channelLogin != null && !item.channelLogin.equals(item.channelName, true)) {
+                        username.text = if (item.login != null && !item.login.equals(item.name, true)) {
                             when (context.prefs().getString(C.UI_NAME_DISPLAY, "0")) {
-                                "0" -> "${item.channelName}(${item.channelLogin})"
-                                "1" -> item.channelName
-                                else -> item.channelLogin
+                                "0" -> "${item.name}(${item.login})"
+                                "1" -> item.name
+                                else -> item.login
                             }
                         } else {
-                            item.channelName
+                            item.name
                         }
                     } else {
                         username.visibility = View.GONE
@@ -107,12 +107,12 @@ class FollowedChannelsAdapter(
                     } else {
                         userFollowed.visibility = View.GONE
                     }
-                    if (item.followAccount) {
-                        twitchText.visibility = View.VISIBLE
+                    if (item.accountFollow) {
+                        accountText.visibility = View.VISIBLE
                     } else {
-                        twitchText.visibility = View.GONE
+                        accountText.visibility = View.GONE
                     }
-                    if (item.followLocal) {
+                    if (item.localFollow) {
                         localText.visibility = View.VISIBLE
                     } else {
                         localText.visibility = View.GONE

@@ -72,12 +72,12 @@ class SearchGamesDataSource(
         val list = data.edges!!.mapNotNull { item ->
             item.node?.let {
                 Game(
-                    gameId = it.id,
-                    gameSlug = it.slug,
-                    gameName = it.displayName,
-                    boxArtUrl = it.boxArtURL,
-                    viewersCount = it.viewersCount ?: 0,
-                    broadcastersCount = it.broadcastersCount ?: 0,
+                    id = it.id,
+                    slug = it.slug,
+                    name = it.displayName,
+                    boxArtURL = it.boxArtURL,
+                    viewerCount = it.viewersCount ?: 0,
+                    broadcasterCount = it.broadcastersCount ?: 0,
                     tags = it.tags?.map { tag ->
                         Tag(
                             id = tag.id,
@@ -107,11 +107,11 @@ class SearchGamesDataSource(
         val list = data.edges.map { item ->
             item.item.let {
                 Game(
-                    gameId = it.id,
-                    gameSlug = it.slug,
-                    gameName = it.displayName,
-                    boxArtUrl = it.boxArtURL,
-                    viewersCount = it.viewersCount ?: 0,
+                    id = it.id,
+                    slug = it.slug,
+                    name = it.displayName,
+                    boxArtURL = it.boxArtURL,
+                    viewerCount = it.viewersCount ?: 0,
                     tags = it.tags?.map { tag ->
                         Tag(
                             id = tag.id,
@@ -141,9 +141,9 @@ class SearchGamesDataSource(
         )
         val list = response.data.map {
             Game(
-                gameId = it.id,
-                gameName = it.name,
-                boxArtUrl = it.boxArtUrl,
+                id = it.id,
+                name = it.name,
+                boxArtURL = it.boxArtURL,
             )
         }
         offset = response.pagination?.cursor
