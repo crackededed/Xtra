@@ -63,17 +63,17 @@ class FollowedVideosDataSource(
                     channelId = it.owner?.id,
                     channelLogin = it.owner?.login,
                     channelName = it.owner?.displayName,
+                    channelImageURL = it.owner?.profileImageURL,
                     gameId = it.game?.id,
                     gameSlug = it.game?.slug,
                     gameName = it.game?.displayName,
-                    type = it.broadcastType?.toString(),
                     title = it.title,
+                    thumbnailURL = it.previewThumbnailURL,
+                    createdAt = it.createdAt?.toString(),
                     viewCount = it.viewCount,
-                    uploadDate = it.createdAt?.toString(),
-                    duration = it.lengthSeconds?.toString(),
-                    thumbnailUrl = it.previewThumbnailURL,
-                    profileImageUrl = it.owner?.profileImageURL,
-                    animatedPreviewURL = it.animatedPreviewURL
+                    durationSeconds = it.lengthSeconds,
+                    type = it.broadcastType?.toString(),
+                    animatedPreviewURL = it.animatedPreviewURL,
                 )
             }
         }
@@ -102,16 +102,16 @@ class FollowedVideosDataSource(
                     channelId = it.owner?.id,
                     channelLogin = it.owner?.login,
                     channelName = it.owner?.displayName,
+                    channelImageURL = it.owner?.profileImageURL,
                     gameId = it.game?.id,
                     gameSlug = it.game?.slug,
                     gameName = it.game?.displayName,
                     title = it.title,
+                    thumbnailURL = it.previewThumbnailURL,
+                    createdAt = it.publishedAt,
                     viewCount = it.viewCount,
-                    uploadDate = it.publishedAt,
-                    duration = it.lengthSeconds?.toString(),
-                    thumbnailUrl = it.previewThumbnailURL,
-                    profileImageUrl = it.owner?.profileImageURL,
-                    animatedPreviewURL = it.animatedPreviewURL
+                    durationSeconds = it.lengthSeconds,
+                    animatedPreviewURL = it.animatedPreviewURL,
                 )
             }
         }

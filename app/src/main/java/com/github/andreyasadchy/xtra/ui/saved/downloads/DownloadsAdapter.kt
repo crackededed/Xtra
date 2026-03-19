@@ -81,7 +81,7 @@ class DownloadsAdapter(
                                 channelId = item.channelId,
                                 channelLogin = item.channelLogin,
                                 channelName = item.channelName,
-                                channelLogo = item.channelLogo,
+                                channelImage = item.channelLogo,
                                 updateLocal = true
                             )
                         )

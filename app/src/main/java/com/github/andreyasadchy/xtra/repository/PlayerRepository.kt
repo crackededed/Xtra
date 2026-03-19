@@ -1,6 +1,5 @@
 package com.github.andreyasadchy.xtra.repository
 
-import android.net.Uri
 import android.net.http.HttpEngine
 import android.os.Build
 import android.os.ext.SdkExtensions
@@ -86,6 +85,8 @@ class PlayerRepository @Inject constructor(
                 loadStreamPlaybackAccessToken(networkLibrary, gqlHeaders.filterNot { it.key == C.HEADER_TOKEN }, channelLogin, randomDeviceId, xDeviceId, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity)
             } else token
         }
+        val signature = accessToken.first
+        val token = accessToken.second
         "https://usher.ttvnw.net/api/v2/channel/hls/${channelLogin}.m3u8".toUri().buildUpon().apply {
             appendQueryParameter("allow_source", "true")
             appendQueryParameter("allow_audio_only", "true")
@@ -94,9 +95,9 @@ class PlayerRepository @Inject constructor(
             if (supportedCodecs?.contains("av1", true) == true) {
                 appendQueryParameter("platform", "web")
             }
-            accessToken.first?.let { appendQueryParameter("sig", it) }
+            signature?.let { appendQueryParameter("sig", it) }
             supportedCodecs?.let { appendQueryParameter("supported_codecs", it) }
-            accessToken.second?.let { appendQueryParameter("token", it) }
+            token?.let { appendQueryParameter("token", it) }
         }.build().toString()
     }
 
@@ -261,8 +262,10 @@ class PlayerRepository @Inject constructor(
                 it.signature to it.value
             }
         }
+        val signature = accessToken.first
+        val token = accessToken.second
         val backupQualities = mutableListOf<String>()
-        accessToken.second?.let { value ->
+        token?.let { value ->
             val json = try {
                 JSONObject(value)
             } catch (e: JSONException) {
@@ -286,9 +289,9 @@ class PlayerRepository @Inject constructor(
             if (supportedCodecs?.contains("av1", true) == true) {
                 appendQueryParameter("platform", "web")
             }
-            accessToken.first?.let { appendQueryParameter("sig", it) }
+            signature?.let { appendQueryParameter("sig", it) }
             supportedCodecs?.let { appendQueryParameter("supported_codecs", it) }
-            accessToken.second?.let { appendQueryParameter("token", it) }
+            token?.let { appendQueryParameter("token", it) }
         }.build().toString()
         url to backupQualities
     }
@@ -368,7 +371,10 @@ class PlayerRepository @Inject constructor(
                         } else {
                             index.toString()
                         }
-                        val url = "${quality.sourceURL}?sig=${Uri.encode(accessToken?.signature)}&token=${Uri.encode(accessToken?.value)}"
+                        val url = quality.sourceURL.toUri().buildUpon().apply {
+                            appendQueryParameter("sig", accessToken?.signature)
+                            appendQueryParameter("token", accessToken?.value)
+                        }.build().toString()
                         Pair(name, quality.codecs) to url
                     } else null
                 }?.toMap()
@@ -393,7 +399,10 @@ class PlayerRepository @Inject constructor(
                         } else {
                             index.toString()
                         }
-                        val url = "${quality.sourceURL}?sig=${Uri.encode(accessToken?.signature)}&token=${Uri.encode(accessToken?.value)}"
+                        val url = quality.sourceURL.toUri().buildUpon().apply {
+                            appendQueryParameter("sig", accessToken?.signature)
+                            appendQueryParameter("token", accessToken?.value)
+                        }.build().toString()
                         Pair(name, quality.codecs) to url
                     } else null
                 }?.toMap()

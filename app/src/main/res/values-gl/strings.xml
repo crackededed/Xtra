@@ -160,7 +160,6 @@
     <string name="chat_first">Primeira mensaxe no chat</string>
     <string name="chat_reward">Canxeo de puntos da canle</string>
     <string name="always">Sempre</string>
-    <string name="twitch">Twitch</string>
     <string name="local">Local</string>
     <string name="days">d</string>
     <string name="seconds">s</string>
@@ -730,4 +729,5 @@
     <string name="copy_code">Copiar código</string>
     <string name="external_tv_login_message">Para acceder a todas as funcións, necesitas iniciar sesión como dispositivo Android TV.\n\nSegue estes pasos:\n• Copia o código mostrado na pantalla.\n• Preme o botón \"Abrir URL\".\n• Introduce o código e preme \"Activar\".\n• Preme \"Autorizar\".\n• Volve a Xtra e preme \"Seguinte\".</string>
     <string name="activate_notifications_when_following">Activate notifications when following</string>
+    <string name="account">Account</string>
 </resources>	

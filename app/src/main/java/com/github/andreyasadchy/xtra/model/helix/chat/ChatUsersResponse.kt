@@ -12,10 +12,10 @@ class ChatUsersResponse(
     @Serializable
     class User(
         @SerialName("user_id")
-        val channelId: String? = null,
+        val id: String? = null,
         @SerialName("user_login")
-        val channelLogin: String? = null,
+        val login: String? = null,
         @SerialName("user_name")
-        val channelName: String? = null,
+        val displayName: String? = null,
     )
 }

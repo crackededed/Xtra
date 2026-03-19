@@ -40,7 +40,7 @@ class ChannelClipsResponse(
         val viewCount: Int? = null,
         val createdAt: String? = null,
         val thumbnailURL: String? = null,
-        val durationSeconds: Double? = null,
+        val durationSeconds: Int? = null,
     )
 
     @Serializable

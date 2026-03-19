@@ -30,6 +30,7 @@ import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.prefs
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -137,7 +138,7 @@ class MediaPlayerFragment : PlayerFragment() {
                         if (viewModel.started && player.duration != -1) {
                             chatFragment?.startReplayChatLoad()
                         }
-                        if (!prefs.getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
+                        if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
                             requireView().keepScreenOn = player.isPlaying
                         }
                         updateProgress()
@@ -146,7 +147,7 @@ class MediaPlayerFragment : PlayerFragment() {
                             binding.playerControls.playPause.visibility = View.VISIBLE
                         } else {
                             binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
-                            if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
+                            if (videoType == STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
                                 binding.playerControls.playPause.visibility = View.GONE
                             }
                         }
@@ -178,7 +179,7 @@ class MediaPlayerFragment : PlayerFragment() {
                 binding.playerControls.playPause.visibility = View.VISIBLE
             } else {
                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
-                if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
+                if (videoType == STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
                     binding.playerControls.playPause.visibility = View.GONE
                 }
             }
@@ -188,7 +189,7 @@ class MediaPlayerFragment : PlayerFragment() {
                 showController()
             }
             updateProgress()
-            if (!prefs.getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
+            if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
                 requireView().keepScreenOn = isPlaying
             }
         }
@@ -209,15 +210,15 @@ class MediaPlayerFragment : PlayerFragment() {
                     playbackService?.offlineVideoId = null
                     playbackService?.title = requireArguments().getString(KEY_TITLE)
                     playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
-                    playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_LOGO)
+                    playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_IMAGE)
                     val response = viewModel.loadPlaylist(
                         url = url,
-                        networkLibrary = prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
-                        proxyMultivariantPlaylist = prefs.getBoolean(C.PROXY_MULTIVARIANT_PLAYLIST, false),
-                        proxyHost = prefs.getString(C.PROXY_HOST, null),
-                        proxyPort = prefs.getString(C.PROXY_PORT, null)?.toIntOrNull(),
-                        proxyUser = prefs.getString(C.PROXY_USER, null),
-                        proxyPassword = prefs.getString(C.PROXY_PASSWORD, null),
+                        networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                        proxyMultivariantPlaylist = requireContext().prefs().getBoolean(C.PROXY_MULTIVARIANT_PLAYLIST, false),
+                        proxyHost = requireContext().prefs().getString(C.PROXY_HOST, null),
+                        proxyPort = requireContext().prefs().getString(C.PROXY_PORT, null)?.toIntOrNull(),
+                        proxyUser = requireContext().prefs().getString(C.PROXY_USER, null),
+                        proxyPassword = requireContext().prefs().getString(C.PROXY_PASSWORD, null),
                     )
                     val playlist = response?.first
                     val responseCode = response?.second
@@ -315,7 +316,7 @@ class MediaPlayerFragment : PlayerFragment() {
                                 quality.value.second?.let {
                                     player.reset()
                                     player.setDataSource(it)
-                                    val volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
+                                    val volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
                                     player.setVolume(volume, volume)
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                                         val params = PlaybackParams()
@@ -352,8 +353,8 @@ class MediaPlayerFragment : PlayerFragment() {
                         playbackService?.offlineVideoId = null
                         playbackService?.title = requireArguments().getString(KEY_TITLE)
                         playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
-                        playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_LOGO)
-                        val response = viewModel.loadPlaylist(url, prefs.getString(C.NETWORK_LIBRARY, "OkHttp"))
+                        playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_IMAGE)
+                        val response = viewModel.loadPlaylist(url, requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"))
                         val playlist = response?.first
                         val responseCode = response?.second
                         val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -367,7 +368,7 @@ class MediaPlayerFragment : PlayerFragment() {
                             activeNetwork?.isConnectedOrConnecting == true
                         }
                         if (responseCode != null && isNetworkAvailable) {
-                            val skipAccessToken = prefs.getString(C.TOKEN_SKIP_VIDEO_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2
+                            val skipAccessToken = requireContext().prefs().getString(C.TOKEN_SKIP_VIDEO_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2
                             when {
                                 skipAccessToken == 1 && viewModel.shouldRetry && responseCode != 0 -> {
                                     viewModel.shouldRetry = false
@@ -505,11 +506,11 @@ class MediaPlayerFragment : PlayerFragment() {
                                     quality.value.second?.let {
                                         player.reset()
                                         player.setDataSource(it)
-                                        val volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
+                                        val volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
                                         player.setVolume(volume, volume)
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                                             val params = PlaybackParams()
-                                            params.speed = prefs.getFloat(C.PLAYER_SPEED, 1f)
+                                            params.speed = requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f)
                                             player.playbackParams = params
                                         }
                                         playbackService?.seekPosition = position
@@ -535,14 +536,14 @@ class MediaPlayerFragment : PlayerFragment() {
                     playbackService?.offlineVideoId = null
                     playbackService?.title = requireArguments().getString(KEY_TITLE)
                     playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
-                    playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_LOGO)
+                    playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_IMAGE)
                     player.reset()
                     player.setDataSource(url)
-                    val volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
+                    val volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
                     player.setVolume(volume, volume)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         val params = PlaybackParams()
-                        params.speed = prefs.getFloat(C.PLAYER_SPEED, 1f)
+                        params.speed = requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f)
                         player.playbackParams = params
                     }
                     playbackService?.seekPosition = position
@@ -570,14 +571,14 @@ class MediaPlayerFragment : PlayerFragment() {
                 playbackService?.offlineVideoId = null
                 playbackService?.title = requireArguments().getString(KEY_TITLE)
                 playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
-                playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_LOGO)
+                playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_IMAGE)
                 player.reset()
                 player.setDataSource(url)
-                val volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
+                val volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
                 player.setVolume(volume, volume)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     val params = PlaybackParams()
-                    params.speed = prefs.getFloat(C.PLAYER_SPEED, 1f)
+                    params.speed = requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f)
                     player.playbackParams = params
                 }
                 player.prepareAsync()
@@ -609,14 +610,14 @@ class MediaPlayerFragment : PlayerFragment() {
                 playbackService?.offlineVideoId = newId
                 playbackService?.title = requireArguments().getString(KEY_TITLE)
                 playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
-                playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_LOGO)
+                playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_IMAGE)
                 player.reset()
                 player.setDataSource(requireContext(), url.toUri())
-                val volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
+                val volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
                 player.setVolume(volume, volume)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     val params = PlaybackParams()
-                    params.speed = prefs.getFloat(C.PLAYER_SPEED, 1f)
+                    params.speed = requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f)
                     player.playbackParams = params
                 }
                 playbackService?.seekPosition = position
@@ -632,11 +633,11 @@ class MediaPlayerFragment : PlayerFragment() {
         return if (videoType == STREAM) {
             1f
         } else {
-            prefs.getFloat(C.PLAYER_SPEED, 1f)
+            requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f)
         }
     }
 
-    override fun getCurrentVolume(): Float = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
+    override fun getCurrentVolume(): Float = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
 
     override fun playPause() {
         player?.let { player ->
@@ -652,7 +653,7 @@ class MediaPlayerFragment : PlayerFragment() {
 
     override fun rewind() {
         player?.let { player ->
-            val rewindMs = prefs.getString(C.PLAYER_REWIND, "10000")?.toLongOrNull() ?: 10000
+            val rewindMs = requireContext().prefs().getString(C.PLAYER_REWIND, "10000")?.toLongOrNull() ?: 10000
             val position = player.currentPosition - rewindMs
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
@@ -664,7 +665,7 @@ class MediaPlayerFragment : PlayerFragment() {
 
     override fun fastForward() {
         player?.let { player ->
-            val fastForwardMs = prefs.getString(C.PLAYER_FORWARD, "10000")?.toLongOrNull() ?: 10000
+            val fastForwardMs = requireContext().prefs().getString(C.PLAYER_FORWARD, "10000")?.toLongOrNull() ?: 10000
             val position = player.currentPosition + fastForwardMs
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
@@ -781,8 +782,8 @@ class MediaPlayerFragment : PlayerFragment() {
                 } else {
                     false
                 }
-                if ((!cellular && prefs.getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") || (cellular && prefs.getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
-                    prefs.edit { putString(C.PLAYER_QUALITY, quality.key) }
+                if ((!cellular && requireContext().prefs().getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") || (cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
+                    requireContext().prefs().edit { putString(C.PLAYER_QUALITY, quality.key) }
                 }
             }
         }
@@ -797,11 +798,11 @@ class MediaPlayerFragment : PlayerFragment() {
                     viewModel.previousQuality = viewModel.quality
                     viewModel.quality = AUDIO_ONLY_QUALITY
                     viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
-                        if (prefs.getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
+                        if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
                             player.setDisplay(null)
                             binding.playerSurface.visibility = View.GONE
                         }
-                        if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
+                        if (requireContext().prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
                             quality.value.second?.let {
                                 val position = player.currentPosition.toLong()
                                 player.reset()
@@ -837,21 +838,21 @@ class MediaPlayerFragment : PlayerFragment() {
     override fun downloadVideo() {
         val totalDuration = player?.duration?.toLong()
         val qualities = viewModel.qualities.filter { !it.value.second.isNullOrBlank() }
-        DownloadDialog.newInstance(
+        DownloadDialog.newVideoInstance(
             id = requireArguments().getString(KEY_VIDEO_ID),
-            title = requireArguments().getString(KEY_TITLE),
-            uploadDate = requireArguments().getString(KEY_UPLOAD_DATE),
-            duration = requireArguments().getString(KEY_DURATION),
-            videoType = requireArguments().getString(KEY_VIDEO_TYPE),
-            animatedPreviewUrl = requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW),
             channelId = requireArguments().getString(KEY_CHANNEL_ID),
             channelLogin = requireArguments().getString(KEY_CHANNEL_LOGIN),
             channelName = requireArguments().getString(KEY_CHANNEL_NAME),
-            channelLogo = requireArguments().getString(KEY_CHANNEL_LOGO),
-            thumbnail = requireArguments().getString(KEY_THUMBNAIL),
+            channelImage = requireArguments().getString(KEY_CHANNEL_IMAGE),
             gameId = requireArguments().getString(KEY_GAME_ID),
             gameSlug = requireArguments().getString(KEY_GAME_SLUG),
             gameName = requireArguments().getString(KEY_GAME_NAME),
+            title = requireArguments().getString(KEY_TITLE),
+            thumbnail = requireArguments().getString(KEY_THUMBNAIL),
+            createdAt = requireArguments().getString(KEY_CREATED_AT),
+            durationSeconds = requireArguments().getInt(KEY_DURATION_SECONDS),
+            type = requireArguments().getString(KEY_VIDEO_TYPE),
+            animatedPreviewUrl = requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW),
             totalDuration = totalDuration,
             currentPosition = getCurrentPosition(),
             qualityKeys = qualities.keys.toTypedArray(),
@@ -892,20 +893,20 @@ class MediaPlayerFragment : PlayerFragment() {
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> !useController && isMaximized
                     else -> false
                 }
-                if ((!isInPIPMode && isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO, true))
-                    || (!isInPIPMode && !isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
-                    || (isInPIPMode && isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, false))
-                    || (isInPIPMode && !isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
+                if ((!isInPIPMode && isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true))
+                    || (!isInPIPMode && !isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
+                    || (isInPIPMode && isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, false))
+                    || (isInPIPMode && !isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
                     if (player.isPlaying && viewModel.quality != AUDIO_ONLY_QUALITY) {
                         viewModel.restoreQuality = true
                         viewModel.previousQuality = viewModel.quality
                         viewModel.quality = AUDIO_ONLY_QUALITY
                         viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
-                            if (prefs.getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
+                            if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
                                 player.setDisplay(null)
                                 binding.playerSurface.visibility = View.GONE
                             }
-                            if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
+                            if (requireContext().prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
                                 quality.value.second?.let {
                                     val position = player.currentPosition.toLong()
                                     player.reset()

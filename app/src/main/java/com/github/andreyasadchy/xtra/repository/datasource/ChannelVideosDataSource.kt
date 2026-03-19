@@ -8,6 +8,7 @@ import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 
 class ChannelVideosDataSource(
     private val channelId: String?,
@@ -78,17 +79,17 @@ class ChannelVideosDataSource(
                     channelId = channelId,
                     channelLogin = data.login,
                     channelName = data.displayName,
+                    channelImageURL = data.profileImageURL,
                     gameId = it.game?.id,
                     gameSlug = it.game?.slug,
                     gameName = it.game?.displayName,
-                    type = it.broadcastType?.toString(),
                     title = it.title,
+                    thumbnailURL = it.previewThumbnailURL,
+                    createdAt = it.createdAt?.toString(),
                     viewCount = it.viewCount,
-                    uploadDate = it.createdAt?.toString(),
-                    duration = it.lengthSeconds?.toString(),
-                    thumbnailUrl = it.previewThumbnailURL,
-                    profileImageUrl = data.profileImageURL,
-                    animatedPreviewURL = it.animatedPreviewURL
+                    durationSeconds = it.lengthSeconds,
+                    type = it.broadcastType?.toString(),
+                    animatedPreviewURL = it.animatedPreviewURL,
                 )
             }
         }
@@ -117,16 +118,16 @@ class ChannelVideosDataSource(
                     channelId = it.owner?.id,
                     channelLogin = it.owner?.login,
                     channelName = it.owner?.displayName,
+                    channelImageURL = it.owner?.profileImageURL,
                     gameId = it.game?.id,
                     gameSlug = it.game?.slug,
                     gameName = it.game?.displayName,
                     title = it.title,
+                    thumbnailURL = it.previewThumbnailURL,
+                    createdAt = it.publishedAt,
                     viewCount = it.viewCount,
-                    uploadDate = it.publishedAt,
-                    duration = it.lengthSeconds?.toString(),
-                    thumbnailUrl = it.previewThumbnailURL,
-                    profileImageUrl = it.owner?.profileImageURL,
-                    animatedPreviewURL = it.animatedPreviewURL
+                    durationSeconds = it.lengthSeconds,
+                    animatedPreviewURL = it.animatedPreviewURL,
                 )
             }
         }
@@ -159,10 +160,10 @@ class ChannelVideosDataSource(
                 channelLogin = it.channelLogin,
                 channelName = it.channelName,
                 title = it.title,
+                thumbnailURL = it.thumbnailURL,
+                createdAt = it.createdAt,
                 viewCount = it.viewCount,
-                uploadDate = it.uploadDate,
-                duration = it.duration,
-                thumbnailUrl = it.thumbnailUrl,
+                durationSeconds = it.duration?.let { duration -> TwitchApiHelper.getDuration(duration) },
             )
         }
         offset = response.pagination?.cursor

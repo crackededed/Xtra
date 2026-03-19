@@ -1738,7 +1738,7 @@ class ChatViewModel @Inject constructor(
                                     networkLibrary = networkLibrary,
                                     headers = helixHeaders,
                                     logins = listOf(splits[1])
-                                ).data.firstOrNull()?.channelId
+                                ).data.firstOrNull()?.id
                                 helixRepository.banUser(networkLibrary, helixHeaders, channelId, accountId, targetId,
                                     reason = if (splits.size >= 3) splits[2] else null
                                 )
@@ -1768,7 +1768,7 @@ class ChatViewModel @Inject constructor(
                                     networkLibrary = networkLibrary,
                                     headers = helixHeaders,
                                     logins = listOf(splits[1])
-                                ).data.firstOrNull()?.channelId
+                                ).data.firstOrNull()?.id
                                 helixRepository.unbanUser(networkLibrary, helixHeaders, channelId, accountId, targetId)
                             } else null
                         }?.let {
@@ -1975,7 +1975,7 @@ class ChatViewModel @Inject constructor(
                                     networkLibrary = networkLibrary,
                                     headers = helixHeaders,
                                     logins = listOf(splits[1])
-                                ).data.firstOrNull()?.channelId
+                                ).data.firstOrNull()?.id
                                 helixRepository.addModerator(networkLibrary, helixHeaders, channelId, targetId)
                             } else null
                         }?.let {
@@ -2003,7 +2003,7 @@ class ChatViewModel @Inject constructor(
                                     networkLibrary = networkLibrary,
                                     headers = helixHeaders,
                                     logins = listOf(splits[1])
-                                ).data.firstOrNull()?.channelId
+                                ).data.firstOrNull()?.id
                                 helixRepository.removeModerator(networkLibrary, helixHeaders, channelId, targetId)
                             } else null
                         }?.let {
@@ -2045,7 +2045,7 @@ class ChatViewModel @Inject constructor(
                                     networkLibrary = networkLibrary,
                                     headers = helixHeaders,
                                     logins = listOf(splits[1])
-                                ).data.firstOrNull()?.channelId
+                                ).data.firstOrNull()?.id
                             }
                             graphQLRepository.startRaid(networkLibrary, gqlHeaders, channelId, targetId).also { response ->
                                 if (enableIntegrity && integrity.value == null) {
@@ -2061,7 +2061,7 @@ class ChatViewModel @Inject constructor(
                                     networkLibrary = networkLibrary,
                                     headers = helixHeaders,
                                     logins = listOf(splits[1])
-                                ).data.firstOrNull()?.channelId
+                                ).data.firstOrNull()?.id
                                 helixRepository.startRaid(networkLibrary, helixHeaders, channelId, targetId)
                             } else null
                         }?.let {
@@ -2183,7 +2183,7 @@ class ChatViewModel @Inject constructor(
                                     networkLibrary = networkLibrary,
                                     headers = helixHeaders,
                                     logins = listOf(splits[1])
-                                ).data.firstOrNull()?.channelId
+                                ).data.firstOrNull()?.id
                                 helixRepository.banUser(networkLibrary, helixHeaders, channelId, accountId, targetId,
                                     duration = if (splits.size >= 3) splits[2] else "600",
                                     reason = if (splits.size >= 4) splits[3] else null
@@ -2214,7 +2214,7 @@ class ChatViewModel @Inject constructor(
                                     networkLibrary = networkLibrary,
                                     headers = helixHeaders,
                                     logins = listOf(splits[1])
-                                ).data.firstOrNull()?.channelId
+                                ).data.firstOrNull()?.id
                                 helixRepository.unbanUser(networkLibrary, helixHeaders, channelId, accountId, targetId)
                             } else null
                         }?.let {
@@ -2268,7 +2268,7 @@ class ChatViewModel @Inject constructor(
                                     networkLibrary = networkLibrary,
                                     headers = helixHeaders,
                                     logins = listOf(splits[1])
-                                ).data.firstOrNull()?.channelId
+                                ).data.firstOrNull()?.id
                                 helixRepository.addVip(networkLibrary, helixHeaders, channelId, targetId)
                             } else null
                         }?.let {
@@ -2296,7 +2296,7 @@ class ChatViewModel @Inject constructor(
                                     networkLibrary = networkLibrary,
                                     headers = helixHeaders,
                                     logins = listOf(splits[1])
-                                ).data.firstOrNull()?.channelId
+                                ).data.firstOrNull()?.id
                                 helixRepository.removeVip(networkLibrary, helixHeaders, channelId, targetId)
                             } else null
                         }?.let {
@@ -2328,7 +2328,7 @@ class ChatViewModel @Inject constructor(
                                 networkLibrary = networkLibrary,
                                 headers = helixHeaders,
                                 logins = listOf(splits[1])
-                            ).data.firstOrNull()?.channelId
+                            ).data.firstOrNull()?.id
                             helixRepository.sendWhisper(networkLibrary, helixHeaders, accountId, targetId, splits[2])?.let {
                                 onMessage(ChatMessage(systemMsg = it))
                             }

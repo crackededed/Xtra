@@ -7,5 +7,4 @@ import kotlinx.parcelize.Parcelize
 class Tag(
     val id: String? = null,
     val name: String? = null,
-    val scope: String? = null,
 ) : Parcelable

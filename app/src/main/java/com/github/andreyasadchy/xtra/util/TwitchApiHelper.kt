@@ -80,15 +80,11 @@ object TwitchApiHelper {
         }
     }
 
-    fun getDuration(duration: String): Long? {
-        return duration.toLongOrNull() ?: try {
-            val h = duration.substringBefore("h", "0").takeLast(2).filter { it.isDigit() }.toInt()
-            val m = duration.substringBefore("m", "0").takeLast(2).filter { it.isDigit() }.toInt()
-            val s = duration.substringBefore("s", "0").takeLast(2).filter { it.isDigit() }.toInt()
-            ((h * 3600) + (m * 60) + s).toLong()
-        } catch (e: Exception) {
-            null
-        }
+    fun getDuration(duration: String): Int {
+        val h = duration.substringBefore("h", "0").takeLastWhile { it.isDigit() }.toIntOrNull() ?: 0
+        val m = duration.substringBefore("m", "0").takeLastWhile { it.isDigit() }.toIntOrNull() ?: 0
+        val s = duration.substringBefore("s", "0").takeLastWhile { it.isDigit() }.toIntOrNull() ?: 0
+        return (h * 3600) + (m * 60) + s
     }
 
     fun getDurationFromSeconds(context: Context, input: String?, text: Boolean = true): String? {

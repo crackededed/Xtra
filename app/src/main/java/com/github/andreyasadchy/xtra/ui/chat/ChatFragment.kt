@@ -435,7 +435,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                                         channelId = raid.targetId,
                                                         channelLogin = raid.targetLogin,
                                                         channelName = raid.targetName,
-                                                        profileImageUrl = raid.targetProfileImage,
+                                                        channelImageURL = raid.targetImageURL,
                                                     )
                                                 )
                                             }
@@ -446,7 +446,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                             raidLayout.setOnClickListener { viewModel.raidClicked.value = raid }
                                             requireContext().imageLoader.enqueue(
                                                 ImageRequest.Builder(requireContext()).apply {
-                                                    data(raid.targetLogo)
+                                                    data(raid.targetImage)
                                                     if (requireContext().prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
                                                         transformations(CircleCropTransformation())
                                                     }
@@ -487,7 +487,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                             channelId = it.targetId,
                                             channelLogin = it.targetLogin,
                                             channelName = it.targetName,
-                                            profileImageUrl = it.targetProfileImage,
+                                            channelImageURL = it.targetImageURL,
                                         )
                                     )
                                     viewModel.raidClicked.value = null
@@ -1033,13 +1033,13 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
         binding.editText.setText(message)
     }
 
-    override fun onViewProfileClicked(id: String?, login: String?, name: String?, channelLogo: String?) {
+    override fun onViewProfileClicked(id: String?, login: String?, name: String?, channelImage: String?) {
         findNavController().navigate(
             ChannelPagerFragmentDirections.actionGlobalChannelPagerFragment(
                 channelId = id,
                 channelLogin = login,
                 channelName = name,
-                channelLogo = channelLogo
+                channelImage = channelImage
             )
         )
         (parentFragment as? PlayerFragment)?.minimize()

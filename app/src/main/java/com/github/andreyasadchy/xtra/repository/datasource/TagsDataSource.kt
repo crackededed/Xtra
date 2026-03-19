@@ -26,7 +26,6 @@ class TagsDataSource(
                         Tag(
                             id = it.id,
                             name = it.localizedName,
-                            scope = it.scope
                         )
                     }
                 } else {
