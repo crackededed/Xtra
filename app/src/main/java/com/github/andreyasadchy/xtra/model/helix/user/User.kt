@@ -5,17 +5,15 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 class User(
-    @SerialName("id")
-    val channelId: String? = null,
-    @SerialName("login")
-    val channelLogin: String? = null,
+    val id: String? = null,
+    val login: String? = null,
     @SerialName("display_name")
-    val channelName: String? = null,
+    val displayName: String? = null,
     val type: String? = null,
     @SerialName("broadcaster_type")
     val broadcasterType: String? = null,
     @SerialName("profile_image_url")
-    val profileImageUrl: String? = null,
+    val profileImageURL: String? = null,
     @SerialName("created_at")
     val createdAt: String? = null,
 )

@@ -33,14 +33,14 @@ class TeamMembersDataSource(
                             channelId = it.id,
                             channelLogin = it.login,
                             channelName = it.displayName,
+                            channelImageURL = it.profileImageURL,
                             gameId = it.stream?.game?.id,
                             gameSlug = it.stream?.game?.slug,
                             gameName = it.stream?.game?.displayName,
                             title = it.stream?.broadcaster?.broadcastSettings?.title,
+                            createdAt = it.stream?.createdAt?.toString(),
                             viewerCount = it.stream?.viewersCount,
-                            startedAt = it.stream?.createdAt?.toString(),
-                            profileImageUrl = it.profileImageURL,
-                            tags = it.stream?.freeformTags?.mapNotNull { tag -> tag.name }
+                            tags = it.stream?.freeformTags?.mapNotNull { tag -> tag.name },
                         )
                     }
                 } ?: emptyList()
@@ -65,14 +65,14 @@ class TeamMembersDataSource(
                                     channelId = it.id,
                                     channelLogin = it.login,
                                     channelName = it.displayName,
+                                    channelImageURL = it.profileImageURL,
                                     gameId = it.stream?.game?.id,
                                     gameSlug = it.stream?.game?.slug,
                                     gameName = it.stream?.game?.displayName,
                                     title = it.stream?.broadcaster?.broadcastSettings?.title,
+                                    createdAt = it.stream?.createdAt?.toString(),
                                     viewerCount = it.stream?.viewersCount,
-                                    startedAt = it.stream?.createdAt?.toString(),
-                                    profileImageUrl = it.profileImageURL,
-                                    tags = it.stream?.freeformTags?.mapNotNull { tag -> tag.name }
+                                    tags = it.stream?.freeformTags?.mapNotNull { tag -> tag.name },
                                 )
                             } else null
                         }
@@ -102,14 +102,14 @@ class TeamMembersDataSource(
                                 channelId = it.id,
                                 channelLogin = it.login,
                                 channelName = it.displayName,
+                                channelImageURL = it.profileImageURL,
                                 gameId = it.stream?.game?.id,
                                 gameSlug = it.stream?.game?.slug,
                                 gameName = it.stream?.game?.displayName,
                                 title = it.stream?.broadcaster?.broadcastSettings?.title,
+                                createdAt = it.stream?.createdAt?.toString(),
                                 viewerCount = it.stream?.viewersCount,
-                                startedAt = it.stream?.createdAt?.toString(),
-                                profileImageUrl = it.profileImageURL,
-                                tags = it.stream?.freeformTags?.mapNotNull { tag -> tag.name }
+                                tags = it.stream?.freeformTags?.mapNotNull { tag -> tag.name },
                             )
                         } else null
                     }

@@ -89,22 +89,22 @@ class GameClipsDataSource(
                     channelId = it.broadcaster?.id,
                     channelLogin = it.broadcaster?.login,
                     channelName = it.broadcaster?.displayName,
-                    videoId = it.video?.id,
-                    vodOffset = if (it.videoOffsetSeconds != null && it.durationSeconds != null) {
-                        max(it.videoOffsetSeconds - it.durationSeconds, 0)
-                    } else {
-                        it.videoOffsetSeconds
-                    },
+                    channelImageURL = it.broadcaster?.profileImageURL,
                     gameId = gameId,
                     gameSlug = gameSlug,
                     gameName = gameName,
                     title = it.title,
+                    thumbnailURL = it.thumbnailURL,
+                    createdAt = it.createdAt?.toString(),
                     viewCount = it.viewCount,
-                    uploadDate = it.createdAt?.toString(),
-                    duration = it.durationSeconds?.toDouble(),
-                    thumbnailUrl = it.thumbnailURL,
-                    profileImageUrl = it.broadcaster?.profileImageURL,
-                    videoAnimatedPreviewURL = it.video?.animatedPreviewURL
+                    durationSeconds = it.durationSeconds,
+                    videoId = it.video?.id,
+                    videoOffsetSeconds = if (it.videoOffsetSeconds != null && it.durationSeconds != null) {
+                        max(it.videoOffsetSeconds - it.durationSeconds, 0)
+                    } else {
+                        it.videoOffsetSeconds
+                    },
+                    videoAnimatedPreviewURL = it.video?.animatedPreviewURL,
                 )
             }
         }
@@ -133,15 +133,15 @@ class GameClipsDataSource(
                     channelId = it.broadcaster?.id,
                     channelLogin = it.broadcaster?.login,
                     channelName = it.broadcaster?.displayName,
+                    channelImageURL = it.broadcaster?.profileImageURL,
                     gameId = gameId,
                     gameSlug = gameSlug,
                     gameName = gameName,
                     title = it.title,
+                    thumbnailURL = it.thumbnailURL,
+                    createdAt = it.createdAt,
                     viewCount = it.viewCount,
-                    uploadDate = it.createdAt,
-                    duration = it.durationSeconds,
-                    thumbnailUrl = it.thumbnailURL,
-                    profileImageUrl = it.broadcaster?.profileImageURL,
+                    durationSeconds = it.durationSeconds,
                 )
             }
         }
@@ -175,28 +175,28 @@ class GameClipsDataSource(
         }
         val list = response.data.map {
             val user = it.channelId?.let { id ->
-                users.find { user -> user.channelId == id }
+                users.find { user -> user.id == id }
             }
             Clip(
                 id = it.id,
                 channelId = it.channelId,
-                channelLogin = user?.channelLogin,
+                channelLogin = user?.login,
                 channelName = it.channelName,
-                videoId = it.videoId,
-                vodOffset = if (it.vodOffset != null && it.duration != null) {
-                    max(it.vodOffset - it.duration.toInt(), 0)
-                } else {
-                    it.vodOffset
-                },
+                channelImageURL = user?.profileImageURL,
                 gameId = gameId,
                 gameSlug = gameSlug,
                 gameName = gameName,
                 title = it.title,
+                thumbnailURL = it.thumbnailURL,
+                createdAt = it.createdAt,
                 viewCount = it.viewCount,
-                uploadDate = it.createdAt,
-                duration = it.duration,
-                thumbnailUrl = it.thumbnailUrl,
-                profileImageUrl = user?.profileImageUrl,
+                durationSeconds = it.duration?.toInt(),
+                videoId = it.videoId,
+                videoOffsetSeconds = if (it.vodOffset != null && it.duration != null) {
+                    max(it.vodOffset - it.duration.toInt(), 0)
+                } else {
+                    it.vodOffset
+                },
             )
         }
         offset = response.pagination?.cursor

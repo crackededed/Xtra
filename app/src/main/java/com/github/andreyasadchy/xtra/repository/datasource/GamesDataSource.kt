@@ -65,12 +65,12 @@ class GamesDataSource(
         val list = items.mapNotNull { item ->
             item?.node?.let {
                 Game(
-                    gameId = it.id,
-                    gameSlug = it.slug,
-                    gameName = it.displayName,
-                    boxArtUrl = it.boxArtURL,
-                    viewersCount = it.viewersCount,
-                    broadcastersCount = it.broadcastersCount,
+                    id = it.id,
+                    slug = it.slug,
+                    name = it.displayName,
+                    boxArtURL = it.boxArtURL,
+                    viewerCount = it.viewersCount,
+                    broadcasterCount = it.broadcastersCount,
                     tags = it.tags?.map { tag ->
                         Tag(
                             id = tag.id,
@@ -101,11 +101,11 @@ class GamesDataSource(
         val list = items.map { item ->
             item.node.let {
                 Game(
-                    gameId = it.id,
-                    gameSlug = it.slug,
-                    gameName = it.displayName,
-                    boxArtUrl = it.avatarURL,
-                    viewersCount = it.viewersCount,
+                    id = it.id,
+                    slug = it.slug,
+                    name = it.displayName,
+                    boxArtURL = it.avatarURL,
+                    viewerCount = it.viewersCount,
                     tags = it.tags?.map { tag ->
                         Tag(
                             id = tag.id,
@@ -135,9 +135,9 @@ class GamesDataSource(
         )
         val list = response.data.map {
             Game(
-                gameId = it.id,
-                gameName = it.name,
-                boxArtUrl = it.boxArtUrl,
+                id = it.id,
+                name = it.name,
+                boxArtURL = it.boxArtURL,
             )
         }
         offset = response.pagination?.cursor

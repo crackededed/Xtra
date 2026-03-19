@@ -375,14 +375,14 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                     }.build()
                 )
             }
-            if (game?.gameName != null && game.gameName != args.gameName) {
+            if (game?.name != null && game.name != args.gameName) {
                 gameLayout.visibility = View.VISIBLE
                 gameName.visibility = View.VISIBLE
-                gameName.text = game.gameName
+                gameName.text = game.name
             }
-            if (game?.viewersCount != null) {
+            if (game?.viewerCount != null) {
                 viewers.visibility = View.VISIBLE
-                val count = game.viewersCount ?: 0
+                val count = game.viewerCount ?: 0
                 viewers.text = resources.getQuantityString(
                     R.plurals.viewers,
                     count,
@@ -391,9 +391,9 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
             } else {
                 viewers.visibility = View.GONE
             }
-            if (game?.broadcastersCount != null && requireContext().prefs().getBoolean(C.UI_BROADCASTERSCOUNT, true)) {
+            if (game?.broadcasterCount != null && requireContext().prefs().getBoolean(C.UI_BROADCASTERSCOUNT, true)) {
                 broadcastersCount.visibility = View.VISIBLE
-                val count = game.broadcastersCount ?: 0
+                val count = game.broadcasterCount ?: 0
                 broadcastersCount.text = resources.getQuantityString(
                     R.plurals.broadcasters,
                     count,
@@ -402,9 +402,9 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
             } else {
                 broadcastersCount.visibility = View.GONE
             }
-            if (game?.followersCount != null) {
+            if (game?.followerCount != null) {
                 followers.visibility = View.VISIBLE
-                val count = game.followersCount
+                val count = game.followerCount
                 followers.text = resources.getQuantityString(
                     R.plurals.followers,
                     count,

@@ -70,15 +70,15 @@ class SearchStreamsDataSource(
                     channelId = it.broadcaster?.id,
                     channelLogin = it.broadcaster?.login,
                     channelName = it.broadcaster?.displayName,
+                    channelImageURL = it.broadcaster?.profileImageURL,
                     gameId = it.game?.id,
                     gameSlug = it.game?.slug,
                     gameName = it.game?.displayName,
                     title = it.broadcaster?.broadcastSettings?.title,
+                    thumbnailURL = it.previewImageURL,
+                    createdAt = it.createdAt?.toString(),
                     viewerCount = it.viewersCount,
-                    startedAt = it.createdAt?.toString(),
-                    thumbnailUrl = it.previewImageURL,
-                    profileImageUrl = it.broadcaster?.profileImageURL,
-                    tags = it.freeformTags?.mapNotNull { tag -> tag.name }
+                    tags = it.freeformTags?.mapNotNull { tag -> tag.name },
                 )
             }
         }
@@ -105,15 +105,15 @@ class SearchStreamsDataSource(
         val list = response.data.mapNotNull {
             if (it.isLive == true) {
                 Stream(
-                    channelId = it.channelId,
-                    channelLogin = it.channelLogin,
-                    channelName = it.channelName,
+                    channelId = it.id,
+                    channelLogin = it.login,
+                    channelName = it.displayName,
+                    channelImageURL = it.profileImageURL,
                     gameId = it.gameId,
                     gameName = it.gameName,
                     title = it.title,
-                    startedAt = it.startedAt,
-                    profileImageUrl = it.profileImageUrl,
-                    tags = it.tags
+                    createdAt = it.startedAt,
+                    tags = it.tags,
                 )
             } else null
         }

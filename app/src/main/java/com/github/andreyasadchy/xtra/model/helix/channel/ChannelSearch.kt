@@ -5,14 +5,13 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 class ChannelSearch(
-    @SerialName("id")
-    val channelId: String? = null,
+    val id: String? = null,
     @SerialName("broadcaster_login")
-    val channelLogin: String? = null,
+    val login: String? = null,
     @SerialName("display_name")
-    val channelName: String? = null,
+    val displayName: String? = null,
     @SerialName("thumbnail_url")
-    val profileImageUrl: String? = null,
+    val profileImageURL: String? = null,
     @SerialName("is_live")
     val isLive: Boolean? = null,
     @SerialName("game_id")

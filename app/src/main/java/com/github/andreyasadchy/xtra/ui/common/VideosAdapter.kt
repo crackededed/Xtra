@@ -44,9 +44,9 @@ class VideosAdapter(
 
         override fun areContentsTheSame(oldItem: Video, newItem: Video): Boolean =
             oldItem.viewCount == newItem.viewCount &&
-                    oldItem.thumbnailUrl == newItem.thumbnailUrl &&
+                    oldItem.thumbnailURL == newItem.thumbnailURL &&
                     oldItem.title == newItem.title &&
-                    oldItem.duration == newItem.duration
+                    oldItem.durationSeconds == newItem.durationSeconds
     }) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PagingViewHolder {
@@ -83,7 +83,6 @@ class VideosAdapter(
             with(binding) {
                 if (item != null) {
                     val context = fragment.requireContext()
-                    val getDuration = item.duration?.let { TwitchApiHelper.getDuration(it) }
                     val position = item.id?.toLongOrNull()?.let { id -> positions?.find { it.id == id }?.position }
                     root.setOnClickListener {
                         (fragment.activity as MainActivity).startVideo(item, position)
@@ -97,8 +96,8 @@ class VideosAdapter(
                             target(thumbnail)
                         }.build()
                     )
-                    if (item.uploadDate != null) {
-                        val text = TwitchApiHelper.formatTimeString(context, item.uploadDate)
+                    if (item.createdAt != null) {
+                        val text = TwitchApiHelper.formatTimeString(context, item.createdAt)
                         if (text != null) {
                             date.visibility = View.VISIBLE
                             date.text = text
@@ -119,9 +118,9 @@ class VideosAdapter(
                     } else {
                         views.visibility = View.GONE
                     }
-                    if (getDuration != null) {
+                    if (item.durationSeconds != null) {
                         duration.visibility = View.VISIBLE
-                        duration.text = DateUtils.formatElapsedTime(getDuration)
+                        duration.text = DateUtils.formatElapsedTime(item.durationSeconds.toLong())
                     } else {
                         duration.visibility = View.GONE
                     }
@@ -136,8 +135,8 @@ class VideosAdapter(
                     } else {
                         type.visibility = View.GONE
                     }
-                    if (position != null && getDuration != null && getDuration > 0L) {
-                        progressBar.progress = (position / (getDuration * 10)).toInt()
+                    if (position != null && item.durationSeconds != null && item.durationSeconds > 0L) {
+                        progressBar.progress = (position / (item.durationSeconds * 10)).toInt()
                         progressBar.visibility = View.VISIBLE
                     } else {
                         progressBar.visibility = View.GONE
@@ -149,15 +148,15 @@ class VideosAdapter(
                                     channelId = item.channelId,
                                     channelLogin = item.channelLogin,
                                     channelName = item.channelName,
-                                    channelLogo = item.channelLogo,
+                                    channelImage = item.channelImage,
                                 )
                             )
                         }
-                        if (item.channelLogo != null) {
+                        if (item.channelImage != null) {
                             userImage.visibility = View.VISIBLE
                             fragment.requireContext().imageLoader.enqueue(
                                 ImageRequest.Builder(fragment.requireContext()).apply {
-                                    data(item.channelLogo)
+                                    data(item.channelImage)
                                     if (context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
                                         transformations(CircleCropTransformation())
                                     }

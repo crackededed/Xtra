@@ -47,7 +47,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
         fun onCreateMessageClickedChatAdapter(): MessageClickedChatAdapter?
         fun onReplyClicked(replyId: String?, userLogin: String?, userName: String?, message: String?)
         fun onCopyMessageClicked(message: String)
-        fun onViewProfileClicked(id: String?, login: String?, name: String?, channelLogo: String?)
+        fun onViewProfileClicked(id: String?, login: String?, name: String?, channelImage: String?)
         fun onTranslateMessageClicked(chatMessage: ChatMessage, languageTag: String?)
     }
 
@@ -150,10 +150,10 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
                     }
                     if (selectedMessage.userId != null || selectedMessage.userLogin != null) {
                         val targetId = requireArguments().getString(KEY_CHANNEL_ID)
-                        val item = selectedMessage.userId?.let { savedUsers.find { it.first.channelId == selectedMessage.userId && it.second == targetId } }
+                        val item = selectedMessage.userId?.let { savedUsers.find { it.first.id == selectedMessage.userId && it.second == targetId } }
                         if (item != null) {
                             updateUserLayout(item.first)
-                            item.first.channelName?.let { channelName ->
+                            item.first.name?.let { channelName ->
                                 if (requireArguments().getBoolean(KEY_MESSAGING) &&
                                     !selectedMessage.id.isNullOrBlank() &&
                                     selectedMessage.userName.isNullOrBlank() &&
@@ -194,14 +194,14 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
                                                     if (requireArguments().getBoolean(KEY_MESSAGING) &&
                                                         !selectedMessage.id.isNullOrBlank() &&
                                                         selectedMessage.userName.isNullOrBlank() &&
-                                                        !user.channelName.isNullOrBlank()
+                                                        !user.name.isNullOrBlank()
                                                     ) {
                                                         reply.visibility = View.VISIBLE
                                                         reply.setOnClickListener {
                                                             listener.onReplyClicked(
                                                                 selectedMessage.id,
                                                                 selectedMessage.userLogin,
-                                                                user.channelName,
+                                                                user.name,
                                                                 selectedMessage.message
                                                             )
                                                             dismiss()
@@ -281,12 +281,12 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
             } else {
                 bannerImage.visibility = View.GONE
             }
-            if (user.channelLogo != null) {
+            if (user.profileImage != null) {
                 userLayout.visibility = View.VISIBLE
                 userImage.visibility = View.VISIBLE
                 requireContext().imageLoader.enqueue(
                     ImageRequest.Builder(requireContext()).apply {
-                        data(user.channelLogo)
+                        data(user.profileImage)
                         if (requireContext().prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
                             transformations(CircleCropTransformation())
                         }
@@ -295,26 +295,26 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
                     }.build()
                 )
                 userImage.setOnClickListener {
-                    listener.onViewProfileClicked(user.channelId, user.channelLogin, user.channelName, user.channelLogo)
+                    listener.onViewProfileClicked(user.id, user.login, user.name, user.profileImage)
                     dismiss()
                 }
             } else {
                 userImage.visibility = View.GONE
             }
-            if (user.channelName != null) {
+            if (user.name != null) {
                 userLayout.visibility = View.VISIBLE
                 userName.visibility = View.VISIBLE
-                userName.text = if (user.channelLogin != null && !user.channelLogin.equals(user.channelName, true)) {
+                userName.text = if (user.login != null && !user.login.equals(user.name, true)) {
                     when (requireContext().prefs().getString(C.UI_NAME_DISPLAY, "0")) {
-                        "0" -> "${user.channelName}(${user.channelLogin})"
-                        "1" -> user.channelName
-                        else -> user.channelLogin
+                        "0" -> "${user.name}(${user.login})"
+                        "1" -> user.name
+                        else -> user.login
                     }
                 } else {
-                    user.channelName
+                    user.name
                 }
                 userName.setOnClickListener {
-                    listener.onViewProfileClicked(user.channelId, user.channelLogin, user.channelName, user.channelLogo)
+                    listener.onViewProfileClicked(user.id, user.login, user.name, user.profileImage)
                     dismiss()
                 }
                 if (user.bannerImageURL != null) {

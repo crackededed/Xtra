@@ -297,14 +297,14 @@ class MainActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.user.collectLatest { user ->
                     if (user != null) {
-                        if (!user.channelId.isNullOrBlank() || !user.channelLogin.isNullOrBlank()) {
+                        if (!user.id.isNullOrBlank() || !user.login.isNullOrBlank()) {
                             playerFragment?.minimize()
                             navController.navigate(
                                 ChannelPagerFragmentDirections.actionGlobalChannelPagerFragment(
-                                    channelId = user.channelId,
-                                    channelLogin = user.channelLogin,
-                                    channelName = user.channelName,
-                                    channelLogo = user.channelLogo,
+                                    channelId = user.id,
+                                    channelLogin = user.login,
+                                    channelName = user.name,
+                                    channelImage = user.profileImage,
                                 )
                             )
                         }
@@ -324,17 +324,17 @@ class MainActivity : AppCompatActivity() {
                             navController.navigate(
                                 if (prefs.getBoolean(C.UI_GAMEPAGER, true)) {
                                     GamePagerFragmentDirections.actionGlobalGamePagerFragment(
-                                        gameId = game.gameId,
-                                        gameSlug = game.gameSlug,
-                                        gameName = game.gameName,
+                                        gameId = game.id,
+                                        gameSlug = game.slug,
+                                        gameName = game.name,
                                         boxArt = game.boxArt,
                                         tags = tag?.let { arrayOf(it) },
                                     )
                                 } else {
                                     GameMediaFragmentDirections.actionGlobalGameMediaFragment(
-                                        gameId = game.gameId,
-                                        gameSlug = game.gameSlug,
-                                        gameName = game.gameName,
+                                        gameId = game.id,
+                                        gameSlug = game.slug,
+                                        gameName = game.name,
                                         boxArt = game.boxArt,
                                         tags = tag?.let { arrayOf(it) },
                                     )
@@ -467,7 +467,7 @@ class MainActivity : AppCompatActivity() {
                     when {
                         url.contains("twitch.tv/videos/") -> {
                             val id = url.substringAfter("twitch.tv/videos/").takeIf { it.isNotBlank() }?.let { it.substringBefore("?", it.substringBefore("/")) }
-                            val offset = url.substringAfter("?t=", "").takeIf { it.isNotBlank() }?.let { (TwitchApiHelper.getDuration(it) ?: 0) * 1000 }
+                            val offset = url.substringAfter("?t=", "").takeIf { it.isNotBlank() }?.let { TwitchApiHelper.getDuration(it).toLong() * 1000 }
                             if (!id.isNullOrBlank()) {
                                 viewModel.loadVideo(
                                     id,
@@ -762,16 +762,16 @@ class MainActivity : AppCompatActivity() {
         return viewModel.sleepTimerEndTime - System.currentTimeMillis()
     }
 
-    fun downloadStream(filesDir: String, id: String?, title: String?, startedAt: String?, channelId: String?, channelLogin: String?, channelName: String?, channelLogo: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {
-        viewModel.downloadStream(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), filesDir, id, title, startedAt, channelId, channelLogin, channelName, channelLogo, thumbnail, gameId, gameSlug, gameName, downloadPath, quality, downloadChat, downloadChatEmotes, wifiOnly)
+    fun downloadStream(filesDir: String, id: String?, title: String?, createdAt: String?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {
+        viewModel.downloadStream(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), filesDir, id, title, createdAt, channelId, channelLogin, channelName, channelImage, thumbnail, gameId, gameSlug, gameName, downloadPath, quality, downloadChat, downloadChatEmotes, wifiOnly)
     }
 
-    fun downloadVideo(filesDir: String, id: String?, title: String?, uploadDate: String?, type: String?, channelId: String?, channelLogin: String?, channelName: String?, channelLogo: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, url: String, downloadPath: String, quality: String, from: Long, to: Long, downloadChat: Boolean, downloadChatEmotes: Boolean, playlistToFile: Boolean, wifiOnly: Boolean) {
-        viewModel.downloadVideo(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), filesDir, id, title, uploadDate, type, channelId, channelLogin, channelName, channelLogo, thumbnail, gameId, gameSlug, gameName, url, downloadPath, quality, from, to, downloadChat, downloadChatEmotes, playlistToFile, wifiOnly)
+    fun downloadVideo(filesDir: String, id: String?, title: String?, createdAt: String?, type: String?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, url: String, downloadPath: String, quality: String, from: Long, to: Long, downloadChat: Boolean, downloadChatEmotes: Boolean, playlistToFile: Boolean, wifiOnly: Boolean) {
+        viewModel.downloadVideo(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), filesDir, id, title, createdAt, type, channelId, channelLogin, channelName, channelImage, thumbnail, gameId, gameSlug, gameName, url, downloadPath, quality, from, to, downloadChat, downloadChatEmotes, playlistToFile, wifiOnly)
     }
 
-    fun downloadClip(filesDir: String, clipId: String?, title: String?, uploadDate: String?, duration: Double?, videoId: String?, vodOffset: Int?, channelId: String?, channelLogin: String?, channelName: String?, channelLogo: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, url: String, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {
-        viewModel.downloadClip(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), filesDir, clipId, title, uploadDate, duration, videoId, vodOffset, channelId, channelLogin, channelName, channelLogo, thumbnail, gameId, gameSlug, gameName, url, downloadPath, quality, downloadChat, downloadChatEmotes, wifiOnly)
+    fun downloadClip(filesDir: String, clipId: String?, title: String?, createdAt: String?, durationSeconds: Int?, videoId: String?, videoOffsetSeconds: Int?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, url: String, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {
+        viewModel.downloadClip(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), filesDir, clipId, title, createdAt, durationSeconds, videoId, videoOffsetSeconds, channelId, channelLogin, channelName, channelImage, thumbnail, gameId, gameSlug, gameName, url, downloadPath, quality, downloadChat, downloadChatEmotes, wifiOnly)
     }
 
     fun popFragment() {
