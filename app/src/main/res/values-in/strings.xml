@@ -159,7 +159,6 @@
     <string name="chat_first">Chat pertama kali</string>
     <string name="chat_reward">Penukaran channel poin</string>
     <string name="always">Selalu</string>
-    <string name="twitch">Twitch</string>
     <string name="local">Lokal</string>
     <string name="days">d</string>
     <string name="seconds">s</string>
@@ -731,4 +730,5 @@
     <string name="copy_code">Copy code</string>
     <string name="external_tv_login_message">To get access to all features, you need to login as an Android TV device.\n\nFollow these steps:\n• Copy the code shown on the screen.\n• Press the \"Open URL\" button.\n• Enter the code and press \"Activate\".\n• Press \"Authorize\".\n• Return to Xtra and press \"Next\".</string>
     <string name="activate_notifications_when_following">Activate notifications when following</string>
+    <string name="account">Account</string>
 </resources>

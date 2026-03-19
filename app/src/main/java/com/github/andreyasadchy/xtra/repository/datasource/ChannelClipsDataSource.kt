@@ -75,22 +75,22 @@ class ChannelClipsDataSource(
                     channelId = channelId,
                     channelLogin = data.login,
                     channelName = data.displayName,
-                    videoId = it.video?.id,
-                    vodOffset = if (it.videoOffsetSeconds != null && it.durationSeconds != null) {
-                        max(it.videoOffsetSeconds - it.durationSeconds, 0) // api is returning wrong offset
-                    } else {
-                        it.videoOffsetSeconds
-                    },
+                    channelImageURL = data.profileImageURL,
                     gameId = it.game?.id,
                     gameSlug = it.game?.slug,
                     gameName = it.game?.displayName,
                     title = it.title,
+                    thumbnailURL = it.thumbnailURL,
+                    createdAt = it.createdAt?.toString(),
                     viewCount = it.viewCount,
-                    uploadDate = it.createdAt?.toString(),
-                    duration = it.durationSeconds?.toDouble(),
-                    thumbnailUrl = it.thumbnailURL,
-                    profileImageUrl = data.profileImageURL,
-                    videoAnimatedPreviewURL = it.video?.animatedPreviewURL
+                    durationSeconds = it.durationSeconds,
+                    videoId = it.video?.id,
+                    videoOffsetSeconds = if (it.videoOffsetSeconds != null && it.durationSeconds != null) {
+                        max(it.videoOffsetSeconds - it.durationSeconds, 0) // api is returning wrong offset
+                    } else {
+                        it.videoOffsetSeconds
+                    },
+                    videoAnimatedPreviewURL = it.video?.animatedPreviewURL,
                 )
             }
         }
@@ -119,15 +119,15 @@ class ChannelClipsDataSource(
                     channelId = channelId,
                     channelLogin = it.broadcaster?.login,
                     channelName = it.broadcaster?.displayName,
+                    channelImageURL = it.broadcaster?.profileImageURL,
                     gameId = it.game?.id,
                     gameSlug = it.game?.slug,
                     gameName = it.game?.name,
                     title = it.title,
+                    thumbnailURL = it.thumbnailURL,
+                    createdAt = it.createdAt,
                     viewCount = it.viewCount,
-                    uploadDate = it.createdAt,
-                    duration = it.durationSeconds,
-                    thumbnailUrl = it.thumbnailURL,
-                    profileImageUrl = it.broadcaster?.profileImageURL,
+                    durationSeconds = it.durationSeconds,
                 )
             }
         }
@@ -165,21 +165,21 @@ class ChannelClipsDataSource(
                 channelId = channelId,
                 channelLogin = channelLogin,
                 channelName = it.channelName,
-                videoId = it.videoId,
-                vodOffset = if (it.vodOffset != null && it.duration != null) {
-                    max(it.vodOffset - it.duration.toInt(), 0)
-                } else {
-                    it.vodOffset
-                },
                 gameId = it.gameId,
                 gameName = it.gameId?.let { id ->
                     games.find { game -> game.id == id }?.name
                 },
                 title = it.title,
+                thumbnailURL = it.thumbnailURL,
+                createdAt = it.createdAt,
                 viewCount = it.viewCount,
-                uploadDate = it.createdAt,
-                duration = it.duration,
-                thumbnailUrl = it.thumbnailUrl,
+                durationSeconds = it.duration?.toInt(),
+                videoId = it.videoId,
+                videoOffsetSeconds = if (it.vodOffset != null && it.duration != null) {
+                    max(it.vodOffset - it.duration.toInt(), 0)
+                } else {
+                    it.vodOffset
+                },
             )
         }
         offset = response.pagination?.cursor

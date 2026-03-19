@@ -51,21 +51,21 @@ class FollowedVideosFragment : PagedListFragment(), Scrollable, Sortable, Videos
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         pagingAdapter = VideosAdapter(this, {
-            DownloadDialog.newInstance(
+            DownloadDialog.newVideoInstance(
                 id = it.id,
-                title = it.title,
-                uploadDate = it.uploadDate,
-                duration = it.duration,
-                videoType = it.type,
-                animatedPreviewUrl = it.animatedPreviewURL,
                 channelId = it.channelId,
                 channelLogin = it.channelLogin,
                 channelName = it.channelName,
-                channelLogo = it.channelLogo,
-                thumbnail = it.thumbnail,
+                channelImage = it.channelImage,
                 gameId = it.gameId,
                 gameSlug = it.gameSlug,
                 gameName = it.gameName,
+                title = it.title,
+                thumbnail = it.thumbnail,
+                createdAt = it.createdAt,
+                durationSeconds = it.durationSeconds,
+                type = it.type,
+                animatedPreviewUrl = it.animatedPreviewURL,
             ).show(childFragmentManager, null)
         }, {
             viewModel.saveBookmark(

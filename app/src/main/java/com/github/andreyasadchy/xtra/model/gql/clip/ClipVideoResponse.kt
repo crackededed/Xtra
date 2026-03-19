@@ -16,7 +16,7 @@ class ClipVideoResponse(
     @Serializable
     class Clip(
         val video: Video? = null,
-        val durationSeconds: Double? = null,
+        val durationSeconds: Int? = null,
         val videoOffsetSeconds: Int? = null,
     )
 

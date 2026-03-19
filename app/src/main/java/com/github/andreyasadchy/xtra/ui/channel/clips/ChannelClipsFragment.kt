@@ -52,21 +52,21 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val showDialog: (Clip) -> Unit = {
-            DownloadDialog.newInstance(
+            DownloadDialog.newClipInstance(
                 clipId = it.id,
-                title = it.title,
-                uploadDate = it.uploadDate,
-                duration = it.duration,
-                videoId = it.videoId,
-                vodOffset = it.vodOffset,
                 channelId = it.channelId,
                 channelLogin = it.channelLogin,
                 channelName = it.channelName,
-                channelLogo = it.channelLogo,
-                thumbnail = it.thumbnail,
+                channelImage = it.channelImage,
                 gameId = it.gameId,
                 gameSlug = it.gameSlug,
                 gameName = it.gameName,
+                title = it.title,
+                thumbnail = it.thumbnail,
+                createdAt = it.createdAt,
+                durationSeconds = it.durationSeconds,
+                videoId = it.videoId,
+                videoOffsetSeconds = it.videoOffsetSeconds,
             ).show(childFragmentManager, null)
         }
         pagingAdapter = ClipsAdapter(this, showDialog, showChannel = false)

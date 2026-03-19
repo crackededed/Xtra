@@ -69,7 +69,7 @@ class StreamsCompactAdapter(
                                 channelId = item.channelId,
                                 channelLogin = item.channelLogin,
                                 channelName = item.channelName,
-                                channelLogo = item.channelLogo,
+                                channelImage = item.channelImage,
                                 streamId = item.id
                             )
                         )
@@ -77,11 +77,11 @@ class StreamsCompactAdapter(
                     root.setOnClickListener {
                         (fragment.activity as MainActivity).startStream(item)
                     }
-                    if (item.channelLogo != null) {
+                    if (item.channelImage != null) {
                         userImage.visibility = View.VISIBLE
                         fragment.requireContext().imageLoader.enqueue(
                             ImageRequest.Builder(fragment.requireContext()).apply {
-                                data(item.channelLogo)
+                                data(item.channelImage)
                                 if (context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
                                     transformations(CircleCropTransformation())
                                 }
@@ -144,8 +144,8 @@ class StreamsCompactAdapter(
                     } else {
                         viewers.visibility = View.GONE
                     }
-                    if (context.prefs().getBoolean(C.UI_UPTIME, true) && item.startedAt != null) {
-                        val text = TwitchApiHelper.getUptime(startedAt = item.startedAt)
+                    if (context.prefs().getBoolean(C.UI_UPTIME, true) && item.createdAt != null) {
+                        val text = TwitchApiHelper.getUptime(startedAt = item.createdAt)
                         if (text != null) {
                             uptime.visibility = View.VISIBLE
                             uptime.text = text

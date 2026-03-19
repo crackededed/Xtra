@@ -10,22 +10,21 @@ class Video(
     val channelId: String? = null,
     val channelLogin: String? = null,
     val channelName: String? = null,
-    val title: String? = null,
-    val uploadDate: String? = null,
-    val thumbnailUrl: String? = null,
-    val viewCount: Int? = null,
-    val type: String? = null,
-    val duration: String? = null,
-
+    var channelImageURL: String? = null,
     var gameId: String? = null,
     var gameSlug: String? = null,
     var gameName: String? = null,
-    var profileImageUrl: String? = null,
+    val title: String? = null,
+    val thumbnailURL: String? = null,
+    val createdAt: String? = null,
+    val viewCount: Int? = null,
+    val durationSeconds: Int? = null,
+    val type: String? = null,
     val animatedPreviewURL: String? = null,
 ) : Parcelable {
 
+    val channelImage: String?
+        get() = TwitchApiHelper.getProfileImage(channelImageURL)
     val thumbnail: String?
-        get() = TwitchApiHelper.getVideoThumbnail(thumbnailUrl)
-    val channelLogo: String?
-        get() = TwitchApiHelper.getProfileImage(profileImageUrl)
+        get() = TwitchApiHelper.getVideoThumbnail(thumbnailURL)
 }

@@ -74,15 +74,15 @@ class StreamsDataSource(
                     channelId = it.broadcaster?.id,
                     channelLogin = it.broadcaster?.login,
                     channelName = it.broadcaster?.displayName,
+                    channelImageURL = it.broadcaster?.profileImageURL,
                     gameId = it.game?.id,
                     gameSlug = it.game?.slug,
                     gameName = it.game?.displayName,
                     title = it.broadcaster?.broadcastSettings?.title,
+                    thumbnailURL = it.previewImageURL,
+                    createdAt = it.createdAt?.toString(),
                     viewerCount = it.viewersCount,
-                    startedAt = it.createdAt?.toString(),
-                    thumbnailUrl = it.previewImageURL,
-                    profileImageUrl = it.broadcaster?.profileImageURL,
-                    tags = it.freeformTags?.mapNotNull { tag -> tag.name }
+                    tags = it.freeformTags?.mapNotNull { tag -> tag.name },
                 )
             }
         }
@@ -111,15 +111,15 @@ class StreamsDataSource(
                     channelId = it.broadcaster?.id,
                     channelLogin = it.broadcaster?.login,
                     channelName = it.broadcaster?.displayName,
+                    channelImageURL = it.broadcaster?.profileImageURL,
                     gameId = it.game?.id,
                     gameSlug = it.game?.slug,
                     gameName = it.game?.displayName,
                     title = it.title,
+                    thumbnailURL = it.previewImageURL,
+                    createdAt = it.createdAt,
                     viewerCount = it.viewersCount,
-                    startedAt = it.createdAt,
-                    thumbnailUrl = it.previewImageURL,
-                    profileImageUrl = it.broadcaster?.profileImageURL,
-                    tags = it.freeformTags?.mapNotNull { tag -> tag.name }
+                    tags = it.freeformTags?.mapNotNull { tag -> tag.name },
                 )
             }
         }
@@ -154,16 +154,16 @@ class StreamsDataSource(
                 channelId = it.channelId,
                 channelLogin = it.channelLogin,
                 channelName = it.channelName,
+                channelImageURL = it.channelId?.let { id ->
+                    users.find { user -> user.id == id }?.profileImageURL
+                },
                 gameId = it.gameId,
                 gameName = it.gameName,
                 title = it.title,
+                thumbnailURL = it.thumbnailURL,
+                createdAt = it.startedAt,
                 viewerCount = it.viewerCount,
-                startedAt = it.startedAt,
-                thumbnailUrl = it.thumbnailUrl,
-                profileImageUrl = it.channelId?.let { id ->
-                    users.find { user -> user.channelId == id }?.profileImageUrl
-                },
-                tags = it.tags
+                tags = it.tags,
             )
         }
         offset = response.pagination?.cursor

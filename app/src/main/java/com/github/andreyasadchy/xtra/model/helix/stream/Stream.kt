@@ -22,6 +22,6 @@ class Stream(
     @SerialName("started_at")
     val startedAt: String? = null,
     @SerialName("thumbnail_url")
-    val thumbnailUrl: String? = null,
+    val thumbnailURL: String? = null,
     val tags: List<String>? = null,
 )

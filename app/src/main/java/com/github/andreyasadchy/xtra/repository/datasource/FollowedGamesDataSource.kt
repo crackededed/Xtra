@@ -21,11 +21,11 @@ class FollowedGamesDataSource(
         val list = mutableListOf<Game>()
         localFollowsGame.loadFollows().forEach {
             list.add(Game(
-                gameId = it.gameId,
-                gameSlug = it.gameSlug,
-                gameName = it.gameName,
-                boxArtUrl = it.boxArt,
-                followLocal = true
+                id = it.gameId,
+                slug = it.gameSlug,
+                name = it.gameName,
+                boxArtURL = it.boxArt,
+                localFollow = true
             ))
         }
         if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
@@ -43,19 +43,19 @@ class FollowedGamesDataSource(
                 }
                 it as? LoadResult.Page
             }?.data?.forEach { game ->
-                val item = list.find { it.gameId == game.gameId }
+                val item = list.find { it.id == game.id }
                 if (item == null) {
-                    game.followAccount = true
+                    game.accountFollow = true
                     list.add(game)
                 } else {
-                    item.followAccount = true
-                    item.viewersCount = game.viewersCount
-                    item.broadcastersCount = game.broadcastersCount
+                    item.accountFollow = true
+                    item.viewerCount = game.viewerCount
+                    item.broadcasterCount = game.broadcasterCount
                     item.tags = game.tags
                 }
             }
         }
-        list.sortBy { it.gameName }
+        list.sortBy { it.name }
         return LoadResult.Page(
             data = list,
             prevKey = null,
@@ -79,12 +79,12 @@ class FollowedGamesDataSource(
         val list = response.data!!.user!!.followedGames!!.nodes!!.mapNotNull { item ->
             item?.let {
                 Game(
-                    gameId = it.id,
-                    gameSlug = it.slug,
-                    gameName = it.displayName,
-                    boxArtUrl = it.boxArtURL,
-                    viewersCount = it.viewersCount,
-                    broadcastersCount = it.broadcastersCount,
+                    id = it.id,
+                    slug = it.slug,
+                    name = it.displayName,
+                    boxArtURL = it.boxArtURL,
+                    viewerCount = it.viewersCount,
+                    broadcasterCount = it.broadcastersCount,
                     tags = it.tags?.map { tag ->
                         Tag(
                             id = tag.id,
@@ -109,10 +109,10 @@ class FollowedGamesDataSource(
         val list = response.data!!.currentUser.followedGames.nodes.map { item ->
             item.let {
                 Game(
-                    gameId = it.id,
-                    gameName = it.displayName,
-                    boxArtUrl = it.boxArtURL,
-                    viewersCount = it.viewersCount ?: 0,
+                    id = it.id,
+                    name = it.displayName,
+                    boxArtURL = it.boxArtURL,
+                    viewerCount = it.viewersCount ?: 0,
                     tags = it.tags?.map { tag ->
                         Tag(
                             id = tag.id,
