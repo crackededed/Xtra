@@ -23,6 +23,7 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import com.github.andreyasadchy.xtra.R
+import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.model.ui.Clip
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.model.ui.Stream
@@ -264,69 +265,42 @@ class MediaPlayerFragment : PlayerFragment() {
                         val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList().ifEmpty {
                             Regex("NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                         }
-                        val codecStrings = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                        val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                         val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
-                        val codecs = codecStrings.map { codec ->
-                            codec.substringBefore('.').let {
-                                when (it) {
-                                    "av01" -> "AV1"
-                                    "hev1" -> "H.265"
-                                    "avc1" -> "H.264"
-                                    else -> it
-                                }
+                        val list = names.mapIndexedNotNull { index, name ->
+                            urls.getOrNull(index)?.let { url ->
+                                VideoQuality(name, codecs.getOrNull(index), url)
                             }
-                        }.takeUnless { it.all { it == "H.264" || it == "mp4a" } }
-                        if (names.isNotEmpty() && urls.isNotEmpty()) {
-                            val map = mutableMapOf<String, Pair<String, String?>>()
-                            names.forEachIndexed { index, quality ->
-                                urls.getOrNull(index)?.let { url ->
-                                    when {
-                                        quality.equals("source", true) -> {
-                                            val quality = getString(R.string.source)
-                                            map["source"] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
-                                        }
-                                        quality.startsWith("audio", true) -> {
-                                            map[AUDIO_ONLY_QUALITY] = Pair(getString(R.string.audio_only), url)
-                                        }
-                                        else -> {
-                                            map[quality] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
-                                        }
-                                    }
-                                }
+                        }
+                        viewModel.qualities = list
+                            .sortedByDescending {
+                                it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                             }
-                            if (!map.containsKey(AUDIO_ONLY_QUALITY)) {
-                                map[AUDIO_ONLY_QUALITY] = Pair(getString(R.string.audio_only), null)
+                            .sortedByDescending {
+                                it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                             }
-                            if (videoType == STREAM) {
-                                map[CHAT_ONLY_QUALITY] = Pair(getString(R.string.chat_only), null)
+                            .sortedByDescending {
+                                it.name == "source"
                             }
-                            viewModel.qualities = map.toList()
-                                .sortedByDescending {
-                                    it.first.substringAfter("p", "").takeWhile { it.isDigit() }.toIntOrNull()
+                            .toMutableList().apply {
+                                if (find { it.name == AUDIO_ONLY_QUALITY } == null) {
+                                    add(VideoQuality(AUDIO_ONLY_QUALITY))
                                 }
-                                .sortedByDescending {
-                                    it.first.substringBefore("p", "").takeWhile { it.isDigit() }.toIntOrNull()
-                                }
-                                .sortedByDescending {
-                                    it.first == "source"
-                                }
-                                .toMap()
-                            setDefaultQuality()
-                            viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
-                                quality.value.second?.let {
-                                    player.reset()
-                                    player.setDataSource(it)
-                                    val volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
-                                    player.setVolume(volume, volume)
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                        val params = PlaybackParams()
-                                        params.speed = 1f
-                                        player.playbackParams = params
-                                    }
-                                    player.prepareAsync()
-                                    viewModel.loaded.value = true
-                                }
+                                add(VideoQuality(CHAT_ONLY_QUALITY))
                             }
+                        setDefaultQuality()
+                        viewModel.quality?.url?.let { url ->
+                            player.reset()
+                            player.setDataSource(url)
+                            val volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
+                            player.setVolume(volume, volume)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                val params = PlaybackParams()
+                                params.speed = 1f
+                                player.playbackParams = params
+                            }
+                            player.prepareAsync()
+                            viewModel.loaded.value = true
                         }
                     }
                 }
@@ -387,7 +361,7 @@ class MediaPlayerFragment : PlayerFragment() {
                             val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList().ifEmpty {
                                 Regex("NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                             }
-                            val codecStrings = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                            val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                             val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
                             playlist.lines().filter { it.startsWith("#EXT-X-SESSION-DATA") }.let { list ->
                                 if (list.isNotEmpty()) {
@@ -433,7 +407,7 @@ class MediaPlayerFragment : PlayerFragment() {
                                                                         if (!name.isNullOrBlank() && !newVariantId.isNullOrBlank()) {
                                                                             names.add(name)
                                                                             if (!codec.isNullOrBlank()) {
-                                                                                codecStrings.add(codec)
+                                                                                codecs.add(codec)
                                                                             }
                                                                             urls.add(url.replace(
                                                                                 "$variantId/index-",
@@ -455,69 +429,41 @@ class MediaPlayerFragment : PlayerFragment() {
                                     }
                                 }
                             }
-                            val codecs = codecStrings.map { codec ->
-                                codec.substringBefore('.').let {
-                                    when (it) {
-                                        "av01" -> "AV1"
-                                        "hev1" -> "H.265"
-                                        "avc1" -> "H.264"
-                                        else -> it
+                            val list = names.mapIndexedNotNull { index, name ->
+                                urls.getOrNull(index)?.let { url ->
+                                    VideoQuality(name, codecs.getOrNull(index), url)
+                                }
+                            }
+                            viewModel.qualities = list
+                                .sortedByDescending {
+                                    it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
+                                }
+                                .sortedByDescending {
+                                    it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
+                                }
+                                .sortedByDescending {
+                                    it.name == "source"
+                                }
+                                .toMutableList().apply {
+                                    if (find { it.name == AUDIO_ONLY_QUALITY } == null) {
+                                        add(VideoQuality(AUDIO_ONLY_QUALITY))
                                     }
                                 }
-                            }.takeUnless { it.all { it == "H.264" || it == "mp4a" } }
-                            if (names.isNotEmpty() && urls.isNotEmpty()) {
-                                val map = mutableMapOf<String, Pair<String, String?>>()
-                                names.forEachIndexed { index, quality ->
-                                    urls.getOrNull(index)?.let { url ->
-                                        when {
-                                            quality.equals("source", true) -> {
-                                                val quality = getString(R.string.source)
-                                                map["source"] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
-                                            }
-                                            quality.startsWith("audio", true) -> {
-                                                map[AUDIO_ONLY_QUALITY] = Pair(getString(R.string.audio_only), url)
-                                            }
-                                            else -> {
-                                                map[quality] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
-                                            }
-                                        }
-                                    }
+                            setDefaultQuality()
+                            changePlayerMode()
+                            viewModel.quality?.url?.let { url ->
+                                player.reset()
+                                player.setDataSource(url)
+                                val volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
+                                player.setVolume(volume, volume)
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    val params = PlaybackParams()
+                                    params.speed = requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f)
+                                    player.playbackParams = params
                                 }
-                                if (!map.containsKey(AUDIO_ONLY_QUALITY)) {
-                                    map[AUDIO_ONLY_QUALITY] = Pair(getString(R.string.audio_only), null)
-                                }
-                                if (videoType == STREAM) {
-                                    map[CHAT_ONLY_QUALITY] = Pair(getString(R.string.chat_only), null)
-                                }
-                                viewModel.qualities = map.toList()
-                                    .sortedByDescending {
-                                        it.first.substringAfter("p", "").takeWhile { it.isDigit() }.toIntOrNull()
-                                    }
-                                    .sortedByDescending {
-                                        it.first.substringBefore("p", "").takeWhile { it.isDigit() }.toIntOrNull()
-                                    }
-                                    .sortedByDescending {
-                                        it.first == "source"
-                                    }
-                                    .toMap()
-                                setDefaultQuality()
-                                changePlayerMode()
-                                viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
-                                    quality.value.second?.let {
-                                        player.reset()
-                                        player.setDataSource(it)
-                                        val volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
-                                        player.setVolume(volume, volume)
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                            val params = PlaybackParams()
-                                            params.speed = requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f)
-                                            player.playbackParams = params
-                                        }
-                                        playbackService?.seekPosition = position
-                                        player.prepareAsync()
-                                        viewModel.loaded.value = true
-                                    }
-                                }
+                                playbackService?.seekPosition = position
+                                player.prepareAsync()
+                                viewModel.loaded.value = true
                             }
                         }
                     }
@@ -557,8 +503,7 @@ class MediaPlayerFragment : PlayerFragment() {
     override fun startClip(url: String?) {
         player?.let { player ->
             if (url != null) {
-                val quality = viewModel.qualities.entries.find { it.key == viewModel.quality }
-                if (quality?.key == AUDIO_ONLY_QUALITY) {
+                if (viewModel.quality?.name == AUDIO_ONLY_QUALITY) {
                     player.setDisplay(null)
                     binding.playerSurface.visibility = View.GONE
                 } else {
@@ -590,8 +535,7 @@ class MediaPlayerFragment : PlayerFragment() {
     override fun startOfflineVideo(url: String?, position: Long) {
         player?.let { player ->
             if (url != null) {
-                val quality = viewModel.qualities.entries.find { it.key == viewModel.quality }
-                if (quality?.key == AUDIO_ONLY_QUALITY) {
+                if (viewModel.quality?.name == AUDIO_ONLY_QUALITY) {
                     player.setDisplay(null)
                     binding.playerSurface.visibility = View.GONE
                 } else {
@@ -731,16 +675,16 @@ class MediaPlayerFragment : PlayerFragment() {
         }
     }
 
-    override fun changeQuality(selectedQuality: String?) {
+    override fun changeQuality(selectedQuality: VideoQuality?) {
         viewModel.previousQuality = viewModel.quality
         viewModel.quality = selectedQuality
-        viewModel.qualities.entries.find { it.key == selectedQuality }?.let { quality ->
+        viewModel.quality?.let { quality ->
             player?.let { player ->
-                when (quality.key) {
+                when (quality.name) {
                     AUDIO_ONLY_QUALITY -> {
                         player.setDisplay(null)
                         binding.playerSurface.visibility = View.GONE
-                        quality.value.second?.let {
+                        quality.url?.let {
                             val position = player.currentPosition.toLong()
                             player.reset()
                             if (playbackService?.offlineVideoId != null) {
@@ -758,7 +702,7 @@ class MediaPlayerFragment : PlayerFragment() {
                         updatePlayingState()
                     }
                     else -> {
-                        quality.value.second?.let {
+                        quality.url?.let {
                             val position = player.currentPosition.toLong()
                             player.reset()
                             if (playbackService?.offlineVideoId != null) {
@@ -783,7 +727,7 @@ class MediaPlayerFragment : PlayerFragment() {
                     false
                 }
                 if ((!cellular && requireContext().prefs().getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") || (cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
-                    requireContext().prefs().edit { putString(C.PLAYER_QUALITY, quality.key) }
+                    requireContext().prefs().edit { putString(C.PLAYER_QUALITY, quality.name) }
                 }
             }
         }
@@ -793,23 +737,23 @@ class MediaPlayerFragment : PlayerFragment() {
         player?.let { player ->
             if (playbackService != null) {
                 savePosition()
-                if (viewModel.quality != AUDIO_ONLY_QUALITY) {
+                if (viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
                     viewModel.restoreQuality = true
                     viewModel.previousQuality = viewModel.quality
-                    viewModel.quality = AUDIO_ONLY_QUALITY
-                    viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
+                    viewModel.quality = viewModel.qualities?.find { it.name == AUDIO_ONLY_QUALITY }
+                    viewModel.quality?.let { quality ->
                         if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
                             player.setDisplay(null)
                             binding.playerSurface.visibility = View.GONE
                         }
                         if (requireContext().prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
-                            quality.value.second?.let {
+                            quality.url?.let { url ->
                                 val position = player.currentPosition.toLong()
                                 player.reset()
                                 if (playbackService?.offlineVideoId != null) {
-                                    player.setDataSource(requireContext(), it.toUri())
+                                    player.setDataSource(requireContext(), url.toUri())
                                 } else {
-                                    player.setDataSource(it)
+                                    player.setDataSource(url)
                                 }
                                 playbackService?.seekPosition = position
                                 player.prepareAsync()
@@ -837,7 +781,7 @@ class MediaPlayerFragment : PlayerFragment() {
 
     override fun downloadVideo() {
         val totalDuration = player?.duration?.toLong()
-        val qualities = viewModel.qualities.filter { !it.value.second.isNullOrBlank() }
+        val qualities = viewModel.qualities?.filter { !it.url.isNullOrBlank() }
         DownloadDialog.newVideoInstance(
             id = requireArguments().getString(KEY_VIDEO_ID),
             channelId = requireArguments().getString(KEY_CHANNEL_ID),
@@ -855,9 +799,9 @@ class MediaPlayerFragment : PlayerFragment() {
             animatedPreviewUrl = requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW),
             totalDuration = totalDuration,
             currentPosition = getCurrentPosition(),
-            qualityKeys = qualities.keys.toTypedArray(),
-            qualityNames = qualities.map { it.value.first }.toTypedArray(),
-            qualityUrls = qualities.mapNotNull { it.value.second }.toTypedArray(),
+            qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
+            qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+            qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
         ).show(childFragmentManager, null)
     }
 
@@ -897,23 +841,23 @@ class MediaPlayerFragment : PlayerFragment() {
                     || (!isInPIPMode && !isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
                     || (isInPIPMode && isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, false))
                     || (isInPIPMode && !isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
-                    if (player.isPlaying && viewModel.quality != AUDIO_ONLY_QUALITY) {
+                    if (player.isPlaying && viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
                         viewModel.restoreQuality = true
                         viewModel.previousQuality = viewModel.quality
-                        viewModel.quality = AUDIO_ONLY_QUALITY
-                        viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
+                        viewModel.quality = viewModel.qualities?.find { it.name == AUDIO_ONLY_QUALITY }
+                        viewModel.quality?.let { quality ->
                             if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
                                 player.setDisplay(null)
                                 binding.playerSurface.visibility = View.GONE
                             }
                             if (requireContext().prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
-                                quality.value.second?.let {
+                                quality.url?.let { url ->
                                     val position = player.currentPosition.toLong()
                                     player.reset()
                                     if (playbackService?.offlineVideoId != null) {
-                                        player.setDataSource(requireContext(), it.toUri())
+                                        player.setDataSource(requireContext(), url.toUri())
                                     } else {
-                                        player.setDataSource(it)
+                                        player.setDataSource(url)
                                     }
                                     playbackService?.seekPosition = position
                                     player.prepareAsync()

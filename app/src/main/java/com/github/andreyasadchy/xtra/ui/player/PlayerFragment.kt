@@ -64,6 +64,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentPlayerBinding
+import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.model.ui.Clip
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.model.ui.Stream
@@ -157,7 +158,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     open fun setSubtitlesButton() {}
     open fun toggleSubtitles(enabled: Boolean) {}
     open fun showPlaylistTags(mediaPlaylist: Boolean) {}
-    open fun changeQuality(selectedQuality: String?) {}
+    open fun changeQuality(selectedQuality: VideoQuality?) {}
     open fun startAudioOnly() {}
     open fun downloadVideo() {}
     open fun close() {}
@@ -699,10 +700,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 if (requireContext().prefs().getBoolean(C.PLAYER_MODE, false)) {
                     audioOnly.visibility = View.VISIBLE
                     audioOnly.setOnClickListener {
-                        if (viewModel.quality == AUDIO_ONLY_QUALITY) {
+                        if (viewModel.quality?.name == AUDIO_ONLY_QUALITY) {
                             changeQuality(viewModel.previousQuality)
                         } else {
-                            changeQuality(AUDIO_ONLY_QUALITY)
+                            changeQuality(viewModel.qualities?.find { it.name == AUDIO_ONLY_QUALITY })
                         }
                         changePlayerMode()
                     }
@@ -892,60 +893,29 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 if (videoType == CLIP) {
                     viewLifecycleOwner.lifecycleScope.launch {
                         repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            viewModel.clipUrls.collectLatest { map ->
-                                if (map != null) {
+                            viewModel.clipUrls.collectLatest { list ->
+                                if (list != null) {
                                     val supportedCodecs = requireContext().prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264")?.split(',') ?: emptyList()
-                                    val filtered = map.filterNot {
-                                        it.key.second?.substringBefore('.').let { codec ->
+                                    val filtered = list.filterNot {
+                                        it.codecs?.substringBefore('.').let { codec ->
                                             (codec == "av01" && !supportedCodecs.contains("av1")) || ((codec == "hev1" || codec == "hvc1") && !supportedCodecs.contains("h265"))
                                         }
                                     }
-                                    val hideCodecs = filtered.all {
-                                        it.key.second?.substringBefore('.').let { codec ->
-                                            codec == "avc1" || codec == "mp4a" || codec.isNullOrBlank()
-                                        }
-                                    }
-                                    val map = mutableMapOf<String, Pair<String, String?>>()
-                                    filtered.forEach {
-                                        val quality = it.key.first.let { quality ->
-                                            val quality = if (quality == "source") {
-                                                getString(R.string.source)
-                                            } else {
-                                                quality
-                                            }
-                                            if (hideCodecs) {
-                                                quality
-                                            } else {
-                                                val codec = it.key.second?.substringBefore('.').let { codec ->
-                                                    when {
-                                                        codec == "av01" -> "AV1"
-                                                        codec == "hev1" || codec == "hvc1" -> "H.265"
-                                                        codec == "avc1" || codec.isNullOrBlank() -> "H.264"
-                                                        else -> it
-                                                    }
-                                                }
-                                                "$quality $codec"
-                                            }
-                                        }
-                                        map[it.key.first] = Pair(quality, it.value)
-                                    }
-                                    map.put(AUDIO_ONLY_QUALITY, Pair(getString(R.string.audio_only), null))
-                                    viewModel.qualities = map.toList()
+                                    viewModel.qualities = filtered
                                         .sortedByDescending {
-                                            it.first.substringAfter("p", "").takeWhile { it.isDigit() }.toIntOrNull()
+                                            it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                                         }
                                         .sortedByDescending {
-                                            it.first.substringBefore("p", "").takeWhile { it.isDigit() }.toIntOrNull()
+                                            it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                                         }
-                                        .sortedByDescending {
-                                            it.first == "source"
+                                        .toMutableList().apply {
+                                            add(VideoQuality(AUDIO_ONLY_QUALITY))
                                         }
-                                        .toMap()
                                     setDefaultQuality()
                                     changePlayerMode()
-                                    val quality = viewModel.qualities.entries.find { it.key == viewModel.quality }
-                                    (quality?.value?.second ?: viewModel.qualities.values.firstOrNull()?.second)?.let {
-                                        startClip(it)
+                                    val url = viewModel.quality?.url ?: viewModel.qualities?.firstOrNull()?.url
+                                    if (url != null) {
+                                        startClip(url)
                                     }
                                     viewModel.clipUrls.value = null
                                 }
@@ -992,9 +962,9 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                             viewModel.savedOfflineVideoPosition.collectLatest {
                                 if (it != null) {
                                     val url = requireArguments().getString(KEY_URL)
-                                    viewModel.qualities = mapOf(
-                                        "source" to Pair(getString(R.string.source), url),
-                                        AUDIO_ONLY_QUALITY to Pair(getString(R.string.audio_only), null)
+                                    viewModel.qualities = listOf(
+                                        VideoQuality("source", null, url),
+                                        VideoQuality(AUDIO_ONLY_QUALITY),
                                     )
                                     setDefaultQuality()
                                     changePlayerMode()
@@ -1321,13 +1291,46 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         }
     }
 
+    fun getQualityMap(): Map<String, VideoQuality>? {
+        val qualities = viewModel.qualities
+        return if (!qualities.isNullOrEmpty()) {
+            val hideCodecs = qualities.all {
+                val codec = it.codecs?.substringBefore('.')
+                codec == "avc1" || codec == "mp4a" || codec.isNullOrBlank()
+            }
+            qualities.associateBy { quality ->
+                when (quality.name) {
+                    "auto" -> getString(R.string.auto)
+                    "source" -> getString(R.string.source)
+                    "audio_only" -> getString(R.string.audio_only)
+                    "chat_only" -> getString(R.string.chat_only)
+                    else -> {
+                        if (hideCodecs) {
+                            quality.name.toString()
+                        } else {
+                            val codec = quality.codecs?.substringBefore('.')
+                            val codecName = when {
+                                codec == "av01" -> "AV1"
+                                codec == "hev1" || codec == "hvc1" -> "H.265"
+                                codec == "avc1" || codec.isNullOrBlank() -> "H.264"
+                                else -> codec
+                            }
+                            "${quality.name} $codecName"
+                        }
+                    }
+                }
+            }
+        } else null
+    }
+
     fun showQualityDialog() {
-        if (viewModel.qualities.isNotEmpty()) {
+        val qualities = getQualityMap()
+        if (!qualities.isNullOrEmpty()) {
             RadioButtonDialogFragment.newInstance(
                 REQUEST_CODE_QUALITY,
-                viewModel.qualities.values.map { it.first },
-                null,
-                viewModel.qualities.keys.indexOf(viewModel.quality)
+                qualities.keys,
+                qualities.values.map { it.name.toString() }.toTypedArray(),
+                qualities.values.indexOf(viewModel.quality)
             ).show(childFragmentManager, "closeOnPip")
         }
     }
@@ -1452,7 +1455,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     fun setQualityText() {
         (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setQuality(
-            viewModel.qualities[viewModel.quality]?.first
+            getQualityMap()?.entries?.find { it.value == viewModel.quality }?.key
         )
     }
 
@@ -1537,7 +1540,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     }
 
     fun restartPlayer() {
-        if (viewModel.quality != CHAT_ONLY_QUALITY) {
+        if (viewModel.quality?.name != CHAT_ONLY_QUALITY) {
             loadStream()
         }
     }
@@ -1598,29 +1601,29 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             "saved" -> {
                 val savedQuality = requireContext().prefs().getString(C.PLAYER_QUALITY, "720p60")?.substringBefore(" ")
                 when (savedQuality) {
-                    AUTO_QUALITY -> viewModel.qualities.entries.find { it.key == AUTO_QUALITY }?.key
-                    AUDIO_ONLY_QUALITY -> viewModel.qualities.entries.find { it.key == AUDIO_ONLY_QUALITY }?.key
-                    CHAT_ONLY_QUALITY -> viewModel.qualities.entries.find { it.key == CHAT_ONLY_QUALITY }?.key
+                    AUTO_QUALITY -> viewModel.qualities?.find { it.name == AUTO_QUALITY }
+                    AUDIO_ONLY_QUALITY -> viewModel.qualities?.find { it.name == AUDIO_ONLY_QUALITY }
+                    CHAT_ONLY_QUALITY -> viewModel.qualities?.find { it.name == CHAT_ONLY_QUALITY }
                     else -> findQuality(savedQuality)
                 }
             }
-            AUTO_QUALITY -> viewModel.qualities.entries.find { it.key == AUTO_QUALITY }?.key
-            "Source" -> viewModel.qualities.entries.find { it.key != AUTO_QUALITY }?.key
-            AUDIO_ONLY_QUALITY -> viewModel.qualities.entries.find { it.key == AUDIO_ONLY_QUALITY }?.key
-            CHAT_ONLY_QUALITY -> viewModel.qualities.entries.find { it.key == CHAT_ONLY_QUALITY }?.key
+            AUTO_QUALITY -> viewModel.qualities?.find { it.name == AUTO_QUALITY }
+            "Source" -> viewModel.qualities?.find { it.name != AUTO_QUALITY }
+            AUDIO_ONLY_QUALITY -> viewModel.qualities?.find { it.name == AUDIO_ONLY_QUALITY }
+            CHAT_ONLY_QUALITY -> viewModel.qualities?.find { it.name == CHAT_ONLY_QUALITY }
             else -> findQuality(defaultQuality)
-        } ?: viewModel.qualities.entries.firstOrNull()?.key
+        } ?: viewModel.qualities?.firstOrNull()
     }
 
-    private fun findQuality(targetQualityString: String?): String? {
+    private fun findQuality(targetQualityString: String?): VideoQuality? {
         val targetQuality = targetQualityString?.split("p")
         return targetQuality?.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()?.let { targetResolution ->
             val targetFps = targetQuality.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
-            val last = viewModel.qualities.keys.last { it != AUDIO_ONLY_QUALITY && it != CHAT_ONLY_QUALITY }
-            viewModel.qualities.keys.find { qualityString ->
-                val quality = qualityString.split("p")
-                val resolution = quality.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
-                val fps = quality.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
+            val last = viewModel.qualities?.last { it.name != AUDIO_ONLY_QUALITY && it.name != CHAT_ONLY_QUALITY }
+            viewModel.qualities?.find { qualityString ->
+                val quality = qualityString.name?.split("p")
+                val resolution = quality?.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
+                val fps = quality?.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
                 resolution != null && ((targetResolution == resolution && targetFps >= fps) || targetResolution > resolution || qualityString == last)
             }
         }
@@ -1830,7 +1833,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         } else {
             viewModel.quality
         }
-        return quality != AUDIO_ONLY_QUALITY && quality != CHAT_ONLY_QUALITY
+        return quality?.name != AUDIO_ONLY_QUALITY && quality?.name != CHAT_ONLY_QUALITY
     }
 
     protected fun setPipActions(playing: Boolean) {
@@ -2011,31 +2014,22 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     protected fun playVideo(skipAccessToken: Boolean, playbackPosition: Long?) {
         if (skipAccessToken && !requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW).isNullOrBlank()) {
             requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW)?.let { preview ->
-                val qualityMap = TwitchApiHelper.getVideoUrlMapFromPreview(preview, requireArguments().getString(KEY_VIDEO_TYPE), viewModel.backupQualities)
-                val map = mutableMapOf<String, Pair<String, String?>>()
-                qualityMap.forEach {
-                    when (it.key) {
-                        "source" -> map[it.key] = Pair(getString(R.string.source), it.value)
-                        "audio_only" -> map[it.key] = Pair(getString(R.string.audio_only), it.value)
-                        else -> map[it.key] = Pair(it.key, it.value)
-                    }
+                val urls = TwitchApiHelper.getVideoUrlsFromPreview(preview, requireArguments().getString(KEY_VIDEO_TYPE), viewModel.backupQualities)
+                val list = urls.map {
+                    VideoQuality(it.key, null, it.value)
                 }
-                map.put(AUDIO_ONLY_QUALITY, map.remove(AUDIO_ONLY_QUALITY) //move audio option to bottom
-                    ?: Pair(getString(R.string.audio_only), null))
-                val qualities = map.toList()
+                viewModel.qualities = list
                     .sortedByDescending {
-                        it.first.substringAfter("p", "").takeWhile { it.isDigit() }.toIntOrNull()
+                        it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                     }
                     .sortedByDescending {
-                        it.first.substringBefore("p", "").takeWhile { it.isDigit() }.toIntOrNull()
+                        it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                     }
                     .sortedByDescending {
-                        it.first == "source"
+                        it.name == "source"
                     }
-                    .toMap()
-                viewModel.qualities = qualities
-                viewModel.quality = qualities.keys.firstOrNull()
-                qualities.values.firstOrNull()?.second
+                viewModel.quality = viewModel.qualities?.firstOrNull()
+                viewModel.quality?.url
             }?.let { url ->
                 startVideo(url, playbackPosition, false)
             }
@@ -2256,7 +2250,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         if (viewModel.loaded.value) {
             when (videoType) {
                 STREAM -> {
-                    val qualities = viewModel.qualities.filter { !it.value.second.isNullOrBlank() }
+                    val qualities = viewModel.qualities?.filter { !it.url.isNullOrBlank() }
                     DownloadDialog.newStreamInstance(
                         id = requireArguments().getString(KEY_STREAM_ID),
                         channelId = requireArguments().getString(KEY_CHANNEL_ID),
@@ -2269,16 +2263,16 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         title = requireArguments().getString(KEY_TITLE),
                         thumbnail = requireArguments().getString(KEY_THUMBNAIL),
                         createdAt = requireArguments().getString(KEY_STARTED_AT),
-                        qualityKeys = qualities.keys.toTypedArray(),
-                        qualityNames = qualities.map { it.value.first }.toTypedArray(),
-                        qualityUrls = qualities.mapNotNull { it.value.second }.toTypedArray(),
+                        qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
+                        qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+                        qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
                     ).show(childFragmentManager, null)
                 }
                 VIDEO -> {
                     downloadVideo()
                 }
                 CLIP -> {
-                    val qualities = viewModel.qualities.filter { !it.value.second.isNullOrBlank() }
+                    val qualities = viewModel.qualities?.filter { !it.url.isNullOrBlank() }
                     DownloadDialog.newClipInstance(
                         clipId = requireArguments().getString(KEY_CLIP_ID),
                         channelId = requireArguments().getString(KEY_CHANNEL_ID),
@@ -2294,9 +2288,9 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         durationSeconds = requireArguments().getInt(KEY_DURATION_SECONDS),
                         videoId = requireArguments().getString(KEY_VIDEO_ID),
                         videoOffsetSeconds = requireArguments().getInt(KEY_VIDEO_OFFSET_SECONDS),
-                        qualityKeys = qualities.keys.toTypedArray(),
-                        qualityNames = qualities.map { it.value.first }.toTypedArray(),
-                        qualityUrls = qualities.mapNotNull { it.value.second }.toTypedArray(),
+                        qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
+                        qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+                        qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
                     ).show(childFragmentManager, null)
                 }
             }
@@ -2333,10 +2327,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         (activity as? MainActivity)?.setSleepTimer(durationMs)
     }
 
-    override fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: Int?) {
+    override fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: String?) {
         when (requestCode) {
             REQUEST_CODE_QUALITY -> {
-                changeQuality(viewModel.qualities.keys.elementAtOrNull(index))
+                changeQuality(viewModel.qualities?.find { it.name == tag })
                 changePlayerMode()
                 setQualityText()
             }
