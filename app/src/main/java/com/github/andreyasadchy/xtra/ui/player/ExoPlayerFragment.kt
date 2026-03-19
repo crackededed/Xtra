@@ -45,6 +45,7 @@ import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import com.github.andreyasadchy.xtra.R
+import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.model.ui.Clip
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.model.ui.Stream
@@ -177,8 +178,8 @@ class ExoPlayerFragment : PlayerFragment() {
                             }
                             setSubtitlesButton()
                             if (!tracks.isEmpty) {
-                                if (viewModel.qualities.containsKey(AUTO_QUALITY)
-                                    && viewModel.quality != AUDIO_ONLY_QUALITY
+                                if (viewModel.qualities?.find { it.name == AUTO_QUALITY } != null
+                                    && viewModel.quality?.name != AUDIO_ONLY_QUALITY
                                     && !viewModel.hidden) {
                                     changeQuality(viewModel.quality)
                                 }
@@ -191,79 +192,40 @@ class ExoPlayerFragment : PlayerFragment() {
                             binding.playerControls.progressBar.setDuration(duration)
                             binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
                             updateProgress()
-                            if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED && !timeline.isEmpty && viewModel.qualities.containsKey(AUTO_QUALITY)) {
-                                viewModel.updateQualities = viewModel.quality != AUDIO_ONLY_QUALITY
+                            if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED && !timeline.isEmpty && viewModel.qualities?.find { it.name == AUTO_QUALITY } != null) {
+                                viewModel.updateQualities = viewModel.quality?.name != AUDIO_ONLY_QUALITY
                             }
-                            if (viewModel.qualities.isEmpty() || viewModel.updateQualities) {
+                            if (viewModel.qualities.isNullOrEmpty() || viewModel.updateQualities) {
                                 val playlist = (player?.currentManifest as? HlsManifest)?.multivariantPlaylist
-                                val names: Array<String>?
-                                val codecStrings: Array<String?>?
-                                val urls: Array<String>?
-                                val labels = playlist?.variants?.mapNotNull { it.format.label }?.toTypedArray()
-                                if (!labels.isNullOrEmpty()) {
-                                    names = labels
-                                    codecStrings = playlist.variants.map { it.format.codecs }.toTypedArray()
-                                    urls = playlist.variants.map { it.url.toString() }.toTypedArray()
-                                } else {
-                                    val variants = playlist?.variants?.mapNotNull { variant ->
-                                        playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.let { variant to it }
-                                    }
-                                    names = variants?.map { it.second }?.toTypedArray()
-                                    codecStrings = variants?.map { it.first.format.codecs }?.toTypedArray()
-                                    urls = variants?.map { it.first.url.toString() }?.toTypedArray()
+                                val list = playlist?.variants?.mapIndexedNotNull { index, variant ->
+                                    val name = variant.format.label?.takeIf { it.isNotBlank() }
+                                        ?: playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.takeIf { it.isNotBlank() }
+                                        ?: index.toString()
+                                    VideoQuality(name, variant.format.codecs, variant.url.toString())
                                 }
-                                val codecs = codecStrings?.map { codec ->
-                                    codec?.substringBefore('.').let {
-                                        when (it) {
-                                            "av01" -> "AV1"
-                                            "hev1" -> "H.265"
-                                            "avc1" -> "H.264"
-                                            else -> it
+                                if (list != null) {
+                                    viewModel.qualities = list.asSequence()
+                                        .sortedByDescending {
+                                            it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                                         }
-                                    }
-                                }?.takeUnless { it.all { it == "H.264" || it == "mp4a" } }
-                                if (!names.isNullOrEmpty() && !urls.isNullOrEmpty()) {
-                                    val map = mutableMapOf<String, Pair<String, String?>>()
-                                    map[AUTO_QUALITY] = Pair(getString(R.string.auto), null)
-                                    names.forEachIndexed { index, quality ->
-                                        urls.getOrNull(index)?.let { url ->
-                                            when {
-                                                quality.equals("source", true) -> {
-                                                    val quality = getString(R.string.source)
-                                                    map["source"] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
-                                                }
-                                                quality.startsWith("audio", true) -> {
-                                                    map[AUDIO_ONLY_QUALITY] = Pair(getString(R.string.audio_only), url)
-                                                }
-                                                else -> {
-                                                    map[quality] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
-                                                }
+                                        .sortedByDescending {
+                                            it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
+                                        }
+                                        .sortedByDescending {
+                                            it.name == "source"
+                                        }
+                                        .toMutableList().apply {
+                                            add(0, VideoQuality(AUTO_QUALITY))
+                                            if (find { it.name == AUDIO_ONLY_QUALITY } == null) {
+                                                add(VideoQuality(AUDIO_ONLY_QUALITY))
+                                            }
+                                            if (videoType == STREAM) {
+                                                add(VideoQuality(CHAT_ONLY_QUALITY))
                                             }
                                         }
-                                    }
-                                    if (!map.containsKey(AUDIO_ONLY_QUALITY)) {
-                                        map[AUDIO_ONLY_QUALITY] = Pair(getString(R.string.audio_only), null)
-                                    }
-                                    if (videoType == STREAM) {
-                                        map[CHAT_ONLY_QUALITY] = Pair(getString(R.string.chat_only), null)
-                                    }
-                                    viewModel.qualities = map.toList()
-                                        .sortedByDescending {
-                                            it.first.substringAfter("p", "").takeWhile { it.isDigit() }.toIntOrNull()
-                                        }
-                                        .sortedByDescending {
-                                            it.first.substringBefore("p", "").takeWhile { it.isDigit() }.toIntOrNull()
-                                        }
-                                        .sortedByDescending {
-                                            it.first == "source"
-                                        }
-                                        .sortedByDescending {
-                                            it.first == "auto"
-                                        }
-                                        .toMap()
                                     setDefaultQuality()
                                     changePlayerMode()
-                                    if (viewModel.quality == AUDIO_ONLY_QUALITY) {
+                                    if (viewModel.quality?.name == AUDIO_ONLY_QUALITY) {
                                         changeQuality(viewModel.quality)
                                     }
                                 }
@@ -289,7 +251,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                                     endTime != null && (it.id.startsWith("stitched-ad-") ||
                                                             it.clientDefinedAttributes.find { it.name == "CLASS" }?.textValue == "twitch-stitched-ad" ||
                                                             it.clientDefinedAttributes.find { it.name.startsWith("X-TV-TWITCH-AD-") } != null)
-                                                            && (startTime <= segmentStartTime && segmentStartTime < endTime)
+                                                            && segmentStartTime in startTime..endTime
                                                 } != null
                                     } == true
                                     val oldValue = viewModel.playingAds
@@ -303,7 +265,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                             }
                                         } else {
                                             if (!oldValue) {
-                                                val playlist = viewModel.qualities[viewModel.quality]?.second
+                                                val playlist = viewModel.quality?.url
                                                 if (!viewModel.stopProxy && !playlist.isNullOrBlank() && useProxy) {
                                                     playbackService?.proxyMediaPlaylist = false
                                                     viewModel.usingProxy = true
@@ -321,7 +283,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                                     if (hideAds) {
                                                         viewModel.hidden = true
                                                         player?.let { player ->
-                                                            if (viewModel.quality != AUDIO_ONLY_QUALITY) {
+                                                            if (viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
                                                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                                                 }.build()
@@ -338,7 +300,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                         if (hideAds && viewModel.hidden) {
                                             viewModel.hidden = false
                                             player?.let { player ->
-                                                if (viewModel.quality != AUDIO_ONLY_QUALITY) {
+                                                if (viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
                                                     player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                                         setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                                                     }.build()
@@ -606,8 +568,7 @@ class ExoPlayerFragment : PlayerFragment() {
 
     override fun startClip(url: String?) {
         player?.let { player ->
-            val quality = viewModel.qualities.entries.find { it.key == viewModel.quality }
-            if (quality?.key == AUDIO_ONLY_QUALITY) {
+            if (viewModel.quality?.name == AUDIO_ONLY_QUALITY) {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                 }.build()
@@ -648,8 +609,7 @@ class ExoPlayerFragment : PlayerFragment() {
 
     override fun startOfflineVideo(url: String?, position: Long) {
         player?.let { player ->
-            val quality = viewModel.qualities.entries.find { it.key == viewModel.quality }
-            if (quality?.key == AUDIO_ONLY_QUALITY) {
+            if (viewModel.quality?.name == AUDIO_ONLY_QUALITY) {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                 }.build()
@@ -823,13 +783,13 @@ class ExoPlayerFragment : PlayerFragment() {
         }
     }
 
-    override fun changeQuality(selectedQuality: String?) {
+    override fun changeQuality(selectedQuality: VideoQuality?) {
         viewModel.previousQuality = viewModel.quality
         viewModel.quality = selectedQuality
-        viewModel.qualities.entries.find { it.key == selectedQuality }?.let { quality ->
+        viewModel.quality?.let { quality ->
             player?.let { player ->
                 player.currentMediaItem?.let { mediaItem ->
-                    when (quality.key) {
+                    when (quality.name) {
                         AUTO_QUALITY -> {
                             viewModel.playlistUrl?.let { uri ->
                                 if (mediaItem.localConfiguration?.uri != uri) {
@@ -855,9 +815,9 @@ class ExoPlayerFragment : PlayerFragment() {
                                 setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                             }.build()
                             binding.playerSurface.visibility = View.GONE
-                            quality.value.second?.let {
+                            quality.url?.let {
                                 val position = player.currentPosition
-                                if (viewModel.qualities.containsKey(AUTO_QUALITY)) {
+                                if (viewModel.qualities?.find { it.name == AUTO_QUALITY } != null) {
                                     viewModel.playlistUrl = mediaItem.localConfiguration?.uri
                                 }
                                 player.setMediaItem(mediaItem.buildUpon().setUri(it).build())
@@ -873,7 +833,7 @@ class ExoPlayerFragment : PlayerFragment() {
                             player.stop()
                         }
                         else -> {
-                            if (viewModel.qualities.containsKey(AUTO_QUALITY)) {
+                            if (viewModel.qualities?.find { it.name == AUTO_QUALITY } != null) {
                                 viewModel.playlistUrl?.let { uri ->
                                     player.currentMediaItem?.let {
                                         val position = player.currentPosition
@@ -888,9 +848,9 @@ class ExoPlayerFragment : PlayerFragment() {
                                     binding.playerSurface.visibility = View.VISIBLE
                                     if (!player.currentTracks.isEmpty) {
                                         player.currentTracks.groups.find { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO }?.let {
-                                            val selectedQuality = quality.key.split("p")
-                                            val targetResolution = selectedQuality.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                            val targetFps = selectedQuality.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
+                                            val selectedQuality = quality.name?.split("p")
+                                            val targetResolution = selectedQuality?.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
+                                            val targetFps = selectedQuality?.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
                                             if (it.mediaTrackGroup.length > 0) {
                                                 if (targetResolution != null) {
                                                     val formats = mutableListOf<Triple<Int, Int, Float>>()
@@ -915,9 +875,9 @@ class ExoPlayerFragment : PlayerFragment() {
                                 }.build()
                             } else {
                                 player.currentMediaItem?.let {
-                                    if (it.localConfiguration?.uri?.toString() != quality.value.second) {
+                                    if (it.localConfiguration?.uri?.toString() != quality.url) {
                                         val position = player.currentPosition
-                                        player.setMediaItem(it.buildUpon().setUri(quality.value.second).build())
+                                        player.setMediaItem(it.buildUpon().setUri(quality.url).build())
                                         player.prepare()
                                         player.seekTo(position)
                                     }
@@ -933,7 +893,7 @@ class ExoPlayerFragment : PlayerFragment() {
                     val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
                     val cellular = networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
                     if ((!cellular && requireContext().prefs().getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") || (cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
-                        requireContext().prefs().edit { putString(C.PLAYER_QUALITY, quality.key) }
+                        requireContext().prefs().edit { putString(C.PLAYER_QUALITY, quality.name) }
                     }
                 }
             }
@@ -948,11 +908,11 @@ class ExoPlayerFragment : PlayerFragment() {
                     playbackService?.proxyMediaPlaylist = false
                     viewModel.usingProxy = false
                 }
-                if (viewModel.quality != AUDIO_ONLY_QUALITY) {
+                if (viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
                     viewModel.restoreQuality = true
                     viewModel.previousQuality = viewModel.quality
-                    viewModel.quality = AUDIO_ONLY_QUALITY
-                    viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
+                    viewModel.quality = viewModel.qualities?.find { it.name == AUDIO_ONLY_QUALITY }
+                    viewModel.quality?.let { quality ->
                         player.currentMediaItem?.let { mediaItem ->
                             if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
@@ -961,12 +921,12 @@ class ExoPlayerFragment : PlayerFragment() {
                                 binding.playerSurface.visibility = View.GONE
                             }
                             if (requireContext().prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
-                                quality.value.second?.let {
+                                quality.url?.let { url ->
                                     val position = player.currentPosition
-                                    if (viewModel.qualities.containsKey(AUTO_QUALITY)) {
+                                    if (viewModel.qualities?.find { it.name == AUTO_QUALITY } != null) {
                                         viewModel.playlistUrl = mediaItem.localConfiguration?.uri
                                     }
-                                    player.setMediaItem(mediaItem.buildUpon().setUri(it).build())
+                                    player.setMediaItem(mediaItem.buildUpon().setUri(url).build())
                                     player.prepare()
                                     player.seekTo(position)
                                 }
@@ -986,7 +946,7 @@ class ExoPlayerFragment : PlayerFragment() {
 
     override fun downloadVideo() {
         val totalDuration = (player?.currentManifest as? HlsManifest)?.mediaPlaylist?.durationUs?.div(1000)
-        val qualities = viewModel.qualities.filter { !it.value.second.isNullOrBlank() }
+        val qualities = viewModel.qualities?.filter { !it.url.isNullOrBlank() }
         DownloadDialog.newVideoInstance(
             id = requireArguments().getString(KEY_VIDEO_ID),
             channelId = requireArguments().getString(KEY_CHANNEL_ID),
@@ -1004,9 +964,9 @@ class ExoPlayerFragment : PlayerFragment() {
             animatedPreviewUrl = requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW),
             totalDuration = totalDuration,
             currentPosition = getCurrentPosition(),
-            qualityKeys = qualities.keys.toTypedArray(),
-            qualityNames = qualities.map { it.value.first }.toTypedArray(),
-            qualityUrls = qualities.mapNotNull { it.value.second }.toTypedArray(),
+            qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
+            qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+            qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
         ).show(childFragmentManager, null)
     }
 
@@ -1042,11 +1002,11 @@ class ExoPlayerFragment : PlayerFragment() {
                     || (!isInPIPMode && !isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
                     || (isInPIPMode && isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, false))
                     || (isInPIPMode && !isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
-                    if (player.playWhenReady && viewModel.quality != AUDIO_ONLY_QUALITY) {
+                    if (player.playWhenReady && viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
                         viewModel.restoreQuality = true
                         viewModel.previousQuality = viewModel.quality
-                        viewModel.quality = AUDIO_ONLY_QUALITY
-                        viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
+                        viewModel.quality = viewModel.qualities?.find { it.name == AUDIO_ONLY_QUALITY }
+                        viewModel.quality?.let { quality ->
                             player.currentMediaItem?.let { mediaItem ->
                                 if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
                                     player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
@@ -1055,12 +1015,12 @@ class ExoPlayerFragment : PlayerFragment() {
                                     binding.playerSurface.visibility = View.GONE
                                 }
                                 if (requireContext().prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
-                                    quality.value.second?.let {
+                                    quality.url?.let { url ->
                                         val position = player.currentPosition
-                                        if (viewModel.qualities.containsKey(AUTO_QUALITY)) {
+                                        if (viewModel.qualities?.find { it.name == AUTO_QUALITY } != null) {
                                             viewModel.playlistUrl = mediaItem.localConfiguration?.uri
                                         }
-                                        player.setMediaItem(mediaItem.buildUpon().setUri(it).build())
+                                        player.setMediaItem(mediaItem.buildUpon().setUri(url).build())
                                         player.prepare()
                                         player.seekTo(position)
                                     }

@@ -12,6 +12,7 @@ import androidx.media3.datasource.HttpDataSource
 import com.github.andreyasadchy.xtra.model.NotificationUser
 import com.github.andreyasadchy.xtra.model.ShownNotification
 import com.github.andreyasadchy.xtra.model.VideoPosition
+import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.model.ui.Bookmark
 import com.github.andreyasadchy.xtra.model.ui.Game
 import com.github.andreyasadchy.xtra.model.ui.LocalFollowChannel
@@ -100,13 +101,13 @@ class PlayerViewModel @Inject constructor(
     val gamesList = MutableStateFlow<List<Game>?>(null)
     var shouldRetry = true
 
-    val clipUrls = MutableStateFlow<Map<Pair<String, String?>, String>?>(null)
+    val clipUrls = MutableStateFlow<List<VideoQuality>?>(null)
 
     val savedOfflineVideoPosition = MutableStateFlow<Long?>(null)
 
-    var qualities: Map<String, Pair<String, String?>> = emptyMap()
-    var quality: String? = null
-    var previousQuality: String? = null
+    var qualities: List<VideoQuality>? = null
+    var quality: VideoQuality? = null
+    var previousQuality: VideoQuality? = null
     var playlistUrl: Uri? = null
     var updateQualities = false
     var started = false
@@ -667,12 +668,12 @@ class PlayerViewModel @Inject constructor(
         if (clipUrls.value == null) {
             viewModelScope.launch {
                 try {
-                    clipUrls.value = playerRepository.loadClipUrls(networkLibrary, gqlHeaders, id, enableIntegrity) ?: emptyMap()
+                    clipUrls.value = playerRepository.loadClipQualities(networkLibrary, gqlHeaders, id, enableIntegrity) ?: emptyList()
                 } catch (e: Exception) {
                     if (e.message == "failed integrity check" && integrity.value == null) {
                         integrity.value = "refreshClip"
                     } else {
-                        clipUrls.value = emptyMap()
+                        clipUrls.value = emptyList()
                     }
                 }
             }
