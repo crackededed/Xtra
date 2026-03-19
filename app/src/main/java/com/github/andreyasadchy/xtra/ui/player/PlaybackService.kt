@@ -38,6 +38,7 @@ import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import com.github.andreyasadchy.xtra.model.VideoPosition
+import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.player.lowlatency.CronetDataSource
 import com.github.andreyasadchy.xtra.player.lowlatency.DefaultHlsPlaylistTracker
 import com.github.andreyasadchy.xtra.player.lowlatency.HlsPlaylistParser
@@ -511,23 +512,17 @@ class PlaybackService : MediaSessionService() {
                             }
                             GET_QUALITIES -> {
                                 val playlist = (session.player.currentManifest as? HlsManifest)?.multivariantPlaylist
-                                val names = playlist?.variants?.mapNotNull { it.format.label }?.toTypedArray()
-                                if (!names.isNullOrEmpty()) {
-                                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundleOf(
-                                        NAMES to names,
-                                        CODECS to playlist.variants.map { it.format.codecs }.toTypedArray(),
-                                        URLS to playlist.variants.map { it.url.toString() }.toTypedArray(),
-                                    )))
-                                } else {
-                                    val variants = playlist?.variants?.mapNotNull { variant ->
-                                        playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.let { variant to it }
-                                    }
-                                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundleOf(
-                                        NAMES to variants?.map { it.second }?.toTypedArray(),
-                                        CODECS to variants?.map { it.first.format.codecs }?.toTypedArray(),
-                                        URLS to variants?.map { it.first.url.toString() }?.toTypedArray(),
-                                    )))
+                                val list = playlist?.variants?.mapIndexedNotNull { index, variant ->
+                                    val name = variant.format.label?.takeIf { it.isNotBlank() }
+                                        ?: playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.takeIf { it.isNotBlank() }
+                                        ?: index.toString()
+                                    VideoQuality(name, variant.format.codecs, variant.url.toString())
                                 }
+                                Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundleOf(
+                                    NAMES to list?.map { it.name.toString() }?.toTypedArray(),
+                                    CODECS to list?.map { it.codecs.toString() }?.toTypedArray(),
+                                    URLS to list?.map { it.url.toString() }?.toTypedArray(),
+                                )))
                             }
                             GET_DURATION -> {
                                 Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundleOf(

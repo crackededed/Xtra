@@ -17,6 +17,7 @@ import com.github.andreyasadchy.xtra.graphql.StreamPlaybackAccessTokenQuery
 import com.github.andreyasadchy.xtra.graphql.type.BadgeImageSize
 import com.github.andreyasadchy.xtra.graphql.type.EmoteType
 import com.github.andreyasadchy.xtra.model.VideoPosition
+import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.model.chat.CheerEmote
 import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.model.chat.RecentEmote
@@ -353,7 +354,7 @@ class PlayerRepository @Inject constructor(
         }
     }
 
-    suspend fun loadClipUrls(networkLibrary: String?, gqlHeaders: Map<String, String>, clipId: String?, enableIntegrity: Boolean): Map<Pair<String, String?>, String>? = withContext(Dispatchers.IO) {
+    suspend fun loadClipQualities(networkLibrary: String?, gqlHeaders: Map<String, String>, clipId: String?, enableIntegrity: Boolean): List<VideoQuality>? = withContext(Dispatchers.IO) {
         try {
             val response = graphQLRepository.loadClipUrls(networkLibrary, gqlHeaders, clipId)
             if (enableIntegrity) {
@@ -377,9 +378,9 @@ class PlayerRepository @Inject constructor(
                             appendQueryParameter("sig", accessToken?.signature)
                             appendQueryParameter("token", accessToken?.value)
                         }.build().toString()
-                        Pair(name, quality.codecs) to url
+                        VideoQuality(name, quality.codecs, url)
                     } else null
-                }?.toMap()
+                }
             }
         } catch (e: Exception) {
             if (e.message == "failed integrity check") throw e
@@ -405,9 +406,9 @@ class PlayerRepository @Inject constructor(
                             appendQueryParameter("sig", accessToken?.signature)
                             appendQueryParameter("token", accessToken?.value)
                         }.build().toString()
-                        Pair(name, quality.codecs) to url
+                        VideoQuality(name, quality.codecs, url)
                     } else null
-                }?.toMap()
+                }
             }
         }
     }
