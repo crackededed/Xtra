@@ -4,7 +4,6 @@ import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.widget.SearchView
-import androidx.core.os.bundleOf
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.DialogFragment
@@ -36,7 +35,9 @@ class SearchTagsDialog : DialogFragment() {
 
         fun newInstance(getGameTags: Boolean): SearchTagsDialog {
             return SearchTagsDialog().apply {
-                arguments = bundleOf(GET_GAME_TAGS to getGameTags)
+                arguments = Bundle().apply {
+                    putBoolean(GET_GAME_TAGS, getGameTags)
+                }
             }
         }
     }

@@ -11,7 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat.getSystemService
-import androidx.core.os.bundleOf
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.databinding.DialogChatMessageClickBinding
@@ -38,9 +37,9 @@ class ReplyClickedDialog : BottomSheetDialogFragment() {
 
         fun newInstance(messagingEnabled: Boolean): ReplyClickedDialog {
             return ReplyClickedDialog().apply {
-                arguments = bundleOf(
-                    KEY_MESSAGING to messagingEnabled,
-                )
+                arguments = Bundle().apply {
+                    putBoolean(KEY_MESSAGING, messagingEnabled)
+                }
             }
         }
     }
