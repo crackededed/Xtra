@@ -43,7 +43,6 @@ import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.content.res.use
-import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -2274,7 +2273,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 CLIP -> {
                     val qualities = viewModel.qualities?.filter { !it.url.isNullOrBlank() }
                     DownloadDialog.newClipInstance(
-                        clipId = requireArguments().getString(KEY_CLIP_ID),
+                        id = requireArguments().getString(KEY_CLIP_ID),
                         channelId = requireArguments().getString(KEY_CHANNEL_ID),
                         channelLogin = requireArguments().getString(KEY_CHANNEL_LOGIN),
                         channelName = requireArguments().getString(KEY_CHANNEL_NAME),
@@ -2285,7 +2284,6 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         title = requireArguments().getString(KEY_TITLE),
                         thumbnail = requireArguments().getString(KEY_THUMBNAIL),
                         createdAt = requireArguments().getString(KEY_CREATED_AT),
-                        durationSeconds = requireArguments().getInt(KEY_DURATION_SECONDS),
                         videoId = requireArguments().getString(KEY_VIDEO_ID),
                         videoOffsetSeconds = requireArguments().getInt(KEY_VIDEO_OFFSET_SECONDS),
                         qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
@@ -2452,82 +2450,82 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     }
 
     protected fun getStreamArguments(item: Stream): Bundle {
-        return bundleOf(
-            KEY_TYPE to STREAM,
-            KEY_STREAM_ID to item.id,
-            KEY_CHANNEL_ID to item.channelId,
-            KEY_CHANNEL_LOGIN to item.channelLogin,
-            KEY_CHANNEL_NAME to item.channelName,
-            KEY_CHANNEL_IMAGE to item.channelImage,
-            KEY_GAME_ID to item.gameId,
-            KEY_GAME_SLUG to item.gameSlug,
-            KEY_GAME_NAME to item.gameName,
-            KEY_TITLE to item.title,
-            KEY_THUMBNAIL to item.thumbnail,
-            KEY_STARTED_AT to item.createdAt,
-            KEY_VIEWER_COUNT to (item.viewerCount ?: -1),
-        )
+        return Bundle().apply {
+            putString(KEY_TYPE, STREAM)
+            putString(KEY_STREAM_ID, item.id)
+            putString(KEY_CHANNEL_ID, item.channelId)
+            putString(KEY_CHANNEL_LOGIN, item.channelLogin)
+            putString(KEY_CHANNEL_NAME, item.channelName)
+            putString(KEY_CHANNEL_IMAGE, item.channelImage)
+            putString(KEY_GAME_ID, item.gameId)
+            putString(KEY_GAME_SLUG, item.gameSlug)
+            putString(KEY_GAME_NAME, item.gameName)
+            putString(KEY_TITLE, item.title)
+            putString(KEY_THUMBNAIL, item.thumbnail)
+            putString(KEY_STARTED_AT, item.createdAt)
+            putInt(KEY_VIEWER_COUNT, item.viewerCount ?: -1)
+        }
     }
 
     protected fun getVideoArguments(item: Video, offset: Long?, ignoreSavedPosition: Boolean): Bundle {
-        return bundleOf(
-            KEY_TYPE to VIDEO,
-            KEY_VIDEO_ID to item.id,
-            KEY_CHANNEL_ID to item.channelId,
-            KEY_CHANNEL_LOGIN to item.channelLogin,
-            KEY_CHANNEL_NAME to item.channelName,
-            KEY_CHANNEL_IMAGE to item.channelImage,
-            KEY_GAME_ID to item.gameId,
-            KEY_GAME_SLUG to item.gameSlug,
-            KEY_GAME_NAME to item.gameName,
-            KEY_TITLE to item.title,
-            KEY_THUMBNAIL to item.thumbnail,
-            KEY_CREATED_AT to item.createdAt,
-            KEY_DURATION_SECONDS to item.durationSeconds,
-            KEY_VIDEO_TYPE to item.type,
-            KEY_VIDEO_ANIMATED_PREVIEW to item.animatedPreviewURL,
-            KEY_OFFSET to (offset ?: -1L),
-            KEY_IGNORE_SAVED_POSITION to ignoreSavedPosition,
-        )
+        return Bundle().apply {
+            putString(KEY_TYPE, VIDEO)
+            putString(KEY_VIDEO_ID, item.id)
+            putString(KEY_CHANNEL_ID, item.channelId)
+            putString(KEY_CHANNEL_LOGIN, item.channelLogin)
+            putString(KEY_CHANNEL_NAME, item.channelName)
+            putString(KEY_CHANNEL_IMAGE, item.channelImage)
+            putString(KEY_GAME_ID, item.gameId)
+            putString(KEY_GAME_SLUG, item.gameSlug)
+            putString(KEY_GAME_NAME, item.gameName)
+            putString(KEY_TITLE, item.title)
+            putString(KEY_THUMBNAIL, item.thumbnail)
+            putString(KEY_CREATED_AT, item.createdAt)
+            putInt(KEY_DURATION_SECONDS, item.durationSeconds ?: 0)
+            putString(KEY_VIDEO_TYPE, item.type)
+            putString(KEY_VIDEO_ANIMATED_PREVIEW, item.animatedPreviewURL)
+            putLong(KEY_OFFSET, offset ?: -1L)
+            putBoolean(KEY_IGNORE_SAVED_POSITION, ignoreSavedPosition)
+        }
     }
 
     protected fun getClipArguments(item: Clip): Bundle {
-        return bundleOf(
-            KEY_TYPE to CLIP,
-            KEY_CLIP_ID to item.id,
-            KEY_CHANNEL_ID to item.channelId,
-            KEY_CHANNEL_LOGIN to item.channelLogin,
-            KEY_CHANNEL_NAME to item.channelName,
-            KEY_PROFILE_IMAGE_URL to item.channelImageURL,
-            KEY_CHANNEL_IMAGE to item.channelImage,
-            KEY_GAME_ID to item.gameId,
-            KEY_GAME_SLUG to item.gameSlug,
-            KEY_GAME_NAME to item.gameName,
-            KEY_TITLE to item.title,
-            KEY_THUMBNAIL to item.thumbnail,
-            KEY_CREATED_AT to item.createdAt,
-            KEY_DURATION_SECONDS to item.durationSeconds,
-            KEY_VIDEO_ID to item.videoId,
-            KEY_VIDEO_OFFSET_SECONDS to (item.videoOffsetSeconds ?: -1),
-            KEY_VIDEO_ANIMATED_PREVIEW to item.videoAnimatedPreviewURL,
-        )
+        return Bundle().apply {
+            putString(KEY_TYPE, CLIP)
+            putString(KEY_CLIP_ID, item.id)
+            putString(KEY_CHANNEL_ID, item.channelId)
+            putString(KEY_CHANNEL_LOGIN, item.channelLogin)
+            putString(KEY_CHANNEL_NAME, item.channelName)
+            putString(KEY_PROFILE_IMAGE_URL, item.channelImageURL)
+            putString(KEY_CHANNEL_IMAGE, item.channelImage)
+            putString(KEY_GAME_ID, item.gameId)
+            putString(KEY_GAME_SLUG, item.gameSlug)
+            putString(KEY_GAME_NAME, item.gameName)
+            putString(KEY_TITLE, item.title)
+            putString(KEY_THUMBNAIL, item.thumbnail)
+            putString(KEY_CREATED_AT, item.createdAt)
+            putInt(KEY_DURATION_SECONDS, item.durationSeconds ?: 0)
+            putString(KEY_VIDEO_ID, item.videoId)
+            putInt(KEY_VIDEO_OFFSET_SECONDS, item.videoOffsetSeconds ?: -1)
+            putString(KEY_VIDEO_ANIMATED_PREVIEW, item.videoAnimatedPreviewURL)
+        }
     }
 
     protected fun getOfflineVideoArguments(item: OfflineVideo): Bundle {
-        return bundleOf(
-            KEY_TYPE to OFFLINE_VIDEO,
-            KEY_OFFLINE_VIDEO_ID to item.id,
-            KEY_URL to item.url,
-            KEY_CHAT_URL to item.chatUrl,
-            KEY_CHANNEL_ID to item.channelId,
-            KEY_CHANNEL_LOGIN to item.channelLogin,
-            KEY_CHANNEL_NAME to item.channelName,
-            KEY_CHANNEL_IMAGE to item.channelLogo,
-            KEY_GAME_ID to item.gameId,
-            KEY_GAME_SLUG to item.gameSlug,
-            KEY_GAME_NAME to item.gameName,
-            KEY_TITLE to item.name,
-        )
+        return Bundle().apply {
+            putString(KEY_TYPE, OFFLINE_VIDEO)
+            putInt(KEY_OFFLINE_VIDEO_ID, item.id)
+            putString(KEY_URL, item.url)
+            putString(KEY_CHAT_URL, item.chatUrl)
+            putString(KEY_CHANNEL_ID, item.channelId)
+            putString(KEY_CHANNEL_LOGIN, item.channelLogin)
+            putString(KEY_CHANNEL_NAME, item.channelName)
+            putString(KEY_CHANNEL_IMAGE, item.channelLogo)
+            putString(KEY_GAME_ID, item.gameId)
+            putString(KEY_GAME_SLUG, item.gameSlug)
+            putString(KEY_GAME_NAME, item.gameName)
+            putString(KEY_TITLE, item.name)
+        }
     }
 
     override fun onDestroyView() {

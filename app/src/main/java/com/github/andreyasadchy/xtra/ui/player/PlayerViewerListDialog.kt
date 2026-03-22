@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -35,7 +34,9 @@ class PlayerViewerListDialog : BottomSheetDialogFragment(), IntegrityDialog.Call
 
         fun newInstance(login: String): PlayerViewerListDialog {
             return PlayerViewerListDialog().apply {
-                arguments = bundleOf(LOGIN to login)
+                arguments = Bundle().apply {
+                    putString(LOGIN, login)
+                }
             }
         }
     }
