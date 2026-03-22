@@ -13,7 +13,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat.getSystemService
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -60,10 +59,10 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
 
         fun newInstance(messagingEnabled: Boolean, channelId: String?): MessageClickedDialog {
             return MessageClickedDialog().apply {
-                arguments = bundleOf(
-                    KEY_MESSAGING to messagingEnabled,
-                    KEY_CHANNEL_ID to channelId
-                )
+                arguments = Bundle().apply {
+                    putBoolean(KEY_MESSAGING, messagingEnabled)
+                    putString(KEY_CHANNEL_ID, channelId)
+                }
             }
         }
     }

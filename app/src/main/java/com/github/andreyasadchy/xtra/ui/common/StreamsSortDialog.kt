@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioButton
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.DialogStreamsSortBinding
@@ -37,7 +36,12 @@ class StreamsSortDialog : BottomSheetDialogFragment(), SearchTagsDialog.OnTagSel
 
         fun newInstance(sort: String?, tags: Array<String>?, languages: Array<String>?, saved: Boolean = false): StreamsSortDialog {
             return StreamsSortDialog().apply {
-                arguments = bundleOf(SORT to sort, TAGS to tags, LANGUAGES to languages, SAVED to saved)
+                arguments = Bundle().apply {
+                    putString(SORT, sort)
+                    putStringArray(TAGS, tags)
+                    putStringArray(LANGUAGES, languages)
+                    putBoolean(SAVED, saved)
+                }
             }
         }
     }
