@@ -2113,6 +2113,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
         with(binding) {
             if (isInPictureInPictureMode) {
+                restoreBrightness()
                 if (!isMaximized) {
                     isMaximized = true
                     requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressedCallback)
@@ -2146,6 +2147,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     }
 
     override fun onStop() {
+        restoreBrightness()
         super.onStop()
         binding.playerControls.root.removeCallbacks(controllerHideAction)
     }
@@ -2928,7 +2930,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     override val isControlsVisible get() = binding.playerControls.root.isVisible
     override val screenWidth get() = resources.displayMetrics.widthPixels
     override val screenHeight get() = resources.displayMetrics.heightPixels
-    override val windowAttributes: android.view.WindowManager.LayoutParams get() = requireActivity().window.attributes
+    override val windowAttributes: android.view.WindowManager.LayoutParams
+        get() = android.view.WindowManager.LayoutParams().apply {
+            copyFrom(requireActivity().window.attributes)
+        }
     override fun setWindowAttributes(params: android.view.WindowManager.LayoutParams) { 
         // Save original brightness before first modification
         if (originalBrightness == -1f && params.screenBrightness != -1f) {
