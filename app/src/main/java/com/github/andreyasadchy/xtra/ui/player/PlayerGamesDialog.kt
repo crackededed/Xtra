@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.core.content.res.use
-import androidx.core.os.bundleOf
 import androidx.core.view.setPadding
 import androidx.core.widget.NestedScrollView
 import com.github.andreyasadchy.xtra.R
@@ -23,7 +22,9 @@ class PlayerGamesDialog : BottomSheetDialogFragment() {
 
         fun newInstance(gamesList: List<Game>): PlayerGamesDialog {
             return PlayerGamesDialog().apply {
-                arguments = bundleOf(GAMES to ArrayList(gamesList))
+                arguments = Bundle().apply {
+                    putParcelableArrayList(GAMES, ArrayList(gamesList))
+                }
             }
         }
     }

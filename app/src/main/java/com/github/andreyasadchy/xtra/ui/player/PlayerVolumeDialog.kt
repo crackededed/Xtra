@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.edit
-import androidx.core.os.bundleOf
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.PlayerVolumeBinding
 import com.github.andreyasadchy.xtra.util.C
@@ -21,7 +20,9 @@ class PlayerVolumeDialog : BottomSheetDialogFragment() {
 
         fun newInstance(volume: Float?): PlayerVolumeDialog {
             return PlayerVolumeDialog().apply {
-                arguments = bundleOf(VOLUME to volume)
+                arguments = Bundle().apply {
+                    putFloat(VOLUME, volume ?: 1f)
+                }
             }
         }
     }

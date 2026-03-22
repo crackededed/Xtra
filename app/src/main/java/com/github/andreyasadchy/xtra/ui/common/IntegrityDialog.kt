@@ -11,7 +11,6 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import androidx.core.content.edit
-import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import androidx.webkit.WebViewClientCompat
@@ -102,7 +101,9 @@ class IntegrityDialog : DialogFragment() {
 
         fun show(fragmentManager: FragmentManager, callback: String? = null) {
             IntegrityDialog().apply {
-                arguments = bundleOf(KEY_CALLBACK to callback)
+                arguments = Bundle().apply {
+                    putString(KEY_CALLBACK, callback)
+                }
                 show(fragmentManager, null)
             }
         }

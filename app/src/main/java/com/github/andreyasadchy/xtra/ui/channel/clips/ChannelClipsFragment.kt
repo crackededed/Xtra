@@ -53,7 +53,7 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
         super.onViewCreated(view, savedInstanceState)
         val showDialog: (Clip) -> Unit = {
             DownloadDialog.newClipInstance(
-                clipId = it.id,
+                id = it.id,
                 channelId = it.channelId,
                 channelLogin = it.channelLogin,
                 channelName = it.channelName,
@@ -64,7 +64,6 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
                 title = it.title,
                 thumbnail = it.thumbnail,
                 createdAt = it.createdAt,
-                durationSeconds = it.durationSeconds,
                 videoId = it.videoId,
                 videoOffsetSeconds = it.videoOffsetSeconds,
             ).show(childFragmentManager, null)
