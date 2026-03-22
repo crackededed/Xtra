@@ -45,6 +45,7 @@ import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import com.github.andreyasadchy.xtra.R
+import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.model.ui.Clip
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.model.ui.Stream
@@ -54,6 +55,7 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.player.PlaybackService.CustomHlsPlaylistParserFactory
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
+import com.github.andreyasadchy.xtra.util.prefs
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -89,7 +91,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                 binding.playerControls.playPause.visibility = View.VISIBLE
                             } else {
                                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
-                                if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
+                                if (videoType == STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
                                     binding.playerControls.playPause.visibility = View.GONE
                                 }
                             }
@@ -109,7 +111,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                 binding.playerControls.playPause.visibility = View.VISIBLE
                             } else {
                                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
-                                if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
+                                if (videoType == STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
                                     binding.playerControls.playPause.visibility = View.GONE
                                 }
                             }
@@ -127,7 +129,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                 binding.playerControls.playPause.visibility = View.VISIBLE
                             } else {
                                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
-                                if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
+                                if (videoType == STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
                                     binding.playerControls.playPause.visibility = View.GONE
                                 }
                             }
@@ -164,7 +166,7 @@ class ExoPlayerFragment : PlayerFragment() {
 
                         override fun onIsPlayingChanged(isPlaying: Boolean) {
                             updateProgress()
-                            if (!prefs.getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
+                            if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
                                 requireView().keepScreenOn = isPlaying
                             }
                         }
@@ -172,12 +174,12 @@ class ExoPlayerFragment : PlayerFragment() {
                         override fun onTracksChanged(tracks: Tracks) {
                             if (!tracks.isEmpty && !viewModel.loaded.value) {
                                 viewModel.loaded.value = true
-                                toggleSubtitles(prefs.getBoolean(C.PLAYER_SUBTITLES_ENABLED, false))
+                                toggleSubtitles(requireContext().prefs().getBoolean(C.PLAYER_SUBTITLES_ENABLED, false))
                             }
                             setSubtitlesButton()
                             if (!tracks.isEmpty) {
-                                if (viewModel.qualities.containsKey(AUTO_QUALITY)
-                                    && viewModel.quality != AUDIO_ONLY_QUALITY
+                                if (viewModel.qualities?.find { it.name == AUTO_QUALITY } != null
+                                    && viewModel.quality?.name != AUDIO_ONLY_QUALITY
                                     && !viewModel.hidden) {
                                     changeQuality(viewModel.quality)
                                 }
@@ -190,79 +192,40 @@ class ExoPlayerFragment : PlayerFragment() {
                             binding.playerControls.progressBar.setDuration(duration)
                             binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
                             updateProgress()
-                            if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED && !timeline.isEmpty && viewModel.qualities.containsKey(AUTO_QUALITY)) {
-                                viewModel.updateQualities = viewModel.quality != AUDIO_ONLY_QUALITY
+                            if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED && !timeline.isEmpty && viewModel.qualities?.find { it.name == AUTO_QUALITY } != null) {
+                                viewModel.updateQualities = viewModel.quality?.name != AUDIO_ONLY_QUALITY
                             }
-                            if (viewModel.qualities.isEmpty() || viewModel.updateQualities) {
+                            if (viewModel.qualities.isNullOrEmpty() || viewModel.updateQualities) {
                                 val playlist = (player?.currentManifest as? HlsManifest)?.multivariantPlaylist
-                                val names: Array<String>?
-                                val codecStrings: Array<String?>?
-                                val urls: Array<String>?
-                                val labels = playlist?.variants?.mapNotNull { it.format.label }?.toTypedArray()
-                                if (!labels.isNullOrEmpty()) {
-                                    names = labels
-                                    codecStrings = playlist.variants.map { it.format.codecs }.toTypedArray()
-                                    urls = playlist.variants.map { it.url.toString() }.toTypedArray()
-                                } else {
-                                    val variants = playlist?.variants?.mapNotNull { variant ->
-                                        playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.let { variant to it }
-                                    }
-                                    names = variants?.map { it.second }?.toTypedArray()
-                                    codecStrings = variants?.map { it.first.format.codecs }?.toTypedArray()
-                                    urls = variants?.map { it.first.url.toString() }?.toTypedArray()
+                                val list = playlist?.variants?.mapIndexedNotNull { index, variant ->
+                                    val name = variant.format.label?.takeIf { it.isNotBlank() }
+                                        ?: playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.takeIf { it.isNotBlank() }
+                                        ?: index.toString()
+                                    VideoQuality(name, variant.format.codecs, variant.url.toString())
                                 }
-                                val codecs = codecStrings?.map { codec ->
-                                    codec?.substringBefore('.').let {
-                                        when (it) {
-                                            "av01" -> "AV1"
-                                            "hev1" -> "H.265"
-                                            "avc1" -> "H.264"
-                                            else -> it
+                                if (list != null) {
+                                    viewModel.qualities = list.asSequence()
+                                        .sortedByDescending {
+                                            it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                                         }
-                                    }
-                                }?.takeUnless { it.all { it == "H.264" || it == "mp4a" } }
-                                if (!names.isNullOrEmpty() && !urls.isNullOrEmpty()) {
-                                    val map = mutableMapOf<String, Pair<String, String?>>()
-                                    map[AUTO_QUALITY] = Pair(getString(R.string.auto), null)
-                                    names.forEachIndexed { index, quality ->
-                                        urls.getOrNull(index)?.let { url ->
-                                            when {
-                                                quality.equals("source", true) -> {
-                                                    val quality = getString(R.string.source)
-                                                    map["source"] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
-                                                }
-                                                quality.startsWith("audio", true) -> {
-                                                    map[AUDIO_ONLY_QUALITY] = Pair(getString(R.string.audio_only), url)
-                                                }
-                                                else -> {
-                                                    map[quality] = Pair(codecs?.getOrNull(index)?.let { "$quality $it" } ?: quality, url)
-                                                }
+                                        .sortedByDescending {
+                                            it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
+                                        }
+                                        .sortedByDescending {
+                                            it.name == "source"
+                                        }
+                                        .toMutableList().apply {
+                                            add(0, VideoQuality(AUTO_QUALITY))
+                                            if (find { it.name == AUDIO_ONLY_QUALITY } == null) {
+                                                add(VideoQuality(AUDIO_ONLY_QUALITY))
+                                            }
+                                            if (videoType == STREAM) {
+                                                add(VideoQuality(CHAT_ONLY_QUALITY))
                                             }
                                         }
-                                    }
-                                    if (!map.containsKey(AUDIO_ONLY_QUALITY)) {
-                                        map[AUDIO_ONLY_QUALITY] = Pair(getString(R.string.audio_only), null)
-                                    }
-                                    if (videoType == STREAM) {
-                                        map[CHAT_ONLY_QUALITY] = Pair(getString(R.string.chat_only), null)
-                                    }
-                                    viewModel.qualities = map.toList()
-                                        .sortedByDescending {
-                                            it.first.substringAfter("p", "").takeWhile { it.isDigit() }.toIntOrNull()
-                                        }
-                                        .sortedByDescending {
-                                            it.first.substringBefore("p", "").takeWhile { it.isDigit() }.toIntOrNull()
-                                        }
-                                        .sortedByDescending {
-                                            it.first == "source"
-                                        }
-                                        .sortedByDescending {
-                                            it.first == "auto"
-                                        }
-                                        .toMap()
                                     setDefaultQuality()
                                     changePlayerMode()
-                                    if (viewModel.quality == AUDIO_ONLY_QUALITY) {
+                                    if (viewModel.quality?.name == AUDIO_ONLY_QUALITY) {
                                         changeQuality(viewModel.quality)
                                     }
                                 }
@@ -271,10 +234,10 @@ class ExoPlayerFragment : PlayerFragment() {
                                 }
                             }
                             if (videoType == STREAM) {
-                                val hideAds = prefs.getBoolean(C.PLAYER_HIDE_ADS, false)
-                                val useProxy = prefs.getBoolean(C.PROXY_MEDIA_PLAYLIST, true)
-                                        && !prefs.getString(C.PROXY_HOST, null).isNullOrBlank()
-                                        && prefs.getString(C.PROXY_PORT, null)?.toIntOrNull() != null
+                                val hideAds = requireContext().prefs().getBoolean(C.PLAYER_HIDE_ADS, false)
+                                val useProxy = requireContext().prefs().getBoolean(C.PROXY_MEDIA_PLAYLIST, true)
+                                        && !requireContext().prefs().getString(C.PROXY_HOST, null).isNullOrBlank()
+                                        && requireContext().prefs().getString(C.PROXY_PORT, null)?.toIntOrNull() != null
                                 if (hideAds || useProxy) {
                                     val playlist = (player?.currentManifest as? HlsManifest)?.mediaPlaylist
                                     val playingAds = playlist?.segments?.lastOrNull()?.let { segment ->
@@ -288,7 +251,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                                     endTime != null && (it.id.startsWith("stitched-ad-") ||
                                                             it.clientDefinedAttributes.find { it.name == "CLASS" }?.textValue == "twitch-stitched-ad" ||
                                                             it.clientDefinedAttributes.find { it.name.startsWith("X-TV-TWITCH-AD-") } != null)
-                                                            && (startTime <= segmentStartTime && segmentStartTime < endTime)
+                                                            && segmentStartTime in startTime..endTime
                                                 } != null
                                     } == true
                                     val oldValue = viewModel.playingAds
@@ -302,14 +265,14 @@ class ExoPlayerFragment : PlayerFragment() {
                                             }
                                         } else {
                                             if (!oldValue) {
-                                                val playlist = viewModel.qualities[viewModel.quality]?.second
+                                                val playlist = viewModel.quality?.url
                                                 if (!viewModel.stopProxy && !playlist.isNullOrBlank() && useProxy) {
                                                     playbackService?.proxyMediaPlaylist = false
                                                     viewModel.usingProxy = true
                                                     viewLifecycleOwner.lifecycleScope.launch {
                                                         for (i in 0 until 10) {
                                                             delay(10000)
-                                                            if (!viewModel.checkPlaylist(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), playlist)) {
+                                                            if (!viewModel.checkPlaylist(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"), playlist)) {
                                                                 break
                                                             }
                                                         }
@@ -320,7 +283,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                                     if (hideAds) {
                                                         viewModel.hidden = true
                                                         player?.let { player ->
-                                                            if (viewModel.quality != AUDIO_ONLY_QUALITY) {
+                                                            if (viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
                                                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                                                 }.build()
@@ -337,13 +300,13 @@ class ExoPlayerFragment : PlayerFragment() {
                                         if (hideAds && viewModel.hidden) {
                                             viewModel.hidden = false
                                             player?.let { player ->
-                                                if (viewModel.quality != AUDIO_ONLY_QUALITY) {
+                                                if (viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
                                                     player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                                         setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                                                     }.build()
                                                     binding.playerSurface.visibility = View.VISIBLE
                                                 }
-                                                player.volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
+                                                player.volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
                                             }
                                         }
                                     }
@@ -398,7 +361,7 @@ class ExoPlayerFragment : PlayerFragment() {
                                             && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                                             && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                                     if (isNetworkAvailable) {
-                                        val skipAccessToken = prefs.getString(C.TOKEN_SKIP_VIDEO_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2
+                                        val skipAccessToken = requireContext().prefs().getString(C.TOKEN_SKIP_VIDEO_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2
                                         when {
                                             skipAccessToken == 1 && viewModel.shouldRetry && responseCode != 0 -> {
                                                 viewModel.shouldRetry = false
@@ -456,7 +419,7 @@ class ExoPlayerFragment : PlayerFragment() {
                         if (viewModel.started && player.currentMediaItem != null) {
                             chatFragment?.startReplayChatLoad()
                         }
-                        if (!prefs.getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
+                        if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
                             requireView().keepScreenOn = player.isPlaying
                         }
                         updateProgress()
@@ -465,7 +428,7 @@ class ExoPlayerFragment : PlayerFragment() {
                             binding.playerControls.playPause.visibility = View.VISIBLE
                         } else {
                             binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
-                            if (videoType == STREAM && !prefs.getBoolean(C.PLAYER_PAUSE, false)) {
+                            if (videoType == STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
                                 binding.playerControls.playPause.visibility = View.GONE
                             }
                         }
@@ -506,16 +469,16 @@ class ExoPlayerFragment : PlayerFragment() {
                     DefaultDataSource.Factory(
                         requireContext(),
                         viewModel.getDataSourceFactory(
-                            networkLibrary = prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
-                            proxyMultivariantPlaylist = prefs.getBoolean(C.PROXY_MULTIVARIANT_PLAYLIST, false),
-                            proxyMediaPlaylist = prefs.getBoolean(C.PROXY_MEDIA_PLAYLIST, true),
-                            proxyHost = prefs.getString(C.PROXY_HOST, null),
-                            proxyPort = prefs.getString(C.PROXY_PORT, null)?.toIntOrNull(),
-                            proxyUser = prefs.getString(C.PROXY_USER, null),
-                            proxyPassword = prefs.getString(C.PROXY_PASSWORD, null),
+                            networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                            proxyMultivariantPlaylist = requireContext().prefs().getBoolean(C.PROXY_MULTIVARIANT_PLAYLIST, false),
+                            proxyMediaPlaylist = requireContext().prefs().getBoolean(C.PROXY_MEDIA_PLAYLIST, true),
+                            proxyHost = requireContext().prefs().getString(C.PROXY_HOST, null),
+                            proxyPort = requireContext().prefs().getString(C.PROXY_PORT, null)?.toIntOrNull(),
+                            proxyUser = requireContext().prefs().getString(C.PROXY_USER, null),
+                            proxyPassword = requireContext().prefs().getString(C.PROXY_PASSWORD, null),
                             useProxy = { playbackService?.proxyMediaPlaylist == true }
                         ).apply {
-                            prefs.getString(C.PLAYER_STREAM_HEADERS, null)?.let {
+                            requireContext().prefs().getString(C.PLAYER_STREAM_HEADERS, null)?.let {
                                 try {
                                     val json = JSONObject(it)
                                     hashMapOf<String, String>().apply {
@@ -539,21 +502,21 @@ class ExoPlayerFragment : PlayerFragment() {
                         setUri(url?.toUri())
                         setMimeType(MimeTypes.APPLICATION_M3U8)
                         setLiveConfiguration(MediaItem.LiveConfiguration.Builder().apply {
-                            prefs.getString(C.PLAYER_LIVE_MIN_SPEED, "")?.toFloatOrNull()?.let { setMinPlaybackSpeed(it) }
-                            prefs.getString(C.PLAYER_LIVE_MAX_SPEED, "")?.toFloatOrNull()?.let { setMaxPlaybackSpeed(it) }
-                            prefs.getString(C.PLAYER_LIVE_TARGET_OFFSET, "2000")?.toLongOrNull()?.let { setTargetOffsetMs(it) }
+                            requireContext().prefs().getString(C.PLAYER_LIVE_MIN_SPEED, "")?.toFloatOrNull()?.let { setMinPlaybackSpeed(it) }
+                            requireContext().prefs().getString(C.PLAYER_LIVE_MAX_SPEED, "")?.toFloatOrNull()?.let { setMaxPlaybackSpeed(it) }
+                            requireContext().prefs().getString(C.PLAYER_LIVE_TARGET_OFFSET, "2000")?.toLongOrNull()?.let { setTargetOffsetMs(it) }
                         }.build())
                         setMediaMetadata(
                             MediaMetadata.Builder().apply {
                                 setTitle(requireArguments().getString(KEY_TITLE))
                                 setArtist(requireArguments().getString(KEY_CHANNEL_NAME))
-                                setArtworkUri(requireArguments().getString(KEY_CHANNEL_LOGO)?.toUri())
+                                setArtworkUri(requireArguments().getString(KEY_CHANNEL_IMAGE)?.toUri())
                             }.build()
                         )
                     }.build()
                 )
             )
-            player.volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
+            player.volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
             player.setPlaybackSpeed(1f)
             player.prepare()
             player.playWhenReady = true
@@ -578,7 +541,7 @@ class ExoPlayerFragment : PlayerFragment() {
                 HlsMediaSource.Factory(
                     DefaultDataSource.Factory(
                         requireContext(),
-                        viewModel.getDataSourceFactory(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"))
+                        viewModel.getDataSourceFactory(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"))
                     )
                 ).apply {
                     setPlaylistParserFactory(CustomHlsPlaylistParserFactory())
@@ -589,14 +552,14 @@ class ExoPlayerFragment : PlayerFragment() {
                             MediaMetadata.Builder().apply {
                                 setTitle(requireArguments().getString(KEY_TITLE))
                                 setArtist(requireArguments().getString(KEY_CHANNEL_NAME))
-                                setArtworkUri(requireArguments().getString(KEY_CHANNEL_LOGO)?.toUri())
+                                setArtworkUri(requireArguments().getString(KEY_CHANNEL_IMAGE)?.toUri())
                             }.build()
                         )
                     }.build()
                 )
             )
-            player.volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
-            player.setPlaybackSpeed(prefs.getFloat(C.PLAYER_SPEED, 1f))
+            player.volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
+            player.setPlaybackSpeed(requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f))
             player.prepare()
             player.playWhenReady = true
             player.seekTo(position)
@@ -605,8 +568,7 @@ class ExoPlayerFragment : PlayerFragment() {
 
     override fun startClip(url: String?) {
         player?.let { player ->
-            val quality = viewModel.qualities.entries.find { it.key == viewModel.quality }
-            if (quality?.key == AUDIO_ONLY_QUALITY) {
+            if (viewModel.quality?.name == AUDIO_ONLY_QUALITY) {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                 }.build()
@@ -623,7 +585,7 @@ class ExoPlayerFragment : PlayerFragment() {
                 ProgressiveMediaSource.Factory(
                     DefaultDataSource.Factory(
                         requireContext(),
-                        viewModel.getDataSourceFactory(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"))
+                        viewModel.getDataSourceFactory(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"))
                     )
                 ).createMediaSource(
                     MediaItem.Builder().apply {
@@ -632,14 +594,14 @@ class ExoPlayerFragment : PlayerFragment() {
                             MediaMetadata.Builder().apply {
                                 setTitle(requireArguments().getString(KEY_TITLE))
                                 setArtist(requireArguments().getString(KEY_CHANNEL_NAME))
-                                setArtworkUri(requireArguments().getString(KEY_CHANNEL_LOGO)?.toUri())
+                                setArtworkUri(requireArguments().getString(KEY_CHANNEL_IMAGE)?.toUri())
                             }.build()
                         )
                     }.build()
                 )
             )
-            player.volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
-            player.setPlaybackSpeed(prefs.getFloat(C.PLAYER_SPEED, 1f))
+            player.volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
+            player.setPlaybackSpeed(requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f))
             player.prepare()
             player.playWhenReady = true
         }
@@ -647,8 +609,7 @@ class ExoPlayerFragment : PlayerFragment() {
 
     override fun startOfflineVideo(url: String?, position: Long) {
         player?.let { player ->
-            val quality = viewModel.qualities.entries.find { it.key == viewModel.quality }
-            if (quality?.key == AUDIO_ONLY_QUALITY) {
+            if (viewModel.quality?.name == AUDIO_ONLY_QUALITY) {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                 }.build()
@@ -674,13 +635,13 @@ class ExoPlayerFragment : PlayerFragment() {
                         MediaMetadata.Builder().apply {
                             setTitle(requireArguments().getString(KEY_TITLE))
                             setArtist(requireArguments().getString(KEY_CHANNEL_NAME))
-                            setArtworkUri(requireArguments().getString(KEY_CHANNEL_LOGO)?.toUri())
+                            setArtworkUri(requireArguments().getString(KEY_CHANNEL_IMAGE)?.toUri())
                         }.build()
                     )
                 }.build()
             )
-            player.volume = prefs.getInt(C.PLAYER_VOLUME, 100) / 100f
-            player.setPlaybackSpeed(prefs.getFloat(C.PLAYER_SPEED, 1f))
+            player.volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
+            player.setPlaybackSpeed(requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f))
             player.prepare()
             player.playWhenReady = true
             player.seekTo(position)
@@ -758,19 +719,19 @@ class ExoPlayerFragment : PlayerFragment() {
     override fun setSubtitlesButton() {
         with(binding.playerControls) {
             val textTracks = player?.currentTracks?.groups?.find { it.type == androidx.media3.common.C.TRACK_TYPE_TEXT }
-            if (textTracks != null && prefs.getBoolean(C.PLAYER_SUBTITLES, false)) {
+            if (textTracks != null && requireContext().prefs().getBoolean(C.PLAYER_SUBTITLES, false)) {
                 subtitles.visibility = View.VISIBLE
                 if (textTracks.isSelected) {
                     subtitles.setImageResource(androidx.media3.ui.R.drawable.exo_ic_subtitle_on)
                     subtitles.setOnClickListener {
                         toggleSubtitles(false)
-                        prefs.edit { putBoolean(C.PLAYER_SUBTITLES_ENABLED, false) }
+                        requireContext().prefs().edit { putBoolean(C.PLAYER_SUBTITLES_ENABLED, false) }
                     }
                 } else {
                     subtitles.setImageResource(androidx.media3.ui.R.drawable.exo_ic_subtitle_off)
                     subtitles.setOnClickListener {
                         toggleSubtitles(true)
-                        prefs.edit { putBoolean(C.PLAYER_SUBTITLES_ENABLED, true) }
+                        requireContext().prefs().edit { putBoolean(C.PLAYER_SUBTITLES_ENABLED, true) }
                     }
                 }
             } else {
@@ -824,13 +785,13 @@ class ExoPlayerFragment : PlayerFragment() {
         }
     }
 
-    override fun changeQuality(selectedQuality: String?) {
+    override fun changeQuality(selectedQuality: VideoQuality?) {
         viewModel.previousQuality = viewModel.quality
         viewModel.quality = selectedQuality
-        viewModel.qualities.entries.find { it.key == selectedQuality }?.let { quality ->
+        viewModel.quality?.let { quality ->
             player?.let { player ->
                 player.currentMediaItem?.let { mediaItem ->
-                    when (quality.key) {
+                    when (quality.name) {
                         AUTO_QUALITY -> {
                             viewModel.playlistUrl?.let { uri ->
                                 if (mediaItem.localConfiguration?.uri != uri) {
@@ -856,9 +817,9 @@ class ExoPlayerFragment : PlayerFragment() {
                                 setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                             }.build()
                             binding.playerSurface.visibility = View.GONE
-                            quality.value.second?.let {
+                            quality.url?.let {
                                 val position = player.currentPosition
-                                if (viewModel.qualities.containsKey(AUTO_QUALITY)) {
+                                if (viewModel.qualities?.find { it.name == AUTO_QUALITY } != null) {
                                     viewModel.playlistUrl = mediaItem.localConfiguration?.uri
                                 }
                                 player.setMediaItem(mediaItem.buildUpon().setUri(it).build())
@@ -874,7 +835,7 @@ class ExoPlayerFragment : PlayerFragment() {
                             player.stop()
                         }
                         else -> {
-                            if (viewModel.qualities.containsKey(AUTO_QUALITY)) {
+                            if (viewModel.qualities?.find { it.name == AUTO_QUALITY } != null) {
                                 viewModel.playlistUrl?.let { uri ->
                                     player.currentMediaItem?.let {
                                         val position = player.currentPosition
@@ -889,9 +850,9 @@ class ExoPlayerFragment : PlayerFragment() {
                                     binding.playerSurface.visibility = View.VISIBLE
                                     if (!player.currentTracks.isEmpty) {
                                         player.currentTracks.groups.find { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO }?.let {
-                                            val selectedQuality = quality.key.split("p")
-                                            val targetResolution = selectedQuality.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                            val targetFps = selectedQuality.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
+                                            val selectedQuality = quality.name?.split("p")
+                                            val targetResolution = selectedQuality?.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
+                                            val targetFps = selectedQuality?.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
                                             if (it.mediaTrackGroup.length > 0) {
                                                 if (targetResolution != null) {
                                                     val formats = mutableListOf<Triple<Int, Int, Float>>()
@@ -916,9 +877,9 @@ class ExoPlayerFragment : PlayerFragment() {
                                 }.build()
                             } else {
                                 player.currentMediaItem?.let {
-                                    if (it.localConfiguration?.uri?.toString() != quality.value.second) {
+                                    if (it.localConfiguration?.uri?.toString() != quality.url) {
                                         val position = player.currentPosition
-                                        player.setMediaItem(it.buildUpon().setUri(quality.value.second).build())
+                                        player.setMediaItem(it.buildUpon().setUri(quality.url).build())
                                         player.prepare()
                                         player.seekTo(position)
                                     }
@@ -933,8 +894,8 @@ class ExoPlayerFragment : PlayerFragment() {
                     val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
                     val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
                     val cellular = networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
-                    if ((!cellular && prefs.getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") || (cellular && prefs.getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
-                        prefs.edit { putString(C.PLAYER_QUALITY, quality.key) }
+                    if ((!cellular && requireContext().prefs().getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") || (cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
+                        requireContext().prefs().edit { putString(C.PLAYER_QUALITY, quality.name) }
                     }
                 }
             }
@@ -949,25 +910,25 @@ class ExoPlayerFragment : PlayerFragment() {
                     playbackService?.proxyMediaPlaylist = false
                     viewModel.usingProxy = false
                 }
-                if (viewModel.quality != AUDIO_ONLY_QUALITY) {
+                if (viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
                     viewModel.restoreQuality = true
                     viewModel.previousQuality = viewModel.quality
-                    viewModel.quality = AUDIO_ONLY_QUALITY
-                    viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
+                    viewModel.quality = viewModel.qualities?.find { it.name == AUDIO_ONLY_QUALITY }
+                    viewModel.quality?.let { quality ->
                         player.currentMediaItem?.let { mediaItem ->
-                            if (prefs.getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
+                            if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                 }.build()
                                 binding.playerSurface.visibility = View.GONE
                             }
-                            if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
-                                quality.value.second?.let {
+                            if (requireContext().prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
+                                quality.url?.let { url ->
                                     val position = player.currentPosition
-                                    if (viewModel.qualities.containsKey(AUTO_QUALITY)) {
+                                    if (viewModel.qualities?.find { it.name == AUTO_QUALITY } != null) {
                                         viewModel.playlistUrl = mediaItem.localConfiguration?.uri
                                     }
-                                    player.setMediaItem(mediaItem.buildUpon().setUri(it).build())
+                                    player.setMediaItem(mediaItem.buildUpon().setUri(url).build())
                                     player.prepare()
                                     player.seekTo(position)
                                 }
@@ -987,27 +948,27 @@ class ExoPlayerFragment : PlayerFragment() {
 
     override fun downloadVideo() {
         val totalDuration = (player?.currentManifest as? HlsManifest)?.mediaPlaylist?.durationUs?.div(1000)
-        val qualities = viewModel.qualities.filter { !it.value.second.isNullOrBlank() }
-        DownloadDialog.newInstance(
+        val qualities = viewModel.qualities?.filter { !it.url.isNullOrBlank() }
+        DownloadDialog.newVideoInstance(
             id = requireArguments().getString(KEY_VIDEO_ID),
-            title = requireArguments().getString(KEY_TITLE),
-            uploadDate = requireArguments().getString(KEY_UPLOAD_DATE),
-            duration = requireArguments().getString(KEY_DURATION),
-            videoType = requireArguments().getString(KEY_VIDEO_TYPE),
-            animatedPreviewUrl = requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW),
             channelId = requireArguments().getString(KEY_CHANNEL_ID),
             channelLogin = requireArguments().getString(KEY_CHANNEL_LOGIN),
             channelName = requireArguments().getString(KEY_CHANNEL_NAME),
-            channelLogo = requireArguments().getString(KEY_CHANNEL_LOGO),
-            thumbnail = requireArguments().getString(KEY_THUMBNAIL),
+            channelImage = requireArguments().getString(KEY_CHANNEL_IMAGE),
             gameId = requireArguments().getString(KEY_GAME_ID),
             gameSlug = requireArguments().getString(KEY_GAME_SLUG),
             gameName = requireArguments().getString(KEY_GAME_NAME),
+            title = requireArguments().getString(KEY_TITLE),
+            thumbnail = requireArguments().getString(KEY_THUMBNAIL),
+            createdAt = requireArguments().getString(KEY_CREATED_AT),
+            durationSeconds = requireArguments().getInt(KEY_DURATION_SECONDS),
+            type = requireArguments().getString(KEY_VIDEO_TYPE),
+            animatedPreviewUrl = requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW),
             totalDuration = totalDuration,
             currentPosition = getCurrentPosition(),
-            qualityKeys = qualities.keys.toTypedArray(),
-            qualityNames = qualities.map { it.value.first }.toTypedArray(),
-            qualityUrls = qualities.mapNotNull { it.value.second }.toTypedArray(),
+            qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
+            qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+            qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
         ).show(childFragmentManager, null)
     }
 
@@ -1039,29 +1000,29 @@ class ExoPlayerFragment : PlayerFragment() {
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> !useController && isMaximized
                     else -> false
                 }
-                if ((!isInPIPMode && isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO, true))
-                    || (!isInPIPMode && !isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
-                    || (isInPIPMode && isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, false))
-                    || (isInPIPMode && !isInteractive && prefs.getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
-                    if (player.playWhenReady && viewModel.quality != AUDIO_ONLY_QUALITY) {
+                if ((!isInPIPMode && isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true))
+                    || (!isInPIPMode && !isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
+                    || (isInPIPMode && isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, false))
+                    || (isInPIPMode && !isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
+                    if (player.playWhenReady && viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
                         viewModel.restoreQuality = true
                         viewModel.previousQuality = viewModel.quality
-                        viewModel.quality = AUDIO_ONLY_QUALITY
-                        viewModel.qualities.entries.find { it.key == viewModel.quality }?.let { quality ->
+                        viewModel.quality = viewModel.qualities?.find { it.name == AUDIO_ONLY_QUALITY }
+                        viewModel.quality?.let { quality ->
                             player.currentMediaItem?.let { mediaItem ->
-                                if (prefs.getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
+                                if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
                                     player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                         setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                     }.build()
                                     binding.playerSurface.visibility = View.GONE
                                 }
-                                if (prefs.getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
-                                    quality.value.second?.let {
+                                if (requireContext().prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
+                                    quality.url?.let { url ->
                                         val position = player.currentPosition
-                                        if (viewModel.qualities.containsKey(AUTO_QUALITY)) {
+                                        if (viewModel.qualities?.find { it.name == AUTO_QUALITY } != null) {
                                             viewModel.playlistUrl = mediaItem.localConfiguration?.uri
                                         }
-                                        player.setMediaItem(mediaItem.buildUpon().setUri(it).build())
+                                        player.setMediaItem(mediaItem.buildUpon().setUri(url).build())
                                         player.prepare()
                                         player.seekTo(position)
                                     }

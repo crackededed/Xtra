@@ -59,9 +59,9 @@ class PlayerGamesDialogAdapter(
                 } else {
                     gameImage.visibility = View.GONE
                 }
-                if (item?.gameName != null) {
+                if (item?.name != null) {
                     gameName.visibility = View.VISIBLE
-                    gameName.text = item.gameName
+                    gameName.text = item.name
                 } else {
                     gameName.visibility = View.GONE
                 }

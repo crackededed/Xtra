@@ -84,10 +84,10 @@
             app:layout_constraintVertical_bias="1.0">
 
             <TextView
-                android:id="@+id/twitchText"
+                android:id="@+id/accountText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/twitch"
+                android:text="@string/account"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:visibility="gone"
                 tools:visibility="visible" />

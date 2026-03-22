@@ -175,7 +175,7 @@
             app:nullable="true"
             android:defaultValue="@null" />
         <argument
-            android:name="channelLogo"
+            android:name="channelImage"
             app:argType="string"
             app:nullable="true"
             android:defaultValue="@null" />

@@ -6,25 +6,22 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 class User(
-    val channelId: String? = null,
-    val channelLogin: String? = null,
-    val channelName: String? = null,
+    val id: String? = null,
+    val login: String? = null,
+    val name: String? = null,
+    var profileImageURL: String? = null,
     val type: String? = null,
     val broadcasterType: String? = null,
-    var profileImageUrl: String? = null,
     val createdAt: String? = null,
-
-    val followersCount: Int? = null,
+    val followerCount: Int? = null,
     val bannerImageURL: String? = null,
-    var followedAt: String? = null,
     var lastBroadcast: String? = null,
     val isLive: Boolean? = false,
-    val stream: Stream? = null,
-
-    var followAccount: Boolean = false,
-    val followLocal: Boolean = false,
+    var followedAt: String? = null,
+    var accountFollow: Boolean = false,
+    val localFollow: Boolean = false,
 ) : Parcelable {
 
-    val channelLogo: String?
-        get() = TwitchApiHelper.getTemplateUrl(profileImageUrl, "profileimage")
+    val profileImage: String?
+        get() = TwitchApiHelper.getProfileImage(profileImageURL)
 }

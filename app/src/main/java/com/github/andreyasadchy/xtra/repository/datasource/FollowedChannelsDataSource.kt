@@ -41,15 +41,15 @@ class FollowedChannelsDataSource(
                 }
                 it as? LoadResult.Page
             }
-            list.filter { it.lastBroadcast == null || it.profileImageUrl == null }.mapNotNull { it.channelId }.chunked(100).forEach { ids ->
+            list.filter { it.lastBroadcast == null || it.profileImageURL == null }.mapNotNull { it.id }.chunked(100).forEach { ids ->
                 val response = graphQLRepository.loadQueryUsersLastBroadcast(networkLibrary, gqlHeaders, ids)
                 if (enableIntegrity) {
                     response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
                 }
                 response.data?.users?.forEach { user ->
-                    list.find { it.channelId == user?.id }?.let { item ->
-                        if (item.profileImageUrl == null) {
-                            item.profileImageUrl = user?.profileImageURL
+                    list.find { it.id == user?.id }?.let { item ->
+                        if (item.profileImageURL == null) {
+                            item.profileImageURL = user?.profileImageURL
                         }
                         item.lastBroadcast = user?.lastBroadcast?.startedAt?.toString()
                     }
@@ -64,10 +64,10 @@ class FollowedChannelsDataSource(
             val list = mutableListOf<User>()
             localFollowsChannel.loadFollows().let { if (order == "asc") it.asReversed() else it }.forEach {
                 list.add(User(
-                    channelId = it.userId,
-                    channelLogin = it.userLogin,
-                    channelName = it.userName,
-                    followLocal = true
+                    id = it.userId,
+                    login = it.userLogin,
+                    name = it.userName,
+                    localFollow = true,
                 ))
             }
             val result = if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank() || !helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
@@ -91,84 +91,84 @@ class FollowedChannelsDataSource(
                 }
             } else null
             result?.data?.forEach { user ->
-                val item = list.find { it.channelId == user.channelId }
+                val item = list.find { it.id == user.id }
                 if (item == null) {
-                    user.followAccount = true
+                    user.accountFollow = true
                     list.add(user)
                 } else {
                     list.remove(item)
                     list.add(
                         User(
-                            channelId = item.channelId,
-                            channelLogin = user.channelLogin ?: item.channelLogin,
-                            channelName = user.channelName ?: item.channelName,
-                            profileImageUrl = user.profileImageUrl,
-                            followedAt = user.followedAt,
+                            id = item.id,
+                            login = user.login ?: item.login,
+                            name = user.name ?: item.name,
+                            profileImageURL = user.profileImageURL,
                             lastBroadcast = user.lastBroadcast,
-                            followAccount = true,
-                            followLocal = item.followLocal,
+                            followedAt = user.followedAt,
+                            accountFollow = true,
+                            localFollow = item.localFollow,
                         )
                     )
-                    if (item.followLocal && item.channelId != null && user.channelLogin != null && user.channelName != null
-                        && (item.channelLogin != user.channelLogin || item.channelName != user.channelName)) {
-                        localFollowsChannel.getFollowByUserId(item.channelId)?.let {
+                    if (item.localFollow && item.id != null && user.login != null && user.name != null
+                        && (item.login != user.login || item.name != user.name)) {
+                        localFollowsChannel.getFollowByUserId(item.id)?.let {
                             localFollowsChannel.updateFollow(it.apply {
-                                userLogin = user.channelLogin
-                                userName = user.channelName
+                                userLogin = user.login
+                                userName = user.name
                             })
                         }
-                        offlineRepository.getVideosByUserId(item.channelId).forEach {
+                        offlineRepository.getVideosByUserId(item.id).forEach {
                             offlineRepository.updateVideo(it.apply {
-                                channelLogin = user.channelLogin
-                                channelName = user.channelName
+                                channelLogin = user.login
+                                channelName = user.name
                             })
                         }
-                        bookmarksRepository.getBookmarksByUserId(item.channelId).forEach {
+                        bookmarksRepository.getBookmarksByUserId(item.id).forEach {
                             bookmarksRepository.updateBookmark(it.apply {
-                                userLogin = user.channelLogin
-                                userName = user.channelName
+                                userLogin = user.login
+                                userName = user.name
                             })
                         }
                     }
                 }
             }
             list.filter {
-                it.lastBroadcast == null || it.profileImageUrl == null
-            }.mapNotNull { it.channelId }.chunked(100).forEach { ids ->
+                it.lastBroadcast == null || it.profileImageURL == null
+            }.mapNotNull { it.id }.chunked(100).forEach { ids ->
                 val response = graphQLRepository.loadQueryUsersLastBroadcast(networkLibrary, gqlHeaders, ids)
                 if (enableIntegrity) {
                     response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
                 }
                 response.data?.users?.forEach { user ->
-                    list.find { it.channelId == user?.id }?.let { item ->
+                    list.find { it.id == user?.id }?.let { item ->
                         list.remove(item)
                         list.add(
                             User(
-                                channelId = item.channelId,
-                                channelLogin = user?.login ?: item.channelLogin,
-                                channelName = user?.displayName ?: item.channelName,
-                                profileImageUrl = user?.profileImageURL,
-                                followedAt = item.followedAt,
+                                id = item.id,
+                                login = user?.login ?: item.login,
+                                name = user?.displayName ?: item.name,
+                                profileImageURL = user?.profileImageURL,
                                 lastBroadcast = user?.lastBroadcast?.startedAt?.toString(),
-                                followAccount = item.followAccount,
-                                followLocal = item.followLocal,
+                                followedAt = item.followedAt,
+                                accountFollow = item.accountFollow,
+                                localFollow = item.localFollow,
                             )
                         )
-                        if (item.followLocal && item.channelId != null && user?.login != null && user.displayName != null
-                            && (item.channelLogin != user.login || item.channelName != user.displayName)) {
-                            localFollowsChannel.getFollowByUserId(item.channelId)?.let {
+                        if (item.localFollow && item.id != null && user?.login != null && user.displayName != null
+                            && (item.login != user.login || item.name != user.displayName)) {
+                            localFollowsChannel.getFollowByUserId(item.id)?.let {
                                 localFollowsChannel.updateFollow(it.apply {
                                     userLogin = user.login
                                     userName = user.displayName
                                 })
                             }
-                            offlineRepository.getVideosByUserId(item.channelId).forEach {
+                            offlineRepository.getVideosByUserId(item.id).forEach {
                                 offlineRepository.updateVideo(it.apply {
                                     channelLogin = user.login
                                     channelName = user.displayName
                                 })
                             }
-                            bookmarksRepository.getBookmarksByUserId(item.channelId).forEach {
+                            bookmarksRepository.getBookmarksByUserId(item.id).forEach {
                                 bookmarksRepository.updateBookmark(it.apply {
                                     userLogin = user.login
                                     userName = user.displayName
@@ -181,13 +181,13 @@ class FollowedChannelsDataSource(
             val sorted = if (order == "asc") {
                 when (sort) {
                     "created_at" -> list.sortedWith(compareBy(nullsLast()) { it.followedAt })
-                    "login" -> list.sortedWith(compareBy(nullsLast()) { it.channelLogin })
+                    "login" -> list.sortedWith(compareBy(nullsLast()) { it.login })
                     else -> list.sortedWith(compareBy(nullsLast()) { it.lastBroadcast })
                 }
             } else {
                 when (sort) {
                     "created_at" -> list.sortedWith(compareByDescending(nullsFirst()) { it.followedAt })
-                    "login" -> list.sortedWith(compareByDescending(nullsFirst()) { it.channelLogin })
+                    "login" -> list.sortedWith(compareByDescending(nullsFirst()) { it.login })
                     else -> list.sortedWith(compareByDescending(nullsFirst()) { it.lastBroadcast })
                 }
             }
@@ -219,12 +219,12 @@ class FollowedChannelsDataSource(
         val list = items.mapNotNull { item ->
             item?.node?.let {
                 User(
-                    channelId = it.id,
-                    channelLogin = it.login,
-                    channelName = it.displayName,
-                    followedAt = item.followedAt?.toString(),
+                    id = it.id,
+                    login = it.login,
+                    name = it.displayName,
+                    profileImageURL = it.profileImageURL,
                     lastBroadcast = it.lastBroadcast?.startedAt?.toString(),
-                    profileImageUrl = it.profileImageURL,
+                    followedAt = item.followedAt?.toString(),
                 )
             }
         }
@@ -249,11 +249,11 @@ class FollowedChannelsDataSource(
         val list = items.map { item ->
             item.node.let {
                 User(
-                    channelId = it.id,
-                    channelLogin = it.login,
-                    channelName = it.displayName,
+                    id = it.id,
+                    login = it.login,
+                    name = it.displayName,
+                    profileImageURL = it.profileImageURL,
                     followedAt = it.self?.follower?.followedAt,
-                    profileImageUrl = it.profileImageURL,
                 )
             }
         }
@@ -278,9 +278,9 @@ class FollowedChannelsDataSource(
         )
         val list = response.data.map {
             User(
-                channelId = it.channelId,
-                channelLogin = it.channelLogin,
-                channelName = it.channelName,
+                id = it.id,
+                login = it.login,
+                name = it.displayName,
                 followedAt = it.followedAt,
             )
         }

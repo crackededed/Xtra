@@ -18,6 +18,7 @@ import com.github.andreyasadchy.xtra.repository.SortChannelRepository
 import com.github.andreyasadchy.xtra.repository.VodBookmarkIgnoredUsersRepository
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.HttpEngineUtils
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
 import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,6 +27,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.chromium.net.CronetEngine
@@ -35,7 +37,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.ExecutorService
 import javax.inject.Inject
-import kotlin.coroutines.suspendCoroutine
 
 @HiltViewModel
 class BookmarksViewModel @Inject internal constructor(
@@ -106,7 +107,7 @@ class BookmarksViewModel @Inject internal constructor(
                         response.data!!.users?.mapNotNull {
                             if (it != null) {
                                 User(
-                                    channelId = it.id,
+                                    id = it.id,
                                     broadcasterType = when {
                                         it.roles?.isPartner == true -> "partner"
                                         it.roles?.isAffiliate == true -> "affiliate"
@@ -115,7 +116,7 @@ class BookmarksViewModel @Inject internal constructor(
                                     type = when {
                                         it.roles?.isStaff == true -> "staff"
                                         else -> null
-                                    }
+                                    },
                                 )
                             } else null
                         }
@@ -128,12 +129,12 @@ class BookmarksViewModel @Inject internal constructor(
                                     ids = ids,
                                 ).data.map {
                                     User(
-                                        channelId = it.channelId,
-                                        channelLogin = it.channelLogin,
-                                        channelName = it.channelName,
+                                        id = it.id,
+                                        login = it.login,
+                                        name = it.displayName,
+                                        profileImageURL = it.profileImageURL,
                                         type = it.type,
                                         broadcasterType = it.broadcasterType,
-                                        profileImageUrl = it.profileImageUrl,
                                         createdAt = it.createdAt,
                                     )
                                 }
@@ -142,7 +143,7 @@ class BookmarksViewModel @Inject internal constructor(
                             }
                         } else null
                     }?.forEach { user ->
-                        user.channelId?.let { id ->
+                        user.id?.let { id ->
                             bookmarks.filter { it.userId == id }
                         }?.forEach { bookmark ->
                             if (user.type != bookmark.userType || user.broadcasterType != bookmark.userBroadcasterType) {
@@ -177,12 +178,12 @@ class BookmarksViewModel @Inject internal constructor(
                                 channelId = it.owner?.id,
                                 channelLogin = it.owner?.login,
                                 channelName = it.owner?.displayName,
-                                type = it.broadcastType?.toString(),
+                                channelImageURL = it.owner?.profileImageURL,
                                 title = it.title,
-                                uploadDate = it.createdAt?.toString(),
-                                duration = it.lengthSeconds?.toString(),
-                                thumbnailUrl = it.previewThumbnailURL,
-                                profileImageUrl = it.owner?.profileImageURL,
+                                thumbnailURL = it.previewThumbnailURL,
+                                createdAt = it.createdAt?.toString(),
+                                durationSeconds = it.lengthSeconds,
+                                type = it.broadcastType?.toString(),
                                 animatedPreviewURL = it.animatedPreviewURL,
                             )
                         }
@@ -201,10 +202,10 @@ class BookmarksViewModel @Inject internal constructor(
                                     channelLogin = it.channelLogin,
                                     channelName = it.channelName,
                                     title = it.title,
+                                    thumbnailURL = it.thumbnailURL,
+                                    createdAt = it.createdAt,
                                     viewCount = it.viewCount,
-                                    uploadDate = it.uploadDate,
-                                    duration = it.duration,
-                                    thumbnailUrl = it.thumbnailUrl,
+                                    durationSeconds = it.duration?.let { duration -> TwitchApiHelper.getDuration(duration) },
                                 )
                             }
                         } catch (e: Exception) {
@@ -222,7 +223,7 @@ class BookmarksViewModel @Inject internal constructor(
                                 try {
                                     when {
                                         networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                                            val response = suspendCoroutine { continuation ->
+                                            val response = suspendCancellableCoroutine { continuation ->
                                                 httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                             }
                                             if (response.first.httpStatusCode in 200..299) {
@@ -242,7 +243,7 @@ class BookmarksViewModel @Inject internal constructor(
                                                     }
                                                 }
                                             } else {
-                                                val response = suspendCoroutine { continuation ->
+                                                val response = suspendCancellableCoroutine { continuation ->
                                                     cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                                                 }
                                                 if (response.first.httpStatusCode in 200..299) {
@@ -284,10 +285,10 @@ class BookmarksViewModel @Inject internal constructor(
                             gameSlug = video.gameSlug ?: bookmark.gameSlug,
                             gameName = video.gameName ?: bookmark.gameName,
                             title = video.title ?: bookmark.title,
-                            createdAt = video.uploadDate ?: bookmark.createdAt,
+                            createdAt = video.createdAt ?: bookmark.createdAt,
                             thumbnail = downloadedThumbnail,
                             type = video.type ?: bookmark.type,
-                            duration = video.duration ?: bookmark.duration,
+                            duration = video.durationSeconds?.toString() ?: bookmark.duration,
                             animatedPreviewURL = video.animatedPreviewURL ?: bookmark.animatedPreviewURL
                         )
                     )
@@ -312,10 +313,10 @@ class BookmarksViewModel @Inject internal constructor(
                             channelLogin = it.channelLogin,
                             channelName = it.channelName,
                             title = it.title,
+                            thumbnailURL = it.thumbnailURL,
+                            createdAt = it.createdAt,
                             viewCount = it.viewCount,
-                            uploadDate = it.uploadDate,
-                            duration = it.duration,
-                            thumbnailUrl = it.thumbnailUrl,
+                            durationSeconds = it.duration?.let { duration -> TwitchApiHelper.getDuration(duration) },
                         )
                     }.forEach { video ->
                         video.id.takeIf { !it.isNullOrBlank() }?.let { id ->
@@ -325,9 +326,9 @@ class BookmarksViewModel @Inject internal constructor(
                                 bookmark.userLogin != video.channelLogin ||
                                 bookmark.userName != video.channelName ||
                                 bookmark.title != video.title ||
-                                bookmark.createdAt != video.uploadDate ||
+                                bookmark.createdAt != video.createdAt ||
                                 bookmark.type != video.type ||
-                                bookmark.duration != video.duration
+                                bookmark.duration != video.durationSeconds?.toString()
                             ) {
                                 val downloadedThumbnail = video.thumbnail.takeIf { !it.isNullOrBlank() }?.let {
                                     File(filesDir, "thumbnails").mkdir()
@@ -336,7 +337,7 @@ class BookmarksViewModel @Inject internal constructor(
                                         try {
                                             when {
                                                 networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                                                    val response = suspendCoroutine { continuation ->
+                                                    val response = suspendCancellableCoroutine { continuation ->
                                                         httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                                     }
                                                     if (response.first.httpStatusCode in 200..299) {
@@ -356,7 +357,7 @@ class BookmarksViewModel @Inject internal constructor(
                                                             }
                                                         }
                                                     } else {
-                                                        val response = suspendCoroutine { continuation ->
+                                                        val response = suspendCancellableCoroutine { continuation ->
                                                             cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                                                         }
                                                         if (response.first.httpStatusCode in 200..299) {
@@ -397,10 +398,10 @@ class BookmarksViewModel @Inject internal constructor(
                                         gameSlug = bookmark.gameSlug,
                                         gameName = bookmark.gameName,
                                         title = video.title ?: bookmark.title,
-                                        createdAt = video.uploadDate ?: bookmark.createdAt,
+                                        createdAt = video.createdAt ?: bookmark.createdAt,
                                         thumbnail = downloadedThumbnail,
                                         type = video.type ?: bookmark.type,
-                                        duration = video.duration ?: bookmark.duration,
+                                        duration = video.durationSeconds?.toString() ?: bookmark.duration,
                                         animatedPreviewURL = video.animatedPreviewURL ?: bookmark.animatedPreviewURL
                                     )
                                 )

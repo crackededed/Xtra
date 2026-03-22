@@ -1,7 +1,8 @@
- package com.github.andreyasadchy.xtra.ui.player
- 
- import com.github.andreyasadchy.xtra.model.ui.Game
- import com.github.andreyasadchy.xtra.model.ui.Stream
+package com.github.andreyasadchy.xtra.ui.player
+
+import com.github.andreyasadchy.xtra.model.VideoQuality
+import com.github.andreyasadchy.xtra.model.ui.Game
+import com.github.andreyasadchy.xtra.model.ui.Stream
  import com.github.andreyasadchy.xtra.repository.BookmarksRepository
  import com.github.andreyasadchy.xtra.repository.GraphQLRepository
  import com.github.andreyasadchy.xtra.repository.HelixRepository
@@ -97,9 +98,9 @@
      }
  
      @Test
-     fun `qualities initial state is empty map`() {
-         assertTrue(viewModel.qualities.isEmpty())
-     }
+    fun `qualities initial state is null`() {
+        assertNull(viewModel.qualities)
+    }
  
      @Test
      fun `quality initial state is null`() {
@@ -152,29 +153,33 @@
      }
  
      @Test
-     fun `Stream model creation with basic fields`() {
-         val stream = Stream(
-             id = "stream123",
-             channelId = "channel456",
-             channelLogin = "teststreamer",
-             channelName = "TestStreamer",
-             gameId = "game789",
-             gameName = "Just Chatting",
-             title = "Test Stream Title",
-             viewerCount = 1000,
-             startedAt = "2025-01-01T00:00:00Z"
-         )
+    fun `Stream model creation with basic fields`() {
+        val stream = Stream(
+            id = "stream123",
+            channelId = "channel456",
+            channelLogin = "teststreamer",
+            channelName = "TestStreamer",
+            channelImageURL = "https://example.com/profile.jpg",
+            gameId = "game789",
+            gameName = "Just Chatting",
+            title = "Test Stream Title",
+            thumbnailURL = "https://example.com/thumb.jpg",
+            viewerCount = 1000,
+            createdAt = "2025-01-01T00:00:00Z"
+        )
          
          assertEquals("stream123", stream.id)
          assertEquals("channel456", stream.channelId)
          assertEquals("teststreamer", stream.channelLogin)
          assertEquals("TestStreamer", stream.channelName)
-         assertEquals("game789", stream.gameId)
-         assertEquals("Just Chatting", stream.gameName)
-         assertEquals("Test Stream Title", stream.title)
-         assertEquals(1000, stream.viewerCount)
-         assertEquals("2025-01-01T00:00:00Z", stream.startedAt)
-     }
+        assertEquals("https://example.com/profile.jpg", stream.channelImageURL)
+        assertEquals("game789", stream.gameId)
+        assertEquals("Just Chatting", stream.gameName)
+        assertEquals("Test Stream Title", stream.title)
+        assertEquals("https://example.com/thumb.jpg", stream.thumbnailURL)
+        assertEquals(1000, stream.viewerCount)
+        assertEquals("2025-01-01T00:00:00Z", stream.createdAt)
+    }
  
      @Test
      fun `Stream with null optional fields`() {
@@ -191,20 +196,21 @@
      }
  
      @Test
-     fun `Game model creation with VOD position`() {
-         val game = Game(
-             gameId = "game123",
-             gameName = "Minecraft",
-             boxArtUrl = "https://example.com/boxart.jpg",
+    fun `Game model creation with VOD position`() {
+        val game = Game(
+            id = "game123",
+            name = "Minecraft",
+            boxArtURL = "https://example.com/boxart.jpg",
             vodPosition = 3600000,
             vodDuration = 7200000
-         )
-         
-         assertEquals("game123", game.gameId)
-         assertEquals("Minecraft", game.gameName)
+        )
+        
+        assertEquals("game123", game.id)
+        assertEquals("Minecraft", game.name)
+        assertEquals("https://example.com/boxart.jpg", game.boxArtURL)
         assertEquals(3600000, game.vodPosition)
         assertEquals(7200000, game.vodDuration)
-     }
+    }
  
      @Test
      fun `mutable state can be updated`() = runTest {
@@ -216,23 +222,23 @@
      }
  
      @Test
-     fun `quality can be set and retrieved`() {
-         viewModel.quality = "720p60"
-         assertEquals("720p60", viewModel.quality)
-         
-         viewModel.quality = "1080p60"
-         assertEquals("1080p60", viewModel.quality)
-     }
- 
-     @Test
-     fun `previousQuality tracks quality changes`() {
-         viewModel.quality = "720p60"
-         viewModel.previousQuality = viewModel.quality
-         viewModel.quality = "1080p60"
-         
-         assertEquals("720p60", viewModel.previousQuality)
-         assertEquals("1080p60", viewModel.quality)
-     }
+    fun `quality can be set and retrieved`() {
+        viewModel.quality = VideoQuality("720p60")
+        assertEquals("720p60", viewModel.quality?.name)
+        
+        viewModel.quality = VideoQuality("1080p60")
+        assertEquals("1080p60", viewModel.quality?.name)
+    }
+
+    @Test
+    fun `previousQuality tracks quality changes`() {
+        viewModel.quality = VideoQuality("720p60")
+        viewModel.previousQuality = viewModel.quality
+        viewModel.quality = VideoQuality("1080p60")
+        
+        assertEquals("720p60", viewModel.previousQuality?.name)
+        assertEquals("1080p60", viewModel.quality?.name)
+    }
  
      @Test
      fun `userHasChangedQuality flag works correctly`() {

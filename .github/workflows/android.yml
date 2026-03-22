@@ -47,7 +47,7 @@ jobs:
         mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/ThystTV-${{ steps.version.outputs.version }}.apk
 
     - name: Upload Release APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ThystTV-Release
         path: app/build/outputs/apk/release/ThystTV-*.apk

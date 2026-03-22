@@ -66,17 +66,17 @@ class SearchVideosDataSource(
                 channelId = it.owner?.id,
                 channelLogin = it.owner?.login,
                 channelName = it.owner?.displayName,
-                type = it.broadcastType?.toString(),
-                title = it.title,
-                viewCount = it.viewCount,
-                uploadDate = it.createdAt?.toString(),
-                duration = it.lengthSeconds?.toString(),
-                thumbnailUrl = it.previewThumbnailURL,
+                channelImageURL = it.owner?.profileImageURL,
                 gameId = it.game?.id,
                 gameSlug = it.game?.slug,
                 gameName = it.game?.displayName,
-                profileImageUrl = it.owner?.profileImageURL,
-                animatedPreviewURL = it.animatedPreviewURL
+                title = it.title,
+                thumbnailURL = it.previewThumbnailURL,
+                createdAt = it.createdAt?.toString(),
+                viewCount = it.viewCount,
+                durationSeconds = it.lengthSeconds,
+                type = it.broadcastType?.toString(),
+                animatedPreviewURL = it.animatedPreviewURL,
             )
         }
         offset = data.cursor
@@ -103,14 +103,14 @@ class SearchVideosDataSource(
                     channelId = it.owner?.id,
                     channelLogin = it.owner?.login,
                     channelName = it.owner?.displayName,
-                    title = it.title,
-                    viewCount = it.viewCount,
-                    uploadDate = it.createdAt,
-                    duration = it.lengthSeconds?.toString(),
-                    thumbnailUrl = it.previewThumbnailURL,
                     gameId = it.game?.id,
                     gameSlug = it.game?.slug,
                     gameName = it.game?.displayName,
+                    title = it.title,
+                    thumbnailURL = it.previewThumbnailURL,
+                    createdAt = it.createdAt,
+                    viewCount = it.viewCount,
+                    durationSeconds = it.lengthSeconds,
                 )
             }
         }

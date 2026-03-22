@@ -12,6 +12,7 @@ import androidx.media3.datasource.HttpDataSource
 import com.github.andreyasadchy.xtra.model.NotificationUser
 import com.github.andreyasadchy.xtra.model.ShownNotification
 import com.github.andreyasadchy.xtra.model.VideoPosition
+import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.model.ui.Bookmark
 import com.github.andreyasadchy.xtra.model.ui.Game
 import com.github.andreyasadchy.xtra.model.ui.LocalFollowChannel
@@ -46,6 +47,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
@@ -63,7 +65,6 @@ import java.net.SocketAddress
 import java.net.URI
 import java.util.concurrent.ExecutorService
 import javax.inject.Inject
-import kotlin.coroutines.suspendCoroutine
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
@@ -100,14 +101,14 @@ class PlayerViewModel @Inject constructor(
     val gamesList = MutableStateFlow<List<Game>?>(null)
     var shouldRetry = true
 
-    val clipUrls = MutableStateFlow<Map<Pair<String, String?>, String>?>(null)
+    val clipUrls = MutableStateFlow<List<VideoQuality>?>(null)
 
     val savedOfflineVideoPosition = MutableStateFlow<Long?>(null)
 
-    var qualities: Map<String, Pair<String, String?>> = emptyMap()
-    var quality: String? = null
+    var qualities: List<VideoQuality>? = null
+    var quality: VideoQuality? = null
+    var previousQuality: VideoQuality? = null
     var userHasChangedQuality = false
-    var previousQuality: String? = null
     var playlistUrl: Uri? = null
     var updateQualities = false
     var started = false
@@ -186,7 +187,7 @@ class PlayerViewModel @Inject constructor(
         try {
             val playlist = when {
                 networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                    val response = suspendCoroutine { continuation ->
+                    val response = suspendCancellableCoroutine { continuation ->
                         httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                     }
                     response.second.inputStream().use {
@@ -202,7 +203,7 @@ class PlayerViewModel @Inject constructor(
                             PlaylistUtils.parseMediaPlaylist(it)
                         }
                     } else {
-                        val response = suspendCoroutine { continuation ->
+                        val response = suspendCancellableCoroutine { continuation ->
                             cronetEngine.get().newUrlRequestBuilder(url, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                         }
                         response.second.inputStream().use {
@@ -244,7 +245,7 @@ class PlayerViewModel @Inject constructor(
             val useProxy = !useCustomProxy && proxyMultivariantPlaylist && !proxyHost.isNullOrBlank() && proxyPort != null
             when {
                 networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null && !useProxy -> {
-                    val response = suspendCoroutine { continuation ->
+                    val response = suspendCancellableCoroutine { continuation ->
                         httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                     }
                     if (response.first.httpStatusCode in 200..299) {
@@ -264,7 +265,7 @@ class PlayerViewModel @Inject constructor(
                             null to response.urlResponseInfo.httpStatusCode
                         }
                     } else {
-                        val response = suspendCoroutine { continuation ->
+                        val response = suspendCancellableCoroutine { continuation ->
                             cronetEngine.get().newUrlRequestBuilder(url, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                         }
                         if (response.first.httpStatusCode in 200..299) {
@@ -312,13 +313,13 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    fun loadStream(channelId: String?, channelLogin: String?, viewerCount: Int?, loop: Boolean, networkLibrary: String?, helixHeaders: Map<String, String>, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
+    fun loadStreamInfo(channelId: String?, channelLogin: String?, viewerCount: Int?, loop: Boolean, networkLibrary: String?, helixHeaders: Map<String, String>, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
         if (loop) {
             streamJob?.cancel()
             streamJob = viewModelScope.launch {
                 while (isActive) {
                     try {
-                        updateStream(channelId, channelLogin, networkLibrary, helixHeaders, gqlHeaders, enableIntegrity)
+                        updateStreamInfo(channelId, channelLogin, networkLibrary, helixHeaders, gqlHeaders, enableIntegrity)
                         delay(300000L)
                     } catch (e: Exception) {
                         if (e.message == "failed integrity check" && integrity.value == null) {
@@ -328,20 +329,22 @@ class PlayerViewModel @Inject constructor(
                     }
                 }
             }
-        } else if (viewerCount == null) {
-            viewModelScope.launch {
-                try {
-                    updateStream(channelId, channelLogin, networkLibrary, helixHeaders, gqlHeaders, enableIntegrity)
-                } catch (e: Exception) {
-                    if (e.message == "failed integrity check" && integrity.value == null) {
-                        integrity.value = "stream"
+        } else {
+            if (viewerCount == null) {
+                viewModelScope.launch {
+                    try {
+                        updateStreamInfo(channelId, channelLogin, networkLibrary, helixHeaders, gqlHeaders, enableIntegrity)
+                    } catch (e: Exception) {
+                        if (e.message == "failed integrity check" && integrity.value == null) {
+                            integrity.value = "stream"
+                        }
                     }
                 }
             }
         }
     }
 
-    private suspend fun updateStream(channelId: String?, channelLogin: String?, networkLibrary: String?, helixHeaders: Map<String, String>, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
+    private suspend fun updateStreamInfo(channelId: String?, channelLogin: String?, networkLibrary: String?, helixHeaders: Map<String, String>, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
         stream.value = try {
             val response = graphQLRepository.loadQueryUsersStream(
                 networkLibrary = networkLibrary,
@@ -358,15 +361,15 @@ class PlayerViewModel @Inject constructor(
                     channelId = channelId,
                     channelLogin = it.login,
                     channelName = it.displayName,
+                    channelImageURL = it.profileImageURL,
                     gameId = it.stream?.game?.id,
                     gameSlug = it.stream?.game?.slug,
                     gameName = it.stream?.game?.displayName,
                     title = it.stream?.broadcaster?.broadcastSettings?.title,
+                    thumbnailURL = it.stream?.previewImageURL,
+                    createdAt = it.stream?.createdAt?.toString(),
                     viewerCount = it.stream?.viewersCount,
-                    startedAt = it.stream?.createdAt?.toString(),
-                    thumbnailUrl = it.stream?.previewImageURL,
-                    profileImageUrl = it.profileImageURL,
-                    tags = it.stream?.freeformTags?.mapNotNull { tag -> tag.name }
+                    tags = it.stream?.freeformTags?.mapNotNull { tag -> tag.name },
                 )
             }
         } catch (e: Exception) {
@@ -387,10 +390,10 @@ class PlayerViewModel @Inject constructor(
                         gameId = it.gameId,
                         gameName = it.gameName,
                         title = it.title,
+                        thumbnailURL = it.thumbnailURL,
+                        createdAt = it.startedAt,
                         viewerCount = it.viewerCount,
-                        startedAt = it.startedAt,
-                        thumbnailUrl = it.thumbnailUrl,
-                        tags = it.tags
+                        tags = it.tags,
                     )
                 }
             } catch (e: Exception) {
@@ -401,7 +404,7 @@ class PlayerViewModel @Inject constructor(
                 response.data!!.user.stream?.let {
                     Stream(
                         id = it.id,
-                        viewerCount = it.viewersCount
+                        viewerCount = it.viewersCount,
                     )
                 }
             }
@@ -456,9 +459,9 @@ class PlayerViewModel @Inject constructor(
                     gamesList.value = response.data!!.video.moments.edges.map { item ->
                         item.node.let {
                             Game(
-                                gameId = it.details?.game?.id,
-                                gameName = it.details?.game?.displayName,
-                                boxArtUrl = it.details?.game?.boxArtURL,
+                                id = it.details?.game?.id,
+                                name = it.details?.game?.displayName,
+                                boxArtURL = it.details?.game?.boxArtURL,
                                 vodPosition = it.positionMilliseconds,
                                 vodDuration = it.durationMilliseconds,
                             )
@@ -477,7 +480,7 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    fun saveBookmark(filesDir: String, networkLibrary: String?, helixHeaders: Map<String, String>, gqlHeaders: Map<String, String>, videoId: String?, title: String?, uploadDate: String?, duration: String?, type: String?, animatedPreviewUrl: String?, channelId: String?, channelLogin: String?, channelName: String?, channelLogo: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?) {
+    fun saveBookmark(filesDir: String, networkLibrary: String?, helixHeaders: Map<String, String>, gqlHeaders: Map<String, String>, videoId: String?, title: String?, uploadDate: String?, durationSeconds: Int?, type: String?, animatedPreviewUrl: String?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?) {
         viewModelScope.launch {
             val item = videoId?.let { bookmarksRepository.getBookmarkByVideoId(it) }
             if (item != null) {
@@ -491,7 +494,7 @@ class PlayerViewModel @Inject constructor(
                             try {
                                 when {
                                     networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                                        val response = suspendCoroutine { continuation ->
+                                        val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
                                         if (response.first.httpStatusCode in 200..299) {
@@ -511,7 +514,7 @@ class PlayerViewModel @Inject constructor(
                                                 }
                                             }
                                         } else {
-                                            val response = suspendCoroutine { continuation ->
+                                            val response = suspendCancellableCoroutine { continuation ->
                                                 cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                                             }
                                             if (response.first.httpStatusCode in 200..299) {
@@ -541,14 +544,14 @@ class PlayerViewModel @Inject constructor(
                     }
                 }
                 val downloadedLogo = channelId.takeIf { !it.isNullOrBlank() }?.let { id ->
-                    channelLogo.takeIf { !it.isNullOrBlank() }?.let {
+                    channelImage.takeIf { !it.isNullOrBlank() }?.let {
                         File(filesDir, "profile_pics").mkdir()
                         val path = filesDir + File.separator + "profile_pics" + File.separator + id
                         viewModelScope.launch(Dispatchers.IO) {
                             try {
                                 when {
                                     networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                                        val response = suspendCoroutine { continuation ->
+                                        val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
                                         if (response.first.httpStatusCode in 200..299) {
@@ -568,7 +571,7 @@ class PlayerViewModel @Inject constructor(
                                                 }
                                             }
                                         } else {
-                                            val response = suspendCoroutine { continuation ->
+                                            val response = suspendCancellableCoroutine { continuation ->
                                                 cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                                             }
                                             if (response.first.httpStatusCode in 200..299) {
@@ -602,7 +605,7 @@ class PlayerViewModel @Inject constructor(
                         val response = graphQLRepository.loadQueryUsersType(networkLibrary, gqlHeaders, listOf(channelId))
                         response.data!!.users?.firstOrNull()?.let {
                             User(
-                                channelId = it.id,
+                                id = it.id,
                                 broadcasterType = when {
                                     it.roles?.isPartner == true -> "partner"
                                     it.roles?.isAffiliate == true -> "affiliate"
@@ -611,7 +614,7 @@ class PlayerViewModel @Inject constructor(
                                 type = when {
                                     it.roles?.isStaff == true -> "staff"
                                     else -> null
-                                }
+                                },
                             )
                         }
                     } catch (e: Exception) {
@@ -623,12 +626,12 @@ class PlayerViewModel @Inject constructor(
                                     ids = listOf(channelId)
                                 ).data.firstOrNull()?.let {
                                     User(
-                                        channelId = it.channelId,
-                                        channelLogin = it.channelLogin,
-                                        channelName = it.channelName,
+                                        id = it.id,
+                                        login = it.login,
+                                        name = it.displayName,
+                                        profileImageURL = it.profileImageURL,
                                         type = it.type,
                                         broadcasterType = it.broadcasterType,
-                                        profileImageUrl = it.profileImageUrl,
                                         createdAt = it.createdAt,
                                     )
                                 }
@@ -654,7 +657,7 @@ class PlayerViewModel @Inject constructor(
                         createdAt = uploadDate,
                         thumbnail = downloadedThumbnail,
                         type = type,
-                        duration = duration,
+                        duration = durationSeconds.toString(),
                         animatedPreviewURL = animatedPreviewUrl
                     )
                 )
@@ -666,12 +669,12 @@ class PlayerViewModel @Inject constructor(
         if (clipUrls.value == null) {
             viewModelScope.launch {
                 try {
-                    clipUrls.value = playerRepository.loadClipUrls(networkLibrary, gqlHeaders, id, enableIntegrity) ?: emptyMap()
+                    clipUrls.value = playerRepository.loadClipQualities(networkLibrary, gqlHeaders, id, enableIntegrity) ?: emptyList()
                 } catch (e: Exception) {
                     if (e.message == "failed integrity check" && integrity.value == null) {
                         integrity.value = "refreshClip"
                     } else {
-                        clipUrls.value = emptyMap()
+                        clipUrls.value = emptyList()
                     }
                 }
             }
@@ -713,7 +716,7 @@ class PlayerViewModel @Inject constructor(
                                     headers = helixHeaders,
                                     userId = userId,
                                     targetId = channelId,
-                                ).data.firstOrNull()?.channelId == channelId
+                                ).data.firstOrNull()?.id == channelId
                                 _isFollowing.value = following
                             }
                         } else {
@@ -727,12 +730,12 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    fun saveFollowChannel(userId: String?, channelId: String?, channelLogin: String?, channelName: String?, setting: Int, notificationsEnabled: Boolean, startedAt: String?, networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
+    fun saveFollowChannel(userId: String?, channelId: String?, channelLogin: String?, channelName: String?, setting: Int, liveNotificationsEnabled: Boolean, disableNotifications: Boolean, startedAt: String?, networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
         viewModelScope.launch {
             try {
                 if (!channelId.isNullOrBlank()) {
                     if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank() && userId != channelId) {
-                        val errorMessage = graphQLRepository.loadFollowUser(networkLibrary, gqlHeaders, channelId).also { response ->
+                        val errorMessage = graphQLRepository.loadFollowUser(networkLibrary, gqlHeaders, channelId, disableNotifications).also { response ->
                             if (enableIntegrity && integrity.value == null) {
                                 response.errors?.find { it.message == "failed integrity check" }?.let {
                                     integrity.value = "follow"
@@ -745,7 +748,7 @@ class PlayerViewModel @Inject constructor(
                         } else {
                             _isFollowing.value = true
                             follow.value = Pair(true, null)
-                            if (notificationsEnabled) {
+                            if (liveNotificationsEnabled) {
                                 startedAt.takeUnless { it.isNullOrBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let {
                                     shownNotificationsRepository.saveList(listOf(ShownNotification(channelId, it)))
                                 }
@@ -755,8 +758,10 @@ class PlayerViewModel @Inject constructor(
                         localFollowsChannel.saveFollow(LocalFollowChannel(channelId, channelLogin, channelName))
                         _isFollowing.value = true
                         follow.value = Pair(true, null)
-                        notificationUsersRepository.saveUser(NotificationUser(channelId))
-                        if (notificationsEnabled) {
+                        if (!disableNotifications) {
+                            notificationUsersRepository.saveUser(NotificationUser(channelId))
+                        }
+                        if (liveNotificationsEnabled) {
                             startedAt.takeUnless { it.isNullOrBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let {
                                 shownNotificationsRepository.saveList(listOf(ShownNotification(channelId, it)))
                             }

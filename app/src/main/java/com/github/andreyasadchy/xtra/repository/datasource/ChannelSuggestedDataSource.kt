@@ -28,13 +28,13 @@ class ChannelSuggestedDataSource(
                         channelId = it.broadcaster?.id,
                         channelLogin = it.broadcaster?.login,
                         channelName = it.broadcaster?.displayName,
+                        channelImageURL = it.broadcaster?.profileImageURL,
                         gameId = it.game?.id,
                         gameSlug = it.game?.slug,
                         gameName = it.game?.displayName,
                         title = it.broadcaster?.broadcastSettings?.title,
                         viewerCount = it.viewersCount,
-                        profileImageUrl = it.broadcaster?.profileImageURL,
-                        tags = it.freeformTags?.mapNotNull { tag -> tag.name }
+                        tags = it.freeformTags?.mapNotNull { tag -> tag.name },
                     )
                 }
             } ?: emptyList()

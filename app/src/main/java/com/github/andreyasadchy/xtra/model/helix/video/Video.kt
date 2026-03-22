@@ -14,9 +14,9 @@ class Video(
     val channelName: String? = null,
     val title: String? = null,
     @SerialName("created_at")
-    val uploadDate: String? = null,
+    val createdAt: String? = null,
     @SerialName("thumbnail_url")
-    val thumbnailUrl: String? = null,
+    val thumbnailURL: String? = null,
     @SerialName("view_count")
     val viewCount: Int? = null,
     val duration: String? = null,

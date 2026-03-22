@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name" translatable="false">ThystTV</string>
     <string name="notification_downloads_channel_id" translatable="false">thysttv_downloads_channel</string>
     <string name="notification_live_channel_id" translatable="false">thysttv_live_channel</string>
@@ -8,6 +8,7 @@
     <string name="lang_en" translatable="false">English</string>
     <string name="lang_es" translatable="false">Español</string>
     <string name="lang_fr" translatable="false">Français</string>
+    <string name="lang_gl" translatable="false">Galego</string>
     <string name="lang_in" translatable="false">Indonesia</string>
     <string name="lang_it" translatable="false">Italiano</string>
     <string name="lang_pt_br" translatable="false">Português - Brasil</string>
@@ -177,7 +178,6 @@
     <string name="chat_first">First time chat</string>
     <string name="chat_reward">Channel point redemption</string>
     <string name="always">Always</string>
-    <string name="twitch">Twitch</string>
     <string name="local">Local</string>
     <string name="days">d</string>
     <string name="seconds">s</string>
@@ -686,7 +686,7 @@
     <string name="use_background_audio">Play audio in the background</string>
     <string name="avoid_rounded_corners">Avoid rounded screen corners</string>
     <string name="api_web_gql_token">Web GQL token</string>
-    <string name="use_new_pubsub">Use new PubSub URL</string>
+    <string name="use_new_pubsub" tools:ignore="MissingTranslation">Use new PubSub URL</string>
     <string name="chat_size_modifier">Size modifier</string>
     <string name="chat_emote_size">Emote size</string>
     <string name="chat_badge_size">Badge size</string>
@@ -703,7 +703,7 @@
     <string name="download_language_model_message">Download language model for %s?</string>
     <string name="translate_from_selected">Translate from selected language</string>
     <string name="translate_all_messages">Translate all messages on this channel</string>
-    <string name="use_custom_websockets">Use custom WebSockets</string>
+    <string name="use_custom_websockets" tools:ignore="MissingTranslation">Use custom WebSockets</string>
     <string name="show_more_websocket_info">Show more info about WebSockets</string>
     <string name="websocket_connected">%s: Connected</string>
     <string name="websocket_disconnected">%1$s: Disconnected - %2$s</string>
@@ -767,13 +767,13 @@
     <string name="seek_forward" translatable="false">Fast Forward</string>
     <string name="seek_backward" translatable="false">Rewind</string>
 
-    <string name="player_gestures_category">Gestures</string>
-    <string name="player_gestures_enabled">Enable gestures</string>
-    <string name="player_gestures_enabled_summary">Control volume and brightness with gestures</string>
-    <string name="player_gestures_haptic">Haptic feedback</string>
-    <string name="player_gestures_haptic_summary">Vibrate when changing volume or brightness</string>
-    <string name="player_gestures_sensitivity">Sensitivity</string>
-    <string name="player_gestures_zone_split">Zone split</string>
+    <string name="player_gestures_category" tools:ignore="MissingTranslation">Gestures</string>
+    <string name="player_gestures_enabled" tools:ignore="MissingTranslation">Enable gestures</string>
+    <string name="player_gestures_enabled_summary" tools:ignore="MissingTranslation">Control volume and brightness with gestures</string>
+    <string name="player_gestures_haptic" tools:ignore="MissingTranslation">Haptic feedback</string>
+    <string name="player_gestures_haptic_summary" tools:ignore="MissingTranslation">Vibrate when changing volume or brightness</string>
+    <string name="player_gestures_sensitivity" tools:ignore="MissingTranslation">Sensitivity</string>
+    <string name="player_gestures_zone_split" tools:ignore="MissingTranslation">Zone split</string>
     <string name="less_rounded_corners">Less rounded</string>
     <string name="reduced_padding">Reduced padding</string>
     <string name="compact_text">Compact text</string>
@@ -784,4 +784,6 @@
     <string name="loading">Loading...</string>
     <string name="copy_code">Copy code</string>
     <string name="external_tv_login_message">To get access to all features, you need to login as an Android TV device.\n\nFollow these steps:\n• Copy the code shown on the screen.\n• Press the \"Open URL\" button.\n• Enter the code and press \"Activate\".\n• Press \"Authorize\".\n• Return to Xtra and press \"Next\".</string>
+    <string name="activate_notifications_when_following">Activate notifications when following</string>
+    <string name="account">Account</string>
 </resources>

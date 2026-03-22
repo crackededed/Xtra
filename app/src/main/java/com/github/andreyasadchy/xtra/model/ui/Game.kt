@@ -6,22 +6,20 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 class Game(
-    val gameId: String? = null,
-    val gameSlug: String? = null,
-    val gameName: String? = null,
-    val boxArtUrl: String? = null,
-
-    var viewersCount: Int? = null,
-    var broadcastersCount: Int? = null,
-    val followersCount: Int? = null,
+    val id: String? = null,
+    val slug: String? = null,
+    val name: String? = null,
+    val boxArtURL: String? = null,
+    var viewerCount: Int? = null,
+    var broadcasterCount: Int? = null,
+    val followerCount: Int? = null,
     var tags: List<Tag>? = null,
     val vodPosition: Int? = null,
     val vodDuration: Int? = null,
-
-    var followAccount: Boolean = false,
-    val followLocal: Boolean = false,
+    var accountFollow: Boolean = false,
+    val localFollow: Boolean = false,
 ) : Parcelable {
 
     val boxArt: String?
-        get() = TwitchApiHelper.getTemplateUrl(boxArtUrl, "game")
+        get() = TwitchApiHelper.getGameBoxArt(boxArtURL)
 }

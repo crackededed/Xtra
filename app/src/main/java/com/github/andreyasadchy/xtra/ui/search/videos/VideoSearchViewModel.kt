@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.chromium.net.CronetEngine
@@ -42,7 +43,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.ExecutorService
 import javax.inject.Inject
-import kotlin.coroutines.suspendCoroutine
 
 @HiltViewModel
 class VideoSearchViewModel @Inject constructor(
@@ -122,7 +122,7 @@ class VideoSearchViewModel @Inject constructor(
                             try {
                                 when {
                                     networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                                        val response = suspendCoroutine { continuation ->
+                                        val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
                                         if (response.first.httpStatusCode in 200..299) {
@@ -142,7 +142,7 @@ class VideoSearchViewModel @Inject constructor(
                                                 }
                                             }
                                         } else {
-                                            val response = suspendCoroutine { continuation ->
+                                            val response = suspendCancellableCoroutine { continuation ->
                                                 cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                                             }
                                             if (response.first.httpStatusCode in 200..299) {
@@ -172,14 +172,14 @@ class VideoSearchViewModel @Inject constructor(
                     }
                 }
                 val downloadedLogo = video.channelId.takeIf { !it.isNullOrBlank() }?.let { id ->
-                    video.channelLogo.takeIf { !it.isNullOrBlank() }?.let {
+                    video.channelImage.takeIf { !it.isNullOrBlank() }?.let {
                         File(filesDir, "profile_pics").mkdir()
                         val path = filesDir + File.separator + "profile_pics" + File.separator + id
                         viewModelScope.launch(Dispatchers.IO) {
                             try {
                                 when {
                                     networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                                        val response = suspendCoroutine { continuation ->
+                                        val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
                                         if (response.first.httpStatusCode in 200..299) {
@@ -199,7 +199,7 @@ class VideoSearchViewModel @Inject constructor(
                                                 }
                                             }
                                         } else {
-                                            val response = suspendCoroutine { continuation ->
+                                            val response = suspendCancellableCoroutine { continuation ->
                                                 cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                                             }
                                             if (response.first.httpStatusCode in 200..299) {
@@ -233,7 +233,7 @@ class VideoSearchViewModel @Inject constructor(
                         val response = graphQLRepository.loadQueryUsersType(networkLibrary, gqlHeaders, listOf(it))
                         response.data!!.users?.firstOrNull()?.let {
                             User(
-                                channelId = it.id,
+                                id = it.id,
                                 broadcasterType = when {
                                     it.roles?.isPartner == true -> "partner"
                                     it.roles?.isAffiliate == true -> "affiliate"
@@ -242,7 +242,7 @@ class VideoSearchViewModel @Inject constructor(
                                 type = when {
                                     it.roles?.isStaff == true -> "staff"
                                     else -> null
-                                }
+                                },
                             )
                         }
                     } catch (e: Exception) {
@@ -254,12 +254,12 @@ class VideoSearchViewModel @Inject constructor(
                                     ids = listOf(it)
                                 ).data.firstOrNull()?.let {
                                     User(
-                                        channelId = it.channelId,
-                                        channelLogin = it.channelLogin,
-                                        channelName = it.channelName,
+                                        id = it.id,
+                                        login = it.login,
+                                        name = it.displayName,
+                                        profileImageURL = it.profileImageURL,
                                         type = it.type,
                                         broadcasterType = it.broadcasterType,
-                                        profileImageUrl = it.profileImageUrl,
                                         createdAt = it.createdAt,
                                     )
                                 }
@@ -282,10 +282,10 @@ class VideoSearchViewModel @Inject constructor(
                         gameSlug = video.gameSlug,
                         gameName = video.gameName,
                         title = video.title,
-                        createdAt = video.uploadDate,
+                        createdAt = video.createdAt,
                         thumbnail = downloadedThumbnail,
                         type = video.type,
-                        duration = video.duration,
+                        duration = video.durationSeconds?.toString(),
                         animatedPreviewURL = video.animatedPreviewURL
                     )
                 )

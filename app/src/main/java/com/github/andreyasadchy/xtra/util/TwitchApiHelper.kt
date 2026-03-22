@@ -32,35 +32,43 @@ import java.util.TimeZone
 
 object TwitchApiHelper {
 
+    private val imageSizeRegex = Regex("-\\d+x\\d+.")
     var checkedValidation = false
     var checkedUpdates = false
 
-    fun getTemplateUrl(url: String?, type: String): String? {
-        if (url.isNullOrBlank() || url.startsWith("https://vod-secure.twitch.tv/_404/404_processing")) {
-            return when (type) {
-                "game" -> "https://static-cdn.jtvnw.net/ttv-static/404_boxart.jpg"
-                "video" -> "https://vod-secure.twitch.tv/_404/404_processing_320x180.png"
-                else -> null
-            }
-        }
-        val width = when (type) {
-            "game" -> "285"
-            "video" -> "1280"
-            "profileimage" -> "300"
-            else -> ""
-        }
-        val height = when (type) {
-            "game" -> "380"
-            "video" -> "720"
-            "profileimage" -> "300"
-            else -> ""
-        }
+    fun getStreamThumbnail(url: String?): String? {
         return when {
-            type == "clip" -> url.replace(Regex("-\\d+x\\d+."), ".")
-            url.contains("%{width}") -> url.replace("%{width}", width).replace("%{height}", height)
-            url.contains("{width}") -> url.replace("{width}", width).replace("{height}", height)
-            else -> url.replace(Regex("-\\d+x\\d+."), "-${width}x${height}.")
+            url.isNullOrBlank() -> "https://static-cdn.jtvnw.net/ttv-static/404_preview-440x248.jpg"
+            url.contains("{width}x{height}") -> url.replace("{width}", "1280").replace("{height}", "720")
+            else -> url.replace(imageSizeRegex, "-1280x720.")
         }
+    }
+
+    fun getVideoThumbnail(url: String?): String? {
+        return when {
+            url.isNullOrBlank() || url.startsWith("https://vod-secure.twitch.tv/_404/404_processing") -> {
+                "https://vod-secure.twitch.tv/_404/404_processing_320x180.png"
+            }
+            url.contains("{width}x{height}") -> url.replace("{width}", "1280").replace("{height}", "720")
+            url.contains("%{width}x%{height}") -> url.replace("%{width}", "1280").replace("%{height}", "720")
+            else -> url.replace(imageSizeRegex, "-1280x720.")
+        }
+    }
+
+    fun getClipThumbnail(url: String?): String? {
+        return url?.replace(imageSizeRegex, "-1280x720.")
+    }
+
+    fun getGameBoxArt(url: String?): String? {
+        return when {
+            url.isNullOrBlank() -> "https://static-cdn.jtvnw.net/ttv-static/404_boxart.jpg"
+            url.contains("{width}x{height}") -> url.replace("{width}", "285").replace("{height}", "380")
+            else -> url.replace(imageSizeRegex, "-285x380.")
+        }
+    }
+
+    fun getProfileImage(url: String?): String? {
+        return url?.replace(imageSizeRegex, "-300x300.")
     }
 
     fun getType(context: Context, type: String?): String? {
@@ -72,15 +80,11 @@ object TwitchApiHelper {
         }
     }
 
-    fun getDuration(duration: String): Long? {
-        return duration.toLongOrNull() ?: try {
-            val h = duration.substringBefore("h", "0").takeLast(2).filter { it.isDigit() }.toInt()
-            val m = duration.substringBefore("m", "0").takeLast(2).filter { it.isDigit() }.toInt()
-            val s = duration.substringBefore("s", "0").takeLast(2).filter { it.isDigit() }.toInt()
-            ((h * 3600) + (m * 60) + s).toLong()
-        } catch (e: Exception) {
-            null
-        }
+    fun getDuration(duration: String): Int {
+        val h = duration.substringBefore("h", "0").takeLastWhile { it.isDigit() }.toIntOrNull() ?: 0
+        val m = duration.substringBefore("m", "0").takeLastWhile { it.isDigit() }.toIntOrNull() ?: 0
+        val s = duration.substringBefore("s", "0").takeLastWhile { it.isDigit() }.toIntOrNull() ?: 0
+        return (h * 3600) + (m * 60) + s
     }
 
     fun getDurationFromSeconds(context: Context, input: String?, text: Boolean = true): String? {
@@ -364,11 +368,15 @@ object TwitchApiHelper {
         return System.currentTimeMillis() >= context.tokenPrefs().getLong(C.INTEGRITY_EXPIRATION, 0)
     }
 
-    fun getVideoUrlMapFromPreview(url: String, type: String?, list: List<String>?): Map<String, String> {
+    fun getVideoUrlsFromPreview(url: String, type: String?, list: List<String>?): Map<String, String> {
         val qualityList = list ?: listOf("chunked", "1080p60", "1080p30", "720p60", "720p30", "480p30", "360p30", "160p30", "144p30", "high", "medium", "low", "mobile", "audio_only")
-        val map = mutableMapOf<String, String>()
-        qualityList.forEach { quality ->
-            map[if (quality == "chunked") "source" else quality] = url
+        return qualityList.associate { quality ->
+            val name = if (quality == "chunked") {
+                "source"
+            } else {
+                quality
+            }
+            val url = url
                 .replace("storyboards", quality)
                 .replaceAfterLast("/",
                     if (type?.lowercase() == "highlight") {
@@ -377,8 +385,8 @@ object TwitchApiHelper {
                         "index-dvr.m3u8"
                     }
                 )
+            name to url
         }
-        return map
     }
 
     fun getMessageIdString(msgId: String?): String? {
@@ -392,7 +400,7 @@ object TwitchApiHelper {
 
     fun getNoticeString(context: Context, msgId: String?, message: String?): String? {
         val lang = AppCompatDelegate.getApplicationLocales().toLanguageTags().substringBefore("-")
-        return if (lang == "ar" || lang == "de" || lang == "es" || lang == "fr" || lang == "in" || lang == "it" || lang == "ja" || lang == "pt" || lang == "ru" || lang == "tr" || lang == "zh") {
+        return if (lang == "ar" || lang == "de" || lang == "es" || lang == "fr" || lang == "gl" || lang == "in" || lang == "it" || lang == "ja" || lang == "pt" || lang == "ru" || lang == "tr" || lang == "zh") {
             when (msgId) {
                 "already_banned" -> ContextCompat.getString(context, R.string.irc_notice_already_banned).format(
                     message?.substringBefore(" is already banned", "") ?: "")

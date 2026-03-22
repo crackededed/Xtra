@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.chromium.net.CronetEngine
@@ -31,7 +32,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.ExecutorService
 import javax.inject.Inject
-import kotlin.coroutines.suspendCoroutine
 
 @HiltViewModel
 class GamePagerViewModel @Inject constructor(
@@ -75,13 +75,13 @@ class GamePagerViewModel @Inject constructor(
                     }
                     response.data!!.game?.let {
                         Game(
-                            gameId = it.id,
-                            gameSlug = it.slug,
-                            gameName = it.displayName,
-                            boxArtUrl = it.boxArtURL,
-                            viewersCount = it.viewersCount,
-                            broadcastersCount = it.broadcastersCount,
-                            followersCount = it.followersCount,
+                            id = it.id,
+                            slug = it.slug,
+                            name = it.displayName,
+                            boxArtURL = it.boxArtURL,
+                            viewerCount = it.viewersCount,
+                            broadcasterCount = it.broadcastersCount,
+                            followerCount = it.followersCount,
                             tags = it.tags?.map { tag ->
                                 Tag(
                                     id = tag.id,
@@ -100,9 +100,9 @@ class GamePagerViewModel @Inject constructor(
                                 names = if (args.gameId.isNullOrBlank()) args.gameName?.let { listOf(it) } else null
                             ).data.firstOrNull()?.let {
                                 Game(
-                                    gameId = it.id,
-                                    gameName = it.name,
-                                    boxArtUrl = it.boxArtUrl
+                                    id = it.id,
+                                    name = it.name,
+                                    boxArtURL = it.boxArtURL
                                 )
                             }
                         } catch (e: Exception) {
@@ -171,12 +171,12 @@ class GamePagerViewModel @Inject constructor(
                                             networkLibrary = networkLibrary,
                                             headers = helixHeaders,
                                             ids = listOf(gameId)
-                                        ).data.firstOrNull()?.boxArtUrl
+                                        ).data.firstOrNull()?.boxArtURL
                                     } else null
-                                }.takeIf { !it.isNullOrBlank() }?.let { TwitchApiHelper.getTemplateUrl(it, "game") }?.let {
+                                }.takeIf { !it.isNullOrBlank() }?.let { TwitchApiHelper.getGameBoxArt(it) }?.let {
                                     when {
                                         networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                                            val response = suspendCoroutine { continuation ->
+                                            val response = suspendCancellableCoroutine { continuation ->
                                                 httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                             }
                                             if (response.first.httpStatusCode in 200..299) {
@@ -196,7 +196,7 @@ class GamePagerViewModel @Inject constructor(
                                                     }
                                                 }
                                             } else {
-                                                val response = suspendCoroutine { continuation ->
+                                                val response = suspendCancellableCoroutine { continuation ->
                                                     cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                                                 }
                                                 if (response.first.httpStatusCode in 200..299) {
@@ -282,12 +282,12 @@ class GamePagerViewModel @Inject constructor(
                                         networkLibrary = networkLibrary,
                                         headers = helixHeaders,
                                         ids = listOf(gameId)
-                                    ).data.firstOrNull()?.boxArtUrl
+                                    ).data.firstOrNull()?.boxArtURL
                                 } else null
-                            }.takeIf { !it.isNullOrBlank() }?.let { TwitchApiHelper.getTemplateUrl(it, "game") }?.let {
+                            }.takeIf { !it.isNullOrBlank() }?.let { TwitchApiHelper.getGameBoxArt(it) }?.let {
                                 when {
                                     networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                                        val response = suspendCoroutine { continuation ->
+                                        val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
                                         if (response.first.httpStatusCode in 200..299) {
@@ -307,7 +307,7 @@ class GamePagerViewModel @Inject constructor(
                                                 }
                                             }
                                         } else {
-                                            val response = suspendCoroutine { continuation ->
+                                            val response = suspendCancellableCoroutine { continuation ->
                                                 cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
                                             }
                                             if (response.first.httpStatusCode in 200..299) {

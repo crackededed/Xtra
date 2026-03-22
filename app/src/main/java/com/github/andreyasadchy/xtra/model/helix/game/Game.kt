@@ -8,5 +8,5 @@ class Game(
     val id: String? = null,
     val name: String? = null,
     @SerialName("box_art_url")
-    val boxArtUrl: String? = null,
+    val boxArtURL: String? = null,
 )
