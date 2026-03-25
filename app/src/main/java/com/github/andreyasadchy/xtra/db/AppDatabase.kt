@@ -3,6 +3,7 @@ package com.github.andreyasadchy.xtra.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.github.andreyasadchy.xtra.model.NotificationUser
+import com.github.andreyasadchy.xtra.model.PlaybackState
 import com.github.andreyasadchy.xtra.model.ShownNotification
 import com.github.andreyasadchy.xtra.model.VideoPosition
 import com.github.andreyasadchy.xtra.model.chat.RecentEmote
@@ -10,16 +11,32 @@ import com.github.andreyasadchy.xtra.model.ui.Bookmark
 import com.github.andreyasadchy.xtra.model.ui.LocalFollowChannel
 import com.github.andreyasadchy.xtra.model.ui.LocalFollowGame
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
-import com.github.andreyasadchy.xtra.model.ui.SavedFilter
 import com.github.andreyasadchy.xtra.model.ui.RecentSearch
+import com.github.andreyasadchy.xtra.model.ui.SavedFilter
 import com.github.andreyasadchy.xtra.model.ui.SortChannel
 import com.github.andreyasadchy.xtra.model.ui.SortGame
 import com.github.andreyasadchy.xtra.model.ui.TranslateAllMessagesUser
 import com.github.andreyasadchy.xtra.model.ui.VodBookmarkIgnoredUser
 
 @Database(
-    entities = [OfflineVideo::class, RecentEmote::class, VideoPosition::class, LocalFollowChannel::class, LocalFollowGame::class, Bookmark::class, VodBookmarkIgnoredUser::class, SortChannel::class, SortGame::class, ShownNotification::class, NotificationUser::class, TranslateAllMessagesUser::class, SavedFilter::class, RecentSearch::class],
-    version = 33
+    entities = [
+        OfflineVideo::class,
+        RecentEmote::class,
+        VideoPosition::class,
+        LocalFollowChannel::class,
+        LocalFollowGame::class,
+        Bookmark::class,
+        VodBookmarkIgnoredUser::class,
+        SortChannel::class,
+        SortGame::class,
+        ShownNotification::class,
+        NotificationUser::class,
+        TranslateAllMessagesUser::class,
+        SavedFilter::class,
+        RecentSearch::class,
+        PlaybackState::class
+    ],
+    version = 34
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -37,4 +54,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun translateAllMessagesUsersDao(): TranslateAllMessagesUsersDao
     abstract fun savedFiltersDao(): SavedFiltersDao
     abstract fun recentSearchDao(): RecentSearchDao
+    abstract fun playbackStatesDao(): PlaybackStatesDao
 }

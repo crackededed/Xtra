@@ -125,7 +125,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
             }
         }
 
-        fun newClipInstance(id: String?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, gameId: String?, gameSlug: String?, gameName: String?, title: String?, thumbnail: String?, createdAt: String?, videoId: String?, videoOffsetSeconds: Int?, qualityNames: Array<String>? = null, qualityCodecs: Array<String>? = null, qualityUrls: Array<String>? = null): DownloadDialog {
+        fun newClipInstance(id: String?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, gameId: String?, gameSlug: String?, gameName: String?, title: String?, thumbnail: String?, createdAt: String?, durationSeconds: Int?, videoId: String?, videoOffsetSeconds: Int?, qualityNames: Array<String>? = null, qualityCodecs: Array<String>? = null, qualityUrls: Array<String>? = null): DownloadDialog {
             return DownloadDialog().apply {
                 arguments = Bundle().apply {
                     putString(KEY_TYPE, CLIP)
@@ -140,6 +140,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                     putString(KEY_TITLE, title)
                     putString(KEY_THUMBNAIL, thumbnail)
                     putString(KEY_CREATED_AT, createdAt)
+                    putInt(KEY_DURATION_SECONDS, durationSeconds ?: -1)
                     putString(KEY_VIDEO_ID, videoId)
                     putInt(KEY_VIDEO_OFFSET_SECONDS, videoOffsetSeconds ?: -1)
                     putStringArray(KEY_QUALITY_NAMES, qualityNames)
@@ -264,7 +265,6 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                     },
                     playerType = requireContext().prefs().getString(C.TOKEN_PLAYERTYPE_VIDEO, "channel_home_live"),
                     supportedCodecs = requireContext().prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
-                    skipAccessToken = requireContext().prefs().getString(C.TOKEN_SKIP_VIDEO_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2,
                     enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                 )
             }
@@ -708,7 +708,6 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.CallbackListener {
                         },
                         playerType = requireContext().prefs().getString(C.TOKEN_PLAYERTYPE_VIDEO, "channel_home_live"),
                         supportedCodecs = requireContext().prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
-                        skipAccessToken = requireContext().prefs().getString(C.TOKEN_SKIP_VIDEO_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2,
                         enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                     )
                 }

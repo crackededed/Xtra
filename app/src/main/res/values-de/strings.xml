@@ -457,11 +457,6 @@
     <string name="api_validate_tokens">Token beim Start validieren</string>
     <string name="followed_only">Nur Follower</string>
     <string name="debug_api_commands">API Chat Kommandos benutzen</string>
-    <string name="skip_video_access_token">Video Zugriff-Token überspringen</string>
-    <string name="skipVideoTokenEntries1">Immer überspringen</string>
-    <string name="skipVideoTokenEntries2">Immer überspringen, außer die Wiedergabe schlägt fehl</string>
-    <string name="skipVideoTokenEntries3">Nicht überspringen, außer die Wiedergabe schlägt fehl</string>
-    <string name="skipVideoTokenEntries4">Niemals überspringen</string>
     <string name="stream_live">%s ist jetzt live</string>
     <string name="stream_offline">%s ist jetzt offline</string>
     <string name="keep_screen_on_when_paused">Bildschirm wach halten, wenn Video pausiert ist</string>

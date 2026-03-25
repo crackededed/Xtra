@@ -55,7 +55,7 @@ import kotlin.math.floor
 
 @OptIn(UnstableApi::class)
 @AndroidEntryPoint
-class Media3Fragment : PlayerFragment() {
+class Media3Fragment : Media3PlayerFragment() {
 
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private val player: MediaController?
@@ -205,7 +205,7 @@ class Media3Fragment : PlayerFragment() {
                                             }
                                         }
                                     }
-                                    if (list != null) {
+                                    if (!list.isNullOrEmpty()) {
                                         viewModel.qualities = list.asSequence()
                                             .sortedByDescending {
                                                 it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
@@ -213,14 +213,16 @@ class Media3Fragment : PlayerFragment() {
                                             .sortedByDescending {
                                                 it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                                             }
-                                            .sortedByDescending {
-                                                it.name == "source"
-                                            }
                                             .toMutableList().apply {
                                                 add(0, VideoQuality(AUTO_QUALITY))
-                                                if (find { it.name == AUDIO_ONLY_QUALITY } == null) {
-                                                    add(VideoQuality(AUDIO_ONLY_QUALITY))
+                                                find { it.name.equals("source", true) }?.let { source ->
+                                                    remove(source)
+                                                    add(1, VideoQuality(SOURCE_QUALITY, source.codecs, source.url))
                                                 }
+                                                val audio = find { it.name?.startsWith("audio", true) == true }?.also {
+                                                    remove(it)
+                                                }
+                                                add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.url))
                                                 if (videoType == STREAM) {
                                                     add(VideoQuality(CHAT_ONLY_QUALITY))
                                                 }
@@ -273,7 +275,7 @@ class Media3Fragment : PlayerFragment() {
                                                         player?.sendCustomCommand(
                                                             SessionCommand(
                                                                 PlaybackService.TOGGLE_PROXY, Bundle().apply {
-                                                                    putBoolean(PlaybackService.USING_PROXY, false)
+                                                                    putBoolean(PlaybackService.USING_PROXY, true)
                                                                 }
                                                             ), Bundle.EMPTY
                                                         )
@@ -404,13 +406,8 @@ class Media3Fragment : PlayerFragment() {
                                             activeNetwork?.isConnectedOrConnecting == true
                                         }
                                         if (isNetworkAvailable) {
-                                            val skipAccessToken = requireContext().prefs().getString(C.TOKEN_SKIP_VIDEO_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2
                                             when {
-                                                skipAccessToken == 1 && viewModel.shouldRetry && responseCode != 0 -> {
-                                                    viewModel.shouldRetry = false
-                                                    playVideo(false, player?.currentPosition)
-                                                }
-                                                skipAccessToken == 2 && viewModel.shouldRetry && responseCode != 0 -> {
+                                                viewModel.shouldRetry && responseCode != 0 -> {
                                                     viewModel.shouldRetry = false
                                                     playVideo(true, player?.currentPosition)
                                                 }
@@ -445,7 +442,7 @@ class Media3Fragment : PlayerFragment() {
             player?.sendCustomCommand(
                 SessionCommand(
                     PlaybackService.SET_SLEEP_TIMER, Bundle().apply {
-                        putLong(PlaybackService.DURATION, 1L)
+                        putLong(PlaybackService.DURATION, -1L)
                     }
                 ), Bundle.EMPTY
             )?.let { result ->

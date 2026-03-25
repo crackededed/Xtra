@@ -9,6 +9,7 @@ import com.github.andreyasadchy.xtra.db.BookmarksDao
 import com.github.andreyasadchy.xtra.db.LocalFollowsChannelDao
 import com.github.andreyasadchy.xtra.db.LocalFollowsGameDao
 import com.github.andreyasadchy.xtra.db.NotificationUsersDao
+import com.github.andreyasadchy.xtra.db.PlaybackStatesDao
 import com.github.andreyasadchy.xtra.db.RecentEmotesDao
 import com.github.andreyasadchy.xtra.db.RecentSearchDao
 import com.github.andreyasadchy.xtra.db.SavedFiltersDao
@@ -24,6 +25,7 @@ import com.github.andreyasadchy.xtra.repository.LocalFollowChannelRepository
 import com.github.andreyasadchy.xtra.repository.LocalFollowGameRepository
 import com.github.andreyasadchy.xtra.repository.NotificationUsersRepository
 import com.github.andreyasadchy.xtra.repository.OfflineRepository
+import com.github.andreyasadchy.xtra.repository.PlaybackStatesRepository
 import com.github.andreyasadchy.xtra.repository.RecentSearchRepository
 import com.github.andreyasadchy.xtra.repository.SavedFiltersRepository
 import com.github.andreyasadchy.xtra.repository.ShownNotificationsRepository
@@ -91,6 +93,10 @@ class DatabaseModule {
 
     @Singleton
     @Provides
+    fun providesPlaybackStatesRepository(playbackStatesDao: PlaybackStatesDao): PlaybackStatesRepository = PlaybackStatesRepository(playbackStatesDao)
+
+    @Singleton
+    @Provides
     fun providesVideosDao(database: AppDatabase): VideosDao = database.videos()
 
     @Singleton
@@ -144,6 +150,10 @@ class DatabaseModule {
     @Singleton
     @Provides
     fun providesRecentSearchDao(database: AppDatabase): RecentSearchDao = database.recentSearchDao()
+
+    @Singleton
+    @Provides
+    fun providesPlaybackStatesDao(database: AppDatabase): PlaybackStatesDao = database.playbackStatesDao()
 
     @Singleton
     @Provides
@@ -339,6 +349,11 @@ class DatabaseModule {
                 object : Migration(32, 33) {
                     override fun migrate(db: SupportSQLiteDatabase) {
                         db.execSQL("CREATE TABLE IF NOT EXISTS recent_search (id INTEGER NOT NULL, query TEXT NOT NULL, type TEXT NOT NULL, lastSearched INTEGER NOT NULL, PRIMARY KEY (id))")
+                    }
+                },
+                object : Migration(33, 34) {
+                    override fun migrate(db: SupportSQLiteDatabase) {
+                        db.execSQL("CREATE TABLE IF NOT EXISTS playback_states (type TEXT, streamId TEXT, videoId TEXT, clipId TEXT, offlineVideoId INTEGER, channelId TEXT, channelLogin TEXT, channelName TEXT, channelImage TEXT, gameId TEXT, gameSlug TEXT, gameName TEXT, title TEXT, thumbnail TEXT, createdAt TEXT, viewerCount INTEGER, durationSeconds INTEGER, videoType TEXT, videoOffsetSeconds INTEGER, videoAnimatedPreviewURL TEXT, position INTEGER, paused INTEGER NOT NULL, qualities TEXT, quality TEXT, previousQuality TEXT, restoreQuality INTEGER NOT NULL, playlistUrl TEXT, restorePlaylist INTEGER NOT NULL, useCustomProxy INTEGER NOT NULL, skipAccessToken INTEGER NOT NULL, id INTEGER NOT NULL, PRIMARY KEY (id))")
                     }
                 },
             )

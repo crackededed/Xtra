@@ -33,20 +33,6 @@
         <item>2</item>
     </string-array>
 
-    <string-array name="skipVideoTokenEntries">
-        <item>@string/skipVideoTokenEntries1</item>
-        <item>@string/skipVideoTokenEntries2</item>
-        <item>@string/skipVideoTokenEntries3</item>
-        <item>@string/skipVideoTokenEntries4</item>
-    </string-array>
-
-    <string-array name="skipVideoTokenValues">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-    </string-array>
-
     <string-array name="followButtonEntries">
         <item>@string/follow_account</item>
         <item>@string/follow_local</item>
