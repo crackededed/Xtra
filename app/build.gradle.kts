@@ -29,7 +29,7 @@ android {
         minSdk = 16
         targetSdk = 36
         versionCode = 121
-        versionName = "2.54.5"
+        versionName = "2.55.0"
     }
 
     buildTypes {
@@ -74,6 +74,7 @@ android {
             "androidx.fragment:fragment-ktx:1.7.0-alpha06",
             "androidx.hilt:hilt-compiler:1.1.0",
             "androidx.hilt:hilt-work:1.1.0",
+            "androidx.lifecycle:lifecycle-service:2.7.0-alpha03",
             "androidx.lifecycle:lifecycle-viewmodel:2.7.0-alpha03",
             "androidx.media3:media3-exoplayer:1.2.1",
             "androidx.media3:media3-exoplayer-hls:1.2.1",
@@ -118,6 +119,7 @@ dependencies {
     implementation(libs.coordinatorlayout)
     implementation(libs.core.ktx)
     implementation(libs.fragment.ktx)
+    implementation(libs.lifecycle.service)
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)

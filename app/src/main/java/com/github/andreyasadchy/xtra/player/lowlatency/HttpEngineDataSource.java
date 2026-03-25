@@ -51,7 +51,7 @@ import androidx.media3.datasource.HttpDataSource;
 import androidx.media3.datasource.HttpUtil;
 import androidx.media3.datasource.TransferListener;
 
-import com.github.andreyasadchy.xtra.ui.player.PlaybackService;
+import com.github.andreyasadchy.xtra.ui.player.ExoPlayerService;
 import com.google.common.base.Ascii;
 import com.google.common.base.Predicate;
 import com.google.common.net.HttpHeaders;
@@ -503,10 +503,10 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
     }
     String host = dataSpec.uri.getHost(); // xtra: proxy
     if (host != null) {
-      if (host.matches(PlaybackService.MULTIVARIANT_PLAYLIST_REGEX) && multivariantPlaylistProxyClient != null) {
+      if (host.matches(ExoPlayerService.MULTIVARIANT_PLAYLIST_REGEX) && multivariantPlaylistProxyClient != null) {
         return openOkHttp(dataSpec, multivariantPlaylistProxyClient);
       } else {
-        if (host.matches(PlaybackService.MEDIA_PLAYLIST_REGEX) && mediaPlaylistProxyClient != null && proxyMediaPlaylist.invoke()) {
+        if (host.matches(ExoPlayerService.MEDIA_PLAYLIST_REGEX) && mediaPlaylistProxyClient != null && proxyMediaPlaylist.invoke()) {
           return openOkHttp(dataSpec, mediaPlaylistProxyClient);
         }
       }

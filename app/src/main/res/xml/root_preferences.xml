@@ -91,7 +91,6 @@
         app:singleLineTitle="false" />
 
     <EditTextPreference
-        android:defaultValue="https://api.ttv.lol/playlist/$channel.m3u8?allow_source=true&amp;allow_audio_only=true&amp;fast_bread=true"
         android:key="player_proxy_url"
         android:summary="@string/stream_proxy_url_desc"
         android:title="@string/stream_proxy_url"

@@ -16,6 +16,7 @@ import com.github.andreyasadchy.xtra.db.VideoPositionsDao
 import com.github.andreyasadchy.xtra.graphql.StreamPlaybackAccessTokenQuery
 import com.github.andreyasadchy.xtra.graphql.type.BadgeImageSize
 import com.github.andreyasadchy.xtra.graphql.type.EmoteType
+import com.github.andreyasadchy.xtra.model.PlaybackState
 import com.github.andreyasadchy.xtra.model.VideoPosition
 import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.model.chat.CheerEmote
@@ -80,6 +81,7 @@ class PlayerRepository @Inject constructor(
     private val helixRepository: HelixRepository,
     private val recentEmotes: RecentEmotesDao,
     private val videoPositions: VideoPositionsDao,
+    private val playbackStatesRepository: PlaybackStatesRepository,
 ) {
 
     suspend fun loadStreamPlaylistUrl(networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, supportedCodecs: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): String = withContext(Dispatchers.IO) {
@@ -1477,5 +1479,15 @@ class PlayerRepository @Inject constructor(
 
     suspend fun deleteVideoPositions() = withContext(Dispatchers.IO) {
         videoPositions.deleteAll()
+    }
+
+    suspend fun getPlaybackStates() = playbackStatesRepository.loadStates()
+
+    suspend fun savePlaybackStates(items: List<PlaybackState>) = withContext(Dispatchers.IO) {
+        playbackStatesRepository.saveStates(items)
+    }
+
+    suspend fun deletePlaybackStates() = withContext(Dispatchers.IO) {
+        playbackStatesRepository.deleteStates()
     }
 }

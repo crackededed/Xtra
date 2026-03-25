@@ -25,13 +25,8 @@ import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.hls.HlsManifest
 import androidx.media3.exoplayer.hls.HlsMediaSource
-import androidx.media3.exoplayer.hls.playlist.HlsMediaPlaylist
-import androidx.media3.exoplayer.hls.playlist.HlsMultivariantPlaylist
-import androidx.media3.exoplayer.hls.playlist.HlsPlaylist
-import androidx.media3.exoplayer.hls.playlist.HlsPlaylistParserFactory
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
-import androidx.media3.exoplayer.upstream.ParsingLoadable
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommand
@@ -40,7 +35,6 @@ import com.github.andreyasadchy.xtra.model.VideoPosition
 import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.player.lowlatency.CronetDataSource
 import com.github.andreyasadchy.xtra.player.lowlatency.DefaultHlsPlaylistTracker
-import com.github.andreyasadchy.xtra.player.lowlatency.HlsPlaylistParser
 import com.github.andreyasadchy.xtra.player.lowlatency.HttpEngineDataSource
 import com.github.andreyasadchy.xtra.player.lowlatency.OkHttpDataSource
 import com.github.andreyasadchy.xtra.repository.OfflineRepository
@@ -224,7 +218,7 @@ class PlaybackService : MediaSessionService() {
                                         proxySelector(
                                             object : ProxySelector() {
                                                 override fun select(u: URI): List<Proxy> {
-                                                    return if (Regex(MULTIVARIANT_PLAYLIST_REGEX).matches(u.host)) {
+                                                    return if (Regex(ExoPlayerService.MULTIVARIANT_PLAYLIST_REGEX).matches(u.host)) {
                                                         listOf(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)), Proxy.NO_PROXY)
                                                     } else {
                                                         listOf(Proxy.NO_PROXY)
@@ -248,7 +242,7 @@ class PlaybackService : MediaSessionService() {
                                         proxySelector(
                                             object : ProxySelector() {
                                                 override fun select(u: URI): List<Proxy> {
-                                                    return if (Regex(MEDIA_PLAYLIST_REGEX).matches(u.host)) {
+                                                    return if (Regex(ExoPlayerService.MEDIA_PLAYLIST_REGEX).matches(u.host)) {
                                                         listOf(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)), Proxy.NO_PROXY)
                                                     } else {
                                                         listOf(Proxy.NO_PROXY)
@@ -300,7 +294,7 @@ class PlaybackService : MediaSessionService() {
                                             }
                                         )
                                     ).apply {
-                                        setPlaylistParserFactory(CustomHlsPlaylistParserFactory())
+                                        setPlaylistParserFactory(ExoPlayerService.CustomHlsPlaylistParserFactory())
                                         setPlaylistTrackerFactory(DefaultHlsPlaylistTracker.FACTORY)
                                         setLoadErrorHandlingPolicy(DefaultLoadErrorHandlingPolicy(6))
                                     }.createMediaSource(
@@ -359,7 +353,7 @@ class PlaybackService : MediaSessionService() {
                                             }
                                         )
                                     ).apply {
-                                        setPlaylistParserFactory(CustomHlsPlaylistParserFactory())
+                                        setPlaylistParserFactory(ExoPlayerService.CustomHlsPlaylistParserFactory())
                                     }.createMediaSource(
                                         MediaItem.Builder().apply {
                                             setUri(uri?.toUri())
@@ -511,11 +505,12 @@ class PlaybackService : MediaSessionService() {
                             }
                             GET_QUALITIES -> {
                                 val playlist = (session.player.currentManifest as? HlsManifest)?.multivariantPlaylist
-                                val list = playlist?.variants?.mapIndexedNotNull { index, variant ->
+                                val list = playlist?.variants?.mapNotNull { variant ->
                                     val name = variant.format.label?.takeIf { it.isNotBlank() }
                                         ?: playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.takeIf { it.isNotBlank() }
-                                        ?: index.toString()
-                                    VideoQuality(name, variant.format.codecs, variant.url.toString())
+                                    if (name != null) {
+                                        VideoQuality(name, variant.format.codecs, variant.url.toString())
+                                    } else null
                                 }
                                 Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, Bundle().apply {
                                     putStringArray(NAMES, list?.map { it.name.toString() }?.toTypedArray())
@@ -634,16 +629,6 @@ class PlaybackService : MediaSessionService() {
         super.onDestroy()
     }
 
-    class CustomHlsPlaylistParserFactory(): HlsPlaylistParserFactory {
-        override fun createPlaylistParser(): ParsingLoadable.Parser<HlsPlaylist> {
-            return HlsPlaylistParser()
-        }
-
-        override fun createPlaylistParser(multivariantPlaylist: HlsMultivariantPlaylist, previousMediaPlaylist: HlsMediaPlaylist?): ParsingLoadable.Parser<HlsPlaylist> {
-            return HlsPlaylistParser(multivariantPlaylist, previousMediaPlaylist)
-        }
-    }
-
     companion object {
         const val START_STREAM = "startStream"
         const val START_VIDEO = "startVideo"
@@ -671,9 +656,6 @@ class PlaybackService : MediaSessionService() {
         const val NAMES = "names"
         const val CODECS = "codecs"
         const val URLS = "urls"
-
-        const val MULTIVARIANT_PLAYLIST_REGEX = "^usher\\.ttvnw\\.net$"
-        const val MEDIA_PLAYLIST_REGEX = "^(?:[a-z0-9-]+\\.playlist\\.(?:live-video|ttvnw)\\.net|video-weaver\\.[a-z0-9-]+\\.hls\\.ttvnw\\.net)$"
 
         const val REQUEST_CODE_RESUME = 2
     }

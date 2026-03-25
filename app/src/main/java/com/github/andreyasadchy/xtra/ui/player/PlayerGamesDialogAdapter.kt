@@ -42,6 +42,7 @@ class PlayerGamesDialogAdapter(
                 val context = fragment.requireContext()
                 root.setOnClickListener {
                     item?.vodPosition?.let { position ->
+                        (fragment.parentFragment as? Media3PlayerFragment)?.seek(position.toLong()) ?:
                         (fragment.parentFragment as? PlayerFragment)?.seek(position.toLong())
                     }
                     (fragment as? PlayerGamesDialog)?.dismiss()

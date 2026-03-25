@@ -64,6 +64,7 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
                 title = it.title,
                 thumbnail = it.thumbnail,
                 createdAt = it.createdAt,
+                durationSeconds = it.durationSeconds,
                 videoId = it.videoId,
                 videoOffsetSeconds = it.videoOffsetSeconds,
             ).show(childFragmentManager, null)
