@@ -267,7 +267,7 @@
     <string name="irc_notice_msg_subsonly">此房間目前處於訂閱者限定模式。若要發言，請在 https://www.twitch.tv/products/%s/ticket?ref=subscriber_only_mode_chat 購買頻道訂閱。</string>
     <string name="irc_notice_msg_suspended">您沒有權限執行這項操作。</string>
     <string name="irc_notice_msg_timedout">您的暫時禁言還有 %s 秒。</string>
-    <string name="irc_notice_msg_verified_email">此房間需要認證帳號才可聊天。請在 https://www.twitch.tv/settings/security 認證您的帳戶。</string>
+    <string name="irc_notice_msg_verified_email">此房間需要認證帳號才可聊天。請在 https://www.twitch.tv/settings/security 認證您的帳號。</string>
     <string name="irc_notice_no_help">沒有可用的說明。</string>
     <string name="irc_notice_no_mods">此頻道沒有 Mod。</string>
     <string name="irc_notice_no_vips">此頻道沒有任何 VIP。</string>
@@ -450,8 +450,8 @@
     <string name="search_streams">搜尋串流</string>
     <string name="reload_emotes">重新載入表情符號</string>
     <string name="api_current_login">目前的登入</string>
-    <string name="api_user_id">帳戶 ID</string>
-    <string name="api_user_login">帳戶登入</string>
+    <string name="api_user_id">帳號 ID</string>
+    <string name="api_user_login">帳號登入</string>
     <string name="api_helix_token">Helix 權杖</string>
     <string name="api_gql_token">GQL 權杖</string>
     <string name="api_validate_tokens">在啟動時驗證權杖</string>
@@ -688,7 +688,7 @@
     <string name="search_tags">搜尋標籤</string>
     <string name="invalid_directory">無效的目錄</string>
     <string name="suggested">推薦的</string>
-    <string name="languages">與移</string>
+    <string name="languages">語言</string>
     <string name="recent">最近開始</string>
     <string name="filters">篩選</string>
     <string name="sort_by">排序依據：%1$s</string>
@@ -722,12 +722,12 @@
     <string name="reduced_padding">減少填充</string>
     <string name="compact_text">緊湊文字</string>
     <string name="next">下一步</string>
-    <string name="tv_login_message">若要存取所有功能，您需要登入為 Android TV 裝置。\n\n請遵從以下步驟：\n• 複製在網頁上顯示的 Code。\n• 按下在底部的「下一步」安紐。\n• 輸入 Code 並按下「啟動/Activate」。\n• 按下「授權/Authorize」。</string>
+    <string name="tv_login_message">若要存取所有功能，您需要登入為 Android TV 裝置。\n\n請遵循以下步驟：\n• 複製在網頁上顯示的 Code。\n• 按下在底部的「下一步」安紐。\n• 輸入 Code 並按下「啟動/Activate」。\n• 按下「授權/Authorize」。</string>
     <string name="open_url">開啟 URL</string>
-    <string name="external_login_message">您可使用外部瀏覽器登入。\n\n請遵從這些步驟：\n• 按下「開啟 URL」以開啟登入頁面。\n• 登入您的帳號並按下「授權/Authorizet」。\n• 應該會出現一個錯誤網頁。複製該網頁的網址，將網址貼到下方框並按下「確定」。</string>
+    <string name="external_login_message">您可使用外部瀏覽器登入。\n\n請遵循這些步驟：\n• 按下「開啟 URL」以開啟登入頁面。\n• 登入您的帳號並按下「授權/Authorizet」。\n• 應該會出現一個錯誤網頁。複製該網頁的網址，將網址貼到下方框並按下「確定」。</string>
     <string name="loading">正在載入...</string>
     <string name="copy_code">複製 Code</string>
-    <string name="external_tv_login_message">若要存取所有功能，您需要登入為 Android TV 裝置。\n\n請遵從以下步驟：\n• 複製在螢幕上顯示的 Code。\n• 按下「開啟 URL」按鈕。\n• 輸入 Code 並按下「啟動/Activate」。\n• 按下「授權/Authorize」。\n• 返回 Xtra 並按下「下一步」。</string>
-    <string name="activate_notifications_when_following">Activate notifications when following</string>
-    <string name="account">Account</string>
+    <string name="external_tv_login_message">若要存取所有功能，您需要登入為 Android TV 裝置。\n\n請遵循以下步驟：\n• 複製在螢幕上顯示的 Code。\n• 按下「開啟 URL」按鈕。\n• 輸入 Code 並按下「啟動/Activate」。\n• 按下「授權/Authorize」。\n• 返回 Xtra 並按下「下一步」。</string>
+    <string name="activate_notifications_when_following">追隨時啟動通知</string>
+    <string name="account">帳號</string>
 </resources>
