@@ -40,7 +40,7 @@ import org.json.JSONException
 
 @OptIn(UnstableApi::class)
 @AndroidEntryPoint
-class MediaPlayerFragment : PlayerFragment() {
+class MediaPlayerFragment : Media3PlayerFragment() {
 
     private var playbackService: MediaPlayerService? = null
     private var serviceConnection: ServiceConnection? = null
@@ -274,13 +274,15 @@ class MediaPlayerFragment : PlayerFragment() {
                             .sortedByDescending {
                                 it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                             }
-                            .sortedByDescending {
-                                it.name == "source"
-                            }
                             .toMutableList().apply {
-                                if (find { it.name == AUDIO_ONLY_QUALITY } == null) {
-                                    add(VideoQuality(AUDIO_ONLY_QUALITY))
+                                find { it.name.equals("source", true) }?.let { source ->
+                                    remove(source)
+                                    add(0, VideoQuality(SOURCE_QUALITY, source.codecs, source.url))
                                 }
+                                val audio = find { it.name?.startsWith("audio", true) == true }?.also {
+                                    remove(it)
+                                }
+                                add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.url))
                                 add(VideoQuality(CHAT_ONLY_QUALITY))
                             }
                         setDefaultQuality()
@@ -330,13 +332,8 @@ class MediaPlayerFragment : PlayerFragment() {
                                 && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                                 && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                         if (responseCode != null && isNetworkAvailable) {
-                            val skipAccessToken = requireContext().prefs().getString(C.TOKEN_SKIP_VIDEO_ACCESS_TOKEN, "2")?.toIntOrNull() ?: 2
                             when {
-                                skipAccessToken == 1 && viewModel.shouldRetry && responseCode != 0 -> {
-                                    viewModel.shouldRetry = false
-                                    playVideo(false, player.currentPosition.toLong())
-                                }
-                                skipAccessToken == 2 && viewModel.shouldRetry && responseCode != 0 -> {
+                                viewModel.shouldRetry && responseCode != 0 -> {
                                     viewModel.shouldRetry = false
                                     playVideo(true, player.currentPosition.toLong())
                                 }
@@ -429,13 +426,15 @@ class MediaPlayerFragment : PlayerFragment() {
                                 .sortedByDescending {
                                     it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                                 }
-                                .sortedByDescending {
-                                    it.name == "source"
-                                }
                                 .toMutableList().apply {
-                                    if (find { it.name == AUDIO_ONLY_QUALITY } == null) {
-                                        add(VideoQuality(AUDIO_ONLY_QUALITY))
+                                    find { it.name.equals("source", true) }?.let { source ->
+                                        remove(source)
+                                        add(0, VideoQuality(SOURCE_QUALITY, source.codecs, source.url))
                                     }
+                                    val audio = find { it.name?.startsWith("audio", true) == true }?.also {
+                                        remove(it)
+                                    }
+                                    add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.url))
                                 }
                             setDefaultQuality()
                             changePlayerMode()

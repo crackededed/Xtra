@@ -458,11 +458,6 @@
     <string name="api_validate_tokens">Başlangıçta token\'ları doğrula</string>
     <string name="followed_only">Sadece takip edilenler</string>
     <string name="debug_api_commands">API sohbet komutlarını kullan</string>
-    <string name="skip_video_access_token">Video erişim token\'ını atla</string>
-    <string name="skipVideoTokenEntries1">Her zaman atla</string>
-    <string name="skipVideoTokenEntries2">Varsayılan olarak atla, oynatma başarısız olursa atlama</string>
-    <string name="skipVideoTokenEntries3">Varsayılan olarak atlama, oynatma başarısız olursa atla</string>
-    <string name="skipVideoTokenEntries4">Asla atlama</string>
     <string name="stream_live">%s şimdi canlı</string>
     <string name="stream_offline">%s şimdi çevrimdışı</string>
     <string name="keep_screen_on_when_paused">Video duraklatıldığında ekranı açık tut</string>

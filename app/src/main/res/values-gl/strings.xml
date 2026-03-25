@@ -457,11 +457,6 @@
     <string name="api_validate_tokens">Validar tokens ao iniciar</string>
     <string name="followed_only">Só seguidos</string>
     <string name="debug_api_commands">Usar comandos de chat da API</string>
-    <string name="skip_video_access_token">Omitir token de acceso ao vídeo</string>
-    <string name="skipVideoTokenEntries1">Omitir sempre</string>
-    <string name="skipVideoTokenEntries2">Omitir por defecto, non omitir se falla a reprodución</string>
-    <string name="skipVideoTokenEntries3">Non omitir por defecto, omitir se falla a reprodución</string>
-    <string name="skipVideoTokenEntries4">Non omitir nunca</string>
     <string name="stream_live">%s está agora en directo</string>
     <string name="stream_offline">%s está agora desconectado</string>
     <string name="keep_screen_on_when_paused">Manter a pantalla acesa cando o vídeo está en pausa</string>

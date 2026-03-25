@@ -64,6 +64,7 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
                 title = it.title,
                 thumbnail = it.thumbnail,
                 createdAt = it.createdAt,
+                durationSeconds = it.durationSeconds,
                 videoId = it.videoId,
                 videoOffsetSeconds = it.videoOffsetSeconds,
             ).show(childFragmentManager, null)

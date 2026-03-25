@@ -63,8 +63,15 @@ class DownloadViewModel @Inject constructor(
                             .sortedByDescending {
                                 it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                             }
-                            .sortedByDescending {
-                                it.name == "source"
+                            .toMutableList().apply {
+                                find { it.name.equals("source", true) }?.let { source ->
+                                    remove(source)
+                                    add(0, VideoQuality("source", source.codecs, source.url))
+                                }
+                                find { it.name?.startsWith("audio", true) == true }?.let { audio ->
+                                    remove(audio)
+                                    add(VideoQuality("audio_only", audio.codecs, audio.url))
+                                }
                             }
                     } catch (e: Exception) {
                         if (e.message == "failed integrity check") {
@@ -82,91 +89,74 @@ class DownloadViewModel @Inject constructor(
         }
     }
 
-    fun setVideo(networkLibrary: String?, gqlHeaders: Map<String, String>, videoId: String?, animatedPreviewUrl: String?, videoType: String?, qualities: List<VideoQuality>?, playerType: String?, supportedCodecs: String?, skipAccessToken: Int, enableIntegrity: Boolean) {
+    fun setVideo(networkLibrary: String?, gqlHeaders: Map<String, String>, videoId: String?, animatedPreviewUrl: String?, videoType: String?, qualities: List<VideoQuality>?, playerType: String?, supportedCodecs: String?, enableIntegrity: Boolean) {
         if (_qualities.value == null) {
             if (!qualities.isNullOrEmpty()) {
                 _qualities.value = qualities
             } else {
                 viewModelScope.launch {
                     try {
-                        if (skipAccessToken <= 1 && !animatedPreviewUrl.isNullOrBlank()) {
-                            val urls = TwitchApiHelper.getVideoUrlsFromPreview(animatedPreviewUrl, videoType, backupQualities)
-                            val list = urls.map {
-                                VideoQuality(it.key, null, it.value)
-                            }
-                            _qualities.value = list
-                                .sortedByDescending {
-                                    it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                }
-                                .sortedByDescending {
-                                    it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                }
-                                .sortedByDescending {
-                                    it.name == "source"
-                                }
-                        } else {
-                            val result = playerRepository.loadVideoPlaylist(networkLibrary, gqlHeaders, videoId, playerType, supportedCodecs, enableIntegrity)
-                            val playlist = result.first
-                            backupQualities = result.second
-                            if (!playlist.isNullOrBlank()) {
-                                val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
-                                val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
-                                val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
-                                playlist.lines().filter { it.startsWith("#EXT-X-SESSION-DATA") }.let { list ->
-                                    if (list.isNotEmpty()) {
-                                        val url = urls.firstOrNull()?.takeIf { it.contains("/index-") }
-                                        val variantId = Regex("STABLE-VARIANT-ID=\"(.+?)\"").find(playlist)?.groups?.get(1)?.value
-                                        if (url != null && variantId != null) {
-                                            list.forEach { line ->
-                                                val id = Regex("DATA-ID=\"(.+?)\"").find(line)?.groups?.get(1)?.value
-                                                if (id == "com.amazon.ivs.unavailable-media") {
-                                                    val value = Regex("VALUE=\"(.+?)\"").find(line)?.groups?.get(1)?.value
-                                                    if (value != null) {
-                                                        val bytes = try {
-                                                            Base64.decode(value, Base64.DEFAULT)
-                                                        } catch (e: IllegalArgumentException) {
+                        val result = playerRepository.loadVideoPlaylist(networkLibrary, gqlHeaders, videoId, playerType, supportedCodecs, enableIntegrity)
+                        val playlist = result.first
+                        backupQualities = result.second
+                        if (!playlist.isNullOrBlank()) {
+                            val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                            val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                            val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
+                            playlist.lines().filter { it.startsWith("#EXT-X-SESSION-DATA") }.let { list ->
+                                if (list.isNotEmpty()) {
+                                    val url = urls.firstOrNull()?.takeIf { it.contains("/index-") }
+                                    val variantId = Regex("STABLE-VARIANT-ID=\"(.+?)\"").find(playlist)?.groups?.get(1)?.value
+                                    if (url != null && variantId != null) {
+                                        list.forEach { line ->
+                                            val id = Regex("DATA-ID=\"(.+?)\"").find(line)?.groups?.get(1)?.value
+                                            if (id == "com.amazon.ivs.unavailable-media") {
+                                                val value = Regex("VALUE=\"(.+?)\"").find(line)?.groups?.get(1)?.value
+                                                if (value != null) {
+                                                    val bytes = try {
+                                                        Base64.decode(value, Base64.DEFAULT)
+                                                    } catch (e: IllegalArgumentException) {
+                                                        null
+                                                    }
+                                                    if (bytes != null) {
+                                                        val string = String(bytes)
+                                                        val array = try {
+                                                            JSONArray(string)
+                                                        } catch (e: JSONException) {
                                                             null
                                                         }
-                                                        if (bytes != null) {
-                                                            val string = String(bytes)
-                                                            val array = try {
-                                                                JSONArray(string)
-                                                            } catch (e: JSONException) {
-                                                                null
-                                                            }
-                                                            if (array != null) {
-                                                                for (i in 0 until array.length()) {
-                                                                    val obj = array.optJSONObject(i)
-                                                                    if (obj != null) {
-                                                                        var skip = false
-                                                                        val filterReasons = obj.optJSONArray("FILTER_REASONS")
-                                                                        if (filterReasons != null) {
-                                                                            for (filterIndex in 0 until filterReasons.length()) {
-                                                                                val filter = filterReasons.optString(filterIndex)
-                                                                                if (filter == "FR_CODEC_NOT_REQUESTED") {
-                                                                                    skip = true
-                                                                                    break
-                                                                                }
+                                                        if (array != null) {
+                                                            for (i in 0 until array.length()) {
+                                                                val obj = array.optJSONObject(i)
+                                                                if (obj != null) {
+                                                                    var skip = false
+                                                                    val filterReasons = obj.optJSONArray("FILTER_REASONS")
+                                                                    if (filterReasons != null) {
+                                                                        for (filterIndex in 0 until filterReasons.length()) {
+                                                                            val filter = filterReasons.optString(filterIndex)
+                                                                            if (filter == "FR_CODEC_NOT_REQUESTED") {
+                                                                                skip = true
+                                                                                break
                                                                             }
                                                                         }
-                                                                        if (!skip) {
-                                                                            val name = obj.optString("IVS_NAME")
-                                                                            val codec = obj.optString("CODECS")
-                                                                            val newVariantId = obj.optString("STABLE-VARIANT-ID")
-                                                                            if (!name.isNullOrBlank() && !newVariantId.isNullOrBlank()) {
-                                                                                names.add(name)
-                                                                                if (!codec.isNullOrBlank()) {
-                                                                                    codecs.add(codec)
-                                                                                }
-                                                                                urls.add(url.replace(
-                                                                                    "$variantId/index-",
-                                                                                    if (urls.find { it.contains("chunked/index-") } == null && newVariantId != "audio_only") {
-                                                                                        "chunked/index-"
-                                                                                    } else {
-                                                                                        "$newVariantId/index-"
-                                                                                    }
-                                                                                ))
+                                                                    }
+                                                                    if (!skip) {
+                                                                        val name = obj.optString("IVS_NAME")
+                                                                        val codec = obj.optString("CODECS")
+                                                                        val newVariantId = obj.optString("STABLE-VARIANT-ID")
+                                                                        if (!name.isNullOrBlank() && !newVariantId.isNullOrBlank()) {
+                                                                            names.add(name)
+                                                                            if (!codec.isNullOrBlank()) {
+                                                                                codecs.add(codec)
                                                                             }
+                                                                            urls.add(url.replace(
+                                                                                "$variantId/index-",
+                                                                                if (urls.find { it.contains("chunked/index-") } == null && newVariantId != "audio_only") {
+                                                                                    "chunked/index-"
+                                                                                } else {
+                                                                                    "$newVariantId/index-"
+                                                                                }
+                                                                            ))
                                                                         }
                                                                     }
                                                                 }
@@ -178,10 +168,34 @@ class DownloadViewModel @Inject constructor(
                                         }
                                     }
                                 }
-                                val list = names.mapIndexedNotNull { index, name ->
-                                    urls.getOrNull(index)?.let { url ->
-                                        VideoQuality(name, codecs.getOrNull(index), url)
+                            }
+                            val list = names.mapIndexedNotNull { index, name ->
+                                urls.getOrNull(index)?.let { url ->
+                                    VideoQuality(name, codecs.getOrNull(index), url)
+                                }
+                            }
+                            _qualities.value = list
+                                .sortedByDescending {
+                                    it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
+                                }
+                                .sortedByDescending {
+                                    it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
+                                }
+                                .toMutableList().apply {
+                                    find { it.name.equals("source", true) }?.let { source ->
+                                        remove(source)
+                                        add(0, VideoQuality("source", source.codecs, source.url))
                                     }
+                                    find { it.name?.startsWith("audio", true) == true }?.let { audio ->
+                                        remove(audio)
+                                        add(VideoQuality("audio_only", audio.codecs, audio.url))
+                                    }
+                                }
+                        } else {
+                            if (!animatedPreviewUrl.isNullOrBlank()) {
+                                val urls = TwitchApiHelper.getVideoUrlsFromPreview(animatedPreviewUrl, videoType, backupQualities)
+                                val list = urls.map {
+                                    VideoQuality(it.key, null, it.value)
                                 }
                                 _qualities.value = list
                                     .sortedByDescending {
@@ -190,28 +204,18 @@ class DownloadViewModel @Inject constructor(
                                     .sortedByDescending {
                                         it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                                     }
-                                    .sortedByDescending {
-                                        it.name == "source"
+                                    .toMutableList().apply {
+                                        find { it.name.equals("source", true) }?.let { source ->
+                                            remove(source)
+                                            add(0, VideoQuality("source", source.codecs, source.url))
+                                        }
+                                        find { it.name?.startsWith("audio", true) == true }?.let { audio ->
+                                            remove(audio)
+                                            add(VideoQuality("audio_only", audio.codecs, audio.url))
+                                        }
                                     }
                             } else {
-                                if (skipAccessToken == 2 && !animatedPreviewUrl.isNullOrBlank()) {
-                                    val urls = TwitchApiHelper.getVideoUrlsFromPreview(animatedPreviewUrl, videoType, backupQualities)
-                                    val list = urls.map {
-                                        VideoQuality(it.key, null, it.value)
-                                    }
-                                    _qualities.value = list
-                                        .sortedByDescending {
-                                            it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                        }
-                                        .sortedByDescending {
-                                            it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                        }
-                                        .sortedByDescending {
-                                            it.name == "source"
-                                        }
-                                } else {
-                                    throw IllegalAccessException()
-                                }
+                                throw IllegalAccessException()
                             }
                         }
                     } catch (e: Exception) {

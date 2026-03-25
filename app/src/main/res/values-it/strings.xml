@@ -457,11 +457,6 @@
     <string name="api_validate_tokens">Convalida token all\'avvio</string>
     <string name="followed_only">Solo seguiti</string>
     <string name="debug_api_commands">Usa comandi chat API</string>
-    <string name="skip_video_access_token">Salta token di accesso video</string>
-    <string name="skipVideoTokenEntries1">Salta sempre</string>
-    <string name="skipVideoTokenEntries2">Salta per impostazione predefinita, non saltare se la riproduzione fallisce</string>
-    <string name="skipVideoTokenEntries3">Non saltare per impostazione predefinita, salta se la riproduzione fallisce</string>
-    <string name="skipVideoTokenEntries4">Mai saltare</string>
     <string name="stream_live">%s è ora in diretta</string>
     <string name="stream_offline">%s è ora offline</string>
     <string name="keep_screen_on_when_paused">Mantieni lo schermo acceso quando il video è in pausa</string>

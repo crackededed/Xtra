@@ -457,11 +457,6 @@
     <string name="api_validate_tokens">Проверять токены при запуске</string>
     <string name="followed_only">Только отслеживаемые</string>
     <string name="debug_api_commands">Использовать команды API чата</string>
-    <string name="skip_video_access_token">Пропустить токен доступа видео</string>
-    <string name="skipVideoTokenEntries1">Всегда пропускать</string>
-    <string name="skipVideoTokenEntries2">Пропускать по умолчанию, не пропускать при ошибке проигрывания</string>
-    <string name="skipVideoTokenEntries3">Не пропускать по умолчанию, пропускать при ошибке проигрывания</string>
-    <string name="skipVideoTokenEntries4">Никогда не пропускать</string>
     <string name="stream_live">%s теперь в эфире</string>
     <string name="stream_offline">%s теперь не в сети</string>
     <string name="keep_screen_on_when_paused">Сохранять экран во время паузы видео</string>
