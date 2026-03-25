@@ -37,6 +37,10 @@
     <init>();
 }
 
+-keep class androidx.work.OverwritingInputMerger {
+    <init>();
+}
+
 -keep class com.github.andreyasadchy.xtra.db.AppDatabase_Impl {
     <init>();
 }
