@@ -457,11 +457,6 @@
     <string name="api_validate_tokens">起動時にトークンを検証</string>
     <string name="followed_only">[フォロー中] タブのみ</string>
     <string name="debug_api_commands">API チャットコマンドを使用</string>
-    <string name="skip_video_access_token">動画アクセストークンをスキップ</string>
-    <string name="skipVideoTokenEntries1">常にスキップ</string>
-    <string name="skipVideoTokenEntries2">デフォルトでスキップして、再生失敗時にはスキップしない</string>
-    <string name="skipVideoTokenEntries3">デフォルトでスキップせず、再生失敗時にスキップする</string>
-    <string name="skipVideoTokenEntries4">スキップしない</string>
     <string name="stream_live">%s は現在ライブ中です</string>
     <string name="stream_offline">%s は現在オフラインです</string>
     <string name="keep_screen_on_when_paused">動画一時停止時に画面をオンのままにする</string>

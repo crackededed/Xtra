@@ -462,11 +462,6 @@
     <string name="api_validate_tokens">Validar tokens al inicio</string>
     <string name="followed_only">Sólo seguido</string>
     <string name="debug_api_commands">Utilizar los comandos de chat de la api</string>
-    <string name="skip_video_access_token">Saltar token de acesso a vídeo</string>
-    <string name="skipVideoTokenEntries1">Saltar siempre</string>
-    <string name="skipVideoTokenEntries2">Saltar por defecto, no saltar si falla la reproducción</string>
-    <string name="skipVideoTokenEntries3">No saltar por defecto, saltar si falla la reproducción</string>
-    <string name="skipVideoTokenEntries4">No saltar nunca</string>
     <string name="stream_live">%s está en vivo</string>
     <string name="stream_offline">%s no está en vivo</string>
     <string name="keep_screen_on_when_paused">Mantener la pantalla encendida cuando el vídeo está en pausa</string>

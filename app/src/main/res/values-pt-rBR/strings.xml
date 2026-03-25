@@ -457,11 +457,6 @@
     <string name="api_validate_tokens">Validar tokens ao iniciar</string>
     <string name="followed_only">Apenas seguido</string>
     <string name="debug_api_commands">Use api de comandos de bate-papo</string>
-    <string name="skip_video_access_token">Pular token de acesso ao vídeo</string>
-    <string name="skipVideoTokenEntries1">Pular sempre</string>
-    <string name="skipVideoTokenEntries2">Pular por padrão, não pular se a reprodução falhar</string>
-    <string name="skipVideoTokenEntries3">Não pular por padrão, pular se a reprodução falhar</string>
-    <string name="skipVideoTokenEntries4">Nunca pular</string>
     <string name="stream_live">%s está ao vivo agora</string>
     <string name="stream_offline">%s está offline agora</string>
     <string name="keep_screen_on_when_paused">Manter a tela ligada quando o vídeo é pausado</string>

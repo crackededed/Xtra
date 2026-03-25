@@ -17,6 +17,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.github.andreyasadchy.xtra.R
+import com.github.andreyasadchy.xtra.model.PlaybackState
 import com.github.andreyasadchy.xtra.model.VideoPosition
 import com.github.andreyasadchy.xtra.model.ui.Clip
 import com.github.andreyasadchy.xtra.model.ui.Game
@@ -41,6 +42,7 @@ import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -78,6 +80,8 @@ class MainViewModel @Inject constructor(
     val isNetworkAvailable = MutableStateFlow<Boolean?>(null)
 
     var isPlayerOpened = false
+    val playbackStates = MutableSharedFlow<List<PlaybackState>>()
+    var loadingPlaybackStates = false
 
     var sleepTimer: Timer? = null
     var sleepTimerEndTime = 0L
@@ -87,6 +91,23 @@ class MainViewModel @Inject constructor(
     val user = MutableStateFlow<User?>(null)
     val game = MutableStateFlow<Pair<Game?, String?>?>(null)
     val tag = MutableStateFlow<Tag?>(null)
+
+    fun savePlaybackState(item: PlaybackState) {
+        viewModelScope.launch {
+            playerRepository.savePlaybackStates(listOf(item))
+        }
+    }
+
+    fun getPlaybackStates() {
+        if (!loadingPlaybackStates) {
+            loadingPlaybackStates = true
+            viewModelScope.launch {
+                playbackStates.emit(playerRepository.getPlaybackStates())
+            }.invokeOnCompletion {
+                loadingPlaybackStates = false
+            }
+        }
+    }
 
     fun loadVideo(videoId: String?, offset: Long?, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
         if (video.value == null) {
@@ -143,6 +164,12 @@ class MainViewModel @Inject constructor(
                 }
                 video.value = item to offset
             }
+        }
+    }
+
+    fun saveVideoPosition(id: Long, position: Long) {
+        viewModelScope.launch {
+            playerRepository.saveVideoPosition(VideoPosition(id, position))
         }
     }
 

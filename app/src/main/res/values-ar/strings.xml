@@ -457,11 +457,6 @@
     <string name="api_validate_tokens">Validate tokens on startup</string>
     <string name="followed_only">Followed only</string>
     <string name="debug_api_commands">Use api chat commands</string>
-    <string name="skip_video_access_token">Skip video access token</string>
-    <string name="skipVideoTokenEntries1">Skip always</string>
-    <string name="skipVideoTokenEntries2">Skip by default, don\'t skip if playback fails</string>
-    <string name="skipVideoTokenEntries3">Don\'t skip by default, skip if playback fails</string>
-    <string name="skipVideoTokenEntries4">Never skip</string>
     <string name="stream_live">%s is now live</string>
     <string name="stream_offline">%s is now offline</string>
     <string name="keep_screen_on_when_paused">Keep screen on when video is paused</string>

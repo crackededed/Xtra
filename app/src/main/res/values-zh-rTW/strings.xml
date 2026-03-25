@@ -457,11 +457,6 @@
     <string name="api_validate_tokens">在啟動時驗證權杖</string>
     <string name="followed_only">僅已關注</string>
     <string name="debug_api_commands">使用 API 聊天指令</string>
-    <string name="skip_video_access_token">略過影片存取權杖</string>
-    <string name="skipVideoTokenEntries1">總是略過</string>
-    <string name="skipVideoTokenEntries2">預設為略過，如果播放失敗則不略過</string>
-    <string name="skipVideoTokenEntries3">不要預設為略過，如果播放失敗則略過</string>
-    <string name="skipVideoTokenEntries4">永不略過</string>
     <string name="stream_live">%s 目前實況</string>
     <string name="stream_offline">%s 目前離線</string>
     <string name="keep_screen_on_when_paused">當影片已暫停時維持畫面開啟</string>
