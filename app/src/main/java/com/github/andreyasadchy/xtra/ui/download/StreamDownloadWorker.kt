@@ -24,6 +24,7 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.github.andreyasadchy.xtra.R
+import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.model.chat.CheerEmote
 import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.model.chat.TwitchBadge
@@ -184,113 +185,139 @@ class StreamDownloadWorker @AssistedInject constructor(
             }
             if (!playlist.isNullOrBlank()) {
                 val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                 val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
-                val map = names.zip(urls)
+                val list = names.mapIndexedNotNull { index, name ->
+                    urls.getOrNull(index)?.let { url ->
+                        VideoQuality(name, codecs.getOrNull(index), url)
+                    }
+                }
+                val qualities = list
                     .sortedByDescending {
-                        it.first.substringAfter("p", "").takeWhile { it.isDigit() }.toIntOrNull()
+                        it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                     }
                     .sortedByDescending {
-                        it.first.substringBefore("p", "").takeWhile { it.isDigit() }.toIntOrNull()
+                        it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                     }
-                    .sortedByDescending {
-                        it.first == "source"
+                    .toMutableList().apply {
+                        find { it.name.equals("source", true) }?.let { source ->
+                            remove(source)
+                            add(0, VideoQuality("source", source.codecs, source.url))
+                        }
+                        find { it.name?.startsWith("audio", true) == true }?.let { audio ->
+                            remove(audio)
+                            add(VideoQuality("audio_only", audio.codecs, audio.url))
+                        }
                     }
-                    .toMap()
-                if (map.isNotEmpty()) {
-                    val mediaPlaylistUrl = if (!quality.isNullOrBlank()) {
-                        quality.split("p").let { targetQuality ->
-                            targetQuality.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()?.let { targetResolution ->
-                                val targetFps = targetQuality.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
-                                val last = map.keys.last { it != "audio_only" && it != "chat_only" }
-                                map.entries.find { entry ->
-                                    val quality = entry.key.split("p")
-                                    val resolution = quality.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                    val fps = quality.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
-                                    resolution != null && ((targetResolution == resolution && targetFps >= fps) || targetResolution > resolution || entry.key == last)
-                                }
-                            }
-                        }?.value ?: map.values.first()
-                    } else {
-                        map.values.first()
-                    }
-                    val url = if ((proxyPlaybackAccessToken || proxyMultivariantPlaylist) && !proxyHost.isNullOrBlank() && proxyPort != null) {
-                        val url = if (proxyPlaybackAccessToken) {
+                if (qualities.isNotEmpty()) {
+                    val qualities = if ((proxyPlaybackAccessToken || proxyMultivariantPlaylist) && !proxyHost.isNullOrBlank() && proxyPort != null) {
+                        val playlistUrl = if (proxyPlaybackAccessToken) {
                             playerRepository.loadStreamPlaylistUrl(networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, true, proxyHost, proxyPort, proxyUser, proxyPassword, false)
                         } else {
                             playlistUrl
                         }
-                        val newPlaylist = when {
-                            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null && !proxyMultivariantPlaylist -> {
-                                val response = suspendCancellableCoroutine { continuation ->
-                                    httpEngine!!.get().newUrlRequestBuilder(url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
-                                }
-                                String(response.second)
-                            }
-                            networkLibrary == "Cronet" && cronetEngine != null && !proxyMultivariantPlaylist -> {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                    val request = UrlRequestCallbacks.forStringBody(RedirectHandlers.alwaysFollow())
-                                    cronetEngine!!.get().newUrlRequestBuilder(url, request.callback, cronetExecutor).build().start()
-                                    request.future.get().responseBody as String
-                                } else {
-                                    val response = suspendCancellableCoroutine { continuation ->
-                                        cronetEngine!!.get().newUrlRequestBuilder(url, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
+                        val playlist = if (proxyMultivariantPlaylist) {
+                            okHttpClient.newBuilder().apply {
+                                proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
+                                if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                                    proxyAuthenticator { _, response ->
+                                        response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
                                     }
-                                    String(response.second)
                                 }
-                            }
-                            else -> {
-                                okHttpClient.newBuilder().apply {
-                                    if (proxyMultivariantPlaylist) {
-                                        proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
-                                        if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
-                                            proxyAuthenticator { _, response ->
-                                                response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
-                                            }
-                                        }
-                                    }
-                                }.build().newCall(Request.Builder().url(url).build()).execute().use { response ->
+                            }.build().newCall(Request.Builder().url(playlistUrl).build()).execute().use { response ->
+                                if (response.isSuccessful) {
                                     response.body.string()
+                                } else null
+                            }
+                        } else {
+                            when {
+                                networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                    val response = suspendCancellableCoroutine { continuation ->
+                                        httpEngine!!.get().newUrlRequestBuilder(playlistUrl, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
+                                    }
+                                    if (response.first.httpStatusCode in 200..299) {
+                                        String(response.second)
+                                    } else null
+                                }
+                                networkLibrary == "Cronet" && cronetEngine != null -> {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                        val request = UrlRequestCallbacks.forStringBody(RedirectHandlers.alwaysFollow())
+                                        cronetEngine!!.get().newUrlRequestBuilder(playlistUrl, request.callback, cronetExecutor).build().start()
+                                        val response = request.future.get()
+                                        if (response.urlResponseInfo.httpStatusCode in 200..299) {
+                                            response.responseBody as String
+                                        } else null
+                                    } else {
+                                        val response = suspendCancellableCoroutine { continuation ->
+                                            cronetEngine!!.get().newUrlRequestBuilder(playlistUrl, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
+                                        }
+                                        if (response.first.httpStatusCode in 200..299) {
+                                            String(response.second)
+                                        } else null
+                                    }
+                                }
+                                else -> {
+                                    okHttpClient.newCall(Request.Builder().url(playlistUrl).build()).execute().use { response ->
+                                        if (response.isSuccessful) {
+                                            response.body.string()
+                                        } else null
+                                    }
                                 }
                             }
                         }
-                        val newNames = Regex("IVS-NAME=\"(.+?)\"").findAll(newPlaylist).mapNotNull { it.groups[1]?.value }.toMutableList()
-                        val newUrls = Regex("https://.*\\.m3u8").findAll(newPlaylist).map(MatchResult::value).toMutableList()
-                        val newMap = newNames.zip(newUrls)
-                            .sortedByDescending {
-                                it.first.substringAfter("p", "").takeWhile { it.isDigit() }.toIntOrNull()
+                        if (!playlist.isNullOrBlank()) {
+                            val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                            val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                            val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
+                            val list = names.mapIndexedNotNull { index, name ->
+                                urls.getOrNull(index)?.let { url ->
+                                    VideoQuality(name, codecs.getOrNull(index), url)
+                                }
                             }
-                            .sortedByDescending {
-                                it.first.substringBefore("p", "").takeWhile { it.isDigit() }.toIntOrNull()
-                            }
-                            .sortedByDescending {
-                                it.first == "source"
-                            }
-                            .toMap()
-                        if (newMap.isNotEmpty()) {
-                            if (!quality.isNullOrBlank()) {
-                                quality.split("p").let { targetQuality ->
-                                    targetQuality.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()?.let { targetResolution ->
-                                        val targetFps = targetQuality.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
-                                        val last = newMap.keys.last { it != "audio_only" && it != "chat_only" }
-                                        newMap.entries.find { entry ->
-                                            val quality = entry.key.split("p")
-                                            val resolution = quality.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                            val fps = quality.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
-                                            resolution != null && ((targetResolution == resolution && targetFps >= fps) || targetResolution > resolution || entry.key == last)
-                                        }
+                            val newQualities = list
+                                .sortedByDescending {
+                                    it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
+                                }
+                                .sortedByDescending {
+                                    it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
+                                }
+                                .toMutableList().apply {
+                                    find { it.name.equals("source", true) }?.let { source ->
+                                        remove(source)
+                                        add(0, VideoQuality("source", source.codecs, source.url))
                                     }
-                                }?.value ?: newMap.values.first()
-                            } else {
-                                newMap.values.first()
-                            }
-                        } else mediaPlaylistUrl
-                    } else {
-                        mediaPlaylistUrl
-                    }
+                                    find { it.name?.startsWith("audio", true) == true }?.let { audio ->
+                                        remove(audio)
+                                        add(VideoQuality("audio_only", audio.codecs, audio.url))
+                                    }
+                                }
+                            newQualities.ifEmpty { qualities }
+                        } else qualities
+                    } else qualities
+                    val selectedQuality = if (!quality.isNullOrBlank()) {
+                        val audio = if (quality.startsWith("audio", true)) {
+                            qualities.find { it.name == "audio_only" }
+                        } else null
+                        if (audio != null) {
+                            audio
+                        } else {
+                            val targetQuality = quality.split("p")
+                            targetQuality.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()?.let { targetResolution ->
+                                val targetFps = targetQuality.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
+                                val last = qualities.last { it.name != "audio_only" }
+                                qualities.find { qualityString ->
+                                    val quality = qualityString.name?.split("p")
+                                    val resolution = quality?.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
+                                    val fps = quality?.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
+                                    resolution != null && ((targetResolution == resolution && targetFps >= fps) || targetResolution > resolution || qualityString == last)
+                                }
+                            } ?: qualities.first()
+                        }
+                    } else qualities.first()
                     offlineRepository.updateVideo(offlineVideo.apply { status = OfflineVideo.STATUS_DOWNLOADING })
                     setForeground(createForegroundInfo(true, firstVideo))
                     val done = try {
-                        download(channelLogin, url, path)
+                        download(channelLogin, selectedQuality.url!!, path)
                     } finally {
                         MainScope().launch(Dispatchers.IO) {
                             chatReadWebSocket?.disconnect(null)
