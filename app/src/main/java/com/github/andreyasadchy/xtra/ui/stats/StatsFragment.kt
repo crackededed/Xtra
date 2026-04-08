@@ -15,6 +15,8 @@ import com.github.andreyasadchy.xtra.model.stats.HourlyWatchTime
 import com.github.andreyasadchy.xtra.databinding.FragmentStatsBinding
 import com.github.andreyasadchy.xtra.model.stats.WatchStreak
 import com.github.andreyasadchy.xtra.ui.view.DailyBarChartView
+import com.github.andreyasadchy.xtra.ui.view.GridAutofitLayoutManager
+import com.github.andreyasadchy.xtra.util.convertDpToPixels
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -37,7 +39,12 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
         val categoryLegendAdapter = CategoryLegendAdapter()
         val loyaltyAdapter = StreamerLoyaltyAdapter()
         binding.categoryLegendRecyclerView.adapter = categoryLegendAdapter
+        binding.loyaltyRecyclerView.layoutManager = GridAutofitLayoutManager(
+            requireContext(),
+            requireContext().convertDpToPixels(280f)
+        )
         binding.loyaltyRecyclerView.adapter = loyaltyAdapter
+        binding.topStreamsRecyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
         val adapter = StreamStatsAdapter()
         binding.topStreamsRecyclerView.adapter = adapter
 
@@ -51,6 +58,8 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
                 launch {
                     viewModel.topStreams.collectLatest { streams ->
                         adapter.submitList(streams)
+                        binding.topStreamsRecyclerView.visibility = if (streams.isEmpty()) GONE else VISIBLE
+                        binding.topStreamsEmptyText.visibility = if (streams.isEmpty()) VISIBLE else GONE
                     }
                 }
                 launch {
@@ -72,6 +81,7 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
                     viewModel.streamerLoyalty.collectLatest { loyalty ->
                         loyaltyAdapter.submitList(loyalty)
                         binding.loyaltyRecyclerView.visibility = if (loyalty.isEmpty()) GONE else VISIBLE
+                        binding.loyaltyEmptyText.visibility = if (loyalty.isEmpty()) VISIBLE else GONE
                     }
                 }
             }
@@ -138,13 +148,9 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
     }
     
     private fun updateStreakDisplay(binding: FragmentStatsBinding, streak: WatchStreak?) {
-        if (streak != null) {
-            binding.streakCard.visibility = VISIBLE
-            binding.currentStreakText.text = streak.currentStreakDays.toString()
-            binding.longestStreakText.text = streak.longestStreakDays.toString()
-        } else {
-            binding.streakCard.visibility = GONE
-        }
+        binding.streakCard.visibility = VISIBLE
+        binding.currentStreakText.text = (streak?.currentStreakDays ?: 0).toString()
+        binding.longestStreakText.text = (streak?.longestStreakDays ?: 0).toString()
     }
     
     private fun updateCategoryChart(
@@ -156,7 +162,9 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
             (it.gameName ?: "Unknown") to it.totalSeconds 
         }
         binding.categoryPieChart.setData(chartData)
-        legendAdapter.submitList(binding.categoryPieChart.getSlices())
+        val slices = binding.categoryPieChart.getSlices()
+        legendAdapter.submitList(slices)
+        binding.categoryLegendRecyclerView.visibility = if (slices.isEmpty()) GONE else VISIBLE
     }
     
     private fun updateHeatmap(binding: FragmentStatsBinding, hourly: List<HourlyWatchTime>) {

@@ -3,29 +3,59 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="8dp"
-    android:gravity="center_vertical">
+    android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/rank"
-        android:layout_width="32dp"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textStyle="bold"
-        tools:text="1"/>
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingVertical="14dp"
+        android:paddingHorizontal="12dp">
 
-    <TextView
-        android:id="@+id/channelName"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:textStyle="bold"
-        tools:text="Channel Name"/>
+        <TextView
+            android:id="@+id/rank"
+            android:layout_width="24dp"
+            android:layout_height="wrap_content"
+            android:textColor="?android:textColorSecondary"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            tools:text="#1" />
 
-    <TextView
-        android:id="@+id/watchTime"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        tools:text="10h 25m"/>
+        <TextView
+            android:id="@+id/channelName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="Squeezie" />
+
+        <TextView
+            android:id="@+id/watchTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:background="?android:colorBackground"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="5dp"
+            android:textColor="?android:textColorSecondary"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            tools:text="0h 06m" />
+    </LinearLayout>
+
+    <!-- Divider (hidden for last item via adapter) -->
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginHorizontal="12dp"
+        android:background="?attr/colorOutlineVariant"
+        android:alpha="0.4" />
 
 </LinearLayout>

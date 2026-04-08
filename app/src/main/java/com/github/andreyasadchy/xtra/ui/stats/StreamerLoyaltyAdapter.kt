@@ -30,7 +30,7 @@
              val minutes = (loyalty.totalWatchSeconds % 3600) / 60
              binding.watchTime.text = buildString {
                  if (hours > 0) append("${hours}h ")
-                 append("${minutes}m")
+                 append("${minutes}m watched")
              }
              
              binding.loyaltyScore.text = "${loyalty.loyaltyScore.toInt()}"

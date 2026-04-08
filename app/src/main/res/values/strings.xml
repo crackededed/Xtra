@@ -760,6 +760,7 @@
     <string name="last_30_days" translatable="false">Last 30 days</string>
     <string name="streamer_loyalty" translatable="false">Streamer Loyalty</string>
     <string name="top_watched_channels" translatable="false">Top Watched Channels</string>
+    <string name="no_data" translatable="false">No data yet</string>
     <string name="days_streak" translatable="false">days</string>
     <string name="speed_normal" translatable="false">Normal</string>
     <string name="speed_decrease" translatable="false">Decrease speed</string>
