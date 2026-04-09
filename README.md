@@ -4,30 +4,74 @@
   <img src="docs/images/ic_launcher_foreground.svg" width="128" height="128" />
 </p>
 
-A fork of [Xtra](https://github.com/crackededed/Xtra) with additional features focused on viewer experience, data management, and accessibility.
+A fork of [Xtra](https://github.com/crackededed/Xtra) with additional features focused on viewer experience, playback UX, local stats, and accessibility.
 
-> **Note:** This fork is experimental and mostly vibe coded. Features are tested manually but may have rough edges. Contributions and bug reports welcome!
+> **Current focus:** polishing the app, fixing player and stats regressions, improving large-screen layouts, cleaning up the repo, and staying aligned with upstream Xtra.
 
-## Known Issues & TODO
+## Current Branch
 
-### Gesture System (In Progress)
-The gesture system is functional and customizable:
+`fix/stats-layout-and-player-regressions`
 
-- [x] **Tap sensitivity after scroll**: Fixed (taps ignored immediately after scroll)
-- [x] **Gesture zone boundaries**: Configurable split between top/bottom zones
-- [x] **Minimize gesture conflicts**: Fixed (gestures blocked when controls visible)
-- [x] **Haptic feedback**: Added (optional, disabled by default)
-- [x] **Settings integration**: Customize sensitivity, zones, and haptics in Settings
-- [ ] **Edge cases**: Refine minimize behavior during active gestures
+## To Do
+
+### Player & Gesture Polish
+- [ ] Fix brightness gesture applying the wrong value
+- [ ] Fix brightness gesture so it does not jump to extreme brightness at night
+- [ ] Make the playback speed button show the current speed
+- [ ] Make seek gestures much more responsive for VoD scrubbing
+- [ ] Refine remaining gesture edge cases during active interactions
+- [ ] Test gesture behavior thoroughly on-device
+
+### Stats & Large-Screen Layout
+- [ ] Fix remaining stats card/layout issues
+- [ ] Finish the adaptive stats dashboard migration cleanup
+- [ ] Remove any leftover legacy tablet-specific layout paths still overriding the new dashboard
+- [ ] Move stats adaptation fully to width-based behavior
+- [ ] Switch adaptive sizing logic to proper window-size-class handling
+- [ ] Verify compact / medium / expanded dashboard behavior
+- [ ] Verify split-screen, resized window, and rotation behavior on large screens
+- [ ] Tune card spans, padding, and density for wide tablets
+
+### Visual & UI Cleanup
+- [ ] Fix app icon cropping / masking issues on Android launchers
+- [ ] Add updated screenshots to the README
+- [ ] Add updated screenshots to the project site
+- [ ] Refresh visuals so the repo better reflects the current app UI
+
+### Repo Cleanup & Maintenance
+- [ ] Delete temporary screenshots folder
+- [ ] Clean up repo structure and temporary assets
+- [ ] Review branch leftovers from the stats/player refactor
+- [ ] Improve overall project organization
+
+### Upstream Sync
+- [ ] Sync with the latest useful upstream Xtra changes
+- [ ] Re-check ThystTV-specific features after upstream sync
+- [ ] Make sure custom player, stats, and floating chat behavior still work correctly
+
+### Testing
+- [ ] Run and pass unit tests for adaptive stats behavior
+- [ ] Run and pass unit tests for gesture behavior
+- [ ] Build debug and release successfully
+- [ ] Do proper manual regression testing on phone and tablet layouts
+
+## Progress So Far
+
+### Gesture System
+- [x] Tap sensitivity after scroll fixed
+- [x] Gesture zone boundaries configurable
+- [x] Minimize gesture conflicts improved
+- [x] Optional haptic feedback added
+- [x] Gesture settings integrated into Settings
+- [x] Gesture logic unit tests added
+- [x] Gesture architecture documentation added
 
 ### Stats & Analytics
-- [x] **Category breakdown**: Charts and legends implemented
-- [x] **Data visualization**: Bar charts, pie charts, and heatmaps added
-
-### General
-- [x] **Testing coverage**: Added unit tests for gesture logic
-- [x] **Documentation**: Added [Gesture System Architecture](docs/GESTURE_SYSTEM.md)
-
+- [x] Category breakdown implemented
+- [x] Charts, legends, and heatmaps implemented
+- [x] Adaptive stats dashboard refactor started
+- [x] Dashboard span policy and adapter introduced
+- [x] Width-based stats resources introduced
 
 ## What's Different from Xtra?
 
@@ -36,29 +80,29 @@ The gesture system is functional and customizable:
 | Floating Chat Overlay | No | Yes |
 | Screen Time & Watch Stats | No | Yes |
 | Swipe Gesture Controls | No | Yes |
+
 ## Key Features
 
-### 💬 Floating Chat (New!)
-*   **Overlay Mode**: Keep up with the chat while watching in full-screen.
-*   **Customizable**: Resize and move the chat window anywhere on the screen.
-*   **Opacity Control**: Adjust transparency to balance visibility between the stream and the chat.
-*   **High Contrast Mode**: Toggle for better readability over bright video content.
+### 💬 Floating Chat
+- **Overlay Mode**: Keep up with chat while watching in full-screen
+- **Customizable**: Resize and move the chat window anywhere on screen
+- **Opacity Control**: Adjust transparency to balance stream and chat visibility
+- **High Contrast Mode**: Improve readability over bright video content
 
 ### ⏱️ Screen Time & Stats
-*   **Daily Tracking**: Monitor your daily viewing time directly within the app.
-*   **Top Channels**: See a leaderboard of your most-watched channels and streamers.
-*   **Privacy First**: All stats are stored locally on your device and are never shared.
-*   **Easy Access**: Access your stats via the new "Stats" tab in the bottom navigation.
+- **Daily Tracking**: Monitor your viewing time directly inside the app
+- **Top Channels**: See your most-watched channels and streamers
+- **Privacy First**: All stats are stored locally on your device
+- **Easy Access**: Open stats from the dedicated tab
 
 ### 👆 Gesture Controls
-*   **Intuitive Control**: Easily adjust settings without blocking the view.
-*   **Volume**: Slide up/down on the **right** half of the screen.
-*   **Brightness**: Slide up/down on the **left** half of the screen.
-*   **Seek** (VoD only): Horizontal swipe on the **top half** of the screen.
-*   **Playback Speed** (VoD only): Horizontal swipe on the **bottom half** of the screen.
-*   **Visual Feedback**: Real-time slider overlay during adjustment.
-*   **Edge Protection**: Gestures are disabled in system gesture zones to prevent conflicts.
-*   **Double-Tap**: Cycle through chat display modes (overlay, side-by-side, hidden).
+- **Volume**: Slide up/down on the **right** half of the screen
+- **Brightness**: Slide up/down on the **left** half of the screen
+- **Seek** (VoD only): Horizontal swipe on the **top** half of the screen
+- **Playback Speed** (VoD only): Horizontal swipe on the **bottom** half of the screen
+- **Visual Feedback**: Real-time overlay while adjusting controls
+- **Edge Protection**: Gestures are limited in system gesture zones to reduce conflicts
+- **Double-Tap**: Cycle chat display modes (overlay, side-by-side, hidden)
 
 ## Building
 
@@ -71,8 +115,3 @@ The gesture system is functional and customizable:
 
 # Run tests
 ./gradlew test
-```
-
-## License
-
-ThystTV is licensed under the [GNU Affero General Public License v3.0](LICENSE), same as the upstream Xtra project.
