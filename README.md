@@ -15,19 +15,18 @@ A fork of [Xtra](https://github.com/crackededed/Xtra) with additional features f
 ## To Do
 
 ### Player & Gesture Polish
-- [ ] Fix brightness gesture applying the wrong value
-- [ ] Fix brightness gesture so it does not jump to extreme brightness at night
-- [ ] Make the playback speed button show the current speed
 - [ ] Make seek gestures much more responsive for VoD scrubbing
 - [ ] Refine remaining gesture edge cases during active interactions
+- [ ] Re-check playback speed UI polish on-device
 - [ ] Test gesture behavior thoroughly on-device
+- [ ] Re-verify brightness behavior on phone and tablet after the recent fixes
 
 ### Stats & Large-Screen Layout
 - [ ] Fix remaining stats card/layout issues
 - [ ] Finish the adaptive stats dashboard migration cleanup
-- [ ] Remove any leftover legacy tablet-specific layout paths still overriding the new dashboard
 - [ ] Move stats adaptation fully to width-based behavior
-- [ ] Switch adaptive sizing logic to proper window-size-class handling
+- [ ] Switch adaptive sizing logic from `screenWidthDp` tiers to proper window-size-class handling
+- [ ] Use the canonical compact-path layout behavior for the dashboard
 - [ ] Verify compact / medium / expanded dashboard behavior
 - [ ] Verify split-screen, resized window, and rotation behavior on large screens
 - [ ] Tune card spans, padding, and density for wide tablets
@@ -50,9 +49,11 @@ A fork of [Xtra](https://github.com/crackededed/Xtra) with additional features f
 - [ ] Make sure custom player, stats, and floating chat behavior still work correctly
 
 ### Testing
-- [ ] Run and pass unit tests for adaptive stats behavior
-- [ ] Run and pass unit tests for gesture behavior
-- [ ] Build debug and release successfully
+- [x] Run and pass unit tests for adaptive stats behavior
+- [x] Run and pass unit tests for brightness / floating-chat state helpers
+- [ ] Run and pass broader gesture behavior tests
+- [x] Build debug successfully
+- [ ] Build release successfully
 - [ ] Do proper manual regression testing on phone and tablet layouts
 
 ## Progress So Far
@@ -63,15 +64,26 @@ A fork of [Xtra](https://github.com/crackededed/Xtra) with additional features f
 - [x] Minimize gesture conflicts improved
 - [x] Optional haptic feedback added
 - [x] Gesture settings integrated into Settings
-- [x] Gesture logic unit tests added
+- [x] Brightness restore logic improved when leaving fullscreen / minimizing
+- [x] Gesture helper and player state unit tests added
 - [x] Gesture architecture documentation added
 
 ### Stats & Analytics
-- [x] Category breakdown implemented
-- [x] Charts, legends, and heatmaps implemented
+- [x] Daily screen time tracking implemented
+- [x] Top watched channels implemented
+- [x] Watch streak tracking implemented
+- [x] Streamer loyalty scoring implemented
+- [x] Category breakdown, legends, and heatmaps implemented
 - [x] Adaptive stats dashboard refactor started
 - [x] Dashboard span policy and adapter introduced
 - [x] Width-based stats resources introduced
+- [x] Legacy `layout-sw600dp` / `layout-land` stats screen variants removed from the main path
+
+### Floating Chat
+- [x] Floating chat overlay implemented
+- [x] Opacity control and high-visibility mode implemented
+- [x] Drag / resize persistence implemented
+- [x] Fullscreen re-entry behavior improved to avoid empty sidebar + floating-chat conflicts
 
 ## What's Different from Xtra?
 
@@ -80,29 +92,48 @@ A fork of [Xtra](https://github.com/crackededed/Xtra) with additional features f
 | Floating Chat Overlay | No | Yes |
 | Screen Time & Watch Stats | No | Yes |
 | Swipe Gesture Controls | No | Yes |
+| Watch Streak & Loyalty Metrics | No | Yes |
+| Adaptive Stats Dashboard Work | No | In progress |
 
 ## Key Features
 
-### 💬 Floating Chat
+### Floating Chat
 - **Overlay Mode**: Keep up with chat while watching in full-screen
 - **Customizable**: Resize and move the chat window anywhere on screen
 - **Opacity Control**: Adjust transparency to balance stream and chat visibility
-- **High Contrast Mode**: Improve readability over bright video content
+- **High Visibility Mode**: Improve readability over bright video content
 
-### ⏱️ Screen Time & Stats
+### Screen Time & Stats
 - **Daily Tracking**: Monitor your viewing time directly inside the app
 - **Top Channels**: See your most-watched channels and streamers
+- **Watch Streaks**: Track current and longest watch streaks
+- **Loyalty Metrics**: See which streamers you come back to most
 - **Privacy First**: All stats are stored locally on your device
 - **Easy Access**: Open stats from the dedicated tab
 
-### 👆 Gesture Controls
-- **Volume**: Slide up/down on the **right** half of the screen
-- **Brightness**: Slide up/down on the **left** half of the screen
-- **Seek** (VoD only): Horizontal swipe on the **top** half of the screen
-- **Playback Speed** (VoD only): Horizontal swipe on the **bottom** half of the screen
+### Gesture Controls
+- **Volume**: Slide up/down on the right half of the screen
+- **Brightness**: Slide up/down on the left half of the screen
+- **Seek** (VoD only): Horizontal swipe on the top half of the screen
+- **Playback Speed** (VoD only): Horizontal swipe on the bottom half of the screen
 - **Visual Feedback**: Real-time overlay while adjusting controls
 - **Edge Protection**: Gestures are limited in system gesture zones to reduce conflicts
-- **Double-Tap**: Cycle chat display modes (overlay, side-by-side, hidden)
+- **Chat Mode Cycle**: Double-tap cycles chat display modes (overlay, side-by-side, hidden)
+
+## Notes On The Current Stats Migration
+
+The stats screen is now driven by a dashboard-style `RecyclerView` with span-based card placement instead of the old stacked tablet layout path. The current branch already includes:
+
+- width tiers at `600dp` and `840dp`
+- dashboard span policy tests
+- width-based resource buckets for wide-card layouts
+- a base dashboard host layout for `StatsFragment`
+
+What is still missing is the last part of the migration:
+
+- switching width-tier detection to proper dynamic window-size-class handling
+- finishing compact / medium / expanded verification under resizing and split-screen
+- tuning density and spans on real tablets
 
 ## Building
 
@@ -115,3 +146,8 @@ A fork of [Xtra](https://github.com/crackededed/Xtra) with additional features f
 
 # Run tests
 ./gradlew test
+```
+
+## License
+
+ThystTV is licensed under the [GNU Affero General Public License v3.0](LICENSE), same as the upstream Xtra project.
