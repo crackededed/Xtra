@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="?attr/colorSurfaceContainer"
+    app:cardCornerRadius="@dimen/stats_card_corner_radius"
+    app:cardElevation="0dp"
+    app:strokeColor="?attr/colorOutlineVariant"
+    app:strokeWidth="1dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="220dp"
+        android:padding="@dimen/stats_card_inner_padding">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/summaryGuideline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.34" />
+
+        <ImageView
+            android:id="@+id/headerIcon"
+            android:layout_width="@dimen/stats_header_icon_size"
+            android:layout_height="@dimen/stats_header_icon_size"
+            android:src="@drawable/baseline_access_time_24"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="?android:textColorSecondary" />
+
+        <TextView
+            android:id="@+id/titleText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/stats_header_icon_margin"
+            android:text="@string/screen_time"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@id/headerIcon"
+            app:layout_constraintStart_toEndOf="@id/headerIcon"
+            app:layout_constraintTop_toTopOf="@id/headerIcon" />
+
+        <TextView
+            android:id="@+id/dailyAverageText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/stats_section_spacing"
+            android:letterSpacing="-0.03"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@id/summaryGuideline"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/headerIcon"
+            tools:text="3h 37m" />
+
+        <TextView
+            android:id="@+id/dailyAverageLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/daily_average"
+            android:textColor="?android:textColorSecondary"
+            android:textSize="13sp"
+            app:layout_constraintEnd_toEndOf="@id/dailyAverageText"
+            app:layout_constraintStart_toStartOf="@id/dailyAverageText"
+            app:layout_constraintTop_toBottomOf="@id/dailyAverageText" />
+
+        <TextView
+            android:id="@+id/weekChangeText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="@id/dailyAverageLabel"
+            app:layout_constraintStart_toStartOf="@id/dailyAverageLabel"
+            app:layout_constraintTop_toBottomOf="@id/dailyAverageLabel"
+            tools:text="↑ from last week" />
+
+        <View
+            android:id="@+id/bottomDivider"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="@dimen/stats_section_spacing"
+            android:background="?attr/colorOutlineVariant"
+            app:layout_constraintEnd_toStartOf="@id/summaryGuideline"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/weekChangeText" />
+
+        <TextView
+            android:id="@+id/todayLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/stats_section_spacing"
+            android:text="@string/today"
+            android:textAllCaps="true"
+            android:textColor="?android:textColorSecondary"
+            android:textSize="11sp"
+            app:layout_constraintEnd_toStartOf="@id/weekTotalLabel"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/bottomDivider" />
+
+        <TextView
+            android:id="@+id/weekTotalLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/stats_card_gutter"
+            android:layout_marginTop="@dimen/stats_section_spacing"
+            android:text="@string/last_7_days"
+            android:textAllCaps="true"
+            android:textColor="?android:textColorSecondary"
+            android:textSize="11sp"
+            app:layout_constraintEnd_toStartOf="@id/summaryGuideline"
+            app:layout_constraintStart_toEndOf="@id/todayLabel"
+            app:layout_constraintTop_toBottomOf="@id/bottomDivider" />
+
+        <TextView
+            android:id="@+id/todayTimeText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="@id/todayLabel"
+            app:layout_constraintStart_toStartOf="@id/todayLabel"
+            app:layout_constraintTop_toBottomOf="@id/todayLabel"
+            tools:text="18 min" />
+
+        <TextView
+            android:id="@+id/weekTotalText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="@id/weekTotalLabel"
+            app:layout_constraintStart_toStartOf="@id/weekTotalLabel"
+            app:layout_constraintTop_toBottomOf="@id/weekTotalLabel"
+            tools:text="25h 16m" />
+
+        <View
+            android:id="@+id/summaryDivider"
+            android:layout_width="1dp"
+            android:layout_height="0dp"
+            android:background="?attr/colorOutlineVariant"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@id/summaryGuideline"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.github.andreyasadchy.xtra.ui.view.DailyBarChartView
+            android:id="@+id/dailyBarChart"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/stats_bar_chart_height"
+            android:layout_marginStart="@dimen/stats_card_inner_padding"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/summaryDivider"
+            app:layout_constraintTop_toTopOf="@id/headerIcon" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

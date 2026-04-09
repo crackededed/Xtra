@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Tablet overrides: scale up one M3 step for more breathing room -->
-    <dimen name="stats_page_padding">24dp</dimen>
-    <dimen name="stats_card_gutter">16dp</dimen>
-    <dimen name="stats_card_inner_padding">24dp</dimen>
-    <dimen name="stats_card_min_height">160dp</dimen>
-</resources>

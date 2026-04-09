@@ -2,21 +2,24 @@ package com.github.andreyasadchy.xtra.ui.stats
 
 import android.os.Bundle
 import android.view.View
-import android.view.View.GONE
-import android.view.View.VISIBLE
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.GridLayoutManager
 import com.github.andreyasadchy.xtra.R
+import com.github.andreyasadchy.xtra.databinding.FragmentStatsBinding
 import com.github.andreyasadchy.xtra.model.stats.CategoryWatchTime
 import com.github.andreyasadchy.xtra.model.stats.HourlyWatchTime
-import com.github.andreyasadchy.xtra.databinding.FragmentStatsBinding
+import com.github.andreyasadchy.xtra.model.stats.ScreenTime
+import com.github.andreyasadchy.xtra.model.stats.StreamWatchStats
+import com.github.andreyasadchy.xtra.model.stats.StreamerLoyalty
 import com.github.andreyasadchy.xtra.model.stats.WatchStreak
+import com.github.andreyasadchy.xtra.ui.adaptive.AdaptiveWindowInfo
+import com.github.andreyasadchy.xtra.ui.adaptive.WidthTier
 import com.github.andreyasadchy.xtra.ui.view.DailyBarChartView
-import com.github.andreyasadchy.xtra.ui.view.GridAutofitLayoutManager
-import com.github.andreyasadchy.xtra.util.convertDpToPixels
+import com.github.andreyasadchy.xtra.ui.view.DashboardSpacingItemDecoration
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -30,155 +33,156 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
 
     private val viewModel: StatsViewModel by viewModels()
     private var binding: FragmentStatsBinding? = null
+    private lateinit var dashboardAdapter: StatsDashboardAdapter
+    private lateinit var widthTier: WidthTier
+
+    private var screenTimeCard = StatsDashboardItem.ScreenTime(
+        chartData = emptyList(),
+        dailyAverageText = "0 min",
+        weekChangeText = "\u2191 from last week",
+        todayTimeText = "0 min",
+        weekTotalText = "0 min",
+    )
+    private var streakCard = StatsDashboardItem.Streak(
+        currentStreakText = "0",
+        longestStreakText = "0",
+    )
+    private var categoriesCard = StatsDashboardItem.Categories(emptyList())
+    private var heatmapCard = StatsDashboardItem.Heatmap(emptyList())
+    private var loyaltyCard = StatsDashboardItem.Loyalty(emptyList())
+    private var topStreamsCard = StatsDashboardItem.TopStreams(emptyList())
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val binding = FragmentStatsBinding.bind(view)
         this.binding = binding
 
-        val categoryLegendAdapter = CategoryLegendAdapter()
-        val loyaltyAdapter = StreamerLoyaltyAdapter()
-        binding.categoryLegendRecyclerView.adapter = categoryLegendAdapter
-        binding.loyaltyRecyclerView.layoutManager = GridAutofitLayoutManager(
-            requireContext(),
-            requireContext().convertDpToPixels(280f)
+        widthTier = AdaptiveWindowInfo.widthTierFor(requireContext())
+        dashboardAdapter = StatsDashboardAdapter(widthTier)
+
+        val spanCount = StatsDashboardSpanPolicy.spanCountFor(widthTier)
+        val layoutManager = GridLayoutManager(requireContext(), spanCount).apply {
+            spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                override fun getSpanSize(position: Int): Int {
+                    val item = dashboardAdapter.currentList.getOrNull(position) ?: return spanCount
+                    return StatsDashboardSpanPolicy.spanSizeFor(widthTier, item.cardType)
+                }
+            }
+        }
+
+        binding.statsRecyclerView.layoutManager = layoutManager
+        binding.statsRecyclerView.adapter = dashboardAdapter
+        binding.statsRecyclerView.setHasFixedSize(false)
+        binding.statsRecyclerView.addItemDecoration(
+            DashboardSpacingItemDecoration(
+                resources.getDimensionPixelSize(R.dimen.stats_dashboard_item_spacing),
+            ),
         )
-        binding.loyaltyRecyclerView.adapter = loyaltyAdapter
-        binding.topStreamsRecyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
-        val adapter = StreamStatsAdapter()
-        binding.topStreamsRecyclerView.adapter = adapter
+
+        renderDashboard()
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.screenTime.collectLatest { screenTimes ->
-                        updateScreenTimeDisplay(binding, screenTimes)
+                        screenTimeCard = buildScreenTimeCard(screenTimes)
+                        renderDashboard()
                     }
                 }
                 launch {
                     viewModel.topStreams.collectLatest { streams ->
-                        adapter.submitList(streams)
-                        binding.topStreamsRecyclerView.visibility = if (streams.isEmpty()) GONE else VISIBLE
-                        binding.topStreamsEmptyText.visibility = if (streams.isEmpty()) VISIBLE else GONE
+                        topStreamsCard = StatsDashboardItem.TopStreams(streams)
+                        renderDashboard()
                     }
                 }
                 launch {
                     viewModel.watchStreak.collectLatest { streak ->
-                        updateStreakDisplay(binding, streak)
+                        streakCard = buildStreakCard(streak)
+                        renderDashboard()
                     }
                 }
                 launch {
                     viewModel.categoryBreakdown.collectLatest { categories ->
-                        updateCategoryChart(binding, categories, categoryLegendAdapter)
+                        categoriesCard = StatsDashboardItem.Categories(categories)
+                        renderDashboard()
                     }
                 }
                 launch {
                     viewModel.hourlyBreakdown.collectLatest { hourly ->
-                        updateHeatmap(binding, hourly)
+                        heatmapCard = StatsDashboardItem.Heatmap(hourly)
+                        renderDashboard()
                     }
                 }
                 launch {
                     viewModel.streamerLoyalty.collectLatest { loyalty ->
-                        loyaltyAdapter.submitList(loyalty)
-                        binding.loyaltyRecyclerView.visibility = if (loyalty.isEmpty()) GONE else VISIBLE
-                        binding.loyaltyEmptyText.visibility = if (loyalty.isEmpty()) VISIBLE else GONE
+                        loyaltyCard = StatsDashboardItem.Loyalty(loyalty)
+                        renderDashboard()
                     }
                 }
             }
         }
     }
 
-    private fun updateScreenTimeDisplay(
-        binding: FragmentStatsBinding,
-        screenTimes: List<com.github.andreyasadchy.xtra.model.stats.ScreenTime>
-    ) {
+    private fun renderDashboard() {
+        dashboardAdapter.submitList(
+            listOf(
+                screenTimeCard,
+                streakCard,
+                categoriesCard,
+                heatmapCard,
+                loyaltyCard,
+                topStreamsCard,
+            ),
+        )
+    }
+
+    private fun buildScreenTimeCard(screenTimes: List<ScreenTime>): StatsDashboardItem.ScreenTime {
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         val today = sdf.format(Date())
-        
-        // Create map of date -> seconds for quick lookup
         val timeMap = screenTimes.associateBy { it.date }
-        
-        // Generate last 7 days data
         val calendar = Calendar.getInstance()
         val dayFormat = SimpleDateFormat("EEE", Locale.getDefault())
         val chartData = mutableListOf<DailyBarChartView.DayData>()
-        
+
         var weekTotalSeconds = 0L
-        
-        // Go back 6 days and work forward to today
         calendar.add(Calendar.DAY_OF_YEAR, -6)
-        
-        for (i in 0 until 7) {
+
+        repeat(7) {
             val dateStr = sdf.format(calendar.time)
             val seconds = timeMap[dateStr]?.totalSeconds ?: 0L
             weekTotalSeconds += seconds
-            
-            val label = if (dateStr == today) {
-                "Today"
-            } else {
-                dayFormat.format(calendar.time)
-            }
-            
+            val label = if (dateStr == today) "Today" else dayFormat.format(calendar.time)
             chartData.add(DailyBarChartView.DayData(label, seconds))
             calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
-        
-        // Set chart data
-        binding.dailyBarChart.setData(chartData)
-        
-        // Calculate daily average
+
         val avgSeconds = if (chartData.isNotEmpty()) weekTotalSeconds / 7 else 0L
         val avgHours = avgSeconds / 3600
         val avgMinutes = (avgSeconds % 3600) / 60
-        binding.dailyAverageText.text = formatTimeShort(avgHours, avgMinutes)
-        
-        // Week change - compare with previous week (placeholder for now)
-        binding.weekChangeText.text = "↑ from last week"
-        
-        // Today's time
+
         val todaySeconds = timeMap[today]?.totalSeconds ?: 0L
         val todayHours = todaySeconds / 3600
         val todayMinutes = (todaySeconds % 3600) / 60
-        binding.todayTimeText.text = formatTimeShort(todayHours, todayMinutes)
-        
-        // Week total
+
         val weekHours = weekTotalSeconds / 3600
         val weekMinutes = (weekTotalSeconds % 3600) / 60
-        binding.weekTotalText.text = formatTimeShort(weekHours, weekMinutes)
+
+        return StatsDashboardItem.ScreenTime(
+            chartData = chartData,
+            dailyAverageText = formatTimeShort(avgHours, avgMinutes),
+            weekChangeText = "\u2191 from last week",
+            todayTimeText = formatTimeShort(todayHours, todayMinutes),
+            weekTotalText = formatTimeShort(weekHours, weekMinutes),
+        )
     }
-    
-    private fun updateStreakDisplay(binding: FragmentStatsBinding, streak: WatchStreak?) {
-        binding.streakCard.visibility = VISIBLE
-        binding.currentStreakText.text = (streak?.currentStreakDays ?: 0).toString()
-        binding.longestStreakText.text = (streak?.longestStreakDays ?: 0).toString()
+
+    private fun buildStreakCard(streak: WatchStreak?): StatsDashboardItem.Streak {
+        return StatsDashboardItem.Streak(
+            currentStreakText = (streak?.currentStreakDays ?: 0).toString(),
+            longestStreakText = (streak?.longestStreakDays ?: 0).toString(),
+        )
     }
-    
-    private fun updateCategoryChart(
-        binding: FragmentStatsBinding,
-        categories: List<CategoryWatchTime>,
-        legendAdapter: CategoryLegendAdapter
-    ) {
-        val chartData = categories.map { 
-            (it.gameName ?: "Unknown") to it.totalSeconds 
-        }
-        binding.categoryPieChart.setData(chartData)
-        val slices = binding.categoryPieChart.getSlices()
-        legendAdapter.submitList(slices)
-        binding.categoryLegendRecyclerView.visibility = if (slices.isEmpty()) GONE else VISIBLE
-    }
-    
-    private fun updateHeatmap(binding: FragmentStatsBinding, hourly: List<HourlyWatchTime>) {
-        val heatmapData = hourly.map { it.hourOfDay to it.totalSeconds }
-        binding.hourlyHeatmap.setData(heatmapData)
-    }
-    
-    private fun formatTime(hours: Long, minutes: Long, suffix: String): String {
-        return buildString {
-            if (hours > 0) append("$hours hr ")
-            append("$minutes min $suffix")
-        }
-    }
-    
+
     private fun formatTimeShort(hours: Long, minutes: Long): String {
         return buildString {
             if (hours > 0) append("$hours hr ")

@@ -141,7 +141,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     private var controllerAnimation: ViewPropertyAnimator? = null
     private var backgroundColor: Int? = null
     private var backgroundVisible = false
-    private var originalBrightness: Float = -1f  // -1 = system default (auto)
+    private val brightnessState = PlayerBrightnessState()
     
     // Gesture conflict prevention: track state at gesture start
     override var controlsVisibleAtGestureStart = false
@@ -1204,7 +1204,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 }
                 if (isMaximized) {
                     hideStatusBar()
-                    val chatWidth = if (isChatOpen) chatWidthLandscape else 0
+                    val showSidebarChat = PlayerChatModeHelper.shouldShowSidebarChat(isChatOpen, isFloatingChatEnabled)
+                    val chatWidth = if (showSidebarChat) chatWidthLandscape else 0
                     playerLayout.updateLayoutParams<FrameLayout.LayoutParams> {
                         width = ViewGroup.LayoutParams.MATCH_PARENT
                         height = ViewGroup.LayoutParams.MATCH_PARENT
@@ -1215,7 +1216,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         height = ViewGroup.LayoutParams.MATCH_PARENT
                         gravity = Gravity.END
                     }
-                    if (isChatOpen) {
+                    if (showSidebarChat) {
                         chatLayout.visibility = View.VISIBLE
                         if (requireView().findViewById<Button>(R.id.btnDown)?.isVisible == false) {
                             requireView().findViewById<RecyclerView>(R.id.recyclerView)?.let { recyclerView ->
@@ -2267,7 +2268,11 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 // Show floating chat again if it was enabled
                 if (isFloatingChatEnabled) {
                     floatingChatRoot.visibility = View.VISIBLE
-                } else if (isChatOpen) {
+                    chatLayout.visibility = View.GONE
+                    playerLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                        marginEnd = 0
+                    }
+                } else if (PlayerChatModeHelper.shouldShowSidebarChat(isChatOpen, isFloatingChatEnabled)) {
                     showChatLayout()
                 }
             }
@@ -2935,9 +2940,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             copyFrom(requireActivity().window.attributes)
         }
     override fun setWindowAttributes(params: android.view.WindowManager.LayoutParams) { 
-        // Save original brightness before first modification
-        if (originalBrightness == -1f && params.screenBrightness != -1f) {
-            originalBrightness = requireActivity().window.attributes.screenBrightness
+        if (params.screenBrightness != requireActivity().window.attributes.screenBrightness) {
+            brightnessState.captureOriginal(requireActivity().window.attributes.screenBrightness)
         }
         requireActivity().window.attributes = params 
     }
@@ -2956,11 +2960,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     }
     
     private fun restoreBrightness() {
-        if (originalBrightness != -1f) {
+        brightnessState.consumeRestoreBrightness()?.let { originalBrightness ->
             val lp = requireActivity().window.attributes
             lp.screenBrightness = originalBrightness
             requireActivity().window.attributes = lp
-            originalBrightness = -1f
         }
     }
 }

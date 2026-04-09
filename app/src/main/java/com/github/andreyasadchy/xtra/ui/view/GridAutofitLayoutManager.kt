@@ -5,7 +5,7 @@ package com.github.andreyasadchy.xtra.ui.view
 import android.content.Context
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlin.math.max
+import com.github.andreyasadchy.xtra.ui.stats.StatsLayoutHelper
 
 class GridAutofitLayoutManager : GridLayoutManager {
 
@@ -27,7 +27,7 @@ class GridAutofitLayoutManager : GridLayoutManager {
             } else {
                 height - paddingTop - paddingBottom
             }
-            val spanCount = max(1, totalSpace / columnWidth)
+            val spanCount = StatsLayoutHelper.calculateSpanCount(totalSpace, columnWidth)
             setSpanCount(spanCount)
             widthChanged = false
         }

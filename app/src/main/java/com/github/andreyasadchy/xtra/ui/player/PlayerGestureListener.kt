@@ -117,8 +117,7 @@ class PlayerGestureListener(
                  // Split left/right halves
                  if (e1.x < width / 2) {
                      isBrightness = true
-                     startBrightness = callback.windowAttributes.screenBrightness
-                     if (startBrightness < 0) startBrightness = 0.5f // Default fallback
+                     startBrightness = helper.getCurrentBrightness(callback.windowAttributes)
                  } else {
                      isVolume = true
                      val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
