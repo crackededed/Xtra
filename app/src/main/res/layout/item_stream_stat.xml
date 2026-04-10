@@ -8,15 +8,16 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingVertical="14dp"
-        android:paddingHorizontal="12dp">
+        android:orientation="horizontal"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="12dp">
 
         <TextView
             android:id="@+id/rank"
-            android:layout_width="24dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:minWidth="24dp"
             android:textColor="?android:textColorSecondary"
             android:textSize="13sp"
             android:textStyle="bold"
@@ -26,8 +27,8 @@
             android:id="@+id/channelName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
             android:layout_weight="1"
-            android:layout_marginStart="12dp"
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="?attr/colorOnSurface"
@@ -39,10 +40,10 @@
             android:id="@+id/watchTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="8dp"
             android:background="?android:colorBackground"
-            android:paddingHorizontal="14dp"
-            android:paddingVertical="5dp"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
             android:textColor="?android:textColorSecondary"
             android:textSize="12sp"
             android:textStyle="bold"
@@ -54,7 +55,7 @@
         android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginHorizontal="12dp"
+        android:layout_marginHorizontal="10dp"
         android:background="?attr/colorOutlineVariant"
         android:alpha="0.4" />
 

@@ -38,17 +38,20 @@ class StatsDashboardSpanPolicyTest {
     }
 
     @Test
-    fun `medium compact landscape falls back to one column`() {
+    fun `compact landscape with limited height uses mixed two column layout`() {
         val spanCount = StatsDashboardSpanPolicy.spanCountFor(
-            widthTier = WidthTier.MEDIUM,
+            widthTier = WidthTier.COMPACT,
             isLandscape = true,
             screenHeightDp = 420,
         )
 
-        assertEquals(1, spanCount)
-        StatsCardType.entries.forEach { type ->
-            assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, type, spanCount))
-        }
+        assertEquals(2, spanCount)
+        assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.SCREEN_TIME, spanCount))
+        assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.STREAK, spanCount))
+        assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.CATEGORIES, spanCount))
+        assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.HEATMAP, spanCount))
+        assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.LOYALTY, spanCount))
+        assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.TOP_STREAMS, spanCount))
     }
 
     @Test

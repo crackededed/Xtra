@@ -11,8 +11,12 @@ object StatsDashboardSpanPolicy {
     }
 
     fun spanCountFor(widthTier: WidthTier, isLandscape: Boolean, screenHeightDp: Int): Int {
-        if (widthTier == WidthTier.MEDIUM && isLandscape && screenHeightDp <= COMPACT_LANDSCAPE_MAX_HEIGHT_DP) {
-            return 1
+        if (isLandscape && screenHeightDp <= COMPACT_LANDSCAPE_MAX_HEIGHT_DP) {
+            return when (widthTier) {
+                WidthTier.COMPACT -> 2
+                WidthTier.MEDIUM -> 1
+                WidthTier.EXPANDED -> 12
+            }
         }
 
         return when (widthTier) {
@@ -30,7 +34,14 @@ object StatsDashboardSpanPolicy {
         if (spanCount == 1) return 1
 
         return when (widthTier) {
-            WidthTier.COMPACT -> 1
+            WidthTier.COMPACT -> when (cardType) {
+                StatsCardType.SCREEN_TIME -> 2
+                StatsCardType.STREAK -> 1
+                StatsCardType.CATEGORIES -> 1
+                StatsCardType.HEATMAP -> 2
+                StatsCardType.LOYALTY -> 1
+                StatsCardType.TOP_STREAMS -> 1
+            }
 
             WidthTier.MEDIUM -> when (cardType) {
                 StatsCardType.SCREEN_TIME -> 2
