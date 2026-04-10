@@ -5,7 +5,7 @@
     android:height="108dp"
     android:viewportWidth="256"
     android:viewportHeight="256">
-    <group android:translateX="16" android:translateY="16" android:scaleX="0.87" android:scaleY="0.87">
+    <group android:translateX="44.9" android:translateY="44.7" android:scaleX="0.65" android:scaleY="0.65">
         <path android:pathData="m233 96.31-153.6-88.31-56.78 31.76v175.4l56.44 33.22 153.9-89.69v-62.4z">
             <aapt:attr name="android:fillColor">
                 <gradient android:startX="22.64" android:startY="128.2" android:endX="233" android:endY="128.2" android:type="linear">
