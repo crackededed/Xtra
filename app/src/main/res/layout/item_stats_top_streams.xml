@@ -33,12 +33,18 @@
             android:maxLines="2"
             android:text="@string/top_watched_channels"
             android:textColor="?attr/colorOnSurface"
-            android:textSize="17sp"
+            android:textSize="16sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="@id/headerIcon"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/headerIcon"
-            app:layout_constraintTop_toTopOf="@id/headerIcon" />
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/headerBottomBarrier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="headerIcon,topStreamsTitle" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/topStreamsRecyclerView"
@@ -48,7 +54,7 @@
             android:nestedScrollingEnabled="false"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/headerIcon"
+            app:layout_constraintTop_toBottomOf="@id/headerBottomBarrier"
             tools:listitem="@layout/item_stream_stat" />
 
         <TextView
@@ -63,7 +69,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/headerIcon" />
+            app:layout_constraintTop_toBottomOf="@id/headerBottomBarrier" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
