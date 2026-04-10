@@ -16,6 +16,29 @@
         android:minHeight="@dimen/stats_compact_card_min_height"
         android:padding="@dimen/stats_card_inner_padding">
 
+        <ImageView
+            android:id="@+id/headerIcon"
+            android:layout_width="@dimen/stats_header_icon_size"
+            android:layout_height="@dimen/stats_header_icon_size"
+            android:src="@drawable/baseline_local_fire_department_24"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:tint="?android:textColorSecondary" />
+
+        <TextView
+            android:id="@+id/titleText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/stats_header_icon_margin"
+            android:text="@string/current_streak"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@id/headerIcon"
+            app:layout_constraintStart_toEndOf="@id/headerIcon"
+            app:layout_constraintTop_toTopOf="@id/headerIcon"
+            tools:text="Streaks" />
+
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/centerGuide"
             android:layout_width="wrap_content"
@@ -23,90 +46,90 @@
             android:orientation="vertical"
             app:layout_constraintGuide_percent="0.5" />
 
-        <ImageView
-            android:id="@+id/currentStreakIcon"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:src="@drawable/baseline_local_fire_department_24"
-            app:layout_constraintEnd_toStartOf="@id/centerGuide"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="#FF6B6B" />
-
-        <TextView
-            android:id="@+id/currentStreakText"
+        <LinearLayout
+            android:id="@+id/currentBlock"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
             android:gravity="center"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="30sp"
-            android:textStyle="bold"
+            android:orientation="vertical"
+            android:paddingTop="@dimen/stats_section_spacing"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/centerGuide"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/currentStreakIcon"
-            tools:text="5" />
+            app:layout_constraintTop_toBottomOf="@id/headerIcon">
 
-        <TextView
-            android:id="@+id/currentStreakLabel"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:gravity="center"
-            android:text="@string/current_streak"
-            android:textAllCaps="true"
-            android:textColor="?android:textColorSecondary"
-            android:textSize="10sp"
-            app:layout_constraintEnd_toStartOf="@id/centerGuide"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/currentStreakText" />
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/baseline_local_fire_department_24"
+                android:tint="?attr/colorPrimary" />
+
+            <TextView
+                android:id="@+id/currentStreakText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                tools:text="7" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/current_streak"
+                android:textAllCaps="true"
+                android:textColor="?android:textColorSecondary"
+                android:textSize="11sp" />
+        </LinearLayout>
 
         <View
-            android:id="@+id/streakDivider"
+            android:id="@+id/centerDivider"
             android:layout_width="1dp"
             android:layout_height="0dp"
             android:background="?attr/colorOutlineVariant"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/longestBlock"
             app:layout_constraintStart_toStartOf="@id/centerGuide"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="@id/currentBlock" />
 
-        <ImageView
-            android:id="@+id/longestStreakIcon"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:src="@drawable/baseline_emoji_events_24"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/centerGuide"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="#FFD93D" />
-
-        <TextView
-            android:id="@+id/longestStreakText"
+        <LinearLayout
+            android:id="@+id/longestBlock"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
             android:gravity="center"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="30sp"
-            android:textStyle="bold"
+            android:orientation="vertical"
+            android:paddingTop="@dimen/stats_section_spacing"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/centerGuide"
-            app:layout_constraintTop_toBottomOf="@id/longestStreakIcon"
-            tools:text="12" />
+            app:layout_constraintTop_toBottomOf="@id/headerIcon">
 
-        <TextView
-            android:id="@+id/longestStreakLabel"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:gravity="center"
-            android:text="@string/longest_streak"
-            android:textAllCaps="true"
-            android:textColor="?android:textColorSecondary"
-            android:textSize="10sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/centerGuide"
-            app:layout_constraintTop_toBottomOf="@id/longestStreakText" />
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/baseline_emoji_events_24"
+                android:tint="?attr/colorPrimary" />
+
+            <TextView
+                android:id="@+id/longestStreakText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                tools:text="14" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/longest_streak"
+                android:textAllCaps="true"
+                android:textColor="?android:textColorSecondary"
+                android:textSize="11sp" />
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

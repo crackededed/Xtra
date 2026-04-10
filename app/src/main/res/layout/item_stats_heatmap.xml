@@ -36,17 +36,6 @@
             app:layout_constraintStart_toEndOf="@id/headerIcon"
             app:layout_constraintTop_toTopOf="@id/headerIcon" />
 
-        <TextView
-            android:id="@+id/subtitleText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/last_30_days"
-            android:textColor="?android:textColorSecondary"
-            android:textSize="12sp"
-            app:layout_constraintBaseline_toBaselineOf="@id/titleText"
-            app:layout_constraintStart_toEndOf="@id/titleText" />
-
         <com.github.andreyasadchy.xtra.ui.view.HourlyHeatmapView
             android:id="@+id/hourlyHeatmap"
             android:layout_width="0dp"

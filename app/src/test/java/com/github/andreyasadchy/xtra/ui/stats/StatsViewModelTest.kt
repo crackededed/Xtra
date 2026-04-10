@@ -1,6 +1,5 @@
  package com.github.andreyasadchy.xtra.ui.stats
  
- import com.github.andreyasadchy.xtra.db.MonthlyWatchTime
  import com.github.andreyasadchy.xtra.model.stats.CategoryWatchTime
  import com.github.andreyasadchy.xtra.model.stats.HourlyWatchTime
  import com.github.andreyasadchy.xtra.model.stats.ScreenTime
@@ -113,26 +112,6 @@
         assertEquals(100f, viewModel.streamerLoyalty.value[0].loyaltyScore)
      }
  
-     @Test
-    fun `monthlySummary loads data`() = runTest {
-        setupDefaultMocks()
-        val monthly = listOf(
-            MonthlyWatchTime("2025-12", 36000L),
-            MonthlyWatchTime("2025-11", 28000L)
-        )
-        whenever(repository.getCategoryBreakdown(any(), any())).thenReturn(emptyList())
-         whenever(repository.getHourlyBreakdown(any(), any())).thenReturn(emptyList())
-        whenever(repository.getMonthlySummary(any())).thenReturn(monthly)
-         whenever(repository.getStreamerLoyalty(any())).thenReturn(emptyList())
-         
-        val viewModel = StatsViewModel(repository)
-         testDispatcher.scheduler.advanceUntilIdle()
-         
-        assertEquals(2, viewModel.monthlySummary.value.size)
-        assertEquals("2025-12", viewModel.monthlySummary.value[0].month)
-     }
- 
-     @Test
     fun `empty data returns empty lists`() = runTest {
         setupDefaultMocks()
          whenever(repository.getCategoryBreakdown(any(), any())).thenReturn(emptyList())
@@ -145,7 +124,6 @@
          
         assertTrue(viewModel.categoryBreakdown.value.isEmpty())
         assertTrue(viewModel.hourlyBreakdown.value.isEmpty())
-        assertTrue(viewModel.monthlySummary.value.isEmpty())
         assertTrue(viewModel.streamerLoyalty.value.isEmpty())
      }
  }

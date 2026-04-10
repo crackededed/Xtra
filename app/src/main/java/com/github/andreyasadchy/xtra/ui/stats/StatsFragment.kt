@@ -1,5 +1,6 @@
 package com.github.andreyasadchy.xtra.ui.stats
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -27,6 +28,8 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 @AndroidEntryPoint
 class StatsFragment : Fragment(R.layout.fragment_stats) {
@@ -38,10 +41,10 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
 
     private var screenTimeCard = StatsDashboardItem.ScreenTime(
         chartData = emptyList(),
-        dailyAverageText = "0 min",
-        weekChangeText = "\u2191 from last week",
-        todayTimeText = "0 min",
-        weekTotalText = "0 min",
+        dailyAverageText = "0m",
+        weekChangeText = "",
+        todayTimeText = "0m",
+        weekTotalText = "0m",
     )
     private var streakCard = StatsDashboardItem.Streak(
         currentStreakText = "0",
@@ -60,12 +63,17 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
         widthTier = AdaptiveWindowInfo.widthTierFor(requireContext())
         dashboardAdapter = StatsDashboardAdapter(widthTier)
 
-        val spanCount = StatsDashboardSpanPolicy.spanCountFor(widthTier)
+        val configuration = resources.configuration
+        val spanCount = StatsDashboardSpanPolicy.spanCountFor(
+            widthTier = widthTier,
+            isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE,
+            screenHeightDp = configuration.screenHeightDp,
+        )
         val layoutManager = GridLayoutManager(requireContext(), spanCount).apply {
             spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                 override fun getSpanSize(position: Int): Int {
                     val item = dashboardAdapter.currentList.getOrNull(position) ?: return spanCount
-                    return StatsDashboardSpanPolicy.spanSizeFor(widthTier, item.cardType)
+                    return StatsDashboardSpanPolicy.spanSizeFor(widthTier, item.cardType, spanCount)
                 }
             }
         }
@@ -79,7 +87,9 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
             ),
         )
 
+        initializeDefaultCards()
         renderDashboard()
+        viewModel.refresh()
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -136,6 +146,21 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
         )
     }
 
+    private fun initializeDefaultCards() {
+        screenTimeCard = StatsDashboardItem.ScreenTime(
+            chartData = emptyList(),
+            dailyAverageText = "0m",
+            weekChangeText = getString(R.string.stats_week_trend_none),
+            todayTimeText = "0m",
+            weekTotalText = "0m",
+        )
+        streakCard = StatsDashboardItem.Streak("0", "0")
+        categoriesCard = StatsDashboardItem.Categories(emptyList())
+        heatmapCard = StatsDashboardItem.Heatmap(emptyList())
+        loyaltyCard = StatsDashboardItem.Loyalty(emptyList())
+        topStreamsCard = StatsDashboardItem.TopStreams(emptyList())
+    }
+
     private fun buildScreenTimeCard(screenTimes: List<ScreenTime>): StatsDashboardItem.ScreenTime {
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         val today = sdf.format(Date())
@@ -156,23 +181,28 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
             calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
 
+        var previousWeekTotalSeconds = 0L
+        calendar.time = Date()
+        calendar.add(Calendar.DAY_OF_YEAR, -13)
+
+        repeat(7) {
+            val dateStr = sdf.format(calendar.time)
+            previousWeekTotalSeconds += timeMap[dateStr]?.totalSeconds ?: 0L
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
+        }
+
         val avgSeconds = if (chartData.isNotEmpty()) weekTotalSeconds / 7 else 0L
-        val avgHours = avgSeconds / 3600
-        val avgMinutes = (avgSeconds % 3600) / 60
-
         val todaySeconds = timeMap[today]?.totalSeconds ?: 0L
-        val todayHours = todaySeconds / 3600
-        val todayMinutes = (todaySeconds % 3600) / 60
-
-        val weekHours = weekTotalSeconds / 3600
-        val weekMinutes = (weekTotalSeconds % 3600) / 60
 
         return StatsDashboardItem.ScreenTime(
             chartData = chartData,
-            dailyAverageText = formatTimeShort(avgHours, avgMinutes),
-            weekChangeText = "\u2191 from last week",
-            todayTimeText = formatTimeShort(todayHours, todayMinutes),
-            weekTotalText = formatTimeShort(weekHours, weekMinutes),
+            dailyAverageText = formatDurationShort(avgSeconds),
+            weekChangeText = buildWeekTrendText(
+                currentWeekSeconds = weekTotalSeconds,
+                previousWeekSeconds = previousWeekTotalSeconds,
+            ),
+            todayTimeText = formatDurationShort(todaySeconds),
+            weekTotalText = formatDurationShort(weekTotalSeconds),
         )
     }
 
@@ -183,10 +213,44 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
         )
     }
 
-    private fun formatTimeShort(hours: Long, minutes: Long): String {
+    private fun buildWeekTrendText(currentWeekSeconds: Long, previousWeekSeconds: Long): String {
+        return when {
+            currentWeekSeconds == 0L && previousWeekSeconds == 0L ->
+                getString(R.string.stats_week_trend_none)
+
+            previousWeekSeconds == 0L ->
+                getString(R.string.stats_week_trend_new)
+
+            currentWeekSeconds == previousWeekSeconds ->
+                getString(R.string.stats_week_trend_flat)
+
+            currentWeekSeconds > previousWeekSeconds -> {
+                val percentage = (
+                    (currentWeekSeconds - previousWeekSeconds).toDouble() /
+                        previousWeekSeconds * 100
+                    ).roundToInt()
+                getString(R.string.stats_week_trend_up, percentage)
+            }
+
+            else -> {
+                val percentage = (
+                    (previousWeekSeconds - currentWeekSeconds).toDouble() /
+                        previousWeekSeconds * 100
+                    ).roundToInt()
+                getString(R.string.stats_week_trend_down, percentage)
+            }
+        }
+    }
+
+    private fun formatDurationShort(totalSeconds: Long): String {
+        val safeSeconds = abs(totalSeconds)
+        val hours = safeSeconds / 3600
+        val minutes = (safeSeconds % 3600) / 60
+
         return buildString {
-            if (hours > 0) append("$hours hr ")
-            if (minutes > 0 || hours == 0L) append("$minutes min")
+            if (hours > 0) append("${hours}h")
+            if (hours > 0 && minutes > 0) append(" ")
+            if (minutes > 0 || hours == 0L) append("${minutes}m")
         }.trim()
     }
 
