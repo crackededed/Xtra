@@ -53,8 +53,9 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
     )
     private var categoriesCard = StatsDashboardItem.Categories(emptyList())
     private var heatmapCard = StatsDashboardItem.Heatmap(emptyList())
-    private var loyaltyCard = StatsDashboardItem.Loyalty(emptyList())
-    private var topStreamsCard = StatsDashboardItem.TopStreams(emptyList())
+    private var favoriteChannelsCard = StatsDashboardItem.FavoriteChannels(emptyList())
+    private var topStreams: List<StreamWatchStats> = emptyList()
+    private var streamerLoyalty: List<StreamerLoyalty> = emptyList()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -76,7 +77,8 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
                 }
                 launch {
                     viewModel.topStreams.collectLatest { streams ->
-                        topStreamsCard = StatsDashboardItem.TopStreams(streams)
+                        topStreams = streams
+                        favoriteChannelsCard = buildFavoriteChannelsCard()
                         renderDashboard()
                     }
                 }
@@ -100,7 +102,8 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
                 }
                 launch {
                     viewModel.streamerLoyalty.collectLatest { loyalty ->
-                        loyaltyCard = StatsDashboardItem.Loyalty(loyalty)
+                        streamerLoyalty = loyalty
+                        favoriteChannelsCard = buildFavoriteChannelsCard()
                         renderDashboard()
                     }
                 }
@@ -123,15 +126,14 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
                 streakCard,
                 categoriesCard,
                 heatmapCard,
-                loyaltyCard,
-                topStreamsCard,
+                favoriteChannelsCard,
             ),
         )
     }
 
     private fun configureDashboard(binding: FragmentStatsBinding) {
         widthTier = AdaptiveWindowInfo.widthTierFor(requireContext())
-        dashboardAdapter = StatsDashboardAdapter(widthTier)
+        dashboardAdapter = StatsDashboardAdapter()
 
         val configuration = resources.configuration
         val spanCount = StatsDashboardSpanPolicy.spanCountFor(
@@ -175,8 +177,18 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
         streakCard = StatsDashboardItem.Streak("0", "0")
         categoriesCard = StatsDashboardItem.Categories(emptyList())
         heatmapCard = StatsDashboardItem.Heatmap(emptyList())
-        loyaltyCard = StatsDashboardItem.Loyalty(emptyList())
-        topStreamsCard = StatsDashboardItem.TopStreams(emptyList())
+        favoriteChannelsCard = StatsDashboardItem.FavoriteChannels(emptyList())
+        topStreams = emptyList()
+        streamerLoyalty = emptyList()
+    }
+
+    private fun buildFavoriteChannelsCard(): StatsDashboardItem.FavoriteChannels {
+        return StatsDashboardItem.FavoriteChannels(
+            channels = StatsDataHelper.buildFavoriteChannels(
+                topStreams = topStreams,
+                loyalty = streamerLoyalty,
+            ),
+        )
     }
 
     private fun buildScreenTimeCard(screenTimes: List<ScreenTime>): StatsDashboardItem.ScreenTime {

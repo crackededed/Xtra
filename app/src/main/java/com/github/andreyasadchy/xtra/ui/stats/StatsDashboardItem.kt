@@ -2,8 +2,6 @@ package com.github.andreyasadchy.xtra.ui.stats
 
 import com.github.andreyasadchy.xtra.model.stats.CategoryWatchTime
 import com.github.andreyasadchy.xtra.model.stats.HourlyWatchTime
-import com.github.andreyasadchy.xtra.model.stats.StreamWatchStats
-import com.github.andreyasadchy.xtra.model.stats.StreamerLoyalty
 import com.github.andreyasadchy.xtra.ui.view.DailyBarChartView
 
 sealed interface StatsDashboardItem {
@@ -38,15 +36,9 @@ sealed interface StatsDashboardItem {
         override val cardType = StatsCardType.HEATMAP
     }
 
-    data class Loyalty(
-        val loyalty: List<StreamerLoyalty>,
+    data class FavoriteChannels(
+        val channels: List<FavoriteChannelRow>,
     ) : StatsDashboardItem {
-        override val cardType = StatsCardType.LOYALTY
-    }
-
-    data class TopStreams(
-        val streams: List<StreamWatchStats>,
-    ) : StatsDashboardItem {
-        override val cardType = StatsCardType.TOP_STREAMS
+        override val cardType = StatsCardType.FAVORITE_CHANNELS
     }
 }

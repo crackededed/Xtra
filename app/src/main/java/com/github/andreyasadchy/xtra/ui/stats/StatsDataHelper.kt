@@ -1,5 +1,7 @@
 package com.github.andreyasadchy.xtra.ui.stats
 
+import com.github.andreyasadchy.xtra.model.stats.StreamWatchStats
+import com.github.andreyasadchy.xtra.model.stats.StreamerLoyalty
 import kotlin.math.max
 
 /**
@@ -95,5 +97,40 @@ object StatsDataHelper {
         val hours = totalSeconds / 3600
         val minutes = (totalSeconds % 3600) / 60
         return Pair(hours, minutes)
+    }
+
+    fun buildFavoriteChannels(
+        topStreams: List<StreamWatchStats>,
+        loyalty: List<StreamerLoyalty>
+    ): List<FavoriteChannelRow> {
+        if (topStreams.isEmpty()) return emptyList()
+
+        val loyaltyByKey = loyalty.associateBy { loyaltyKey(it.channelId, it.channelName, it.channelLogin) }
+        val maxWatchSeconds = topStreams.maxOfOrNull { it.totalSecondsWatched } ?: 0L
+
+        return topStreams.map { stream ->
+            val loyaltyData = loyaltyByKey[loyaltyKey(stream.channelId, stream.channelName, null)]
+            FavoriteChannelRow(
+                channelId = stream.channelId,
+                channelName = stream.channelName,
+                totalSecondsWatched = stream.totalSecondsWatched,
+                sessionCount = loyaltyData?.sessionCount ?: 0,
+                loyaltyScore = loyaltyData?.loyaltyScore?.toInt() ?: 0,
+                watchTimeProgress = if (maxWatchSeconds > 0L) {
+                    stream.totalSecondsWatched.toFloat() / maxWatchSeconds.toFloat()
+                } else {
+                    0f
+                },
+            )
+        }
+    }
+
+    private fun loyaltyKey(channelId: String?, channelName: String?, channelLogin: String?): String {
+        return when {
+            !channelId.isNullOrBlank() -> "id:$channelId"
+            !channelName.isNullOrBlank() -> "name:${channelName.lowercase()}"
+            !channelLogin.isNullOrBlank() -> "login:${channelLogin.lowercase()}"
+            else -> ""
+        }
     }
 }

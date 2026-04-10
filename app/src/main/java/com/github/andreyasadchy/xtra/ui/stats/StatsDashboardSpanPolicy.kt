@@ -39,8 +39,7 @@ object StatsDashboardSpanPolicy {
                 StatsCardType.STREAK -> 2
                 StatsCardType.CATEGORIES -> 2
                 StatsCardType.HEATMAP -> 2
-                StatsCardType.LOYALTY -> 1
-                StatsCardType.TOP_STREAMS -> 1
+                StatsCardType.FAVORITE_CHANNELS -> 2
             }
 
             WidthTier.MEDIUM -> when (cardType) {
@@ -48,8 +47,7 @@ object StatsDashboardSpanPolicy {
                 StatsCardType.STREAK -> 2
                 StatsCardType.CATEGORIES -> 2
                 StatsCardType.HEATMAP -> 2
-                StatsCardType.LOYALTY -> 1
-                StatsCardType.TOP_STREAMS -> 1
+                StatsCardType.FAVORITE_CHANNELS -> 2
             }
 
             WidthTier.EXPANDED -> when (cardType) {
@@ -57,8 +55,7 @@ object StatsDashboardSpanPolicy {
                 StatsCardType.STREAK -> 12
                 StatsCardType.CATEGORIES -> 12
                 StatsCardType.HEATMAP -> 12
-                StatsCardType.LOYALTY -> 6
-                StatsCardType.TOP_STREAMS -> 6
+                StatsCardType.FAVORITE_CHANNELS -> 12
             }
         }
     }

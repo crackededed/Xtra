@@ -20,18 +20,18 @@
             android:layout_width="@dimen/stats_header_icon_size"
             android:layout_height="@dimen/stats_header_icon_size"
             android:src="@drawable/baseline_pie_chart_24"
+            android:tint="?android:textColorSecondary"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="?android:textColorSecondary" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/topStreamsTitle"
+            android:id="@+id/favoriteChannelsTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/stats_header_icon_margin"
             android:ellipsize="end"
             android:maxLines="2"
-            android:text="@string/top_watched_channels"
+            android:text="@string/favorite_channels"
             android:textColor="?attr/colorOnSurface"
             android:textSize="16sp"
             android:textStyle="bold"
@@ -44,10 +44,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:barrierDirection="bottom"
-            app:constraint_referenced_ids="headerIcon,topStreamsTitle" />
+            app:constraint_referenced_ids="headerIcon,favoriteChannelsTitle" />
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/topStreamsRecyclerView"
+            android:id="@+id/favoriteChannelsRecyclerView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/stats_section_spacing"
@@ -55,10 +55,10 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/headerBottomBarrier"
-            tools:listitem="@layout/item_stream_stat" />
+            tools:listitem="@layout/item_favorite_channel" />
 
         <TextView
-            android:id="@+id/topStreamsEmptyText"
+            android:id="@+id/favoriteChannelsEmptyText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:gravity="center"

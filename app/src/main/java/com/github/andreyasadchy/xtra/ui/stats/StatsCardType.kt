@@ -5,6 +5,5 @@ enum class StatsCardType {
     STREAK,
     CATEGORIES,
     HEATMAP,
-    LOYALTY,
-    TOP_STREAMS,
+    FAVORITE_CHANNELS,
 }

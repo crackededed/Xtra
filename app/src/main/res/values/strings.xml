@@ -757,8 +757,9 @@
     <string name="longest_streak" translatable="false">Longest streak</string>
     <string name="categories_watched" translatable="false">Categories Watched</string>
     <string name="peak_viewing_times" translatable="false">Peak Viewing Times</string>
-    <string name="streamer_loyalty" translatable="false">Streamer Loyalty</string>
-    <string name="top_watched_channels" translatable="false">Top Watched Channels</string>
+    <string name="favorite_channels" translatable="false">Favorite Channels</string>
+    <string name="stats_loyalty_badge" translatable="false">%1$d Loyalty</string>
+    <string name="stats_rank_format" translatable="false">#%1$d</string>
     <string name="no_data" translatable="false">No data yet</string>
     <string name="days_streak" translatable="false">days</string>
     <string name="stats_week_trend_none" translatable="false">No previous data</string>

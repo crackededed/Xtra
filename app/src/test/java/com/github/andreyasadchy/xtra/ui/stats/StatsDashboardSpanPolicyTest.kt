@@ -21,7 +21,7 @@ class StatsDashboardSpanPolicyTest {
     }
 
     @Test
-    fun `medium portrait uses full width top cards and split lower pair`() {
+    fun `medium portrait uses full width cards`() {
         val spanCount = StatsDashboardSpanPolicy.spanCountFor(
             widthTier = WidthTier.MEDIUM,
             isLandscape = false,
@@ -33,12 +33,11 @@ class StatsDashboardSpanPolicyTest {
         assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.STREAK, spanCount))
         assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.CATEGORIES, spanCount))
         assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.HEATMAP, spanCount))
-        assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.LOYALTY, spanCount))
-        assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.TOP_STREAMS, spanCount))
+        assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.FAVORITE_CHANNELS, spanCount))
     }
 
     @Test
-    fun `compact landscape with limited height uses mixed two column layout`() {
+    fun `compact landscape with limited height keeps every card full width`() {
         val spanCount = StatsDashboardSpanPolicy.spanCountFor(
             widthTier = WidthTier.COMPACT,
             isLandscape = true,
@@ -50,12 +49,11 @@ class StatsDashboardSpanPolicyTest {
         assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.STREAK, spanCount))
         assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.CATEGORIES, spanCount))
         assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.HEATMAP, spanCount))
-        assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.LOYALTY, spanCount))
-        assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.TOP_STREAMS, spanCount))
+        assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.FAVORITE_CHANNELS, spanCount))
     }
 
     @Test
-    fun `medium landscape with limited height keeps full width top cards and split lower pair`() {
+    fun `medium landscape with limited height keeps every card full width`() {
         val spanCount = StatsDashboardSpanPolicy.spanCountFor(
             widthTier = WidthTier.MEDIUM,
             isLandscape = true,
@@ -67,12 +65,11 @@ class StatsDashboardSpanPolicyTest {
         assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.STREAK, spanCount))
         assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.CATEGORIES, spanCount))
         assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.HEATMAP, spanCount))
-        assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.LOYALTY, spanCount))
-        assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.TOP_STREAMS, spanCount))
+        assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.FAVORITE_CHANNELS, spanCount))
     }
 
     @Test
-    fun `expanded uses clean full width top cards and split lower pair`() {
+    fun `expanded uses clean full width cards`() {
         val spanCount = StatsDashboardSpanPolicy.spanCountFor(
             widthTier = WidthTier.EXPANDED,
             isLandscape = true,
@@ -84,7 +81,6 @@ class StatsDashboardSpanPolicyTest {
         assertEquals(12, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.EXPANDED, StatsCardType.STREAK, spanCount))
         assertEquals(12, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.EXPANDED, StatsCardType.CATEGORIES, spanCount))
         assertEquals(12, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.EXPANDED, StatsCardType.HEATMAP, spanCount))
-        assertEquals(6, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.EXPANDED, StatsCardType.LOYALTY, spanCount))
-        assertEquals(6, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.EXPANDED, StatsCardType.TOP_STREAMS, spanCount))
+        assertEquals(12, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.EXPANDED, StatsCardType.FAVORITE_CHANNELS, spanCount))
     }
 }

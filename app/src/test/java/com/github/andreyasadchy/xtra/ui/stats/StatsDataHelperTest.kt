@@ -1,5 +1,7 @@
 package com.github.andreyasadchy.xtra.ui.stats
 
+import com.github.andreyasadchy.xtra.model.stats.StreamWatchStats
+import com.github.andreyasadchy.xtra.model.stats.StreamerLoyalty
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -205,5 +207,100 @@ class StatsDataHelperTest {
         val (hours, minutes) = StatsDataHelper.formatSecondsToHoursMinutes(5445L)
         assertEquals(1L, hours)
         assertEquals(30L, minutes) // 45 seconds are truncated
+    }
+
+    // ==================== buildFavoriteChannels Tests ====================
+
+    @Test
+    fun `buildFavoriteChannels keeps watch time order and merges loyalty metadata`() {
+        val topStreams = listOf(
+            StreamWatchStats(
+                channelId = "alpha",
+                channelName = "Alpha",
+                totalSecondsWatched = 360L,
+                lastWatchedTimestamp = 1L,
+            ),
+            StreamWatchStats(
+                channelId = "beta",
+                channelName = "Beta",
+                totalSecondsWatched = 180L,
+                lastWatchedTimestamp = 2L,
+            ),
+        )
+        val loyalty = listOf(
+            StreamerLoyalty(
+                channelId = "beta",
+                channelName = "Beta",
+                channelLogin = "beta_login",
+                totalWatchSeconds = 180L,
+                sessionCount = 2,
+                distinctDaysWatched = 2,
+                loyaltyScore = 55f,
+            ),
+            StreamerLoyalty(
+                channelId = "alpha",
+                channelName = "Alpha",
+                channelLogin = "alpha_login",
+                totalWatchSeconds = 360L,
+                sessionCount = 3,
+                distinctDaysWatched = 3,
+                loyaltyScore = 100f,
+            ),
+        )
+
+        val rows = StatsDataHelper.buildFavoriteChannels(topStreams, loyalty)
+
+        assertEquals(2, rows.size)
+        assertEquals(
+            FavoriteChannelRow(
+                channelId = "alpha",
+                channelName = "Alpha",
+                totalSecondsWatched = 360L,
+                sessionCount = 3,
+                loyaltyScore = 100,
+                watchTimeProgress = 1f,
+            ),
+            rows[0],
+        )
+        assertEquals(
+            FavoriteChannelRow(
+                channelId = "beta",
+                channelName = "Beta",
+                totalSecondsWatched = 180L,
+                sessionCount = 2,
+                loyaltyScore = 55,
+                watchTimeProgress = 0.5f,
+            ),
+            rows[1],
+        )
+    }
+
+    @Test
+    fun `buildFavoriteChannels fills missing loyalty metadata with defaults`() {
+        val rows = StatsDataHelper.buildFavoriteChannels(
+            topStreams = listOf(
+                StreamWatchStats(
+                    channelId = "gamma",
+                    channelName = "Gamma",
+                    totalSecondsWatched = 120L,
+                    lastWatchedTimestamp = 3L,
+                ),
+            ),
+            loyalty = emptyList(),
+        )
+
+        assertEquals(
+            listOf(
+                FavoriteChannelRow(
+                    channelId = "gamma",
+                    channelName = "Gamma",
+                    totalSecondsWatched = 120L,
+                    sessionCount = 0,
+                    loyaltyScore = 0,
+                    watchTimeProgress = 1f,
+                ),
+            ),
+            rows,
+        )
     }
 }
