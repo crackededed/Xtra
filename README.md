@@ -22,14 +22,15 @@ A fork of [Xtra](https://github.com/crackededed/Xtra) with additional features f
 - [ ] Re-verify brightness behavior on phone and tablet after the recent fixes
 
 ### Stats & Large-Screen Layout
-- [ ] Fix remaining stats card/layout issues
-- [ ] Finish the adaptive stats dashboard migration cleanup
-- [ ] Move stats adaptation fully to width-based behavior
+- [x] Fix major stats card/layout issues on phone, tablet, and rotation paths
+- [x] Finish the adaptive stats dashboard migration cleanup
+- [x] Move stats adaptation fully to width-based behavior
 - [ ] Switch adaptive sizing logic from `screenWidthDp` tiers to proper window-size-class handling
-- [ ] Use the canonical compact-path layout behavior for the dashboard
-- [ ] Verify compact / medium / expanded dashboard behavior
-- [ ] Verify split-screen, resized window, and rotation behavior on large screens
-- [ ] Tune card spans, padding, and density for wide tablets
+- [x] Use the canonical dashboard path instead of legacy screen-specific stats layouts
+- [x] Verify compact / medium / expanded dashboard behavior
+- [x] Verify rotation-driven dashboard re-layout while the stats screen is already open
+- [ ] Verify split-screen and resized window behavior on large screens
+- [ ] Do a final wide-tablet polish pass after more real-device screenshots
 
 ### Visual & UI Cleanup
 - [ ] Fix app icon cropping / masking issues on Android launchers
@@ -70,13 +71,16 @@ A fork of [Xtra](https://github.com/crackededed/Xtra) with additional features f
 
 ### Stats & Analytics
 - [x] Daily screen time tracking implemented
-- [x] Top watched channels implemented
+- [x] Favorite channels card implemented with watch time as the primary ranking
 - [x] Watch streak tracking implemented
 - [x] Streamer loyalty scoring implemented
 - [x] Category breakdown, legends, and heatmaps implemented
-- [x] Adaptive stats dashboard refactor started
+- [x] Adaptive stats dashboard refactor completed on the main stats path
 - [x] Dashboard span policy and adapter introduced
 - [x] Width-based stats resources introduced
+- [x] Short-height landscape card compositions added for screen time and categories
+- [x] Rotation refresh fixed so the dashboard re-lays out immediately on orientation change
+- [x] Loyalty and top-stream cards merged into a single full-width favorite-channels card
 - [x] Legacy `layout-sw600dp` / `layout-land` stats screen variants removed from the main path
 
 ### Floating Chat
@@ -122,18 +126,21 @@ A fork of [Xtra](https://github.com/crackededed/Xtra) with additional features f
 
 ## Notes On The Current Stats Migration
 
-The stats screen is now driven by a dashboard-style `RecyclerView` with span-based card placement instead of the old stacked tablet layout path. The current branch already includes:
+The stats screen is now driven by a dashboard-style `RecyclerView` with span-based card placement instead of the old stacked tablet layout path. The current branch includes:
 
 - width tiers at `600dp` and `840dp`
 - dashboard span policy tests
 - width-based resource buckets for wide-card layouts
 - a base dashboard host layout for `StatsFragment`
+- short-height landscape compositions for screen time and categories
+- immediate adapter/layout refresh on rotation while staying on the stats screen
+- a merged `Favorite Channels` card that combines watch time, loyalty, sessions, and relative progress in one list
 
-What is still missing is the last part of the migration:
+What is still left after this branch:
 
 - switching width-tier detection to proper dynamic window-size-class handling
-- finishing compact / medium / expanded verification under resizing and split-screen
-- tuning density and spans on real tablets
+- finishing verification under split-screen and arbitrary window resizing
+- tuning density and spans on real wide tablets after more screenshots
 
 ## Building
 
