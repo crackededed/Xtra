@@ -9,6 +9,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentStatsBinding
 import com.github.andreyasadchy.xtra.model.stats.CategoryWatchTime
@@ -60,34 +61,8 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
         val binding = FragmentStatsBinding.bind(view)
         this.binding = binding
 
-        widthTier = AdaptiveWindowInfo.widthTierFor(requireContext())
-        dashboardAdapter = StatsDashboardAdapter(widthTier)
-
-        val configuration = resources.configuration
-        val spanCount = StatsDashboardSpanPolicy.spanCountFor(
-            widthTier = widthTier,
-            isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE,
-            screenHeightDp = configuration.screenHeightDp,
-        )
-        val layoutManager = GridLayoutManager(requireContext(), spanCount).apply {
-            spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-                override fun getSpanSize(position: Int): Int {
-                    val item = dashboardAdapter.currentList.getOrNull(position) ?: return spanCount
-                    return StatsDashboardSpanPolicy.spanSizeFor(widthTier, item.cardType, spanCount)
-                }
-            }
-        }
-
-        binding.statsRecyclerView.layoutManager = layoutManager
-        binding.statsRecyclerView.adapter = dashboardAdapter
-        binding.statsRecyclerView.setHasFixedSize(false)
-        binding.statsRecyclerView.addItemDecoration(
-            DashboardSpacingItemDecoration(
-                resources.getDimensionPixelSize(R.dimen.stats_dashboard_item_spacing),
-            ),
-        )
-
         initializeDefaultCards()
+        configureDashboard(binding)
         renderDashboard()
         viewModel.refresh()
 
@@ -133,6 +108,14 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
         }
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        binding?.let { binding ->
+            configureDashboard(binding)
+            renderDashboard()
+        }
+    }
+
     private fun renderDashboard() {
         dashboardAdapter.submitList(
             listOf(
@@ -142,6 +125,41 @@ class StatsFragment : Fragment(R.layout.fragment_stats) {
                 heatmapCard,
                 loyaltyCard,
                 topStreamsCard,
+            ),
+        )
+    }
+
+    private fun configureDashboard(binding: FragmentStatsBinding) {
+        widthTier = AdaptiveWindowInfo.widthTierFor(requireContext())
+        dashboardAdapter = StatsDashboardAdapter(widthTier)
+
+        val configuration = resources.configuration
+        val spanCount = StatsDashboardSpanPolicy.spanCountFor(
+            widthTier = widthTier,
+            isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE,
+            screenHeightDp = configuration.screenHeightDp,
+        )
+
+        binding.statsRecyclerView.layoutManager = GridLayoutManager(requireContext(), spanCount).apply {
+            spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                override fun getSpanSize(position: Int): Int {
+                    val item = dashboardAdapter.currentList.getOrNull(position) ?: return spanCount
+                    return StatsDashboardSpanPolicy.spanSizeFor(widthTier, item.cardType, spanCount)
+                }
+            }
+        }
+        binding.statsRecyclerView.adapter = dashboardAdapter
+        binding.statsRecyclerView.setHasFixedSize(false)
+        replaceDashboardSpacingDecoration(binding.statsRecyclerView)
+    }
+
+    private fun replaceDashboardSpacingDecoration(recyclerView: RecyclerView) {
+        while (recyclerView.itemDecorationCount > 0) {
+            recyclerView.removeItemDecorationAt(0)
+        }
+        recyclerView.addItemDecoration(
+            DashboardSpacingItemDecoration(
+                resources.getDimensionPixelSize(R.dimen.stats_dashboard_item_spacing),
             ),
         )
     }

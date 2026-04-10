@@ -26,14 +26,17 @@
 
         <TextView
             android:id="@+id/loyaltyTitle"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/stats_header_icon_margin"
+            android:ellipsize="end"
+            android:maxLines="2"
             android:text="@string/streamer_loyalty"
             android:textColor="?attr/colorOnSurface"
-            android:textSize="18sp"
+            android:textSize="17sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="@id/headerIcon"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/headerIcon"
             app:layout_constraintTop_toTopOf="@id/headerIcon" />
 
