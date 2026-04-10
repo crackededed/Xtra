@@ -21,7 +21,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.42" />
+            app:layout_constraintGuide_percent="0.38" />
 
         <ImageView
             android:id="@+id/headerIcon"
@@ -48,8 +48,8 @@
         <com.github.andreyasadchy.xtra.ui.view.CategoryPieChartView
             android:id="@+id/categoryPieChart"
             android:layout_width="0dp"
-            android:layout_height="138dp"
-            android:layout_marginTop="12dp"
+            android:layout_height="124dp"
+            android:layout_marginTop="10dp"
             app:layout_constraintEnd_toStartOf="@id/chartGuide"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/headerIcon" />
@@ -58,7 +58,7 @@
             android:id="@+id/categoryLegendRecyclerView"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="10dp"
             android:nestedScrollingEnabled="false"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toBottomOf="@id/categoryPieChart"

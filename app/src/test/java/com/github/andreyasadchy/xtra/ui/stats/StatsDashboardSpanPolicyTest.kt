@@ -47,11 +47,28 @@ class StatsDashboardSpanPolicyTest {
 
         assertEquals(2, spanCount)
         assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.SCREEN_TIME, spanCount))
-        assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.STREAK, spanCount))
-        assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.CATEGORIES, spanCount))
+        assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.STREAK, spanCount))
+        assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.CATEGORIES, spanCount))
         assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.HEATMAP, spanCount))
         assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.LOYALTY, spanCount))
         assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.COMPACT, StatsCardType.TOP_STREAMS, spanCount))
+    }
+
+    @Test
+    fun `medium landscape with limited height keeps full width top cards and split lower pair`() {
+        val spanCount = StatsDashboardSpanPolicy.spanCountFor(
+            widthTier = WidthTier.MEDIUM,
+            isLandscape = true,
+            screenHeightDp = 480,
+        )
+
+        assertEquals(2, spanCount)
+        assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.SCREEN_TIME, spanCount))
+        assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.STREAK, spanCount))
+        assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.CATEGORIES, spanCount))
+        assertEquals(2, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.HEATMAP, spanCount))
+        assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.LOYALTY, spanCount))
+        assertEquals(1, StatsDashboardSpanPolicy.spanSizeFor(WidthTier.MEDIUM, StatsCardType.TOP_STREAMS, spanCount))
     }
 
     @Test

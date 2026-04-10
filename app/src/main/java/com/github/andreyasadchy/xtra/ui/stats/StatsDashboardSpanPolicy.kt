@@ -14,7 +14,7 @@ object StatsDashboardSpanPolicy {
         if (isLandscape && screenHeightDp <= COMPACT_LANDSCAPE_MAX_HEIGHT_DP) {
             return when (widthTier) {
                 WidthTier.COMPACT -> 2
-                WidthTier.MEDIUM -> 1
+                WidthTier.MEDIUM -> 2
                 WidthTier.EXPANDED -> 12
             }
         }
@@ -36,8 +36,8 @@ object StatsDashboardSpanPolicy {
         return when (widthTier) {
             WidthTier.COMPACT -> when (cardType) {
                 StatsCardType.SCREEN_TIME -> 2
-                StatsCardType.STREAK -> 1
-                StatsCardType.CATEGORIES -> 1
+                StatsCardType.STREAK -> 2
+                StatsCardType.CATEGORIES -> 2
                 StatsCardType.HEATMAP -> 2
                 StatsCardType.LOYALTY -> 1
                 StatsCardType.TOP_STREAMS -> 1
