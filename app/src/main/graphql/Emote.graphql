@@ -1,0 +1,13 @@
+query Emote($id: ID!) {
+    emote(id: $id) {
+        bitsBadgeTierSummary {
+            threshold
+        }
+        owner {
+            displayName
+            login
+        }
+        subscriptionTier
+        type
+    }
+}

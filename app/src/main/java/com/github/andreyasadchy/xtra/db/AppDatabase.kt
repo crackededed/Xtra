@@ -36,7 +36,8 @@ import com.github.andreyasadchy.xtra.model.ui.VodBookmarkIgnoredUser
         RecentSearch::class,
         PlaybackState::class
     ],
-    version = 34
+    version = 34,
+    exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
