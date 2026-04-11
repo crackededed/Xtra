@@ -29,7 +29,7 @@ android {
         minSdk = 23
         targetSdk = 36
         versionCode = 121
-        versionName = "2.55.0"
+        versionName = "2.55.1"
     }
 
     buildTypes {
@@ -123,10 +123,6 @@ dependencies {
     ksp(libs.hilt.extension.compiler)
 
     implementation(libs.coroutines)
-}
-
-ksp {
-    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 apollo {

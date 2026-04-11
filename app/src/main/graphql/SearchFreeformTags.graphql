@@ -1,0 +1,9 @@
+query SearchFreeformTags($query: String!, $first: Int) {
+    searchFreeformTags(userQuery: $query, first: $first) {
+        edges {
+            node {
+                tagName
+            }
+        }
+    }
+}

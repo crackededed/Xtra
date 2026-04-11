@@ -26,7 +26,7 @@ class PlayerViewerListViewModel @Inject constructor(
             isLoading = true
             viewModelScope.launch {
                 try {
-                    val response = graphQLRepository.loadChannelViewerList(networkLibrary, gqlHeaders, channelLogin)
+                    val response = graphQLRepository.loadQueryUserChatters(networkLibrary, gqlHeaders, login = channelLogin)
                     if (enableIntegrity && integrity.value == null) {
                         response.errors?.find { it.message == "failed integrity check" }?.let {
                             integrity.value = "refresh"
@@ -44,10 +44,29 @@ class PlayerViewerListViewModel @Inject constructor(
                         )
                     }
                 } catch (e: Exception) {
+                    try {
+                        val response = graphQLRepository.loadChannelViewerList(networkLibrary, gqlHeaders, channelLogin)
+                        if (enableIntegrity && integrity.value == null) {
+                            response.errors?.find { it.message == "failed integrity check" }?.let {
+                                integrity.value = "refresh"
+                                isLoading = false
+                                return@launch
+                            }
+                        }
+                        _viewerList.value = response.data?.user?.channel?.chatters?.let { response ->
+                            ChannelViewerList(
+                                broadcasters = response.broadcasters?.mapNotNull { it.login } ?: emptyList(),
+                                moderators = response.moderators?.mapNotNull { it.login } ?: emptyList(),
+                                vips = response.vips?.mapNotNull { it.login } ?: emptyList(),
+                                viewers = response.viewers?.mapNotNull { it.login } ?: emptyList(),
+                                count = response.count
+                            )
+                        }
+                    } catch (e: Exception) {
 
-                } finally {
-                    isLoading = false
+                    }
                 }
+                isLoading = false
             }
         }
     }
