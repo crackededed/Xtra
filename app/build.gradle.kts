@@ -152,10 +152,6 @@ dependencies {
     testImplementation("androidx.arch.core:core-testing:2.2.0")
 }
 
-ksp {
-    arg("room.schemaLocation", "$projectDir/schemas")
-}
-
 apollo {
     service("service") {
         packageName.set("com.github.andreyasadchy.xtra.graphql")
