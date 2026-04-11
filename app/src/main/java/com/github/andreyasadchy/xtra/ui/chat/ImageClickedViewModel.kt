@@ -22,23 +22,43 @@ class ImageClickedViewModel @Inject constructor(
         if (emoteCard.value == null) {
             viewModelScope.launch {
                 try {
-                    val response = graphQLRepository.loadEmoteCard(networkLibrary, gqlHeaders, emoteId).also { response ->
-                        if (enableIntegrity && integrity.value == null) {
-                            response.errors?.find { it.message == "failed integrity check" }?.let {
-                                integrity.value = "refresh"
-                                return@launch
+                    val response = if (!emoteId.isNullOrBlank()) {
+                        graphQLRepository.loadQueryEmote(networkLibrary, gqlHeaders, emoteId).also { response ->
+                            if (enableIntegrity && integrity.value == null) {
+                                response.errors?.find { it.message == "failed integrity check" }?.let {
+                                    integrity.value = "refresh"
+                                    return@launch
+                                }
                             }
-                        }
-                    }.data?.emote
+                        }.data!!.emote
+                    } else null
                     emoteCard.value = EmoteCard(
-                        type = response?.type,
-                        subTier = response?.subscriptionTier,
+                        type = response?.type?.rawValue,
+                        subTier = response?.subscriptionTier?.rawValue,
                         bitThreshold = response?.bitsBadgeTierSummary?.threshold,
                         channelLogin = response?.owner?.login,
                         channelName = response?.owner?.displayName,
                     )
                 } catch (e: Exception) {
+                    try {
+                        val response = graphQLRepository.loadEmoteCard(networkLibrary, gqlHeaders, emoteId).also { response ->
+                            if (enableIntegrity && integrity.value == null) {
+                                response.errors?.find { it.message == "failed integrity check" }?.let {
+                                    integrity.value = "refresh"
+                                    return@launch
+                                }
+                            }
+                        }.data?.emote
+                        emoteCard.value = EmoteCard(
+                            type = response?.type,
+                            subTier = response?.subscriptionTier,
+                            bitThreshold = response?.bitsBadgeTierSummary?.threshold,
+                            channelLogin = response?.owner?.login,
+                            channelName = response?.owner?.displayName,
+                        )
+                    } catch (e: Exception) {
 
+                    }
                 }
             }
         }
