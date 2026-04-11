@@ -63,7 +63,7 @@ class AutoCompleteAdapter<T>(
 
     override fun getFilter(): Filter = filter
 
-    private val filter = object : Filter() {
+    private val filter: Filter = object : Filter() {
         override fun performFiltering(constraint: CharSequence?): FilterResults? {
             return if (constraint.isNullOrBlank()) {
                 FilterResults()

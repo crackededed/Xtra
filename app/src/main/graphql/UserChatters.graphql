@@ -1,0 +1,21 @@
+query UserChatters($id: ID, $login: String) {
+    user(id: $id, login: $login, lookupType: ALL) {
+        channel {
+            chatters {
+                broadcasters {
+                    login
+                }
+                count
+                moderators {
+                    login
+                }
+                viewers {
+                    login
+                }
+                vips {
+                    login
+                }
+            }
+        }
+    }
+}

@@ -13,12 +13,15 @@ import com.apollographql.apollo.api.json.writeObject
 import com.apollographql.apollo.api.parseResponse
 import com.github.andreyasadchy.xtra.graphql.BadgesQuery
 import com.github.andreyasadchy.xtra.graphql.ClipUrlsQuery
+import com.github.andreyasadchy.xtra.graphql.EmoteQuery
 import com.github.andreyasadchy.xtra.graphql.GameBoxArtQuery
 import com.github.andreyasadchy.xtra.graphql.GameClipsQuery
 import com.github.andreyasadchy.xtra.graphql.GameQuery
 import com.github.andreyasadchy.xtra.graphql.GameStreamsQuery
 import com.github.andreyasadchy.xtra.graphql.GameVideosQuery
 import com.github.andreyasadchy.xtra.graphql.SearchChannelsQuery
+import com.github.andreyasadchy.xtra.graphql.SearchFreeformTagsQuery
+import com.github.andreyasadchy.xtra.graphql.SearchGameTagsQuery
 import com.github.andreyasadchy.xtra.graphql.SearchGamesQuery
 import com.github.andreyasadchy.xtra.graphql.SearchStreamsQuery
 import com.github.andreyasadchy.xtra.graphql.SearchVideosQuery
@@ -34,6 +37,7 @@ import com.github.andreyasadchy.xtra.graphql.TopStreamsQuery
 import com.github.andreyasadchy.xtra.graphql.UserAboutQuery
 import com.github.andreyasadchy.xtra.graphql.UserBadgesQuery
 import com.github.andreyasadchy.xtra.graphql.UserChannelPageQuery
+import com.github.andreyasadchy.xtra.graphql.UserChattersQuery
 import com.github.andreyasadchy.xtra.graphql.UserCheerEmotesQuery
 import com.github.andreyasadchy.xtra.graphql.UserClipsQuery
 import com.github.andreyasadchy.xtra.graphql.UserEmotesQuery
@@ -49,6 +53,8 @@ import com.github.andreyasadchy.xtra.graphql.UserVideosQuery
 import com.github.andreyasadchy.xtra.graphql.UsersLastBroadcastQuery
 import com.github.andreyasadchy.xtra.graphql.UsersStreamQuery
 import com.github.andreyasadchy.xtra.graphql.UsersTypeQuery
+import com.github.andreyasadchy.xtra.graphql.VideoCommentsQuery
+import com.github.andreyasadchy.xtra.graphql.VideoMomentsQuery
 import com.github.andreyasadchy.xtra.graphql.VideoPlaybackAccessTokenQuery
 import com.github.andreyasadchy.xtra.graphql.VideoQuery
 import com.github.andreyasadchy.xtra.graphql.type.BadgeImageSize
@@ -252,6 +258,11 @@ class GraphQLRepository @Inject constructor(
         sendQuery(networkLibrary, headers, query)
     }
 
+    suspend fun loadQueryEmote(networkLibrary: String?, headers: Map<String, String>, id: String): ApolloResponse<EmoteQuery.Data> = withContext(Dispatchers.IO) {
+        val query = EmoteQuery(id)
+        sendQuery(networkLibrary, headers, query)
+    }
+
     suspend fun loadQueryGame(networkLibrary: String?, headers: Map<String, String>, id: String? = null, slug: String? = null, name: String? = null): ApolloResponse<GameQuery.Data> = withContext(Dispatchers.IO) {
         val query = GameQuery(
             id = if (!id.isNullOrBlank()) Optional.Present(id) else Optional.Absent,
@@ -319,11 +330,27 @@ class GraphQLRepository @Inject constructor(
         sendQuery(networkLibrary, headers, query)
     }
 
+    suspend fun loadQuerySearchFreeformTags(networkLibrary: String?, headers: Map<String, String>, query: String, first: Int?): ApolloResponse<SearchFreeformTagsQuery.Data> = withContext(Dispatchers.IO) {
+        val query = SearchFreeformTagsQuery(
+            query = query,
+            first = Optional.Present(first),
+        )
+        sendQuery(networkLibrary, headers, query)
+    }
+
     suspend fun loadQuerySearchGames(networkLibrary: String?, headers: Map<String, String>, query: String, first: Int?, after: String?): ApolloResponse<SearchGamesQuery.Data> = withContext(Dispatchers.IO) {
         val query = SearchGamesQuery(
             query = query,
             first = Optional.Present(first),
             after = Optional.Present(after),
+        )
+        sendQuery(networkLibrary, headers, query)
+    }
+
+    suspend fun loadQuerySearchGameTags(networkLibrary: String?, headers: Map<String, String>, query: String, first: Int?): ApolloResponse<SearchGameTagsQuery.Data> = withContext(Dispatchers.IO) {
+        val query = SearchGameTagsQuery(
+            query = query,
+            first = Optional.Present(first),
         )
         sendQuery(networkLibrary, headers, query)
     }
@@ -453,6 +480,14 @@ class GraphQLRepository @Inject constructor(
         sendQuery(networkLibrary, headers, query)
     }
 
+    suspend fun loadQueryUserChatters(networkLibrary: String?, headers: Map<String, String>, id: String? = null, login: String? = null): ApolloResponse<UserChattersQuery.Data> = withContext(Dispatchers.IO) {
+        val query = UserChattersQuery(
+            id = if (!id.isNullOrBlank()) Optional.Present(id) else Optional.Absent,
+            login = if (!login.isNullOrBlank()) Optional.Present(login) else Optional.Absent,
+        )
+        sendQuery(networkLibrary, headers, query)
+    }
+
     suspend fun loadQueryUserCheerEmotes(networkLibrary: String?, headers: Map<String, String>, id: String? = null, login: String? = null): ApolloResponse<UserCheerEmotesQuery.Data> = withContext(Dispatchers.IO) {
         val query = UserCheerEmotesQuery(
             id = if (!id.isNullOrBlank()) Optional.Present(id) else Optional.Absent,
@@ -567,6 +602,25 @@ class GraphQLRepository @Inject constructor(
 
     suspend fun loadQueryVideo(networkLibrary: String?, headers: Map<String, String>, id: String?): ApolloResponse<VideoQuery.Data> = withContext(Dispatchers.IO) {
         val query = VideoQuery(Optional.Present(id))
+        sendQuery(networkLibrary, headers, query)
+    }
+
+    suspend fun loadQueryVideoComments(networkLibrary: String?, headers: Map<String, String>, videoId: String?, offset: Int? = null, cursor: String? = null): ApolloResponse<VideoCommentsQuery.Data> = withContext(Dispatchers.IO) {
+        val query = VideoCommentsQuery(
+            id = Optional.Present(videoId),
+            first = Optional.Present(100),
+            after = Optional.Present(cursor),
+            offset = if (offset != null) Optional.Present(offset) else Optional.Absent,
+        )
+        sendQuery(networkLibrary, headers, query)
+    }
+
+    suspend fun loadQueryVideoMoments(networkLibrary: String?, headers: Map<String, String>, videoId: String?): ApolloResponse<VideoMomentsQuery.Data> = withContext(Dispatchers.IO) {
+        val query = VideoMomentsQuery(
+            id = Optional.Present(videoId),
+            first = Optional.Present(100),
+            after = Optional.Present(null),
+        )
         sendQuery(networkLibrary, headers, query)
     }
 

@@ -62,9 +62,9 @@ class ChatReplayManager(
         loadJob = coroutineScope.launch(Dispatchers.IO) {
             try {
                 val response = if (position != null) {
-                    graphQLRepository.loadVideoMessages(networkLibrary, gqlHeaders, videoId, offset = position.div(1000).toInt())
+                    graphQLRepository.loadQueryVideoComments(networkLibrary, gqlHeaders, videoId, offset = position.div(1000).toInt())
                 } else {
-                    graphQLRepository.loadVideoMessages(networkLibrary, gqlHeaders, videoId, cursor = cursor)
+                    graphQLRepository.loadQueryVideoComments(networkLibrary, gqlHeaders, videoId, cursor = cursor)
                 }
                 if (enableIntegrity) {
                     response.errors?.find { it.message == "failed integrity check" }?.let {
@@ -73,13 +73,13 @@ class ChatReplayManager(
                         return@launch
                     }
                 }
-                val comments = response.data!!.video.comments
-                val messages = comments.edges.mapNotNull { comment ->
-                    comment.node.let { item ->
-                        item.message?.let { message ->
+                val comments = response.data!!.video!!.comments!!
+                val messages = comments.edges!!.mapNotNull { comment ->
+                    comment?.node.let { item ->
+                        item?.message?.let { message ->
                             val chatMessage = StringBuilder()
                             val emotes = message.fragments?.mapNotNull { fragment ->
-                                fragment.text?.let { text ->
+                                fragment?.text?.let { text ->
                                     fragment.emote?.emoteID?.let { id ->
                                         TwitchEmote(
                                             id = id,
@@ -90,7 +90,7 @@ class ChatReplayManager(
                                 }
                             }
                             val badges = message.userBadges?.mapNotNull { badge ->
-                                badge.setID?.let { setId ->
+                                badge?.setID?.let { setId ->
                                     badge.version?.let { version ->
                                         Badge(
                                             setId = setId,
@@ -109,18 +109,79 @@ class ChatReplayManager(
                                 color = message.userColor,
                                 emotes = emotes,
                                 badges = badges,
-                                fullMsg = json.encodeToString(item)
+                                fullMsg = null
                             )
                         }
                     }
                 }
                 messageJob?.cancel()
                 list.addAll(messages)
-                cursor = if (comments.pageInfo?.hasNextPage != false) comments.edges.lastOrNull()?.cursor else null
+                cursor = if (comments.pageInfo?.hasNextPage != false) comments.edges.lastOrNull()?.cursor?.toString() else null
                 isLoading = false
                 startJob()
             } catch (e: Exception) {
+                try {
+                    val response = if (position != null) {
+                        graphQLRepository.loadVideoMessages(networkLibrary, gqlHeaders, videoId, offset = position.div(1000).toInt())
+                    } else {
+                        graphQLRepository.loadVideoMessages(networkLibrary, gqlHeaders, videoId, cursor = cursor)
+                    }
+                    if (enableIntegrity) {
+                        response.errors?.find { it.message == "failed integrity check" }?.let {
+                            listener.getIntegrityToken()
+                            isLoading = false
+                            return@launch
+                        }
+                    }
+                    val comments = response.data!!.video.comments
+                    val messages = comments.edges.mapNotNull { comment ->
+                        comment.node.let { item ->
+                            item.message?.let { message ->
+                                val chatMessage = StringBuilder()
+                                val emotes = message.fragments?.mapNotNull { fragment ->
+                                    fragment.text?.let { text ->
+                                        fragment.emote?.emoteID?.let { id ->
+                                            TwitchEmote(
+                                                id = id,
+                                                begin = chatMessage.codePointCount(0, chatMessage.length),
+                                                end = chatMessage.codePointCount(0, chatMessage.length) + text.lastIndex
+                                            )
+                                        }.also { chatMessage.append(text) }
+                                    }
+                                }
+                                val badges = message.userBadges?.mapNotNull { badge ->
+                                    badge.setID?.let { setId ->
+                                        badge.version?.let { version ->
+                                            Badge(
+                                                setId = setId,
+                                                version = version,
+                                            )
+                                        }
+                                    }
+                                }
+                                VideoChatMessage(
+                                    id = item.id,
+                                    offsetSeconds = item.contentOffsetSeconds,
+                                    userId = item.commenter?.id,
+                                    userLogin = item.commenter?.login,
+                                    userName = item.commenter?.displayName,
+                                    message = chatMessage.toString(),
+                                    color = message.userColor,
+                                    emotes = emotes,
+                                    badges = badges,
+                                    fullMsg = json.encodeToString(item)
+                                )
+                            }
+                        }
+                    }
+                    messageJob?.cancel()
+                    list.addAll(messages)
+                    cursor = if (comments.pageInfo?.hasNextPage != false) comments.edges.lastOrNull()?.cursor else null
+                    isLoading = false
+                    startJob()
+                } catch (e: Exception) {
 
+                }
             }
         }
     }
