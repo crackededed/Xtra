@@ -7,6 +7,8 @@
 A fork of [Xtra](https://github.com/crackededed/Xtra) with additional features focused on viewer experience, playback UX, local stats, and accessibility.
 
 > **Current focus:** polishing the app, fixing player and stats regressions, improving large-screen layouts, cleaning up the repo, and staying aligned with upstream Xtra.
+>
+> **Upstream sync note:** ThystTV currently uses a selective upstream-sync approach. Some upstream Xtra fixes are cherry-picked and conflict-resolved locally so GitHub can still show the fork as "behind" even when those safe changes are already present here. The main intentionally deferred upstream area is the unstable player rewrite, which is being kept out until it can be integrated without breaking ThystTV-specific behavior.
 
 ## Current Branch
 
