@@ -54,48 +54,39 @@ jobs:
 
     - name: Generate release notes
       run: |
-        echo "## ThystTV ${{ steps.version.outputs.version }}" > notes.txt
-        echo "" >> notes.txt
-        echo "### Changes" >> notes.txt
-        git log $(git describe --tags --abbrev=0 2>/dev/null || echo HEAD~10)..HEAD --oneline --decorate=no >> notes.txt || echo "Initial release" >> notes.txt
+        NOTES_FILE="docs/release-notes/${{ steps.version.outputs.version }}.md"
+        if [ -f "$NOTES_FILE" ]; then
+          cp "$NOTES_FILE" notes.txt
+        else
+          echo "## ThystTV ${{ steps.version.outputs.version }}" > notes.txt
+          echo "" >> notes.txt
+          echo "### Changes" >> notes.txt
+          git log $(git describe --tags --abbrev=0 2>/dev/null || echo HEAD~10)..HEAD --oneline --decorate=no >> notes.txt || echo "Initial release" >> notes.txt
+        fi
 
-    # --- Versioned release (v1.1.0, etc.) ---
+    - name: Check existing release
+      id: release_check
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        TAG="v${{ steps.version.outputs.version }}"
+        if gh release view "$TAG" >/dev/null 2>&1; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+
     - name: Create versioned release
-      continue-on-error: true
+      if: steps.release_check.outputs.exists == 'false'
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
         TAG="v${{ steps.version.outputs.version }}"
         git config user.name github-actions
         git config user.email github-actions@github.com
-        git tag -f "$TAG"
-        git push -f origin tag "$TAG"
-        gh release delete "$TAG" -y 2>/dev/null || true
+        git tag "$TAG"
+        git push origin "$TAG"
         gh release create "$TAG" \
           --title "ThystTV ${{ steps.version.outputs.version }}" \
           --notes-file notes.txt \
-          app/build/outputs/apk/release/ThystTV-*.apk
-
-    # --- Rolling "latest" release ---
-    - name: Delete existing latest release
-      continue-on-error: true
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: gh release delete latest -y
-
-    - name: Update latest tag
-      run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        git tag -f latest
-        git push -f origin tag latest
-
-    - name: Create latest release
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        gh release create latest \
-          --title "ThystTV ${{ steps.version.outputs.version }} (latest)" \
-          --notes-file notes.txt \
-          --latest \
           app/build/outputs/apk/release/ThystTV-*.apk
