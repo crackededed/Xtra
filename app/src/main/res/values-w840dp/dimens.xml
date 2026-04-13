@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="stats_page_padding">24dp</dimen>
+    <dimen name="stats_card_inner_padding">20dp</dimen>
+    <dimen name="stats_card_min_height">132dp</dimen>
+    <dimen name="stats_compact_card_min_height">120dp</dimen>
+    <dimen name="stats_bar_chart_height">208dp</dimen>
+    <dimen name="stats_pie_chart_height">200dp</dimen>
+</resources>

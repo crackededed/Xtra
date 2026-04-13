@@ -3,15 +3,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingVertical="6dp"
-    android:gravity="center_vertical">
+    android:paddingVertical="4dp">
 
     <View
         android:id="@+id/colorDot"
-        android:layout_width="12dp"
-        android:layout_height="12dp"
-        android:layout_marginEnd="12dp"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:layout_marginEnd="10dp"
         android:background="@drawable/circle_dot" />
 
     <TextView
@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:textColor="?attr/colorOnSurface"
-        android:textSize="14sp"
+        android:textSize="13sp"
         android:ellipsize="end"
         android:maxLines="1"
         tools:text="Just Chatting" />
@@ -29,8 +29,9 @@
         android:id="@+id/categoryPercentage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
         android:textColor="?android:textColorSecondary"
-        android:textSize="14sp"
+        android:textSize="13sp"
         android:textStyle="bold"
         tools:text="45%" />
 </LinearLayout>

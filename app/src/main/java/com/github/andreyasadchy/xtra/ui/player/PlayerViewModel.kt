@@ -449,26 +449,47 @@ class PlayerViewModel @Inject constructor(
         if (gamesList.value == null) {
             viewModelScope.launch {
                 try {
-                    val response = graphQLRepository.loadVideoGames(networkLibrary, gqlHeaders, videoId)
+                    val response = graphQLRepository.loadQueryVideoMoments(networkLibrary, gqlHeaders, videoId)
                     if (enableIntegrity && integrity.value == null) {
                         response.errors?.find { it.message == "failed integrity check" }?.let {
                             integrity.value = "refreshVideo"
                             return@launch
                         }
                     }
-                    gamesList.value = response.data!!.video.moments.edges.map { item ->
-                        item.node.let {
+                    gamesList.value = response.data!!.video!!.moments!!.edges!!.map { item ->
+                        item.node!!.let {
                             Game(
-                                id = it.details?.game?.id,
-                                name = it.details?.game?.displayName,
-                                boxArtURL = it.details?.game?.boxArtURL,
+                                id = it.details?.onGameChangeMomentDetails?.game?.id,
+                                name = it.details?.onGameChangeMomentDetails?.game?.displayName,
+                                boxArtURL = it.details?.onGameChangeMomentDetails?.game?.boxArtURL,
                                 vodPosition = it.positionMilliseconds,
                                 vodDuration = it.durationMilliseconds,
                             )
                         }
                     }
                 } catch (e: Exception) {
+                    try {
+                        val response = graphQLRepository.loadVideoGames(networkLibrary, gqlHeaders, videoId)
+                        if (enableIntegrity && integrity.value == null) {
+                            response.errors?.find { it.message == "failed integrity check" }?.let {
+                                integrity.value = "refreshVideo"
+                                return@launch
+                            }
+                        }
+                        gamesList.value = response.data!!.video.moments.edges.map { item ->
+                            item.node.let {
+                                Game(
+                                    id = it.details?.game?.id,
+                                    name = it.details?.game?.displayName,
+                                    boxArtURL = it.details?.game?.boxArtURL,
+                                    vodPosition = it.positionMilliseconds,
+                                    vodDuration = it.durationMilliseconds,
+                                )
+                            }
+                        }
+                    } catch (e: Exception) {
 
+                    }
                 }
             }
         }

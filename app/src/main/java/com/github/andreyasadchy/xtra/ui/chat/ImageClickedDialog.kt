@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -44,15 +43,15 @@ class ImageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callback
 
         fun newInstance(url: String?, name: String?, format: String?, isAnimated: Boolean?, source: Int?, thirdParty: Boolean?, emoteId: String?): ImageClickedDialog {
             return ImageClickedDialog().apply {
-                arguments = bundleOf(
-                    IMAGE_URL to url,
-                    IMAGE_NAME to name,
-                    IMAGE_FORMAT to format,
-                    IMAGE_ANIMATED to isAnimated,
-                    IMAGE_SOURCE to source,
-                    IMAGE_THIRD_PARTY to thirdParty,
-                    EMOTE_ID to emoteId
-                )
+                arguments = Bundle().apply {
+                    putString(IMAGE_URL, url)
+                    putString(IMAGE_NAME, name)
+                    putString(IMAGE_FORMAT, format)
+                    putBoolean(IMAGE_ANIMATED, isAnimated == true)
+                    putInt(IMAGE_SOURCE, source ?: -1)
+                    putBoolean(IMAGE_THIRD_PARTY, thirdParty == true)
+                    putString(EMOTE_ID, emoteId)
+                }
             }
         }
     }

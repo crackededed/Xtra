@@ -36,4 +36,8 @@
         <item quantity="one">%s member</item>
         <item quantity="other">%s members</item>
     </plurals>
+    <plurals name="stats_sessions" translatable="false">
+        <item quantity="one">%d session</item>
+        <item quantity="other">%d sessions</item>
+    </plurals>
 </resources>

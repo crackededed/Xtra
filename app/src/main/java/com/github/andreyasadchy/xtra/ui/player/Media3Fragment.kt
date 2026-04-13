@@ -259,9 +259,9 @@ class Media3Fragment : PlayerFragment() {
                                                 if (!viewModel.stopProxy) {
                                                     player?.sendCustomCommand(
                                                         SessionCommand(
-                                                            PlaybackService.TOGGLE_PROXY, bundleOf(
-                                                                PlaybackService.USING_PROXY to false
-                                                            )
+                                                            PlaybackService.TOGGLE_PROXY, Bundle().apply {
+                                                                putBoolean(PlaybackService.USING_PROXY, false)
+                                                            }
                                                         ), Bundle.EMPTY
                                                     )
                                                     viewModel.usingProxy = false
@@ -273,9 +273,9 @@ class Media3Fragment : PlayerFragment() {
                                                     if (!viewModel.stopProxy && !playlist.isNullOrBlank() && useProxy) {
                                                         player?.sendCustomCommand(
                                                             SessionCommand(
-                                                                PlaybackService.TOGGLE_PROXY, bundleOf(
-                                                                    PlaybackService.USING_PROXY to false
-                                                                )
+                                                                PlaybackService.TOGGLE_PROXY, Bundle().apply {
+                                                                    putBoolean(PlaybackService.USING_PROXY, false)
+                                                                }
                                                             ), Bundle.EMPTY
                                                         )
                                                         viewModel.usingProxy = true
@@ -288,9 +288,9 @@ class Media3Fragment : PlayerFragment() {
                                                             }
                                                             player?.sendCustomCommand(
                                                                 SessionCommand(
-                                                                    PlaybackService.TOGGLE_PROXY, bundleOf(
-                                                                        PlaybackService.USING_PROXY to false
-                                                                    )
+                                                                    PlaybackService.TOGGLE_PROXY, Bundle().apply {
+                                                                        putBoolean(PlaybackService.USING_PROXY, false)
+                                                                    }
                                                                 ), Bundle.EMPTY
                                                             )
                                                             viewModel.usingProxy = false
@@ -435,9 +435,9 @@ class Media3Fragment : PlayerFragment() {
             }
             player?.sendCustomCommand(
                 SessionCommand(
-                    PlaybackService.SET_SLEEP_TIMER, bundleOf(
-                        PlaybackService.DURATION to -1L
-                    )
+                    PlaybackService.SET_SLEEP_TIMER, Bundle().apply {
+                        putLong(PlaybackService.DURATION, 1L)
+                    }
                 ), Bundle.EMPTY
             )?.let { result ->
                 result.addListener({
@@ -788,9 +788,9 @@ class Media3Fragment : PlayerFragment() {
                             if (viewModel.usingProxy) {
                                 player.sendCustomCommand(
                                     SessionCommand(
-                                        PlaybackService.TOGGLE_PROXY, bundleOf(
-                                            PlaybackService.USING_PROXY to false
-                                        )
+                                        PlaybackService.TOGGLE_PROXY, Bundle().apply {
+                                            putBoolean(PlaybackService.USING_PROXY, false)
+                                        }
                                     ), Bundle.EMPTY
                                 )
                                 viewModel.usingProxy = false
@@ -813,9 +813,9 @@ class Media3Fragment : PlayerFragment() {
                             if (viewModel.usingProxy) {
                                 player.sendCustomCommand(
                                     SessionCommand(
-                                        PlaybackService.TOGGLE_PROXY, bundleOf(
-                                            PlaybackService.USING_PROXY to false
-                                        )
+                                        PlaybackService.TOGGLE_PROXY, Bundle().apply {
+                                            putBoolean(PlaybackService.USING_PROXY, false)
+                                        }
                                     ), Bundle.EMPTY
                                 )
                                 viewModel.usingProxy = false
@@ -897,9 +897,9 @@ class Media3Fragment : PlayerFragment() {
                 if (viewModel.usingProxy) {
                     player.sendCustomCommand(
                         SessionCommand(
-                            PlaybackService.TOGGLE_PROXY, bundleOf(
-                                PlaybackService.USING_PROXY to false
-                            )
+                            PlaybackService.TOGGLE_PROXY, Bundle().apply {
+                                putBoolean(PlaybackService.USING_PROXY, false)
+                            }
                         ), Bundle.EMPTY
                     )
                     viewModel.usingProxy = false
@@ -932,9 +932,9 @@ class Media3Fragment : PlayerFragment() {
                 }
                 player.sendCustomCommand(
                     SessionCommand(
-                        PlaybackService.SET_SLEEP_TIMER, bundleOf(
-                            PlaybackService.DURATION to ((activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
-                        )
+                        PlaybackService.SET_SLEEP_TIMER, Bundle().apply {
+                            putLong(PlaybackService.DURATION, (activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
+                        }
                     ), Bundle.EMPTY
                 )
             }
@@ -997,9 +997,9 @@ class Media3Fragment : PlayerFragment() {
                 if (viewModel.usingProxy) {
                     player.sendCustomCommand(
                         SessionCommand(
-                            PlaybackService.TOGGLE_PROXY, bundleOf(
-                                PlaybackService.USING_PROXY to false
-                            )
+                            PlaybackService.TOGGLE_PROXY, Bundle().apply {
+                                putBoolean(PlaybackService.USING_PROXY, false)
+                            }
                         ), Bundle.EMPTY
                     )
                     viewModel.usingProxy = false
@@ -1046,9 +1046,9 @@ class Media3Fragment : PlayerFragment() {
                 }
                 player.sendCustomCommand(
                     SessionCommand(
-                        PlaybackService.SET_SLEEP_TIMER, bundleOf(
-                            PlaybackService.DURATION to ((activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
-                        )
+                        PlaybackService.SET_SLEEP_TIMER, Bundle().apply {
+                            putLong(PlaybackService.DURATION, (activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
+                        }
                     ), Bundle.EMPTY
                 )
             }

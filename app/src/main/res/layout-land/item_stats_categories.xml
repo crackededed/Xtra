@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="?attr/colorSurfaceContainer"
+    app:cardCornerRadius="@dimen/stats_card_corner_radius"
+    app:cardElevation="0dp"
+    app:strokeColor="?attr/colorOutlineVariant"
+    app:strokeWidth="1dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="176dp"
+        android:padding="14dp">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/chartGuide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.38" />
+
+        <ImageView
+            android:id="@+id/headerIcon"
+            android:layout_width="@dimen/stats_header_icon_size"
+            android:layout_height="@dimen/stats_header_icon_size"
+            android:src="@drawable/baseline_pie_chart_24"
+            android:tint="?android:textColorSecondary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/titleText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/stats_header_icon_margin"
+            android:text="@string/categories_watched"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@id/headerIcon"
+            app:layout_constraintStart_toEndOf="@id/headerIcon"
+            app:layout_constraintTop_toTopOf="@id/headerIcon" />
+
+        <com.github.andreyasadchy.xtra.ui.view.CategoryPieChartView
+            android:id="@+id/categoryPieChart"
+            android:layout_width="0dp"
+            android:layout_height="124dp"
+            android:layout_marginTop="10dp"
+            app:layout_constraintEnd_toStartOf="@id/chartGuide"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/headerIcon" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/categoryLegendRecyclerView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="10dp"
+            android:nestedScrollingEnabled="false"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="@id/categoryPieChart"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/chartGuide"
+            app:layout_constraintTop_toTopOf="@id/categoryPieChart"
+            tools:listitem="@layout/item_category_legend" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

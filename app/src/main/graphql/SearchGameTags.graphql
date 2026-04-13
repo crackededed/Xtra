@@ -1,0 +1,6 @@
+query SearchGameTags($query: String!, $first: Int) {
+    searchCategoryTags(userQuery: $query, limit: $first) {
+        id
+        localizedName
+    }
+}

@@ -1,4 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="divider_margin">5dp</dimen>
+
+    <!-- Stats screen spacing tokens -->
+    <dimen name="stats_page_padding">16dp</dimen>
+    <dimen name="stats_card_gutter">12dp</dimen>
+    <dimen name="stats_section_spacing">16dp</dimen>
+    <dimen name="stats_card_inner_padding">16dp</dimen>
+    <dimen name="stats_item_inner_padding">16dp</dimen>
+    <dimen name="stats_card_corner_radius">12dp</dimen>
+    <dimen name="stats_item_card_corner_radius">8dp</dimen>
+    <dimen name="stats_title_margin_top">8dp</dimen>
+    <dimen name="stats_title_margin_bottom">12dp</dimen>
+    <dimen name="stats_card_min_height">120dp</dimen>
+    <dimen name="stats_compact_card_min_height">112dp</dimen>
+    <dimen name="stats_header_icon_size">24dp</dimen>
+    <dimen name="stats_header_icon_margin">12dp</dimen>
+    <dimen name="stats_bar_chart_height">160dp</dimen>
+    <dimen name="stats_pie_chart_height">176dp</dimen>
+    <dimen name="stats_heatmap_height">52dp</dimen>
+    <dimen name="stats_dashboard_item_spacing">12dp</dimen>
+    <dimen name="stats_loyalty_min_item_width">240dp</dimen>
+    <dimen name="stats_loyalty_min_item_width_expanded">200dp</dimen>
 </resources>

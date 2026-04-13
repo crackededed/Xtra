@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="stats_page_padding">20dp</dimen>
+    <dimen name="stats_card_gutter">16dp</dimen>
+    <dimen name="stats_card_inner_padding">20dp</dimen>
+    <dimen name="stats_card_min_height">124dp</dimen>
+    <dimen name="stats_compact_card_min_height">116dp</dimen>
+    <dimen name="stats_bar_chart_height">168dp</dimen>
+    <dimen name="stats_pie_chart_height">184dp</dimen>
+    <dimen name="stats_dashboard_item_spacing">16dp</dimen>
+    <dimen name="stats_loyalty_min_item_width">250dp</dimen>
+    <dimen name="stats_loyalty_min_item_width_expanded">216dp</dimen>
+</resources>

@@ -36,6 +36,10 @@
     <init>();
 }
 
+-keep class androidx.work.OverwritingInputMerger {
+    <init>();
+}
+
 # Needed for Android 6 when using AGP 9
 -keep class androidx.navigation.fragment.NavHostFragment {
     *;
