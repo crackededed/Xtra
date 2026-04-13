@@ -28,7 +28,7 @@
             android:layout_width="@dimen/stats_header_icon_size"
             android:layout_height="@dimen/stats_header_icon_size"
             android:src="@drawable/baseline_access_time_24"
-            android:tint="?android:textColorSecondary"
+            app:tint="?android:textColorSecondary"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
