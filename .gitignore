@@ -86,6 +86,8 @@ CHANGELOG.md
 nul
 /*_diff.txt
 /staged_diff.diff
+/temp_screenshots/
+/TEMP_PROGRESS.md
 
 # IDE and editor files
 *.swp
@@ -93,3 +95,8 @@ nul
 *~
 .DS_Store
 Thumbs.db
+
+# Local agent/editor workspaces
+/.kilo/
+/.opencode/
+/.gradle-user/

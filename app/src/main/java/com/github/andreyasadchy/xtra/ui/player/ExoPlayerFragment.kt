@@ -403,8 +403,7 @@ class ExoPlayerFragment : PlayerFragment() {
                             (activity as? MainActivity)?.setSleepTimer(duration)
                         } else {
                             minimize()
-                            close()
-                            (activity as? MainActivity)?.closePlayer()
+                            (activity as? MainActivity)?.closePlayer(this@ExoPlayerFragment)
                         }
                     }
                     if (viewModel.resume) {
@@ -976,7 +975,7 @@ class ExoPlayerFragment : PlayerFragment() {
         savePosition()
         player?.pause()
         player?.stop()
-        player?.removeMediaItem(0)
+        player?.clearMediaItems()
         playerListener?.let { player?.removeListener(it) }
         playerListener = null
         serviceConnection?.let { requireContext().unbindService(it) }

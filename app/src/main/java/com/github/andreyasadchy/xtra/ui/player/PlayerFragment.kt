@@ -434,8 +434,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                 setDuration(250L)
                                 start()
                             }
-                            close()
-                            (activity as? MainActivity)?.closePlayer()
+                            (activity as? MainActivity)?.closePlayer(this@PlayerFragment)
                         }
                         xVelocity < -1500 -> {
                             isAnimating = true
@@ -444,8 +443,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                 setDuration(250L)
                                 start()
                             }
-                            close()
-                            (activity as? MainActivity)?.closePlayer()
+                            (activity as? MainActivity)?.closePlayer(this@PlayerFragment)
                         }
                         else -> {
                             if (isTap && (event.eventTime - tapEventTime) < longPressTimeout) {

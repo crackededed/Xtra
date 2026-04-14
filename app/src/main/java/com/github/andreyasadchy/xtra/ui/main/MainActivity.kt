@@ -320,8 +320,7 @@ class MainActivity : AppCompatActivity() {
                         if (!video.id.isNullOrBlank()) {
                             playerFragment?.let {
                                 it.minimize()
-                                it.close()
-                                closePlayer()
+                                closePlayer(it)
                             }
                             startVideo(video, offset, offset != null)
                             if (prefs.getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
@@ -753,7 +752,6 @@ class MainActivity : AppCompatActivity() {
 //Player methods
 
     private fun startPlayer(fragment: PlayerFragment) {
-        playerFragment?.close()
         playerFragment = fragment
         supportFragmentManager.beginTransaction()
             .replace(R.id.playerContainer, fragment).commit()
@@ -766,11 +764,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun closePlayer() {
-        supportFragmentManager.beginTransaction()
-            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-            .remove(supportFragmentManager.findFragmentById(R.id.playerContainer)!!)
-            .commit()
+    fun closePlayer(sourceFragment: PlayerFragment? = null) {
+        val currentFragment = supportFragmentManager.findFragmentById(R.id.playerContainer) as? PlayerFragment
+        if (sourceFragment != null && sourceFragment !== currentFragment) {
+            return
+        }
+        currentFragment?.let {
+            it.close()
+            supportFragmentManager.beginTransaction()
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                .remove(it)
+                .commit()
+        }
         playerFragment = null
         viewModel.isPlayerOpened = false
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
@@ -800,8 +805,7 @@ class MainActivity : AppCompatActivity() {
                         if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                             playerFragment?.let {
                                 it.minimize()
-                                it.close()
-                                closePlayer()
+                                closePlayer(it)
                             }
                             if (prefs.getBoolean(C.SLEEP_TIMER_LOCK, false)) {
                                 if ((getSystemService(POWER_SERVICE) as PowerManager).isInteractive) {
@@ -816,8 +820,7 @@ class MainActivity : AppCompatActivity() {
                             withStarted {
                                 playerFragment?.let {
                                     it.minimize()
-                                    it.close()
-                                    closePlayer()
+                                    closePlayer(it)
                                 }
                             }
                         }

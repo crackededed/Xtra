@@ -124,8 +124,7 @@ class MediaPlayerFragment : PlayerFragment() {
                             (activity as? MainActivity)?.setSleepTimer(duration)
                         } else {
                             minimize()
-                            close()
-                            (activity as? MainActivity)?.closePlayer()
+                            (activity as? MainActivity)?.closePlayer(this@MediaPlayerFragment)
                         }
                     }
                     if (viewModel.resume) {

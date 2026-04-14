@@ -449,8 +449,7 @@ class Media3Fragment : PlayerFragment() {
                                 (activity as? MainActivity)?.setSleepTimer(duration)
                             } else {
                                 minimize()
-                                close()
-                                (activity as? MainActivity)?.closePlayer()
+                                (activity as? MainActivity)?.closePlayer(this@Media3Fragment)
                             }
                         }
                     }
@@ -983,7 +982,7 @@ class Media3Fragment : PlayerFragment() {
         savePosition()
         player?.pause()
         player?.stop()
-        player?.removeMediaItem(0)
+        player?.clearMediaItems()
         playerListener?.let { player?.removeListener(it) }
         playerListener = null
         controllerFuture?.let { MediaController.releaseFuture(it) }
