@@ -752,6 +752,7 @@ class MainActivity : AppCompatActivity() {
 //Player methods
 
     private fun startPlayer(fragment: PlayerFragment) {
+        (supportFragmentManager.findFragmentById(R.id.playerContainer) as? PlayerFragment)?.close()
         playerFragment = fragment
         supportFragmentManager.beginTransaction()
             .replace(R.id.playerContainer, fragment).commit()

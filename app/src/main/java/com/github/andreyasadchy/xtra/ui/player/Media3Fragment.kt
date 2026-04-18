@@ -436,7 +436,7 @@ class Media3Fragment : PlayerFragment() {
             player?.sendCustomCommand(
                 SessionCommand(
                     PlaybackService.SET_SLEEP_TIMER, Bundle().apply {
-                        putLong(PlaybackService.DURATION, 1L)
+                        putLong(PlaybackService.DURATION, -1L)
                     }
                 ), Bundle.EMPTY
             )?.let { result ->
@@ -983,6 +983,11 @@ class Media3Fragment : PlayerFragment() {
         player?.pause()
         player?.stop()
         player?.clearMediaItems()
+        player?.sendCustomCommand(
+            SessionCommand(PlaybackService.SET_SLEEP_TIMER, Bundle().apply {
+                putLong(PlaybackService.DURATION, 0L)
+            }), Bundle.EMPTY
+        )
         playerListener?.let { player?.removeListener(it) }
         playerListener = null
         controllerFuture?.let { MediaController.releaseFuture(it) }
