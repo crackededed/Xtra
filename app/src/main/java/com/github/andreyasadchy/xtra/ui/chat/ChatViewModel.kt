@@ -78,7 +78,7 @@ class ChatViewModel @Inject constructor(
     private val json: Json,
 ) : ViewModel() {
 
-    val integrity = MutableStateFlow<String?>(null)
+    val integrity = MutableSharedFlow<String?>()
 
     private var chatReadIRC: ChatReadIRC? = null
     private var chatWriteIRC: ChatWriteIRC? = null
@@ -244,8 +244,8 @@ class ChatViewModel @Inject constructor(
                         }
                     }
                 } catch (e: Exception) {
-                    if (e.message == "failed integrity check" && integrity.value == null) {
-                        integrity.value = "refresh"
+                    if (e.message == C.FAILED_INTEGRITY_CHECK) {
+                        integrity.emit("refresh")
                     }
                 }
             }
@@ -480,8 +480,8 @@ class ChatViewModel @Inject constructor(
                         }
                     }
                 } catch (e: Exception) {
-                    if (e.message == "failed integrity check" && integrity.value == null) {
-                        integrity.value = "refresh"
+                    if (e.message == C.FAILED_INTEGRITY_CHECK) {
+                        integrity.emit("refresh")
                     }
                 }
             }
@@ -498,8 +498,8 @@ class ChatViewModel @Inject constructor(
                         }
                     }
                 } catch (e: Exception) {
-                    if (e.message == "failed integrity check" && integrity.value == null) {
-                        integrity.value = "refresh"
+                    if (e.message == C.FAILED_INTEGRITY_CHECK) {
+                        integrity.emit("refresh")
                     }
                 }
             }
@@ -565,8 +565,8 @@ class ChatViewModel @Inject constructor(
                             loadedUserEmotes = true
                         }
                     } catch (e: Exception) {
-                        if (e.message == "failed integrity check" && integrity.value == null) {
-                            integrity.value = "refresh"
+                        if (e.message == C.FAILED_INTEGRITY_CHECK) {
+                            integrity.emit("refresh")
                         }
                     }
                 }
@@ -1170,17 +1170,17 @@ class ChatViewModel @Inject constructor(
                     viewModelScope.launch {
                         try {
                             val response = graphQLRepository.loadChannelPointsContext(networkLibrary, gqlHeaders, channelLogin)
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "refresh"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("refresh")
                                     return@launch
                                 }
                             }
                             response.data?.community?.channel?.self?.communityPoints?.availableClaim?.id?.let { claimId ->
                                 val response = graphQLRepository.loadClaimPoints(networkLibrary, gqlHeaders, channelId, claimId)
-                                if (enableIntegrity && integrity.value == null) {
-                                    response.errors?.find { it.message == "failed integrity check" }?.let {
-                                        integrity.value = "refresh"
+                                if (enableIntegrity) {
+                                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                        integrity.emit("refresh")
                                         return@launch
                                     }
                                 }
@@ -1213,9 +1213,9 @@ class ChatViewModel @Inject constructor(
                             viewModelScope.launch {
                                 try {
                                     val response = graphQLRepository.loadJoinRaid(networkLibrary, gqlHeaders, it.raidId)
-                                    if (enableIntegrity && integrity.value == null) {
-                                        response.errors?.find { it.message == "failed integrity check" }?.let {
-                                            integrity.value = "refresh"
+                                    if (enableIntegrity) {
+                                        response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                            integrity.emit("refresh")
                                             return@launch
                                         }
                                     }
@@ -1656,9 +1656,9 @@ class ChatViewModel @Inject constructor(
                 if (useApiChatMessages) {
                     if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                         graphQLRepository.sendMessage(networkLibrary, gqlHeaders, channelId, message.toString(), replyId).also { response ->
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "refresh"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("refresh")
                                     return@launch
                                 }
                             }
@@ -1700,9 +1700,9 @@ class ChatViewModel @Inject constructor(
                     viewModelScope.launch {
                         if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                             graphQLRepository.sendAnnouncement(networkLibrary, gqlHeaders, channelId, splits[1], splits[0].substringAfter("/announce", "").ifBlank { null }).also { response ->
-                                if (enableIntegrity && integrity.value == null) {
-                                    response.errors?.find { it.message == "failed integrity check" }?.let {
-                                        integrity.value = "refresh"
+                                if (enableIntegrity) {
+                                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                        integrity.emit("refresh")
                                         return@launch
                                     }
                                 }
@@ -1725,9 +1725,9 @@ class ChatViewModel @Inject constructor(
                             graphQLRepository.banUser(networkLibrary, gqlHeaders, channelId, splits[1],
                                 reason = if (splits.size >= 3) splits[2] else null
                             ).also { response ->
-                                if (enableIntegrity && integrity.value == null) {
-                                    response.errors?.find { it.message == "failed integrity check" }?.let {
-                                        integrity.value = "refresh"
+                                if (enableIntegrity) {
+                                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                        integrity.emit("refresh")
                                         return@launch
                                     }
                                 }
@@ -1755,9 +1755,9 @@ class ChatViewModel @Inject constructor(
                     viewModelScope.launch {
                         if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                             graphQLRepository.unbanUser(networkLibrary, gqlHeaders, channelId, splits[1]).also { response ->
-                                if (enableIntegrity && integrity.value == null) {
-                                    response.errors?.find { it.message == "failed integrity check" }?.let {
-                                        integrity.value = "refresh"
+                                if (enableIntegrity) {
+                                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                        integrity.emit("refresh")
                                         return@launch
                                     }
                                 }
@@ -1796,9 +1796,9 @@ class ChatViewModel @Inject constructor(
                     if (splits.size >= 2) {
                         if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                             graphQLRepository.updateChatColor(networkLibrary, gqlHeaders, splits[1]).also { response ->
-                                if (enableIntegrity && integrity.value == null) {
-                                    response.errors?.find { it.message == "failed integrity check" }?.let {
-                                        integrity.value = "refresh"
+                                if (enableIntegrity) {
+                                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                        integrity.emit("refresh")
                                         return@launch
                                     }
                                 }
@@ -1854,9 +1854,9 @@ class ChatViewModel @Inject constructor(
                 viewModelScope.launch {
                     if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                         graphQLRepository.updateChatSettings(networkLibrary, gqlHeaders, channelId, emote = true).also { response ->
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "refresh"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("refresh")
                                     return@launch
                                 }
                             }
@@ -1874,9 +1874,9 @@ class ChatViewModel @Inject constructor(
                 viewModelScope.launch {
                     if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                         graphQLRepository.updateChatSettings(networkLibrary, gqlHeaders, channelId, emote = false).also { response ->
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "refresh"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("refresh")
                                     return@launch
                                 }
                             }
@@ -1896,9 +1896,9 @@ class ChatViewModel @Inject constructor(
                 viewModelScope.launch {
                     if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                         graphQLRepository.setFollowersOnlyMode(networkLibrary, gqlHeaders, channelId, duration ?: 0).also { response ->
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "refresh"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("refresh")
                                     return@launch
                                 }
                             }
@@ -1919,9 +1919,9 @@ class ChatViewModel @Inject constructor(
                 viewModelScope.launch {
                     if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                         graphQLRepository.setFollowersOnlyMode(networkLibrary, gqlHeaders, channelId, -1).also { response ->
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "refresh"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("refresh")
                                     return@launch
                                 }
                             }
@@ -1940,9 +1940,9 @@ class ChatViewModel @Inject constructor(
                 viewModelScope.launch {
                     if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                         graphQLRepository.createStreamMarker(networkLibrary, gqlHeaders, channelLogin).also { response ->
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "refresh"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("refresh")
                                     return@launch
                                 }
                             }
@@ -1962,9 +1962,9 @@ class ChatViewModel @Inject constructor(
                     viewModelScope.launch {
                         if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                             graphQLRepository.addModerator(networkLibrary, gqlHeaders, channelId, splits[1]).also { response ->
-                                if (enableIntegrity && integrity.value == null) {
-                                    response.errors?.find { it.message == "failed integrity check" }?.let {
-                                        integrity.value = "refresh"
+                                if (enableIntegrity) {
+                                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                        integrity.emit("refresh")
                                         return@launch
                                     }
                                 }
@@ -1990,9 +1990,9 @@ class ChatViewModel @Inject constructor(
                     viewModelScope.launch {
                         if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                             graphQLRepository.removeModerator(networkLibrary, gqlHeaders, channelId, splits[1]).also { response ->
-                                if (enableIntegrity && integrity.value == null) {
-                                    response.errors?.find { it.message == "failed integrity check" }?.let {
-                                        integrity.value = "refresh"
+                                if (enableIntegrity) {
+                                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                        integrity.emit("refresh")
                                         return@launch
                                     }
                                 }
@@ -2015,9 +2015,9 @@ class ChatViewModel @Inject constructor(
             command.equals("/mods", true) -> {
                 viewModelScope.launch {
                     graphQLRepository.getModerators(networkLibrary, gqlHeaders, channelLogin).also { response ->
-                        if (enableIntegrity && integrity.value == null) {
-                            response.errors?.find { it.message == "failed integrity check" }?.let {
-                                integrity.value = "refresh"
+                        if (enableIntegrity) {
+                            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                integrity.emit("refresh")
                                 return@launch
                             }
                         }
@@ -2033,9 +2033,9 @@ class ChatViewModel @Inject constructor(
                         if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                             val targetId = try {
                                 graphQLRepository.loadQueryUser(networkLibrary, gqlHeaders, login = splits[1]).also { response ->
-                                    if (enableIntegrity && integrity.value == null) {
-                                        response.errors?.find { it.message == "failed integrity check" }?.let {
-                                            integrity.value = "refresh"
+                                    if (enableIntegrity) {
+                                        response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                            integrity.emit("refresh")
                                             return@launch
                                         }
                                     }
@@ -2048,9 +2048,9 @@ class ChatViewModel @Inject constructor(
                                 ).data.firstOrNull()?.id
                             }
                             graphQLRepository.startRaid(networkLibrary, gqlHeaders, channelId, targetId).also { response ->
-                                if (enableIntegrity && integrity.value == null) {
-                                    response.errors?.find { it.message == "failed integrity check" }?.let {
-                                        integrity.value = "refresh"
+                                if (enableIntegrity) {
+                                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                        integrity.emit("refresh")
                                         return@launch
                                     }
                                 }
@@ -2074,9 +2074,9 @@ class ChatViewModel @Inject constructor(
                 viewModelScope.launch {
                     if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                         graphQLRepository.cancelRaid(networkLibrary, gqlHeaders, channelId).also { response ->
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "refresh"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("refresh")
                                     return@launch
                                 }
                             }
@@ -2096,9 +2096,9 @@ class ChatViewModel @Inject constructor(
                 viewModelScope.launch {
                     if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                         graphQLRepository.setSlowMode(networkLibrary, gqlHeaders, channelId, duration ?: 30).also { response ->
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "refresh"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("refresh")
                                     return@launch
                                 }
                             }
@@ -2119,9 +2119,9 @@ class ChatViewModel @Inject constructor(
                 viewModelScope.launch {
                     if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                         graphQLRepository.setSlowMode(networkLibrary, gqlHeaders, channelId, 0).also { response ->
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "refresh"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("refresh")
                                     return@launch
                                 }
                             }
@@ -2170,9 +2170,9 @@ class ChatViewModel @Inject constructor(
                                 duration = if (splits.size >= 3) splits[2] else "10m",
                                 reason = if (splits.size >= 4) splits[3] else null
                             ).also { response ->
-                                if (enableIntegrity && integrity.value == null) {
-                                    response.errors?.find { it.message == "failed integrity check" }?.let {
-                                        integrity.value = "refresh"
+                                if (enableIntegrity) {
+                                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                        integrity.emit("refresh")
                                         return@launch
                                     }
                                 }
@@ -2201,9 +2201,9 @@ class ChatViewModel @Inject constructor(
                     viewModelScope.launch {
                         if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                             graphQLRepository.unbanUser(networkLibrary, gqlHeaders, channelId, splits[1]).also { response ->
-                                if (enableIntegrity && integrity.value == null) {
-                                    response.errors?.find { it.message == "failed integrity check" }?.let {
-                                        integrity.value = "refresh"
+                                if (enableIntegrity) {
+                                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                        integrity.emit("refresh")
                                         return@launch
                                     }
                                 }
@@ -2255,9 +2255,9 @@ class ChatViewModel @Inject constructor(
                     viewModelScope.launch {
                         if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                             graphQLRepository.addVip(networkLibrary, gqlHeaders, channelId, splits[1]).also { response ->
-                                if (enableIntegrity && integrity.value == null) {
-                                    response.errors?.find { it.message == "failed integrity check" }?.let {
-                                        integrity.value = "refresh"
+                                if (enableIntegrity) {
+                                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                        integrity.emit("refresh")
                                         return@launch
                                     }
                                 }
@@ -2283,9 +2283,9 @@ class ChatViewModel @Inject constructor(
                     viewModelScope.launch {
                         if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                             graphQLRepository.removeVip(networkLibrary, gqlHeaders, channelId, splits[1]).also { response ->
-                                if (enableIntegrity && integrity.value == null) {
-                                    response.errors?.find { it.message == "failed integrity check" }?.let {
-                                        integrity.value = "refresh"
+                                if (enableIntegrity) {
+                                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                        integrity.emit("refresh")
                                         return@launch
                                     }
                                 }
@@ -2308,9 +2308,9 @@ class ChatViewModel @Inject constructor(
             command.equals("/vips", true) -> {
                 viewModelScope.launch {
                     graphQLRepository.getVips(networkLibrary, gqlHeaders, channelLogin).also { response ->
-                        if (enableIntegrity && integrity.value == null) {
-                            response.errors?.find { it.message == "failed integrity check" }?.let {
-                                integrity.value = "refresh"
+                        if (enableIntegrity) {
+                            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                integrity.emit("refresh")
                                 return@launch
                             }
                         }
@@ -2401,9 +2401,7 @@ class ChatViewModel @Inject constructor(
         }
 
         override suspend fun getIntegrityToken() {
-            if (integrity.value == null) {
-                integrity.value = "refresh"
-            }
+            integrity.emit("refresh")
         }
     }
 

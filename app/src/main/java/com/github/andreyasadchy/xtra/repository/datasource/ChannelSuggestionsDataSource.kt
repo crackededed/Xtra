@@ -4,6 +4,7 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
+import com.github.andreyasadchy.xtra.util.C
 
 class ChannelSuggestionsDataSource(
     private val channelLogin: String?,
@@ -17,7 +18,7 @@ class ChannelSuggestionsDataSource(
         return try {
             val response = graphQLRepository.loadChannelSuggestions(networkLibrary, gqlHeaders, channelLogin)
             if (enableIntegrity) {
-                response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
             }
             val list = response.data!!.sideNav.sections.edges.find {
                 it.node.id == "provider-side-nav-similar-streamer-currently-watching-1"

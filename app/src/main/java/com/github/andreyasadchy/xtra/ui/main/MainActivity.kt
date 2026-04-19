@@ -41,6 +41,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -157,14 +158,9 @@ class MainActivity : AppCompatActivity() {
         }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.integrity.collectLatest {
-                    if (it != null &&
-                        it != "done" &&
-                        prefs.getBoolean(C.ENABLE_INTEGRITY, false) &&
-                        prefs.getBoolean(C.USE_WEBVIEW_INTEGRITY, true)
-                    ) {
-                        IntegrityDialog.show(supportFragmentManager, it)
-                        viewModel.integrity.value = "done"
+                viewModel.integrity.collect {
+                    if (prefs.getBoolean(C.USE_WEBVIEW_INTEGRITY, true)) {
+                        getNewIntegrityToken(null, supportFragmentManager)
                     }
                 }
             }
@@ -442,6 +438,9 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+        }
+        if (prefs.getBoolean(C.ENABLE_INTEGRITY, false) && TwitchApiHelper.isIntegrityTokenExpired(this)) {
+            getNewIntegrityToken(null, supportFragmentManager)
         }
         if (prefs.getBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false)) {
             WorkManager.getInstance(this).enqueueUniquePeriodicWork(
@@ -726,6 +725,19 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    fun getNewIntegrityToken(callback: String?, fragmentManager: FragmentManager) {
+        if (!viewModel.loadingIntegrityToken) {
+            if (prefs.getBoolean(C.USE_WEBVIEW_INTEGRITY, true)) {
+                viewModel.loadingIntegrityToken = true
+                IntegrityDialog.newInstance(callback).show(fragmentManager, null)
+            }
+        }
+    }
+
+    fun integrityTokenLoaded() {
+        viewModel.loadingIntegrityToken = false
     }
 
 //Navigation listeners

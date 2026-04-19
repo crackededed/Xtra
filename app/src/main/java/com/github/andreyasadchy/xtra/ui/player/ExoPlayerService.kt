@@ -639,8 +639,8 @@ class ExoPlayerService : BasePlaybackService() {
                             enableIntegrity = prefs().getBoolean(C.ENABLE_INTEGRITY, false)
                         )
                     } catch (e: Exception) {
-                        if (e.message == "failed integrity check" && integrity.value == null) {
-                            integrity.value = "refreshStream"
+                        if (e.message == C.FAILED_INTEGRITY_CHECK) {
+                            integrity.emit("refreshStream")
                         }
                         null
                     }
@@ -778,8 +778,8 @@ class ExoPlayerService : BasePlaybackService() {
                         enableIntegrity = prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                     )
                 } catch (e: Exception) {
-                    if (e.message == "failed integrity check" && integrity.value == null) {
-                        integrity.value = "refreshVideo"
+                    if (e.message == C.FAILED_INTEGRITY_CHECK) {
+                        integrity.emit("refreshVideo")
                     }
                     null
                 }
@@ -836,8 +836,8 @@ class ExoPlayerService : BasePlaybackService() {
                         enableIntegrity = prefs().getBoolean(C.ENABLE_INTEGRITY, false)
                     )
                 } catch (e: Exception) {
-                    if (e.message == "failed integrity check" && integrity.value == null) {
-                        integrity.value = "refreshClip"
+                    if (e.message == C.FAILED_INTEGRITY_CHECK) {
+                        integrity.emit("refreshClip")
                     }
                     null
                 }

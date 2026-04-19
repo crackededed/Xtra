@@ -66,7 +66,7 @@ class SearchChannelsDataSource(
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): LoadResult<Int, User> {
         val response = graphQLRepository.loadQuerySearchChannels(networkLibrary, gqlHeaders, query, params.loadSize, offset)
         if (enableIntegrity) {
-            response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
         }
         val data = response.data!!.searchUsers!!
         val list = data.edges!!.mapNotNull { item ->
@@ -95,7 +95,7 @@ class SearchChannelsDataSource(
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, User> {
         val response = graphQLRepository.loadSearchChannels(networkLibrary, gqlHeaders, query, offset)
         if (enableIntegrity) {
-            response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
         }
         val data = response.data!!.searchFor.channels
         val list = data.edges.map { item ->

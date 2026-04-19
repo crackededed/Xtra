@@ -12,9 +12,9 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import androidx.core.content.edit
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.FragmentManager
 import androidx.webkit.WebViewClientCompat
 import com.github.andreyasadchy.xtra.databinding.DialogIntegrityBinding
+import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
@@ -24,17 +24,17 @@ import org.json.JSONObject
 
 class IntegrityDialog : DialogFragment() {
 
-    interface CallbackListener {
-        fun onIntegrityDialogCallback(callback: String?)
+    interface Listener {
+        fun onIntegrityTokenLoaded(callback: String?)
     }
 
     private var _binding: DialogIntegrityBinding? = null
     private val binding get() = _binding!!
-    private var listener: CallbackListener? = null
+    private var listener: Listener? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        listener = parentFragment as? CallbackListener
+        listener = parentFragment as? Listener
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -59,7 +59,7 @@ class IntegrityDialog : DialogFragment() {
             webViewClient = object : WebViewClientCompat() {
 
                 override fun shouldInterceptRequest(view: WebView, webViewRequest: WebResourceRequest): WebResourceResponse? {
-                    if (!webViewRequest.requestHeaders.entries.firstOrNull { it.key.equals("Client-Integrity", true) }?.value.isNullOrBlank()) {
+                    if (!webViewRequest.requestHeaders.entries.find { it.key.equals("Client-Integrity", true) }?.value.isNullOrBlank()) {
                         context.tokenPrefs().edit {
                             putLong(C.INTEGRITY_EXPIRATION, System.currentTimeMillis() + 57600000)
                             putString(C.GQL_HEADERS, JSONObject(
@@ -75,7 +75,7 @@ class IntegrityDialog : DialogFragment() {
                                 }
                             ).toString())
                         }
-                        listener?.onIntegrityDialogCallback(requireArguments().getString(KEY_CALLBACK))
+                        listener?.onIntegrityTokenLoaded(requireArguments().getString(KEY_CALLBACK))
                         dismiss()
                     }
                     return super.shouldInterceptRequest(view, webViewRequest)
@@ -87,6 +87,7 @@ class IntegrityDialog : DialogFragment() {
     }
 
     override fun onDismiss(dialog: DialogInterface) {
+        (activity as? MainActivity)?.integrityTokenLoaded()
         binding.webView.loadUrl("about:blank")
         super.onDismiss(dialog)
     }
@@ -99,12 +100,11 @@ class IntegrityDialog : DialogFragment() {
     companion object {
         private const val KEY_CALLBACK = "callback"
 
-        fun show(fragmentManager: FragmentManager, callback: String? = null) {
-            IntegrityDialog().apply {
+        fun newInstance(callback: String?): IntegrityDialog {
+            return IntegrityDialog().apply {
                 arguments = Bundle().apply {
                     putString(KEY_CALLBACK, callback)
                 }
-                show(fragmentManager, null)
             }
         }
     }

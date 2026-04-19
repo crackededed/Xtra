@@ -31,6 +31,7 @@ import com.github.andreyasadchy.xtra.databinding.DialogChatMessageClickBinding
 import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.ui.User
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
+import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
@@ -44,7 +45,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 
 @AndroidEntryPoint
-class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.CallbackListener {
+class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listener {
 
     interface OnButtonClickListener {
         fun onCreateMessageClickedChatAdapter(): MessageClickedChatAdapter?
@@ -97,15 +98,8 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.integrity.collectLatest {
-                    if (it != null &&
-                        it != "done" &&
-                        requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false) &&
-                        requireContext().prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, true)
-                    ) {
-                        IntegrityDialog.show(childFragmentManager, it)
-                        viewModel.integrity.value = "done"
-                    }
+                viewModel.integrity.collect {
+                    (requireActivity() as? MainActivity)?.getNewIntegrityToken(it, childFragmentManager)
                 }
             }
         }
@@ -460,24 +454,22 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callba
         }
     }
 
-    override fun onIntegrityDialogCallback(callback: String?) {
-        if (callback == "refresh") {
-            viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    val userId = adapter?.selectedMessage?.userId
-                    val userLogin = adapter?.selectedMessage?.userLogin
-                    if (userId != null || userLogin != null) {
-                        val targetId = requireArguments().getString(KEY_CHANNEL_ID)
-                        viewModel.loadUser(
-                            channelId = userId,
-                            channelLogin = userLogin,
-                            targetId = if (userId != targetId) targetId else null,
-                            networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                            gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
-                            helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext()),
-                            enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                        )
-                    }
+    override fun onIntegrityTokenLoaded(callback: String?) {
+        when (callback) {
+            "refresh" -> {
+                val userId = adapter?.selectedMessage?.userId
+                val userLogin = adapter?.selectedMessage?.userLogin
+                if (userId != null || userLogin != null) {
+                    val targetId = requireArguments().getString(KEY_CHANNEL_ID)
+                    viewModel.loadUser(
+                        channelId = userId,
+                        channelLogin = userLogin,
+                        targetId = if (userId != targetId) targetId else null,
+                        networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                        gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
+                        helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext()),
+                        enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                    )
                 }
             }
         }

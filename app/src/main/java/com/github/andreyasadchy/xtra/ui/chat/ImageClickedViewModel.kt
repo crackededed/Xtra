@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andreyasadchy.xtra.model.chat.EmoteCard
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
+import com.github.andreyasadchy.xtra.util.C
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -14,7 +16,7 @@ class ImageClickedViewModel @Inject constructor(
     private val graphQLRepository: GraphQLRepository,
 ) : ViewModel() {
 
-    val integrity = MutableStateFlow<String?>(null)
+    val integrity = MutableSharedFlow<String?>()
 
     val emoteCard = MutableStateFlow<EmoteCard?>(null)
 
@@ -24,9 +26,9 @@ class ImageClickedViewModel @Inject constructor(
                 try {
                     val response = if (!emoteId.isNullOrBlank()) {
                         graphQLRepository.loadQueryEmote(networkLibrary, gqlHeaders, emoteId).also { response ->
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "refresh"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("refresh")
                                     return@launch
                                 }
                             }
@@ -42,9 +44,9 @@ class ImageClickedViewModel @Inject constructor(
                 } catch (e: Exception) {
                     try {
                         val response = graphQLRepository.loadEmoteCard(networkLibrary, gqlHeaders, emoteId).also { response ->
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "refresh"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("refresh")
                                     return@launch
                                 }
                             }

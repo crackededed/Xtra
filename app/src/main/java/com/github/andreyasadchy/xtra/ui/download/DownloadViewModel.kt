@@ -5,8 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
+import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -19,7 +21,7 @@ class DownloadViewModel @Inject constructor(
     private val playerRepository: PlayerRepository,
 ) : ViewModel() {
 
-    val integrity = MutableStateFlow<String?>(null)
+    val integrity = MutableSharedFlow<String?>()
 
     private val _qualities = MutableStateFlow<List<VideoQuality>?>(null)
     val qualities: StateFlow<List<VideoQuality>?> = _qualities
@@ -74,10 +76,8 @@ class DownloadViewModel @Inject constructor(
                                 }
                             }
                     } catch (e: Exception) {
-                        if (e.message == "failed integrity check") {
-                            if (integrity.value == null) {
-                                integrity.value = "refresh"
-                            }
+                        if (e.message == C.FAILED_INTEGRITY_CHECK) {
+                            integrity.emit("stream")
                         } else {
                             _qualities.value = default.map {
                                 VideoQuality(it, null, "")
@@ -219,8 +219,8 @@ class DownloadViewModel @Inject constructor(
                             }
                         }
                     } catch (e: Exception) {
-                        if (e.message == "failed integrity check" && integrity.value == null) {
-                            integrity.value = "refresh"
+                        if (e.message == C.FAILED_INTEGRITY_CHECK) {
+                            integrity.emit("video")
                         }
                         if (e is IllegalAccessException) {
                             dismiss.value = true
@@ -249,8 +249,8 @@ class DownloadViewModel @Inject constructor(
                                 }
                         }
                     } catch (e: Exception) {
-                        if (e.message == "failed integrity check" && integrity.value == null) {
-                            integrity.value = "refresh"
+                        if (e.message == C.FAILED_INTEGRITY_CHECK) {
+                            integrity.emit("clip")
                         }
                     }
                 }

@@ -77,9 +77,11 @@ class FollowedGamesFragment : PagedListFragment(), Scrollable {
         pagingAdapter.retry()
     }
 
-    override fun onIntegrityDialogCallback(callback: String?) {
-        if (callback == "refresh") {
-            pagingAdapter.refresh()
+    override fun onIntegrityTokenLoaded(callback: String?) {
+        when (callback) {
+            "refresh" -> {
+                pagingAdapter.refresh()
+            }
         }
     }
 
