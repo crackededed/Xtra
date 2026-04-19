@@ -21,6 +21,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
+import android.text.format.Formatter
 import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
@@ -30,6 +31,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.OptIn
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
@@ -62,6 +64,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.ActivityMainBinding
+import com.github.andreyasadchy.xtra.databinding.DialogUpdateDownloadBinding
 import com.github.andreyasadchy.xtra.model.PlaybackState
 import com.github.andreyasadchy.xtra.model.ui.Clip
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
@@ -145,6 +148,8 @@ class MainActivity : AppCompatActivity() {
     var settingsResultLauncher: ActivityResultLauncher<Intent>? = null
     var loginResultLauncher: ActivityResultLauncher<Intent>? = null
     var logoutResultLauncher: ActivityResultLauncher<Intent>? = null
+    private var updateDownloadDialogBinding: DialogUpdateDownloadBinding? = null
+    private var updateDownloadDialog: AlertDialog? = null
 
     //Lifecycle methods
 
@@ -291,7 +296,30 @@ class MainActivity : AppCompatActivity() {
                                         Toast.makeText(this@MainActivity, R.string.no_browser_found, Toast.LENGTH_LONG).show()
                                     }
                                 } else {
+                                    val binding = DialogUpdateDownloadBinding.inflate(layoutInflater)
+                                    updateDownloadDialogBinding = binding
+                                    val size = viewModel.updateSize
+                                    if (size != null) {
+                                        binding.textView.text = getString(
+                                            R.string.downloading_update_progress,
+                                            Formatter.formatFileSize(this@MainActivity, 0),
+                                            Formatter.formatFileSize(this@MainActivity, size),
+                                        )
+                                    } else {
+                                        binding.textView.text = getString(R.string.downloading_update)
+                                        binding.progressBar.visibility = View.GONE
+                                    }
                                     viewModel.downloadUpdate(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), it)
+                                    val dialog = getAlertDialogBuilder()
+                                        .setView(binding.root)
+                                        .setNegativeButton(getString(android.R.string.cancel), null)
+                                        .setOnDismissListener {
+                                            viewModel.updateJob?.cancel()
+                                            updateDownloadDialogBinding = null
+                                            updateDownloadDialog = null
+                                        }
+                                        .show()
+                                    updateDownloadDialog = dialog
                                 }
                             }
                             .setNegativeButton(getString(R.string.no)) { _, _ ->
@@ -301,6 +329,30 @@ class MainActivity : AppCompatActivity() {
                             }
                             .show()
                     }
+                }
+            }
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.updateProgress.collectLatest {
+                    updateDownloadDialogBinding?.let { binding ->
+                        val size = viewModel.updateSize
+                        if (size != null) {
+                            binding.textView.text = getString(
+                                R.string.downloading_update_progress,
+                                Formatter.formatFileSize(this@MainActivity, it.toLong()),
+                                Formatter.formatFileSize(this@MainActivity, size),
+                            )
+                            binding.progressBar.progress = (((it.toFloat() / size) * 100)).toInt()
+                        }
+                    }
+                }
+            }
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.closeUpdateDialog.collectLatest {
+                    updateDownloadDialog?.dismiss()
                 }
             }
         }

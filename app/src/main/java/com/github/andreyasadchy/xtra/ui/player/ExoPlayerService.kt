@@ -63,10 +63,9 @@ import com.github.andreyasadchy.xtra.player.lowlatency.HttpEngineDataSource
 import com.github.andreyasadchy.xtra.player.lowlatency.OkHttpDataSource
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.HttpEngineUtils
 import com.github.andreyasadchy.xtra.util.MediaButtonReceiver
+import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import com.github.andreyasadchy.xtra.util.prefs
 import dagger.hilt.android.AndroidEntryPoint
@@ -79,8 +78,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import okhttp3.Credentials
 import okhttp3.Request
-import org.chromium.net.apihelpers.RedirectHandlers
-import org.chromium.net.apihelpers.UrlRequestCallbacks
 import org.json.JSONObject
 import java.io.FileInputStream
 import java.io.IOException
@@ -1070,27 +1067,18 @@ class ExoPlayerService : BasePlaybackService() {
             val playlist = when {
                 networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                     val response = suspendCancellableCoroutine { continuation ->
-                        httpEngine!!.get().newUrlRequestBuilder(url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
+                        httpEngine!!.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                     }
                     response.second.inputStream().use {
                         PlaylistUtils.parseMediaPlaylist(it)
                     }
                 }
                 networkLibrary == "Cronet" && cronetEngine != null -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
-                        cronetEngine!!.get().newUrlRequestBuilder(url, request.callback, cronetExecutor).build().start()
-                        val response = request.future.get().responseBody as ByteArray
-                        response.inputStream().use {
-                            PlaylistUtils.parseMediaPlaylist(it)
-                        }
-                    } else {
-                        val response = suspendCancellableCoroutine { continuation ->
-                            cronetEngine!!.get().newUrlRequestBuilder(url, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
-                        }
-                        response.second.inputStream().use {
-                            PlaylistUtils.parseMediaPlaylist(it)
-                        }
+                    val response = suspendCancellableCoroutine { continuation ->
+                        cronetEngine!!.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
+                    }
+                    response.second.inputStream().use {
+                        PlaylistUtils.parseMediaPlaylist(it)
                     }
                 }
                 else -> {
@@ -1293,28 +1281,19 @@ class ExoPlayerService : BasePlaybackService() {
                             when {
                                 networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        httpEngine!!.get().newUrlRequestBuilder(url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
+                                        httpEngine!!.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                     }
                                     if (response.first.httpStatusCode in 200..299) {
                                         response.second
                                     } else null
                                 }
                                 networkLibrary == "Cronet" && cronetEngine != null -> {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                        val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
-                                        cronetEngine!!.get().newUrlRequestBuilder(url, request.callback, cronetExecutor).build().start()
-                                        val response = request.future.get()
-                                        if (response.urlResponseInfo.httpStatusCode in 200..299) {
-                                            response.responseBody as ByteArray
-                                        } else null
-                                    } else {
-                                        val response = suspendCancellableCoroutine { continuation ->
-                                            cronetEngine!!.get().newUrlRequestBuilder(url, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
-                                        }
-                                        if (response.first.httpStatusCode in 200..299) {
-                                            response.second
-                                        } else null
+                                    val response = suspendCancellableCoroutine { continuation ->
+                                        cronetEngine!!.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                     }
+                                    if (response.first.httpStatusCode in 200..299) {
+                                        response.second
+                                    } else null
                                 }
                                 else -> {
                                     okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
@@ -1387,28 +1366,19 @@ class ExoPlayerService : BasePlaybackService() {
                             when {
                                 networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        httpEngine!!.get().newUrlRequestBuilder(url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
+                                        httpEngine!!.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                     }
                                     if (response.first.httpStatusCode in 200..299) {
                                         response.second
                                     } else null
                                 }
                                 networkLibrary == "Cronet" && cronetEngine != null -> {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                        val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
-                                        cronetEngine!!.get().newUrlRequestBuilder(url, request.callback, cronetExecutor).build().start()
-                                        val response = request.future.get()
-                                        if (response.urlResponseInfo.httpStatusCode in 200..299) {
-                                            response.responseBody as ByteArray
-                                        } else null
-                                    } else {
-                                        val response = suspendCancellableCoroutine { continuation ->
-                                            cronetEngine!!.get().newUrlRequestBuilder(url, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
-                                        }
-                                        if (response.first.httpStatusCode in 200..299) {
-                                            response.second
-                                        } else null
+                                    val response = suspendCancellableCoroutine { continuation ->
+                                        cronetEngine!!.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                     }
+                                    if (response.first.httpStatusCode in 200..299) {
+                                        response.second
+                                    } else null
                                 }
                                 else -> {
                                     okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
