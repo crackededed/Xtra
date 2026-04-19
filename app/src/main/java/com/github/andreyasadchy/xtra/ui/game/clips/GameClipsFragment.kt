@@ -203,10 +203,12 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
         pagingAdapter.retry()
     }
 
-    override fun onIntegrityDialogCallback(callback: String?) {
-        (parentFragment as? IntegrityDialog.CallbackListener)?.onIntegrityDialogCallback("refresh")
-        if (callback == "refresh") {
-            pagingAdapter.refresh()
+    override fun onIntegrityTokenLoaded(callback: String?) {
+        (parentFragment as? IntegrityDialog.Listener)?.onIntegrityTokenLoaded("refresh")
+        when (callback) {
+            "refresh" -> {
+                pagingAdapter.refresh()
+            }
         }
     }
 

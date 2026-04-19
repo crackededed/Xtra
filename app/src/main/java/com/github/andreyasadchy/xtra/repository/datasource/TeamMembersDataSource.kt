@@ -4,6 +4,7 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
+import com.github.andreyasadchy.xtra.util.C
 
 class TeamMembersDataSource(
     private val teamName: String?,
@@ -22,7 +23,7 @@ class TeamMembersDataSource(
             if (getLiveMembers) {
                 val response = graphQLRepository.loadQueryTeamLiveMembers(networkLibrary, gqlHeaders, teamName!!, params.loadSize, liveOffset)
                 if (enableIntegrity) {
-                    response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
                 }
                 val data = response.data!!.team!!.liveMembers
                 val items = data?.edges
@@ -90,7 +91,7 @@ class TeamMembersDataSource(
             } else {
                 val response = graphQLRepository.loadQueryTeamMembers(networkLibrary, gqlHeaders, teamName!!, params.loadSize, offset)
                 if (enableIntegrity) {
-                    response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
                 }
                 val data = response.data!!.team!!.members
                 val items = data?.edges

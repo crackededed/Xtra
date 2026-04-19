@@ -9,13 +9,13 @@ import androidx.paging.LoadState
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
+import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.CallbackListener {
+abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.Listener {
 
     fun <T : Any, VH : RecyclerView.ViewHolder> setAdapter(recyclerView: RecyclerView, adapter: PagingDataAdapter<T, VH>) {
         adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
@@ -61,11 +61,9 @@ abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.Callba
                         nothingHere.isVisible = loadState.refresh !is LoadState.Loading && pagingAdapter.itemCount == 0
                         if ((loadState.refresh as? LoadState.Error ?:
                             loadState.append as? LoadState.Error ?:
-                            loadState.prepend as? LoadState.Error)?.error?.message == "failed integrity check" &&
-                            requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false) &&
-                            requireContext().prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, true)
+                            loadState.prepend as? LoadState.Error)?.error?.message == C.FAILED_INTEGRITY_CHECK
                         ) {
-                            IntegrityDialog.show(childFragmentManager, "refresh")
+                            (requireActivity() as? MainActivity)?.getNewIntegrityToken("refresh", childFragmentManager)
                         }
                     }
                 }
@@ -86,12 +84,6 @@ abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.Callba
                     it.visibility = View.GONE
                 }
             }
-        }
-        if (requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false) &&
-            requireContext().prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, true) &&
-            TwitchApiHelper.isIntegrityTokenExpired(requireContext())
-        ) {
-            IntegrityDialog.show(childFragmentManager, "refresh")
         }
     }
 }

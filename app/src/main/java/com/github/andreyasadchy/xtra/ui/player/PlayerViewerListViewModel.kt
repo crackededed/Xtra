@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andreyasadchy.xtra.model.ui.ChannelViewerList
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
+import com.github.andreyasadchy.xtra.util.C
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -15,7 +17,7 @@ class PlayerViewerListViewModel @Inject constructor(
     private val graphQLRepository: GraphQLRepository,
 ) : ViewModel() {
 
-    val integrity = MutableStateFlow<String?>(null)
+    val integrity = MutableSharedFlow<String?>()
 
     private val _viewerList = MutableStateFlow<ChannelViewerList?>(null)
     val viewerList: StateFlow<ChannelViewerList?> = _viewerList
@@ -27,9 +29,9 @@ class PlayerViewerListViewModel @Inject constructor(
             viewModelScope.launch {
                 try {
                     val response = graphQLRepository.loadQueryUserChatters(networkLibrary, gqlHeaders, login = channelLogin)
-                    if (enableIntegrity && integrity.value == null) {
-                        response.errors?.find { it.message == "failed integrity check" }?.let {
-                            integrity.value = "refresh"
+                    if (enableIntegrity) {
+                        response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                            integrity.emit("refresh")
                             isLoading = false
                             return@launch
                         }
@@ -46,9 +48,9 @@ class PlayerViewerListViewModel @Inject constructor(
                 } catch (e: Exception) {
                     try {
                         val response = graphQLRepository.loadChannelViewerList(networkLibrary, gqlHeaders, channelLogin)
-                        if (enableIntegrity && integrity.value == null) {
-                            response.errors?.find { it.message == "failed integrity check" }?.let {
-                                integrity.value = "refresh"
+                        if (enableIntegrity) {
+                            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                integrity.emit("refresh")
                                 isLoading = false
                                 return@launch
                             }

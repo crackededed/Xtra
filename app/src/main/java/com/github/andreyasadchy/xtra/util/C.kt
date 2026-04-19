@@ -10,6 +10,7 @@ object C {
     const val CHANNEL_NAME = "channelName"
     const val CHANNEL_IMAGE = "channelImage"
     const val TAGS = "tags"
+    const val FAILED_INTEGRITY_CHECK = "failed integrity check"
     const val HEADER_CLIENT_ID = "Client-Id"
     const val HEADER_TOKEN = "Authorization"
     const val GQL_TOKEN = "gql_token"

@@ -19,13 +19,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
 import com.github.andreyasadchy.xtra.model.ui.User
-import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
+import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.search.RecentSearchAdapter
 import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragment
 import com.github.andreyasadchy.xtra.ui.search.Searchable
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -81,11 +80,9 @@ class ChannelSearchFragment : PagedListFragment(), Searchable {
                         }
                         if ((loadState.refresh as? LoadState.Error ?:
                             loadState.append as? LoadState.Error ?:
-                            loadState.prepend as? LoadState.Error)?.error?.message == "failed integrity check" &&
-                            requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false) &&
-                            requireContext().prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, true)
+                            loadState.prepend as? LoadState.Error)?.error?.message == C.FAILED_INTEGRITY_CHECK
                         ) {
-                            IntegrityDialog.show(childFragmentManager, "refresh")
+                            (requireActivity() as? MainActivity)?.getNewIntegrityToken("refresh", childFragmentManager)
                         }
                     }
                 }
@@ -100,12 +97,6 @@ class ChannelSearchFragment : PagedListFragment(), Searchable {
                 }
             }
         }
-        if (requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false) &&
-            requireContext().prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, true) &&
-            TwitchApiHelper.isIntegrityTokenExpired(requireContext())
-        ) {
-            IntegrityDialog.show(childFragmentManager, "refresh")
-        }
     }
 
     override fun search(query: String) {
@@ -119,9 +110,11 @@ class ChannelSearchFragment : PagedListFragment(), Searchable {
         pagingAdapter.retry()
     }
 
-    override fun onIntegrityDialogCallback(callback: String?) {
-        if (callback == "refresh") {
-            pagingAdapter.refresh()
+    override fun onIntegrityTokenLoaded(callback: String?) {
+        when (callback) {
+            "refresh" -> {
+                pagingAdapter.refresh()
+            }
         }
     }
 

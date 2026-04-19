@@ -81,7 +81,8 @@ class MainViewModel @Inject constructor(
     private val json: Json,
 ) : ViewModel() {
 
-    val integrity = MutableStateFlow<String?>(null)
+    val integrity = MutableSharedFlow<String?>()
+    var loadingIntegrityToken = false
 
     val checkNetworkStatus = MutableStateFlow(false)
     val isNetworkAvailable = MutableStateFlow<Boolean?>(null)
@@ -123,9 +124,9 @@ class MainViewModel @Inject constructor(
             viewModelScope.launch {
                 val item = try {
                     val response = graphQLRepository.loadQueryVideo(networkLibrary, gqlHeaders, videoId)
-                    if (enableIntegrity && integrity.value == null) {
-                        response.errors?.find { it.message == "failed integrity check" }?.let {
-                            integrity.value = "refresh"
+                    if (enableIntegrity) {
+                        response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                            integrity.emit("refresh")
                             return@launch
                         }
                     }
@@ -196,9 +197,9 @@ class MainViewModel @Inject constructor(
                         null
                     }
                     val clip = graphQLRepository.loadClipVideo(networkLibrary, gqlHeaders, clipId).also { response ->
-                        if (enableIntegrity && integrity.value == null) {
-                            response.errors?.find { it.message == "failed integrity check" }?.let {
-                                integrity.value = "refresh"
+                        if (enableIntegrity) {
+                            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                integrity.emit("refresh")
                                 return@launch
                             }
                         }
@@ -259,9 +260,9 @@ class MainViewModel @Inject constructor(
             viewModelScope.launch {
                 user.value = try {
                     val response = graphQLRepository.loadQueryUser(networkLibrary, gqlHeaders, login = login)
-                    if (enableIntegrity && integrity.value == null) {
-                        response.errors?.find { it.message == "failed integrity check" }?.let {
-                            integrity.value = "refresh"
+                    if (enableIntegrity) {
+                        response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                            integrity.emit("refresh")
                             return@launch
                         }
                     }
@@ -310,9 +311,9 @@ class MainViewModel @Inject constructor(
                         slug = gameSlug,
                         name = gameName.takeIf { gameSlug.isNullOrBlank() },
                     )
-                    if (enableIntegrity && integrity.value == null) {
-                        response.errors?.find { it.message == "failed integrity check" }?.let {
-                            integrity.value = "refresh"
+                    if (enableIntegrity) {
+                        response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                            integrity.emit("refresh")
                             return@launch
                         }
                     }
@@ -352,9 +353,9 @@ class MainViewModel @Inject constructor(
             viewModelScope.launch {
                 tag.value = try {
                     val response = graphQLRepository.loadQueryTag(networkLibrary, gqlHeaders, tagId)
-                    if (enableIntegrity && integrity.value == null) {
-                        response.errors?.find { it.message == "failed integrity check" }?.let {
-                            integrity.value = "refresh"
+                    if (enableIntegrity) {
+                        response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                            integrity.emit("refresh")
                             return@launch
                         }
                     }
@@ -367,9 +368,9 @@ class MainViewModel @Inject constructor(
                 } catch (e: Exception) {
                     try {
                         val response = graphQLRepository.loadTag(networkLibrary, gqlHeaders, tagId)
-                        if (enableIntegrity && integrity.value == null) {
-                            response.errors?.find { it.message == "failed integrity check" }?.let {
-                                integrity.value = "refresh"
+                        if (enableIntegrity) {
+                            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                integrity.emit("refresh")
                                 return@launch
                             }
                         }

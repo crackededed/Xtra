@@ -174,13 +174,13 @@ class PlayerRepository @Inject constructor(
                 )
             }
             if (enableIntegrity) {
-                response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
             }
             response.data!!.streamPlaybackAccessToken!!.let {
                 it.signature to it.value
             }
         } catch (e: Exception) {
-            if (e.message == "failed integrity check") throw e
+            if (e.message == C.FAILED_INTEGRITY_CHECK) throw e
             val response = if (proxyPlaybackAccessToken && !proxyHost.isNullOrBlank() && proxyPort != null) {
                 val query = StreamPlaybackAccessTokenQuery(channelLogin, "web", playerType ?: "")
                 val body = buildJsonString {
@@ -226,7 +226,7 @@ class PlayerRepository @Inject constructor(
                 )
             }
             if (enableIntegrity) {
-                response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
             }
             response.data!!.streamPlaybackAccessToken!!.let {
                 it.signature to it.value
@@ -244,13 +244,13 @@ class PlayerRepository @Inject constructor(
                 playerType = playerType
             )
             if (enableIntegrity) {
-                response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
             }
             response.data!!.videoPlaybackAccessToken!!.let {
                 it.signature to it.value
             }
         } catch (e: Exception) {
-            if (e.message == "failed integrity check") throw e
+            if (e.message == C.FAILED_INTEGRITY_CHECK) throw e
             val response = graphQLRepository.loadQueryVideoPlaybackAccessToken(
                 networkLibrary = networkLibrary,
                 headers = accessTokenHeaders,
@@ -259,7 +259,7 @@ class PlayerRepository @Inject constructor(
                 playerType = playerType ?: ""
             )
             if (enableIntegrity) {
-                response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
             }
             response.data!!.videoPlaybackAccessToken!!.let {
                 it.signature to it.value
@@ -358,7 +358,7 @@ class PlayerRepository @Inject constructor(
         try {
             val response = graphQLRepository.loadClipUrls(networkLibrary, gqlHeaders, clipId)
             if (enableIntegrity) {
-                response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
             }
             val accessToken = response.data?.clip?.playbackAccessToken
             response.data!!.clip.assets.let { assets ->
@@ -383,10 +383,10 @@ class PlayerRepository @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            if (e.message == "failed integrity check") throw e
+            if (e.message == C.FAILED_INTEGRITY_CHECK) throw e
             val response = graphQLRepository.loadQueryClipUrls(networkLibrary, gqlHeaders, clipId!!)
             if (enableIntegrity) {
-                response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
             }
             val accessToken = response.data?.clip?.playbackAccessToken
             response.data?.clip?.assets?.let { assets ->
@@ -994,7 +994,7 @@ class PlayerRepository @Inject constructor(
                 }
             )
             if (enableIntegrity) {
-                response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
             }
             response.data!!.badges?.mapNotNull {
                 it?.setID?.let { setId ->
@@ -1014,11 +1014,11 @@ class PlayerRepository @Inject constructor(
                 }
             } ?: emptyList()
         } catch (e: Exception) {
-            if (e.message == "failed integrity check") throw e
+            if (e.message == C.FAILED_INTEGRITY_CHECK) throw e
             try {
                 val response = graphQLRepository.loadChatBadges(networkLibrary, gqlHeaders, "")
                 if (enableIntegrity) {
-                    response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
                 }
                 response.data!!.badges?.mapNotNull {
                     it.setID?.let { setId ->
@@ -1036,7 +1036,7 @@ class PlayerRepository @Inject constructor(
                     }
                 } ?: emptyList()
             } catch (e: Exception) {
-                if (e.message == "failed integrity check") throw e
+                if (e.message == C.FAILED_INTEGRITY_CHECK) throw e
                 if (helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) throw Exception()
                 helixRepository.getGlobalBadges(networkLibrary, helixHeaders).data.mapNotNull { set ->
                     set.setId?.let { setId ->
@@ -1069,7 +1069,7 @@ class PlayerRepository @Inject constructor(
                 }
             )
             if (enableIntegrity) {
-                response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
             }
             response.data!!.user?.broadcastBadges?.mapNotNull {
                 it?.setID?.let { setId ->
@@ -1089,11 +1089,11 @@ class PlayerRepository @Inject constructor(
                 }
             } ?: emptyList()
         } catch (e: Exception) {
-            if (e.message == "failed integrity check") throw e
+            if (e.message == C.FAILED_INTEGRITY_CHECK) throw e
             try {
                 val response = graphQLRepository.loadChatBadges(networkLibrary, gqlHeaders, channelLogin)
                 if (enableIntegrity) {
-                    response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
                 }
                 response.data!!.badges?.mapNotNull {
                     it.setID?.let { setId ->
@@ -1111,7 +1111,7 @@ class PlayerRepository @Inject constructor(
                     }
                 } ?: emptyList()
             } catch (e: Exception) {
-                if (e.message == "failed integrity check") throw e
+                if (e.message == C.FAILED_INTEGRITY_CHECK) throw e
                 if (helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) throw Exception()
                 helixRepository.getChannelBadges(networkLibrary, helixHeaders, channelId).data.mapNotNull { set ->
                     set.setId?.let { setId ->
@@ -1138,7 +1138,7 @@ class PlayerRepository @Inject constructor(
             val emotes = mutableListOf<CheerEmote>()
             val response = graphQLRepository.loadQueryUserCheerEmotes(networkLibrary, gqlHeaders, channelId, channelLogin.takeIf { channelId.isNullOrBlank() })
             if (enableIntegrity) {
-                response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
             }
             response.data!!.cheerConfig?.displayConfig?.let { config ->
                 val background = config.backgrounds?.find { it == "dark" } ?: config.backgrounds?.lastOrNull() ?: ""
@@ -1204,12 +1204,12 @@ class PlayerRepository @Inject constructor(
             }
             emotes
         } catch (e: Exception) {
-            if (e.message == "failed integrity check") throw e
+            if (e.message == C.FAILED_INTEGRITY_CHECK) throw e
             try {
                 val emotes = mutableListOf<CheerEmote>()
                 val response = graphQLRepository.loadGlobalCheerEmotes(networkLibrary, gqlHeaders)
                 if (enableIntegrity) {
-                    response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
                 }
                 response.data!!.cheerConfig.displayConfig.let { config ->
                     val background = config.backgrounds?.find { it == "dark" } ?: config.backgrounds?.lastOrNull() ?: ""
@@ -1275,7 +1275,7 @@ class PlayerRepository @Inject constructor(
                 }
                 emotes
             } catch (e: Exception) {
-                if (e.message == "failed integrity check") throw e
+                if (e.message == C.FAILED_INTEGRITY_CHECK) throw e
                 if (helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) throw Exception()
                 helixRepository.getCheerEmotes(networkLibrary, helixHeaders, channelId).data.map { set ->
                     set.tiers.mapNotNull { tier ->
@@ -1312,7 +1312,7 @@ class PlayerRepository @Inject constructor(
             do {
                 val response = graphQLRepository.loadUserEmotes(networkLibrary, gqlHeaders, channelId, offset)
                 if (enableIntegrity) {
-                    response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
                 }
                 val sets = response.data!!.channel.self.availableEmoteSetsPaginated
                 val items = sets.edges
@@ -1339,12 +1339,12 @@ class PlayerRepository @Inject constructor(
             } while (!items.lastOrNull()?.cursor.isNullOrBlank() && sets.pageInfo?.hasNextPage == true)
             emotes
         } catch (e: Exception) {
-            if (e.message == "failed integrity check") throw e
+            if (e.message == C.FAILED_INTEGRITY_CHECK) throw e
             try {
                 if (gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) throw Exception()
                 val response = graphQLRepository.loadQueryUserEmotes(networkLibrary, gqlHeaders)
                 if (enableIntegrity) {
-                    response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
                 }
                 response.data!!.user?.emoteSets?.mapNotNull { set ->
                     set.emotes?.mapNotNull { emote ->
@@ -1364,7 +1364,7 @@ class PlayerRepository @Inject constructor(
                     }
                 }?.flatten() ?: emptyList()
             } catch (e: Exception) {
-                if (e.message == "failed integrity check") throw e
+                if (e.message == C.FAILED_INTEGRITY_CHECK) throw e
                 if (helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) throw Exception()
                 val emotes = mutableListOf<TwitchEmote>()
                 var offset: String? = null

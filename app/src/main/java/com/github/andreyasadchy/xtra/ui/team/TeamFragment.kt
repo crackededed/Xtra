@@ -55,7 +55,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackListener {
+class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.Listener {
 
     private var _binding: FragmentTeamBinding? = null
     private val binding get() = _binding!!
@@ -147,6 +147,13 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
             )
         }
         setAdapter(binding.recyclerViewLayout.recyclerView, pagingAdapter)
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.integrity.collect {
+                    (requireActivity() as? MainActivity)?.getNewIntegrityToken(it, childFragmentManager)
+                }
+            }
+        }
     }
 
     override fun initialize() {
@@ -293,19 +300,17 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.CallbackLi
         pagingAdapter.retry()
     }
 
-    override fun onIntegrityDialogCallback(callback: String?) {
-        if (callback == "refresh") {
-            viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.loadTeamInfo(
-                        teamName = args.teamName,
-                        networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                        gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
-                        enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                    )
-                }
+    override fun onIntegrityTokenLoaded(callback: String?) {
+        when (callback) {
+            "refresh" -> {
+                viewModel.loadTeamInfo(
+                    teamName = args.teamName,
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
+                    enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                )
+                pagingAdapter.refresh()
             }
-            pagingAdapter.refresh()
         }
     }
 
