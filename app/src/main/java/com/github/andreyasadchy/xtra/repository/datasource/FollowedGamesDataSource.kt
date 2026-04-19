@@ -13,7 +13,6 @@ class FollowedGamesDataSource(
     private val gqlHeaders: Map<String, String>,
     private val graphQLRepository: GraphQLRepository,
     private val enableIntegrity: Boolean,
-    private val apiPref: List<String>,
     private val networkLibrary: String?,
 ) : PagingSource<Int, Game>() {
 
@@ -30,10 +29,18 @@ class FollowedGamesDataSource(
         }
         if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
             try {
-                loadFromApi(apiPref.getOrNull(0))
+                if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                    gqlQueryLoad()
+                } else {
+                    throw Exception()
+                }
             } catch (e: Exception) {
                 try {
-                    loadFromApi(apiPref.getOrNull(1))
+                    if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                        gqlLoad()
+                    } else {
+                        throw Exception()
+                    }
                 } catch (e: Exception) {
                     null
                 }
@@ -61,14 +68,6 @@ class FollowedGamesDataSource(
             prevKey = null,
             nextKey = null
         )
-    }
-
-    private suspend fun loadFromApi(apiPref: String?): LoadResult<Int, Game> {
-        return when (apiPref) {
-            C.GQL -> if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) gqlQueryLoad() else throw Exception()
-            C.GQL_PERSISTED_QUERY -> if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) gqlLoad() else throw Exception()
-            else -> throw Exception()
-        }
     }
 
     private suspend fun gqlQueryLoad(): LoadResult<Int, Game> {

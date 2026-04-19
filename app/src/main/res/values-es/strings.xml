@@ -376,19 +376,7 @@
     <string name="api_login">Obtener token para las apis seleccionadas</string>
     <string name="api_helix_redirect">URL de redirección de Helix</string>
     <string name="api_gql_redirect">URL de redirección GQL</string>
-    <string name="api_settings">Configuración de API</string>
     <string name="streams">Transmisiones</string>
-    <string name="game_streams">Transmisiones de juegos</string>
-    <string name="game_videos">Vídeos del juego</string>
-    <string name="game_clips">Clips de juegos</string>
-    <string name="channel_videos">Vídeos del canal</string>
-    <string name="channel_clips">Clips de canal</string>
-    <string name="search_channels">Buscar canales</string>
-    <string name="search_games">Buscar juegos</string>
-    <string name="followed_streams">Transmisiones seguidas</string>
-    <string name="followed_videos">Vídeos seguidos</string>
-    <string name="followed_channels">Canales seguidos</string>
-    <string name="followed_games">Juegos seguidos</string>
     <string name="irc_msgid_highlighted_message">Mensaje destacado</string>
     <string name="irc_msgid_announcement">Anuncio</string>
     <string name="add_bookmark">Añadir marcador</string>
@@ -444,7 +432,6 @@
     <string name="save_default">Guardar como predeterminado</string>
     <string name="viewers_high">Espectadores (de alto a bajo)</string>
     <string name="viewers_low">Espectadores (de menor a mayor)</string>
-    <string name="search_videos">Buscar vídeos</string>
     <string name="points_earned">Recibió %d puntos de canal</string>
     <string name="points_notify">Notificar cuando se ganan puntos del canal</string>
     <string name="points_collect">Obtener puntos del canal automáticamente</string>
@@ -452,7 +439,6 @@
     <string name="raid_text">Raid %1$s con %2$d espectadores</string>
     <string name="show_raids">Mostrar incursiones y anfitriones</string>
     <string name="auto_switch_raids">Cambiar la transmisión a la incursión automáticamente</string>
-    <string name="search_streams">Buscar transmisiones</string>
     <string name="reload_emotes">Recargar emotes</string>
     <string name="api_current_login">Inicio de sesión actual</string>
     <string name="api_user_id">Identificación de la cuenta</string>
@@ -600,9 +586,6 @@
     <string name="channel_follower_emote">Emote de seguidor %s</string>
     <string name="bits_reward_emote">Recompensa de %d bits</string>
     <string name="show_name_paints">Mostrar colores de nombre de 7TV</string>
-    <string name="api_helix">Helix</string>
-    <string name="api_gql">GQL</string>
-    <string name="api_gql_persisted_query">Consulta GQL persistente</string>
     <string name="show_stv_badges">Mostrar insignias de 7TV</string>
     <string name="show_stv_personal_emotes">Mostrar emotes personales de 7TV</string>
     <string name="stv_live_updates">Actualizaciones en vivo de emotes de 7TV</string>
@@ -687,7 +670,7 @@
     <string name="sort_and_type">Ordenar por: %1$s. Tipo: %2$s</string>
     <string name="search_tags">Buscar etiquetas</string>
     <string name="invalid_directory">Directorio inválido</string>
-    <string name="suggested">Sugeridos</string>
+    <string name="suggestions">Sugeridos</string>
     <string name="languages">Idiomas</string>
     <string name="recent">Más recientes</string>
     <string name="filters">Filtros</string>

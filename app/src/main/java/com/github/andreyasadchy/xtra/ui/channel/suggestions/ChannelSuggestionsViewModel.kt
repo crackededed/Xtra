@@ -1,4 +1,4 @@
-package com.github.andreyasadchy.xtra.ui.channel.suggested
+package com.github.andreyasadchy.xtra.ui.channel.suggestions
 
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
@@ -8,7 +8,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
-import com.github.andreyasadchy.xtra.repository.datasource.ChannelSuggestedDataSource
+import com.github.andreyasadchy.xtra.repository.datasource.ChannelSuggestionsDataSource
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentArgs
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
@@ -18,7 +18,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 @HiltViewModel
-class ChannelSuggestedViewModel @Inject constructor(
+class ChannelSuggestionsViewModel @Inject constructor(
     @ApplicationContext applicationContext: Context,
     private val graphQLRepository: GraphQLRepository,
     savedStateHandle: SavedStateHandle,
@@ -29,7 +29,7 @@ class ChannelSuggestedViewModel @Inject constructor(
     val flow = Pager(
         PagingConfig(pageSize = 30, prefetchDistance = 10, initialLoadSize = 30)
     ) {
-        ChannelSuggestedDataSource(
+        ChannelSuggestionsDataSource(
             channelLogin = args.channelLogin,
             gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext, true),
             graphQLRepository = graphQLRepository,

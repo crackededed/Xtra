@@ -371,19 +371,7 @@
     <string name="api_login">Получить токены для выбранных API</string>
     <string name="api_helix_redirect">Ссылка перенаправления для Helix</string>
     <string name="api_gql_redirect">Ссылка перенаправления для GQL</string>
-    <string name="api_settings">Настройки API</string>
     <string name="streams">Эфир</string>
-    <string name="game_streams">Игровые трансляции</string>
-    <string name="game_videos">Игровое видео</string>
-    <string name="game_clips">Игровые клипы</string>
-    <string name="channel_videos">Видео канала</string>
-    <string name="channel_clips">Клипы канала</string>
-    <string name="search_channels">Поиск каналов</string>
-    <string name="search_games">Поиск игр</string>
-    <string name="followed_streams">Отслеживаемые трансляции</string>
-    <string name="followed_videos">Отслеживаемое видео</string>
-    <string name="followed_channels">Отслеживаемые каналы</string>
-    <string name="followed_games">Отслеживаемые игры</string>
     <string name="irc_msgid_highlighted_message">Выделенное сообщение</string>
     <string name="irc_msgid_announcement">Объявление</string>
     <string name="add_bookmark">Добавить в закладки</string>
@@ -439,7 +427,6 @@
     <string name="save_default">Сохранить по умолчанию</string>
     <string name="viewers_high">Зрители (по убыванию)</string>
     <string name="viewers_low">Зрители (по возрастанию)</string>
-    <string name="search_videos">Поиск видео</string>
     <string name="points_earned">Собраны баллы канала: %d</string>
     <string name="points_notify">Уведомлять о сборе баллов канала</string>
     <string name="points_collect">Автосбор баллов канала</string>
@@ -447,7 +434,6 @@
     <string name="raid_text">Происходит рейд %1$s с %2$d зрителями</string>
     <string name="show_raids">Показывать рейды и хосты</string>
     <string name="auto_switch_raids">Автоматически переключать трансляции при рейде</string>
-    <string name="search_streams">Поиск трансляций</string>
     <string name="reload_emotes">Перезагрузить смайлы</string>
     <string name="api_current_login">Текущий логин</string>
     <string name="api_user_id">Идентификатор уч. записи</string>
@@ -595,9 +581,6 @@
     <string name="channel_follower_emote">%s смайл отслеживающего</string>
     <string name="bits_reward_emote">%d награда за битсы</string>
     <string name="show_name_paints">Показать краски имён 7TV</string>
-    <string name="api_helix">Helix</string>
-    <string name="api_gql">GQL</string>
-    <string name="api_gql_persisted_query">Сохраняемый запрос GQL</string>
     <string name="show_stv_badges">Показывать значки 7TV</string>
     <string name="show_stv_personal_emotes">Показывать персональные смайлы 7TV</string>
     <string name="stv_live_updates">Обновления живых смайлов 7TV</string>
@@ -682,7 +665,7 @@
     <string name="sort_and_type">Сортировать: %1$s. Тип: %2$s</string>
     <string name="search_tags">Теги поиска</string>
     <string name="invalid_directory">Неверный каталог</string>
-    <string name="suggested">Предлагаемые</string>
+    <string name="suggestions">Предлагаемые</string>
     <string name="languages">Языки</string>
     <string name="recent">Недавно начался</string>
     <string name="filters">Фильтры</string>
@@ -717,12 +700,12 @@
     <string name="reduced_padding">Reduced padding</string>
     <string name="compact_text">Compact text</string>
     <string name="next">Next</string>
-    <string name="tv_login_message">To get access to all features, you need to login as an Android TV device.\n\nFollow these steps:\n• Copy the code shown on the web page.\n• Press the \"Next\" button at the bottom.\n• Enter the code and press \"Activate\".\n• Press \"Authorize\".</string>
+    <string name="tv_login_message">To get access to all features, you need to log in as an Android TV device.\n\nFollow these steps:\n• Copy the code shown on the web page.\n• Press the \"Next\" button at the bottom.\n• Enter the code and press \"Activate\".\n• Press \"Authorize\".</string>
     <string name="open_url">Open URL</string>
     <string name="external_login_message">You can log in using an external browser.\n\nFollow these steps:\n• Press \"Open URL\" to open the login page.\n• Login to your account and press \"Authorize\".\n• A page with an error should appear. Copy the URL of that page, paste the URL into the box below and press \"OK\".</string>
     <string name="loading">Loading...</string>
     <string name="copy_code">Copy code</string>
-    <string name="external_tv_login_message">To get access to all features, you need to login as an Android TV device.\n\nFollow these steps:\n• Copy the code shown on the screen.\n• Press the \"Open URL\" button.\n• Enter the code and press \"Activate\".\n• Press \"Authorize\".\n• Return to Xtra and press \"Next\".</string>
+    <string name="external_tv_login_message">To get access to all features, you need to log in as an Android TV device.\n\nFollow these steps:\n• Copy the code shown on the screen.\n• Press the \"Open URL\" button.\n• Enter the code and press \"Activate\".\n• Press \"Authorize\".\n• Return to Xtra and press \"Next\".</string>
     <string name="activate_notifications_when_following">Activate notifications when following</string>
     <string name="account">Account</string>
 </resources>

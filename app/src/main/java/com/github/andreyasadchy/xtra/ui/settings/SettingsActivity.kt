@@ -17,8 +17,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
-import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,7 +25,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
-import androidx.core.content.res.use
 import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
 import androidx.core.view.ViewCompat
@@ -35,8 +32,6 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
-import androidx.core.widget.NestedScrollView
-import androidx.core.widget.TextViewCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -713,7 +708,7 @@ class SettingsActivity : AppCompatActivity() {
                     SettingsDragListItem(
                         key = split[0],
                         text = when (split[0]) {
-                            "0" -> getString(R.string.suggested)
+                            "0" -> getString(R.string.suggestions)
                             "1" -> getString(R.string.videos)
                             "2" -> getString(R.string.clips)
                             "3" -> getString(R.string.chat)
@@ -1394,107 +1389,6 @@ class SettingsActivity : AppCompatActivity() {
     class DebugSettingsFragment : MaterialPreferenceFragment() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.debug_preferences, rootKey)
-            findPreference<Preference>("api_settings")?.setOnPreferenceClickListener { preference ->
-                var newId = 1000
-                val view = LinearLayout(requireContext()).apply {
-                    id = R.id.layout
-                    orientation = LinearLayout.VERTICAL
-                }
-                val list = listOf(
-                    Triple(getString(R.string.games), C.API_PREFS_GAMES, C.DEFAULT_API_PREFS_GAMES),
-                    Triple(getString(R.string.streams), C.API_PREFS_STREAMS, C.DEFAULT_API_PREFS_STREAMS),
-                    Triple(getString(R.string.followed_games), C.API_PREFS_FOLLOWED_GAMES, C.DEFAULT_API_PREFS_FOLLOWED_GAMES),
-                    Triple(getString(R.string.followed_streams), C.API_PREFS_FOLLOWED_STREAMS, C.DEFAULT_API_PREFS_FOLLOWED_STREAMS),
-                    Triple(getString(R.string.followed_videos), C.API_PREFS_FOLLOWED_VIDEOS, C.DEFAULT_API_PREFS_FOLLOWED_VIDEOS),
-                    Triple(getString(R.string.followed_channels), C.API_PREFS_FOLLOWED_CHANNELS, C.DEFAULT_API_PREFS_FOLLOWED_CHANNELS),
-                    Triple(getString(R.string.channel_videos), C.API_PREFS_CHANNEL_VIDEOS, C.DEFAULT_API_PREFS_CHANNEL_VIDEOS),
-                    Triple(getString(R.string.channel_clips), C.API_PREFS_CHANNEL_CLIPS, C.DEFAULT_API_PREFS_CHANNEL_CLIPS),
-                    Triple(getString(R.string.game_videos), C.API_PREFS_GAME_VIDEOS, C.DEFAULT_API_PREFS_GAME_VIDEOS),
-                    Triple(getString(R.string.game_streams), C.API_PREFS_GAME_STREAMS, C.DEFAULT_API_PREFS_GAME_STREAMS),
-                    Triple(getString(R.string.game_clips), C.API_PREFS_GAME_CLIPS, C.DEFAULT_API_PREFS_GAME_CLIPS),
-                    Triple(getString(R.string.search_videos), C.API_PREFS_SEARCH_VIDEOS, C.DEFAULT_API_PREFS_SEARCH_VIDEOS),
-                    Triple(getString(R.string.search_streams), C.API_PREFS_SEARCH_STREAMS, C.DEFAULT_API_PREFS_SEARCH_STREAMS),
-                    Triple(getString(R.string.search_channels), C.API_PREFS_SEARCH_CHANNELS, C.DEFAULT_API_PREFS_SEARCH_CHANNELS),
-                    Triple(getString(R.string.search_games), C.API_PREFS_SEARCH_GAMES, C.DEFAULT_API_PREFS_SEARCH_GAMES),
-                ).map { item ->
-                    newId++
-                    view.addView(TextView(requireContext()).apply {
-                        text = item.first
-                        layoutParams = LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT
-                        ).apply {
-                            val horizontalMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20f, resources.displayMetrics).toInt()
-                            val verticalMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 3f, resources.displayMetrics).toInt()
-                            setMargins(horizontalMargin, verticalMargin, horizontalMargin, verticalMargin)
-                        }
-                        context.obtainStyledAttributes(intArrayOf(com.google.android.material.R.attr.textAppearanceTitleMedium)).use {
-                            TextViewCompat.setTextAppearance(this, it.getResourceId(0, 0))
-                        }
-                    })
-                    val prefKey = item.second
-                    val list = (requireContext().prefs().getString(prefKey, null) ?: item.third).split(',').map {
-                        val split = it.split(':')
-                        SettingsDragListItem(
-                            key = split[0],
-                            text = when (split[0]) {
-                                "0" -> getString(R.string.api_gql)
-                                "1" -> getString(R.string.api_gql_persisted_query)
-                                "2" -> getString(R.string.api_helix)
-                                else -> getString(R.string.api_gql)
-                            },
-                            default = false,
-                            enabled = split[1] != "0",
-                        )
-                    }
-                    val listAdapter = SettingsDragListAdapter()
-                    val itemTouchHelper = ItemTouchHelper(
-                        object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
-                            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-                                Collections.swap(list, viewHolder.bindingAdapterPosition, target.bindingAdapterPosition)
-                                listAdapter.notifyItemMoved(viewHolder.bindingAdapterPosition, target.bindingAdapterPosition)
-                                return true
-                            }
-
-                            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
-
-                            override fun isLongPressDragEnabled(): Boolean {
-                                return false
-                            }
-                        }
-                    )
-                    listAdapter.itemTouchHelper = itemTouchHelper
-                    val recyclerView = RecyclerView(requireContext()).apply {
-                        id = newId
-                        layoutManager = LinearLayoutManager(requireContext())
-                        adapter = listAdapter
-                    }
-                    itemTouchHelper.attachToRecyclerView(recyclerView)
-                    listAdapter.submitList(list)
-                    view.addView(recyclerView)
-                    prefKey to listAdapter
-                }
-                requireContext().getAlertDialogBuilder()
-                    .setTitle(preference.title)
-                    .setView(NestedScrollView(requireContext()).apply {
-                        addView(view)
-                        val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10f, resources.displayMetrics).toInt()
-                        setPadding(0, padding, 0, 0)
-                    })
-                    .setPositiveButton(getString(android.R.string.ok)) { _, _ ->
-                        requireContext().prefs().edit {
-                            list.forEach { item ->
-                                putString(item.first, item.second.currentList.joinToString(",") {
-                                    "${it.key}:${if (it.enabled) "1" else "0"}"
-                                })
-                            }
-                            (requireActivity() as? SettingsActivity)?.setResult()
-                        }
-                    }
-                    .setNegativeButton(getString(android.R.string.cancel), null)
-                    .show()
-                true
-            }
             findPreference<EditTextPreference>("gql_headers")?.apply {
                 isPersistent = false
                 text = requireContext().tokenPrefs().getString(C.GQL_HEADERS, null)

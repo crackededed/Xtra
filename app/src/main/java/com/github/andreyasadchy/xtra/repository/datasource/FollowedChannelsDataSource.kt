@@ -22,7 +22,6 @@ class FollowedChannelsDataSource(
     private val helixHeaders: Map<String, String>,
     private val helixRepository: HelixRepository,
     private val enableIntegrity: Boolean,
-    private val apiPref: List<String>,
     private val networkLibrary: String?,
 ) : PagingSource<Int, User>() {
     private var api: String? = null
@@ -32,7 +31,7 @@ class FollowedChannelsDataSource(
         return if (!offset.isNullOrBlank()) {
             val list = mutableListOf<User>()
             val result = try {
-                loadFromApi(api, params)
+                loadFromApi(params)
             } catch (e: Exception) {
                 null
             }?.let {
@@ -72,13 +71,16 @@ class FollowedChannelsDataSource(
             }
             val result = if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank() || !helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                 try {
-                    loadFromApi(apiPref.getOrNull(0), params)
+                    api = C.GQL
+                    loadFromApi(params)
                 } catch (e: Exception) {
                     try {
-                        loadFromApi(apiPref.getOrNull(1), params)
+                        api = C.GQL_PERSISTED_QUERY
+                        loadFromApi(params)
                     } catch (e: Exception) {
                         try {
-                            loadFromApi(apiPref.getOrNull(2), params)
+                            api = C.HELIX
+                            loadFromApi(params)
                         } catch (e: Exception) {
                             null
                         }
@@ -199,9 +201,8 @@ class FollowedChannelsDataSource(
         }
     }
 
-    private suspend fun loadFromApi(apiPref: String?, params: LoadParams<Int>): LoadResult<Int, User> {
-        api = apiPref
-        return when (apiPref) {
+    private suspend fun loadFromApi(params: LoadParams<Int>): LoadResult<Int, User> {
+        return when (api) {
             C.GQL -> if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) gqlQueryLoad(params) else throw Exception()
             C.GQL_PERSISTED_QUERY -> if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) gqlLoad(params) else throw Exception()
             C.HELIX -> if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) helixLoad(params) else throw Exception()
