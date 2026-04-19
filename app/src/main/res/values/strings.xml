@@ -44,7 +44,7 @@
     <string name="chat_only">Chat only</string>
     <string name="select_quality">Select quality</string>
     <string name="download">Download</string>
-    <string name="downloading">Downloading...</string>
+    <string name="downloading">Downloading…</string>
     <string name="downloaded">Download complete</string>
     <string name="uploaded_date">Uploaded %s</string>
     <string name="downloaded_date">Downloaded %s</string>
@@ -95,7 +95,7 @@
     <string name="search">Search</string>
     <string name="chat_replay_unavailable">Chat replay is unavailable</string>
     <string name="video_subscribers_only">This video is only available to subscribers.</string>
-    <string name="player_error">Player error, retrying...</string>
+    <string name="player_error">Player error, retrying…</string>
     <string name="picture_in_picture">Picture-in-Picture</string>
     <string name="source_vod_start">Start: %s</string>
     <string name="source_vod_end">End: %s</string>
@@ -198,7 +198,7 @@
     <string name="recentMsg_limit">Recent message limit</string>
     <string name="last_broadcast_date">Last broadcast %s</string>
     <string name="followed_at">Followed at %s</string>
-    <string name="show_usernotice">Show user notices (subs, raids...)</string>
+    <string name="show_usernotice">Show user notices (subs, raids)</string>
     <string name="show_clearmsg">Show deletions of single messages</string>
     <string name="show_clearchat">Show timeouts and bans</string>
     <string name="copy_fullmsg">Copy full message</string>
@@ -721,9 +721,11 @@
     <string name="tv_login_message">To get access to all features, you need to log in as an Android TV device.\n\nFollow these steps:\n• Copy the code shown on the web page.\n• Press the \"Next\" button at the bottom.\n• Enter the code and press \"Activate\".\n• Press \"Authorize\".</string>
     <string name="open_url">Open URL</string>
     <string name="external_login_message">You can log in using an external browser.\n\nFollow these steps:\n• Press \"Open URL\" to open the login page.\n• Login to your account and press \"Authorize\".\n• A page with an error should appear. Copy the URL of that page, paste the URL into the box below and press \"OK\".</string>
-    <string name="loading">Loading...</string>
+    <string name="loading">Loading…</string>
     <string name="copy_code">Copy code</string>
     <string name="external_tv_login_message">To get access to all features, you need to log in as an Android TV device.\n\nFollow these steps:\n• Copy the code shown on the screen.\n• Press the \"Open URL\" button.\n• Enter the code and press \"Activate\".\n• Press \"Authorize\".\n• Return to Xtra and press \"Next\".</string>
     <string name="activate_notifications_when_following">Activate notifications when following</string>
     <string name="account">Account</string>
+    <string name="downloading_update_progress">Downloading update… %1$s / %2$s</string>
+    <string name="downloading_update">Downloading update…</string>
 </resources>

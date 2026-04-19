@@ -99,8 +99,7 @@ import com.github.andreyasadchy.xtra.model.gql.tag.TagResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoGamesResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoMessagesResponse
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.HttpEngineUtils
-import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
+import com.github.andreyasadchy.xtra.util.NetworkUtils
 import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -119,9 +118,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okio.buffer
 import okio.source
 import org.chromium.net.CronetEngine
-import org.chromium.net.apihelpers.RedirectHandlers
 import org.chromium.net.apihelpers.UploadDataProviders
-import org.chromium.net.apihelpers.UrlRequestCallbacks
 import java.util.UUID
 import java.util.concurrent.ExecutorService
 import javax.inject.Inject
@@ -152,10 +149,10 @@ class GraphQLRepository @Inject constructor(
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.get().newUrlRequestBuilder("https://gql.twitch.tv/gql/", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
+                    httpEngine.get().newUrlRequestBuilder("https://gql.twitch.tv/gql/", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
-                        setUploadDataProvider(HttpEngineUtils.byteArrayUploadProvider(body.toByteArray()), cronetExecutor)
+                        setUploadDataProvider(NetworkUtils.byteArrayUploadProvider(body.toByteArray()), cronetExecutor)
                     }.build().start()
                 }
                 response.second.inputStream().source().buffer().jsonReader().use {
@@ -163,28 +160,15 @@ class GraphQLRepository @Inject constructor(
                 }
             }
             networkLibrary == "Cronet" && cronetEngine != null -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
-                    cronetEngine.get().newUrlRequestBuilder("https://gql.twitch.tv/gql/", request.callback, cronetExecutor).apply {
+                val response = suspendCancellableCoroutine { continuation ->
+                    cronetEngine.get().newUrlRequestBuilder("https://gql.twitch.tv/gql/", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor)
                     }.build().start()
-                    val response = request.future.get().responseBody as ByteArray
-                    response.inputStream().source().buffer().jsonReader().use {
-                        query.parseResponse(it)
-                    }
-                } else {
-                    val response = suspendCancellableCoroutine { continuation ->
-                        cronetEngine.get().newUrlRequestBuilder("https://gql.twitch.tv/gql/", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
-                            headers.forEach { addHeader(it.key, it.value) }
-                            addHeader("Content-Type", "application/json")
-                            setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor)
-                        }.build().start()
-                    }
-                    response.second.inputStream().source().buffer().jsonReader().use {
-                        query.parseResponse(it)
-                    }
+                }
+                response.second.inputStream().source().buffer().jsonReader().use {
+                    query.parseResponse(it)
                 }
             }
             else -> {
@@ -206,33 +190,23 @@ class GraphQLRepository @Inject constructor(
         when {
             networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.get().newUrlRequestBuilder("https://gql.twitch.tv/gql/", cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).apply {
+                    httpEngine.get().newUrlRequestBuilder("https://gql.twitch.tv/gql/", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
-                        setUploadDataProvider(HttpEngineUtils.byteArrayUploadProvider(body.toByteArray()), cronetExecutor)
+                        setUploadDataProvider(NetworkUtils.byteArrayUploadProvider(body.toByteArray()), cronetExecutor)
                     }.build().start()
                 }
                 String(response.second)
             }
             networkLibrary == "Cronet" && cronetEngine != null -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    val request = UrlRequestCallbacks.forStringBody(RedirectHandlers.alwaysFollow())
-                    cronetEngine.get().newUrlRequestBuilder("https://gql.twitch.tv/gql/", request.callback, cronetExecutor).apply {
+                val response = suspendCancellableCoroutine { continuation ->
+                    cronetEngine.get().newUrlRequestBuilder("https://gql.twitch.tv/gql/", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor)
                     }.build().start()
-                    request.future.get().responseBody as String
-                } else {
-                    val response = suspendCancellableCoroutine { continuation ->
-                        cronetEngine.get().newUrlRequestBuilder("https://gql.twitch.tv/gql/", getByteArrayCronetCallback(continuation), cronetExecutor).apply {
-                            headers.forEach { addHeader(it.key, it.value) }
-                            addHeader("Content-Type", "application/json")
-                            setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor)
-                        }.build().start()
-                    }
-                    String(response.second)
                 }
+                String(response.second)
             }
             else -> {
                 okHttpClient.newCall(Request.Builder().apply {

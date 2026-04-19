@@ -32,9 +32,8 @@ import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.repository.ShownNotificationsRepository
 import com.github.andreyasadchy.xtra.repository.TranslateAllMessagesUsersRepository
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.HttpEngineUtils
+import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -52,8 +51,6 @@ import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.chromium.net.CronetEngine
-import org.chromium.net.apihelpers.RedirectHandlers
-import org.chromium.net.apihelpers.UrlRequestCallbacks
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -186,27 +183,18 @@ class Media3PlayerViewModel @Inject constructor(
             val playlist = when {
                 networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                     val response = suspendCancellableCoroutine { continuation ->
-                        httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
+                        httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                     }
                     response.second.inputStream().use {
                         PlaylistUtils.parseMediaPlaylist(it)
                     }
                 }
                 networkLibrary == "Cronet" && cronetEngine != null -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
-                        cronetEngine.get().newUrlRequestBuilder(url, request.callback, cronetExecutor).build().start()
-                        val response = request.future.get().responseBody as ByteArray
-                        response.inputStream().use {
-                            PlaylistUtils.parseMediaPlaylist(it)
-                        }
-                    } else {
-                        val response = suspendCancellableCoroutine { continuation ->
-                            cronetEngine.get().newUrlRequestBuilder(url, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
-                        }
-                        response.second.inputStream().use {
-                            PlaylistUtils.parseMediaPlaylist(it)
-                        }
+                    val response = suspendCancellableCoroutine { continuation ->
+                        cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
+                    }
+                    response.second.inputStream().use {
+                        PlaylistUtils.parseMediaPlaylist(it)
                     }
                 }
                 else -> {
@@ -244,7 +232,7 @@ class Media3PlayerViewModel @Inject constructor(
             when {
                 networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null && !useProxy -> {
                     val response = suspendCancellableCoroutine { continuation ->
-                        httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
+                        httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                     }
                     if (response.first.httpStatusCode in 200..299) {
                         String(response.second) to null
@@ -253,24 +241,13 @@ class Media3PlayerViewModel @Inject constructor(
                     }
                 }
                 networkLibrary == "Cronet" && cronetEngine != null && !useProxy -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        val request = UrlRequestCallbacks.forStringBody(RedirectHandlers.alwaysFollow())
-                        cronetEngine.get().newUrlRequestBuilder(url, request.callback, cronetExecutor).build().start()
-                        val response = request.future.get()
-                        if (response.urlResponseInfo.httpStatusCode in 200..299) {
-                            (response.responseBody as String) to null
-                        } else {
-                            null to response.urlResponseInfo.httpStatusCode
-                        }
+                    val response = suspendCancellableCoroutine { continuation ->
+                        cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
+                    }
+                    if (response.first.httpStatusCode in 200..299) {
+                        String(response.second) to null
                     } else {
-                        val response = suspendCancellableCoroutine { continuation ->
-                            cronetEngine.get().newUrlRequestBuilder(url, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
-                        }
-                        if (response.first.httpStatusCode in 200..299) {
-                            String(response.second) to null
-                        } else {
-                            null to response.first.httpStatusCode
-                        }
+                        null to response.first.httpStatusCode
                     }
                 }
                 else -> {
@@ -514,7 +491,7 @@ class Media3PlayerViewModel @Inject constructor(
                                 when {
                                     networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
-                                            httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
+                                            httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
                                         if (response.first.httpStatusCode in 200..299) {
                                             FileOutputStream(path).use {
@@ -523,23 +500,12 @@ class Media3PlayerViewModel @Inject constructor(
                                         }
                                     }
                                     networkLibrary == "Cronet" && cronetEngine != null -> {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                            val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
-                                            cronetEngine.get().newUrlRequestBuilder(it, request.callback, cronetExecutor).build().start()
-                                            val response = request.future.get()
-                                            if (response.urlResponseInfo.httpStatusCode in 200..299) {
-                                                FileOutputStream(path).use {
-                                                    it.write(response.responseBody as ByteArray)
-                                                }
-                                            }
-                                        } else {
-                                            val response = suspendCancellableCoroutine { continuation ->
-                                                cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
-                                            }
-                                            if (response.first.httpStatusCode in 200..299) {
-                                                FileOutputStream(path).use {
-                                                    it.write(response.second)
-                                                }
+                                        val response = suspendCancellableCoroutine { continuation ->
+                                            cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
+                                        }
+                                        if (response.first.httpStatusCode in 200..299) {
+                                            FileOutputStream(path).use {
+                                                it.write(response.second)
                                             }
                                         }
                                     }
@@ -571,7 +537,7 @@ class Media3PlayerViewModel @Inject constructor(
                                 when {
                                     networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
-                                            httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
+                                            httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
                                         if (response.first.httpStatusCode in 200..299) {
                                             FileOutputStream(path).use {
@@ -580,23 +546,12 @@ class Media3PlayerViewModel @Inject constructor(
                                         }
                                     }
                                     networkLibrary == "Cronet" && cronetEngine != null -> {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                            val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
-                                            cronetEngine.get().newUrlRequestBuilder(it, request.callback, cronetExecutor).build().start()
-                                            val response = request.future.get()
-                                            if (response.urlResponseInfo.httpStatusCode in 200..299) {
-                                                FileOutputStream(path).use {
-                                                    it.write(response.responseBody as ByteArray)
-                                                }
-                                            }
-                                        } else {
-                                            val response = suspendCancellableCoroutine { continuation ->
-                                                cronetEngine.get().newUrlRequestBuilder(it, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
-                                            }
-                                            if (response.first.httpStatusCode in 200..299) {
-                                                FileOutputStream(path).use {
-                                                    it.write(response.second)
-                                                }
+                                        val response = suspendCancellableCoroutine { continuation ->
+                                            cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
+                                        }
+                                        if (response.first.httpStatusCode in 200..299) {
+                                            FileOutputStream(path).use {
+                                                it.write(response.second)
                                             }
                                         }
                                     }
