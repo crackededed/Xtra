@@ -38,6 +38,7 @@ import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
+import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.chat.ChatReadWebSocket
 import com.github.andreyasadchy.xtra.util.chat.ChatUtils
@@ -162,7 +163,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                     } else null
                 }
                 else -> {
-                    okHttpClient.newCall(Request.Builder().url(playlistUrl).build()).execute().use { response ->
+                    okHttpClient.newCall(Request.Builder().url(playlistUrl).build()).executeAsync().use { response ->
                         if (response.isSuccessful) {
                             response.body.string()
                         } else null
@@ -210,7 +211,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                                         response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
                                     }
                                 }
-                            }.build().newCall(Request.Builder().url(playlistUrl).build()).execute().use { response ->
+                            }.build().newCall(Request.Builder().url(playlistUrl).build()).executeAsync().use { response ->
                                 if (response.isSuccessful) {
                                     response.body.string()
                                 } else null
@@ -234,7 +235,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                                     } else null
                                 }
                                 else -> {
-                                    okHttpClient.newCall(Request.Builder().url(playlistUrl).build()).execute().use { response ->
+                                    okHttpClient.newCall(Request.Builder().url(playlistUrl).build()).executeAsync().use { response ->
                                         if (response.isSuccessful) {
                                             response.body.string()
                                         } else null
@@ -407,7 +408,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                 }
             }
             else -> {
-                okHttpClient.newCall(Request.Builder().url(sourceUrl).build()).execute().use { response ->
+                okHttpClient.newCall(Request.Builder().url(sourceUrl).build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         try {
                             response.body.byteStream().use {
@@ -500,7 +501,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                         response.second.size.toLong()
                     }
                     else -> {
-                        okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                        okHttpClient.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
                             if (isShared) {
                                 context.contentResolver.openOutputStream(fileUri.toUri(), "wa")!!
                             } else {
@@ -621,7 +622,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                                                         }
                                                     }
                                                     else -> {
-                                                        okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                                        okHttpClient.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
                                                             if (response.isSuccessful) {
                                                                 FileOutputStream(filePath).use { outputStream ->
                                                                     response.body.byteStream().use { inputStream ->
@@ -708,7 +709,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                                     }
                                 }
                                 else -> {
-                                    okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                    okHttpClient.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
                                         val mutex = Mutex()
                                         val id = firstUrls.indexOf(it)
                                         if (firstCount.value != id) {
@@ -770,7 +771,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                         }
                     }
                     else -> {
-                        okHttpClient.newCall(Request.Builder().url(sourceUrl).build()).execute().use { response ->
+                        okHttpClient.newCall(Request.Builder().url(sourceUrl).build()).executeAsync().use { response ->
                             if (response.isSuccessful) {
                                 try {
                                     response.body.byteStream().use {
@@ -834,7 +835,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                                             }
                                         }
                                         else -> {
-                                            okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                            okHttpClient.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
                                                 val mutex = Mutex()
                                                 val id = urls.indexOf(it)
                                                 if (count.value != id) {
@@ -1193,7 +1194,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                             }
                             else -> {
                                 runBlocking {
-                                    okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                                    okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                                         response.body.source().readByteArray()
                                     }
                                 }
@@ -1239,7 +1240,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                             }
                             else -> {
                                 runBlocking {
-                                    okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                                    okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                                         response.body.source().readByteArray()
                                     }
                                 }
@@ -1286,7 +1287,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                             }
                             else -> {
                                 runBlocking {
-                                    okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                                    okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                                         response.body.source().readByteArray()
                                     }
                                 }
@@ -1334,7 +1335,7 @@ class StreamDownloadWorker @AssistedInject constructor(
                             }
                             else -> {
                                 runBlocking {
-                                    okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                                    okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                                         response.body.source().readByteArray()
                                     }
                                 }

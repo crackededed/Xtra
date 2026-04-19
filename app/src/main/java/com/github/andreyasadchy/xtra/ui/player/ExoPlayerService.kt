@@ -65,6 +65,7 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.MediaButtonReceiver
 import com.github.andreyasadchy.xtra.util.NetworkUtils
+import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import com.github.andreyasadchy.xtra.util.prefs
@@ -1082,7 +1083,7 @@ class ExoPlayerService : BasePlaybackService() {
                     }
                 }
                 else -> {
-                    okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                    okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                         response.body.byteStream().use {
                             PlaylistUtils.parseMediaPlaylist(it)
                         }
@@ -1296,7 +1297,7 @@ class ExoPlayerService : BasePlaybackService() {
                                     } else null
                                 }
                                 else -> {
-                                    okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                                    okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                                         if (response.isSuccessful) {
                                             response.body.bytes()
                                         } else null
@@ -1381,7 +1382,7 @@ class ExoPlayerService : BasePlaybackService() {
                                     } else null
                                 }
                                 else -> {
-                                    okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                                    okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                                         if (response.isSuccessful) {
                                             response.body.bytes()
                                         } else null

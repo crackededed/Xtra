@@ -33,6 +33,7 @@ import com.github.andreyasadchy.xtra.repository.ShownNotificationsRepository
 import com.github.andreyasadchy.xtra.repository.TranslateAllMessagesUsersRepository
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
+import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import dagger.Lazy
@@ -198,7 +199,7 @@ class Media3PlayerViewModel @Inject constructor(
                     }
                 }
                 else -> {
-                    okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                    okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                         response.body.byteStream().use {
                             PlaylistUtils.parseMediaPlaylist(it)
                         }
@@ -260,7 +261,7 @@ class Media3PlayerViewModel @Inject constructor(
                                 }
                             }
                         }
-                    }.build().newCall(Request.Builder().url(url).build()).execute().use { response ->
+                    }.build().newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                         if (response.isSuccessful) {
                             response.body.string() to null
                         } else {
@@ -510,7 +511,7 @@ class Media3PlayerViewModel @Inject constructor(
                                         }
                                     }
                                     else -> {
-                                        okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                        okHttpClient.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
                                             if (response.isSuccessful) {
                                                 FileOutputStream(path).use { outputStream ->
                                                     response.body.byteStream().use { inputStream ->
@@ -556,7 +557,7 @@ class Media3PlayerViewModel @Inject constructor(
                                         }
                                     }
                                     else -> {
-                                        okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                        okHttpClient.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
                                             if (response.isSuccessful) {
                                                 FileOutputStream(path).use { outputStream ->
                                                     response.body.byteStream().use { inputStream ->
