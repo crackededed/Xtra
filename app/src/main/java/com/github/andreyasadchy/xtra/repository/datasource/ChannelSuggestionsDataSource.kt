@@ -5,7 +5,7 @@ import androidx.paging.PagingState
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 
-class ChannelSuggestedDataSource(
+class ChannelSuggestionsDataSource(
     private val channelLogin: String?,
     private val gqlHeaders: Map<String, String>,
     private val graphQLRepository: GraphQLRepository,
@@ -15,7 +15,7 @@ class ChannelSuggestedDataSource(
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Stream> {
         return try {
-            val response = graphQLRepository.loadChannelSuggested(networkLibrary, gqlHeaders, channelLogin)
+            val response = graphQLRepository.loadChannelSuggestions(networkLibrary, gqlHeaders, channelLogin)
             if (enableIntegrity) {
                 response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
             }

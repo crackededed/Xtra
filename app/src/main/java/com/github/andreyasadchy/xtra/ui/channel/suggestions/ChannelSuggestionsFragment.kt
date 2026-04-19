@@ -1,4 +1,4 @@
-package com.github.andreyasadchy.xtra.ui.channel.suggested
+package com.github.andreyasadchy.xtra.ui.channel.suggestions
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -29,11 +29,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class ChannelSuggestedFragment : PagedListFragment(), Scrollable {
+class ChannelSuggestionsFragment : PagedListFragment(), Scrollable {
 
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: ChannelSuggestedViewModel by viewModels()
+    private val viewModel: ChannelSuggestionsViewModel by viewModels()
     private lateinit var pagingAdapter: PagingDataAdapter<Stream, out RecyclerView.ViewHolder>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

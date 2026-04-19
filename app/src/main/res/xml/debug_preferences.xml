@@ -1,12 +1,6 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <Preference
-        android:key="api_settings"
-        android:title="@string/api_settings"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="debug_chat_fullmsg"

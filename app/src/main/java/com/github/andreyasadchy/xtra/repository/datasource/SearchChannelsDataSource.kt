@@ -14,7 +14,6 @@ class SearchChannelsDataSource(
     private val helixHeaders: Map<String, String>,
     private val helixRepository: HelixRepository,
     private val enableIntegrity: Boolean,
-    private val apiPref: List<String>,
     private val networkLibrary: String?,
 ) : PagingSource<Int, User>() {
     private var api: String? = null
@@ -30,19 +29,22 @@ class SearchChannelsDataSource(
         } else {
             if (!offset.isNullOrBlank()) {
                 try {
-                    loadFromApi(api, params)
+                    loadFromApi(params)
                 } catch (e: Exception) {
                     LoadResult.Error(e)
                 }
             } else {
                 try {
-                    loadFromApi(apiPref.getOrNull(0), params)
+                    api = C.GQL
+                    loadFromApi(params)
                 } catch (e: Exception) {
                     try {
-                        loadFromApi(apiPref.getOrNull(1), params)
+                        api = C.GQL_PERSISTED_QUERY
+                        loadFromApi(params)
                     } catch (e: Exception) {
                         try {
-                            loadFromApi(apiPref.getOrNull(2), params)
+                            api = C.HELIX
+                            loadFromApi(params)
                         } catch (e: Exception) {
                             LoadResult.Error(e)
                         }
@@ -52,9 +54,8 @@ class SearchChannelsDataSource(
         }
     }
 
-    private suspend fun loadFromApi(apiPref: String?, params: LoadParams<Int>): LoadResult<Int, User> {
-        api = apiPref
-        return when (apiPref) {
+    private suspend fun loadFromApi(params: LoadParams<Int>): LoadResult<Int, User> {
+        return when (api) {
             C.GQL -> gqlQueryLoad(params)
             C.GQL_PERSISTED_QUERY -> gqlLoad(params)
             C.HELIX -> if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) helixLoad(params) else throw Exception()
