@@ -38,6 +38,7 @@ import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
+import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import com.github.andreyasadchy.xtra.util.m3u8.Segment
@@ -140,7 +141,7 @@ class VideoDownloadWorker @AssistedInject constructor(
                     }
                 }
                 else -> {
-                    okHttpClient.newCall(Request.Builder().url(sourceUrl).build()).execute().use { response ->
+                    okHttpClient.newCall(Request.Builder().url(sourceUrl).build()).executeAsync().use { response ->
                         response.body.byteStream().use {
                             PlaylistUtils.parseMediaPlaylist(it)
                         }
@@ -259,7 +260,7 @@ class VideoDownloadWorker @AssistedInject constructor(
                                 response.second.size.toLong()
                             }
                             else -> {
-                                okHttpClient.newCall(Request.Builder().url(urlPath + playlist.initSegmentUri).build()).execute().use { response ->
+                                okHttpClient.newCall(Request.Builder().url(urlPath + playlist.initSegmentUri).build()).executeAsync().use { response ->
                                     if (isShared) {
                                         context.contentResolver.openOutputStream(fileUri.toUri(), "wa")!!
                                     } else {
@@ -341,7 +342,7 @@ class VideoDownloadWorker @AssistedInject constructor(
                                         }
                                     }
                                     else -> {
-                                        okHttpClient.newCall(Request.Builder().url(urlPath + it.uri).build()).execute().use { response ->
+                                        okHttpClient.newCall(Request.Builder().url(urlPath + it.uri).build()).executeAsync().use { response ->
                                             val mutex = Mutex()
                                             val id = remainingSegments.indexOf(it)
                                             if (count.value != id) {
@@ -442,7 +443,7 @@ class VideoDownloadWorker @AssistedInject constructor(
                                     }
                                 }
                                 else -> {
-                                    okHttpClient.newCall(Request.Builder().url(urlPath + playlist.initSegmentUri).build()).execute().use { response ->
+                                    okHttpClient.newCall(Request.Builder().url(urlPath + playlist.initSegmentUri).build()).executeAsync().use { response ->
                                         try {
                                             context.contentResolver.openOutputStream(initSegmentFileUri)!!
                                         } catch (e: IllegalArgumentException) {
@@ -522,7 +523,7 @@ class VideoDownloadWorker @AssistedInject constructor(
                                                     }
                                                 }
                                                 else -> {
-                                                    okHttpClient.newCall(Request.Builder().url(urlPath + it.uri).build()).execute().use { response ->
+                                                    okHttpClient.newCall(Request.Builder().url(urlPath + it.uri).build()).executeAsync().use { response ->
                                                         if (outputStream != null) {
                                                             outputStream
                                                         } else {
@@ -584,7 +585,7 @@ class VideoDownloadWorker @AssistedInject constructor(
                                     }
                                 }
                                 else -> {
-                                    okHttpClient.newCall(Request.Builder().url(urlPath + playlist.initSegmentUri).build()).execute().use { response ->
+                                    okHttpClient.newCall(Request.Builder().url(urlPath + playlist.initSegmentUri).build()).executeAsync().use { response ->
                                         FileOutputStream(directory + playlist.initSegmentUri).use { outputStream ->
                                             response.body.byteStream().use { inputStream ->
                                                 inputStream.copyTo(outputStream)
@@ -631,7 +632,7 @@ class VideoDownloadWorker @AssistedInject constructor(
                                                 }
                                             }
                                             else -> {
-                                                okHttpClient.newCall(Request.Builder().url(urlPath + it.uri).build()).execute().use { response ->
+                                                okHttpClient.newCall(Request.Builder().url(urlPath + it.uri).build()).executeAsync().use { response ->
                                                     FileOutputStream(directory + it.uri).use { outputStream ->
                                                         response.body.byteStream().use { inputStream ->
                                                             inputStream.copyTo(outputStream)
@@ -728,7 +729,7 @@ class VideoDownloadWorker @AssistedInject constructor(
                                 }
                             }
                             else -> {
-                                okHttpClient.newCall(Request.Builder().url(sourceUrl).build()).execute().use { response ->
+                                okHttpClient.newCall(Request.Builder().url(sourceUrl).build()).executeAsync().use { response ->
                                     if (isShared) {
                                         context.contentResolver.openOutputStream(videoFileUri.toUri())!!
                                     } else {
@@ -1149,7 +1150,7 @@ class VideoDownloadWorker @AssistedInject constructor(
                                                 response.second
                                             }
                                             else -> {
-                                                okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                                                okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                                                     response.body.source().readByteArray()
                                                 }
                                             }
@@ -1189,7 +1190,7 @@ class VideoDownloadWorker @AssistedInject constructor(
                                                 response.second
                                             }
                                             else -> {
-                                                okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                                                okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                                                     response.body.source().readByteArray()
                                                 }
                                             }
@@ -1230,7 +1231,7 @@ class VideoDownloadWorker @AssistedInject constructor(
                                                 response.second
                                             }
                                             else -> {
-                                                okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                                                okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                                                     response.body.source().readByteArray()
                                                 }
                                             }
@@ -1272,7 +1273,7 @@ class VideoDownloadWorker @AssistedInject constructor(
                                                 response.second
                                             }
                                             else -> {
-                                                okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                                                okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                                                     response.body.source().readByteArray()
                                                 }
                                             }

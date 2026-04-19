@@ -37,6 +37,7 @@ import com.github.andreyasadchy.xtra.ui.download.VideoDownloadWorker
 import com.github.andreyasadchy.xtra.ui.login.LoginActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
+import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import dagger.Lazy
@@ -423,7 +424,7 @@ class MainViewModel @Inject constructor(
                                         }
                                     }
                                     else -> {
-                                        okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                        okHttpClient.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
                                             if (response.isSuccessful) {
                                                 FileOutputStream(path).use { outputStream ->
                                                     response.body.byteStream().use { inputStream ->
@@ -469,7 +470,7 @@ class MainViewModel @Inject constructor(
                                         }
                                     }
                                     else -> {
-                                        okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                        okHttpClient.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
                                             if (response.isSuccessful) {
                                                 FileOutputStream(path).use { outputStream ->
                                                     response.body.byteStream().use { inputStream ->
@@ -554,7 +555,7 @@ class MainViewModel @Inject constructor(
                                     }
                                 }
                                 else -> {
-                                    okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                    okHttpClient.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
                                         if (response.isSuccessful) {
                                             FileOutputStream(path).use { outputStream ->
                                                 response.body.byteStream().use { inputStream ->
@@ -600,7 +601,7 @@ class MainViewModel @Inject constructor(
                                     }
                                 }
                                 else -> {
-                                    okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                    okHttpClient.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
                                         if (response.isSuccessful) {
                                             FileOutputStream(path).use { outputStream ->
                                                 response.body.byteStream().use { inputStream ->
@@ -690,7 +691,7 @@ class MainViewModel @Inject constructor(
                                     }
                                 }
                                 else -> {
-                                    okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                    okHttpClient.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
                                         if (response.isSuccessful) {
                                             FileOutputStream(path).use { outputStream ->
                                                 response.body.byteStream().use { inputStream ->
@@ -736,7 +737,7 @@ class MainViewModel @Inject constructor(
                                     }
                                 }
                                 else -> {
-                                    okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                    okHttpClient.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
                                         if (response.isSuccessful) {
                                             FileOutputStream(path).use { outputStream ->
                                                 response.body.byteStream().use { inputStream ->
@@ -867,7 +868,7 @@ class MainViewModel @Inject constructor(
                             json.decodeFromString<JsonObject>(String(response.second))
                         }
                         else -> {
-                            okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                            okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                                 json.decodeFromString<JsonObject>(response.body.string())
                             }
                         }
@@ -918,7 +919,7 @@ class MainViewModel @Inject constructor(
                     else -> {
                         okHttpClient.newBuilder().apply {
                             addNetworkInterceptor(NetworkUtils.progressInterceptor(progressListener))
-                        }.build().newCall(Request.Builder().url(url).build()).execute().use { response ->
+                        }.build().newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                             if (response.isSuccessful) {
                                 response.body.bytes()
                             } else null

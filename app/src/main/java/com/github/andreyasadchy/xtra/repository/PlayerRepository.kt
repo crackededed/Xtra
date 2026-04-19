@@ -35,6 +35,7 @@ import com.github.andreyasadchy.xtra.model.misc.StvGlobalResponse
 import com.github.andreyasadchy.xtra.model.misc.StvResponse
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
+import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -121,7 +122,7 @@ class PlayerRepository @Inject constructor(
                 } else null
             }
             else -> {
-                okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         response.body.string()
                     } else null
@@ -150,7 +151,7 @@ class PlayerRepository @Inject constructor(
                     }
                     header("Content-Type", "application/json")
                     post(graphQLRepository.getPlaybackAccessTokenRequestBody(channelLogin, "", playerType).toRequestBody())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<PlaybackAccessTokenResponse>(response.body.string())
                 }
             } else {
@@ -199,7 +200,7 @@ class PlayerRepository @Inject constructor(
                     }
                     header("Content-Type", "application/json")
                     post(body.toRequestBody())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     response.body.byteStream().source().buffer().jsonReader().use {
                         query.parseResponse(it)
                     }
@@ -309,7 +310,7 @@ class PlayerRepository @Inject constructor(
                 } else null
             }
             else -> {
-                okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         response.body.string()
                     } else null
@@ -408,7 +409,7 @@ class PlayerRepository @Inject constructor(
                     String(response.second)
                 }
                 else -> {
-                    okHttpClient.newCall(Request.Builder().url("https://www.twitch.tv/${channelLogin}").build()).execute().use { response ->
+                    okHttpClient.newCall(Request.Builder().url("https://www.twitch.tv/${channelLogin}").build()).executeAsync().use { response ->
                         response.body.string()
                     }
                 }
@@ -432,7 +433,7 @@ class PlayerRepository @Inject constructor(
                         String(response.second)
                     }
                     else -> {
-                        okHttpClient.newCall(Request.Builder().url(settingsUrl).build()).execute().use { response ->
+                        okHttpClient.newCall(Request.Builder().url(settingsUrl).build()).executeAsync().use { response ->
                             response.body.string()
                         }
                     }
@@ -474,7 +475,7 @@ class PlayerRepository @Inject constructor(
                                 url(spadeUrl)
                                 header("Content-Type", "application/x-www-form-urlencoded")
                                 post(spadeRequest.toRequestBody())
-                            }.build()).execute()
+                            }.build()).executeAsync()
                         }
                     }
                 }
@@ -504,7 +505,7 @@ class PlayerRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url("https://recent-messages.robotty.de/api/v2/recent-messages/${channelLogin}?limit=${limit}")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<RecentMessagesResponse>(response.body.string())
                 }
             }
@@ -533,7 +534,7 @@ class PlayerRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url("https://7tv.io/v3/emote-sets/global")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<StvGlobalResponse>(response.body.string())
                 }
             }
@@ -563,7 +564,7 @@ class PlayerRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url("https://7tv.io/v3/users/twitch/${channelId}")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<StvChannelResponse>(response.body.string())
                 }
             }
@@ -629,7 +630,7 @@ class PlayerRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url("https://7tv.io/v3/users/twitch/${userId}")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     response.body.string()
                 }
             }
@@ -672,7 +673,7 @@ class PlayerRepository @Inject constructor(
                     header("Content-Type", "application/json")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     post(body.toRequestBody())
-                }.build()).execute()
+                }.build()).executeAsync()
             }
         }
     }
@@ -699,7 +700,7 @@ class PlayerRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url("https://api.betterttv.net/3/cached/emotes/global")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<List<BttvResponse>>(response.body.string())
                 }
             }
@@ -729,7 +730,7 @@ class PlayerRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url("https://api.betterttv.net/3/cached/users/twitch/${channelId}")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<Map<String, JsonElement>>(response.body.string())
                 }
             }
@@ -786,7 +787,7 @@ class PlayerRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url("https://api.frankerfacez.com/v1/set/global")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<FfzGlobalResponse>(response.body.string())
                 }
             }
@@ -818,7 +819,7 @@ class PlayerRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url("https://api.frankerfacez.com/v1/room/id/${channelId}")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<FfzChannelResponse>(response.body.string())
                 }
             }
