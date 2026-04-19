@@ -16,6 +16,7 @@ import com.github.andreyasadchy.xtra.util.prefs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,7 +28,7 @@ class TeamViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    val integrity = MutableStateFlow<String?>(null)
+    val integrity = MutableSharedFlow<String?>()
 
     private val args = TeamFragmentArgs.fromSavedStateHandle(savedStateHandle)
     val team = MutableStateFlow<Team?>(null)
@@ -53,9 +54,9 @@ class TeamViewModel @Inject constructor(
             viewModelScope.launch {
                 val response = try {
                     val response = graphQLRepository.loadQueryTeam(networkLibrary, gqlHeaders, teamName)
-                    if (enableIntegrity && integrity.value == null) {
-                        response.errors?.find { it.message == "failed integrity check" }?.let {
-                            integrity.value = "refresh"
+                    if (enableIntegrity) {
+                        response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                            integrity.emit("refresh")
                             isLoading = false
                             return@launch
                         }

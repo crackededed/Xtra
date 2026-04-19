@@ -199,11 +199,11 @@ class LoginActivity : AppCompatActivity() {
 
                 override fun shouldInterceptRequest(view: WebView, webViewRequest: WebResourceRequest): WebResourceResponse? {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && readHeaders) {
-                        val token = webViewRequest.requestHeaders.entries.firstOrNull {
+                        val token = webViewRequest.requestHeaders.entries.find {
                             it.key.equals(C.HEADER_TOKEN, true) && !it.value.equals("undefined", true)
                         }?.value?.removePrefix("OAuth ")
                         if (!token.isNullOrBlank()) {
-                            val clientId = webViewRequest.requestHeaders.entries.firstOrNull { it.key.equals(C.HEADER_CLIENT_ID, true) }?.value
+                            val clientId = webViewRequest.requestHeaders.entries.find { it.key.equals(C.HEADER_CLIENT_ID, true) }?.value
                             readHeaders = false
                             lifecycleScope.launch {
                                 val valid = validateGQLToken(networkLibrary, clientId, token)
@@ -485,11 +485,11 @@ class LoginActivity : AppCompatActivity() {
             secondaryWebView.webViewClient = object : WebViewClientCompat() {
                 override fun shouldInterceptRequest(view: WebView, webViewRequest: WebResourceRequest): WebResourceResponse? {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && readHeaders2) {
-                        val token = webViewRequest.requestHeaders.entries.firstOrNull {
+                        val token = webViewRequest.requestHeaders.entries.find {
                             it.key.equals(C.HEADER_TOKEN, true) && !it.value.equals("undefined", true)
                         }?.value?.removePrefix("OAuth ")
                         if (!token.isNullOrBlank() && token != gqlWebToken) {
-                            val clientId = webViewRequest.requestHeaders.entries.firstOrNull { it.key.equals(C.HEADER_CLIENT_ID, true) }?.value
+                            val clientId = webViewRequest.requestHeaders.entries.find { it.key.equals(C.HEADER_CLIENT_ID, true) }?.value
                             if (!clientId.isNullOrBlank() && clientId != gqlWebClientId) {
                                 readHeaders2 = false
                                 lifecycleScope.launch {

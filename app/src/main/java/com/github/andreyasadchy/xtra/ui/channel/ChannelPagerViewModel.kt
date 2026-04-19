@@ -26,6 +26,7 @@ import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
 import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -56,7 +57,7 @@ class ChannelPagerViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    val integrity = MutableStateFlow<String?>(null)
+    val integrity = MutableSharedFlow<String?>()
 
     private val args = ChannelPagerFragmentArgs.fromSavedStateHandle(savedStateHandle)
     private val _notificationsEnabled = MutableStateFlow<Boolean?>(null)
@@ -77,9 +78,9 @@ class ChannelPagerViewModel @Inject constructor(
             viewModelScope.launch {
                 try {
                     val response = graphQLRepository.loadQueryUserChannelPage(networkLibrary, gqlHeaders, args.channelId, if (args.channelId.isNullOrBlank()) args.channelLogin else null)
-                    if (enableIntegrity && integrity.value == null) {
-                        response.errors?.find { it.message == "failed integrity check" }?.let {
-                            integrity.value = "refresh"
+                    if (enableIntegrity) {
+                        response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                            integrity.emit("refresh")
                             return@launch
                         }
                     }
@@ -171,9 +172,9 @@ class ChannelPagerViewModel @Inject constructor(
             try {
                 if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank() && _isFollowing.value == true && userId != channelId) {
                     val errorMessage = graphQLRepository.loadToggleNotificationsUser(networkLibrary, gqlHeaders, channelId, false).also { response ->
-                        if (enableIntegrity && integrity.value == null) {
-                            response.errors?.find { it.message == "failed integrity check" }?.let {
-                                integrity.value = "enableNotifications"
+                        if (enableIntegrity) {
+                            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                integrity.emit("enableNotifications")
                                 return@launch
                             }
                         }
@@ -210,9 +211,9 @@ class ChannelPagerViewModel @Inject constructor(
             try {
                 if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank() && _isFollowing.value == true && userId != channelId) {
                     val errorMessage = graphQLRepository.loadToggleNotificationsUser(networkLibrary, gqlHeaders, channelId, true).also { response ->
-                        if (enableIntegrity && integrity.value == null) {
-                            response.errors?.find { it.message == "failed integrity check" }?.let {
-                                integrity.value = "disableNotifications"
+                        if (enableIntegrity) {
+                            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                integrity.emit("disableNotifications")
                                 return@launch
                             }
                         }
@@ -284,9 +285,9 @@ class ChannelPagerViewModel @Inject constructor(
                 if (!channelId.isNullOrBlank()) {
                     if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank() && userId != channelId) {
                         val errorMessage = graphQLRepository.loadFollowUser(networkLibrary, gqlHeaders, channelId, disableNotifications).also { response ->
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "follow"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("follow")
                                     return@launch
                                 }
                             }
@@ -332,9 +333,9 @@ class ChannelPagerViewModel @Inject constructor(
                 if (!channelId.isNullOrBlank()) {
                     if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank() && userId != channelId) {
                         val errorMessage = graphQLRepository.loadUnfollowUser(networkLibrary, gqlHeaders, channelId).also { response ->
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "unfollow"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("unfollow")
                                     return@launch
                                 }
                             }

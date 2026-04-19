@@ -1502,7 +1502,7 @@ class SettingsActivity : AppCompatActivity() {
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 findPreference<Preference>("get_integrity_token")?.setOnPreferenceClickListener {
-                    IntegrityDialog.show(childFragmentManager)
+                    IntegrityDialog.newInstance(null).show(childFragmentManager, null)
                     true
                 }
             } else {

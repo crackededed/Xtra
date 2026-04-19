@@ -27,6 +27,7 @@ import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.common.Sortable
 import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
+import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
@@ -40,7 +41,7 @@ import java.time.temporal.ChronoUnit
 import java.util.Calendar
 
 @AndroidEntryPoint
-class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, BookmarksSortDialog.OnFilter, IntegrityDialog.CallbackListener {
+class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, BookmarksSortDialog.OnFilter, IntegrityDialog.Listener {
 
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
@@ -57,15 +58,8 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
         super.onViewCreated(view, savedInstanceState)
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.integrity.collectLatest {
-                    if (it != null &&
-                        it != "done" &&
-                        requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false) &&
-                        requireContext().prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, true)
-                    ) {
-                        IntegrityDialog.show(childFragmentManager, it)
-                        viewModel.integrity.value = "done"
-                    }
+                viewModel.integrity.collect {
+                    (requireActivity() as? MainActivity)?.getNewIntegrityToken(it, childFragmentManager)
                 }
             }
         }
@@ -241,12 +235,6 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
                 }
             }
         }
-        if (requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false) &&
-            requireContext().prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, true) &&
-            TwitchApiHelper.isIntegrityTokenExpired(requireContext())
-        ) {
-            IntegrityDialog.show(childFragmentManager, "refresh")
-        }
         if (requireContext().prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -324,19 +312,15 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
     override fun onNetworkRestored() {
     }
 
-    override fun onIntegrityDialogCallback(callback: String?) {
-        if (callback != null) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    when (callback) {
-                        "users" -> viewModel.updateUsers(
-                            requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                            TwitchApiHelper.getGQLHeaders(requireContext()),
-                            TwitchApiHelper.getHelixHeaders(requireContext()),
-                            requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                        )
-                    }
-                }
+    override fun onIntegrityTokenLoaded(callback: String?) {
+        when (callback) {
+            "users" -> {
+                viewModel.updateUsers(
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    TwitchApiHelper.getGQLHeaders(requireContext()),
+                    TwitchApiHelper.getHelixHeaders(requireContext()),
+                    requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                )
             }
         }
     }

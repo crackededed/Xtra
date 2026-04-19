@@ -15,6 +15,7 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentViewerListBinding
 import com.github.andreyasadchy.xtra.model.ui.ChannelViewerList
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
+import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
@@ -26,7 +27,7 @@ import kotlinx.coroutines.launch
 
 
 @AndroidEntryPoint
-class PlayerViewerListDialog : BottomSheetDialogFragment(), IntegrityDialog.CallbackListener {
+class PlayerViewerListDialog : BottomSheetDialogFragment(), IntegrityDialog.Listener {
 
     companion object {
 
@@ -65,15 +66,8 @@ class PlayerViewerListDialog : BottomSheetDialogFragment(), IntegrityDialog.Call
         with(binding) {
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.integrity.collectLatest {
-                        if (it != null &&
-                            it != "done" &&
-                            requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false) &&
-                            requireContext().prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, true)
-                        ) {
-                            IntegrityDialog.show(childFragmentManager, it)
-                            viewModel.integrity.value = "done"
-                        }
+                    viewModel.integrity.collect {
+                        (requireActivity() as? MainActivity)?.getNewIntegrityToken(it, childFragmentManager)
                     }
                 }
             }
@@ -183,17 +177,15 @@ class PlayerViewerListDialog : BottomSheetDialogFragment(), IntegrityDialog.Call
         }
     }
 
-    override fun onIntegrityDialogCallback(callback: String?) {
-        if (callback == "refresh") {
-            viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.loadViewerList(
-                        requireArguments().getString(LOGIN),
-                        requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                        TwitchApiHelper.getGQLHeaders(requireContext()),
-                        requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                    )
-                }
+    override fun onIntegrityTokenLoaded(callback: String?) {
+        when (callback) {
+            "refresh" -> {
+                viewModel.loadViewerList(
+                    requireArguments().getString(LOGIN),
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    TwitchApiHelper.getGQLHeaders(requireContext()),
+                    requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                )
             }
         }
     }

@@ -20,6 +20,7 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.DialogChatImageClickBinding
 import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
+import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
@@ -30,7 +31,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class ImageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.CallbackListener {
+class ImageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listener {
 
     companion object {
         private const val IMAGE_URL = "image_url"
@@ -72,15 +73,8 @@ class ImageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callback
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.integrity.collectLatest {
-                    if (it != null &&
-                        it != "done" &&
-                        requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false) &&
-                        requireContext().prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, true)
-                    ) {
-                        IntegrityDialog.show(childFragmentManager, it)
-                        viewModel.integrity.value = "done"
-                    }
+                viewModel.integrity.collect {
+                    (requireActivity() as? MainActivity)?.getNewIntegrityToken(it, childFragmentManager)
                 }
             }
         }
@@ -169,18 +163,16 @@ class ImageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Callback
         }
     }
 
-    override fun onIntegrityDialogCallback(callback: String?) {
-        if (callback == "refresh") {
-            requireArguments().getString(EMOTE_ID)?.let {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    repeatOnLifecycle(Lifecycle.State.STARTED) {
-                        viewModel.loadEmoteCard(
-                            it,
-                            requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                            TwitchApiHelper.getGQLHeaders(requireContext()),
-                            requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                        )
-                    }
+    override fun onIntegrityTokenLoaded(callback: String?) {
+        when (callback) {
+            "refresh" -> {
+                requireArguments().getString(EMOTE_ID)?.let {
+                    viewModel.loadEmoteCard(
+                        it,
+                        requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                        TwitchApiHelper.getGQLHeaders(requireContext()),
+                        requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                    )
                 }
             }
         }

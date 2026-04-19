@@ -96,7 +96,7 @@ import kotlin.math.max
 
 @OptIn(UnstableApi::class)
 @AndroidEntryPoint
-abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment.OnSortOptionChanged, IntegrityDialog.CallbackListener {
+abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment.OnSortOptionChanged, IntegrityDialog.Listener {
 
     private var _binding: FragmentPlayerBinding? = null
     protected val binding get() = _binding!!
@@ -202,15 +202,8 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
         with(binding) {
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.integrity.collectLatest {
-                        if (it != null &&
-                            it != "done" &&
-                            requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false) &&
-                            requireContext().prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, true)
-                        ) {
-                            IntegrityDialog.show(childFragmentManager, it)
-                            viewModel.integrity.value = "done"
-                        }
+                    viewModel.integrity.collect {
+                        (requireActivity() as? MainActivity)?.getNewIntegrityToken(it, childFragmentManager)
                     }
                 }
             }
@@ -2405,107 +2398,105 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
         }
     }
 
-    override fun onIntegrityDialogCallback(callback: String?) {
-        if (callback != null) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    when (callback) {
-                        "refreshStream" -> {
-                            requireArguments().getString(KEY_CHANNEL_LOGIN)?.let { channelLogin ->
-                                viewModel.loadStreamResult(
-                                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                                    gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), requireContext().prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, true)),
-                                    channelLogin = channelLogin,
-                                    randomDeviceId = requireContext().prefs().getBoolean(C.TOKEN_RANDOM_DEVICEID, true),
-                                    xDeviceId = requireContext().prefs().getString(C.TOKEN_XDEVICEID, "twitch-web-wall-mason"),
-                                    playerType = requireContext().prefs().getString(C.TOKEN_PLAYERTYPE, "site"),
-                                    supportedCodecs = requireContext().prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
-                                    proxyPlaybackAccessToken = requireContext().prefs().getBoolean(C.PROXY_PLAYBACK_ACCESS_TOKEN, false),
-                                    proxyHost = requireContext().prefs().getString(C.PROXY_HOST, null),
-                                    proxyPort = requireContext().prefs().getString(C.PROXY_PORT, null)?.toIntOrNull(),
-                                    proxyUser = requireContext().prefs().getString(C.PROXY_USER, null),
-                                    proxyPassword = requireContext().prefs().getString(C.PROXY_PASSWORD, null),
-                                    enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false)
-                                )
-                            }
-                            viewModel.isFollowingChannel(
-                                requireContext().tokenPrefs().getString(C.USER_ID, null),
-                                requireArguments().getString(KEY_CHANNEL_ID),
-                                requireArguments().getString(KEY_CHANNEL_LOGIN),
-                                requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
-                                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                                TwitchApiHelper.getGQLHeaders(requireContext(), true),
-                                TwitchApiHelper.getHelixHeaders(requireContext()),
-                            )
-                        }
-                        "refreshVideo" -> {
-                            val videoId = requireArguments().getString(KEY_VIDEO_ID)
-                            viewModel.loadVideo(
-                                networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                                gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), requireContext().prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_VIDEO, true)),
-                                videoId = videoId,
-                                playerType = requireContext().prefs().getString(C.TOKEN_PLAYERTYPE_VIDEO, "channel_home_live"),
-                                supportedCodecs = requireContext().prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
-                                enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                            )
-                            viewModel.isFollowingChannel(
-                                requireContext().tokenPrefs().getString(C.USER_ID, null),
-                                requireArguments().getString(KEY_CHANNEL_ID),
-                                requireArguments().getString(KEY_CHANNEL_LOGIN),
-                                requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
-                                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                                TwitchApiHelper.getGQLHeaders(requireContext(), true),
-                                TwitchApiHelper.getHelixHeaders(requireContext()),
-                            )
-                            if (!videoId.isNullOrBlank() && (requireContext().prefs().getBoolean(C.PLAYER_GAMESBUTTON, true) || requireContext().prefs().getBoolean(C.PLAYER_MENU_GAMES, false))) {
-                                viewModel.loadGamesList(
-                                    videoId,
-                                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                                    TwitchApiHelper.getGQLHeaders(requireContext()),
-                                    requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                                )
-                            }
-                        }
-                        "refreshClip" -> {
-                            viewModel.loadClip(
-                                networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                                gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
-                                id = requireArguments().getString(KEY_CLIP_ID),
-                                enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                            )
-                            viewModel.isFollowingChannel(
-                                requireContext().tokenPrefs().getString(C.USER_ID, null),
-                                requireArguments().getString(KEY_CHANNEL_ID),
-                                requireArguments().getString(KEY_CHANNEL_LOGIN),
-                                requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
-                                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                                TwitchApiHelper.getGQLHeaders(requireContext(), true),
-                                TwitchApiHelper.getHelixHeaders(requireContext()),
-                            )
-                        }
-                        "follow" -> viewModel.saveFollowChannel(
-                            requireContext().tokenPrefs().getString(C.USER_ID, null),
-                            requireArguments().getString(KEY_CHANNEL_ID),
-                            requireArguments().getString(KEY_CHANNEL_LOGIN),
-                            requireArguments().getString(KEY_CHANNEL_NAME),
-                            requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
-                            requireContext().prefs().getBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false),
-                            !requireContext().prefs().getBoolean(C.UI_ACTIVATE_NOTIFICATIONS_WHEN_FOLLOWING, true),
-                            requireArguments().getString(KEY_STARTED_AT),
-                            requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                            TwitchApiHelper.getGQLHeaders(requireContext(), true),
-                            requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                        )
-                        "unfollow" -> viewModel.deleteFollowChannel(
-                            requireContext().tokenPrefs().getString(C.USER_ID, null),
-                            requireArguments().getString(KEY_CHANNEL_ID),
-                            requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
-                            requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                            TwitchApiHelper.getGQLHeaders(requireContext(), true),
-                            requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                        )
-                    }
+    override fun onIntegrityTokenLoaded(callback: String?) {
+        when (callback) {
+            "refreshStream" -> {
+                requireArguments().getString(KEY_CHANNEL_LOGIN)?.let { channelLogin ->
+                    viewModel.loadStreamResult(
+                        networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                        gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), requireContext().prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, true)),
+                        channelLogin = channelLogin,
+                        randomDeviceId = requireContext().prefs().getBoolean(C.TOKEN_RANDOM_DEVICEID, true),
+                        xDeviceId = requireContext().prefs().getString(C.TOKEN_XDEVICEID, "twitch-web-wall-mason"),
+                        playerType = requireContext().prefs().getString(C.TOKEN_PLAYERTYPE, "site"),
+                        supportedCodecs = requireContext().prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
+                        proxyPlaybackAccessToken = requireContext().prefs().getBoolean(C.PROXY_PLAYBACK_ACCESS_TOKEN, false),
+                        proxyHost = requireContext().prefs().getString(C.PROXY_HOST, null),
+                        proxyPort = requireContext().prefs().getString(C.PROXY_PORT, null)?.toIntOrNull(),
+                        proxyUser = requireContext().prefs().getString(C.PROXY_USER, null),
+                        proxyPassword = requireContext().prefs().getString(C.PROXY_PASSWORD, null),
+                        enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false)
+                    )
                 }
+                viewModel.isFollowingChannel(
+                    requireContext().tokenPrefs().getString(C.USER_ID, null),
+                    requireArguments().getString(KEY_CHANNEL_ID),
+                    requireArguments().getString(KEY_CHANNEL_LOGIN),
+                    requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    TwitchApiHelper.getGQLHeaders(requireContext(), true),
+                    TwitchApiHelper.getHelixHeaders(requireContext()),
+                )
+            }
+            "refreshVideo" -> {
+                val videoId = requireArguments().getString(KEY_VIDEO_ID)
+                viewModel.loadVideo(
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), requireContext().prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_VIDEO, true)),
+                    videoId = videoId,
+                    playerType = requireContext().prefs().getString(C.TOKEN_PLAYERTYPE_VIDEO, "channel_home_live"),
+                    supportedCodecs = requireContext().prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
+                    enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                )
+                viewModel.isFollowingChannel(
+                    requireContext().tokenPrefs().getString(C.USER_ID, null),
+                    requireArguments().getString(KEY_CHANNEL_ID),
+                    requireArguments().getString(KEY_CHANNEL_LOGIN),
+                    requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    TwitchApiHelper.getGQLHeaders(requireContext(), true),
+                    TwitchApiHelper.getHelixHeaders(requireContext()),
+                )
+                if (!videoId.isNullOrBlank() && (requireContext().prefs().getBoolean(C.PLAYER_GAMESBUTTON, true) || requireContext().prefs().getBoolean(C.PLAYER_MENU_GAMES, false))) {
+                    viewModel.loadGamesList(
+                        videoId,
+                        requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                        TwitchApiHelper.getGQLHeaders(requireContext()),
+                        requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                    )
+                }
+            }
+            "refreshClip" -> {
+                viewModel.loadClip(
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
+                    id = requireArguments().getString(KEY_CLIP_ID),
+                    enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                )
+                viewModel.isFollowingChannel(
+                    requireContext().tokenPrefs().getString(C.USER_ID, null),
+                    requireArguments().getString(KEY_CHANNEL_ID),
+                    requireArguments().getString(KEY_CHANNEL_LOGIN),
+                    requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    TwitchApiHelper.getGQLHeaders(requireContext(), true),
+                    TwitchApiHelper.getHelixHeaders(requireContext()),
+                )
+            }
+            "follow" -> {
+                viewModel.saveFollowChannel(
+                    requireContext().tokenPrefs().getString(C.USER_ID, null),
+                    requireArguments().getString(KEY_CHANNEL_ID),
+                    requireArguments().getString(KEY_CHANNEL_LOGIN),
+                    requireArguments().getString(KEY_CHANNEL_NAME),
+                    requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
+                    requireContext().prefs().getBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false),
+                    !requireContext().prefs().getBoolean(C.UI_ACTIVATE_NOTIFICATIONS_WHEN_FOLLOWING, true),
+                    requireArguments().getString(KEY_STARTED_AT),
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    TwitchApiHelper.getGQLHeaders(requireContext(), true),
+                    requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                )
+            }
+            "unfollow" -> {
+                viewModel.deleteFollowChannel(
+                    requireContext().tokenPrefs().getString(C.USER_ID, null),
+                    requireArguments().getString(KEY_CHANNEL_ID),
+                    requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    TwitchApiHelper.getGQLHeaders(requireContext(), true),
+                    requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                )
             }
         }
     }

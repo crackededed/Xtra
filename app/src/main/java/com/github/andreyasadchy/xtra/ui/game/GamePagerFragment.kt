@@ -63,7 +63,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, IntegrityDialog.CallbackListener {
+class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, IntegrityDialog.Listener {
 
     private var _binding: FragmentGamePagerBinding? = null
     private val binding get() = _binding!!
@@ -91,15 +91,8 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
         super.onViewCreated(view, savedInstanceState)
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.integrity.collectLatest {
-                    if (it != null &&
-                        it != "done" &&
-                        requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false) &&
-                        requireContext().prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, true)
-                    ) {
-                        IntegrityDialog.show(childFragmentManager, it)
-                        viewModel.integrity.value = "done"
-                    }
+                viewModel.integrity.collect {
+                    (requireActivity() as? MainActivity)?.getNewIntegrityToken(it, childFragmentManager)
                 }
             }
         }
@@ -478,50 +471,48 @@ class GamePagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
         )
     }
 
-    override fun onIntegrityDialogCallback(callback: String?) {
-        if (callback != null) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    when (callback) {
-                        "refresh" -> {
-                            viewModel.loadGame(
-                                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                                TwitchApiHelper.getGQLHeaders(requireContext()),
-                                TwitchApiHelper.getHelixHeaders(requireContext()),
-                                requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                            )
-                            val setting = requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0
-                            if (setting < 2) {
-                                viewModel.isFollowingGame(
-                                    args.gameId,
-                                    args.gameSlug,
-                                    args.gameName,
-                                    setting,
-                                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                                    TwitchApiHelper.getGQLHeaders(requireContext(), true),
-                                )
-                            }
-                        }
-                        "follow" -> viewModel.saveFollowGame(
-                            args.gameId,
-                            args.gameSlug,
-                            args.gameName,
-                            requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
-                            requireContext().filesDir.path,
-                            requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                            TwitchApiHelper.getGQLHeaders(requireContext(), true),
-                            TwitchApiHelper.getHelixHeaders(requireContext()),
-                            requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                        )
-                        "unfollow" -> viewModel.deleteFollowGame(
-                            args.gameId,
-                            requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
-                            requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                            TwitchApiHelper.getGQLHeaders(requireContext(), true),
-                            requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                        )
-                    }
+    override fun onIntegrityTokenLoaded(callback: String?) {
+        when (callback) {
+            "refresh" -> {
+                viewModel.loadGame(
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    TwitchApiHelper.getGQLHeaders(requireContext()),
+                    TwitchApiHelper.getHelixHeaders(requireContext()),
+                    requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                )
+                val setting = requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0
+                if (setting < 2) {
+                    viewModel.isFollowingGame(
+                        args.gameId,
+                        args.gameSlug,
+                        args.gameName,
+                        setting,
+                        requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                        TwitchApiHelper.getGQLHeaders(requireContext(), true),
+                    )
                 }
+            }
+            "follow" -> {
+                viewModel.saveFollowGame(
+                    args.gameId,
+                    args.gameSlug,
+                    args.gameName,
+                    requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
+                    requireContext().filesDir.path,
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    TwitchApiHelper.getGQLHeaders(requireContext(), true),
+                    TwitchApiHelper.getHelixHeaders(requireContext()),
+                    requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                )
+            }
+            "unfollow" -> {
+                viewModel.deleteFollowGame(
+                    args.gameId,
+                    requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    TwitchApiHelper.getGQLHeaders(requireContext(), true),
+                    requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                )
             }
         }
     }

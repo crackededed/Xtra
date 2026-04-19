@@ -41,7 +41,6 @@ import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.common.BaseNetworkFragment
-import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.player.Media3PlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.PlayerFragment
@@ -107,15 +106,8 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
         super.onViewCreated(view, savedInstanceState)
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.integrity.collectLatest {
-                    if (it != null &&
-                        it != "done" &&
-                        requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false) &&
-                        requireContext().prefs().getBoolean(C.USE_WEBVIEW_INTEGRITY, true)
-                    ) {
-                        IntegrityDialog.show(childFragmentManager, it)
-                        viewModel.integrity.value = "done"
-                    }
+                viewModel.integrity.collect {
+                    (requireActivity() as? MainActivity)?.getNewIntegrityToken(it, childFragmentManager)
                 }
             }
         }

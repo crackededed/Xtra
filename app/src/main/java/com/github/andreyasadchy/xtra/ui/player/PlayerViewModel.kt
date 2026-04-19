@@ -31,6 +31,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
@@ -62,7 +63,7 @@ class PlayerViewModel @Inject constructor(
     private val bookmarksRepository: BookmarksRepository,
 ) : ViewModel() {
 
-    val integrity = MutableStateFlow<String?>(null)
+    val integrity = MutableSharedFlow<String?>()
 
     val stream = MutableStateFlow<Stream?>(null)
     private var streamUpdateJob: Job? = null
@@ -88,8 +89,8 @@ class PlayerViewModel @Inject constructor(
                             updateStreamInfo(channelId, channelLogin, networkLibrary, helixHeaders, gqlHeaders, enableIntegrity)
                             delay(300000L)
                         } catch (e: Exception) {
-                            if (e.message == "failed integrity check" && integrity.value == null) {
-                                integrity.value = "stream"
+                            if (e.message == C.FAILED_INTEGRITY_CHECK) {
+                                integrity.emit("stream")
                             }
                             delay(60000L)
                         }
@@ -102,8 +103,8 @@ class PlayerViewModel @Inject constructor(
                     try {
                         updateStreamInfo(channelId, channelLogin, networkLibrary, helixHeaders, gqlHeaders, enableIntegrity)
                     } catch (e: Exception) {
-                        if (e.message == "failed integrity check" && integrity.value == null) {
-                            integrity.value = "stream"
+                        if (e.message == C.FAILED_INTEGRITY_CHECK) {
+                            integrity.emit("stream")
                         }
                     }
                 }
@@ -120,7 +121,7 @@ class PlayerViewModel @Inject constructor(
                 logins = if (channelId.isNullOrBlank()) channelLogin?.let { listOf(it) } else null,
             )
             if (enableIntegrity) {
-                response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
             }
             response.data!!.users?.firstOrNull()?.let {
                 Stream(
@@ -140,7 +141,7 @@ class PlayerViewModel @Inject constructor(
                 )
             }
         } catch (e: Exception) {
-            if (e.message == "failed integrity check") throw e
+            if (e.message == C.FAILED_INTEGRITY_CHECK) throw e
             if (helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) throw Exception()
             try {
                 helixRepository.getStreams(
@@ -166,7 +167,7 @@ class PlayerViewModel @Inject constructor(
             } catch (e: Exception) {
                 val response = graphQLRepository.loadViewerCount(networkLibrary, gqlHeaders, channelLogin)
                 if (enableIntegrity) {
-                    response.errors?.find { it.message == "failed integrity check" }?.let { throw Exception(it.message) }
+                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
                 }
                 response.data!!.user.stream?.let {
                     Stream(
@@ -183,9 +184,9 @@ class PlayerViewModel @Inject constructor(
             viewModelScope.launch {
                 try {
                     val response = graphQLRepository.loadQueryVideoMoments(networkLibrary, gqlHeaders, videoId)
-                    if (enableIntegrity && integrity.value == null) {
-                        response.errors?.find { it.message == "failed integrity check" }?.let {
-                            integrity.value = "refreshVideo"
+                    if (enableIntegrity) {
+                        response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                            integrity.emit("refreshVideo")
                             return@launch
                         }
                     }
@@ -203,9 +204,9 @@ class PlayerViewModel @Inject constructor(
                 } catch (e: Exception) {
                     try {
                         val response = graphQLRepository.loadVideoGames(networkLibrary, gqlHeaders, videoId)
-                        if (enableIntegrity && integrity.value == null) {
-                            response.errors?.find { it.message == "failed integrity check" }?.let {
-                                integrity.value = "refreshVideo"
+                        if (enableIntegrity) {
+                            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                integrity.emit("refreshVideo")
                                 return@launch
                             }
                         }
@@ -460,9 +461,9 @@ class PlayerViewModel @Inject constructor(
                 if (!channelId.isNullOrBlank()) {
                     if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank() && userId != channelId) {
                         val errorMessage = graphQLRepository.loadFollowUser(networkLibrary, gqlHeaders, channelId, disableNotifications).also { response ->
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "follow"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("follow")
                                     return@launch
                                 }
                             }
@@ -504,9 +505,9 @@ class PlayerViewModel @Inject constructor(
                 if (!channelId.isNullOrBlank()) {
                     if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank() && userId != channelId) {
                         val errorMessage = graphQLRepository.loadUnfollowUser(networkLibrary, gqlHeaders, channelId).also { response ->
-                            if (enableIntegrity && integrity.value == null) {
-                                response.errors?.find { it.message == "failed integrity check" }?.let {
-                                    integrity.value = "unfollow"
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("unfollow")
                                     return@launch
                                 }
                             }

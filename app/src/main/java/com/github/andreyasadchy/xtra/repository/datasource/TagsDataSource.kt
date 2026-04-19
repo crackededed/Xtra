@@ -4,6 +4,7 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
+import com.github.andreyasadchy.xtra.util.C
 
 class TagsDataSource(
     private val getGameTags: Boolean,
@@ -38,7 +39,7 @@ class TagsDataSource(
         return if (getGameTags) {
             val response = graphQLRepository.loadQuerySearchGameTags(networkLibrary, gqlHeaders, query, 100)
             if (enableIntegrity) {
-                response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
             }
             val list = response.data!!.searchCategoryTags!!.map { item ->
                 Tag(
@@ -54,7 +55,7 @@ class TagsDataSource(
         } else {
             val response = graphQLRepository.loadQuerySearchFreeformTags(networkLibrary, gqlHeaders, query, 100)
             if (enableIntegrity) {
-                response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
             }
             val data = response.data!!.searchFreeformTags!!
             val items = data.edges!!
@@ -77,7 +78,7 @@ class TagsDataSource(
         return if (getGameTags) {
             val response = graphQLRepository.loadGameTags(networkLibrary, gqlHeaders, query, 100)
             if (enableIntegrity) {
-                response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
             }
             val list = response.data!!.searchCategoryTags.map {
                 Tag(
@@ -93,7 +94,7 @@ class TagsDataSource(
         } else {
             val response = graphQLRepository.loadFreeformTags(networkLibrary, gqlHeaders, query, 100)
             if (enableIntegrity) {
-                response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
             }
             val data = response.data!!.searchFreeformTags
             val items = data.edges

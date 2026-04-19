@@ -25,6 +25,7 @@ import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
@@ -53,7 +54,7 @@ class BookmarksViewModel @Inject internal constructor(
     private val okHttpClient: OkHttpClient,
 ) : ViewModel() {
 
-    val integrity = MutableStateFlow<String?>(null)
+    val integrity = MutableSharedFlow<String?>()
 
     val positions = playerRepository.loadVideoPositions()
     val ignoredUsers = vodBookmarkIgnoredUsersRepository.loadUsersFlow()
@@ -99,9 +100,9 @@ class BookmarksViewModel @Inject internal constructor(
                 }.chunked(100).forEach { ids ->
                     try {
                         val response = graphQLRepository.loadQueryUsersType(networkLibrary, gqlHeaders, ids)
-                        if (enableIntegrity && integrity.value == null) {
-                            response.errors?.find { it.message == "failed integrity check" }?.let {
-                                integrity.value = "users"
+                        if (enableIntegrity) {
+                            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                integrity.emit("users")
                                 return@launch
                             }
                         }
@@ -166,9 +167,9 @@ class BookmarksViewModel @Inject internal constructor(
             if (!videoId.isNullOrBlank()) {
                 val video = try {
                     val response = graphQLRepository.loadQueryVideo(networkLibrary, gqlHeaders, videoId)
-                    if (enableIntegrity && integrity.value == null) {
-                        response.errors?.find { it.message == "failed integrity check" }?.let {
-                            integrity.value = "video"
+                    if (enableIntegrity) {
+                        response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                            integrity.emit("video")
                             return@launch
                         }
                     }

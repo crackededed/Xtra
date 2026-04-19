@@ -79,7 +79,7 @@ class GameClipsDataSource(
             after = offset
         )
         if (enableIntegrity) {
-            response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
         }
         val data = response.data!!.game!!.clips!!
         val items = data.edges!!
@@ -123,7 +123,7 @@ class GameClipsDataSource(
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, Clip> {
         val response = graphQLRepository.loadGameClips(networkLibrary, gqlHeaders, gameSlug, gqlPeriod, gqlLanguages, params.loadSize, offset)
         if (enableIntegrity) {
-            response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
         }
         val data = response.data!!.game.clips
         val items = data.edges

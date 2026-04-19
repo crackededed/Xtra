@@ -20,6 +20,7 @@ import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
 import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -46,7 +47,7 @@ class GamePagerViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    val integrity = MutableStateFlow<String?>(null)
+    val integrity = MutableSharedFlow<String?>()
 
     private val args = GamePagerFragmentArgs.fromSavedStateHandle(savedStateHandle)
     private val _isFollowing = MutableStateFlow<Boolean?>(null)
@@ -68,9 +69,9 @@ class GamePagerViewModel @Inject constructor(
                         slug = args.gameSlug.takeIf { args.gameId.isNullOrBlank() },
                         name = args.gameName.takeIf { args.gameId.isNullOrBlank() && args.gameSlug.isNullOrBlank() },
                     )
-                    if (enableIntegrity && integrity.value == null) {
-                        response.errors?.find { it.message == "failed integrity check" }?.let {
-                            integrity.value = "refresh"
+                    if (enableIntegrity) {
+                        response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                            integrity.emit("refresh")
                             return@launch
                         }
                     }
@@ -145,9 +146,9 @@ class GamePagerViewModel @Inject constructor(
             try {
                 if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                     val errorMessage = graphQLRepository.loadFollowGame(networkLibrary, gqlHeaders, gameId).also { response ->
-                        if (enableIntegrity && integrity.value == null) {
-                            response.errors?.find { it.message == "failed integrity check" }?.let {
-                                integrity.value = "follow"
+                        if (enableIntegrity) {
+                            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                integrity.emit("follow")
                                 return@launch
                             }
                         }
@@ -240,9 +241,9 @@ class GamePagerViewModel @Inject constructor(
             try {
                 if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                     val errorMessage = graphQLRepository.loadUnfollowGame(networkLibrary, gqlHeaders, gameId).also { response ->
-                        if (enableIntegrity && integrity.value == null) {
-                            response.errors?.find { it.message == "failed integrity check" }?.let {
-                                integrity.value = "unfollow"
+                        if (enableIntegrity) {
+                            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                integrity.emit("unfollow")
                                 return@launch
                             }
                         }

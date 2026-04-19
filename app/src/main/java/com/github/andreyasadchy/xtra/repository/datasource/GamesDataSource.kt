@@ -59,7 +59,7 @@ class GamesDataSource(
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): LoadResult<Int, Game> {
         val response = graphQLRepository.loadQueryTopGames(networkLibrary, gqlHeaders, tags, params.loadSize, offset)
         if (enableIntegrity) {
-            response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
         }
         val data = response.data!!.games!!
         val items = data.edges!!
@@ -95,7 +95,7 @@ class GamesDataSource(
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, Game> {
         val response = graphQLRepository.loadTopGames(networkLibrary, gqlHeaders, tags, params.loadSize, offset)
         if (enableIntegrity) {
-            response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
         }
         val data = response.data!!.directoriesWithTags
         val items = data.edges
