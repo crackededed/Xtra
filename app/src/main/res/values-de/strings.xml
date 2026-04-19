@@ -703,9 +703,11 @@
     <string name="tv_login_message">Um Zugriff auf alle Funktionen zu erhalten, musst du dich als Android-TV-Gerät anmelden.\n\nFolge diesen Schritten:\n• Kopiere den auf der Webseite angezeigten Code.\n• Drücke unten auf die Schaltfläche \"Weiter\".\n• Gib den Code ein und drücke \"Aktivieren\".\n• Drücke \"Autorisieren\".</string>
     <string name="open_url">URL öffnen</string>
     <string name="external_login_message">Du kannst dich über einen externen Browser anmelden.\n\nFolge diesen Schritten:\n• Drücke \"URL öffnen\", um die Anmeldeseite zu öffnen.\n• Melde dich bei deinem Konto an und drücke \"Autorisieren\".\n• Es sollte eine Seite mit einer Fehlermeldung erscheinen. Kopiere die URL dieser Seite, füge sie in das untenstehende Feld ein und drücke \"OK\".</string>
-    <string name="loading">Wird geladen...</string>
+    <string name="loading">Wird geladen…</string>
     <string name="copy_code">Code kopieren</string>
     <string name="external_tv_login_message">Um Zugriff auf alle Funktionen zu erhalten, musst du dich als Android-TV-Gerät anmelden.\n\nFolge diesen Schritten:\n• Kopiere den auf dem Bildschirm angezeigten Code.\n• Drücke die Schaltfläche \"URL öffnen\".\n• Gib den Code ein und drücke \"Aktivieren\".\n• Drücke \"Autorisieren\".\n• Kehre zu Xtra zurück und drücke \"Weiter\".</string>
     <string name="activate_notifications_when_following">Activate notifications when following</string>
     <string name="account">Account</string>
+    <string name="downloading_update_progress">Downloading update… %1$s / %2$s</string>
+    <string name="downloading_update">Downloading update…</string>
 </resources>

@@ -703,9 +703,11 @@
     <string name="tv_login_message">若要存取所有功能，您需要登入為 Android TV 裝置。\n\n請遵循以下步驟：\n• 複製在網頁上顯示的 Code。\n• 按下在底部的「下一步」安紐。\n• 輸入 Code 並按下「啟動/Activate」。\n• 按下「授權/Authorize」。</string>
     <string name="open_url">開啟 URL</string>
     <string name="external_login_message">您可使用外部瀏覽器登入。\n\n請遵循這些步驟：\n• 按下「開啟 URL」以開啟登入頁面。\n• 登入您的帳號並按下「授權/Authorizet」。\n• 應該會出現一個錯誤網頁。複製該網頁的網址，將網址貼到下方框並按下「確定」。</string>
-    <string name="loading">正在載入...</string>
+    <string name="loading">正在載入…</string>
     <string name="copy_code">複製 Code</string>
     <string name="external_tv_login_message">若要存取所有功能，您需要登入為 Android TV 裝置。\n\n請遵循以下步驟：\n• 複製在螢幕上顯示的 Code。\n• 按下「開啟 URL」按鈕。\n• 輸入 Code 並按下「啟動/Activate」。\n• 按下「授權/Authorize」。\n• 返回 Xtra 並按下「下一步」。</string>
     <string name="activate_notifications_when_following">追隨時啟動通知</string>
     <string name="account">帳號</string>
+    <string name="downloading_update_progress">Downloading update… %1$s / %2$s</string>
+    <string name="downloading_update">Downloading update…</string>
 </resources>

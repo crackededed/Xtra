@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.ext.SdkExtensions
 import android.provider.Settings
+import android.text.format.Formatter
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -22,6 +23,7 @@ import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SearchView
@@ -59,6 +61,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.SettingsNavGraphDirections
 import com.github.andreyasadchy.xtra.databinding.ActivitySettingsBinding
+import com.github.andreyasadchy.xtra.databinding.DialogUpdateDownloadBinding
 import com.github.andreyasadchy.xtra.model.ui.SettingsDragListItem
 import com.github.andreyasadchy.xtra.model.ui.SettingsSearchItem
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
@@ -252,6 +255,8 @@ class SettingsActivity : AppCompatActivity() {
         private val viewModel: SettingsViewModel by activityViewModels()
         private var backupResultLauncher: ActivityResultLauncher<Intent>? = null
         private var restoreResultLauncher: ActivityResultLauncher<Intent>? = null
+        private var updateDownloadDialogBinding: DialogUpdateDownloadBinding? = null
+        private var updateDownloadDialog: AlertDialog? = null
 
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
@@ -586,7 +591,30 @@ class SettingsActivity : AppCompatActivity() {
                                             Toast.makeText(requireContext(), R.string.no_browser_found, Toast.LENGTH_LONG).show()
                                         }
                                     } else {
+                                        val binding = DialogUpdateDownloadBinding.inflate(layoutInflater)
+                                        updateDownloadDialogBinding = binding
+                                        val size = viewModel.updateSize
+                                        if (size != null) {
+                                            binding.textView.text = getString(
+                                                R.string.downloading_update_progress,
+                                                Formatter.formatFileSize(requireContext(), 0),
+                                                Formatter.formatFileSize(requireContext(), size),
+                                            )
+                                        } else {
+                                            binding.textView.text = getString(R.string.downloading_update)
+                                            binding.progressBar.visibility = View.GONE
+                                        }
                                         viewModel.downloadUpdate(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"), it)
+                                        val dialog = requireActivity().getAlertDialogBuilder()
+                                            .setView(binding.root)
+                                            .setNegativeButton(getString(android.R.string.cancel), null)
+                                            .setOnDismissListener {
+                                                viewModel.updateJob?.cancel()
+                                                updateDownloadDialogBinding = null
+                                                updateDownloadDialog = null
+                                            }
+                                            .show()
+                                        updateDownloadDialog = dialog
                                     }
                                 }
                                 .setNegativeButton(getString(R.string.no), null)
@@ -594,6 +622,30 @@ class SettingsActivity : AppCompatActivity() {
                         } else {
                             Toast.makeText(requireContext(), R.string.no_updates_found, Toast.LENGTH_LONG).show()
                         }
+                    }
+                }
+            }
+            viewLifecycleOwner.lifecycleScope.launch {
+                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.updateProgress.collectLatest {
+                        updateDownloadDialogBinding?.let { binding ->
+                            val size = viewModel.updateSize
+                            if (size != null) {
+                                binding.textView.text = getString(
+                                    R.string.downloading_update_progress,
+                                    Formatter.formatFileSize(requireContext(), it.toLong()),
+                                    Formatter.formatFileSize(requireContext(), size),
+                                )
+                                binding.progressBar.progress = (((it.toFloat() / size) * 100)).toInt()
+                            }
+                        }
+                    }
+                }
+            }
+            viewLifecycleOwner.lifecycleScope.launch {
+                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.closeUpdateDialog.collectLatest {
+                        updateDownloadDialog?.dismiss()
                     }
                 }
             }

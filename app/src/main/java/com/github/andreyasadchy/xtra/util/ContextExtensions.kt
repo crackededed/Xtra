@@ -17,20 +17,7 @@ import com.github.andreyasadchy.xtra.R
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import okhttp3.Headers
-import okhttp3.MediaType
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.Response
-import org.chromium.net.CronetException
-import org.chromium.net.UrlResponseInfo
-import org.chromium.net.apihelpers.ByteArrayCronetCallback
-import org.chromium.net.apihelpers.CronetRequestCompletionListener
-import java.io.IOException
 import java.util.Locale
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 fun Context.prefs(): SharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
 
@@ -288,43 +275,4 @@ fun Context.getActivity(): Activity? {
         is ContextWrapper -> this.baseContext.getActivity()
         else -> null
     }
-}
-
-fun getByteArrayCronetCallback(continuation: Continuation<Pair<UrlResponseInfo, ByteArray>>): ByteArrayCronetCallback {
-    return object : ByteArrayCronetCallback() {
-        override fun shouldFollowRedirect(info: UrlResponseInfo?, newLocationUrl: String?): Boolean {
-            return true
-        }
-    }.also {
-        it.addCompletionListener(object : CronetRequestCompletionListener<ByteArray> {
-            override fun onFailed(info: UrlResponseInfo?, exception: CronetException) {
-                continuation.resumeWithException(exception)
-            }
-
-            override fun onCanceled(info: UrlResponseInfo?) {
-                continuation.resumeWithException(IOException("The request was canceled!"))
-            }
-
-            override fun onSucceeded(info: UrlResponseInfo, body: ByteArray) {
-                continuation.resume(Pair(info, body))
-            }
-        })
-    }
-}
-
-val Response.body
-    get() = this.body()!!
-
-val Response.request: Request
-    get() = this.request()
-
-val Response.code
-    get() = this.code()
-
-fun Map<String, String>.toHeaders(): Headers {
-    return Headers.of(this)
-}
-
-fun String.toRequestBody(contentType: MediaType? = null): RequestBody {
-    return RequestBody.create(contentType, toByteArray())
 }
