@@ -19,6 +19,7 @@ import com.github.andreyasadchy.xtra.repository.VodBookmarkIgnoredUsersRepositor
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.body
+import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -242,7 +243,7 @@ class BookmarksViewModel @Inject internal constructor(
                                             }
                                         }
                                         else -> {
-                                            okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                            okHttpClient.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
                                                 if (response.isSuccessful) {
                                                     FileOutputStream(path).use { outputStream ->
                                                         response.body.byteStream().use { inputStream ->
@@ -345,7 +346,7 @@ class BookmarksViewModel @Inject internal constructor(
                                                     }
                                                 }
                                                 else -> {
-                                                    okHttpClient.newCall(Request.Builder().url(it).build()).execute().use { response ->
+                                                    okHttpClient.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
                                                         if (response.isSuccessful) {
                                                             FileOutputStream(path).use { outputStream ->
                                                                 response.body.byteStream().use { inputStream ->

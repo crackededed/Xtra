@@ -101,6 +101,7 @@ import com.github.andreyasadchy.xtra.model.gql.video.VideoMessagesResponse
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.body
+import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import com.github.andreyasadchy.xtra.util.NetworkUtils.toHeaders
 import com.github.andreyasadchy.xtra.util.NetworkUtils.toRequestBody
 import dagger.Lazy
@@ -178,7 +179,7 @@ class GraphQLRepository @Inject constructor(
                     headers(headers.toHeaders())
                     header("Content-Type", "application/json")
                     post(body.toRequestBody())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     response.body.byteStream().source().buffer().jsonReader().use {
                         query.parseResponse(it)
                     }
@@ -215,7 +216,7 @@ class GraphQLRepository @Inject constructor(
                     headers(headers.toHeaders())
                     header("Content-Type", "application/json")
                     post(body.toRequestBody())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     response.body.string()
                 }
             }

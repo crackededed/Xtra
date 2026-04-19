@@ -18,6 +18,7 @@ import com.github.andreyasadchy.xtra.model.helix.user.UsersResponse
 import com.github.andreyasadchy.xtra.model.helix.video.VideosResponse
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.body
+import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import com.github.andreyasadchy.xtra.util.NetworkUtils.toHeaders
 import com.github.andreyasadchy.xtra.util.NetworkUtils.toRequestBody
 import dagger.Lazy
@@ -76,7 +77,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<GamesResponse>(response.body.string())
                 }
             }
@@ -109,7 +110,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<GamesResponse>(response.body.string())
                 }
             }
@@ -146,7 +147,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<StreamsResponse>(response.body.string())
                 }
             }
@@ -180,7 +181,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<StreamsResponse>(response.body.string())
                 }
             }
@@ -218,7 +219,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<ClipsResponse>(response.body.string())
                 }
             }
@@ -258,7 +259,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<VideosResponse>(response.body.string())
                 }
             }
@@ -291,7 +292,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<UsersResponse>(response.body.string())
                 }
             }
@@ -325,7 +326,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<GamesResponse>(response.body.string())
                 }
             }
@@ -360,7 +361,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<ChannelSearchResponse>(response.body.string())
                 }
             }
@@ -395,7 +396,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<FollowsResponse>(response.body.string())
                 }
             }
@@ -430,7 +431,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<FollowsResponse>(response.body.string())
                 }
             }
@@ -464,7 +465,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<UserEmotesResponse>(response.body.string())
                 }
             }
@@ -496,7 +497,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<EmoteSetsResponse>(response.body.string())
                 }
             }
@@ -526,7 +527,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<BadgesResponse>(response.body.string())
                 }
             }
@@ -558,7 +559,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<BadgesResponse>(response.body.string())
                 }
             }
@@ -590,7 +591,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<CheerEmotesResponse>(response.body.string())
                 }
             }
@@ -625,7 +626,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<ChatUsersResponse>(response.body.string())
                 }
             }
@@ -681,7 +682,7 @@ class HelixRepository @Inject constructor(
                     headers(headers.toHeaders())
                     header("Content-Type", "application/json")
                     post(body.toRequestBody())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
@@ -735,7 +736,7 @@ class HelixRepository @Inject constructor(
                     headers(headers.toHeaders())
                     header("Content-Type", "application/json")
                     post(body.toRequestBody())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
@@ -790,7 +791,7 @@ class HelixRepository @Inject constructor(
                     headers(headers.toHeaders())
                     header("Content-Type", "application/json")
                     post(body.toRequestBody())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
@@ -848,7 +849,7 @@ class HelixRepository @Inject constructor(
                     headers(headers.toHeaders())
                     header("Content-Type", "application/json")
                     post(body.toRequestBody())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
@@ -897,7 +898,7 @@ class HelixRepository @Inject constructor(
                     url(url)
                     headers(headers.toHeaders())
                     method("DELETE", null)
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
@@ -946,7 +947,7 @@ class HelixRepository @Inject constructor(
                     url(url)
                     headers(headers.toHeaders())
                     method("DELETE", null)
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
@@ -990,7 +991,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         json.decodeFromString<JsonElement>(response.body.string()).jsonObject["data"]?.jsonArray?.firstOrNull()?.jsonObject?.get("color")?.jsonPrimitive?.contentOrNull
                     } else {
@@ -1038,7 +1039,7 @@ class HelixRepository @Inject constructor(
                     url(url)
                     headers(headers.toHeaders())
                     method("PUT", null)
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
@@ -1090,7 +1091,7 @@ class HelixRepository @Inject constructor(
                     headers(headers.toHeaders())
                     header("Content-Type", "application/json")
                     post(body.toRequestBody())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         json.decodeFromString<JsonElement>(response.body.string()).jsonObject["data"]?.jsonArray?.firstOrNull()?.jsonObject?.get("message")?.jsonPrimitive?.contentOrNull
                     } else {
@@ -1152,7 +1153,7 @@ class HelixRepository @Inject constructor(
                     headers(headers.toHeaders())
                     header("Content-Type", "application/json")
                     method("PATCH", body.toRequestBody())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
@@ -1204,7 +1205,7 @@ class HelixRepository @Inject constructor(
                     headers(headers.toHeaders())
                     header("Content-Type", "application/json")
                     post(body.toRequestBody())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
@@ -1249,7 +1250,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
@@ -1297,7 +1298,7 @@ class HelixRepository @Inject constructor(
                     url(url)
                     headers(headers.toHeaders())
                     method("DELETE", null)
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
@@ -1342,7 +1343,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
@@ -1389,7 +1390,7 @@ class HelixRepository @Inject constructor(
                     url(url)
                     headers(headers.toHeaders())
                     method("DELETE", null)
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
@@ -1434,7 +1435,7 @@ class HelixRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
@@ -1482,7 +1483,7 @@ class HelixRepository @Inject constructor(
                     url(url)
                     headers(headers.toHeaders())
                     method("DELETE", null)
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
@@ -1536,7 +1537,7 @@ class HelixRepository @Inject constructor(
                     headers(headers.toHeaders())
                     header("Content-Type", "application/json")
                     post(body.toRequestBody())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.isSuccessful) {
                         null
                     } else {
