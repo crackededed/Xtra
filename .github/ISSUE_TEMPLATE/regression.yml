@@ -1,0 +1,45 @@
+name: Regression report
+description: Report behavior that used to work and now does not
+title: "[regression] "
+labels: ["bug", "regression"]
+body:
+  - type: input
+    id: last_good
+    attributes:
+      label: Last known good version / commit
+      placeholder: "e.g. 1.1.5 or commit sha"
+    validations:
+      required: true
+
+  - type: input
+    id: first_bad
+    attributes:
+      label: First known bad version / commit
+      placeholder: "e.g. 1.1.6 or commit sha"
+
+  - type: input
+    id: device
+    attributes:
+      label: Device / Android version
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What regressed?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How do you reproduce it?
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Screenshots, logs, videos, bisect notes, related issues, etc.

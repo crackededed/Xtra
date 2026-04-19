@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Decode release keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release-keystore.jks
+
+      - name: Run unit tests
+        run: ./gradlew test
+
+      - name: Build release APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleRelease
+
+      - name: Read version
+        id: version
+        run: |
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Rename APK
+        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/ThystTV-${{ steps.version.outputs.version }}.apk
+
+      - name: Upload release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: thysttv-release-apk
+          path: app/build/outputs/apk/release/ThystTV-*.apk
+
+      - name: Prepare release notes
+        run: |
+          NOTES_FILE="docs/release-notes/${{ steps.version.outputs.version }}.md"
+          if [ -f "$NOTES_FILE" ]; then
+            cp "$NOTES_FILE" notes.txt
+          else
+            {
+              echo "# ThystTV ${{ steps.version.outputs.version }}"
+              echo
+              echo "Release notes were not found. Update docs/release-notes before publishing."
+            } > notes.txt
+          fi
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME:-v${{ steps.version.outputs.version }}}"
+          gh release create "$TAG" \
+            --title "ThystTV ${{ steps.version.outputs.version }}" \
+            --notes-file notes.txt \
+            app/build/outputs/apk/release/ThystTV-*.apk

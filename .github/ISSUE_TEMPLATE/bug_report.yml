@@ -1,0 +1,84 @@
+name: Bug report
+description: Report a reproducible bug in ThystTV
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: ThystTV version
+      placeholder: "e.g. 1.1.6"
+    validations:
+      required: true
+
+  - type: input
+    id: android
+    attributes:
+      label: Android version
+      placeholder: "e.g. Android 15"
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device model
+      placeholder: "e.g. Pixel 8"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Area
+      options:
+        - player
+        - gestures
+        - floating chat
+        - stats
+        - layout
+        - startup / crash
+        - build / install
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+        3. Rotate ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true
+
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshot / recording / logs
+      description: Paste links or relevant text here.
+
+  - type: dropdown
+    id: upstream
+    attributes:
+      label: Does this also happen in upstream Xtra?
+      options:
+        - unknown
+        - yes
+        - no

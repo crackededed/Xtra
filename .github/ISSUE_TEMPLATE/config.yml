@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security issue
+    url: https://github.com/tzii/ThystTV/security
+    about: Report vulnerabilities privately if private reporting is enabled.
