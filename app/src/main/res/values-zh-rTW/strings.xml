@@ -371,19 +371,7 @@
     <string name="api_login">取得選取 API 的權杖</string>
     <string name="api_helix_redirect">Helix 重新導向 URL</string>
     <string name="api_gql_redirect">GQL 重新導向 URL</string>
-    <string name="api_settings">API 設定</string>
     <string name="streams">串流</string>
-    <string name="game_streams">遊戲串流</string>
-    <string name="game_videos">遊戲影片</string>
-    <string name="game_clips">遊戲剪輯</string>
-    <string name="channel_videos">頻道影片</string>
-    <string name="channel_clips">頻道剪輯</string>
-    <string name="search_channels">搜尋頻道</string>
-    <string name="search_games">搜尋遊戲</string>
-    <string name="followed_streams">追隨的串流</string>
-    <string name="followed_videos">追隨的影片</string>
-    <string name="followed_channels">追隨的頻道</string>
-    <string name="followed_games">追隨的遊戲</string>
     <string name="irc_msgid_highlighted_message">醒目的訊息</string>
     <string name="irc_msgid_announcement">公告</string>
     <string name="add_bookmark">加入書籤</string>
@@ -439,7 +427,6 @@
     <string name="save_default">儲存為預設</string>
     <string name="viewers_high">觀眾數（高至低）</string>
     <string name="viewers_low">觀眾數（低至高）</string>
-    <string name="search_videos">搜尋影片</string>
     <string name="points_earned">已收到 %d 忠誠點數</string>
     <string name="points_notify">當賺取忠誠點數時通知</string>
     <string name="points_collect">自動地收集忠誠點數</string>
@@ -447,7 +434,6 @@
     <string name="raid_text">與 %2$d 觀眾揪團至 %1$s</string>
     <string name="show_raids">顯示揪團</string>
     <string name="auto_switch_raids">自動地在揪團上切換串流</string>
-    <string name="search_streams">搜尋串流</string>
     <string name="reload_emotes">重新載入表情符號</string>
     <string name="api_current_login">目前的登入</string>
     <string name="api_user_id">帳號 ID</string>
@@ -595,9 +581,6 @@
     <string name="channel_follower_emote">%s 追隨者表情符號</string>
     <string name="bits_reward_emote">%d 小奇點獎勵</string>
     <string name="show_name_paints">顯示 7TV 名稱顏料</string>
-    <string name="api_helix">Helix</string>
-    <string name="api_gql">GQL</string>
-    <string name="api_gql_persisted_query">GQL 持續性查詢</string>
     <string name="show_stv_badges">顯示 7TV 徽章</string>
     <string name="show_stv_personal_emotes">顯示 7TV 個人的表情符號</string>
     <string name="stv_live_updates">7TV live 表情符號更新</string>
@@ -682,7 +665,7 @@
     <string name="sort_and_type">排序依據：%1$s。類型：%2$s</string>
     <string name="search_tags">搜尋標籤</string>
     <string name="invalid_directory">無效的目錄</string>
-    <string name="suggested">推薦的</string>
+    <string name="suggestions">推薦的</string>
     <string name="languages">語言</string>
     <string name="recent">最近開始</string>
     <string name="filters">篩選</string>

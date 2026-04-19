@@ -65,7 +65,7 @@ import com.github.andreyasadchy.xtra.graphql.type.StreamSort
 import com.github.andreyasadchy.xtra.graphql.type.VideoSort
 import com.github.andreyasadchy.xtra.model.gql.ErrorResponse
 import com.github.andreyasadchy.xtra.model.gql.channel.ChannelClipsResponse
-import com.github.andreyasadchy.xtra.model.gql.channel.ChannelSuggestedResponse
+import com.github.andreyasadchy.xtra.model.gql.channel.ChannelSuggestionsResponse
 import com.github.andreyasadchy.xtra.model.gql.channel.ChannelVideosResponse
 import com.github.andreyasadchy.xtra.model.gql.channel.ChannelViewerListResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.BadgesResponse
@@ -868,7 +868,7 @@ class GraphQLRepository @Inject constructor(
         json.decodeFromString<GameClipsResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
-    suspend fun loadChannelSuggested(networkLibrary: String?, headers: Map<String, String>, channelLogin: String?): ChannelSuggestedResponse = withContext(Dispatchers.IO) {
+    suspend fun loadChannelSuggestions(networkLibrary: String?, headers: Map<String, String>, channelLogin: String?): ChannelSuggestionsResponse = withContext(Dispatchers.IO) {
         val body = buildJsonObject {
             putJsonObject("extensions") {
                 putJsonObject("persistedQuery") {
@@ -898,7 +898,7 @@ class GraphQLRepository @Inject constructor(
                 put("X-Device-Id", randomId)
             }
         } else headers
-        json.decodeFromString<ChannelSuggestedResponse>(sendPersistedQuery(networkLibrary, headers, body))
+        json.decodeFromString<ChannelSuggestionsResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
     suspend fun loadChannelVideos(networkLibrary: String?, headers: Map<String, String>, channelLogin: String?, type: String?, sort: String?, limit: Int?, cursor: String?): ChannelVideosResponse = withContext(Dispatchers.IO) {
