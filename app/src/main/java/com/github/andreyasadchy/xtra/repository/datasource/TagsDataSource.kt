@@ -15,22 +15,22 @@ class TagsDataSource(
 ) : PagingSource<Int, Tag>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Tag> {
-        return try {
-            if (query.isNotBlank()) {
-                gqlQueryLoad()
-            } else {
-                LoadResult.Page(
-                    data = emptyList(),
-                    prevKey = null,
-                    nextKey = null
-                )
-            }
-        } catch (e: Exception) {
+        return if (query.isNotBlank()) {
             try {
-                gqlLoad()
+                gqlQueryLoad()
             } catch (e: Exception) {
-                LoadResult.Error(e)
+                try {
+                    gqlLoad()
+                } catch (e: Exception) {
+                    LoadResult.Error(e)
+                }
             }
+        } else {
+            LoadResult.Page(
+                data = emptyList(),
+                prevKey = null,
+                nextKey = null
+            )
         }
     }
 

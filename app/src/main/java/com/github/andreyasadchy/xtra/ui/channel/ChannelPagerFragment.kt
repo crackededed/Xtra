@@ -505,7 +505,7 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
             viewPager.reduceDragSensitivity()
             TabLayoutMediator(tabLayout, viewPager) { tab, position ->
                 tab.text = when (tabs.getOrNull(position)) {
-                    "0" -> getString(R.string.suggested)
+                    "0" -> getString(R.string.suggestions)
                     "1" -> getString(R.string.videos)
                     "2" -> getString(R.string.clips)
                     "3" -> getString(R.string.chat)

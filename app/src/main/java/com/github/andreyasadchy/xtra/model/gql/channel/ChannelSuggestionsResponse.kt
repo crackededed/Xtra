@@ -4,7 +4,7 @@ import com.github.andreyasadchy.xtra.model.gql.Error
 import kotlinx.serialization.Serializable
 
 @Serializable
-class ChannelSuggestedResponse(
+class ChannelSuggestionsResponse(
     val errors: List<Error>? = null,
     val data: Data? = null,
 ) {
