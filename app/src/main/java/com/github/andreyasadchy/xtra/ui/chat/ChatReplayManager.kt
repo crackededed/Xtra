@@ -5,6 +5,7 @@ import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.chat.TwitchEmote
 import com.github.andreyasadchy.xtra.model.chat.VideoChatMessage
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
+import com.github.andreyasadchy.xtra.util.C
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -67,7 +68,7 @@ class ChatReplayManager(
                     graphQLRepository.loadQueryVideoComments(networkLibrary, gqlHeaders, videoId, cursor = cursor)
                 }
                 if (enableIntegrity) {
-                    response.errors?.find { it.message == "failed integrity check" }?.let {
+                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
                         listener.getIntegrityToken()
                         isLoading = false
                         return@launch
@@ -127,7 +128,7 @@ class ChatReplayManager(
                         graphQLRepository.loadVideoMessages(networkLibrary, gqlHeaders, videoId, cursor = cursor)
                     }
                     if (enableIntegrity) {
-                        response.errors?.find { it.message == "failed integrity check" }?.let {
+                        response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
                             listener.getIntegrityToken()
                             isLoading = false
                             return@launch

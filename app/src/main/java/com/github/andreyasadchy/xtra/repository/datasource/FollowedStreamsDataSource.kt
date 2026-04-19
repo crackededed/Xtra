@@ -41,7 +41,7 @@ class FollowedStreamsDataSource(
                     }
                 }
             }?.let {
-                if (it is LoadResult.Error && it.throwable.message == "failed integrity check") {
+                if (it is LoadResult.Error && it.throwable.message == C.FAILED_INTEGRITY_CHECK) {
                     return it
                 }
                 (it as? LoadResult.Page)?.data?.let { list.addAll(it) }
@@ -63,7 +63,7 @@ class FollowedStreamsDataSource(
                         }
                     }
                 }?.let {
-                    if (it is LoadResult.Error && it.throwable.message == "failed integrity check") {
+                    if (it is LoadResult.Error && it.throwable.message == C.FAILED_INTEGRITY_CHECK) {
                         return it
                     }
                     it as? LoadResult.Page
@@ -96,7 +96,7 @@ class FollowedStreamsDataSource(
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): LoadResult<Int, Stream> {
         val response = graphQLRepository.loadQueryUserFollowedStreams(networkLibrary, gqlHeaders, 100, offset)
         if (enableIntegrity) {
-            response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
         }
         val data = response.data!!.user!!.followedLiveUsers!!
         val items = data.edges!!
@@ -133,7 +133,7 @@ class FollowedStreamsDataSource(
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, Stream> {
         val response = graphQLRepository.loadFollowedStreams(networkLibrary, gqlHeaders, 100, offset)
         if (enableIntegrity) {
-            response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
         }
         val data = response.data!!.currentUser.followedLiveUsers
         val items = data.edges
@@ -214,7 +214,7 @@ class FollowedStreamsDataSource(
         val items = ids.chunked(100).map { list ->
             graphQLRepository.loadQueryUsersStream(networkLibrary, gqlHeaders, list).also { response ->
                 if (enableIntegrity) {
-                    response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+                    response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
                 }
             }
         }.flatMap { it.data!!.users!! }

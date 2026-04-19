@@ -34,6 +34,7 @@ import com.github.andreyasadchy.xtra.databinding.FragmentAboutBinding
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentArgs
 import com.github.andreyasadchy.xtra.ui.common.BaseNetworkFragment
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
+import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.team.TeamFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
@@ -43,7 +44,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.CallbackListener {
+class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.Listener {
 
     private var _binding: FragmentAboutBinding? = null
     private val binding get() = _binding!!
@@ -60,6 +61,13 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.CallbackList
         super.onViewCreated(view, savedInstanceState)
         panelAdapter = ChannelPanelAdapter(this@ChannelAboutFragment)
         binding.recyclerView.adapter = panelAdapter
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.integrity.collect {
+                    (requireActivity() as? MainActivity)?.getNewIntegrityToken(it, childFragmentManager)
+                }
+            }
+        }
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
             if (activity?.findViewById<LinearLayout>(R.id.navBarContainer)?.isVisible == false) {
                 val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -195,19 +203,17 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.CallbackList
         )
     }
 
-    override fun onIntegrityDialogCallback(callback: String?) {
-        (parentFragment as? IntegrityDialog.CallbackListener)?.onIntegrityDialogCallback("refresh")
-        if (callback == "refresh") {
-            viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.loadAbout(
-                        channelId = args.channelId,
-                        channelLogin = args.channelLogin,
-                        networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                        gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
-                        enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                    )
-                }
+    override fun onIntegrityTokenLoaded(callback: String?) {
+        (parentFragment as? IntegrityDialog.Listener)?.onIntegrityTokenLoaded("refresh")
+        when (callback) {
+            "refresh" -> {
+                viewModel.loadAbout(
+                    channelId = args.channelId,
+                    channelLogin = args.channelLogin,
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
+                    enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                )
             }
         }
     }

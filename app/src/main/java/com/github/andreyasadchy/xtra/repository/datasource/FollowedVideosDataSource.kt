@@ -52,7 +52,7 @@ class FollowedVideosDataSource(
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): LoadResult<Int, Video> {
         val response = graphQLRepository.loadQueryUserFollowedVideos(networkLibrary, gqlHeaders, gqlQuerySort, gqlQueryType?.let { listOf(it) }, params.loadSize, offset)
         if (enableIntegrity) {
-            response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
         }
         val data = response.data!!.user!!.followedVideos!!
         val items = data.edges!!
@@ -91,7 +91,7 @@ class FollowedVideosDataSource(
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, Video> {
         val response = graphQLRepository.loadFollowedVideos(networkLibrary, gqlHeaders, params.loadSize, offset)
         if (enableIntegrity) {
-            response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
         }
         val data = response.data!!.currentUser.followedVideos
         val items = data.edges

@@ -64,7 +64,7 @@ class StreamsDataSource(
     private suspend fun gqlQueryLoad(params: LoadParams<Int>): LoadResult<Int, Stream> {
         val response = graphQLRepository.loadQueryTopStreams(networkLibrary, gqlHeaders, gqlQuerySort, tags, gqlQueryLanguages, params.loadSize, offset)
         if (enableIntegrity) {
-            response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
         }
         val data = response.data!!.streams!!
         val items = data.edges!!
@@ -101,7 +101,7 @@ class StreamsDataSource(
     private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, Stream> {
         val response = graphQLRepository.loadTopStreams(networkLibrary, gqlHeaders, gqlSort, tags, gqlLanguages, params.loadSize, offset)
         if (enableIntegrity) {
-            response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
+            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { return LoadResult.Error(Exception(it.message)) }
         }
         val data = response.data!!.streams
         val items = data.edges

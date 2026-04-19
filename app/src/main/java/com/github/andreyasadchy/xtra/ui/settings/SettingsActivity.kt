@@ -1204,7 +1204,7 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
             findPreference<Preference>("get_integrity_token")?.setOnPreferenceClickListener {
-                IntegrityDialog.show(childFragmentManager)
+                IntegrityDialog.newInstance(null).show(childFragmentManager, null)
                 true
             }
             val httpEngine = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7
