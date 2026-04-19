@@ -7,6 +7,7 @@ import com.github.andreyasadchy.xtra.model.id.DeviceCodeResponse
 import com.github.andreyasadchy.xtra.model.id.TokenResponse
 import com.github.andreyasadchy.xtra.model.id.ValidationResponse
 import com.github.andreyasadchy.xtra.util.NetworkUtils
+import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -60,7 +61,7 @@ class AuthRepository @Inject constructor(
                 okHttpClient.newCall(Request.Builder().apply {
                     url("https://id.twitch.tv/oauth2/validate")
                     header("Authorization", token)
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     if (response.code != 401) {
                         json.decodeFromString<ValidationResponse>(response.body.string())
                     } else {
@@ -94,7 +95,7 @@ class AuthRepository @Inject constructor(
                     url("https://id.twitch.tv/oauth2/revoke")
                     header("Content-Type", "application/x-www-form-urlencoded")
                     post(body.toRequestBody())
-                }.build()).execute()
+                }.build()).executeAsync()
             }
         }
     }
@@ -124,7 +125,7 @@ class AuthRepository @Inject constructor(
                     url("https://id.twitch.tv/oauth2/device")
                     header("Content-Type", "application/x-www-form-urlencoded")
                     post(body.toRequestBody())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<DeviceCodeResponse>(response.body.string())
                 }
             }
@@ -156,7 +157,7 @@ class AuthRepository @Inject constructor(
                     url("https://id.twitch.tv/oauth2/token")
                     header("Content-Type", "application/x-www-form-urlencoded")
                     post(body.toRequestBody())
-                }.build()).execute().use { response ->
+                }.build()).executeAsync().use { response ->
                     json.decodeFromString<TokenResponse>(response.body.string())
                 }
             }

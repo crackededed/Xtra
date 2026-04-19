@@ -7,8 +7,13 @@ import android.net.http.UrlRequest
 import android.net.http.UrlResponseInfo
 import android.os.Build
 import androidx.annotation.RequiresExtension
+import kotlinx.coroutines.suspendCancellableCoroutine
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.Interceptor
+import okhttp3.Response
 import okhttp3.ResponseBody
+import okhttp3.internal.closeQuietly
 import okio.Buffer
 import okio.BufferedSource
 import okio.ForwardingSource
@@ -179,4 +184,30 @@ object NetworkUtils {
             }.build()
         }
     }
+
+    suspend fun Call.executeAsync(): Response =
+        suspendCancellableCoroutine { continuation ->
+            continuation.invokeOnCancellation {
+                this.cancel()
+            }
+            this.enqueue(
+                object : Callback {
+                    override fun onFailure(
+                        call: Call,
+                        e: okio.IOException,
+                    ) {
+                        continuation.resumeWithException(e)
+                    }
+
+                    override fun onResponse(
+                        call: Call,
+                        response: Response,
+                    ) {
+                        continuation.resume(response) { _, value, _ ->
+                            value.closeQuietly()
+                        }
+                    }
+                },
+            )
+        }
 }
