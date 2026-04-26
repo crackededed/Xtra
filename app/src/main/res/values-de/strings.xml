@@ -706,8 +706,8 @@
     <string name="loading">Wird geladen…</string>
     <string name="copy_code">Code kopieren</string>
     <string name="external_tv_login_message">Um Zugriff auf alle Funktionen zu erhalten, musst du dich als Android-TV-Gerät anmelden.\n\nFolge diesen Schritten:\n• Kopiere den auf dem Bildschirm angezeigten Code.\n• Drücke die Schaltfläche \"URL öffnen\".\n• Gib den Code ein und drücke \"Aktivieren\".\n• Drücke \"Autorisieren\".\n• Kehre zu Xtra zurück und drücke \"Weiter\".</string>
-    <string name="activate_notifications_when_following">Activate notifications when following</string>
-    <string name="account">Account</string>
-    <string name="downloading_update_progress">Downloading update… %1$s / %2$s</string>
-    <string name="downloading_update">Downloading update…</string>
+    <string name="activate_notifications_when_following">Benachrichtigungen beim Folgen aktivieren</string>
+    <string name="account">Konto</string>
+    <string name="downloading_update_progress">Update wird heruntergeladen… %1$s / %2$s</string>
+    <string name="downloading_update">Update wird heruntergeladen…</string>
 </resources>
