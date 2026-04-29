@@ -283,7 +283,7 @@ class Media3Fragment : Media3PlayerFragment() {
                                                         viewLifecycleOwner.lifecycleScope.launch {
                                                             for (i in 0 until 10) {
                                                                 delay(10000)
-                                                                if (!viewModel.checkPlaylist(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"), playlist)) {
+                                                                if (!viewModel.checkPlaylist(requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), playlist)) {
                                                                     break
                                                                 }
                                                             }
@@ -860,7 +860,7 @@ class Media3Fragment : Media3PlayerFragment() {
                     val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
                     val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
                     val cellular = networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
-                    if ((!cellular && requireContext().prefs().getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") || (cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
+                    if ((!cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_QUALITY, "saved") == "saved") || (cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
                         requireContext().prefs().edit { putString(C.PLAYER_QUALITY, quality.name) }
                     }
                 }

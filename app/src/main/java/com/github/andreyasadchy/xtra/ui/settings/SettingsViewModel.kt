@@ -19,13 +19,10 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.github.andreyasadchy.xtra.db.AppDatabase
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
-import com.github.andreyasadchy.xtra.repository.GraphQLRepository
-import com.github.andreyasadchy.xtra.repository.HelixRepository
-import com.github.andreyasadchy.xtra.repository.NotificationUsersRepository
-import com.github.andreyasadchy.xtra.repository.OfflineRepository
+import com.github.andreyasadchy.xtra.repository.NotificationsRepository
+import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
-import com.github.andreyasadchy.xtra.repository.RecentSearchRepository
-import com.github.andreyasadchy.xtra.repository.ShownNotificationsRepository
+import com.github.andreyasadchy.xtra.repository.RecentSearchesRepository
 import com.github.andreyasadchy.xtra.ui.main.LiveNotificationWorker
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
@@ -52,12 +49,9 @@ import kotlin.system.exitProcess
 class SettingsViewModel @Inject constructor(
     @param:ApplicationContext private val applicationContext: Context,
     private val playerRepository: PlayerRepository,
-    private val offlineRepository: OfflineRepository,
-    private val recentSearchRepository: RecentSearchRepository,
-    private val shownNotificationsRepository: ShownNotificationsRepository,
-    private val notificationUsersRepository: NotificationUsersRepository,
-    private val graphQLRepository: GraphQLRepository,
-    private val helixRepository: HelixRepository,
+    private val offlineVideosRepository: OfflineVideosRepository,
+    private val recentSearchesRepository: RecentSearchesRepository,
+    private val notificationsRepository: NotificationsRepository,
     private val appDatabase: AppDatabase,
     private val httpEngine: Lazy<HttpEngine>?,
     private val cronetEngine: Lazy<CronetEngine>?,
@@ -69,13 +63,13 @@ class SettingsViewModel @Inject constructor(
     fun deletePositions() {
         viewModelScope.launch {
             playerRepository.deleteVideoPositions()
-            offlineRepository.deletePositions()
+            offlineVideosRepository.deletePositions()
         }
     }
 
     fun deleteRecentSearches() {
         viewModelScope.launch {
-            recentSearchRepository.deleteAll()
+            recentSearchesRepository.deleteAll()
         }
     }
 
@@ -91,7 +85,7 @@ class SettingsViewModel @Inject constructor(
                         files.filter { !it.name.endsWith(".json") }.forEach { file ->
                             if (file.isDirectory) {
                                 file.listFiles()?.filter { it.name.endsWith(".m3u8") }?.forEach { playlistFile ->
-                                        val existingVideo = offlineRepository.getVideoByUrl(playlistFile.path)
+                                        val existingVideo = offlineVideosRepository.getByUrl(playlistFile.path)
                                         if (existingVideo == null) {
                                             val playlist = FileInputStream(playlistFile).use {
                                                 PlaylistUtils.parseMediaPlaylist(it)
@@ -153,7 +147,7 @@ class SettingsViewModel @Inject constructor(
 
                                                 }
                                             }
-                                            offlineRepository.saveVideo(
+                                            offlineVideosRepository.save(
                                                 OfflineVideo(
                                                     url = playlistFile.path,
                                                     name = if (!title.isNullOrBlank()) title else Uri.decode(file.name),
@@ -176,7 +170,7 @@ class SettingsViewModel @Inject constructor(
                                         }
                                     }
                             } else if (file.isFile && (file.name.endsWith(".mp4") || file.name.endsWith(".ts"))) {
-                                val existingVideo = offlineRepository.getVideoByUrl(file.path)
+                                val existingVideo = offlineVideosRepository.getByUrl(file.path)
                                 if (existingVideo == null) {
                                     val fileName = file.name.removeSuffix(".mp4").removeSuffix(".ts")
                                     val chatFile = chatFiles[fileName]
@@ -224,7 +218,7 @@ class SettingsViewModel @Inject constructor(
 
                                         }
                                     }
-                                    offlineRepository.saveVideo(
+                                    offlineVideosRepository.save(
                                         OfflineVideo(
                                             url = file.path,
                                             name = if (!title.isNullOrBlank()) title else Uri.decode(fileName),
@@ -324,7 +318,7 @@ class SettingsViewModel @Inject constructor(
     fun toggleNotifications(enabled: Boolean, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>) {
         viewModelScope.launch(Dispatchers.IO) {
             if (enabled) {
-                shownNotificationsRepository.getNewStreams(notificationUsersRepository, networkLibrary, gqlHeaders, graphQLRepository, helixHeaders, helixRepository)
+                notificationsRepository.getNewStreams(networkLibrary, gqlHeaders, helixHeaders)
                 WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
                     "live_notifications",
                     ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,

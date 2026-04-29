@@ -112,7 +112,7 @@ class ReplyClickedDialog : BottomSheetDialogFragment() {
                     }
                 }
             }
-            if (requireContext().prefs().getBoolean(C.DEBUG_CHAT_FULLMSG, false)) {
+            if (requireContext().prefs().getBoolean(C.DEBUG_CHAT_FULL_MSG, false)) {
                 copyFullMsg.visibility = View.VISIBLE
             }
         }

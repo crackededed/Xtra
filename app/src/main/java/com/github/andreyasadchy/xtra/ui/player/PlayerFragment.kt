@@ -243,7 +243,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             val touchSlopRange = -touchSlop.toFloat()..touchSlop.toFloat()
             val longPressTimeout = ViewConfiguration.getLongPressTimeout()
             val moveFreely = requireContext().prefs().getBoolean(C.PLAYER_MOVE_FREELY, false)
-            val doubleTap = requireContext().prefs().getBoolean(C.PLAYER_DOUBLETAP, true) && !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)
+            val doubleTap = requireContext().prefs().getBoolean(C.PLAYER_DOUBLE_TAP, true) && !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)
             val controllerTapDetector = GestureDetector(
                 requireContext(),
                 object : GestureDetector.SimpleOnGestureListener() {
@@ -631,7 +631,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     playbackService?.channelId,
                     playbackService?.channelLogin,
                     requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
-                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     TwitchApiHelper.getGQLHeaders(requireContext(), true),
                     TwitchApiHelper.getHelixHeaders(requireContext()),
                 )
@@ -642,8 +642,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                 channelId = playbackService?.channelId,
                                 channelLogin = it,
                                 viewerCount = playbackService?.viewerCount,
-                                loop = requireContext().prefs().getBoolean(C.CHAT_DISABLE, false) || !requireContext().prefs().getBoolean(C.CHAT_PUBSUB_ENABLED, true),
-                                networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                loop = requireContext().prefs().getBoolean(C.CHAT_DISABLE, false) || !requireContext().prefs().getBoolean(C.CHAT_PUB_SUB_ENABLED, true),
+                                networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                 helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext()),
                                 gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
                                 enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
@@ -652,10 +652,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     }
                     BasePlaybackService.VIDEO -> {
                         val videoId = playbackService?.videoId
-                        if (!videoId.isNullOrBlank() && (requireContext().prefs().getBoolean(C.PLAYER_GAMESBUTTON, true) || requireContext().prefs().getBoolean(C.PLAYER_MENU_GAMES, false))) {
+                        if (!videoId.isNullOrBlank() && (requireContext().prefs().getBoolean(C.PLAYER_GAMES_BUTTON, true) || requireContext().prefs().getBoolean(C.PLAYER_MENU_GAMES, false))) {
                             viewModel.loadGamesList(
                                 videoId,
-                                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                 TwitchApiHelper.getGQLHeaders(requireContext()),
                                 requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                             )
@@ -704,7 +704,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     category.text = gameName
                     category.setOnClickListener {
                         findNavController().navigate(
-                            if (requireContext().prefs().getBoolean(C.UI_GAMEPAGER, true)) {
+                            if (requireContext().prefs().getBoolean(C.UI_GAME_PAGER, true)) {
                                 GamePagerFragmentDirections.actionGlobalGamePagerFragment(
                                     gameId = playbackService?.gameId,
                                     gameSlug = playbackService?.gameSlug,
@@ -725,7 +725,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     minimize.visibility = View.VISIBLE
                     minimize.setOnClickListener { minimize() }
                 }
-                if (requireContext().prefs().getBoolean(C.PLAYER_VOLUMEBUTTON, true)) {
+                if (requireContext().prefs().getBoolean(C.PLAYER_VOLUME_BUTTON, true)) {
                     volume.visibility = View.VISIBLE
                     volume.setOnClickListener { showVolumeDialog() }
                 }
@@ -773,7 +773,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         (!TwitchApiHelper.getGQLHeaders(requireContext(), true)[C.HEADER_TOKEN].isNullOrBlank() ||
                                 !TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank())
                     ) {
-                        if (requireContext().prefs().getBoolean(C.PLAYER_CHATBARTOGGLE, false) && !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)) {
+                        if (requireContext().prefs().getBoolean(C.PLAYER_CHAT_BAR_TOGGLE, false) && !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)) {
                             toggleChatInput.visibility = View.VISIBLE
                             toggleChatInput.setOnClickListener { toggleChatBar() }
                         }
@@ -809,13 +809,13 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                         chatFragment?.updateStreamId(it)
                                     }
                                     if (requireContext().prefs().getBoolean(C.CHAT_DISABLE, false) ||
-                                        !requireContext().prefs().getBoolean(C.CHAT_PUBSUB_ENABLED, true) ||
+                                        !requireContext().prefs().getBoolean(C.CHAT_PUB_SUB_ENABLED, true) ||
                                         viewersText.text.isNullOrBlank()
                                     ) {
                                         updateViewerCount(stream.viewerCount)
                                     }
                                     if (requireContext().prefs().getBoolean(C.CHAT_DISABLE, false) ||
-                                        !requireContext().prefs().getBoolean(C.CHAT_PUBSUB_ENABLED, true) ||
+                                        !requireContext().prefs().getBoolean(C.CHAT_PUB_SUB_ENABLED, true) ||
                                         title.text.isNullOrBlank() ||
                                         category.text.isNullOrBlank()
                                     ) {
@@ -838,11 +838,11 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         restart.visibility = View.VISIBLE
                         restart.setOnClickListener { restartPlayer() }
                     }
-                    if (requireContext().prefs().getBoolean(C.PLAYER_SEEKLIVE, false)) {
+                    if (requireContext().prefs().getBoolean(C.PLAYER_SEEK_LIVE, false)) {
                         seekLive.visibility = View.VISIBLE
                         seekLive.setOnClickListener { seekToLivePosition() }
                     }
-                    if (requireContext().prefs().getBoolean(C.PLAYER_VIEWERLIST, false)) {
+                    if (requireContext().prefs().getBoolean(C.PLAYER_VIEWER_LIST, false)) {
                         viewersLayout.setOnClickListener { openViewerList() }
                     }
                     if (requireContext().prefs().getBoolean(C.PLAYER_SHOW_UPTIME, true)) {
@@ -865,7 +865,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     )
                     updateViewerCount(playbackService?.viewerCount)
                 } else {
-                    if (requireContext().prefs().getBoolean(C.PLAYER_SPEEDBUTTON, true)) {
+                    if (requireContext().prefs().getBoolean(C.PLAYER_SPEED_BUTTON, true)) {
                         speed.visibility = View.VISIBLE
                         speed.setOnClickListener { showSpeedDialog() }
                     }
@@ -883,12 +883,12 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                             }
                         }
                     }
-                    if (!playbackService?.videoId.isNullOrBlank() && (requireContext().prefs().getBoolean(C.PLAYER_GAMESBUTTON, true) || requireContext().prefs().getBoolean(C.PLAYER_MENU_GAMES, false))) {
+                    if (!playbackService?.videoId.isNullOrBlank() && (requireContext().prefs().getBoolean(C.PLAYER_GAMES_BUTTON, true) || requireContext().prefs().getBoolean(C.PLAYER_MENU_GAMES, false))) {
                         viewLifecycleOwner.lifecycleScope.launch {
                             repeatOnLifecycle(Lifecycle.State.STARTED) {
                                 viewModel.gamesList.collectLatest { list ->
                                     if (!list.isNullOrEmpty()) {
-                                        if (requireContext().prefs().getBoolean(C.PLAYER_GAMESBUTTON, true)) {
+                                        if (requireContext().prefs().getBoolean(C.PLAYER_GAMES_BUTTON, true)) {
                                             vodGames.visibility = View.VISIBLE
                                             vodGames.setOnClickListener { showVodGames() }
                                         }
@@ -964,7 +964,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                                 requireContext().tokenPrefs().getString(C.USER_ID, null),
                                                 playbackService?.channelId,
                                                 setting,
-                                                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                                requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                                 TwitchApiHelper.getGQLHeaders(requireContext(), true),
                                                 requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                                             )
@@ -980,7 +980,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                         requireContext().prefs().getBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false),
                                         !requireContext().prefs().getBoolean(C.UI_ACTIVATE_NOTIFICATIONS_WHEN_FOLLOWING, true),
                                         playbackService?.createdAt,
-                                        requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                        requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                         TwitchApiHelper.getGQLHeaders(requireContext(), true),
                                         requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                                     )
@@ -1188,7 +1188,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         aspectRatio.visibility = View.VISIBLE
                         aspectRatio.setOnClickListener { setResizeMode() }
                     }
-                    if (requireContext().prefs().getBoolean(C.PLAYER_CHATTOGGLE, true) && !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)) {
+                    if (requireContext().prefs().getBoolean(C.PLAYER_CHAT_TOGGLE, true) && !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)) {
                         toggleChat.visibility = View.VISIBLE
                         if (isChatOpen) {
                             toggleChat.setImageResource(R.drawable.baseline_speaker_notes_off_black_24)
@@ -1310,17 +1310,15 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         } else null
     }
 
-    fun saveTranslateAllMessagesUser() {
+    fun saveTranslatedChannel() {
         playbackService?.channelId?.let {
-            chatFragment?.toggleTranslateAllMessages(true)
-            viewModel.saveTranslateAllMessagesUser(it)
+            chatFragment?.saveTranslatedChannel(it)
         }
     }
 
-    fun deleteTranslateAllMessagesUser() {
+    fun deleteTranslatedChannel() {
         playbackService?.channelId?.let {
-            chatFragment?.toggleTranslateAllMessages(false)
-            viewModel.deleteTranslateAllMessagesUser(it)
+            chatFragment?.deleteTranslatedChannel(it)
         }
     }
 
@@ -1346,7 +1344,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     fun hideChat() {
         isChatOpen = false
         hideChatLayout()
-        if (requireContext().prefs().getBoolean(C.PLAYER_CHATTOGGLE, true)) {
+        if (requireContext().prefs().getBoolean(C.PLAYER_CHAT_TOGGLE, true)) {
             binding.playerControls.toggleChat.apply {
                 visibility = View.VISIBLE
                 setImageResource(R.drawable.baseline_speaker_notes_black_24)
@@ -1359,7 +1357,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     fun showChat() {
         isChatOpen = true
         showChatLayout()
-        if (requireContext().prefs().getBoolean(C.PLAYER_CHATTOGGLE, true)) {
+        if (requireContext().prefs().getBoolean(C.PLAYER_CHAT_TOGGLE, true)) {
             binding.playerControls.toggleChat.apply {
                 visibility = View.VISIBLE
                 setImageResource(R.drawable.baseline_speaker_notes_off_black_24)
@@ -1413,8 +1411,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     fun updateViewerCount(viewerCount: Int?) {
         with(binding.playerControls) {
             if (viewerCount != null) {
-                viewersText.text = TwitchApiHelper.formatCount(viewerCount, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
-                if (requireContext().prefs().getBoolean(C.PLAYER_VIEWERICON, true)) {
+                viewersText.text = TwitchApiHelper.formatCount(viewerCount, requireContext().prefs().getBoolean(C.UI_TRUNCATE_VIEW_COUNT, true))
+                if (requireContext().prefs().getBoolean(C.PLAYER_VIEWER_ICON, true)) {
                     viewersIcon.visibility = View.VISIBLE
                 }
             } else {
@@ -1440,7 +1438,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 uptimeLayout.visibility = View.VISIBLE
                 uptimeTimer.base = SystemClock.elapsedRealtime() + uptimeMs - System.currentTimeMillis()
                 uptimeTimer.start()
-                if (requireContext().prefs().getBoolean(C.PLAYER_VIEWERICON, true)) {
+                if (requireContext().prefs().getBoolean(C.PLAYER_VIEWER_ICON, true)) {
                     uptimeIcon.visibility = View.VISIBLE
                 } else {
                     uptimeIcon.visibility = View.GONE
@@ -1471,7 +1469,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 visibility = View.VISIBLE
                 setOnClickListener {
                     findNavController().navigate(
-                        if (requireContext().prefs().getBoolean(C.UI_GAMEPAGER, true)) {
+                        if (requireContext().prefs().getBoolean(C.UI_GAME_PAGER, true)) {
                             GamePagerFragmentDirections.actionGlobalGamePagerFragment(
                                 gameId = gameId,
                                 gameSlug = gameSlug,
@@ -1513,7 +1511,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     fun saveBookmark() {
         viewModel.saveBookmark(
             filesDir = requireContext().filesDir.path,
-            networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+            networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
             helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext()),
             gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
             videoId = playbackService?.videoId,
@@ -2104,7 +2102,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     playbackService?.channelId,
                     playbackService?.channelLogin,
                     requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
-                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     TwitchApiHelper.getGQLHeaders(requireContext(), true),
                     TwitchApiHelper.getHelixHeaders(requireContext()),
                 )
@@ -2117,14 +2115,14 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     playbackService?.channelId,
                     playbackService?.channelLogin,
                     requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
-                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     TwitchApiHelper.getGQLHeaders(requireContext(), true),
                     TwitchApiHelper.getHelixHeaders(requireContext()),
                 )
-                if (!videoId.isNullOrBlank() && (requireContext().prefs().getBoolean(C.PLAYER_GAMESBUTTON, true) || requireContext().prefs().getBoolean(C.PLAYER_MENU_GAMES, false))) {
+                if (!videoId.isNullOrBlank() && (requireContext().prefs().getBoolean(C.PLAYER_GAMES_BUTTON, true) || requireContext().prefs().getBoolean(C.PLAYER_MENU_GAMES, false))) {
                     viewModel.loadGamesList(
                         videoId,
-                        requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                        requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                         TwitchApiHelper.getGQLHeaders(requireContext()),
                         requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                     )
@@ -2137,7 +2135,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     playbackService?.channelId,
                     playbackService?.channelLogin,
                     requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
-                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     TwitchApiHelper.getGQLHeaders(requireContext(), true),
                     TwitchApiHelper.getHelixHeaders(requireContext()),
                 )
@@ -2152,7 +2150,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     requireContext().prefs().getBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false),
                     !requireContext().prefs().getBoolean(C.UI_ACTIVATE_NOTIFICATIONS_WHEN_FOLLOWING, true),
                     playbackService?.createdAt,
-                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     TwitchApiHelper.getGQLHeaders(requireContext(), true),
                     requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                 )
@@ -2162,7 +2160,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     requireContext().tokenPrefs().getString(C.USER_ID, null),
                     playbackService?.channelId,
                     requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
-                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     TwitchApiHelper.getGQLHeaders(requireContext(), true),
                     requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                 )

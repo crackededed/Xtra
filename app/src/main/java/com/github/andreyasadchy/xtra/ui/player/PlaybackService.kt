@@ -37,7 +37,7 @@ import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.player.lowlatency.CronetDataSource
 import com.github.andreyasadchy.xtra.player.lowlatency.HttpEngineDataSource
 import com.github.andreyasadchy.xtra.player.lowlatency.OkHttpDataSource
-import com.github.andreyasadchy.xtra.repository.OfflineRepository
+import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
@@ -86,7 +86,7 @@ class PlaybackService : MediaSessionService() {
     lateinit var playerRepository: PlayerRepository
 
     @Inject
-    lateinit var offlineRepository: OfflineRepository
+    lateinit var offlineVideosRepository: OfflineVideosRepository
 
     private var mediaSession: MediaSession? = null
     private var dynamicsProcessing: DynamicsProcessing? = null
@@ -280,16 +280,16 @@ class PlaybackService : MediaSessionService() {
                                         }
                                     }.build()
                                 } else null
-                                val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp")
+                                val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
                                 player.setMediaSource(
                                     HlsMediaSource.Factory(
                                         DefaultDataSource.Factory(
                                             this@PlaybackService,
                                             when {
-                                                networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                                     HttpEngineDataSource.Factory(httpEngine!!.get(), cronetExecutor, multivariantPlaylistProxyClient, mediaPlaylistProxyClient) { proxyMediaPlaylist }
                                                 }
-                                                networkLibrary == "Cronet" && cronetEngine != null -> {
+                                                networkLibrary == C.CRONET && cronetEngine != null -> {
                                                     CronetDataSource.Factory(cronetEngine!!.get(), cronetExecutor, multivariantPlaylistProxyClient, mediaPlaylistProxyClient) { proxyMediaPlaylist }
                                                 }
                                                 else -> {
@@ -353,16 +353,16 @@ class PlaybackService : MediaSessionService() {
                                 }
                                 videoId = newId
                                 offlineVideoId = null
-                                val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp")
+                                val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
                                 player.setMediaSource(
                                     HlsMediaSource.Factory(
                                         DefaultDataSource.Factory(
                                             this@PlaybackService,
                                             when {
-                                                networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                                     HttpEngineDataSource.Factory(httpEngine!!.get(), cronetExecutor, null, null) { false }
                                                 }
-                                                networkLibrary == "Cronet" && cronetEngine != null -> {
+                                                networkLibrary == C.CRONET && cronetEngine != null -> {
                                                     CronetDataSource.Factory(cronetEngine!!.get(), cronetExecutor, null, null) { false }
                                                 }
                                                 else -> {
@@ -399,16 +399,16 @@ class PlaybackService : MediaSessionService() {
                                 val channelLogo = customCommand.customExtras.getString(CHANNEL_LOGO)
                                 videoId = null
                                 offlineVideoId = null
-                                val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp")
+                                val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
                                 player.setMediaSource(
                                     ProgressiveMediaSource.Factory(
                                         DefaultDataSource.Factory(
                                             this@PlaybackService,
                                             when {
-                                                networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                                     HttpEngineDataSource.Factory(httpEngine!!.get(), cronetExecutor, null, null) { false }
                                                 }
-                                                networkLibrary == "Cronet" && cronetEngine != null -> {
+                                                networkLibrary == C.CRONET && cronetEngine != null -> {
                                                     CronetDataSource.Factory(cronetEngine!!.get(), cronetExecutor, null, null) { false }
                                                 }
                                                 else -> {
@@ -599,7 +599,7 @@ class PlaybackService : MediaSessionService() {
 
     private fun savePosition() {
         mediaSession?.player?.let { player ->
-            if (!player.currentTracks.isEmpty && prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+            if (!player.currentTracks.isEmpty && prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
                 videoId?.let {
                     runBlocking {
                         playerRepository.saveVideoPosition(VideoPosition(it, player.currentPosition))
@@ -607,7 +607,7 @@ class PlaybackService : MediaSessionService() {
                 } ?:
                 offlineVideoId?.let {
                     runBlocking {
-                        offlineRepository.updateVideoPosition(it, player.currentPosition)
+                        offlineVideosRepository.updatePosition(it, player.currentPosition)
                     }
                 }
             }
@@ -616,7 +616,7 @@ class PlaybackService : MediaSessionService() {
 
     private fun updateSavedPosition() {
         mediaSession?.player?.let { player ->
-            if (!player.currentTracks.isEmpty && prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+            if (!player.currentTracks.isEmpty && prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
                 val currentPosition = player.currentPosition
                 val savedPosition = lastSavedPosition
                 if (savedPosition == null || currentPosition - savedPosition !in 0..2000) {
@@ -628,7 +628,7 @@ class PlaybackService : MediaSessionService() {
                     } ?:
                     offlineVideoId?.let {
                         runBlocking {
-                            offlineRepository.updateVideoPosition(it, currentPosition)
+                            offlineVideosRepository.updatePosition(it, currentPosition)
                         }
                     }
                 }

@@ -82,7 +82,7 @@ class StreamsCompactAdapter(
                         fragment.requireContext().imageLoader.enqueue(
                             ImageRequest.Builder(fragment.requireContext()).apply {
                                 data(item.channelImage)
-                                if (context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
+                                if (context.prefs().getBoolean(C.UI_ROUND_USER_IMAGE, true)) {
                                     transformations(CircleCropTransformation())
                                 }
                                 crossfade(true)
@@ -117,7 +117,7 @@ class StreamsCompactAdapter(
                     if (showGame && item.gameName != null) {
                         val gameListener: (View) -> Unit = {
                             fragment.findNavController().navigate(
-                                if (context.prefs().getBoolean(C.UI_GAMEPAGER, true)) {
+                                if (context.prefs().getBoolean(C.UI_GAME_PAGER, true)) {
                                     GamePagerFragmentDirections.actionGlobalGamePagerFragment(
                                         gameId = item.gameId,
                                         gameSlug = item.gameSlug,
@@ -140,7 +140,7 @@ class StreamsCompactAdapter(
                     }
                     if (item.viewerCount != null) {
                         viewers.visibility = View.VISIBLE
-                        viewers.text = TwitchApiHelper.formatCount(item.viewerCount ?: 0, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                        viewers.text = TwitchApiHelper.formatCount(item.viewerCount ?: 0, context.prefs().getBoolean(C.UI_TRUNCATE_VIEW_COUNT, true))
                     } else {
                         viewers.visibility = View.GONE
                     }

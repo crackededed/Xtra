@@ -13,9 +13,9 @@ interface NotificationUsersDao {
     fun getAll(): List<NotificationUser>
 
     @Query("SELECT * FROM notifications WHERE channelId = :id")
-    fun getByUserId(id: String): NotificationUser?
+    fun getById(id: String): NotificationUser?
 
-    @Insert()
+    @Insert
     fun insert(item: NotificationUser)
 
     @Delete

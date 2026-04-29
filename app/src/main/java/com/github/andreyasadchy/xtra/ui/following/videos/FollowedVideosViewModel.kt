@@ -12,14 +12,14 @@ import androidx.paging.cachedIn
 import com.github.andreyasadchy.xtra.graphql.type.BroadcastType
 import com.github.andreyasadchy.xtra.graphql.type.VideoSort
 import com.github.andreyasadchy.xtra.model.ui.Bookmark
-import com.github.andreyasadchy.xtra.model.ui.SortChannel
+import com.github.andreyasadchy.xtra.model.ui.ChannelSort
 import com.github.andreyasadchy.xtra.model.ui.User
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.repository.BookmarksRepository
+import com.github.andreyasadchy.xtra.repository.ChannelSortRepository
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
-import com.github.andreyasadchy.xtra.repository.SortChannelRepository
 import com.github.andreyasadchy.xtra.repository.datasource.FollowedVideosDataSource
 import com.github.andreyasadchy.xtra.ui.common.VideosSortDialog
 import com.github.andreyasadchy.xtra.util.C
@@ -47,7 +47,7 @@ import javax.inject.Inject
 @HiltViewModel
 class FollowedVideosViewModel @Inject constructor(
     @param:ApplicationContext private val applicationContext: Context,
-    private val sortChannelRepository: SortChannelRepository,
+    private val channelSortRepository: ChannelSortRepository,
     playerRepository: PlayerRepository,
     private val bookmarksRepository: BookmarksRepository,
     private val graphQLRepository: GraphQLRepository,
@@ -61,7 +61,7 @@ class FollowedVideosViewModel @Inject constructor(
     val filter = MutableStateFlow<Filter?>(null)
     val sortText = MutableStateFlow<CharSequence?>(null)
     val positions = playerRepository.loadVideoPositions()
-    val bookmarks = bookmarksRepository.loadBookmarksFlow()
+    val bookmarks = bookmarksRepository.getAllFlow()
 
     val sort: String
         get() = filter.value?.sort ?: VideosSortDialog.SORT_TIME
@@ -91,17 +91,17 @@ class FollowedVideosViewModel @Inject constructor(
                 gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext, true),
                 graphQLRepository = graphQLRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
             )
         }.flow
     }.cachedIn(viewModelScope)
 
-    suspend fun getSortChannel(id: String): SortChannel? {
-        return sortChannelRepository.getById(id)
+    suspend fun getChannelSort(id: String): ChannelSort? {
+        return channelSortRepository.getById(id)
     }
 
-    suspend fun saveSortChannel(item: SortChannel) {
-        sortChannelRepository.save(item)
+    suspend fun saveChannelSort(item: ChannelSort) {
+        channelSortRepository.save(item)
     }
 
     fun setFilter(sort: String?, type: String?) {
@@ -116,9 +116,9 @@ class FollowedVideosViewModel @Inject constructor(
 
     fun saveBookmark(filesDir: String, video: Video, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>) {
         viewModelScope.launch {
-            val item = video.id?.let { bookmarksRepository.getBookmarkByVideoId(it) }
+            val item = video.id?.let { bookmarksRepository.getByVideoId(it) }
             if (item != null) {
-                bookmarksRepository.deleteBookmark(item)
+                bookmarksRepository.delete(item)
             } else {
                 val downloadedThumbnail = video.id.takeIf { !it.isNullOrBlank() }?.let { id ->
                     video.thumbnail.takeIf { !it.isNullOrBlank() }?.let {
@@ -127,7 +127,7 @@ class FollowedVideosViewModel @Inject constructor(
                         viewModelScope.launch(Dispatchers.IO) {
                             try {
                                 when {
-                                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
@@ -137,7 +137,7 @@ class FollowedVideosViewModel @Inject constructor(
                                             }
                                         }
                                     }
-                                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                                    networkLibrary == C.CRONET && cronetEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                         }
@@ -173,7 +173,7 @@ class FollowedVideosViewModel @Inject constructor(
                         viewModelScope.launch(Dispatchers.IO) {
                             try {
                                 when {
-                                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
@@ -183,7 +183,7 @@ class FollowedVideosViewModel @Inject constructor(
                                             }
                                         }
                                     }
-                                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                                    networkLibrary == C.CRONET && cronetEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                         }
@@ -253,7 +253,7 @@ class FollowedVideosViewModel @Inject constructor(
                         } else null
                     }
                 }
-                bookmarksRepository.saveBookmark(
+                bookmarksRepository.save(
                     Bookmark(
                         videoId = video.id,
                         userId = video.channelId,

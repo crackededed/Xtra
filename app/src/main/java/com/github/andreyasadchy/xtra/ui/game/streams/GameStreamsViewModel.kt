@@ -9,12 +9,12 @@ import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import com.github.andreyasadchy.xtra.graphql.type.Language
 import com.github.andreyasadchy.xtra.graphql.type.StreamSort
+import com.github.andreyasadchy.xtra.model.ui.GameSort
 import com.github.andreyasadchy.xtra.model.ui.SavedFilter
-import com.github.andreyasadchy.xtra.model.ui.SortGame
+import com.github.andreyasadchy.xtra.repository.GameSortRepository
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.repository.SavedFiltersRepository
-import com.github.andreyasadchy.xtra.repository.SortGameRepository
 import com.github.andreyasadchy.xtra.repository.datasource.GameStreamsDataSource
 import com.github.andreyasadchy.xtra.ui.common.StreamsSortDialog
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentArgs
@@ -31,7 +31,7 @@ import javax.inject.Inject
 @HiltViewModel
 class GameStreamsViewModel @Inject constructor(
     @ApplicationContext applicationContext: Context,
-    private val sortGameRepository: SortGameRepository,
+    private val gameSortRepository: GameSortRepository,
     private val savedFiltersRepository: SavedFiltersRepository,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
@@ -85,25 +85,25 @@ class GameStreamsViewModel @Inject constructor(
                 helixHeaders = TwitchApiHelper.getHelixHeaders(applicationContext),
                 helixRepository = helixRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
             )
         }.flow
     }.cachedIn(viewModelScope)
 
-    suspend fun getSortGame(id: String): SortGame? {
-        return sortGameRepository.getById(id)
+    suspend fun getGameSort(id: String): GameSort? {
+        return gameSortRepository.getById(id)
     }
 
-    suspend fun saveSortGame(item: SortGame) {
-        sortGameRepository.save(item)
+    suspend fun saveGameSort(item: GameSort) {
+        gameSortRepository.save(item)
     }
 
-    suspend fun deleteSortGame(item: SortGame) {
-        sortGameRepository.delete(item)
+    suspend fun deleteGameSort(item: GameSort) {
+        gameSortRepository.delete(item)
     }
 
     suspend fun saveFilters(item: SavedFilter) {
-        savedFiltersRepository.saveFilter(item)
+        savedFiltersRepository.save(item)
     }
 
     fun setFilter(sort: String?, tags: Array<String>?, languages: Array<String>?) {

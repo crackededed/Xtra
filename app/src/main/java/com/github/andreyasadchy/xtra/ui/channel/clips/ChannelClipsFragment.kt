@@ -20,8 +20,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
 import com.github.andreyasadchy.xtra.databinding.SortBarBinding
+import com.github.andreyasadchy.xtra.model.ui.ChannelSort
 import com.github.andreyasadchy.xtra.model.ui.Clip
-import com.github.andreyasadchy.xtra.model.ui.SortChannel
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentArgs
 import com.github.andreyasadchy.xtra.ui.common.ClipsAdapter
 import com.github.andreyasadchy.xtra.ui.common.FragmentHost
@@ -83,7 +83,7 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                val sortValues = args.channelId?.let { viewModel.getSortChannel(it) } ?: viewModel.getSortChannel("default")
+                val sortValues = args.channelId?.let { viewModel.getChannelSort(it) } ?: viewModel.getChannelSort("default")
                 viewModel.setFilter(
                     period = sortValues?.clipPeriod,
                 )
@@ -117,7 +117,7 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
                 VideosSortDialog.newInstance(
                     sort = VideosSortDialog.SORT_VIEWS,
                     period = viewModel.period,
-                    saved = args.channelId?.let { viewModel.getSortChannel(it) } != null
+                    saved = args.channelId?.let { viewModel.getChannelSort(it) } != null
                 ).show(childFragmentManager, null)
             }
         }
@@ -141,23 +141,23 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
                 }
                 if (saveSort) {
                     args.channelId?.let { id ->
-                        val item = viewModel.getSortChannel(id)?.apply {
+                        val item = viewModel.getChannelSort(id)?.apply {
                             clipPeriod = period
-                        } ?: SortChannel(
+                        } ?: ChannelSort(
                             id = id,
                             clipPeriod = period
                         )
-                        viewModel.saveSortChannel(item)
+                        viewModel.saveChannelSort(item)
                     }
                 }
                 if (saveDefault) {
-                    val item = viewModel.getSortChannel("default")?.apply {
+                    val item = viewModel.getChannelSort("default")?.apply {
                         clipPeriod = period
-                    } ?: SortChannel(
+                    } ?: ChannelSort(
                         id = "default",
                         clipPeriod = period
                     )
-                    viewModel.saveSortChannel(item)
+                    viewModel.saveChannelSort(item)
                 }
             }
         }
@@ -166,7 +166,7 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
     override fun deleteSavedSort() {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
-                args.channelId?.let { viewModel.getSortChannel(it) }?.let { viewModel.deleteSortChannel(it) }
+                args.channelId?.let { viewModel.getChannelSort(it) }?.let { viewModel.deleteChannelSort(it) }
             }
         }
     }

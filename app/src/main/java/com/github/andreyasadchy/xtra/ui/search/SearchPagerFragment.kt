@@ -175,7 +175,7 @@ class SearchPagerFragment : BaseNetworkFragment(), FragmentHost {
                                     viewModel.loadUserResult(
                                         checkedId = checkedId,
                                         result = result,
-                                        networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                        networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                         gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
                                         enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                                     )

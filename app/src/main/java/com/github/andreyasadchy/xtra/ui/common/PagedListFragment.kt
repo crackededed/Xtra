@@ -72,7 +72,7 @@ abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.Listen
                 swipeRefresh.isEnabled = true
                 swipeRefresh.setOnRefreshListener { pagingAdapter.refresh() }
             }
-            if (enableScrollTopButton && requireContext().prefs().getBoolean(C.UI_SCROLLTOP, true)) {
+            if (enableScrollTopButton && requireContext().prefs().getBoolean(C.UI_SCROLL_TOP, true)) {
                 recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                     override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                         super.onScrollStateChanged(recyclerView, newState)

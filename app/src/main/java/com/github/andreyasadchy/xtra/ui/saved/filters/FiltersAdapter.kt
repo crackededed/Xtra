@@ -52,7 +52,7 @@ class FiltersAdapter(
                     root.setOnClickListener {
                         if (item.gameId != null || item.gameSlug != null || item.gameName != null) {
                             fragment.findNavController().navigate(
-                                if (context.prefs().getBoolean(C.UI_GAMEPAGER, true)) {
+                                if (context.prefs().getBoolean(C.UI_GAME_PAGER, true)) {
                                     GamePagerFragmentDirections.actionGlobalGamePagerFragment(
                                         gameId = item.gameId,
                                         gameSlug = item.gameSlug,
