@@ -6,16 +6,15 @@ import android.os.ext.SdkExtensions
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andreyasadchy.xtra.model.ui.Bookmark
-import com.github.andreyasadchy.xtra.model.ui.SortChannel
+import com.github.andreyasadchy.xtra.model.ui.BookmarkIgnoredUser
+import com.github.andreyasadchy.xtra.model.ui.ChannelSort
 import com.github.andreyasadchy.xtra.model.ui.User
 import com.github.andreyasadchy.xtra.model.ui.Video
-import com.github.andreyasadchy.xtra.model.ui.VodBookmarkIgnoredUser
 import com.github.andreyasadchy.xtra.repository.BookmarksRepository
+import com.github.andreyasadchy.xtra.repository.ChannelSortRepository
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
-import com.github.andreyasadchy.xtra.repository.SortChannelRepository
-import com.github.andreyasadchy.xtra.repository.VodBookmarkIgnoredUsersRepository
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.body
@@ -43,9 +42,8 @@ class BookmarksViewModel @Inject internal constructor(
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
     private val bookmarksRepository: BookmarksRepository,
-    private val sortChannelRepository: SortChannelRepository,
+    private val channelSortRepository: ChannelSortRepository,
     playerRepository: PlayerRepository,
-    private val vodBookmarkIgnoredUsersRepository: VodBookmarkIgnoredUsersRepository,
     private val httpEngine: Lazy<HttpEngine>?,
     private val cronetEngine: Lazy<CronetEngine>?,
     private val cronetExecutor: ExecutorService,
@@ -55,7 +53,7 @@ class BookmarksViewModel @Inject internal constructor(
     val integrity = MutableSharedFlow<String?>()
 
     val positions = playerRepository.loadVideoPositions()
-    val ignoredUsers = vodBookmarkIgnoredUsersRepository.loadUsersFlow()
+    val ignoredUsers = bookmarksRepository.getIgnoredUsersFlow()
     private var updatedUsers = false
     private var updatedVideos = false
 
@@ -69,21 +67,21 @@ class BookmarksViewModel @Inject internal constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow = filter.flatMapLatest { filter ->
-        bookmarksRepository.loadBookmarksFlow()
+        bookmarksRepository.getAllFlow()
     }
 
     fun delete(bookmark: Bookmark) {
         viewModelScope.launch {
-            bookmarksRepository.deleteBookmark(bookmark)
+            bookmarksRepository.delete(bookmark)
         }
     }
 
     fun vodIgnoreUser(userId: String) {
         viewModelScope.launch {
-            if (vodBookmarkIgnoredUsersRepository.getUserById(userId) != null) {
-                vodBookmarkIgnoredUsersRepository.deleteUser(VodBookmarkIgnoredUser(userId))
+            if (bookmarksRepository.getIgnoredUser(userId) != null) {
+                bookmarksRepository.deleteIgnoredUser(BookmarkIgnoredUser(userId))
             } else {
-                vodBookmarkIgnoredUsersRepository.saveUser(VodBookmarkIgnoredUser(userId))
+                bookmarksRepository.saveIgnoredUser(BookmarkIgnoredUser(userId))
             }
         }
     }
@@ -91,8 +89,8 @@ class BookmarksViewModel @Inject internal constructor(
     fun updateUsers(networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
         if (!updatedUsers) {
             viewModelScope.launch {
-                val bookmarks = bookmarksRepository.loadBookmarks()
-                val ignored = vodBookmarkIgnoredUsersRepository.loadUsers()
+                val bookmarks = bookmarksRepository.getAll()
+                val ignored = bookmarksRepository.getIgnoredUsers()
                 bookmarks.mapNotNull { bookmark ->
                     bookmark.userId?.takeIf { ignored.find { it.userId == bookmark.userId } == null }
                 }.chunked(100).forEach { ids ->
@@ -147,7 +145,7 @@ class BookmarksViewModel @Inject internal constructor(
                             bookmarks.filter { it.userId == id }
                         }?.forEach { bookmark ->
                             if (user.type != bookmark.userType || user.broadcasterType != bookmark.userBroadcasterType) {
-                                bookmarksRepository.updateBookmark(bookmark.apply {
+                                bookmarksRepository.update(bookmark.apply {
                                     userType = user.type
                                     userBroadcasterType = user.broadcasterType
                                 })
@@ -213,7 +211,7 @@ class BookmarksViewModel @Inject internal constructor(
                         }
                     } else null
                 }
-                val bookmark = bookmarksRepository.getBookmarkByVideoId(videoId)
+                val bookmark = bookmarksRepository.getByVideoId(videoId)
                 if (video != null && bookmark != null) {
                     val downloadedThumbnail = video.id.takeIf { !it.isNullOrBlank() }?.let { id ->
                         video.thumbnail.takeIf { !it.isNullOrBlank() }?.let {
@@ -222,7 +220,7 @@ class BookmarksViewModel @Inject internal constructor(
                             viewModelScope.launch(Dispatchers.IO) {
                                 try {
                                     when {
-                                        networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                        networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                             val response = suspendCancellableCoroutine { continuation ->
                                                 httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                             }
@@ -232,7 +230,7 @@ class BookmarksViewModel @Inject internal constructor(
                                                 }
                                             }
                                         }
-                                        networkLibrary == "Cronet" && cronetEngine != null -> {
+                                        networkLibrary == C.CRONET && cronetEngine != null -> {
                                             val response = suspendCancellableCoroutine { continuation ->
                                                 cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                             }
@@ -261,7 +259,7 @@ class BookmarksViewModel @Inject internal constructor(
                             path
                         }
                     }
-                    bookmarksRepository.updateBookmark(
+                    bookmarksRepository.update(
                         Bookmark(
                             videoId = bookmark.videoId,
                             userId = video.channelId ?: bookmark.userId,
@@ -289,7 +287,7 @@ class BookmarksViewModel @Inject internal constructor(
     fun updateVideos(filesDir: String, networkLibrary: String?, helixHeaders: Map<String, String>) {
         if (!updatedVideos) {
             viewModelScope.launch {
-                val bookmarks = bookmarksRepository.loadBookmarks()
+                val bookmarks = bookmarksRepository.getAll()
                 bookmarks.mapNotNull { it.videoId }.chunked(100).forEach { ids ->
                     helixRepository.getVideos(
                         networkLibrary = networkLibrary,
@@ -325,7 +323,7 @@ class BookmarksViewModel @Inject internal constructor(
                                     viewModelScope.launch(Dispatchers.IO) {
                                         try {
                                             when {
-                                                networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                                     val response = suspendCancellableCoroutine { continuation ->
                                                         httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                                     }
@@ -335,7 +333,7 @@ class BookmarksViewModel @Inject internal constructor(
                                                         }
                                                     }
                                                 }
-                                                networkLibrary == "Cronet" && cronetEngine != null -> {
+                                                networkLibrary == C.CRONET && cronetEngine != null -> {
                                                     val response = suspendCancellableCoroutine { continuation ->
                                                         cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                                     }
@@ -363,7 +361,7 @@ class BookmarksViewModel @Inject internal constructor(
                                     }
                                     path
                                 }
-                                bookmarksRepository.updateBookmark(
+                                bookmarksRepository.update(
                                     Bookmark(
                                         videoId = bookmark.videoId,
                                         userId = video.channelId ?: bookmark.userId,
@@ -392,12 +390,12 @@ class BookmarksViewModel @Inject internal constructor(
         }
     }
 
-    suspend fun getSortChannel(id: String): SortChannel? {
-        return sortChannelRepository.getById(id)
+    suspend fun getChannelSort(id: String): ChannelSort? {
+        return channelSortRepository.getById(id)
     }
 
-    suspend fun saveSortChannel(item: SortChannel) {
-        sortChannelRepository.save(item)
+    suspend fun saveChannelSort(item: ChannelSort) {
+        channelSortRepository.save(item)
     }
 
     fun setFilter(sort: String?, order: String?) {

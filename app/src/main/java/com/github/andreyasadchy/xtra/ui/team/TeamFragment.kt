@@ -163,7 +163,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.Listener {
     override fun initialize() {
         viewModel.loadTeamInfo(
             teamName = args.teamName,
-            networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+            networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
             gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
             enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
         )
@@ -184,7 +184,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.Listener {
             }
         }
         initializeAdapter(binding.recyclerViewLayout, pagingAdapter)
-        if (requireContext().prefs().getBoolean(C.UI_SCROLLTOP, true)) {
+        if (requireContext().prefs().getBoolean(C.UI_SCROLL_TOP, true)) {
             binding.recyclerViewLayout.scrollTop.setOnClickListener {
                 scrollToTop()
                 it.visibility = View.GONE
@@ -210,7 +210,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.Listener {
                 teamMembers.text = resources.getQuantityString(
                     R.plurals.members,
                     count,
-                    TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                    TwitchApiHelper.formatCount(count, requireContext().prefs().getBoolean(C.UI_TRUNCATE_VIEW_COUNT, true))
                 )
                 if (team.bannerUrl != null) {
                     teamMembers.setTextColor(Color.LTGRAY)
@@ -247,7 +247,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.Listener {
                     .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .apply {
-                        if (requireContext().prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
+                        if (requireContext().prefs().getBoolean(C.UI_ROUND_USER_IMAGE, true)) {
                             circleCrop()
                         }
                     }
@@ -295,7 +295,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.Listener {
     override fun onNetworkRestored() {
         viewModel.loadTeamInfo(
             teamName = args.teamName,
-            networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+            networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
             gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
             enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
         )
@@ -307,7 +307,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.Listener {
             "refresh" -> {
                 viewModel.loadTeamInfo(
                     teamName = args.teamName,
-                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
                     enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                 )

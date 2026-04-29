@@ -170,7 +170,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listen
                                 channelId = selectedMessage.userId,
                                 channelLogin = selectedMessage.userLogin,
                                 targetId = if (selectedMessage.userId != targetId) targetId else null,
-                                networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                 gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
                                 helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext()),
                                 enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
@@ -220,7 +220,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listen
                     }
                 }
             }
-            if (requireContext().prefs().getBoolean(C.DEBUG_CHAT_FULLMSG, false)) {
+            if (requireContext().prefs().getBoolean(C.DEBUG_CHAT_FULL_MSG, false)) {
                 copyFullMsg.visibility = View.VISIBLE
             }
         }
@@ -308,7 +308,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listen
                     .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .apply {
-                        if (requireContext().prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
+                        if (requireContext().prefs().getBoolean(C.UI_ROUND_USER_IMAGE, true)) {
                             circleCrop()
                         }
                     }
@@ -460,7 +460,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listen
                         channelId = userId,
                         channelLogin = userLogin,
                         targetId = if (userId != targetId) targetId else null,
-                        networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                        networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                         gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
                         helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext()),
                         enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),

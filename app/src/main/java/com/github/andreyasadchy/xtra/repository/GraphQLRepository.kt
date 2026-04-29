@@ -149,7 +149,7 @@ class GraphQLRepository @Inject constructor(
             }
         }
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://gql.twitch.tv/gql/", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -161,7 +161,7 @@ class GraphQLRepository @Inject constructor(
                     query.parseResponse(it)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder("https://gql.twitch.tv/gql/", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -190,7 +190,7 @@ class GraphQLRepository @Inject constructor(
 
     private suspend fun sendPersistedQuery(networkLibrary: String?, headers: Map<String, String>, body: String): String = withContext(Dispatchers.IO) {
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://gql.twitch.tv/gql/", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -200,7 +200,7 @@ class GraphQLRepository @Inject constructor(
                 }
                 String(response.second)
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder("https://gql.twitch.tv/gql/", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }

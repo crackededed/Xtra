@@ -16,7 +16,7 @@ import androidx.work.NetworkType
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
-import com.github.andreyasadchy.xtra.repository.OfflineRepository
+import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import com.github.andreyasadchy.xtra.util.m3u8.Segment
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,7 +33,7 @@ import kotlin.math.max
 @HiltViewModel
 class DownloadsViewModel @Inject internal constructor(
     @param:ApplicationContext private val applicationContext: Context,
-    private val repository: OfflineRepository,
+    private val offlineVideosRepository: OfflineVideosRepository,
 ) : ViewModel() {
 
     var selectedVideo: OfflineVideo? = null
@@ -44,7 +44,7 @@ class DownloadsViewModel @Inject internal constructor(
     val flow = Pager(
         PagingConfig(pageSize = 30, prefetchDistance = 3, initialLoadSize = 30),
     ) {
-        repository.loadAllVideos()
+        offlineVideosRepository.getAll()
     }.flow.cachedIn(viewModelScope)
 
     fun finishDownload(video: OfflineVideo) {
@@ -70,7 +70,7 @@ class DownloadsViewModel @Inject internal constructor(
             }
         }
         viewModelScope.launch(Dispatchers.IO) {
-            repository.updateVideo(video.apply {
+            offlineVideosRepository.update(video.apply {
                 status = OfflineVideo.STATUS_DOWNLOADED
             })
         }
@@ -84,9 +84,9 @@ class DownloadsViewModel @Inject internal constructor(
                     val work = list.lastOrNull()
                     when {
                         work == null || work.state.isFinished -> {
-                            repository.getLiveDownload(channelLogin)?.let { video ->
+                            offlineVideosRepository.getLiveDownload(channelLogin)?.let { video ->
                                 if (video.status == OfflineVideo.STATUS_DOWNLOADING || video.status == OfflineVideo.STATUS_BLOCKED || video.status == OfflineVideo.STATUS_QUEUED || video.status == OfflineVideo.STATUS_QUEUED_WIFI || video.status == OfflineVideo.STATUS_WAITING_FOR_STREAM) {
-                                    repository.updateVideo(video.apply {
+                                    offlineVideosRepository.update(video.apply {
                                         status = OfflineVideo.STATUS_PENDING
                                     })
                                 }
@@ -94,8 +94,8 @@ class DownloadsViewModel @Inject internal constructor(
                             cancel()
                         }
                         work.state == WorkInfo.State.ENQUEUED -> {
-                            repository.getLiveDownload(channelLogin)?.let { video ->
-                                repository.updateVideo(video.apply {
+                            offlineVideosRepository.getLiveDownload(channelLogin)?.let { video ->
+                                offlineVideosRepository.update(video.apply {
                                     status = if (work.constraints.requiredNetworkType == NetworkType.UNMETERED) {
                                         OfflineVideo.STATUS_QUEUED_WIFI
                                     } else {
@@ -105,8 +105,8 @@ class DownloadsViewModel @Inject internal constructor(
                             }
                         }
                         work.state == WorkInfo.State.BLOCKED -> {
-                            repository.getLiveDownload(channelLogin)?.let { video ->
-                                repository.updateVideo(video.apply {
+                            offlineVideosRepository.getLiveDownload(channelLogin)?.let { video ->
+                                offlineVideosRepository.update(video.apply {
                                     status = OfflineVideo.STATUS_BLOCKED
                                 })
                             }
@@ -127,9 +127,9 @@ class DownloadsViewModel @Inject internal constructor(
                     val work = list.lastOrNull()
                     when {
                         work == null || work.state.isFinished -> {
-                            repository.getVideoById(videoId)?.let { video ->
+                            offlineVideosRepository.getById(videoId)?.let { video ->
                                 if (video.status == OfflineVideo.STATUS_DOWNLOADING || video.status == OfflineVideo.STATUS_BLOCKED || video.status == OfflineVideo.STATUS_QUEUED || video.status == OfflineVideo.STATUS_QUEUED_WIFI) {
-                                    repository.updateVideo(video.apply {
+                                    offlineVideosRepository.update(video.apply {
                                         status = OfflineVideo.STATUS_PENDING
                                     })
                                 }
@@ -137,8 +137,8 @@ class DownloadsViewModel @Inject internal constructor(
                             cancel()
                         }
                         work.state == WorkInfo.State.ENQUEUED -> {
-                            repository.getVideoById(videoId)?.let { video ->
-                                repository.updateVideo(video.apply {
+                            offlineVideosRepository.getById(videoId)?.let { video ->
+                                offlineVideosRepository.update(video.apply {
                                     status = if (work.constraints.requiredNetworkType == NetworkType.UNMETERED) {
                                         OfflineVideo.STATUS_QUEUED_WIFI
                                     } else {
@@ -148,8 +148,8 @@ class DownloadsViewModel @Inject internal constructor(
                             }
                         }
                         work.state == WorkInfo.State.BLOCKED -> {
-                            repository.getVideoById(videoId)?.let { video ->
-                                repository.updateVideo(video.apply {
+                            offlineVideosRepository.getById(videoId)?.let { video ->
+                                offlineVideosRepository.update(video.apply {
                                     status = OfflineVideo.STATUS_BLOCKED
                                 })
                             }
@@ -167,7 +167,7 @@ class DownloadsViewModel @Inject internal constructor(
         if (!videosInUse.contains(video) && videoUrl != null) {
             videosInUse.add(video)
             viewModelScope.launch(Dispatchers.IO) {
-                repository.updateVideo(video.apply {
+                offlineVideosRepository.update(video.apply {
                     progress = 0
                     maxProgress = 100
                     status = OfflineVideo.STATUS_CONVERTING
@@ -182,7 +182,7 @@ class DownloadsViewModel @Inject internal constructor(
                     val newVideoFileUri = oldDirectoryUri + (if (!oldDirectoryUri.endsWith("%3A")) "%2F" else "") + videoFileName
                     val tracksToDelete = mutableListOf<String>()
                     oldPlaylist.segments.forEach { tracksToDelete.add(it.uri.substringAfterLast("%2F").substringAfterLast("/")) }
-                    val playlists = repository.getPlaylists().mapNotNull { video ->
+                    val playlists = offlineVideosRepository.getPlaylists().mapNotNull { video ->
                         video.url?.takeIf {
                             it.toUri().scheme == ContentResolver.SCHEME_CONTENT
                                     && it.substringBeforeLast("%2F") == oldVideoDirectoryUri
@@ -214,7 +214,7 @@ class DownloadsViewModel @Inject internal constructor(
                             }
                         }
                     }
-                    repository.updateVideo(video.apply {
+                    offlineVideosRepository.update(video.apply {
                         maxProgress = tracksToDelete.count()
                     })
                     oldPlaylist.segments.forEach { track ->
@@ -232,11 +232,11 @@ class DownloadsViewModel @Inject internal constructor(
 
                             }
                         }
-                        repository.updateVideo(video.apply {
+                        offlineVideosRepository.update(video.apply {
                             progress += 1
                         })
                     }
-                    repository.updateVideo(video.apply {
+                    offlineVideosRepository.update(video.apply {
                         thumbnail.let {
                             if (it == null || it == url || !File(it).exists()) {
                                 newVideoFileUri
@@ -285,7 +285,7 @@ class DownloadsViewModel @Inject internal constructor(
                                     }
                                 }
                             }
-                            repository.updateVideo(video.apply {
+                            offlineVideosRepository.update(video.apply {
                                 maxProgress = tracksToDelete.count()
                             })
                             oldPlaylist.segments.forEach { track ->
@@ -300,11 +300,11 @@ class DownloadsViewModel @Inject internal constructor(
                                         oldFile.delete()
                                     }
                                 }
-                                repository.updateVideo(video.apply {
+                                offlineVideosRepository.update(video.apply {
                                     progress += 1
                                 })
                             }
-                            repository.updateVideo(video.apply {
+                            offlineVideosRepository.update(video.apply {
                                 thumbnail.let {
                                     if (it == null || it == url || !File(it).exists()) {
                                         thumbnail = newVideoFileUri
@@ -323,7 +323,7 @@ class DownloadsViewModel @Inject internal constructor(
             }.invokeOnCompletion {
                 videosInUse.remove(video)
                 viewModelScope.launch(Dispatchers.IO) {
-                    repository.updateVideo(video.apply {
+                    offlineVideosRepository.update(video.apply {
                         status = OfflineVideo.STATUS_DOWNLOADED
                     })
                 }
@@ -336,7 +336,7 @@ class DownloadsViewModel @Inject internal constructor(
         if (!videosInUse.contains(video) && videoUrl != null) {
             videosInUse.add(video)
             viewModelScope.launch(Dispatchers.IO) {
-                repository.updateVideo(video.apply {
+                offlineVideosRepository.update(video.apply {
                     progress = 0
                     maxProgress = 100
                     status = OfflineVideo.STATUS_MOVING
@@ -398,7 +398,7 @@ class DownloadsViewModel @Inject internal constructor(
                                     }
                                 }
                             }
-                            repository.updateVideo(video.apply {
+                            offlineVideosRepository.update(video.apply {
                                 maxProgress = tracksToDelete.count()
                             })
                             oldPlaylist.segments.forEach { track ->
@@ -419,7 +419,7 @@ class DownloadsViewModel @Inject internal constructor(
                                         oldFile.delete()
                                     }
                                 }
-                                repository.updateVideo(video.apply {
+                                offlineVideosRepository.update(video.apply {
                                     progress += 1
                                 })
                             }
@@ -437,7 +437,7 @@ class DownloadsViewModel @Inject internal constructor(
                                     }
                                 }
                             }
-                            repository.updateVideo(video.apply {
+                            offlineVideosRepository.update(video.apply {
                                 thumbnail.let {
                                     if (it == null || it == url || !File(it).exists()) {
                                         oldPlaylist.segments.getOrNull(
@@ -488,7 +488,7 @@ class DownloadsViewModel @Inject internal constructor(
                                 }
                             }
                         }
-                        repository.updateVideo(video.apply {
+                        offlineVideosRepository.update(video.apply {
                             thumbnail.let {
                                 if (it == null || it == url || !File(it).exists()) {
                                     thumbnail = newFileUri
@@ -504,7 +504,7 @@ class DownloadsViewModel @Inject internal constructor(
             }.invokeOnCompletion {
                 videosInUse.remove(video)
                 viewModelScope.launch(Dispatchers.IO) {
-                    repository.updateVideo(video.apply {
+                    offlineVideosRepository.update(video.apply {
                         status = OfflineVideo.STATUS_DOWNLOADED
                     })
                 }
@@ -517,7 +517,7 @@ class DownloadsViewModel @Inject internal constructor(
         if (!videosInUse.contains(video) && videoUrl != null) {
             videosInUse.add(video)
             viewModelScope.launch(Dispatchers.IO) {
-                repository.updateVideo(video.apply {
+                offlineVideosRepository.update(video.apply {
                     progress = 0
                     maxProgress = 100
                     status = OfflineVideo.STATUS_MOVING
@@ -544,7 +544,7 @@ class DownloadsViewModel @Inject internal constructor(
                     }
                     val tracksToDelete = mutableListOf<String>()
                     oldPlaylist.segments.forEach { tracksToDelete.add(it.uri.substringAfterLast("%2F").substringAfterLast("/")) }
-                    val playlists = repository.getPlaylists().mapNotNull { video ->
+                    val playlists = offlineVideosRepository.getPlaylists().mapNotNull { video ->
                         video.url?.takeIf {
                             it.toUri().scheme == ContentResolver.SCHEME_CONTENT
                                     && it.substringBeforeLast("%2F") == oldVideoDirectoryUri
@@ -571,7 +571,7 @@ class DownloadsViewModel @Inject internal constructor(
                             }
                         }
                     }
-                    repository.updateVideo(video.apply {
+                    offlineVideosRepository.update(video.apply {
                         maxProgress = tracksToDelete.count()
                     })
                     oldPlaylist.segments.forEach { track ->
@@ -590,7 +590,7 @@ class DownloadsViewModel @Inject internal constructor(
 
                             }
                         }
-                        repository.updateVideo(video.apply {
+                        offlineVideosRepository.update(video.apply {
                             progress += 1
                         })
                     }
@@ -604,7 +604,7 @@ class DownloadsViewModel @Inject internal constructor(
                             }
                         }
                     }
-                    repository.updateVideo(video.apply {
+                    offlineVideosRepository.update(video.apply {
                         thumbnail.let {
                             if (it == null || it == url || !File(it).exists()) {
                                 thumbnail = newVideoDirectoryUri + File.separator + oldPlaylist.segments.getOrNull(
@@ -653,7 +653,7 @@ class DownloadsViewModel @Inject internal constructor(
                             }
                         }
                     }
-                    repository.updateVideo(video.apply {
+                    offlineVideosRepository.update(video.apply {
                         thumbnail.let {
                             if (it == null || it == url || !File(it).exists()) {
                                 thumbnail = newFileUri
@@ -678,7 +678,7 @@ class DownloadsViewModel @Inject internal constructor(
             }.invokeOnCompletion {
                 videosInUse.remove(video)
                 viewModelScope.launch(Dispatchers.IO) {
-                    repository.updateVideo(video.apply {
+                    offlineVideosRepository.update(video.apply {
                         status = OfflineVideo.STATUS_DOWNLOADED
                     })
                 }
@@ -735,7 +735,7 @@ class DownloadsViewModel @Inject internal constructor(
                 } catch (e: Exception) {
 
                 }
-                repository.updateVideo(video.apply {
+                offlineVideosRepository.update(video.apply {
                     if (!title.isNullOrBlank()) this.name = title
                     if (!channelId.isNullOrBlank()) this.channelId = channelId
                     if (!channelLogin.isNullOrBlank()) this.channelLogin = channelLogin
@@ -756,7 +756,7 @@ class DownloadsViewModel @Inject internal constructor(
         if (!videosInUse.contains(video)) {
             videosInUse.add(video)
             viewModelScope.launch(Dispatchers.IO) {
-                repository.updateVideo(video.apply {
+                offlineVideosRepository.update(video.apply {
                     progress = 0
                     maxProgress = 100
                     status = OfflineVideo.STATUS_DELETING
@@ -778,7 +778,7 @@ class DownloadsViewModel @Inject internal constructor(
                                 null
                             }
                             val tracksToDelete = playlist?.segments?.toMutableSet() ?: mutableSetOf()
-                            val playlists = repository.getPlaylists().mapNotNull { video ->
+                            val playlists = offlineVideosRepository.getPlaylists().mapNotNull { video ->
                                 video.url?.takeIf {
                                     it.toUri().scheme == ContentResolver.SCHEME_CONTENT
                                             && it.substringBeforeLast("%2F") == videoDirectoryUri
@@ -795,7 +795,7 @@ class DownloadsViewModel @Inject internal constructor(
 
                                 }
                             }
-                            repository.updateVideo(video.apply {
+                            offlineVideosRepository.update(video.apply {
                                 maxProgress = tracksToDelete.count()
                             })
                             tracksToDelete.forEach {
@@ -804,7 +804,7 @@ class DownloadsViewModel @Inject internal constructor(
                                 } catch (e: Exception) {
 
                                 }
-                                repository.updateVideo(video.apply {
+                                offlineVideosRepository.update(video.apply {
                                     progress += 1
                                 })
                             }
@@ -854,12 +854,12 @@ class DownloadsViewModel @Inject internal constructor(
                                         val p = PlaylistUtils.parseMediaPlaylist(it.inputStream())
                                         tracksToDelete.removeAll(p.segments.toSet())
                                     }
-                                    repository.updateVideo(video.apply {
+                                    offlineVideosRepository.update(video.apply {
                                         maxProgress = tracksToDelete.count()
                                     })
                                     tracksToDelete.forEach {
                                         File(it.uri).delete()
-                                        repository.updateVideo(video.apply {
+                                        offlineVideosRepository.update(video.apply {
                                             progress += 1
                                         })
                                     }
@@ -888,7 +888,7 @@ class DownloadsViewModel @Inject internal constructor(
             }.invokeOnCompletion {
                 videosInUse.remove(video)
                 viewModelScope.launch(Dispatchers.IO) {
-                    repository.deleteVideo(video)
+                    offlineVideosRepository.delete(video)
                 }
             }
         }

@@ -233,7 +233,7 @@ class ExoPlayerService : BasePlaybackService() {
                                             lifecycleScope.launch {
                                                 for (i in 0 until 10) {
                                                     delay(10000)
-                                                    if (!checkPlaylist(prefs().getString(C.NETWORK_LIBRARY, "OkHttp"), playlist)) {
+                                                    if (!checkPlaylist(prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), playlist)) {
                                                         break
                                                     }
                                                 }
@@ -340,16 +340,16 @@ class ExoPlayerService : BasePlaybackService() {
                                                     player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                                         setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                                                     }.build()
-                                                    val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp")
+                                                    val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
                                                     player.setMediaSource(
                                                         HlsMediaSource.Factory(
                                                             DefaultDataSource.Factory(
                                                                 this@ExoPlayerService,
                                                                 when {
-                                                                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                                                         HttpEngineDataSource.Factory(httpEngine!!.get(), cronetExecutor, null, null) { false }
                                                                     }
-                                                                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                                                                    networkLibrary == C.CRONET && cronetEngine != null -> {
                                                                         CronetDataSource.Factory(cronetEngine!!.get(), cronetExecutor, null, null) { false }
                                                                     }
                                                                     else -> {
@@ -563,9 +563,9 @@ class ExoPlayerService : BasePlaybackService() {
                 }
                 OFFLINE_VIDEO -> {
                     offlineVideoId?.let { id ->
-                        val video = offlineRepository.getVideoById(id)
+                        val video = offlineVideosRepository.getById(id)
                         if (video != null) {
-                            val playbackPosition = if (prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+                            val playbackPosition = if (prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
                                 video.lastWatchPosition
                             } else {
                                 null
@@ -614,12 +614,12 @@ class ExoPlayerService : BasePlaybackService() {
                     useCustomProxy = false
                     val url = try {
                         playerRepository.loadStreamPlaylistUrl(
-                            networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                            networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                             gqlHeaders = TwitchApiHelper.getGQLHeaders(this@ExoPlayerService, prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, true)),
                             channelLogin = channelLogin,
-                            randomDeviceId = prefs().getBoolean(C.TOKEN_RANDOM_DEVICEID, true),
-                            xDeviceId = prefs().getString(C.TOKEN_XDEVICEID, "twitch-web-wall-mason"),
-                            playerType = prefs().getString(C.TOKEN_PLAYERTYPE, "site"),
+                            randomDeviceId = prefs().getBoolean(C.TOKEN_RANDOM_DEVICE_ID, true),
+                            xDeviceId = prefs().getString(C.TOKEN_X_DEVICE_ID, "twitch-web-wall-mason"),
+                            playerType = prefs().getString(C.TOKEN_PLAYER_TYPE, "site"),
                             supportedCodecs = prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
                             proxyPlaybackAccessToken = prefs().getBoolean(C.PROXY_PLAYBACK_ACCESS_TOKEN, false),
                             proxyHost = prefs().getString(C.PROXY_HOST, null),
@@ -641,7 +641,7 @@ class ExoPlayerService : BasePlaybackService() {
             if (url != null) {
                 player?.let { player ->
                     proxyMediaPlaylist = false
-                    val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp")
+                    val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
                     val proxyHost = prefs().getString(C.PROXY_HOST, null)
                     val proxyPort = prefs().getString(C.PROXY_PORT, null)?.toIntOrNull()
                     val proxyUser = prefs().getString(C.PROXY_USER, null)
@@ -699,10 +699,10 @@ class ExoPlayerService : BasePlaybackService() {
                             DefaultDataSource.Factory(
                                 this@ExoPlayerService,
                                 when {
-                                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                         HttpEngineDataSource.Factory(httpEngine!!.get(), cronetExecutor, multivariantPlaylistProxyClient, mediaPlaylistProxyClient) { proxyMediaPlaylist }
                                     }
-                                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                                    networkLibrary == C.CRONET && cronetEngine != null -> {
                                         CronetDataSource.Factory(cronetEngine!!.get(), cronetExecutor, multivariantPlaylistProxyClient, mediaPlaylistProxyClient) { proxyMediaPlaylist }
                                     }
                                     else -> {
@@ -753,7 +753,7 @@ class ExoPlayerService : BasePlaybackService() {
 
     private suspend fun loadVideo(restorePauseState: Boolean = false) {
         videoId?.let { videoId ->
-            val playbackPosition = if (prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+            val playbackPosition = if (prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
                 videoId.toLongOrNull()?.let { playerRepository.getVideoPosition(it)?.position }
             } else {
                 null
@@ -761,10 +761,10 @@ class ExoPlayerService : BasePlaybackService() {
             if (qualities.isNullOrEmpty()) {
                 val result = try {
                     playerRepository.loadVideoPlaylistUrl(
-                        networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                        networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                         gqlHeaders = TwitchApiHelper.getGQLHeaders(this@ExoPlayerService, prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_VIDEO, true)),
                         videoId = videoId,
-                        playerType = prefs().getString(C.TOKEN_PLAYERTYPE_VIDEO, "channel_home_live"),
+                        playerType = prefs().getString(C.TOKEN_PLAYER_TYPE_VIDEO, "channel_home_live"),
                         supportedCodecs = prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
                         enableIntegrity = prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                     )
@@ -782,16 +782,16 @@ class ExoPlayerService : BasePlaybackService() {
             val url = playlistUrl
             if (url != null) {
                 player?.let { player ->
-                    val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp")
+                    val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
                     player.setMediaSource(
                         HlsMediaSource.Factory(
                             DefaultDataSource.Factory(
                                 this@ExoPlayerService,
                                 when {
-                                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                         HttpEngineDataSource.Factory(httpEngine!!.get(), cronetExecutor, null, null) { false }
                                     }
-                                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                                    networkLibrary == C.CRONET && cronetEngine != null -> {
                                         CronetDataSource.Factory(cronetEngine!!.get(), cronetExecutor, null, null) { false }
                                     }
                                     else -> {
@@ -817,7 +817,7 @@ class ExoPlayerService : BasePlaybackService() {
 
     private suspend fun loadClip(restorePauseState: Boolean = false) {
         clipId?.let { clipId ->
-            val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp")
+            val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
             if (qualities.isNullOrEmpty()) {
                 val list = try {
                     playerRepository.loadClipQualities(
@@ -866,10 +866,10 @@ class ExoPlayerService : BasePlaybackService() {
                             DefaultDataSource.Factory(
                                 this@ExoPlayerService,
                                 when {
-                                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                         HttpEngineDataSource.Factory(httpEngine!!.get(), cronetExecutor, null, null) { false }
                                     }
-                                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                                    networkLibrary == C.CRONET && cronetEngine != null -> {
                                         CronetDataSource.Factory(cronetEngine!!.get(), cronetExecutor, null, null) { false }
                                     }
                                     else -> {
@@ -1020,7 +1020,7 @@ class ExoPlayerService : BasePlaybackService() {
                     } else {
                         false
                     }
-                    if ((!cellular && prefs().getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") || (cellular && prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
+                    if ((!cellular && prefs().getString(C.PLAYER_DEFAULT_QUALITY, "saved") == "saved") || (cellular && prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
                         prefs().edit { putString(C.PLAYER_QUALITY, quality.name) }
                     }
                 }
@@ -1049,7 +1049,7 @@ class ExoPlayerService : BasePlaybackService() {
     suspend fun checkPlaylist(networkLibrary: String?, url: String): Boolean = withContext(Dispatchers.IO) {
         try {
             val playlist = when {
-                networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                     val response = suspendCancellableCoroutine { continuation ->
                         httpEngine!!.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                     }
@@ -1057,7 +1057,7 @@ class ExoPlayerService : BasePlaybackService() {
                         PlaylistUtils.parseMediaPlaylist(it)
                     }
                 }
-                networkLibrary == "Cronet" && cronetEngine != null -> {
+                networkLibrary == C.CRONET && cronetEngine != null -> {
                     val response = suspendCancellableCoroutine { continuation ->
                         cronetEngine!!.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                     }
@@ -1267,7 +1267,7 @@ class ExoPlayerService : BasePlaybackService() {
                 if (url == artworkUri && cachedBitmap != null) {
                     cachedBitmap
                 } else {
-                    val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp")
+                    val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
                     artworkUri = url
                     bitmapLoadJob?.cancel()
                     bitmapLoadJob = lifecycleScope.launch(Dispatchers.IO) {
@@ -1275,7 +1275,7 @@ class ExoPlayerService : BasePlaybackService() {
                             val scheme = url.toUri().scheme
                             val response = if (scheme == "https" || scheme == "http") {
                                 when {
-                                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine!!.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
@@ -1283,7 +1283,7 @@ class ExoPlayerService : BasePlaybackService() {
                                             response.second
                                         } else null
                                     }
-                                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                                    networkLibrary == C.CRONET && cronetEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             cronetEngine!!.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                         }
@@ -1356,7 +1356,7 @@ class ExoPlayerService : BasePlaybackService() {
             if (url == artworkUri && cachedBitmap != null) {
                 cachedBitmap
             } else {
-                val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp")
+                val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
                 artworkUri = url
                 bitmapLoadJob?.cancel()
                 bitmapLoadJob = lifecycleScope.launch(Dispatchers.IO) {
@@ -1364,7 +1364,7 @@ class ExoPlayerService : BasePlaybackService() {
                         val scheme = url.toUri().scheme
                         val response = if (scheme == "https" || scheme == "http") {
                             when {
-                                networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
                                         httpEngine!!.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                     }
@@ -1372,7 +1372,7 @@ class ExoPlayerService : BasePlaybackService() {
                                         response.second
                                     } else null
                                 }
-                                networkLibrary == "Cronet" && cronetEngine != null -> {
+                                networkLibrary == C.CRONET && cronetEngine != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
                                         cronetEngine!!.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                     }
@@ -1722,7 +1722,7 @@ class ExoPlayerService : BasePlaybackService() {
     private fun savePosition() {
         player?.let { player ->
             if (!player.currentTracks.isEmpty) {
-                if (prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+                if (prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
                     when (type) {
                         VIDEO -> {
                             videoId?.toLongOrNull()?.let {
@@ -1734,7 +1734,7 @@ class ExoPlayerService : BasePlaybackService() {
                         OFFLINE_VIDEO -> {
                             offlineVideoId?.let {
                                 runBlocking {
-                                    offlineRepository.updateVideoPosition(it, player.currentPosition)
+                                    offlineVideosRepository.updatePosition(it, player.currentPosition)
                                 }
                             }
                         }
@@ -1754,7 +1754,7 @@ class ExoPlayerService : BasePlaybackService() {
                 val savedPosition = lastSavedPosition
                 if (savedPosition == null || currentPosition - savedPosition !in 0..2000) {
                     lastSavedPosition = currentPosition
-                    if (prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+                    if (prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
                         when (type) {
                             VIDEO -> {
                                 videoId?.toLongOrNull()?.let {
@@ -1766,7 +1766,7 @@ class ExoPlayerService : BasePlaybackService() {
                             OFFLINE_VIDEO -> {
                                 offlineVideoId?.let {
                                     runBlocking {
-                                        offlineRepository.updateVideoPosition(it, currentPosition)
+                                        offlineVideosRepository.updatePosition(it, currentPosition)
                                     }
                                 }
                             }

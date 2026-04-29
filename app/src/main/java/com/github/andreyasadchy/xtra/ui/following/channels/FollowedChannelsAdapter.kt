@@ -63,7 +63,7 @@ class FollowedChannelsAdapter(
                             .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .apply {
-                                if (context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
+                                if (context.prefs().getBoolean(C.UI_ROUND_USER_IMAGE, true)) {
                                     circleCrop()
                                 }
                             }

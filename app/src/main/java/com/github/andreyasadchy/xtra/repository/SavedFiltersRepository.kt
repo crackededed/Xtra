@@ -12,13 +12,13 @@ class SavedFiltersRepository @Inject constructor(
     private val savedFiltersDao: SavedFiltersDao,
 ) {
 
-    fun loadFiltersPagingSource() = savedFiltersDao.getAllPagingSource()
+    fun getAll() = savedFiltersDao.getAll()
 
-    suspend fun saveFilter(item: SavedFilter) = withContext(Dispatchers.IO) {
+    suspend fun save(item: SavedFilter) = withContext(Dispatchers.IO) {
         savedFiltersDao.insert(item)
     }
 
-    suspend fun deleteFilter(item: SavedFilter) = withContext(Dispatchers.IO) {
+    suspend fun delete(item: SavedFilter) = withContext(Dispatchers.IO) {
         savedFiltersDao.delete(item)
     }
 }

@@ -82,7 +82,7 @@ class DownloadsAdapter(
                     }
                     val gameListener: (View) -> Unit = {
                         fragment.findNavController().navigate(
-                            if (context.prefs().getBoolean(C.UI_GAMEPAGER, true)) {
+                            if (context.prefs().getBoolean(C.UI_GAME_PAGER, true)) {
                                 GamePagerFragmentDirections.actionGlobalGamePagerFragment(
                                     gameId = item.gameId,
                                     gameSlug = item.gameSlug,
@@ -136,7 +136,7 @@ class DownloadsAdapter(
                             .diskCacheStrategy(DiskCacheStrategy.NONE)
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .apply {
-                                if (context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
+                                if (context.prefs().getBoolean(C.UI_ROUND_USER_IMAGE, true)) {
                                     circleCrop()
                                 }
                             }
@@ -185,7 +185,7 @@ class DownloadsAdapter(
                             sourceStart.visibility = View.GONE
                             sourceEnd.visibility = View.GONE
                         }
-                        if (context.prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true) && item.lastWatchPosition != null && itemDuration > 0L) {
+                        if (context.prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true) && item.lastWatchPosition != null && itemDuration > 0L) {
                             progressBar.progress = (item.lastWatchPosition!!.toFloat() / itemDuration * 100).toInt()
                             progressBar.visibility = View.VISIBLE
                         } else {

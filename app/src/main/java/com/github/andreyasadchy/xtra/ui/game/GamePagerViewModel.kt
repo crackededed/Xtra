@@ -7,11 +7,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andreyasadchy.xtra.model.ui.Game
-import com.github.andreyasadchy.xtra.model.ui.LocalFollowGame
+import com.github.andreyasadchy.xtra.model.ui.LocalGameFollow
 import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
-import com.github.andreyasadchy.xtra.repository.LocalFollowGameRepository
+import com.github.andreyasadchy.xtra.repository.LocalGameFollowsRepository
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.body
@@ -37,7 +37,7 @@ import javax.inject.Inject
 class GamePagerViewModel @Inject constructor(
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
-    private val localFollowsGame: LocalFollowGameRepository,
+    private val localGameFollowsRepository: LocalGameFollowsRepository,
     private val httpEngine: Lazy<HttpEngine>?,
     private val cronetEngine: Lazy<CronetEngine>?,
     private val cronetExecutor: ExecutorService,
@@ -128,7 +128,7 @@ class GamePagerViewModel @Inject constructor(
                         ).data?.game?.self?.follow?.followedAt != null
                     } else {
                         gameId?.let {
-                            localFollowsGame.getFollowByGameId(it)
+                            localGameFollowsRepository.getById(it)
                         } != null
                     }
                     _isFollowing.value = isFollowing
@@ -175,7 +175,7 @@ class GamePagerViewModel @Inject constructor(
                                     } else null
                                 }.takeIf { !it.isNullOrBlank() }?.let { TwitchApiHelper.getGameBoxArt(it) }?.let {
                                     when {
-                                        networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                        networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                             val response = suspendCancellableCoroutine { continuation ->
                                                 httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                             }
@@ -185,7 +185,7 @@ class GamePagerViewModel @Inject constructor(
                                                 }
                                             }
                                         }
-                                        networkLibrary == "Cronet" && cronetEngine != null -> {
+                                        networkLibrary == C.CRONET && cronetEngine != null -> {
                                             val response = suspendCancellableCoroutine { continuation ->
                                                 cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                             }
@@ -212,7 +212,7 @@ class GamePagerViewModel @Inject constructor(
 
                             }
                         }
-                        localFollowsGame.saveFollow(LocalFollowGame(gameId, gameSlug, gameName, path))
+                        localGameFollowsRepository.save(LocalGameFollow(gameId, gameSlug, gameName, path))
                         _isFollowing.value = true
                         follow.value = Pair(true, null)
                     }
@@ -243,7 +243,7 @@ class GamePagerViewModel @Inject constructor(
                     }
                 } else {
                     if (gameId != null) {
-                        localFollowsGame.getFollowByGameId(gameId)?.let { localFollowsGame.deleteFollow(it) }
+                        localGameFollowsRepository.getById(gameId)?.let { localGameFollowsRepository.delete(it) }
                         _isFollowing.value = false
                         follow.value = Pair(false, null)
                     }
@@ -275,7 +275,7 @@ class GamePagerViewModel @Inject constructor(
                                 } else null
                             }.takeIf { !it.isNullOrBlank() }?.let { TwitchApiHelper.getGameBoxArt(it) }?.let {
                                 when {
-                                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
@@ -285,7 +285,7 @@ class GamePagerViewModel @Inject constructor(
                                             }
                                         }
                                     }
-                                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                                    networkLibrary == C.CRONET && cronetEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                         }
@@ -312,8 +312,8 @@ class GamePagerViewModel @Inject constructor(
 
                         }
                     }
-                    localFollowsGame.getFollowByGameId(gameId)?.let {
-                        localFollowsGame.updateFollow(it.apply {
+                    localGameFollowsRepository.getById(gameId)?.let {
+                        localGameFollowsRepository.update(it.apply {
                             this.gameName = gameName
                             boxArt = path
                         })

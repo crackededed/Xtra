@@ -202,14 +202,14 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                     menuTranslateAll.visibility = View.VISIBLE
                     if (translateAll) {
                         menuTranslateAll.setOnClickListener {
-                            (parentFragment as? Media3PlayerFragment)?.deleteTranslateAllMessagesUser() ?:
-                            (parentFragment as? PlayerFragment)?.deleteTranslateAllMessagesUser()
+                            (parentFragment as? Media3PlayerFragment)?.deleteTranslatedChannel() ?:
+                            (parentFragment as? PlayerFragment)?.deleteTranslatedChannel()
                             dismiss()
                         }
                     } else {
                         menuTranslateAll.setOnClickListener {
-                            (parentFragment as? Media3PlayerFragment)?.saveTranslateAllMessagesUser() ?:
-                            (parentFragment as? PlayerFragment)?.saveTranslateAllMessagesUser()
+                            (parentFragment as? Media3PlayerFragment)?.saveTranslatedChannel() ?:
+                            (parentFragment as? PlayerFragment)?.saveTranslatedChannel()
                             dismiss()
                         }
                     }

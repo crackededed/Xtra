@@ -1,23 +1,41 @@
 package com.github.andreyasadchy.xtra.ui.download
 
+import android.net.http.HttpEngine
+import android.os.Build
+import android.os.ext.SdkExtensions
 import android.util.Base64
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.NetworkUtils
+import com.github.andreyasadchy.xtra.util.NetworkUtils.body
+import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
+import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.chromium.net.CronetEngine
 import org.json.JSONArray
 import org.json.JSONException
+import java.util.concurrent.ExecutorService
 import javax.inject.Inject
 
 @HiltViewModel
 class DownloadViewModel @Inject constructor(
+    private val httpEngine: Lazy<HttpEngine>?,
+    private val cronetEngine: Lazy<CronetEngine>?,
+    private val cronetExecutor: ExecutorService,
+    private val okHttpClient: OkHttpClient,
     private val playerRepository: PlayerRepository,
 ) : ViewModel() {
 
@@ -38,7 +56,34 @@ class DownloadViewModel @Inject constructor(
                     val default = listOf("source", "1080p60", "1080p30", "720p60", "720p30", "480p30", "360p30", "160p30", "audio_only")
                     try {
                         val list = if (!channelLogin.isNullOrBlank()) {
-                            val playlist = playerRepository.loadStreamPlaylist(networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, enableIntegrity)
+                            val url = playerRepository.loadStreamPlaylistUrl(networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, false, null, null, null, null, enableIntegrity)
+                            val playlist = withContext(Dispatchers.IO) {
+                                when {
+                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                        val response = suspendCancellableCoroutine { continuation ->
+                                            httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                                        }
+                                        if (response.first.httpStatusCode in 200..299) {
+                                            String(response.second)
+                                        } else null
+                                    }
+                                    networkLibrary == C.CRONET && cronetEngine != null -> {
+                                        val response = suspendCancellableCoroutine { continuation ->
+                                            cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
+                                        }
+                                        if (response.first.httpStatusCode in 200..299) {
+                                            String(response.second)
+                                        } else null
+                                    }
+                                    else -> {
+                                        okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
+                                            if (response.isSuccessful) {
+                                                response.body.string()
+                                            } else null
+                                        }
+                                    }
+                                }
+                            }
                             if (!playlist.isNullOrBlank()) {
                                 val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                                 val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
@@ -96,9 +141,36 @@ class DownloadViewModel @Inject constructor(
             } else {
                 viewModelScope.launch {
                     try {
-                        val result = playerRepository.loadVideoPlaylist(networkLibrary, gqlHeaders, videoId, playerType, supportedCodecs, enableIntegrity)
-                        val playlist = result.first
+                        val result = playerRepository.loadVideoPlaylistUrl(networkLibrary, gqlHeaders, videoId, playerType, supportedCodecs, enableIntegrity)
+                        val url = result.first
                         backupQualities = result.second
+                        val playlist = withContext(Dispatchers.IO) {
+                            when {
+                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                    val response = suspendCancellableCoroutine { continuation ->
+                                        httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                                    }
+                                    if (response.first.httpStatusCode in 200..299) {
+                                        String(response.second)
+                                    } else null
+                                }
+                                networkLibrary == C.CRONET && cronetEngine != null -> {
+                                    val response = suspendCancellableCoroutine { continuation ->
+                                        cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
+                                    }
+                                    if (response.first.httpStatusCode in 200..299) {
+                                        String(response.second)
+                                    } else null
+                                }
+                                else -> {
+                                    okHttpClient.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
+                                        if (response.isSuccessful) {
+                                            response.body.string()
+                                        } else null
+                                    }
+                                }
+                            }
+                        }
                         if (!playlist.isNullOrBlank()) {
                             val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                             val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()

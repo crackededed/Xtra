@@ -255,7 +255,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                     }
                 }
                 viewModel.setStream(
-                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), requireContext().prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, true)),
                     channelLogin = requireArguments().getString(KEY_CHANNEL_LOGIN),
                     qualities = requireArguments().getStringArray(KEY_QUALITY_NAMES)?.let { names ->
@@ -267,9 +267,9 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                             }
                         }
                     },
-                    randomDeviceId = requireContext().prefs().getBoolean(C.TOKEN_RANDOM_DEVICEID, true),
-                    xDeviceId = requireContext().prefs().getString(C.TOKEN_XDEVICEID, "twitch-web-wall-mason"),
-                    playerType = requireContext().prefs().getString(C.TOKEN_PLAYERTYPE, "site"),
+                    randomDeviceId = requireContext().prefs().getBoolean(C.TOKEN_RANDOM_DEVICE_ID, true),
+                    xDeviceId = requireContext().prefs().getString(C.TOKEN_X_DEVICE_ID, "twitch-web-wall-mason"),
+                    playerType = requireContext().prefs().getString(C.TOKEN_PLAYER_TYPE, "site"),
                     supportedCodecs = requireContext().prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
                     enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                 )
@@ -301,7 +301,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                     }
                 }
                 viewModel.setVideo(
-                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), requireContext().prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_VIDEO, true)),
                     videoId = requireArguments().getString(KEY_VIDEO_ID),
                     animatedPreviewUrl = requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW),
@@ -315,7 +315,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                             }
                         }
                     },
-                    playerType = requireContext().prefs().getString(C.TOKEN_PLAYERTYPE_VIDEO, "channel_home_live"),
+                    playerType = requireContext().prefs().getString(C.TOKEN_PLAYER_TYPE_VIDEO, "channel_home_live"),
                     supportedCodecs = requireContext().prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
                     enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                 )
@@ -331,7 +331,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                     }
                 }
                 viewModel.setClip(
-                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
                     clipId = requireArguments().getString(KEY_CLIP_ID),
                     qualities = requireArguments().getStringArray(KEY_QUALITY_NAMES)?.let { names ->
@@ -742,7 +742,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
         when (callback) {
             "stream" -> {
                 viewModel.setStream(
-                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), requireContext().prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, true)),
                     channelLogin = requireArguments().getString(KEY_CHANNEL_LOGIN),
                     qualities = requireArguments().getStringArray(KEY_QUALITY_NAMES)?.let { names ->
@@ -754,16 +754,16 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                             }
                         }
                     },
-                    randomDeviceId = requireContext().prefs().getBoolean(C.TOKEN_RANDOM_DEVICEID, true),
-                    xDeviceId = requireContext().prefs().getString(C.TOKEN_XDEVICEID, "twitch-web-wall-mason"),
-                    playerType = requireContext().prefs().getString(C.TOKEN_PLAYERTYPE, "site"),
+                    randomDeviceId = requireContext().prefs().getBoolean(C.TOKEN_RANDOM_DEVICE_ID, true),
+                    xDeviceId = requireContext().prefs().getString(C.TOKEN_X_DEVICE_ID, "twitch-web-wall-mason"),
+                    playerType = requireContext().prefs().getString(C.TOKEN_PLAYER_TYPE, "site"),
                     supportedCodecs = requireContext().prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
                     enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                 )
             }
             "video" -> {
                 viewModel.setVideo(
-                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), requireContext().prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_VIDEO, true)),
                     videoId = requireArguments().getString(KEY_VIDEO_ID),
                     animatedPreviewUrl = requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW),
@@ -777,14 +777,14 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                             }
                         }
                     },
-                    playerType = requireContext().prefs().getString(C.TOKEN_PLAYERTYPE_VIDEO, "channel_home_live"),
+                    playerType = requireContext().prefs().getString(C.TOKEN_PLAYER_TYPE_VIDEO, "channel_home_live"),
                     supportedCodecs = requireContext().prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
                     enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                 )
             }
             "clip" -> {
                 viewModel.setClip(
-                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
                     clipId = requireArguments().getString(KEY_CLIP_ID),
                     qualities = requireArguments().getStringArray(KEY_QUALITY_NAMES)?.let { names ->

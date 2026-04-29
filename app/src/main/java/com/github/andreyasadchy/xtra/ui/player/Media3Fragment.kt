@@ -283,7 +283,7 @@ class Media3Fragment : Media3PlayerFragment() {
                                                         viewLifecycleOwner.lifecycleScope.launch {
                                                             for (i in 0 until 10) {
                                                                 delay(10000)
-                                                                if (!viewModel.checkPlaylist(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"), playlist)) {
+                                                                if (!viewModel.checkPlaylist(requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), playlist)) {
                                                                     break
                                                                 }
                                                             }
@@ -851,7 +851,7 @@ class Media3Fragment : Media3PlayerFragment() {
                     } else {
                         false
                     }
-                    if ((!cellular && requireContext().prefs().getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") || (cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
+                    if ((!cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_QUALITY, "saved") == "saved") || (cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
                         requireContext().prefs().edit { putString(C.PLAYER_QUALITY, quality.name) }
                     }
                 }

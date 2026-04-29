@@ -24,8 +24,8 @@ import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.chat.CheerEmote
 import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.model.chat.NamePaint
-import com.github.andreyasadchy.xtra.model.chat.StvBadge
-import com.github.andreyasadchy.xtra.model.chat.StvUser
+import com.github.andreyasadchy.xtra.model.chat.STVBadge
+import com.github.andreyasadchy.xtra.model.chat.STVUser
 import com.github.andreyasadchy.xtra.model.chat.TwitchBadge
 import com.github.andreyasadchy.xtra.model.chat.TwitchEmote
 import com.github.andreyasadchy.xtra.ui.view.NamePaintImageSpan
@@ -40,9 +40,9 @@ class MessageClickedChatAdapter(
     private val channelBadges: List<TwitchBadge>,
     private val cheerEmotes: List<CheerEmote>,
     private val namePaints: List<NamePaint>,
-    private val stvBadges: List<StvBadge>,
+    private val stvBadges: List<STVBadge>,
     private val personalEmoteSets: Map<String, List<Emote>>,
-    private val stvUsers: List<StvUser>,
+    private val stvUsers: List<STVUser>,
     private val enableTimestamps: Boolean,
     private val timestampFormat: String?,
     private val firstMsgVisibility: Int,
@@ -59,7 +59,7 @@ class MessageClickedChatAdapter(
     private val nameDisplay: String?,
     private val useBoldNames: Boolean,
     private val showNamePaints: Boolean,
-    private val showStvBadges: Boolean,
+    private val showSTVBadges: Boolean,
     private val showPersonalEmotes: Boolean,
     private val showSystemMessageEmotes: Boolean,
     private val chatUrl: String?,
@@ -113,7 +113,7 @@ class MessageClickedChatAdapter(
         val result = ChatAdapterUtils.prepareChatMessage(
             chatMessage, holder.textView, enableTimestamps, timestampFormat, firstMsgVisibility, firstChatMsg, redeemedChatMsg, redeemedNoMsg,
             rewardChatMsg, replyMessage, { url, name, format, isAnimated, source, thirdParty, emoteId -> imageClick(url, name, format, isAnimated, source, thirdParty, emoteId) },
-            useRandomColors, random, useReadableColors, isLightTheme, nameDisplay, useBoldNames, showNamePaints, namePaints, showStvBadges,
+            useRandomColors, random, useReadableColors, isLightTheme, nameDisplay, useBoldNames, showNamePaints, namePaints, showSTVBadges,
             stvBadges, showPersonalEmotes, personalEmoteSets, stvUsers, showSystemMessageEmotes, enableOverlayEmotes, loggedInUser, chatUrl,
             getEmoteBytes, userColors, savedColors, translateAllMessages, translateMessage, showLanguageDownloadDialog, false, localTwitchEmotes,
             thirdPartyEmotes, globalBadges, channelBadges, cheerEmotes, savedLocalTwitchEmotes, savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes

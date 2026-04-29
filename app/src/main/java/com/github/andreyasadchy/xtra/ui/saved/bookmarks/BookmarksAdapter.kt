@@ -17,8 +17,8 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentVideosListItemBinding
 import com.github.andreyasadchy.xtra.model.VideoPosition
 import com.github.andreyasadchy.xtra.model.ui.Bookmark
+import com.github.andreyasadchy.xtra.model.ui.BookmarkIgnoredUser
 import com.github.andreyasadchy.xtra.model.ui.Video
-import com.github.andreyasadchy.xtra.model.ui.VodBookmarkIgnoredUser
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
@@ -61,9 +61,9 @@ class BookmarksAdapter(
         }
     }
 
-    private var ignored: List<VodBookmarkIgnoredUser>? = null
+    private var ignored: List<BookmarkIgnoredUser>? = null
 
-    fun setIgnoredUsers(list: List<VodBookmarkIgnoredUser>) {
+    fun setIgnoredUsers(list: List<BookmarkIgnoredUser>) {
         this.ignored = list
         if (itemCount != 0) {
             notifyDataSetChanged()
@@ -91,7 +91,7 @@ class BookmarksAdapter(
                     }
                     val gameListener: (View) -> Unit = {
                         fragment.findNavController().navigate(
-                            if (context.prefs().getBoolean(C.UI_GAMEPAGER, true)) {
+                            if (context.prefs().getBoolean(C.UI_GAME_PAGER, true)) {
                                 GamePagerFragmentDirections.actionGlobalGamePagerFragment(
                                     gameId = item.gameId,
                                     gameSlug = item.gameSlug,
@@ -188,7 +188,7 @@ class BookmarksAdapter(
                             .diskCacheStrategy(DiskCacheStrategy.NONE)
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .apply {
-                                if (context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
+                                if (context.prefs().getBoolean(C.UI_ROUND_USER_IMAGE, true)) {
                                     circleCrop()
                                 }
                             }

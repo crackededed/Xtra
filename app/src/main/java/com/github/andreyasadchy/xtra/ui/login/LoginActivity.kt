@@ -86,7 +86,7 @@ class LoginActivity : AppCompatActivity() {
             windowInsets
         }
         with(binding) {
-            val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp")
+            val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
             val helixHeaders = TwitchApiHelper.getHelixHeaders(this@LoginActivity)
             val helixClientId = helixHeaders[C.HEADER_CLIENT_ID]
             val oldHelixToken = helixHeaders[C.HEADER_TOKEN]?.removePrefix("Bearer ")

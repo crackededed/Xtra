@@ -5,34 +5,21 @@ import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.github.andreyasadchy.xtra.db.AppDatabase
+import com.github.andreyasadchy.xtra.db.BookmarkIgnoredUsersDao
 import com.github.andreyasadchy.xtra.db.BookmarksDao
-import com.github.andreyasadchy.xtra.db.LocalFollowsChannelDao
-import com.github.andreyasadchy.xtra.db.LocalFollowsGameDao
+import com.github.andreyasadchy.xtra.db.ChannelSortDao
+import com.github.andreyasadchy.xtra.db.GameSortDao
+import com.github.andreyasadchy.xtra.db.LocalChannelFollowsDao
+import com.github.andreyasadchy.xtra.db.LocalGameFollowsDao
 import com.github.andreyasadchy.xtra.db.NotificationUsersDao
+import com.github.andreyasadchy.xtra.db.OfflineVideosDao
 import com.github.andreyasadchy.xtra.db.PlaybackStatesDao
 import com.github.andreyasadchy.xtra.db.RecentEmotesDao
-import com.github.andreyasadchy.xtra.db.RecentSearchDao
+import com.github.andreyasadchy.xtra.db.RecentSearchesDao
 import com.github.andreyasadchy.xtra.db.SavedFiltersDao
 import com.github.andreyasadchy.xtra.db.ShownNotificationsDao
-import com.github.andreyasadchy.xtra.db.SortChannelDao
-import com.github.andreyasadchy.xtra.db.SortGameDao
-import com.github.andreyasadchy.xtra.db.TranslateAllMessagesUsersDao
+import com.github.andreyasadchy.xtra.db.TranslatedChannelsDao
 import com.github.andreyasadchy.xtra.db.VideoPositionsDao
-import com.github.andreyasadchy.xtra.db.VideosDao
-import com.github.andreyasadchy.xtra.db.VodBookmarkIgnoredUsersDao
-import com.github.andreyasadchy.xtra.repository.BookmarksRepository
-import com.github.andreyasadchy.xtra.repository.LocalFollowChannelRepository
-import com.github.andreyasadchy.xtra.repository.LocalFollowGameRepository
-import com.github.andreyasadchy.xtra.repository.NotificationUsersRepository
-import com.github.andreyasadchy.xtra.repository.OfflineRepository
-import com.github.andreyasadchy.xtra.repository.PlaybackStatesRepository
-import com.github.andreyasadchy.xtra.repository.RecentSearchRepository
-import com.github.andreyasadchy.xtra.repository.SavedFiltersRepository
-import com.github.andreyasadchy.xtra.repository.ShownNotificationsRepository
-import com.github.andreyasadchy.xtra.repository.SortChannelRepository
-import com.github.andreyasadchy.xtra.repository.SortGameRepository
-import com.github.andreyasadchy.xtra.repository.TranslateAllMessagesUsersRepository
-import com.github.andreyasadchy.xtra.repository.VodBookmarkIgnoredUsersRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -45,59 +32,7 @@ class DatabaseModule {
 
     @Singleton
     @Provides
-    fun providesRepository(videosDao: VideosDao, localFollowsChannelDao: LocalFollowsChannelDao, bookmarksDao: BookmarksDao): OfflineRepository = OfflineRepository(videosDao, localFollowsChannelDao, bookmarksDao)
-
-    @Singleton
-    @Provides
-    fun providesLocalFollowsChannelRepository(localFollowsChannelDao: LocalFollowsChannelDao): LocalFollowChannelRepository = LocalFollowChannelRepository(localFollowsChannelDao)
-
-    @Singleton
-    @Provides
-    fun providesLocalFollowsGameRepository(localFollowsGameDao: LocalFollowsGameDao): LocalFollowGameRepository = LocalFollowGameRepository(localFollowsGameDao)
-
-    @Singleton
-    @Provides
-    fun providesBookmarksRepository(bookmarksDao: BookmarksDao, videosDao: VideosDao): BookmarksRepository = BookmarksRepository(bookmarksDao, videosDao)
-
-    @Singleton
-    @Provides
-    fun providesVodBookmarkIgnoredUsersRepository(vodBookmarkIgnoredUsersDao: VodBookmarkIgnoredUsersDao): VodBookmarkIgnoredUsersRepository = VodBookmarkIgnoredUsersRepository(vodBookmarkIgnoredUsersDao)
-
-    @Singleton
-    @Provides
-    fun providesSortChannelRepository(sortChannelDao: SortChannelDao): SortChannelRepository = SortChannelRepository(sortChannelDao)
-
-    @Singleton
-    @Provides
-    fun providesSortGameRepository(sortGameDao: SortGameDao): SortGameRepository = SortGameRepository(sortGameDao)
-
-    @Singleton
-    @Provides
-    fun providesShownNotificationsRepository(shownNotificationsDao: ShownNotificationsDao): ShownNotificationsRepository = ShownNotificationsRepository(shownNotificationsDao)
-
-    @Singleton
-    @Provides
-    fun providesNotificationUsersRepository(notificationUsersDao: NotificationUsersDao): NotificationUsersRepository = NotificationUsersRepository(notificationUsersDao)
-
-    @Singleton
-    @Provides
-    fun providesTranslateAllMessagesUsersRepository(translateAllMessagesUsersDao: TranslateAllMessagesUsersDao): TranslateAllMessagesUsersRepository = TranslateAllMessagesUsersRepository(translateAllMessagesUsersDao)
-
-    @Singleton
-    @Provides
-    fun providesSavedFiltersRepository(savedFiltersDao: SavedFiltersDao): SavedFiltersRepository = SavedFiltersRepository(savedFiltersDao)
-
-    @Singleton
-    @Provides
-    fun providesRecentSearchRepository(recentSearchDao: RecentSearchDao): RecentSearchRepository = RecentSearchRepository(recentSearchDao)
-
-    @Singleton
-    @Provides
-    fun providesPlaybackStatesRepository(playbackStatesDao: PlaybackStatesDao): PlaybackStatesRepository = PlaybackStatesRepository(playbackStatesDao)
-
-    @Singleton
-    @Provides
-    fun providesVideosDao(database: AppDatabase): VideosDao = database.videos()
+    fun providesOfflineVideosDao(database: AppDatabase): OfflineVideosDao = database.offlineVideos()
 
     @Singleton
     @Provides
@@ -109,11 +44,11 @@ class DatabaseModule {
 
     @Singleton
     @Provides
-    fun providesLocalFollowsChannelDao(database: AppDatabase): LocalFollowsChannelDao = database.localFollowsChannel()
+    fun providesLocalChannelFollowsDao(database: AppDatabase): LocalChannelFollowsDao = database.localChannelFollows()
 
     @Singleton
     @Provides
-    fun providesLocalFollowsGameDao(database: AppDatabase): LocalFollowsGameDao = database.localFollowsGame()
+    fun providesLocalGameFollowsDao(database: AppDatabase): LocalGameFollowsDao = database.localGameFollows()
 
     @Singleton
     @Provides
@@ -121,39 +56,39 @@ class DatabaseModule {
 
     @Singleton
     @Provides
-    fun providesVodBookmarkIgnoredUsersDao(database: AppDatabase): VodBookmarkIgnoredUsersDao = database.vodBookmarkIgnoredUsers()
+    fun providesBookmarkIgnoredUsersDao(database: AppDatabase): BookmarkIgnoredUsersDao = database.bookmarkIgnoredUsers()
 
     @Singleton
     @Provides
-    fun providesSortChannelDao(database: AppDatabase): SortChannelDao = database.sortChannelDao()
+    fun providesChannelSortDao(database: AppDatabase): ChannelSortDao = database.channelSort()
 
     @Singleton
     @Provides
-    fun providesSortGameDao(database: AppDatabase): SortGameDao = database.sortGameDao()
+    fun providesGameSortDao(database: AppDatabase): GameSortDao = database.gameSort()
 
     @Singleton
     @Provides
-    fun providesShownNotificationsDao(database: AppDatabase): ShownNotificationsDao = database.shownNotificationsDao()
+    fun providesShownNotificationsDao(database: AppDatabase): ShownNotificationsDao = database.shownNotifications()
 
     @Singleton
     @Provides
-    fun providesNotificationUsersDao(database: AppDatabase): NotificationUsersDao = database.notificationsDao()
+    fun providesNotificationUsersDao(database: AppDatabase): NotificationUsersDao = database.notificationUsers()
 
     @Singleton
     @Provides
-    fun providesTranslateAllMessagesUsersDao(database: AppDatabase): TranslateAllMessagesUsersDao = database.translateAllMessagesUsersDao()
+    fun providesTranslatedChannelsDao(database: AppDatabase): TranslatedChannelsDao = database.translatedChannels()
 
     @Singleton
     @Provides
-    fun providesSavedFiltersDao(database: AppDatabase): SavedFiltersDao = database.savedFiltersDao()
+    fun providesSavedFiltersDao(database: AppDatabase): SavedFiltersDao = database.savedFilters()
 
     @Singleton
     @Provides
-    fun providesRecentSearchDao(database: AppDatabase): RecentSearchDao = database.recentSearchDao()
+    fun providesRecentSearchesDao(database: AppDatabase): RecentSearchesDao = database.recentSearches()
 
     @Singleton
     @Provides
-    fun providesPlaybackStatesDao(database: AppDatabase): PlaybackStatesDao = database.playbackStatesDao()
+    fun providesPlaybackStatesDao(database: AppDatabase): PlaybackStatesDao = database.playbackStates()
 
     @Singleton
     @Provides

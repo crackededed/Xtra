@@ -34,8 +34,8 @@ class MediaButtonReceiver: BroadcastReceiver() {
                             playerRepository.getPlaybackStates()
                         }
                         if (savedStates.isNotEmpty()) {
-                            when (context.prefs().getString(C.PLAYER, "ExoPlayer")) {
-                                "MediaPlayer" -> {}
+                            when (context.prefs().getString(C.PLAYER, C.EXOPLAYER)) {
+                                C.MEDIA_PLAYER -> {}
                                 else -> {
                                     if (context.prefs().getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
                                         context.startForegroundService(Intent(context, ExoPlayerService::class.java).apply {
@@ -51,8 +51,8 @@ class MediaButtonReceiver: BroadcastReceiver() {
                         playerRepository.getPlaybackStates()
                     }
                     if (savedStates.isNotEmpty()) {
-                        when (context.prefs().getString(C.PLAYER, "ExoPlayer")) {
-                            "MediaPlayer" -> {}
+                        when (context.prefs().getString(C.PLAYER, C.EXOPLAYER)) {
+                            C.MEDIA_PLAYER -> {}
                             else -> {
                                 if (context.prefs().getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
                                     context.startService(Intent(context, ExoPlayerService::class.java).apply {

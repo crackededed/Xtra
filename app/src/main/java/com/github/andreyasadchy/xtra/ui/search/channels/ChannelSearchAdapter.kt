@@ -63,7 +63,7 @@ class ChannelSearchAdapter(
                             .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .apply {
-                                if (context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
+                                if (context.prefs().getBoolean(C.UI_ROUND_USER_IMAGE, true)) {
                                     circleCrop()
                                 }
                             }
@@ -91,7 +91,7 @@ class ChannelSearchAdapter(
                         userFollowers.text = context.resources.getQuantityString(
                             R.plurals.followers,
                             count,
-                            TwitchApiHelper.formatCount(count, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                            TwitchApiHelper.formatCount(count, context.prefs().getBoolean(C.UI_TRUNCATE_VIEW_COUNT, true))
                         )
                     } else {
                         userFollowers.visibility = View.GONE

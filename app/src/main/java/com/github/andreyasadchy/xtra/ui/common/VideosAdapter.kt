@@ -106,7 +106,7 @@ class VideosAdapter(
                         views.text = context.resources.getQuantityString(
                             R.plurals.views,
                             count,
-                            TwitchApiHelper.formatCount(count, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                            TwitchApiHelper.formatCount(count, context.prefs().getBoolean(C.UI_TRUNCATE_VIEW_COUNT, true))
                         )
                     } else {
                         views.visibility = View.GONE
@@ -152,7 +152,7 @@ class VideosAdapter(
                                 .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                                 .transition(DrawableTransitionOptions.withCrossFade())
                                 .apply {
-                                    if (context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
+                                    if (context.prefs().getBoolean(C.UI_ROUND_USER_IMAGE, true)) {
                                         circleCrop()
                                     }
                                 }
@@ -189,7 +189,7 @@ class VideosAdapter(
                     if (showGame && item.gameName != null) {
                         val gameListener: (View) -> Unit = {
                             fragment.findNavController().navigate(
-                                if (context.prefs().getBoolean(C.UI_GAMEPAGER, true)) {
+                                if (context.prefs().getBoolean(C.UI_GAME_PAGER, true)) {
                                     GamePagerFragmentDirections.actionGlobalGamePagerFragment(
                                         gameId = item.gameId,
                                         gameSlug = item.gameSlug,

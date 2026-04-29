@@ -20,8 +20,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
 import com.github.andreyasadchy.xtra.databinding.SortBarBinding
+import com.github.andreyasadchy.xtra.model.ui.GameSort
 import com.github.andreyasadchy.xtra.model.ui.SavedFilter
-import com.github.andreyasadchy.xtra.model.ui.SortGame
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.ui.common.FragmentHost
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
@@ -75,7 +75,7 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                val sortValues = args.gameId?.let { viewModel.getSortGame(it) } ?: viewModel.getSortGame("default")
+                val sortValues = args.gameId?.let { viewModel.getGameSort(it) } ?: viewModel.getGameSort("default")
                 viewModel.setFilter(
                     sort = sortValues?.streamSort,
                     tags = args.tags ?: sortValues?.streamTags?.split(',')?.toTypedArray(),
@@ -135,7 +135,7 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
                     sort = viewModel.sort,
                     tags = viewModel.tags,
                     languages = viewModel.languages,
-                    saved = args.gameId?.let { viewModel.getSortGame(it) } != null
+                    saved = args.gameId?.let { viewModel.getGameSort(it) } != null
                 ).show(childFragmentManager, null)
             }
         }
@@ -237,31 +237,31 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
                 }
                 if (saveSort) {
                     args.gameId?.let { id ->
-                        val item = viewModel.getSortGame(id)?.apply {
+                        val item = viewModel.getGameSort(id)?.apply {
                             streamSort = sort
                             streamTags = tags.takeIf { it.isNotEmpty() }?.joinToString(",")
                             streamLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
-                        } ?: SortGame(
+                        } ?: GameSort(
                             id = id,
                             streamSort = sort,
                             streamTags = tags.takeIf { it.isNotEmpty() }?.joinToString(","),
                             streamLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
                         )
-                        viewModel.saveSortGame(item)
+                        viewModel.saveGameSort(item)
                     }
                 }
                 if (saveDefault) {
-                    val item = viewModel.getSortGame("default")?.apply {
+                    val item = viewModel.getGameSort("default")?.apply {
                         streamSort = sort
                         streamTags = tags.takeIf { it.isNotEmpty() }?.joinToString(",")
                         streamLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
-                    } ?: SortGame(
+                    } ?: GameSort(
                         id = "default",
                         streamSort = sort,
                         streamTags = tags.takeIf { it.isNotEmpty() }?.joinToString(","),
                         streamLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
                     )
-                    viewModel.saveSortGame(item)
+                    viewModel.saveGameSort(item)
                 }
             }
         }
@@ -270,7 +270,7 @@ class GameStreamsFragment : PagedListFragment(), Scrollable, Sortable, StreamsSo
     override fun deleteSavedSort() {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
-                args.gameId?.let { viewModel.getSortGame(it) }?.let { viewModel.deleteSortGame(it) }
+                args.gameId?.let { viewModel.getGameSort(it) }?.let { viewModel.deleteGameSort(it) }
             }
         }
     }

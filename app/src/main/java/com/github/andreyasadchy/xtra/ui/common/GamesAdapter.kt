@@ -59,7 +59,7 @@ class GamesAdapter(
                     val context = fragment.requireContext()
                     root.setOnClickListener {
                         fragment.findNavController().navigate(
-                            if (context.prefs().getBoolean(C.UI_GAMEPAGER, true)) {
+                            if (context.prefs().getBoolean(C.UI_GAME_PAGER, true)) {
                                 GamePagerFragmentDirections.actionGlobalGamePagerFragment(
                                     gameId = item.id,
                                     gameSlug = item.slug,
@@ -98,18 +98,18 @@ class GamesAdapter(
                         viewers.text = context.resources.getQuantityString(
                             R.plurals.viewers,
                             count,
-                            TwitchApiHelper.formatCount(count, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                            TwitchApiHelper.formatCount(count, context.prefs().getBoolean(C.UI_TRUNCATE_VIEW_COUNT, true))
                         )
                     } else {
                         viewers.visibility = View.GONE
                     }
-                    if (item.broadcasterCount != null && context.prefs().getBoolean(C.UI_BROADCASTERSCOUNT, true)) {
+                    if (item.broadcasterCount != null && context.prefs().getBoolean(C.UI_BROADCASTERS_COUNT, true)) {
                         broadcastersCount.visibility = View.VISIBLE
                         val count = item.broadcasterCount ?: 0
                         broadcastersCount.text = context.resources.getQuantityString(
                             R.plurals.broadcasters,
                             count,
-                            TwitchApiHelper.formatCount(count, context.prefs().getBoolean(C.UI_TRUNCATEVIEWCOUNT, true))
+                            TwitchApiHelper.formatCount(count, context.prefs().getBoolean(C.UI_TRUNCATE_VIEW_COUNT, true))
                         )
                     } else {
                         broadcastersCount.visibility = View.GONE

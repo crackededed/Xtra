@@ -6,13 +6,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
-import com.github.andreyasadchy.xtra.model.ui.SortChannel
+import com.github.andreyasadchy.xtra.model.ui.ChannelSort
 import com.github.andreyasadchy.xtra.repository.BookmarksRepository
+import com.github.andreyasadchy.xtra.repository.ChannelSortRepository
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
-import com.github.andreyasadchy.xtra.repository.LocalFollowChannelRepository
-import com.github.andreyasadchy.xtra.repository.OfflineRepository
-import com.github.andreyasadchy.xtra.repository.SortChannelRepository
+import com.github.andreyasadchy.xtra.repository.LocalChannelFollowsRepository
+import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
 import com.github.andreyasadchy.xtra.repository.datasource.FollowedChannelsDataSource
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
@@ -28,9 +28,9 @@ import javax.inject.Inject
 @HiltViewModel
 class FollowedChannelsViewModel @Inject constructor(
     @param:ApplicationContext private val applicationContext: Context,
-    private val sortChannelRepository: SortChannelRepository,
-    private val localFollowsChannel: LocalFollowChannelRepository,
-    private val offlineRepository: OfflineRepository,
+    private val channelSortRepository: ChannelSortRepository,
+    private val localChannelFollowsRepository: LocalChannelFollowsRepository,
+    private val offlineVideosRepository: OfflineVideosRepository,
     private val bookmarksRepository: BookmarksRepository,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
@@ -62,25 +62,25 @@ class FollowedChannelsViewModel @Inject constructor(
                     FollowedChannelsSortDialog.ORDER_ASC -> "asc"
                     else -> "desc"
                 },
-                localFollowsChannel = localFollowsChannel,
-                offlineRepository = offlineRepository,
+                localChannelFollowsRepository = localChannelFollowsRepository,
+                offlineVideosRepository = offlineVideosRepository,
                 bookmarksRepository = bookmarksRepository,
                 gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext, true),
                 graphQLRepository = graphQLRepository,
                 helixHeaders = TwitchApiHelper.getHelixHeaders(applicationContext),
                 helixRepository = helixRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
             )
         }.flow
     }.cachedIn(viewModelScope)
 
-    suspend fun getSortChannel(id: String): SortChannel? {
-        return sortChannelRepository.getById(id)
+    suspend fun getChannelSort(id: String): ChannelSort? {
+        return channelSortRepository.getById(id)
     }
 
-    suspend fun saveSortChannel(item: SortChannel) {
-        sortChannelRepository.save(item)
+    suspend fun saveChannelSort(item: ChannelSort) {
+        channelSortRepository.save(item)
     }
 
     fun setFilter(sort: String?, order: String?) {

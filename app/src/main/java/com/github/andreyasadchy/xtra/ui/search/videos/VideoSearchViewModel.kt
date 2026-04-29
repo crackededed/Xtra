@@ -17,7 +17,7 @@ import com.github.andreyasadchy.xtra.repository.BookmarksRepository
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
-import com.github.andreyasadchy.xtra.repository.RecentSearchRepository
+import com.github.andreyasadchy.xtra.repository.RecentSearchesRepository
 import com.github.andreyasadchy.xtra.repository.datasource.SearchVideosDataSource
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
@@ -46,7 +46,7 @@ import javax.inject.Inject
 @HiltViewModel
 class VideoSearchViewModel @Inject constructor(
     @ApplicationContext applicationContext: Context,
-    private val recentSearchRepository: RecentSearchRepository,
+    private val recentSearchesRepository: RecentSearchesRepository,
     playerRepository: PlayerRepository,
     private val bookmarksRepository: BookmarksRepository,
     private val graphQLRepository: GraphQLRepository,
@@ -59,9 +59,9 @@ class VideoSearchViewModel @Inject constructor(
 
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query
-    val recentSearches = recentSearchRepository.loadRecentSearchFlow(RecentSearch.TYPE_VIDEO)
+    val recentSearches = recentSearchesRepository.getAll(RecentSearch.TYPE_VIDEO)
     val positions = playerRepository.loadVideoPositions()
-    val bookmarks = bookmarksRepository.loadBookmarksFlow()
+    val bookmarks = bookmarksRepository.getAllFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow = _query.flatMapLatest { query ->
@@ -73,7 +73,7 @@ class VideoSearchViewModel @Inject constructor(
                 gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext),
                 graphQLRepository = graphQLRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
             )
         }.flow
     }.cachedIn(viewModelScope)
@@ -87,25 +87,25 @@ class VideoSearchViewModel @Inject constructor(
     fun saveRecentSearch(query: String) {
         if (query.isNotBlank()) {
             viewModelScope.launch {
-                recentSearchRepository.getItem(query, RecentSearch.TYPE_VIDEO)?.let {
-                    recentSearchRepository.delete(it)
+                recentSearchesRepository.getItem(query, RecentSearch.TYPE_VIDEO)?.let {
+                    recentSearchesRepository.delete(it)
                 }
-                recentSearchRepository.save(RecentSearch(query, RecentSearch.TYPE_VIDEO, System.currentTimeMillis()))
+                recentSearchesRepository.save(RecentSearch(query, RecentSearch.TYPE_VIDEO, System.currentTimeMillis()))
             }
         }
     }
 
     fun deleteRecentSearch(item: RecentSearch) {
         viewModelScope.launch {
-            recentSearchRepository.delete(item)
+            recentSearchesRepository.delete(item)
         }
     }
 
     fun saveBookmark(filesDir: String, video: Video, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>) {
         viewModelScope.launch {
-            val item = video.id?.let { bookmarksRepository.getBookmarkByVideoId(it) }
+            val item = video.id?.let { bookmarksRepository.getByVideoId(it) }
             if (item != null) {
-                bookmarksRepository.deleteBookmark(item)
+                bookmarksRepository.delete(item)
             } else {
                 val downloadedThumbnail = video.id.takeIf { !it.isNullOrBlank() }?.let { id ->
                     video.thumbnail.takeIf { !it.isNullOrBlank() }?.let {
@@ -114,7 +114,7 @@ class VideoSearchViewModel @Inject constructor(
                         viewModelScope.launch(Dispatchers.IO) {
                             try {
                                 when {
-                                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
@@ -124,7 +124,7 @@ class VideoSearchViewModel @Inject constructor(
                                             }
                                         }
                                     }
-                                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                                    networkLibrary == C.CRONET && cronetEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                         }
@@ -160,7 +160,7 @@ class VideoSearchViewModel @Inject constructor(
                         viewModelScope.launch(Dispatchers.IO) {
                             try {
                                 when {
-                                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
@@ -170,7 +170,7 @@ class VideoSearchViewModel @Inject constructor(
                                             }
                                         }
                                     }
-                                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                                    networkLibrary == C.CRONET && cronetEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                         }
@@ -240,7 +240,7 @@ class VideoSearchViewModel @Inject constructor(
                         } else null
                     }
                 }
-                bookmarksRepository.saveBookmark(
+                bookmarksRepository.save(
                     Bookmark(
                         videoId = video.id,
                         userId = video.channelId,

@@ -21,7 +21,7 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
 import com.github.andreyasadchy.xtra.databinding.SortBarBinding
 import com.github.andreyasadchy.xtra.model.ui.Clip
-import com.github.andreyasadchy.xtra.model.ui.SortGame
+import com.github.andreyasadchy.xtra.model.ui.GameSort
 import com.github.andreyasadchy.xtra.ui.common.ClipsAdapter
 import com.github.andreyasadchy.xtra.ui.common.FragmentHost
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
@@ -83,7 +83,7 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                val sortValues = args.gameId?.let { viewModel.getSortGame(it) } ?: viewModel.getSortGame("default")
+                val sortValues = args.gameId?.let { viewModel.getGameSort(it) } ?: viewModel.getGameSort("default")
                 viewModel.setFilter(
                     period = sortValues?.clipPeriod,
                     languages = sortValues?.clipLanguages?.split(',')?.toTypedArray(),
@@ -122,7 +122,7 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
                     sort = VideosSortDialog.SORT_VIEWS,
                     period = viewModel.period,
                     languages = viewModel.languages,
-                    saved = args.gameId?.let { viewModel.getSortGame(it) } != null
+                    saved = args.gameId?.let { viewModel.getGameSort(it) } != null
                 ).show(childFragmentManager, null)
             }
         }
@@ -161,27 +161,27 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
                 }
                 if (saveSort) {
                     args.gameId?.let { id ->
-                        val item = viewModel.getSortGame(id)?.apply {
+                        val item = viewModel.getGameSort(id)?.apply {
                             clipPeriod = period
                             clipLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
-                        } ?: SortGame(
+                        } ?: GameSort(
                             id = id,
                             clipPeriod = period,
                             clipLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
                         )
-                        viewModel.saveSortGame(item)
+                        viewModel.saveGameSort(item)
                     }
                 }
                 if (saveDefault) {
-                    val item = viewModel.getSortGame("default")?.apply {
+                    val item = viewModel.getGameSort("default")?.apply {
                         clipPeriod = period
                         clipLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
-                    } ?: SortGame(
+                    } ?: GameSort(
                         id = "default",
                         clipPeriod = period,
                         clipLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
                     )
-                    viewModel.saveSortGame(item)
+                    viewModel.saveGameSort(item)
                 }
             }
         }
@@ -190,7 +190,7 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
     override fun deleteSavedSort() {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
-                args.gameId?.let { viewModel.getSortGame(it) }?.let { viewModel.deleteSortGame(it) }
+                args.gameId?.let { viewModel.getGameSort(it) }?.let { viewModel.deleteGameSort(it) }
             }
         }
     }

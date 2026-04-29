@@ -20,7 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
 import com.github.andreyasadchy.xtra.databinding.SortBarBinding
-import com.github.andreyasadchy.xtra.model.ui.SortGame
+import com.github.andreyasadchy.xtra.model.ui.GameSort
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.common.FragmentHost
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
@@ -75,7 +75,7 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
             viewModel.saveBookmark(
                 requireContext().filesDir.path,
                 it,
-                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                 TwitchApiHelper.getGQLHeaders(requireContext()),
                 TwitchApiHelper.getHelixHeaders(requireContext()),
             )
@@ -93,7 +93,7 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                val sortValues = args.gameId?.let { viewModel.getSortGame(it) } ?: viewModel.getSortGame("default")
+                val sortValues = args.gameId?.let { viewModel.getGameSort(it) } ?: viewModel.getGameSort("default")
                 viewModel.setFilter(
                     sort = sortValues?.videoSort,
                     period = if (!TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank()) {
@@ -131,7 +131,7 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
             }
         }
         initializeAdapter(binding, pagingAdapter)
-        if (requireContext().prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+        if (requireContext().prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.positions.collectLatest {
@@ -158,7 +158,7 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                     period = viewModel.period,
                     type = viewModel.type,
                     languages = viewModel.languages,
-                    saved = args.gameId?.let { viewModel.getSortGame(it) } != null
+                    saved = args.gameId?.let { viewModel.getGameSort(it) } != null
                 ).show(childFragmentManager, null)
             }
         }
@@ -197,39 +197,39 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
                 }
                 if (saveSort) {
                     args.gameId?.let { id ->
-                        val item = viewModel.getSortGame(id)?.apply {
+                        val item = viewModel.getGameSort(id)?.apply {
                             videoSort = sort
                             if (!TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank()) {
                                 videoPeriod = period
                             }
                             videoType = type
                             videoLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
-                        } ?: SortGame(
+                        } ?: GameSort(
                             id = id,
                             videoSort = sort,
                             videoPeriod = if (!TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank()) period else null,
                             videoType = type,
                             videoLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
                         )
-                        viewModel.saveSortGame(item)
+                        viewModel.saveGameSort(item)
                     }
                 }
                 if (saveDefault) {
-                    val item = viewModel.getSortGame("default")?.apply {
+                    val item = viewModel.getGameSort("default")?.apply {
                         videoSort = sort
                         if (!TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank()) {
                             videoPeriod = period
                         }
                         videoType = type
                         videoLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
-                    } ?: SortGame(
+                    } ?: GameSort(
                         id = "default",
                         videoSort = sort,
                         videoPeriod = if (!TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank()) period else null,
                         videoType = type,
                         videoLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
                     )
-                    viewModel.saveSortGame(item)
+                    viewModel.saveGameSort(item)
                 }
             }
         }
@@ -238,7 +238,7 @@ class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSort
     override fun deleteSavedSort() {
         if ((parentFragment as? FragmentHost)?.currentFragment == this) {
             viewLifecycleOwner.lifecycleScope.launch {
-                args.gameId?.let { viewModel.getSortGame(it) }?.let { viewModel.deleteSortGame(it) }
+                args.gameId?.let { viewModel.getGameSort(it) }?.let { viewModel.deleteGameSort(it) }
             }
         }
     }

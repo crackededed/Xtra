@@ -6,6 +6,7 @@ import android.os.ext.SdkExtensions
 import com.github.andreyasadchy.xtra.model.id.DeviceCodeResponse
 import com.github.andreyasadchy.xtra.model.id.TokenResponse
 import com.github.andreyasadchy.xtra.model.id.ValidationResponse
+import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.body
 import com.github.andreyasadchy.xtra.util.NetworkUtils.code
@@ -35,7 +36,7 @@ class AuthRepository @Inject constructor(
 
     suspend fun validate(networkLibrary: String?, token: String): ValidationResponse = withContext(Dispatchers.IO) {
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/validate", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("Authorization", token)
@@ -47,7 +48,7 @@ class AuthRepository @Inject constructor(
                     throw IllegalStateException("401")
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/validate", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         addHeader("Authorization", token)
@@ -76,7 +77,7 @@ class AuthRepository @Inject constructor(
 
     suspend fun revoke(networkLibrary: String?, body: String) = withContext(Dispatchers.IO) {
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/revoke", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("Content-Type", "application/x-www-form-urlencoded")
@@ -84,7 +85,7 @@ class AuthRepository @Inject constructor(
                     }.build().start()
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 suspendCancellableCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
                     cronetEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/revoke", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         addHeader("Content-Type", "application/x-www-form-urlencoded")
@@ -104,7 +105,7 @@ class AuthRepository @Inject constructor(
 
     suspend fun getDeviceCode(networkLibrary: String?, body: String): DeviceCodeResponse = withContext(Dispatchers.IO) {
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/device", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("Content-Type", "application/x-www-form-urlencoded")
@@ -113,7 +114,7 @@ class AuthRepository @Inject constructor(
                 }
                 json.decodeFromString<DeviceCodeResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/device", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         addHeader("Content-Type", "application/x-www-form-urlencoded")
@@ -136,7 +137,7 @@ class AuthRepository @Inject constructor(
 
     suspend fun getToken(networkLibrary: String?, body: String): TokenResponse = withContext(Dispatchers.IO) {
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/token", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("Content-Type", "application/x-www-form-urlencoded")
@@ -145,7 +146,7 @@ class AuthRepository @Inject constructor(
                 }
                 json.decodeFromString<TokenResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder("https://id.twitch.tv/oauth2/token", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         addHeader("Content-Type", "application/x-www-form-urlencoded")
