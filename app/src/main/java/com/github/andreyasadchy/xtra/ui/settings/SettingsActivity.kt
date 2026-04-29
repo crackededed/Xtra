@@ -278,7 +278,7 @@ class SettingsActivity : AppCompatActivity() {
                     }
                     viewModel.restoreSettings(
                         list = list,
-                        networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                        networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                         gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), true),
                         helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext())
                     )
@@ -344,7 +344,7 @@ class SettingsActivity : AppCompatActivity() {
                 }
                 viewModel.toggleNotifications(
                     enabled = newValue as Boolean,
-                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), true),
                     helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext())
                 )
@@ -405,7 +405,7 @@ class SettingsActivity : AppCompatActivity() {
             }
             findPreference<Preference>("check_updates")?.setOnPreferenceClickListener {
                 viewModel.checkUpdates(
-                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     requireContext().prefs().getString(C.UPDATE_URL, null) ?: "https://api.github.com/repos/crackededed/xtra/releases/tags/api21",
                     requireContext().tokenPrefs().getLong(C.UPDATE_LAST_CHECKED, 0)
                 )
@@ -510,7 +510,7 @@ class SettingsActivity : AppCompatActivity() {
                                             binding.textView.text = getString(R.string.downloading_update)
                                             binding.progressBar.visibility = View.GONE
                                         }
-                                        viewModel.downloadUpdate(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"), it)
+                                        viewModel.downloadUpdate(requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), it)
                                         val dialog = requireActivity().getAlertDialogBuilder()
                                             .setView(binding.root)
                                             .setNegativeButton(getString(android.R.string.cancel), null)
@@ -580,7 +580,7 @@ class SettingsActivity : AppCompatActivity() {
                 requireActivity().recreate()
                 true
             }
-            findPreference<SwitchPreferenceCompat>(C.UI_ROUNDUSERIMAGE)?.onPreferenceChangeListener = changeListener
+            findPreference<SwitchPreferenceCompat>(C.UI_ROUND_USER_IMAGE)?.onPreferenceChangeListener = changeListener
             findPreference<ListPreference>(C.THEME)?.onPreferenceChangeListener = changeListener
             findPreference<SwitchPreferenceCompat>(C.UI_THEME_FOLLOW_SYSTEM)?.onPreferenceChangeListener = changeListener
             findPreference<ListPreference>(C.UI_THEME_DARK_ON)?.onPreferenceChangeListener = changeListener
@@ -632,13 +632,13 @@ class SettingsActivity : AppCompatActivity() {
                 (requireActivity() as? SettingsActivity)?.setResult()
                 true
             }
-            findPreference<SwitchPreferenceCompat>(C.UI_ROUNDUSERIMAGE)?.onPreferenceChangeListener = changeListener
-            findPreference<SwitchPreferenceCompat>(C.UI_TRUNCATEVIEWCOUNT)?.onPreferenceChangeListener = changeListener
+            findPreference<SwitchPreferenceCompat>(C.UI_ROUND_USER_IMAGE)?.onPreferenceChangeListener = changeListener
+            findPreference<SwitchPreferenceCompat>(C.UI_TRUNCATE_VIEW_COUNT)?.onPreferenceChangeListener = changeListener
             findPreference<SwitchPreferenceCompat>(C.UI_UPTIME)?.onPreferenceChangeListener = changeListener
             findPreference<SwitchPreferenceCompat>(C.UI_TAGS)?.onPreferenceChangeListener = changeListener
-            findPreference<SwitchPreferenceCompat>(C.UI_BROADCASTERSCOUNT)?.onPreferenceChangeListener = changeListener
+            findPreference<SwitchPreferenceCompat>(C.UI_BROADCASTERS_COUNT)?.onPreferenceChangeListener = changeListener
             findPreference<SwitchPreferenceCompat>(C.UI_BOOKMARK_TIME_LEFT)?.onPreferenceChangeListener = changeListener
-            findPreference<SwitchPreferenceCompat>(C.UI_SCROLLTOP)?.onPreferenceChangeListener = changeListener
+            findPreference<SwitchPreferenceCompat>(C.UI_SCROLL_TOP)?.onPreferenceChangeListener = changeListener
             findPreference<ListPreference>(C.PORTRAIT_COLUMN_COUNT)?.onPreferenceChangeListener = changeListener
             findPreference<ListPreference>(C.LANDSCAPE_COLUMN_COUNT)?.onPreferenceChangeListener = changeListener
             findPreference<ListPreference>(C.COMPACT_STREAMS)?.onPreferenceChangeListener = changeListener

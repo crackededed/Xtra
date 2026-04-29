@@ -103,7 +103,7 @@ class EmotesFragment : Fragment() {
         when (position) {
             0 -> {
                 if (recentEmotes.isNotEmpty()) {
-                    val personalEmotes = viewModel.userStvEmoteSetId?.let { setId ->
+                    val personalEmotes = viewModel.userSTVEmoteSetId?.let { setId ->
                         synchronized(viewModel.personalEmoteSets) {
                             viewModel.personalEmoteSets[setId]
                         }
@@ -120,7 +120,7 @@ class EmotesFragment : Fragment() {
                 }
             }
             else -> {
-                val personalEmotes = viewModel.userStvEmoteSetId?.let { setId ->
+                val personalEmotes = viewModel.userSTVEmoteSetId?.let { setId ->
                     synchronized(viewModel.personalEmoteSets) {
                         viewModel.personalEmoteSets[setId]
                     }

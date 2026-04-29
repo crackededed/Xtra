@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
 import com.github.andreyasadchy.xtra.databinding.SortBarBinding
-import com.github.andreyasadchy.xtra.model.ui.SortChannel
+import com.github.andreyasadchy.xtra.model.ui.ChannelSort
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.common.FragmentHost
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
@@ -71,7 +71,7 @@ class FollowedVideosFragment : PagedListFragment(), Scrollable, Sortable, Videos
             viewModel.saveBookmark(
                 requireContext().filesDir.path,
                 it,
-                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                 TwitchApiHelper.getGQLHeaders(requireContext()),
                 TwitchApiHelper.getHelixHeaders(requireContext()),
             )
@@ -89,7 +89,7 @@ class FollowedVideosFragment : PagedListFragment(), Scrollable, Sortable, Videos
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                val sortValues = viewModel.getSortChannel("followed_videos")
+                val sortValues = viewModel.getChannelSort("followed_videos")
                 viewModel.setFilter(
                     sort = sortValues?.videoSort,
                     type = sortValues?.videoType,
@@ -113,7 +113,7 @@ class FollowedVideosFragment : PagedListFragment(), Scrollable, Sortable, Videos
             }
         }
         initializeAdapter(binding, pagingAdapter, enableScrollTopButton = false)
-        if (requireContext().prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+        if (requireContext().prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.positions.collectLatest {
@@ -159,15 +159,15 @@ class FollowedVideosFragment : PagedListFragment(), Scrollable, Sortable, Videos
                     viewModel.sortText.value = getString(R.string.sort_and_type, sortText, typeText)
                 }
                 if (saveDefault) {
-                    val item = viewModel.getSortChannel("followed_videos")?.apply {
+                    val item = viewModel.getChannelSort("followed_videos")?.apply {
                         videoSort = sort
                         videoType = type
-                    } ?: SortChannel(
+                    } ?: ChannelSort(
                         id = "followed_videos",
                         videoSort = sort,
                         videoType = type
                     )
-                    viewModel.saveSortChannel(item)
+                    viewModel.saveChannelSort(item)
                 }
             }
         }

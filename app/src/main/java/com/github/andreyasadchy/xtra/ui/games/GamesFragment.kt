@@ -149,7 +149,7 @@ class GamesFragment : PagedListFragment(), Scrollable, GamesSortDialog.OnFilter 
         }
         val enableScrollTopButton = !args.tags.isNullOrEmpty()
         initializeAdapter(binding.recyclerViewLayout, pagingAdapter, enableScrollTopButton = enableScrollTopButton)
-        if (enableScrollTopButton && requireContext().prefs().getBoolean(C.UI_SCROLLTOP, true)) {
+        if (enableScrollTopButton && requireContext().prefs().getBoolean(C.UI_SCROLL_TOP, true)) {
             binding.recyclerViewLayout.scrollTop.setOnClickListener {
                 scrollToTop()
                 it.visibility = View.GONE

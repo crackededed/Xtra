@@ -9,7 +9,7 @@ import androidx.paging.cachedIn
 import com.github.andreyasadchy.xtra.model.ui.RecentSearch
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
-import com.github.andreyasadchy.xtra.repository.RecentSearchRepository
+import com.github.andreyasadchy.xtra.repository.RecentSearchesRepository
 import com.github.andreyasadchy.xtra.repository.datasource.SearchStreamsDataSource
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
@@ -26,14 +26,14 @@ import javax.inject.Inject
 @HiltViewModel
 class StreamSearchViewModel @Inject constructor(
     @ApplicationContext applicationContext: Context,
-    private val recentSearchRepository: RecentSearchRepository,
+    private val recentSearchesRepository: RecentSearchesRepository,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
 ) : ViewModel() {
 
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query
-    val recentSearches = recentSearchRepository.loadRecentSearchFlow(RecentSearch.TYPE_STREAM)
+    val recentSearches = recentSearchesRepository.getAll(RecentSearch.TYPE_STREAM)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val flow = _query.flatMapLatest { query ->
@@ -51,7 +51,7 @@ class StreamSearchViewModel @Inject constructor(
                 gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext),
                 graphQLRepository = graphQLRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
             )
         }.flow
     }.cachedIn(viewModelScope)
@@ -65,17 +65,17 @@ class StreamSearchViewModel @Inject constructor(
     fun saveRecentSearch(query: String) {
         if (query.isNotBlank()) {
             viewModelScope.launch {
-                recentSearchRepository.getItem(query, RecentSearch.TYPE_STREAM)?.let {
-                    recentSearchRepository.delete(it)
+                recentSearchesRepository.getItem(query, RecentSearch.TYPE_STREAM)?.let {
+                    recentSearchesRepository.delete(it)
                 }
-                recentSearchRepository.save(RecentSearch(query, RecentSearch.TYPE_STREAM, System.currentTimeMillis()))
+                recentSearchesRepository.save(RecentSearch(query, RecentSearch.TYPE_STREAM, System.currentTimeMillis()))
             }
         }
     }
 
     fun deleteRecentSearch(item: RecentSearch) {
         viewModelScope.launch {
-            recentSearchRepository.delete(item)
+            recentSearchesRepository.delete(item)
         }
     }
 }

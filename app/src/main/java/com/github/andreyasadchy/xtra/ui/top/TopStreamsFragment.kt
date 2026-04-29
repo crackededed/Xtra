@@ -24,8 +24,8 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentGamesBinding
+import com.github.andreyasadchy.xtra.model.ui.GameSort
 import com.github.andreyasadchy.xtra.model.ui.SavedFilter
-import com.github.andreyasadchy.xtra.model.ui.SortGame
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
@@ -139,7 +139,7 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                val sortValues = viewModel.getSortGame("top_streams")
+                val sortValues = viewModel.getGameSort("top_streams")
                 viewModel.setFilter(
                     sort = sortValues?.streamSort,
                     tags = args.tags ?: sortValues?.streamTags?.split(',')?.toTypedArray(),
@@ -190,7 +190,7 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
         }
         val enableScrollTopButton = !args.tags.isNullOrEmpty() || !args.languages.isNullOrEmpty()
         initializeAdapter(binding.recyclerViewLayout, pagingAdapter, enableScrollTopButton = enableScrollTopButton)
-        if (enableScrollTopButton && requireContext().prefs().getBoolean(C.UI_SCROLLTOP, true)) {
+        if (enableScrollTopButton && requireContext().prefs().getBoolean(C.UI_SCROLL_TOP, true)) {
             binding.recyclerViewLayout.scrollTop.setOnClickListener {
                 scrollToTop()
                 it.visibility = View.GONE
@@ -299,17 +299,17 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
                 )
             }
             if (saveDefault) {
-                val item = viewModel.getSortGame("top_streams")?.apply {
+                val item = viewModel.getGameSort("top_streams")?.apply {
                     streamSort = sort
                     streamTags = tags.takeIf { it.isNotEmpty() }?.joinToString(",")
                     streamLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
-                } ?: SortGame(
+                } ?: GameSort(
                     id = "top_streams",
                     streamSort = sort,
                     streamTags = tags.takeIf { it.isNotEmpty() }?.joinToString(","),
                     streamLanguages = languages.takeIf { it.isNotEmpty() }?.joinToString(",")
                 )
-                viewModel.saveSortGame(item)
+                viewModel.saveGameSort(item)
             }
         }
     }

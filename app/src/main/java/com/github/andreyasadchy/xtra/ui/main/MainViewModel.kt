@@ -30,7 +30,8 @@ import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.repository.AuthRepository
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
-import com.github.andreyasadchy.xtra.repository.OfflineRepository
+import com.github.andreyasadchy.xtra.repository.LocalChannelFollowsRepository
+import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.ui.download.StreamDownloadWorker
 import com.github.andreyasadchy.xtra.ui.download.VideoDownloadWorker
@@ -73,7 +74,8 @@ class MainViewModel @Inject constructor(
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
     private val playerRepository: PlayerRepository,
-    private val offlineRepository: OfflineRepository,
+    private val offlineVideosRepository: OfflineVideosRepository,
+    private val localChannelFollowsRepository: LocalChannelFollowsRepository,
     private val authRepository: AuthRepository,
     private val httpEngine: Lazy<HttpEngine>?,
     private val cronetEngine: Lazy<CronetEngine>?,
@@ -403,7 +405,7 @@ class MainViewModel @Inject constructor(
                         viewModelScope.launch(Dispatchers.IO) {
                             try {
                                 when {
-                                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
@@ -413,7 +415,7 @@ class MainViewModel @Inject constructor(
                                             }
                                         }
                                     }
-                                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                                    networkLibrary == C.CRONET && cronetEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                         }
@@ -449,7 +451,7 @@ class MainViewModel @Inject constructor(
                         viewModelScope.launch(Dispatchers.IO) {
                             try {
                                 when {
-                                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                         }
@@ -459,7 +461,7 @@ class MainViewModel @Inject constructor(
                                             }
                                         }
                                     }
-                                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                                    networkLibrary == C.CRONET && cronetEngine != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
                                             cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                         }
@@ -488,7 +490,7 @@ class MainViewModel @Inject constructor(
                         path
                     }
                 }
-                val videoId = offlineRepository.saveVideo(
+                val videoId = offlineVideosRepository.save(
                     OfflineVideo(
                         name = title,
                         channelId = channelId,
@@ -534,7 +536,7 @@ class MainViewModel @Inject constructor(
                     viewModelScope.launch(Dispatchers.IO) {
                         try {
                             when {
-                                networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
                                         httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                     }
@@ -544,7 +546,7 @@ class MainViewModel @Inject constructor(
                                         }
                                     }
                                 }
-                                networkLibrary == "Cronet" && cronetEngine != null -> {
+                                networkLibrary == C.CRONET && cronetEngine != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
                                         cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                     }
@@ -580,7 +582,7 @@ class MainViewModel @Inject constructor(
                     viewModelScope.launch(Dispatchers.IO) {
                         try {
                             when {
-                                networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
                                         httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                     }
@@ -590,7 +592,7 @@ class MainViewModel @Inject constructor(
                                         }
                                     }
                                 }
-                                networkLibrary == "Cronet" && cronetEngine != null -> {
+                                networkLibrary == C.CRONET && cronetEngine != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
                                         cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                     }
@@ -619,7 +621,7 @@ class MainViewModel @Inject constructor(
                     path
                 }
             }
-            val videoId = offlineRepository.saveVideo(
+            val videoId = offlineVideosRepository.save(
                 OfflineVideo(
                     sourceUrl = url,
                     name = title,
@@ -670,7 +672,7 @@ class MainViewModel @Inject constructor(
                     viewModelScope.launch(Dispatchers.IO) {
                         try {
                             when {
-                                networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
                                         httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                     }
@@ -680,7 +682,7 @@ class MainViewModel @Inject constructor(
                                         }
                                     }
                                 }
-                                networkLibrary == "Cronet" && cronetEngine != null -> {
+                                networkLibrary == C.CRONET && cronetEngine != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
                                         cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                     }
@@ -716,7 +718,7 @@ class MainViewModel @Inject constructor(
                     viewModelScope.launch(Dispatchers.IO) {
                         try {
                             when {
-                                networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
                                         httpEngine.get().newUrlRequestBuilder(it, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                                     }
@@ -726,7 +728,7 @@ class MainViewModel @Inject constructor(
                                         }
                                     }
                                 }
-                                networkLibrary == "Cronet" && cronetEngine != null -> {
+                                networkLibrary == C.CRONET && cronetEngine != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
                                         cronetEngine.get().newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                                     }
@@ -755,7 +757,7 @@ class MainViewModel @Inject constructor(
                     path
                 }
             }
-            val videoId = offlineRepository.saveVideo(
+            val videoId = offlineVideosRepository.save(
                 OfflineVideo(
                     sourceUrl = url,
                     sourceStartPosition = videoOffsetSeconds?.toLong()?.times(1000L),
@@ -855,13 +857,13 @@ class MainViewModel @Inject constructor(
             updateUrl.emit(
                 try {
                     val response = when {
-                        networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                        networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                             val response = suspendCancellableCoroutine { continuation ->
                                 httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                             }
                             json.decodeFromString<JsonObject>(String(response.second))
                         }
-                        networkLibrary == "Cronet" && cronetEngine != null -> {
+                        networkLibrary == C.CRONET && cronetEngine != null -> {
                             val response = suspendCancellableCoroutine { continuation ->
                                 cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
                             }
@@ -900,7 +902,7 @@ class MainViewModel @Inject constructor(
                     }
                 }
                 val response = when {
-                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                         val response = suspendCancellableCoroutine { continuation ->
                             httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation, progressListener)).build().start()
                         }
@@ -908,7 +910,7 @@ class MainViewModel @Inject constructor(
                             response.second
                         } else null
                     }
-                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                    networkLibrary == C.CRONET && cronetEngine != null -> {
                         val response = suspendCancellableCoroutine { continuation ->
                             cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation, progressListener), cronetExecutor).build().start()
                         }
@@ -956,7 +958,7 @@ class MainViewModel @Inject constructor(
 
     fun deleteOldImages() {
         viewModelScope.launch(Dispatchers.IO) {
-            offlineRepository.deleteOldImages()
+            localChannelFollowsRepository.deleteOldImages()
         }
     }
 }

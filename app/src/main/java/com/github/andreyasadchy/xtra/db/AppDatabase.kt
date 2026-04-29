@@ -8,30 +8,30 @@ import com.github.andreyasadchy.xtra.model.ShownNotification
 import com.github.andreyasadchy.xtra.model.VideoPosition
 import com.github.andreyasadchy.xtra.model.chat.RecentEmote
 import com.github.andreyasadchy.xtra.model.ui.Bookmark
-import com.github.andreyasadchy.xtra.model.ui.LocalFollowChannel
-import com.github.andreyasadchy.xtra.model.ui.LocalFollowGame
+import com.github.andreyasadchy.xtra.model.ui.BookmarkIgnoredUser
+import com.github.andreyasadchy.xtra.model.ui.ChannelSort
+import com.github.andreyasadchy.xtra.model.ui.GameSort
+import com.github.andreyasadchy.xtra.model.ui.LocalChannelFollow
+import com.github.andreyasadchy.xtra.model.ui.LocalGameFollow
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.model.ui.RecentSearch
 import com.github.andreyasadchy.xtra.model.ui.SavedFilter
-import com.github.andreyasadchy.xtra.model.ui.SortChannel
-import com.github.andreyasadchy.xtra.model.ui.SortGame
-import com.github.andreyasadchy.xtra.model.ui.TranslateAllMessagesUser
-import com.github.andreyasadchy.xtra.model.ui.VodBookmarkIgnoredUser
+import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
 
 @Database(
     entities = [
         OfflineVideo::class,
         RecentEmote::class,
         VideoPosition::class,
-        LocalFollowChannel::class,
-        LocalFollowGame::class,
+        LocalChannelFollow::class,
+        LocalGameFollow::class,
         Bookmark::class,
-        VodBookmarkIgnoredUser::class,
-        SortChannel::class,
-        SortGame::class,
+        BookmarkIgnoredUser::class,
+        ChannelSort::class,
+        GameSort::class,
         ShownNotification::class,
         NotificationUser::class,
-        TranslateAllMessagesUser::class,
+        TranslatedChannel::class,
         SavedFilter::class,
         RecentSearch::class,
         PlaybackState::class
@@ -41,19 +41,19 @@ import com.github.andreyasadchy.xtra.model.ui.VodBookmarkIgnoredUser
 )
 abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun videos(): VideosDao
+    abstract fun offlineVideos(): OfflineVideosDao
     abstract fun recentEmotes(): RecentEmotesDao
     abstract fun videoPositions(): VideoPositionsDao
-    abstract fun localFollowsChannel(): LocalFollowsChannelDao
-    abstract fun localFollowsGame(): LocalFollowsGameDao
+    abstract fun localChannelFollows(): LocalChannelFollowsDao
+    abstract fun localGameFollows(): LocalGameFollowsDao
     abstract fun bookmarks(): BookmarksDao
-    abstract fun vodBookmarkIgnoredUsers(): VodBookmarkIgnoredUsersDao
-    abstract fun sortChannelDao(): SortChannelDao
-    abstract fun sortGameDao(): SortGameDao
-    abstract fun shownNotificationsDao(): ShownNotificationsDao
-    abstract fun notificationsDao(): NotificationUsersDao
-    abstract fun translateAllMessagesUsersDao(): TranslateAllMessagesUsersDao
-    abstract fun savedFiltersDao(): SavedFiltersDao
-    abstract fun recentSearchDao(): RecentSearchDao
-    abstract fun playbackStatesDao(): PlaybackStatesDao
+    abstract fun bookmarkIgnoredUsers(): BookmarkIgnoredUsersDao
+    abstract fun channelSort(): ChannelSortDao
+    abstract fun gameSort(): GameSortDao
+    abstract fun shownNotifications(): ShownNotificationsDao
+    abstract fun notificationUsers(): NotificationUsersDao
+    abstract fun translatedChannels(): TranslatedChannelsDao
+    abstract fun savedFilters(): SavedFiltersDao
+    abstract fun recentSearches(): RecentSearchesDao
+    abstract fun playbackStates(): PlaybackStatesDao
 }

@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
 import com.github.andreyasadchy.xtra.databinding.SortBarBinding
-import com.github.andreyasadchy.xtra.model.ui.SortChannel
+import com.github.andreyasadchy.xtra.model.ui.ChannelSort
 import com.github.andreyasadchy.xtra.model.ui.User
 import com.github.andreyasadchy.xtra.ui.common.FragmentHost
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
@@ -58,7 +58,7 @@ class FollowedChannelsFragment : PagedListFragment(), Scrollable, Sortable, Foll
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                val sortValues = viewModel.getSortChannel("followed_channels")
+                val sortValues = viewModel.getChannelSort("followed_channels")
                 viewModel.setFilter(
                     sort = sortValues?.videoSort,
                     order = sortValues?.videoType,
@@ -117,15 +117,15 @@ class FollowedChannelsFragment : PagedListFragment(), Scrollable, Sortable, Foll
                     viewModel.sortText.value = getString(R.string.sort_and_order, sortText, orderText)
                 }
                 if (saveDefault) {
-                    val item = viewModel.getSortChannel("followed_channels")?.apply {
+                    val item = viewModel.getChannelSort("followed_channels")?.apply {
                         videoSort = sort
                         videoType = order
-                    } ?: SortChannel(
+                    } ?: ChannelSort(
                         id = "followed_channels",
                         videoSort = sort,
                         videoType = order
                     )
-                    viewModel.saveSortChannel(item)
+                    viewModel.saveChannelSort(item)
                 }
             }
         }

@@ -5,12 +5,12 @@ import androidx.paging.PagingState
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
-import com.github.andreyasadchy.xtra.repository.LocalFollowChannelRepository
+import com.github.andreyasadchy.xtra.repository.LocalChannelFollowsRepository
 import com.github.andreyasadchy.xtra.util.C
 
 class FollowedStreamsDataSource(
     private val userId: String?,
-    private val localFollowsChannel: LocalFollowChannelRepository,
+    private val localChannelFollowsRepository: LocalChannelFollowsRepository,
     private val gqlHeaders: Map<String, String>,
     private val graphQLRepository: GraphQLRepository,
     private val helixHeaders: Map<String, String>,
@@ -30,7 +30,7 @@ class FollowedStreamsDataSource(
             }
         } else {
             val list = mutableListOf<Stream>()
-            localFollowsChannel.loadFollows().mapNotNull { it.userId }.takeIf { it.isNotEmpty() }?.let {
+            localChannelFollowsRepository.getAll().mapNotNull { it.userId }.takeIf { it.isNotEmpty() }?.let {
                 try {
                     gqlQueryLocal(it)
                 } catch (e: Exception) {
