@@ -16,6 +16,7 @@ import com.github.andreyasadchy.xtra.model.helix.game.GamesResponse
 import com.github.andreyasadchy.xtra.model.helix.stream.StreamsResponse
 import com.github.andreyasadchy.xtra.model.helix.user.UsersResponse
 import com.github.andreyasadchy.xtra.model.helix.video.VideosResponse
+import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import dagger.Lazy
@@ -56,7 +57,7 @@ class HelixRepository @Inject constructor(
             names?.forEach { appendQueryParameter("name", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -64,7 +65,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<GamesResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -89,7 +90,7 @@ class HelixRepository @Inject constructor(
             offset?.let { appendQueryParameter("after", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -97,7 +98,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<GamesResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -126,7 +127,7 @@ class HelixRepository @Inject constructor(
             offset?.let { appendQueryParameter("after", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -134,7 +135,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<StreamsResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -160,7 +161,7 @@ class HelixRepository @Inject constructor(
             offset?.let { appendQueryParameter("after", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -168,7 +169,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<StreamsResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -198,7 +199,7 @@ class HelixRepository @Inject constructor(
             offset?.let { appendQueryParameter("after", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -206,7 +207,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<ClipsResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -238,7 +239,7 @@ class HelixRepository @Inject constructor(
             offset?.let { appendQueryParameter("after", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -246,7 +247,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<VideosResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -271,7 +272,7 @@ class HelixRepository @Inject constructor(
             logins?.forEach { appendQueryParameter("login", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -279,7 +280,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<UsersResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -305,7 +306,7 @@ class HelixRepository @Inject constructor(
             offset?.let { appendQueryParameter("after", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -313,7 +314,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<GamesResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -340,7 +341,7 @@ class HelixRepository @Inject constructor(
             live?.let { appendQueryParameter("live_only", it.toString()) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -348,7 +349,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<ChannelSearchResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -375,7 +376,7 @@ class HelixRepository @Inject constructor(
             offset?.let { appendQueryParameter("after", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -383,7 +384,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<FollowsResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -410,7 +411,7 @@ class HelixRepository @Inject constructor(
             offset?.let { appendQueryParameter("after", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -418,7 +419,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<FollowsResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -444,7 +445,7 @@ class HelixRepository @Inject constructor(
             offset?.let { appendQueryParameter("after", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -452,7 +453,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<UserEmotesResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -476,7 +477,7 @@ class HelixRepository @Inject constructor(
             setIds.forEach { appendQueryParameter("emote_set_id", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -484,7 +485,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<EmoteSetsResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -506,7 +507,7 @@ class HelixRepository @Inject constructor(
     suspend fun getGlobalBadges(networkLibrary: String?, headers: Map<String, String>): BadgesResponse = withContext(Dispatchers.IO) {
         val url = "https://api.twitch.tv/helix/chat/badges/global"
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -514,7 +515,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<BadgesResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -538,7 +539,7 @@ class HelixRepository @Inject constructor(
             userId?.let { appendQueryParameter("broadcaster_id", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -546,7 +547,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<BadgesResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -570,7 +571,7 @@ class HelixRepository @Inject constructor(
             userId?.let { appendQueryParameter("broadcaster_id", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -578,7 +579,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<CheerEmotesResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -605,7 +606,7 @@ class HelixRepository @Inject constructor(
             offset?.let { appendQueryParameter("after", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -613,7 +614,7 @@ class HelixRepository @Inject constructor(
                 }
                 json.decodeFromString<ChatUsersResponse>(String(response.second))
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -647,7 +648,7 @@ class HelixRepository @Inject constructor(
             }
         }.toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -661,7 +662,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -701,7 +702,7 @@ class HelixRepository @Inject constructor(
             replyId?.let { put("reply_parent_message_id", it) }
         }.toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -715,7 +716,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -756,7 +757,7 @@ class HelixRepository @Inject constructor(
             color?.let { put("color", it) }
         }.toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -770,7 +771,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -814,7 +815,7 @@ class HelixRepository @Inject constructor(
             }
         }.toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -828,7 +829,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -866,7 +867,7 @@ class HelixRepository @Inject constructor(
             targetId?.let { appendQueryParameter("user_id", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -879,7 +880,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -915,7 +916,7 @@ class HelixRepository @Inject constructor(
             messageId?.let { appendQueryParameter("message_id", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -928,7 +929,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -962,7 +963,7 @@ class HelixRepository @Inject constructor(
             userId?.let { appendQueryParameter("user_id", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -974,7 +975,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1007,7 +1008,7 @@ class HelixRepository @Inject constructor(
             color?.let { appendQueryParameter("color", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1020,7 +1021,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1056,7 +1057,7 @@ class HelixRepository @Inject constructor(
             put("length", length?.toIntOrNull())
         }.toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1070,7 +1071,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1116,7 +1117,7 @@ class HelixRepository @Inject constructor(
             unique?.let { put("unique_chat_mode", it) }
         }.toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1131,7 +1132,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1170,7 +1171,7 @@ class HelixRepository @Inject constructor(
             description?.let { put("description", it) }
         }.toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1184,7 +1185,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1221,7 +1222,7 @@ class HelixRepository @Inject constructor(
             targetId?.let { appendQueryParameter("user_id", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1233,7 +1234,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1266,7 +1267,7 @@ class HelixRepository @Inject constructor(
             targetId?.let { appendQueryParameter("user_id", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1279,7 +1280,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1314,7 +1315,7 @@ class HelixRepository @Inject constructor(
             targetId?.let { appendQueryParameter("to_broadcaster_id", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1326,7 +1327,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1358,7 +1359,7 @@ class HelixRepository @Inject constructor(
             channelId?.let { appendQueryParameter("broadcaster_id", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1371,7 +1372,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1406,7 +1407,7 @@ class HelixRepository @Inject constructor(
             targetId?.let { appendQueryParameter("user_id", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1418,7 +1419,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1451,7 +1452,7 @@ class HelixRepository @Inject constructor(
             targetId?.let { appendQueryParameter("user_id", it) }
         }.build().toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1464,7 +1465,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1502,7 +1503,7 @@ class HelixRepository @Inject constructor(
             put("message", message)
         }.toString()
         when {
-            networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1516,7 +1517,7 @@ class HelixRepository @Inject constructor(
                     String(response.second)
                 }
             }
-            networkLibrary == "Cronet" && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     cronetEngine.get().newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
                         headers.forEach { addHeader(it.key, it.value) }

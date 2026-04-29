@@ -237,7 +237,7 @@ class MainActivity : AppCompatActivity() {
                             if (isNetworkAvailable) {
                                 if (!TwitchApiHelper.checkedValidation && prefs.getBoolean(C.VALIDATE_TOKENS, true)) {
                                     viewModel.validate(
-                                        prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                        prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                         TwitchApiHelper.getGQLHeaders(this@MainActivity, true),
                                         prefs.getString(C.GQL_CLIENT_ID_WEB, "kimne78kx3ncx6brgo4mv6wki5h1ko"),
                                         tokenPrefs().getString(C.GQL_TOKEN_WEB, null)?.takeIf { it.isNotBlank() }?.let { TwitchApiHelper.addTokenPrefixGQL(it) },
@@ -252,7 +252,7 @@ class MainActivity : AppCompatActivity() {
                                     (prefs.getString(C.UPDATE_CHECK_FREQUENCY, "7")?.toIntOrNull() ?: 7) * 86400000 + tokenPrefs().getLong(C.UPDATE_LAST_CHECKED, 0) < System.currentTimeMillis()
                                 ) {
                                     viewModel.checkUpdates(
-                                        prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                        prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                         prefs.getString(C.UPDATE_URL, null) ?: "https://api.github.com/repos/crackededed/xtra/releases/tags/latest",
                                         tokenPrefs().getLong(C.UPDATE_LAST_CHECKED, 0)
                                     )
@@ -298,7 +298,7 @@ class MainActivity : AppCompatActivity() {
                                         binding.textView.text = getString(R.string.downloading_update)
                                         binding.progressBar.visibility = View.GONE
                                     }
-                                    viewModel.downloadUpdate(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), it)
+                                    viewModel.downloadUpdate(prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP), it)
                                     val dialog = getAlertDialogBuilder()
                                         .setView(binding.root)
                                         .setNegativeButton(getString(android.R.string.cancel), null)
@@ -361,7 +361,7 @@ class MainActivity : AppCompatActivity() {
             },
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
-        if (prefs.getString(C.PLAYER, "ExoPlayer") != "MediaPlayer" && prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
             lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.playbackStates.collectLatest { states ->
@@ -400,7 +400,7 @@ class MainActivity : AppCompatActivity() {
                                 closePlayer()
                             }
                             startVideo(video, offset, offset != null)
-                            if (prefs.getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+                            if (prefs.getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
                                 video.id.toLongOrNull()?.let { id ->
                                     viewModel.savePosition(id, offset ?: 0)
                                 }
@@ -452,7 +452,7 @@ class MainActivity : AppCompatActivity() {
                         if (game != null) {
                             (playerFragment as? Media3PlayerFragment)?.minimize() ?: (playerFragment as? PlayerFragment)?.minimize()
                             navController.navigate(
-                                if (prefs.getBoolean(C.UI_GAMEPAGER, true)) {
+                                if (prefs.getBoolean(C.UI_GAME_PAGER, true)) {
                                     GamePagerFragmentDirections.actionGlobalGamePagerFragment(
                                         gameId = game.id,
                                         gameSlug = game.slug,
@@ -605,7 +605,7 @@ class MainActivity : AppCompatActivity() {
                                 viewModel.loadVideo(
                                     id,
                                     offset,
-                                    prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                    prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                     TwitchApiHelper.getGQLHeaders(this),
                                     TwitchApiHelper.getHelixHeaders(this),
                                     prefs.getBoolean(C.ENABLE_INTEGRITY, false),
@@ -617,7 +617,7 @@ class MainActivity : AppCompatActivity() {
                             if (!id.isNullOrBlank()) {
                                 viewModel.loadClip(
                                     id,
-                                    prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                    prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                     TwitchApiHelper.getGQLHeaders(this),
                                     TwitchApiHelper.getHelixHeaders(this),
                                     prefs.getBoolean(C.ENABLE_INTEGRITY, false),
@@ -629,7 +629,7 @@ class MainActivity : AppCompatActivity() {
                             if (!id.isNullOrBlank()) {
                                 viewModel.loadClip(
                                     id,
-                                    prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                    prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                     TwitchApiHelper.getHelixHeaders(this),
                                     TwitchApiHelper.getGQLHeaders(this),
                                     prefs.getBoolean(C.ENABLE_INTEGRITY, false),
@@ -643,7 +643,7 @@ class MainActivity : AppCompatActivity() {
                                 viewModel.loadGame(
                                     gameSlug = slug,
                                     tag = tag?.let { Uri.decode(it) },
-                                    networkLibrary = prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                    networkLibrary = prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                     gqlHeaders = TwitchApiHelper.getGQLHeaders(this),
                                     helixHeaders = TwitchApiHelper.getHelixHeaders(this),
                                     enableIntegrity = prefs.getBoolean(C.ENABLE_INTEGRITY, false),
@@ -657,7 +657,7 @@ class MainActivity : AppCompatActivity() {
                                 viewModel.loadGame(
                                     gameName = Uri.decode(name),
                                     tag = tag?.let { Uri.decode(it) },
-                                    networkLibrary = prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                    networkLibrary = prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                     gqlHeaders = TwitchApiHelper.getGQLHeaders(this),
                                     helixHeaders = TwitchApiHelper.getHelixHeaders(this),
                                     enableIntegrity = prefs.getBoolean(C.ENABLE_INTEGRITY, false),
@@ -686,7 +686,7 @@ class MainActivity : AppCompatActivity() {
                             if (!tagId.isNullOrBlank()) {
                                 viewModel.loadTag(
                                     tagId,
-                                    prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                    prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                     TwitchApiHelper.getGQLHeaders(this),
                                     prefs.getBoolean(C.ENABLE_INTEGRITY, false),
                                 )
@@ -714,7 +714,7 @@ class MainActivity : AppCompatActivity() {
                             if (!login.isNullOrBlank()) {
                                 viewModel.loadUser(
                                     login,
-                                    prefs.getString(C.NETWORK_LIBRARY, "OkHttp"),
+                                    prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                     TwitchApiHelper.getGQLHeaders(this),
                                     TwitchApiHelper.getHelixHeaders(this),
                                     prefs.getBoolean(C.ENABLE_INTEGRITY, false),
@@ -751,7 +751,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             INTENT_OPEN_DOWNLOADS_TAB -> {
-                binding.navBar.selectedItemId = if (prefs.getBoolean(C.UI_SAVEDPAGER, true)) {
+                binding.navBar.selectedItemId = if (prefs.getBoolean(C.UI_SAVED_PAGER, true)) {
                     R.id.savedPagerFragment
                 } else {
                     R.id.savedMediaFragment
@@ -771,7 +771,7 @@ class MainActivity : AppCompatActivity() {
                 if (playerFragment != null) {
                     (playerFragment as? Media3PlayerFragment)?.maximize() ?: (playerFragment as? PlayerFragment)?.maximize()
                 } else {
-                    if (prefs.getString(C.PLAYER, "ExoPlayer") != "MediaPlayer" && prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+                    if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
                         viewModel.getPlaybackStates()
                     }
                 }
@@ -795,8 +795,8 @@ class MainActivity : AppCompatActivity() {
 //Navigation listeners
 
     fun startStream(stream: Stream) {
-        when (prefs.getString(C.PLAYER, "ExoPlayer")) {
-            "MediaPlayer" -> {
+        when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
+            C.MEDIA_PLAYER -> {
                 val fragment = MediaPlayerFragment.newInstance(stream)
                 startPlayer(fragment)
             }
@@ -830,8 +830,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun startVideo(video: Video, offset: Long?, ignoreSavedPosition: Boolean = false) {
-        when (prefs.getString(C.PLAYER, "ExoPlayer")) {
-            "MediaPlayer" -> {
+        when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
+            C.MEDIA_PLAYER -> {
                 val fragment = MediaPlayerFragment.newInstance(video, offset, ignoreSavedPosition)
                 startPlayer(fragment)
             }
@@ -857,7 +857,7 @@ class MainActivity : AppCompatActivity() {
                         videoAnimatedPreviewURL = video.animatedPreviewURL,
                         position = offset,
                     ))
-                    if (prefs.getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+                    if (prefs.getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
                         video.id?.toLongOrNull()?.let { id ->
                             viewModel.saveVideoPosition(id, offset ?: 0)
                         }
@@ -873,8 +873,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun startClip(clip: Clip) {
-        when (prefs.getString(C.PLAYER, "ExoPlayer")) {
-            "MediaPlayer" -> {
+        when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
+            C.MEDIA_PLAYER -> {
                 val fragment = MediaPlayerFragment.newInstance(clip)
                 startPlayer(fragment)
             }
@@ -911,8 +911,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun startOfflineVideo(video: OfflineVideo) {
-        when (prefs.getString(C.PLAYER, "ExoPlayer")) {
-            "MediaPlayer" -> {
+        when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
+            C.MEDIA_PLAYER -> {
                 val fragment = MediaPlayerFragment.newInstance(video)
                 startPlayer(fragment)
             }
@@ -980,7 +980,7 @@ class MainActivity : AppCompatActivity() {
         if (playerFragment == null) {
             playerFragment = supportFragmentManager.findFragmentById(R.id.playerContainer) as? Media3PlayerFragment ?: supportFragmentManager.findFragmentById(R.id.playerContainer) as? PlayerFragment
             if (playerFragment == null) {
-                if (prefs.getString(C.PLAYER, "ExoPlayer") != "MediaPlayer" && prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+                if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
                     viewModel.getPlaybackStates()
                 }
             }
@@ -1044,15 +1044,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun downloadStream(filesDir: String, id: String?, title: String?, createdAt: String?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {
-        viewModel.downloadStream(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), filesDir, id, title, createdAt, channelId, channelLogin, channelName, channelImage, thumbnail, gameId, gameSlug, gameName, downloadPath, quality, downloadChat, downloadChatEmotes, wifiOnly)
+        viewModel.downloadStream(prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP), filesDir, id, title, createdAt, channelId, channelLogin, channelName, channelImage, thumbnail, gameId, gameSlug, gameName, downloadPath, quality, downloadChat, downloadChatEmotes, wifiOnly)
     }
 
     fun downloadVideo(filesDir: String, id: String?, title: String?, createdAt: String?, type: String?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, url: String, downloadPath: String, quality: String, from: Long, to: Long, downloadChat: Boolean, downloadChatEmotes: Boolean, playlistToFile: Boolean, wifiOnly: Boolean) {
-        viewModel.downloadVideo(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), filesDir, id, title, createdAt, type, channelId, channelLogin, channelName, channelImage, thumbnail, gameId, gameSlug, gameName, url, downloadPath, quality, from, to, downloadChat, downloadChatEmotes, playlistToFile, wifiOnly)
+        viewModel.downloadVideo(prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP), filesDir, id, title, createdAt, type, channelId, channelLogin, channelName, channelImage, thumbnail, gameId, gameSlug, gameName, url, downloadPath, quality, from, to, downloadChat, downloadChatEmotes, playlistToFile, wifiOnly)
     }
 
     fun downloadClip(filesDir: String, clipId: String?, title: String?, createdAt: String?, durationSeconds: Int?, videoId: String?, videoOffsetSeconds: Int?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, url: String, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {
-        viewModel.downloadClip(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), filesDir, clipId, title, createdAt, durationSeconds, videoId, videoOffsetSeconds, channelId, channelLogin, channelName, channelImage, thumbnail, gameId, gameSlug, gameName, url, downloadPath, quality, downloadChat, downloadChatEmotes, wifiOnly)
+        viewModel.downloadClip(prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP), filesDir, clipId, title, createdAt, durationSeconds, videoId, videoOffsetSeconds, channelId, channelLogin, channelName, channelImage, thumbnail, gameId, gameSlug, gameName, url, downloadPath, quality, downloadChat, downloadChatEmotes, wifiOnly)
     }
 
     fun popFragment() {
@@ -1076,13 +1076,13 @@ class MainActivity : AppCompatActivity() {
             } else defaultTabs
         }
         navController.setGraph(navController.navInflater.inflate(R.navigation.nav_graph).also {
-            val startOnFollowed = prefs.getString(C.UI_STARTONFOLLOWED, "1")?.toIntOrNull() ?: 1
+            val startOnFollowed = prefs.getString(C.UI_START_ON_FOLLOWED, "1")?.toIntOrNull() ?: 1
             val isLoggedIn = !TwitchApiHelper.getGQLHeaders(this, true)[C.HEADER_TOKEN].isNullOrBlank() ||
                     !TwitchApiHelper.getHelixHeaders(this)[C.HEADER_TOKEN].isNullOrBlank()
             val defaultItem = tabList.find { it.split(':')[1] != "0" }?.split(':')[0] ?: "1"
             when {
                 (isLoggedIn && startOnFollowed < 2) || (!isLoggedIn && startOnFollowed == 0) || defaultItem == "2" -> {
-                    if (prefs.getBoolean(C.UI_FOLLOWPAGER, true)) {
+                    if (prefs.getBoolean(C.UI_FOLLOW_PAGER, true)) {
                         it.setStartDestination(R.id.followPagerFragment)
                     } else {
                         it.setStartDestination(R.id.followMediaFragment)
@@ -1090,7 +1090,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 defaultItem == "0" -> it.setStartDestination(R.id.rootGamesFragment)
                 defaultItem == "3" -> {
-                    if (prefs.getBoolean(C.UI_SAVEDPAGER, true)) {
+                    if (prefs.getBoolean(C.UI_SAVED_PAGER, true)) {
                         it.setStartDestination(R.id.savedPagerFragment)
                     } else {
                         it.setStartDestination(R.id.savedMediaFragment)
@@ -1112,14 +1112,14 @@ class MainActivity : AppCompatActivity() {
                             "0" -> menu.add(Menu.NONE, R.id.rootGamesFragment, Menu.NONE, R.string.games).setIcon(R.drawable.ic_games_black_24dp)
                             "1" -> menu.add(Menu.NONE, R.id.rootTopFragment, Menu.NONE, R.string.popular).setIcon(R.drawable.ic_trending_up_black_24dp)
                             "2" -> {
-                                if (prefs.getBoolean(C.UI_FOLLOWPAGER, true)) {
+                                if (prefs.getBoolean(C.UI_FOLLOW_PAGER, true)) {
                                     menu.add(Menu.NONE, R.id.followPagerFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
                                 } else {
                                     menu.add(Menu.NONE, R.id.followMediaFragment, Menu.NONE, R.string.following).setIcon(R.drawable.ic_favorite_black_24dp)
                                 }
                             }
                             "3" -> {
-                                if (prefs.getBoolean(C.UI_SAVEDPAGER, true)) {
+                                if (prefs.getBoolean(C.UI_SAVED_PAGER, true)) {
                                     menu.add(Menu.NONE, R.id.savedPagerFragment, Menu.NONE, R.string.saved).setIcon(R.drawable.ic_file_download_black_24dp)
                                 } else {
                                     menu.add(Menu.NONE, R.id.savedMediaFragment, Menu.NONE, R.string.saved).setIcon(R.drawable.ic_file_download_black_24dp)
@@ -1215,7 +1215,7 @@ class MainActivity : AppCompatActivity() {
         }
         if (version < 7) {
             prefs.edit {
-                if (prefs.getString(C.UI_CUTOUTMODE, "0") == "1") {
+                if (prefs.getString(C.UI_CUTOUT_MODE, "0") == "1") {
                     putBoolean(C.UI_DRAW_BEHIND_CUTOUTS, true)
                 }
             }

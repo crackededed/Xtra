@@ -24,11 +24,11 @@ interface BookmarksDao {
     fun getByUserId(id: String): List<Bookmark>
 
     @Insert
-    fun insert(video: Bookmark)
+    fun insert(item: Bookmark)
 
     @Delete
-    fun delete(video: Bookmark)
+    fun delete(item: Bookmark)
 
     @Update
-    fun update(video: Bookmark)
+    fun update(item: Bookmark)
 }

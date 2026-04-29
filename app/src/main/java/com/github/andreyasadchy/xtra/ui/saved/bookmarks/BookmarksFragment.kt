@@ -20,7 +20,7 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
 import com.github.andreyasadchy.xtra.databinding.SortBarBinding
 import com.github.andreyasadchy.xtra.model.ui.Bookmark
-import com.github.andreyasadchy.xtra.model.ui.SortChannel
+import com.github.andreyasadchy.xtra.model.ui.ChannelSort
 import com.github.andreyasadchy.xtra.ui.common.BaseNetworkFragment
 import com.github.andreyasadchy.xtra.ui.common.FragmentHost
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
@@ -67,7 +67,7 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
             viewModel.updateVideo(
                 requireContext().filesDir.path,
                 it,
-                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                 TwitchApiHelper.getGQLHeaders(requireContext()),
                 TwitchApiHelper.getHelixHeaders(requireContext()),
                 requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
@@ -127,7 +127,7 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
     override fun initialize() {
         viewLifecycleOwner.lifecycleScope.launch {
             if (viewModel.filter.value == null) {
-                val sortValues = viewModel.getSortChannel("bookmarks")
+                val sortValues = viewModel.getChannelSort("bookmarks")
                 viewModel.setFilter(
                     sort = sortValues?.videoSort,
                     order = sortValues?.videoType,
@@ -235,7 +235,7 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
                 }
             }
         }
-        if (requireContext().prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+        if (requireContext().prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.positions.collectLatest {
@@ -253,7 +253,7 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
                 }
             }
             viewModel.updateUsers(
-                requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                 TwitchApiHelper.getGQLHeaders(requireContext()),
                 TwitchApiHelper.getHelixHeaders(requireContext()),
                 requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
@@ -261,7 +261,7 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
         }
         val helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext())
         if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-            viewModel.updateVideos(requireContext().filesDir.path, requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"), helixHeaders)
+            viewModel.updateVideos(requireContext().filesDir.path, requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), helixHeaders)
         }
     }
 
@@ -291,15 +291,15 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
                     viewModel.sortText.value = getString(R.string.sort_and_order, sortText, orderText)
                 }
                 if (saveDefault) {
-                    val item = viewModel.getSortChannel("bookmarks")?.apply {
+                    val item = viewModel.getChannelSort("bookmarks")?.apply {
                         videoSort = sort
                         videoType = order
-                    } ?: SortChannel(
+                    } ?: ChannelSort(
                         id = "bookmarks",
                         videoSort = sort,
                         videoType = order
                     )
-                    viewModel.saveSortChannel(item)
+                    viewModel.saveChannelSort(item)
                 }
             }
         }
@@ -316,7 +316,7 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
         when (callback) {
             "users" -> {
                 viewModel.updateUsers(
-                    requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                    requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     TwitchApiHelper.getGQLHeaders(requireContext()),
                     TwitchApiHelper.getHelixHeaders(requireContext()),
                     requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),

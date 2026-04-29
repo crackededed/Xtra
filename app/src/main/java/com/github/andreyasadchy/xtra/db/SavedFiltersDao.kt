@@ -11,7 +11,7 @@ import com.github.andreyasadchy.xtra.model.ui.SavedFilter
 interface SavedFiltersDao {
 
     @Query("SELECT * FROM filters")
-    fun getAllPagingSource(): PagingSource<Int, SavedFilter>
+    fun getAll(): PagingSource<Int, SavedFilter>
 
     @Insert
     fun insert(item: SavedFilter)

@@ -35,7 +35,7 @@ import androidx.media3.session.CacheBitmapLoader
 import androidx.media3.session.DefaultMediaNotificationProvider
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.model.VideoPosition
-import com.github.andreyasadchy.xtra.repository.OfflineRepository
+import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
@@ -57,7 +57,7 @@ class MediaPlayerService : Service() {
     lateinit var playerRepository: PlayerRepository
 
     @Inject
-    lateinit var offlineRepository: OfflineRepository
+    lateinit var offlineVideosRepository: OfflineVideosRepository
 
     var player: MediaPlayer? = null
     private var wifiLock: WifiManager.WifiLock? = null
@@ -577,7 +577,7 @@ class MediaPlayerService : Service() {
 
     private fun savePosition() {
         player?.let { player ->
-            if (player.duration != -1 && prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+            if (player.duration != -1 && prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
                 videoId?.let {
                     runBlocking {
                         playerRepository.saveVideoPosition(VideoPosition(it, player.currentPosition.toLong()))
@@ -585,7 +585,7 @@ class MediaPlayerService : Service() {
                 } ?:
                 offlineVideoId?.let {
                     runBlocking {
-                        offlineRepository.updateVideoPosition(it, player.currentPosition.toLong())
+                        offlineVideosRepository.updatePosition(it, player.currentPosition.toLong())
                     }
                 }
             }
@@ -616,7 +616,7 @@ class MediaPlayerService : Service() {
 
     private fun updateSavedPosition() {
         player?.let { player ->
-            if (player.duration != -1 && prefs().getBoolean(C.PLAYER_USE_VIDEOPOSITIONS, true)) {
+            if (player.duration != -1 && prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
                 val currentPosition = player.currentPosition.toLong()
                 val savedPosition = lastSavedPosition
                 if (savedPosition == null || currentPosition - savedPosition !in 0..2000) {
@@ -628,7 +628,7 @@ class MediaPlayerService : Service() {
                     } ?:
                     offlineVideoId?.let {
                         runBlocking {
-                            offlineRepository.updateVideoPosition(it, currentPosition)
+                            offlineVideosRepository.updatePosition(it, currentPosition)
                         }
                     }
                 }

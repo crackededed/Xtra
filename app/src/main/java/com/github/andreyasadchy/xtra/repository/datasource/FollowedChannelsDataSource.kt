@@ -6,16 +6,16 @@ import com.github.andreyasadchy.xtra.model.ui.User
 import com.github.andreyasadchy.xtra.repository.BookmarksRepository
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
-import com.github.andreyasadchy.xtra.repository.LocalFollowChannelRepository
-import com.github.andreyasadchy.xtra.repository.OfflineRepository
+import com.github.andreyasadchy.xtra.repository.LocalChannelFollowsRepository
+import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
 import com.github.andreyasadchy.xtra.util.C
 
 class FollowedChannelsDataSource(
     private val sort: String,
     private val order: String,
     private val userId: String?,
-    private val localFollowsChannel: LocalFollowChannelRepository,
-    private val offlineRepository: OfflineRepository,
+    private val localChannelFollowsRepository: LocalChannelFollowsRepository,
+    private val offlineVideosRepository: OfflineVideosRepository,
     private val bookmarksRepository: BookmarksRepository,
     private val gqlHeaders: Map<String, String>,
     private val graphQLRepository: GraphQLRepository,
@@ -61,7 +61,7 @@ class FollowedChannelsDataSource(
             )
         } else {
             val list = mutableListOf<User>()
-            localFollowsChannel.loadFollows().let { if (order == "asc") it.asReversed() else it }.forEach {
+            localChannelFollowsRepository.getAll().let { if (order == "asc") it.asReversed() else it }.forEach {
                 list.add(User(
                     id = it.userId,
                     login = it.userLogin,
@@ -113,20 +113,20 @@ class FollowedChannelsDataSource(
                     )
                     if (item.localFollow && item.id != null && user.login != null && user.name != null
                         && (item.login != user.login || item.name != user.name)) {
-                        localFollowsChannel.getFollowByUserId(item.id)?.let {
-                            localFollowsChannel.updateFollow(it.apply {
+                        localChannelFollowsRepository.getById(item.id)?.let {
+                            localChannelFollowsRepository.update(it.apply {
                                 userLogin = user.login
                                 userName = user.name
                             })
                         }
-                        offlineRepository.getVideosByUserId(item.id).forEach {
-                            offlineRepository.updateVideo(it.apply {
+                        offlineVideosRepository.getByUserId(item.id).forEach {
+                            offlineVideosRepository.update(it.apply {
                                 channelLogin = user.login
                                 channelName = user.name
                             })
                         }
-                        bookmarksRepository.getBookmarksByUserId(item.id).forEach {
-                            bookmarksRepository.updateBookmark(it.apply {
+                        bookmarksRepository.getByUserId(item.id).forEach {
+                            bookmarksRepository.update(it.apply {
                                 userLogin = user.login
                                 userName = user.name
                             })
@@ -158,20 +158,20 @@ class FollowedChannelsDataSource(
                         )
                         if (item.localFollow && item.id != null && user?.login != null && user.displayName != null
                             && (item.login != user.login || item.name != user.displayName)) {
-                            localFollowsChannel.getFollowByUserId(item.id)?.let {
-                                localFollowsChannel.updateFollow(it.apply {
+                            localChannelFollowsRepository.getById(item.id)?.let {
+                                localChannelFollowsRepository.update(it.apply {
                                     userLogin = user.login
                                     userName = user.displayName
                                 })
                             }
-                            offlineRepository.getVideosByUserId(item.id).forEach {
-                                offlineRepository.updateVideo(it.apply {
+                            offlineVideosRepository.getByUserId(item.id).forEach {
+                                offlineVideosRepository.update(it.apply {
                                     channelLogin = user.login
                                     channelName = user.displayName
                                 })
                             }
-                            bookmarksRepository.getBookmarksByUserId(item.id).forEach {
-                                bookmarksRepository.updateBookmark(it.apply {
+                            bookmarksRepository.getByUserId(item.id).forEach {
+                                bookmarksRepository.update(it.apply {
                                     userLogin = user.login
                                     userName = user.displayName
                                 })

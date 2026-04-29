@@ -8,7 +8,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
-import com.github.andreyasadchy.xtra.repository.OfflineRepository
+import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import com.github.andreyasadchy.xtra.util.m3u8.Segment
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +21,7 @@ import kotlin.math.max
 @HiltViewModel
 class SavedPagerViewModel @Inject constructor(
     @param:ApplicationContext private val applicationContext: Context,
-    private val offlineRepository: OfflineRepository,
+    private val offlineVideosRepository: OfflineVideosRepository,
 ) : ViewModel() {
 
     fun saveFolders(url: String) {
@@ -75,7 +75,7 @@ class SavedPagerViewModel @Inject constructor(
                 }
             }
             playlistFileUris.forEach { uri ->
-                val existingVideo = offlineRepository.getVideoByUrl(uri.toString())
+                val existingVideo = offlineVideosRepository.getByUrl(uri.toString())
                 if (existingVideo == null) {
                     val videoDirectoryUri = uri.toString().substringBeforeLast("%2F")
                     val videoDirectoryName = videoDirectoryUri.substringAfterLast("%2F").substringAfterLast("%3A")
@@ -139,7 +139,7 @@ class SavedPagerViewModel @Inject constructor(
 
                         }
                     }
-                    offlineRepository.saveVideo(OfflineVideo(
+                    offlineVideosRepository.save(OfflineVideo(
                         url = uri.toString(),
                         name = if (!title.isNullOrBlank()) title else Uri.decode(videoDirectoryName),
                         channelId = if (!channelId.isNullOrBlank()) channelId else null,
@@ -170,7 +170,7 @@ class SavedPagerViewModel @Inject constructor(
                 chatFiles[fileName] = url
             }
             list.filter { !it.endsWith(".json") }.forEach { url ->
-                val existingVideo = offlineRepository.getVideoByUrl(url)
+                val existingVideo = offlineVideosRepository.getByUrl(url)
                 if (existingVideo == null) {
                     val fileName = url.substringAfterLast("%2F").substringAfterLast("%3A").removeSuffix(".mp4").removeSuffix(".ts")
                     val chatFile = chatFiles[fileName]
@@ -218,7 +218,7 @@ class SavedPagerViewModel @Inject constructor(
 
                         }
                     }
-                    offlineRepository.saveVideo(
+                    offlineVideosRepository.save(
                         OfflineVideo(
                             url = url,
                             name = if (!title.isNullOrBlank()) title else Uri.decode(fileName),

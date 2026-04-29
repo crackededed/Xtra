@@ -64,7 +64,7 @@ class FollowedChannelsAdapter(
                         fragment.requireContext().imageLoader.enqueue(
                             ImageRequest.Builder(fragment.requireContext()).apply {
                                 data(item.profileImage)
-                                if (context.prefs().getBoolean(C.UI_ROUNDUSERIMAGE, true)) {
+                                if (context.prefs().getBoolean(C.UI_ROUND_USER_IMAGE, true)) {
                                     transformations(CircleCropTransformation())
                                 }
                                 crossfade(true)

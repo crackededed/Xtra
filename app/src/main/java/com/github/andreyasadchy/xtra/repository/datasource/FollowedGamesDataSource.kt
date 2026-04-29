@@ -5,11 +5,11 @@ import androidx.paging.PagingState
 import com.github.andreyasadchy.xtra.model.ui.Game
 import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
-import com.github.andreyasadchy.xtra.repository.LocalFollowGameRepository
+import com.github.andreyasadchy.xtra.repository.LocalGameFollowsRepository
 import com.github.andreyasadchy.xtra.util.C
 
 class FollowedGamesDataSource(
-    private val localFollowsGame: LocalFollowGameRepository,
+    private val localGameFollowsRepository: LocalGameFollowsRepository,
     private val gqlHeaders: Map<String, String>,
     private val graphQLRepository: GraphQLRepository,
     private val enableIntegrity: Boolean,
@@ -18,7 +18,7 @@ class FollowedGamesDataSource(
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Game> {
         val list = mutableListOf<Game>()
-        localFollowsGame.loadFollows().forEach {
+        localGameFollowsRepository.getAll().forEach {
             list.add(Game(
                 id = it.gameId,
                 slug = it.gameSlug,

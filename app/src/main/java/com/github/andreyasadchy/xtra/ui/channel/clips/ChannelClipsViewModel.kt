@@ -8,10 +8,10 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import com.github.andreyasadchy.xtra.graphql.type.ClipsPeriod
-import com.github.andreyasadchy.xtra.model.ui.SortChannel
+import com.github.andreyasadchy.xtra.model.ui.ChannelSort
+import com.github.andreyasadchy.xtra.repository.ChannelSortRepository
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
-import com.github.andreyasadchy.xtra.repository.SortChannelRepository
 import com.github.andreyasadchy.xtra.repository.datasource.ChannelClipsDataSource
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentArgs
 import com.github.andreyasadchy.xtra.ui.common.VideosSortDialog
@@ -28,7 +28,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ChannelClipsViewModel @Inject constructor(
     @param:ApplicationContext private val applicationContext: Context,
-    private val sortChannelRepository: SortChannelRepository,
+    private val channelSortRepository: ChannelSortRepository,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
     savedStateHandle: SavedStateHandle,
@@ -87,21 +87,21 @@ class ChannelClipsViewModel @Inject constructor(
                 helixHeaders = TwitchApiHelper.getHelixHeaders(applicationContext),
                 helixRepository = helixRepository,
                 enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
             )
         }.flow
     }.cachedIn(viewModelScope)
 
-    suspend fun getSortChannel(id: String): SortChannel? {
-        return sortChannelRepository.getById(id)
+    suspend fun getChannelSort(id: String): ChannelSort? {
+        return channelSortRepository.getById(id)
     }
 
-    suspend fun saveSortChannel(item: SortChannel) {
-        sortChannelRepository.save(item)
+    suspend fun saveChannelSort(item: ChannelSort) {
+        channelSortRepository.save(item)
     }
 
-    suspend fun deleteSortChannel(item: SortChannel) {
-        sortChannelRepository.delete(item)
+    suspend fun deleteChannelSort(item: ChannelSort) {
+        channelSortRepository.delete(item)
     }
 
     fun setFilter(period: String?) {

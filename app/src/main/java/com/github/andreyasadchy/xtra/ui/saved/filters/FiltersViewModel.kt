@@ -19,12 +19,12 @@ class FiltersViewModel @Inject internal constructor(
     val flow = Pager(
         PagingConfig(pageSize = 30, prefetchDistance = 3, initialLoadSize = 30),
     ) {
-        savedFiltersRepository.loadFiltersPagingSource()
+        savedFiltersRepository.getAll()
     }.flow.cachedIn(viewModelScope)
 
     fun delete(item: SavedFilter) {
         viewModelScope.launch {
-            savedFiltersRepository.deleteFilter(item)
+            savedFiltersRepository.delete(item)
         }
     }
 }

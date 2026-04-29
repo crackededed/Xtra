@@ -8,7 +8,7 @@ import androidx.lifecycle.LifecycleService
 import androidx.media3.common.util.UnstableApi
 import com.github.andreyasadchy.xtra.model.PlaybackState
 import com.github.andreyasadchy.xtra.model.VideoQuality
-import com.github.andreyasadchy.xtra.repository.OfflineRepository
+import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
@@ -50,7 +50,7 @@ abstract class BasePlaybackService : LifecycleService() {
     lateinit var playerRepository: PlayerRepository
 
     @Inject
-    lateinit var offlineRepository: OfflineRepository
+    lateinit var offlineVideosRepository: OfflineVideosRepository
 
     val integrity = MutableSharedFlow<String?>()
 
@@ -189,7 +189,7 @@ abstract class BasePlaybackService : LifecycleService() {
         val defaultQuality = if (cellular) {
             prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved")
         } else {
-            prefs().getString(C.PLAYER_DEFAULTQUALITY, "saved")
+            prefs().getString(C.PLAYER_DEFAULT_QUALITY, "saved")
         }?.substringBefore(" ")
         quality = when (defaultQuality) {
             "saved" -> {

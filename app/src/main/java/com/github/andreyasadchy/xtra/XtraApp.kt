@@ -76,9 +76,9 @@ class XtraApp : Application(), Configuration.Provider, SingletonImageLoader.Fact
                 logger(DebugLogger())
             }
             components {
-                val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp")
+                val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
                 when {
-                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
                         add(NetworkFetcher.Factory(
                             networkClient = {
                                 object : NetworkClient {
@@ -122,7 +122,7 @@ class XtraApp : Application(), Configuration.Provider, SingletonImageLoader.Fact
                             cacheStrategy = { CacheControlCacheStrategy() }
                         ))
                     }
-                    networkLibrary == "Cronet" && cronetEngine != null -> {
+                    networkLibrary == C.CRONET && cronetEngine != null -> {
                         add(NetworkFetcher.Factory(
                             networkClient = {
                                 object : NetworkClient {

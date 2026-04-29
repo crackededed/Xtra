@@ -214,7 +214,7 @@ class MediaPlayerFragment : Media3PlayerFragment() {
                     playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_IMAGE)
                     val response = viewModel.loadPlaylist(
                         url = url,
-                        networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
+                        networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                         proxyMultivariantPlaylist = requireContext().prefs().getBoolean(C.PROXY_MULTIVARIANT_PLAYLIST, false),
                         proxyHost = requireContext().prefs().getString(C.PROXY_HOST, null),
                         proxyPort = requireContext().prefs().getString(C.PROXY_PORT, null)?.toIntOrNull(),
@@ -323,7 +323,7 @@ class MediaPlayerFragment : Media3PlayerFragment() {
                         playbackService?.title = requireArguments().getString(KEY_TITLE)
                         playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
                         playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_IMAGE)
-                        val response = viewModel.loadPlaylist(url, requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"))
+                        val response = viewModel.loadPlaylist(url, requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP))
                         val playlist = response?.first
                         val responseCode = response?.second
                         val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -695,7 +695,7 @@ class MediaPlayerFragment : Media3PlayerFragment() {
                 val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
                 val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
                 val cellular = networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
-                if ((!cellular && requireContext().prefs().getString(C.PLAYER_DEFAULTQUALITY, "saved") == "saved") || (cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
+                if ((!cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_QUALITY, "saved") == "saved") || (cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
                     requireContext().prefs().edit { putString(C.PLAYER_QUALITY, quality.name) }
                 }
             }
