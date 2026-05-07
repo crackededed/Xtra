@@ -92,7 +92,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     protected val binding get() = _binding!!
     protected val viewModel: PlayerViewModel by viewModels { PlayerViewModelFactory }
     protected var chatFragment: ChatFragment? = null
-    protected var playbackService: BasePlaybackService? = null
+    protected open val playbackService: BasePlaybackService? = null
     protected var started = false
 
     private var isPortrait = false
@@ -148,7 +148,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     open fun showPlaylistTags(mediaPlaylist: Boolean) {}
     open fun changeQuality(selectedQuality: VideoQuality?) {}
     open fun startAudioOnly() {}
-    open fun close() {}
+    open fun close(deleteStates: Boolean = true) {}
+    open fun retry(item: String) {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (arguments?.getBoolean(KEY_OFFLINE) == true) {
@@ -2095,7 +2096,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     override fun onIntegrityTokenLoaded(callback: String?) {
         when (callback) {
             "refreshStream" -> {
-                playbackService?.retry(callback)
+                retry(callback)
                 viewModel.isFollowingChannel(
                     requireContext().tokenPrefs().getString(C.USER_ID, null),
                     playbackService?.channelId,
@@ -2107,7 +2108,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 )
             }
             "refreshVideo" -> {
-                playbackService?.retry(callback)
+                retry(callback)
                 val videoId = playbackService?.videoId
                 viewModel.isFollowingChannel(
                     requireContext().tokenPrefs().getString(C.USER_ID, null),
@@ -2128,7 +2129,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 }
             }
             "refreshClip" -> {
-                playbackService?.retry(callback)
+                retry(callback)
                 viewModel.isFollowingChannel(
                     requireContext().tokenPrefs().getString(C.USER_ID, null),
                     playbackService?.channelId,
