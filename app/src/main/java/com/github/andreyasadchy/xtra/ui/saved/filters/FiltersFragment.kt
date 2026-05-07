@@ -21,17 +21,16 @@ import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
 import com.github.andreyasadchy.xtra.model.ui.SavedFilter
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
+import com.github.andreyasadchy.xtra.ui.saved.filters.FiltersViewModel.Companion.FiltersViewModelFactory
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class FiltersFragment : PagedListFragment(), Scrollable {
 
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: FiltersViewModel by viewModels()
+    private val viewModel: FiltersViewModel by viewModels { FiltersViewModelFactory }
     private lateinit var pagingAdapter: PagingDataAdapter<SavedFilter, out RecyclerView.ViewHolder>
     override var enableNetworkCheck = false
 

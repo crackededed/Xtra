@@ -4,11 +4,8 @@ import com.github.andreyasadchy.xtra.db.SavedFiltersDao
 import com.github.andreyasadchy.xtra.model.ui.SavedFilter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class SavedFiltersRepository @Inject constructor(
+class SavedFiltersRepository(
     private val savedFiltersDao: SavedFiltersDao,
 ) {
 

@@ -1,18 +1,19 @@
 package com.github.andreyasadchy.xtra.ui.chat
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.chat.EmoteCard
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.util.C
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class ImageClickedViewModel @Inject constructor(
+class ImageClickedViewModel(
     private val graphQLRepository: GraphQLRepository,
 ) : ViewModel() {
 
@@ -62,6 +63,16 @@ class ImageClickedViewModel @Inject constructor(
 
                     }
                 }
+            }
+        }
+    }
+
+    companion object {
+        val ImageClickedViewModelFactory = viewModelFactory {
+            initializer {
+                val application = (this[APPLICATION_KEY] as XtraApp)
+                val xtraModule = application.xtraModule
+                ImageClickedViewModel(xtraModule.graphQLRepository)
             }
         }
     }

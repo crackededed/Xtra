@@ -14,7 +14,7 @@ class ChatWriteWebSocket(
     private val userLogin: String?,
     private val userToken: String?,
     private val channelLogin: String,
-    private val trustManager: X509TrustManager?,
+    private val trustManager: Lazy<X509TrustManager>,
     private val listener: ChatReadWebSocket.Listener,
 ) {
     private var webSocket: WebSocket? = null

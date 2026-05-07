@@ -32,9 +32,7 @@ import com.github.andreyasadchy.xtra.util.reduceDragSensitivity
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
-import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
 class FollowPagerFragment : Fragment(), Scrollable, FragmentHost {
 
     private var _binding: FragmentMediaPagerBinding? = null

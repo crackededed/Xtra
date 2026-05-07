@@ -19,7 +19,7 @@ import kotlin.random.Random
 class ChatReadIRCSocket(
     private val useSSL: Boolean,
     private val channelLogin: String,
-    private val trustManager: X509TrustManager?,
+    private val trustManager: Lazy<X509TrustManager>,
     private val listener: ChatReadWebSocket.Listener,
 ) {
     private var socket: Socket? = null
@@ -66,7 +66,7 @@ class ChatReadIRCSocket(
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> SSLContext.getDefault().socketFactory
                 else -> {
                     val sslContext = SSLContext.getInstance("TLSv1.3")
-                    sslContext.init(null, arrayOf(trustManager), null)
+                    sslContext.init(null, arrayOf(trustManager.value), null)
                     sslContext.socketFactory
                 }
             }

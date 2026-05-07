@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
     alias(libs.plugins.navigation.safeargs)
     alias(libs.plugins.apollo)
 }
@@ -116,11 +115,6 @@ dependencies {
     ksp(libs.glide.ksp)
     implementation(libs.glide.okhttp)
     implementation(libs.glide.webpdecoder)
-
-    implementation(libs.hilt)
-    ksp(libs.hilt.compiler)
-    implementation(libs.hilt.work)
-    ksp(libs.hilt.extension.compiler)
 
     implementation(libs.coroutines)
 }

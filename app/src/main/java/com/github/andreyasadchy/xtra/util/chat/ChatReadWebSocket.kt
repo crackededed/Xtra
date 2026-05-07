@@ -13,7 +13,7 @@ import kotlin.random.Random
 
 class ChatReadWebSocket(
     private val channelLogin: String,
-    private val trustManager: X509TrustManager?,
+    private val trustManager: Lazy<X509TrustManager>,
     private val listener: Listener,
 ) {
     private var webSocket: WebSocket? = null
