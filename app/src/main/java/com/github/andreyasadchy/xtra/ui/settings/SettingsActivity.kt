@@ -65,6 +65,7 @@ import com.github.andreyasadchy.xtra.databinding.DialogUpdateDownloadBinding
 import com.github.andreyasadchy.xtra.model.ui.SettingsDragListItem
 import com.github.andreyasadchy.xtra.model.ui.SettingsSearchItem
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
+import com.github.andreyasadchy.xtra.ui.settings.SettingsViewModel.Companion.SettingsViewModelFactory
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.applyTheme
@@ -76,7 +77,6 @@ import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModelManager
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.TranslateRemoteModel
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -86,7 +86,6 @@ import java.io.File
 import java.util.Collections
 import java.util.Locale
 
-@AndroidEntryPoint
 class SettingsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
@@ -252,7 +251,7 @@ class SettingsActivity : AppCompatActivity() {
 
     class SettingsFragment : MaterialPreferenceFragment() {
 
-        private val viewModel: SettingsViewModel by activityViewModels()
+        private val viewModel: SettingsViewModel by activityViewModels { SettingsViewModelFactory }
         private var backupResultLauncher: ActivityResultLauncher<Intent>? = null
         private var restoreResultLauncher: ActivityResultLauncher<Intent>? = null
         private var updateDownloadDialogBinding: DialogUpdateDownloadBinding? = null
@@ -718,7 +717,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     class UiSettingsFragment : MaterialPreferenceFragment() {
-        private val viewModel: SettingsViewModel by activityViewModels()
+        private val viewModel: SettingsViewModel by activityViewModels { SettingsViewModelFactory }
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.ui_preferences, rootKey)
@@ -1074,7 +1073,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     class PlayerSettingsFragment : MaterialPreferenceFragment() {
-        private val viewModel: SettingsViewModel by activityViewModels()
+        private val viewModel: SettingsViewModel by activityViewModels { SettingsViewModelFactory }
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.player_preferences, rootKey)
@@ -1417,7 +1416,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     class DownloadSettingsFragment : MaterialPreferenceFragment() {
-        private val viewModel: SettingsViewModel by activityViewModels()
+        private val viewModel: SettingsViewModel by activityViewModels { SettingsViewModelFactory }
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.download_preferences, rootKey)

@@ -48,13 +48,11 @@ import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.floor
 
 @OptIn(UnstableApi::class)
-@AndroidEntryPoint
 class Media3Fragment : Media3PlayerFragment() {
 
     private var controllerFuture: ListenableFuture<MediaController>? = null

@@ -32,6 +32,7 @@ import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.common.Sortable
 import com.github.andreyasadchy.xtra.ui.login.LoginActivity
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
+import com.github.andreyasadchy.xtra.ui.saved.SavedPagerViewModel.Companion.SavedPagerViewModelFactory
 import com.github.andreyasadchy.xtra.ui.saved.bookmarks.BookmarksFragment
 import com.github.andreyasadchy.xtra.ui.saved.downloads.DownloadsFragment
 import com.github.andreyasadchy.xtra.ui.saved.filters.FiltersFragment
@@ -44,15 +45,13 @@ import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
-import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 
-@AndroidEntryPoint
 class SavedMediaFragment : Fragment(), Scrollable, FragmentHost {
 
     private var _binding: FragmentMediaBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: SavedPagerViewModel by viewModels()
+    private val viewModel: SavedPagerViewModel by viewModels { SavedPagerViewModelFactory }
     private var folderResultLauncher: ActivityResultLauncher<Intent>? = null
     private var fileResultLauncher: ActivityResultLauncher<Intent>? = null
 

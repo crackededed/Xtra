@@ -8,11 +8,8 @@ import com.github.andreyasadchy.xtra.model.ui.BookmarkIgnoredUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class BookmarksRepository @Inject constructor(
+class BookmarksRepository(
     private val bookmarksDao: BookmarksDao,
     private val bookmarkIgnoredUsersDao: BookmarkIgnoredUsersDao,
     private val offlineVideosDao: OfflineVideosDao,

@@ -12,7 +12,7 @@ import javax.net.ssl.X509TrustManager
 
 class STVEventApiWebSocket(
     private val channelId: String,
-    private val trustManager: X509TrustManager?,
+    private val trustManager: Lazy<X509TrustManager>,
     private val listener: Listener,
 ) {
     private var webSocket: WebSocket? = null

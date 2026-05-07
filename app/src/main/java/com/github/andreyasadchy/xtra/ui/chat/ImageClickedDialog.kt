@@ -19,6 +19,7 @@ import com.github.andreyasadchy.xtra.BuildConfig
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.DialogChatImageClickBinding
 import com.github.andreyasadchy.xtra.model.chat.Emote
+import com.github.andreyasadchy.xtra.ui.chat.ImageClickedViewModel.Companion.ImageClickedViewModelFactory
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
@@ -26,11 +27,9 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class ImageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listener {
 
     companion object {
@@ -59,7 +58,7 @@ class ImageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listener
 
     private var _binding: DialogChatImageClickBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: ImageClickedViewModel by viewModels()
+    private val viewModel: ImageClickedViewModel by viewModels { ImageClickedViewModelFactory }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = DialogChatImageClickBinding.inflate(inflater, container, false)

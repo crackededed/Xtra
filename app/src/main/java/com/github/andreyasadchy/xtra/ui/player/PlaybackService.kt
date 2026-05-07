@@ -3,7 +3,6 @@ package com.github.andreyasadchy.xtra.ui.player
 import android.app.PendingIntent
 import android.content.Intent
 import android.media.audiofx.DynamicsProcessing
-import android.net.http.HttpEngine
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -31,26 +30,22 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
+import com.github.andreyasadchy.xtra.XtraApp
+import com.github.andreyasadchy.xtra.XtraModule
 import com.github.andreyasadchy.xtra.model.VideoPosition
 import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.player.lowlatency.CronetDataSource
 import com.github.andreyasadchy.xtra.player.lowlatency.DefaultHlsPlaylistTracker
 import com.github.andreyasadchy.xtra.player.lowlatency.HttpEngineDataSource
 import com.github.andreyasadchy.xtra.player.lowlatency.OkHttpDataSource
-import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
-import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils.request
 import com.github.andreyasadchy.xtra.util.prefs
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-import dagger.Lazy
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.runBlocking
 import okhttp3.Credentials
-import okhttp3.OkHttpClient
-import org.chromium.net.CronetEngine
 import org.json.JSONObject
 import java.io.IOException
 import java.net.InetSocketAddress
@@ -59,35 +54,13 @@ import java.net.ProxySelector
 import java.net.SocketAddress
 import java.net.URI
 import java.util.Timer
-import java.util.concurrent.ExecutorService
-import javax.inject.Inject
 import kotlin.concurrent.schedule
 import kotlin.concurrent.scheduleAtFixedRate
 
-
 @OptIn(UnstableApi::class)
-@AndroidEntryPoint
 class PlaybackService : MediaSessionService() {
 
-    @Inject
-    @JvmField
-    var httpEngine: Lazy<HttpEngine>? = null
-
-    @Inject
-    @JvmField
-    var cronetEngine: Lazy<CronetEngine>? = null
-
-    @Inject
-    lateinit var cronetExecutor: ExecutorService
-
-    @Inject
-    lateinit var okHttpClient: OkHttpClient
-
-    @Inject
-    lateinit var playerRepository: PlayerRepository
-
-    @Inject
-    lateinit var offlineVideosRepository: OfflineVideosRepository
+    lateinit var xtraModule: XtraModule
 
     private var mediaSession: MediaSession? = null
     private var dynamicsProcessing: DynamicsProcessing? = null
@@ -102,6 +75,7 @@ class PlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
+        xtraModule = (application as XtraApp).xtraModule
         val player = ExoPlayer.Builder(this).apply {
             setLoadControl(
                 DefaultLoadControl.Builder().apply {
@@ -214,7 +188,7 @@ class PlaybackService : MediaSessionService() {
                                 val proxyUser = prefs().getString(C.PROXY_USER, null)
                                 val proxyPassword = prefs().getString(C.PROXY_PASSWORD, null)
                                 val multivariantPlaylistProxyClient = if (prefs().getBoolean(C.PROXY_MULTIVARIANT_PLAYLIST, false) && !proxyHost.isNullOrBlank() && proxyPort != null) {
-                                    okHttpClient.newBuilder().apply {
+                                    xtraModule.okHttpClient.value.newBuilder().apply {
                                         proxySelector(
                                             object : ProxySelector() {
                                                 override fun select(u: URI): List<Proxy> {
@@ -238,7 +212,7 @@ class PlaybackService : MediaSessionService() {
                                     }.build()
                                 } else null
                                 val mediaPlaylistProxyClient = if (prefs().getBoolean(C.PROXY_MEDIA_PLAYLIST, true) && !proxyHost.isNullOrBlank() && proxyPort != null) {
-                                    okHttpClient.newBuilder().apply {
+                                    xtraModule.okHttpClient.value.newBuilder().apply {
                                         proxySelector(
                                             object : ProxySelector() {
                                                 override fun select(u: URI): List<Proxy> {
@@ -267,14 +241,14 @@ class PlaybackService : MediaSessionService() {
                                         DefaultDataSource.Factory(
                                             this@PlaybackService,
                                             when {
-                                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                                                    HttpEngineDataSource.Factory(httpEngine!!.get(), cronetExecutor, multivariantPlaylistProxyClient, mediaPlaylistProxyClient) { proxyMediaPlaylist }
+                                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                                    HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, multivariantPlaylistProxyClient, mediaPlaylistProxyClient) { proxyMediaPlaylist }
                                                 }
-                                                networkLibrary == C.CRONET && cronetEngine != null -> {
-                                                    CronetDataSource.Factory(cronetEngine!!.get(), cronetExecutor, multivariantPlaylistProxyClient, mediaPlaylistProxyClient) { proxyMediaPlaylist }
+                                                networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
+                                                    CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, multivariantPlaylistProxyClient, mediaPlaylistProxyClient) { proxyMediaPlaylist }
                                                 }
                                                 else -> {
-                                                    OkHttpDataSource.Factory(multivariantPlaylistProxyClient ?: okHttpClient, mediaPlaylistProxyClient) { proxyMediaPlaylist }
+                                                    OkHttpDataSource.Factory(multivariantPlaylistProxyClient ?: xtraModule.okHttpClient.value, mediaPlaylistProxyClient) { proxyMediaPlaylist }
                                                 }
                                             }.apply {
                                                 prefs().getString(C.PLAYER_STREAM_HEADERS, null)?.let {
@@ -341,14 +315,14 @@ class PlaybackService : MediaSessionService() {
                                         DefaultDataSource.Factory(
                                             this@PlaybackService,
                                             when {
-                                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                                                    HttpEngineDataSource.Factory(httpEngine!!.get(), cronetExecutor, null, null) { false }
+                                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                                    HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, null, null) { false }
                                                 }
-                                                networkLibrary == C.CRONET && cronetEngine != null -> {
-                                                    CronetDataSource.Factory(cronetEngine!!.get(), cronetExecutor, null, null) { false }
+                                                networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
+                                                    CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, null, null) { false }
                                                 }
                                                 else -> {
-                                                    OkHttpDataSource.Factory(okHttpClient, null) { false }
+                                                    OkHttpDataSource.Factory(xtraModule.okHttpClient.value, null) { false }
                                                 }
                                             }
                                         )
@@ -387,14 +361,14 @@ class PlaybackService : MediaSessionService() {
                                         DefaultDataSource.Factory(
                                             this@PlaybackService,
                                             when {
-                                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                                                    HttpEngineDataSource.Factory(httpEngine!!.get(), cronetExecutor, null, null) { false }
+                                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                                    HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, null, null) { false }
                                                 }
-                                                networkLibrary == C.CRONET && cronetEngine != null -> {
-                                                    CronetDataSource.Factory(cronetEngine!!.get(), cronetExecutor, null, null) { false }
+                                                networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
+                                                    CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, null, null) { false }
                                                 }
                                                 else -> {
-                                                    OkHttpDataSource.Factory(okHttpClient, null) { false }
+                                                    OkHttpDataSource.Factory(xtraModule.okHttpClient.value, null) { false }
                                                 }
                                             }
                                         )
@@ -576,12 +550,12 @@ class PlaybackService : MediaSessionService() {
             if (!player.currentTracks.isEmpty && prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
                 videoId?.let {
                     runBlocking {
-                        playerRepository.saveVideoPosition(VideoPosition(it, player.currentPosition))
+                        xtraModule.playerRepository.saveVideoPosition(VideoPosition(it, player.currentPosition))
                     }
                 } ?:
                 offlineVideoId?.let {
                     runBlocking {
-                        offlineVideosRepository.updatePosition(it, player.currentPosition)
+                        xtraModule.offlineVideosRepository.updatePosition(it, player.currentPosition)
                     }
                 }
             }
@@ -597,12 +571,12 @@ class PlaybackService : MediaSessionService() {
                     lastSavedPosition = currentPosition
                     videoId?.let {
                         runBlocking {
-                            playerRepository.saveVideoPosition(VideoPosition(it, currentPosition))
+                            xtraModule.playerRepository.saveVideoPosition(VideoPosition(it, currentPosition))
                         }
                     } ?:
                     offlineVideoId?.let {
                         runBlocking {
-                            offlineVideosRepository.updatePosition(it, currentPosition)
+                            xtraModule.offlineVideosRepository.updatePosition(it, currentPosition)
                         }
                     }
                 }

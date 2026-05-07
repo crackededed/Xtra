@@ -8,31 +8,31 @@ import android.provider.DocumentsContract
 import android.util.JsonReader
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import androidx.work.NetworkType
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import com.github.andreyasadchy.xtra.util.m3u8.Segment
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import javax.inject.Inject
 import kotlin.math.max
 
-@HiltViewModel
-class DownloadsViewModel @Inject internal constructor(
-    @param:ApplicationContext private val applicationContext: Context,
+class DownloadsViewModel(
+    private val applicationContext: Context,
     private val offlineVideosRepository: OfflineVideosRepository,
 ) : ViewModel() {
 
@@ -890,6 +890,16 @@ class DownloadsViewModel @Inject internal constructor(
                 viewModelScope.launch(Dispatchers.IO) {
                     offlineVideosRepository.delete(video)
                 }
+            }
+        }
+    }
+
+    companion object {
+        val DownloadsViewModelFactory = viewModelFactory {
+            initializer {
+                val application = (this[APPLICATION_KEY] as XtraApp)
+                val xtraModule = application.xtraModule
+                DownloadsViewModel(application.applicationContext, xtraModule.offlineVideosRepository)
             }
         }
     }

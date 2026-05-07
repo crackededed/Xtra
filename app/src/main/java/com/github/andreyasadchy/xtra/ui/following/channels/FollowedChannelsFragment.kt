@@ -25,16 +25,15 @@ import com.github.andreyasadchy.xtra.ui.common.FragmentHost
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.common.Sortable
-import dagger.hilt.android.AndroidEntryPoint
+import com.github.andreyasadchy.xtra.ui.following.channels.FollowedChannelsViewModel.Companion.FollowedChannelsViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class FollowedChannelsFragment : PagedListFragment(), Scrollable, Sortable, FollowedChannelsSortDialog.OnFilter {
 
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: FollowedChannelsViewModel by viewModels()
+    private val viewModel: FollowedChannelsViewModel by viewModels { FollowedChannelsViewModelFactory }
     private lateinit var pagingAdapter: PagingDataAdapter<User, out RecyclerView.ViewHolder>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

@@ -2,10 +2,14 @@ package com.github.andreyasadchy.xtra.ui.following.channels
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
+import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.ui.ChannelSort
 import com.github.andreyasadchy.xtra.repository.BookmarksRepository
 import com.github.andreyasadchy.xtra.repository.ChannelSortRepository
@@ -18,16 +22,12 @@ import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
-import javax.inject.Inject
 
-@HiltViewModel
-class FollowedChannelsViewModel @Inject constructor(
-    @param:ApplicationContext private val applicationContext: Context,
+class FollowedChannelsViewModel(
+    private val applicationContext: Context,
     private val channelSortRepository: ChannelSortRepository,
     private val localChannelFollowsRepository: LocalChannelFollowsRepository,
     private val offlineVideosRepository: OfflineVideosRepository,
@@ -45,7 +45,7 @@ class FollowedChannelsViewModel @Inject constructor(
         get() = filter.value?.order ?: FollowedChannelsSortDialog.ORDER_DESC
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val flow = filter.flatMapLatest { filter ->
+    val flow = filter.flatMapLatest {
         Pager(
             PagingConfig(pageSize = 15, prefetchDistance = 5, initialLoadSize = 15)
         ) {
@@ -91,4 +91,14 @@ class FollowedChannelsViewModel @Inject constructor(
         val sort: String?,
         val order: String?,
     )
+
+    companion object {
+        val FollowedChannelsViewModelFactory = viewModelFactory {
+            initializer {
+                val application = (this[APPLICATION_KEY] as XtraApp)
+                val xtraModule = application.xtraModule
+                FollowedChannelsViewModel(application.applicationContext, xtraModule.channelSortRepository, xtraModule.localChannelFollowsRepository, xtraModule.offlineVideosRepository, xtraModule.bookmarksRepository, xtraModule.graphQLRepository, xtraModule.helixRepository)
+            }
+        }
+    }
 }

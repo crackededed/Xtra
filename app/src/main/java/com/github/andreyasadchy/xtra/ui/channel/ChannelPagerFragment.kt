@@ -43,6 +43,7 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentChannelBinding
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.model.ui.User
+import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerViewModel.Companion.ChannelPagerViewModelFactory
 import com.github.andreyasadchy.xtra.ui.common.BaseNetworkFragment
 import com.github.andreyasadchy.xtra.ui.common.FragmentHost
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
@@ -67,18 +68,16 @@ import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
-@AndroidEntryPoint
 class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, IntegrityDialog.Listener {
 
     private var _binding: FragmentChannelBinding? = null
     private val binding get() = _binding!!
     private val args: ChannelPagerFragmentArgs by navArgs()
-    private val viewModel: ChannelPagerViewModel by viewModels()
+    private val viewModel: ChannelPagerViewModel by viewModels { ChannelPagerViewModelFactory }
     private var firstLaunch = true
 
     override val currentFragment: Fragment?

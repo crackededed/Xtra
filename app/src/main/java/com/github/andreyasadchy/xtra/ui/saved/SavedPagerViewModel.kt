@@ -7,24 +7,24 @@ import android.provider.DocumentsContract
 import android.util.JsonReader
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import com.github.andreyasadchy.xtra.util.m3u8.Segment
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import javax.inject.Inject
 import kotlin.math.max
 
-@HiltViewModel
-class SavedPagerViewModel @Inject constructor(
-    @param:ApplicationContext private val applicationContext: Context,
+class SavedPagerViewModel(
+    private val applicationContext: Context,
     private val offlineVideosRepository: OfflineVideosRepository,
 ) : ViewModel() {
 
@@ -343,6 +343,16 @@ class SavedPagerViewModel @Inject constructor(
                         )
                     )
                 }
+            }
+        }
+    }
+
+    companion object {
+        val SavedPagerViewModelFactory = viewModelFactory {
+            initializer {
+                val application = (this[APPLICATION_KEY] as XtraApp)
+                val xtraModule = application.xtraModule
+                SavedPagerViewModel(application.applicationContext, xtraModule.offlineVideosRepository)
             }
         }
     }

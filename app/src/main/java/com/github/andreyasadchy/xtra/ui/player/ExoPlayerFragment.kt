@@ -36,10 +36,8 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
-import dagger.hilt.android.AndroidEntryPoint
 
 @OptIn(UnstableApi::class)
-@AndroidEntryPoint
 class ExoPlayerFragment : PlayerFragment() {
 
     private var serviceConnection: ServiceConnection? = null

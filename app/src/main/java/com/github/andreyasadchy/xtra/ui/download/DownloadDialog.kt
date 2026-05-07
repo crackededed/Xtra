@@ -37,6 +37,7 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.DialogVideoDownloadBinding
 import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
+import com.github.andreyasadchy.xtra.ui.download.DownloadViewModel.Companion.DownloadViewModelFactory
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
@@ -44,12 +45,10 @@ import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.File
 
-@AndroidEntryPoint
 class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
 
     companion object {
@@ -158,7 +157,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
 
     private var _binding: DialogVideoDownloadBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: DownloadViewModel by viewModels()
+    private val viewModel: DownloadViewModel by viewModels { DownloadViewModelFactory }
     private var sharedPath: String? = null
     private var directoryResultLauncher: ActivityResultLauncher<Intent>? = null
     private var storage: List<Pair<String, String>> = emptyList()

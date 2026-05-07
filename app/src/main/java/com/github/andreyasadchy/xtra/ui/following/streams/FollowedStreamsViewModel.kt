@@ -2,10 +2,14 @@ package com.github.andreyasadchy.xtra.ui.following.streams
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
+import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.repository.LocalChannelFollowsRepository
@@ -14,13 +18,9 @@ import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
 
-@HiltViewModel
-class FollowedStreamsViewModel @Inject constructor(
-    @ApplicationContext applicationContext: Context,
+class FollowedStreamsViewModel(
+    applicationContext: Context,
     private val localChannelFollowsRepository: LocalChannelFollowsRepository,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
@@ -44,4 +44,14 @@ class FollowedStreamsViewModel @Inject constructor(
             networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
         )
     }.flow.cachedIn(viewModelScope)
+
+    companion object {
+        val FollowedStreamsViewModelFactory = viewModelFactory {
+            initializer {
+                val application = (this[APPLICATION_KEY] as XtraApp)
+                val xtraModule = application.xtraModule
+                FollowedStreamsViewModel(application.applicationContext, xtraModule.localChannelFollowsRepository, xtraModule.graphQLRepository, xtraModule.helixRepository)
+            }
+        }
+    }
 }

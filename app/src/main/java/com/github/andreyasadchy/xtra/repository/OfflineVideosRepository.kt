@@ -6,11 +6,8 @@ import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class OfflineVideosRepository @Inject constructor(
+class OfflineVideosRepository(
     private val offlineVideosDao: OfflineVideosDao,
     private val bookmarksDao: BookmarksDao,
 ) {

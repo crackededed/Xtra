@@ -2,23 +2,27 @@ package com.github.andreyasadchy.xtra
 
 import android.app.Application
 import android.content.Context
-import androidx.hilt.work.HiltWorkerFactory
+import android.os.Build
 import androidx.multidex.MultiDex
-import androidx.work.Configuration
-import dagger.hilt.android.HiltAndroidApp
-import javax.inject.Inject
+import org.conscrypt.Conscrypt
+import java.security.Security
 
-
-@HiltAndroidApp
-class XtraApp : Application(), Configuration.Provider {
+class XtraApp : Application() {
 
     companion object {
         lateinit var INSTANCE: Application
     }
 
+    lateinit var xtraModule: XtraModule
+
     override fun onCreate() {
         super.onCreate()
         INSTANCE = this
+        xtraModule = XtraModule(this)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            val conscrypt = Conscrypt.newProvider()
+            Security.insertProviderAt(conscrypt, 1)
+        }
     }
 
     override fun attachBaseContext(base: Context?) {
@@ -27,12 +31,4 @@ class XtraApp : Application(), Configuration.Provider {
             MultiDex.install(this)
         }
     }
-
-    @Inject
-    lateinit var workerFactory: HiltWorkerFactory
-
-    override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .build()
 }

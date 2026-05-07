@@ -74,6 +74,7 @@ import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.games.GamesFragmentDirections
+import com.github.andreyasadchy.xtra.ui.main.MainViewModel.Companion.MainViewModelFactory
 import com.github.andreyasadchy.xtra.ui.player.BasePlaybackService
 import com.github.andreyasadchy.xtra.ui.player.ExoPlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.Media3Fragment
@@ -89,14 +90,12 @@ import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.google.android.material.color.MaterialColors
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Timer
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.schedule
 
-@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     companion object {
@@ -112,7 +111,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private lateinit var binding: ActivityMainBinding
-    private val viewModel: MainViewModel by viewModels()
+    private val viewModel: MainViewModel by viewModels { MainViewModelFactory }
     private lateinit var navController: NavController
     var playerFragment: Fragment? = null
         private set

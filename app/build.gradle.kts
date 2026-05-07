@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
     alias(libs.plugins.navigation.safeargs)
     alias(libs.plugins.apollo)
 }
@@ -72,8 +71,6 @@ android {
             "androidx.coordinatorlayout:coordinatorlayout:1.3.0-alpha02",
             "androidx.core:core-ktx:1.13.0-alpha01",
             "androidx.fragment:fragment-ktx:1.7.0-alpha06",
-            "androidx.hilt:hilt-compiler:1.1.0",
-            "androidx.hilt:hilt-work:1.1.0",
             "androidx.lifecycle:lifecycle-service:2.7.0-alpha03",
             "androidx.lifecycle:lifecycle-viewmodel:2.7.0-alpha03",
             "androidx.media3:media3-exoplayer:1.2.1",
@@ -150,11 +147,6 @@ dependencies {
     ksp(libs.glide.ksp)
     implementation(libs.glide.okhttp)
     implementation(libs.glide.webpdecoder)
-
-    implementation(libs.hilt)
-    ksp(libs.hilt.compiler)
-    implementation(libs.hilt.work)
-    ksp(libs.hilt.extension.compiler)
 
     implementation(libs.coroutines)
 }

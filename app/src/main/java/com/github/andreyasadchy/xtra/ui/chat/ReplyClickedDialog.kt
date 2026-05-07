@@ -22,10 +22,8 @@ import com.github.andreyasadchy.xtra.util.prefs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.mlkit.nl.translate.TranslateLanguage
-import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 
-@AndroidEntryPoint
 class ReplyClickedDialog : BottomSheetDialogFragment() {
 
     interface OnButtonClickListener {

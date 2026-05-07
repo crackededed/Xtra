@@ -7,11 +7,8 @@ import com.github.andreyasadchy.xtra.model.ui.LocalChannelFollow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class LocalChannelFollowsRepository @Inject constructor(
+class LocalChannelFollowsRepository(
     private val localChannelFollowsDao: LocalChannelFollowsDao,
     private val offlineVideosDao: OfflineVideosDao,
     private val bookmarksDao: BookmarksDao,

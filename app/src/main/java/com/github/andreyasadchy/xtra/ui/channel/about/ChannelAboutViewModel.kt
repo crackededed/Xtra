@@ -1,18 +1,19 @@
 package com.github.andreyasadchy.xtra.ui.channel.about
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.ui.ChannelPanel
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.util.C
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class ChannelAboutViewModel @Inject constructor(
+class ChannelAboutViewModel(
     private val graphQLRepository: GraphQLRepository,
 ) : ViewModel() {
 
@@ -61,6 +62,16 @@ class ChannelAboutViewModel @Inject constructor(
 
                 }
                 isLoading = false
+            }
+        }
+    }
+
+    companion object {
+        val ChannelAboutViewModelFactory = viewModelFactory {
+            initializer {
+                val application = (this[APPLICATION_KEY] as XtraApp)
+                val xtraModule = application.xtraModule
+                ChannelAboutViewModel(xtraModule.graphQLRepository)
             }
         }
     }

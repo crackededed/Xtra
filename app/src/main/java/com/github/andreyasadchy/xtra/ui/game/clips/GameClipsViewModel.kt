@@ -3,10 +3,15 @@ package com.github.andreyasadchy.xtra.ui.game.clips
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
+import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.graphql.type.ClipsPeriod
 import com.github.andreyasadchy.xtra.graphql.type.Language
 import com.github.andreyasadchy.xtra.model.ui.GameSort
@@ -19,16 +24,12 @@ import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentArgs
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
-import javax.inject.Inject
 
-@HiltViewModel
-class GameClipsViewModel @Inject constructor(
-    @param:ApplicationContext private val applicationContext: Context,
+class GameClipsViewModel(
+    private val applicationContext: Context,
     private val gameSortRepository: GameSortRepository,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
@@ -46,7 +47,7 @@ class GameClipsViewModel @Inject constructor(
         get() = filter.value?.languages ?: emptyArray()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val flow = filter.flatMapLatest { filter ->
+    val flow = filter.flatMapLatest {
         Pager(
             PagingConfig(pageSize = 20, prefetchDistance = 3, initialLoadSize = 20)
         ) {
@@ -121,4 +122,15 @@ class GameClipsViewModel @Inject constructor(
         val period: String?,
         val languages: Array<String>?,
     )
+
+    companion object {
+        val GameClipsViewModelFactory = viewModelFactory {
+            initializer {
+                val savedStateHandle = createSavedStateHandle()
+                val application = (this[APPLICATION_KEY] as XtraApp)
+                val xtraModule = application.xtraModule
+                GameClipsViewModel(application.applicationContext, xtraModule.gameSortRepository, xtraModule.graphQLRepository, xtraModule.helixRepository, savedStateHandle)
+            }
+        }
+    }
 }

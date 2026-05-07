@@ -40,6 +40,7 @@ import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
+import com.github.andreyasadchy.xtra.ui.chat.ChatViewModel.Companion.ChatViewModelFactory
 import com.github.andreyasadchy.xtra.ui.common.BaseNetworkFragment
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.player.Media3PlayerFragment
@@ -59,7 +60,6 @@ import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -67,12 +67,11 @@ import java.util.Locale
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-@AndroidEntryPoint
 class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickListener, ReplyClickedDialog.OnButtonClickListener {
 
     private var _binding: FragmentChatBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: ChatViewModel by viewModels()
+    private val viewModel: ChatViewModel by viewModels { ChatViewModelFactory }
     private var adapter: ChatAdapter? = null
 
     private var isChatTouched = false

@@ -36,30 +36,23 @@ import androidx.media3.datasource.DataSourceBitmapLoader
 import androidx.media3.session.CacheBitmapLoader
 import androidx.media3.session.DefaultMediaNotificationProvider
 import com.github.andreyasadchy.xtra.R
+import com.github.andreyasadchy.xtra.XtraApp
+import com.github.andreyasadchy.xtra.XtraModule
 import com.github.andreyasadchy.xtra.model.VideoPosition
-import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
-import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
 import com.google.common.util.concurrent.FutureCallback
 import com.google.common.util.concurrent.Futures
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.runBlocking
 import java.util.Timer
-import javax.inject.Inject
 import kotlin.concurrent.schedule
 import kotlin.concurrent.scheduleAtFixedRate
 
 @OptIn(UnstableApi::class)
-@AndroidEntryPoint
 class MediaPlayerService : Service() {
 
-    @Inject
-    lateinit var playerRepository: PlayerRepository
-
-    @Inject
-    lateinit var offlineVideosRepository: OfflineVideosRepository
+    lateinit var xtraModule: XtraModule
 
     var player: MediaPlayer? = null
     private var wifiLock: WifiManager.WifiLock? = null
@@ -93,6 +86,7 @@ class MediaPlayerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        xtraModule = (application as XtraApp).xtraModule
         val player = MediaPlayer().apply {
             setWakeMode(this@MediaPlayerService, PowerManager.PARTIAL_WAKE_LOCK)
         }
@@ -747,12 +741,12 @@ class MediaPlayerService : Service() {
             if (player.duration != -1 && prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
                 videoId?.let {
                     runBlocking {
-                        playerRepository.saveVideoPosition(VideoPosition(it, player.currentPosition.toLong()))
+                        xtraModule.playerRepository.saveVideoPosition(VideoPosition(it, player.currentPosition.toLong()))
                     }
                 } ?:
                 offlineVideoId?.let {
                     runBlocking {
-                        offlineVideosRepository.updatePosition(it, player.currentPosition.toLong())
+                        xtraModule.offlineVideosRepository.updatePosition(it, player.currentPosition.toLong())
                     }
                 }
             }
@@ -790,12 +784,12 @@ class MediaPlayerService : Service() {
                     lastSavedPosition = currentPosition
                     videoId?.let {
                         runBlocking {
-                            playerRepository.saveVideoPosition(VideoPosition(it, currentPosition))
+                            xtraModule.playerRepository.saveVideoPosition(VideoPosition(it, currentPosition))
                         }
                     } ?:
                     offlineVideoId?.let {
                         runBlocking {
-                            offlineVideosRepository.updatePosition(it, currentPosition)
+                            xtraModule.offlineVideosRepository.updatePosition(it, currentPosition)
                         }
                     }
                 }
