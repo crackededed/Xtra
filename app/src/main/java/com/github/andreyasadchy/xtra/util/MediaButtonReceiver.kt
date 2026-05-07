@@ -7,6 +7,7 @@ import android.os.Build
 import android.view.KeyEvent
 import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.ui.player.ExoPlayerService
+import com.github.andreyasadchy.xtra.ui.player.MediaPlayerService
 import kotlinx.coroutines.runBlocking
 
 class MediaButtonReceiver: BroadcastReceiver() {
@@ -29,7 +30,11 @@ class MediaButtonReceiver: BroadcastReceiver() {
                         }
                         if (savedStates.isNotEmpty()) {
                             when (context.prefs().getString(C.PLAYER, C.EXOPLAYER)) {
-                                C.MEDIA_PLAYER -> {}
+                                C.MEDIA_PLAYER -> {
+                                    context.startForegroundService(Intent(context, MediaPlayerService::class.java).apply {
+                                        fillIn(intent, 0)
+                                    })
+                                }
                                 else -> {
                                     if (context.prefs().getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
                                         context.startForegroundService(Intent(context, ExoPlayerService::class.java).apply {
@@ -46,7 +51,11 @@ class MediaButtonReceiver: BroadcastReceiver() {
                     }
                     if (savedStates.isNotEmpty()) {
                         when (context.prefs().getString(C.PLAYER, C.EXOPLAYER)) {
-                            C.MEDIA_PLAYER -> {}
+                            C.MEDIA_PLAYER -> {
+                                context.startService(Intent(context, MediaPlayerService::class.java).apply {
+                                    fillIn(intent, 0)
+                                })
+                            }
                             else -> {
                                 if (context.prefs().getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
                                     context.startService(Intent(context, ExoPlayerService::class.java).apply {

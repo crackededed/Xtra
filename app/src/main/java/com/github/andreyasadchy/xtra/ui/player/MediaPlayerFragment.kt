@@ -4,59 +4,134 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Color
 import android.media.MediaPlayer
 import android.media.PlaybackParams
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.IBinder
-import android.os.PowerManager
 import android.text.format.DateUtils
-import android.util.Base64
 import android.view.SurfaceHolder
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.OptIn
-import androidx.core.content.edit
-import androidx.core.net.toUri
 import androidx.core.view.isVisible
-import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.model.VideoQuality
-import com.github.andreyasadchy.xtra.model.ui.Clip
-import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
-import com.github.andreyasadchy.xtra.model.ui.Stream
-import com.github.andreyasadchy.xtra.model.ui.Video
-import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import org.json.JSONArray
-import org.json.JSONException
 
 @OptIn(UnstableApi::class)
-class MediaPlayerFragment : Media3PlayerFragment() {
+class MediaPlayerFragment : PlayerFragment() {
 
-    private var playbackService: MediaPlayerService? = null
+    override var playbackService: MediaPlayerService? = null
     private var serviceConnection: ServiceConnection? = null
-    private val player: MediaPlayer?
-        get() = playbackService?.player
     private var surfaceHolderCallback: SurfaceHolder.Callback? = null
     private var surfaceCreated = false
     private val updateProgressAction = Runnable { if (view != null) updateProgress() }
 
     override fun onStart() {
         super.onStart()
+        val listener = object : MediaPlayerService.PlayerListener {
+            override fun onPrepared(player: MediaPlayer) {
+                val duration = player.duration.takeIf { it != -1 }?.toLong() ?: 0
+                binding.playerControls.progressBar.setDuration(duration)
+                binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
+                updatePlayingState()
+                chatFragment?.startReplayChatLoad()
+            }
+
+            override fun onSeekComplete(player: MediaPlayer) {
+                updatePlayingState()
+                chatFragment?.updatePosition(player.currentPosition.toLong())
+            }
+
+            override fun onCompletion(player: MediaPlayer) {
+                updatePlayingState()
+            }
+
+            override fun onInfo(player: MediaPlayer, what: Int, extra: Int) {
+                when (what) {
+                    MediaPlayer.MEDIA_INFO_BUFFERING_START -> binding.bufferingIndicator.visibility = View.VISIBLE
+                    MediaPlayer.MEDIA_INFO_BUFFERING_END -> binding.bufferingIndicator.visibility = View.GONE
+                }
+            }
+
+            override fun onVideoSizeChanged(player: MediaPlayer, width: Int, height: Int) {
+                if (width > 0 && height > 0) {
+                    val aspectRatio = width.toFloat() / height
+                    binding.aspectRatioFrameLayout.setAspectRatio(aspectRatio)
+                }
+            }
+
+            override fun onError(player: MediaPlayer, what: Int, extra: Int) {
+                updatePlayingState()
+            }
+
+            override fun onIsPlayingChanged() {
+                updatePlayingState()
+            }
+
+            override fun onSpeedChanged(speed: Float) {
+                chatFragment?.updateSpeed(speed)
+            }
+        }
+        val serviceListener = object : MediaPlayerService.Listener {
+            override fun started() {
+                if (view != null) {
+                    if (!started && (isInitialized || !enableNetworkCheck)) {
+                        started = true
+                        start()
+                    }
+                }
+            }
+
+            override fun loaded() {
+                if (view != null) {
+                    with(binding.playerControls) {
+                        quality.isEnabled = true
+                        quality.setColorFilter(Color.WHITE)
+                        download.isEnabled = true
+                        download.setColorFilter(Color.WHITE)
+                        audioOnly.isEnabled = true
+                        audioOnly.setColorFilter(Color.WHITE)
+                        setQualityText()
+                    }
+                }
+            }
+
+            override fun changePlayerMode() {
+                if (view != null) {
+                    this@MediaPlayerFragment.changePlayerMode()
+                }
+            }
+
+            override fun toast(resId: Int, duration: Int) {
+                if (view != null) {
+                    Toast.makeText(requireContext(), resId, duration).show()
+                }
+            }
+
+            override fun changeSurfaceVisibility(visible: Boolean) {
+                if (visible) {
+                    if (surfaceCreated) {
+                        playbackService?.player?.setDisplay(binding.playerSurface.holder)
+                    }
+                    binding.playerSurface.visibility = View.VISIBLE
+                } else {
+                    playbackService?.player?.setDisplay(null)
+                    binding.playerSurface.visibility = View.GONE
+                }
+            }
+        }
         val callback = object : SurfaceHolder.Callback {
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
 
             override fun surfaceCreated(holder: SurfaceHolder) {
                 surfaceCreated = true
-                if (viewModel.started && binding.playerSurface.isVisible) {
-                    player?.setDisplay(binding.playerSurface.holder)
+                if (started && binding.playerSurface.isVisible) {
+                    playbackService?.player?.setDisplay(binding.playerSurface.holder)
                 }
             }
 
@@ -71,50 +146,11 @@ class MediaPlayerFragment : Media3PlayerFragment() {
                 if (view != null) {
                     val binder = service as MediaPlayerService.ServiceBinder
                     playbackService = binder.getService()
+                    playbackService?.serviceListener = serviceListener
                     if (surfaceCreated && binding.playerSurface.isVisible) {
-                        player?.setDisplay(binding.playerSurface.holder)
+                        playbackService?.player?.setDisplay(binding.playerSurface.holder)
                     }
-                    playbackService?.preparedListener = MediaPlayer.OnPreparedListener { player ->
-                        val duration = player.duration.takeIf { it != -1 }?.toLong() ?: 0
-                        binding.playerControls.progressBar.setDuration(duration)
-                        binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
-                        updatePlayingState()
-                        chatFragment?.startReplayChatLoad()
-                    }
-                    playbackService?.seekCompleteListener = MediaPlayer.OnSeekCompleteListener {
-                        updatePlayingState()
-                        player?.currentPosition?.toLong()?.let { chatFragment?.updatePosition(it) }
-                    }
-                    playbackService?.completionListener = MediaPlayer.OnCompletionListener {
-                        updatePlayingState()
-                    }
-                    playbackService?.infoListener = MediaPlayer.OnInfoListener { _, what, _ ->
-                        when (what) {
-                            MediaPlayer.MEDIA_INFO_BUFFERING_START -> binding.bufferingIndicator.visibility = View.VISIBLE
-                            MediaPlayer.MEDIA_INFO_BUFFERING_END -> binding.bufferingIndicator.visibility = View.GONE
-                        }
-                        return@OnInfoListener true
-                    }
-                    playbackService?.videoSizeListener = MediaPlayer.OnVideoSizeChangedListener { _, width, height ->
-                        if (width > 0 && height > 0) {
-                            val aspectRatio = width.toFloat() / height
-                            binding.aspectRatioFrameLayout.setAspectRatio(aspectRatio)
-                        }
-                    }
-                    playbackService?.errorListener = MediaPlayer.OnErrorListener { _, _, _ ->
-                        updatePlayingState()
-                        return@OnErrorListener true
-                    }
-                    playbackService?.pauseListener = {
-                        updatePlayingState()
-                    }
-                    playbackService?.speedListener = { speed ->
-                        chatFragment?.updateSpeed(speed)
-                    }
-                    if (viewModel.restoreQuality) {
-                        viewModel.restoreQuality = false
-                        changeQuality(viewModel.previousQuality)
-                    }
+                    playbackService?.playerListener = listener
                     val endTime = playbackService?.setSleepTimer(-1)
                     if (endTime != null && endTime > 0L) {
                         val duration = endTime - System.currentTimeMillis()
@@ -126,17 +162,7 @@ class MediaPlayerFragment : Media3PlayerFragment() {
                             (activity as? MainActivity)?.closePlayer()
                         }
                     }
-                    if (viewModel.resume) {
-                        viewModel.resume = false
-                        player?.start()
-                    }
-                    player?.let { player ->
-                        if (viewModel.loaded.value && player.trackInfo.isEmpty()) {
-                            viewModel.started = false
-                        }
-                        if (viewModel.started && player.duration != -1) {
-                            chatFragment?.startReplayChatLoad()
-                        }
+                    playbackService?.player?.let { player ->
                         if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
                             requireView().keepScreenOn = player.isPlaying
                         }
@@ -146,15 +172,26 @@ class MediaPlayerFragment : Media3PlayerFragment() {
                             binding.playerControls.playPause.visibility = View.VISIBLE
                         } else {
                             binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
-                            if (videoType == STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
+                            if (playbackService?.type == BasePlaybackService.STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
                                 binding.playerControls.playPause.visibility = View.GONE
                             }
                         }
                     }
-                    if ((isInitialized || !enableNetworkCheck) && !viewModel.started) {
-                        startPlayer()
+                    if (playbackService?.started == true) {
+                        if (!started) {
+                            if (isInitialized || !enableNetworkCheck) {
+                                started = true
+                                start()
+                            }
+                        } else {
+                            chatFragment?.startReplayChatLoad()
+                            if (playbackService?.restoreQuality == true) {
+                                playbackService?.restoreQuality = false
+                                changeQuality(playbackService?.previousQuality)
+                            }
+                        }
                     }
-                    player?.let { player ->
+                    playbackService?.player?.let { player ->
                         setPipActions(player.isPlaying)
                     }
                 }
@@ -164,27 +201,29 @@ class MediaPlayerFragment : Media3PlayerFragment() {
                 playbackService = null
             }
         }
-        serviceConnection = connection
-        val intent = Intent(requireContext(), MediaPlayerService::class.java)
+        val intent = Intent(requireContext(), MediaPlayerService::class.java).apply {
+            action = MediaPlayerService.INTENT_START
+        }
         requireContext().startService(intent)
         requireContext().bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        serviceConnection = connection
     }
 
     private fun updatePlayingState() {
-        player?.let { player ->
+        playbackService?.player?.let { player ->
             val isPlaying = player.isPlaying
             if (!isPlaying) {
                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
                 binding.playerControls.playPause.visibility = View.VISIBLE
             } else {
                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
-                if (videoType == STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
+                if (playbackService?.type == BasePlaybackService.STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
                     binding.playerControls.playPause.visibility = View.GONE
                 }
             }
             setPipActions(isPlaying)
             controllerAutoHide = isPlaying
-            if (videoType != STREAM && useController) {
+            if (playbackService?.type != BasePlaybackService.STREAM && useController) {
                 showController()
             }
             updateProgress()
@@ -194,384 +233,10 @@ class MediaPlayerFragment : Media3PlayerFragment() {
         }
     }
 
-    override fun initialize() {
-        if (player != null && !viewModel.started) {
-            startPlayer()
-        }
-        super.initialize()
-    }
-
-    override fun startStream(url: String?) {
-        player?.let { player ->
-            if (url != null) {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    playbackService?.videoId = null
-                    playbackService?.offlineVideoId = null
-                    playbackService?.title = requireArguments().getString(KEY_TITLE)
-                    playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
-                    playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_IMAGE)
-                    val response = viewModel.loadPlaylist(
-                        url = url,
-                        networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
-                        proxyMultivariantPlaylist = requireContext().prefs().getBoolean(C.PROXY_MULTIVARIANT_PLAYLIST, false),
-                        proxyHost = requireContext().prefs().getString(C.PROXY_HOST, null),
-                        proxyPort = requireContext().prefs().getString(C.PROXY_PORT, null)?.toIntOrNull(),
-                        proxyUser = requireContext().prefs().getString(C.PROXY_USER, null),
-                        proxyPassword = requireContext().prefs().getString(C.PROXY_PASSWORD, null),
-                    )
-                    val playlist = response?.first
-                    val responseCode = response?.second
-                    val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-                    val isNetworkAvailable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-                        networkCapabilities != null
-                                && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                                && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                    } else @Suppress("DEPRECATION") {
-                        val activeNetwork = connectivityManager.activeNetworkInfo ?: connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_VPN)
-                        activeNetwork?.isConnectedOrConnecting == true
-                    }
-                    if (responseCode != null && isNetworkAvailable) {
-                        when {
-                            responseCode == 404 -> {
-                                Toast.makeText(requireContext(), R.string.stream_ended, Toast.LENGTH_LONG).show()
-                            }
-                            viewModel.useCustomProxy && responseCode >= 400 -> {
-                                Toast.makeText(requireContext(), R.string.proxy_error, Toast.LENGTH_LONG).show()
-                                viewModel.useCustomProxy = false
-                                viewLifecycleOwner.lifecycleScope.launch {
-                                    delay(1500L)
-                                    try {
-                                        restartPlayer()
-                                    } catch (e: Exception) {
-                                    }
-                                }
-                            }
-                            else -> {
-                                Toast.makeText(requireContext(), R.string.player_error, Toast.LENGTH_SHORT).show()
-                                viewLifecycleOwner.lifecycleScope.launch {
-                                    delay(1500L)
-                                    try {
-                                        restartPlayer()
-                                    } catch (e: Exception) {
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (!playlist.isNullOrBlank()) {
-                        val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList().ifEmpty {
-                            Regex("NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
-                        }
-                        val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
-                        val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
-                        val list = names.mapIndexedNotNull { index, name ->
-                            urls.getOrNull(index)?.let { url ->
-                                VideoQuality(name, codecs.getOrNull(index), url)
-                            }
-                        }
-                        viewModel.qualities = list
-                            .sortedByDescending {
-                                it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                            }
-                            .sortedByDescending {
-                                it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                            }
-                            .toMutableList().apply {
-                                find { it.name.equals("source", true) }?.let { source ->
-                                    remove(source)
-                                    add(0, VideoQuality(SOURCE_QUALITY, source.codecs, source.url))
-                                }
-                                val audio = find { it.name?.startsWith("audio", true) == true }?.also {
-                                    remove(it)
-                                }
-                                add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.url))
-                                add(VideoQuality(CHAT_ONLY_QUALITY))
-                            }
-                        setDefaultQuality()
-                        viewModel.quality?.url?.let { url ->
-                            player.reset()
-                            player.setDataSource(url)
-                            val volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
-                            player.setVolume(volume, volume)
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                val params = PlaybackParams()
-                                params.speed = 1f
-                                player.playbackParams = params
-                            }
-                            player.prepareAsync()
-                            viewModel.loaded.value = true
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    override fun startVideo(url: String?, playbackPosition: Long?, multivariantPlaylist: Boolean) {
-        player?.let { player ->
-            if (url != null) {
-                if (multivariantPlaylist) {
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        if (surfaceCreated) {
-                            player.setDisplay(binding.playerSurface.holder)
-                        }
-                        binding.playerSurface.visibility = View.VISIBLE
-                        val newId = requireArguments().getString(KEY_VIDEO_ID)?.toLongOrNull()
-                        val position = if (playbackService?.videoId == newId && player.duration != -1) {
-                            player.currentPosition.toLong().takeIf { it > 0 } ?: playbackPosition ?: 0
-                        } else {
-                            playbackPosition ?: 0
-                        }
-                        playbackService?.videoId = newId
-                        playbackService?.offlineVideoId = null
-                        playbackService?.title = requireArguments().getString(KEY_TITLE)
-                        playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
-                        playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_IMAGE)
-                        val response = viewModel.loadPlaylist(url, requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP))
-                        val playlist = response?.first
-                        val responseCode = response?.second
-                        val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-                        val isNetworkAvailable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-                            networkCapabilities != null
-                                    && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                                    && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                        } else @Suppress("DEPRECATION") {
-                            val activeNetwork = connectivityManager.activeNetworkInfo ?: connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_VPN)
-                            activeNetwork?.isConnectedOrConnecting == true
-                        }
-                        if (responseCode != null && isNetworkAvailable) {
-                            when {
-                                viewModel.shouldRetry && responseCode != 0 -> {
-                                    viewModel.shouldRetry = false
-                                    playVideo(true, player.currentPosition.toLong())
-                                }
-                                responseCode == 403 -> {
-                                    Toast.makeText(requireContext(), R.string.video_subscribers_only, Toast.LENGTH_LONG).show()
-                                }
-                            }
-                        }
-                        if (!playlist.isNullOrBlank()) {
-                            val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList().ifEmpty {
-                                Regex("NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
-                            }
-                            val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
-                            val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
-                            playlist.lines().filter { it.startsWith("#EXT-X-SESSION-DATA") }.let { list ->
-                                if (list.isNotEmpty()) {
-                                    val url = urls.firstOrNull()?.takeIf { it.contains("/index-") }
-                                    val variantId = Regex("STABLE-VARIANT-ID=\"(.+?)\"").find(playlist)?.groups?.get(1)?.value
-                                    if (url != null && variantId != null) {
-                                        list.forEach { line ->
-                                            val id = Regex("DATA-ID=\"(.+?)\"").find(line)?.groups?.get(1)?.value
-                                            if (id == "com.amazon.ivs.unavailable-media") {
-                                                val value = Regex("VALUE=\"(.+?)\"").find(line)?.groups?.get(1)?.value
-                                                if (value != null) {
-                                                    val bytes = try {
-                                                        Base64.decode(value, Base64.DEFAULT)
-                                                    } catch (e: IllegalArgumentException) {
-                                                        null
-                                                    }
-                                                    if (bytes != null) {
-                                                        val string = String(bytes)
-                                                        val array = try {
-                                                            JSONArray(string)
-                                                        } catch (e: JSONException) {
-                                                            null
-                                                        }
-                                                        if (array != null) {
-                                                            for (i in 0 until array.length()) {
-                                                                val obj = array.optJSONObject(i)
-                                                                if (obj != null) {
-                                                                    var skip = false
-                                                                    val filterReasons = obj.optJSONArray("FILTER_REASONS")
-                                                                    if (filterReasons != null) {
-                                                                        for (filterIndex in 0 until filterReasons.length()) {
-                                                                            val filter = filterReasons.optString(filterIndex)
-                                                                            if (filter == "FR_CODEC_NOT_REQUESTED") {
-                                                                                skip = true
-                                                                                break
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                    if (!skip) {
-                                                                        val name = obj.optString("IVS_NAME")
-                                                                        val codec = obj.optString("CODECS")
-                                                                        val newVariantId = obj.optString("STABLE-VARIANT-ID")
-                                                                        if (!name.isNullOrBlank() && !newVariantId.isNullOrBlank()) {
-                                                                            names.add(name)
-                                                                            if (!codec.isNullOrBlank()) {
-                                                                                codecs.add(codec)
-                                                                            }
-                                                                            urls.add(url.replace(
-                                                                                "$variantId/index-",
-                                                                                if (urls.find { it.contains("chunked/index-") } == null && newVariantId != "audio_only") {
-                                                                                    "chunked/index-"
-                                                                                } else {
-                                                                                    "$newVariantId/index-"
-                                                                                }
-                                                                            ))
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            val list = names.mapIndexedNotNull { index, name ->
-                                urls.getOrNull(index)?.let { url ->
-                                    VideoQuality(name, codecs.getOrNull(index), url)
-                                }
-                            }
-                            viewModel.qualities = list
-                                .sortedByDescending {
-                                    it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                }
-                                .sortedByDescending {
-                                    it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                }
-                                .toMutableList().apply {
-                                    find { it.name.equals("source", true) }?.let { source ->
-                                        remove(source)
-                                        add(0, VideoQuality(SOURCE_QUALITY, source.codecs, source.url))
-                                    }
-                                    val audio = find { it.name?.startsWith("audio", true) == true }?.also {
-                                        remove(it)
-                                    }
-                                    add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.url))
-                                }
-                            setDefaultQuality()
-                            changePlayerMode()
-                            viewModel.quality?.url?.let { url ->
-                                player.reset()
-                                player.setDataSource(url)
-                                val volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
-                                player.setVolume(volume, volume)
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                    val params = PlaybackParams()
-                                    params.speed = requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f)
-                                    player.playbackParams = params
-                                }
-                                playbackService?.seekPosition = position
-                                player.prepareAsync()
-                                viewModel.loaded.value = true
-                            }
-                        }
-                    }
-                } else {
-                    if (surfaceCreated) {
-                        player.setDisplay(binding.playerSurface.holder)
-                    }
-                    binding.playerSurface.visibility = View.VISIBLE
-                    val newId = requireArguments().getString(KEY_VIDEO_ID)?.toLongOrNull()
-                    val position = if (playbackService?.videoId == newId && player.duration != -1) {
-                        player.currentPosition.toLong().takeIf { it > 0 } ?: playbackPosition ?: 0
-                    } else {
-                        playbackPosition ?: 0
-                    }
-                    playbackService?.videoId = newId
-                    playbackService?.offlineVideoId = null
-                    playbackService?.title = requireArguments().getString(KEY_TITLE)
-                    playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
-                    playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_IMAGE)
-                    player.reset()
-                    player.setDataSource(url)
-                    val volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
-                    player.setVolume(volume, volume)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        val params = PlaybackParams()
-                        params.speed = requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f)
-                        player.playbackParams = params
-                    }
-                    playbackService?.seekPosition = position
-                    player.prepareAsync()
-                    viewModel.loaded.value = true
-                }
-            }
-        }
-    }
-
-    override fun startClip(url: String?) {
-        player?.let { player ->
-            if (url != null) {
-                if (viewModel.quality?.name == AUDIO_ONLY_QUALITY) {
-                    player.setDisplay(null)
-                    binding.playerSurface.visibility = View.GONE
-                } else {
-                    if (surfaceCreated) {
-                        player.setDisplay(binding.playerSurface.holder)
-                    }
-                    binding.playerSurface.visibility = View.VISIBLE
-                }
-                playbackService?.videoId = null
-                playbackService?.offlineVideoId = null
-                playbackService?.title = requireArguments().getString(KEY_TITLE)
-                playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
-                playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_IMAGE)
-                player.reset()
-                player.setDataSource(url)
-                val volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
-                player.setVolume(volume, volume)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    val params = PlaybackParams()
-                    params.speed = requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f)
-                    player.playbackParams = params
-                }
-                player.prepareAsync()
-                viewModel.loaded.value = true
-            }
-        }
-    }
-
-    override fun startOfflineVideo(url: String?, position: Long) {
-        player?.let { player ->
-            if (url != null) {
-                if (viewModel.quality?.name == AUDIO_ONLY_QUALITY) {
-                    player.setDisplay(null)
-                    binding.playerSurface.visibility = View.GONE
-                } else {
-                    if (surfaceCreated) {
-                        player.setDisplay(binding.playerSurface.holder)
-                    }
-                    binding.playerSurface.visibility = View.VISIBLE
-                }
-                val newId = requireArguments().getInt(KEY_OFFLINE_VIDEO_ID).takeIf { it != 0 }
-                val position = if (playbackService?.offlineVideoId == newId && player.duration != -1) {
-                    player.currentPosition.toLong().takeIf { it > 0 } ?: position
-                } else {
-                    position
-                }
-                playbackService?.videoId = null
-                playbackService?.offlineVideoId = newId
-                playbackService?.title = requireArguments().getString(KEY_TITLE)
-                playbackService?.channelName = requireArguments().getString(KEY_CHANNEL_NAME)
-                playbackService?.channelLogo = requireArguments().getString(KEY_CHANNEL_IMAGE)
-                player.reset()
-                player.setDataSource(requireContext(), url.toUri())
-                val volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
-                player.setVolume(volume, volume)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    val params = PlaybackParams()
-                    params.speed = requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f)
-                    player.playbackParams = params
-                }
-                playbackService?.seekPosition = position
-                player.prepareAsync()
-                viewModel.loaded.value = true
-            }
-        }
-    }
-
-    override fun getCurrentPosition(): Long? = player?.currentPosition?.toLong()
+    override fun getCurrentPosition(): Long? = playbackService?.player?.currentPosition?.toLong()
 
     override fun getCurrentSpeed(): Float {
-        return if (videoType == STREAM) {
+        return if (playbackService?.type == BasePlaybackService.STREAM) {
             1f
         } else {
             requireContext().prefs().getFloat(C.PLAYER_SPEED, 1f)
@@ -580,8 +245,10 @@ class MediaPlayerFragment : Media3PlayerFragment() {
 
     override fun getCurrentVolume(): Float = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
 
+    override fun getTotalDuration() = playbackService?.player?.duration?.toLong()
+
     override fun playPause() {
-        player?.let { player ->
+        playbackService?.player?.let { player ->
             if (player.isPlaying) {
                 player.pause()
             } else {
@@ -593,7 +260,7 @@ class MediaPlayerFragment : Media3PlayerFragment() {
     }
 
     override fun rewind() {
-        player?.let { player ->
+        playbackService?.player?.let { player ->
             val rewindMs = requireContext().prefs().getString(C.PLAYER_REWIND, "10000")?.toLongOrNull() ?: 10000
             val position = player.currentPosition - rewindMs
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -605,7 +272,7 @@ class MediaPlayerFragment : Media3PlayerFragment() {
     }
 
     override fun fastForward() {
-        player?.let { player ->
+        playbackService?.player?.let { player ->
             val fastForwardMs = requireContext().prefs().getString(C.PLAYER_FORWARD, "10000")?.toLongOrNull() ?: 10000
             val position = player.currentPosition + fastForwardMs
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -618,9 +285,9 @@ class MediaPlayerFragment : Media3PlayerFragment() {
 
     override fun seek(position: Long) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            player?.seekTo(position, MediaPlayer.SEEK_CLOSEST)
+            playbackService?.player?.seekTo(position, MediaPlayer.SEEK_CLOSEST)
         } else {
-            player?.seekTo(position.toInt())
+            playbackService?.player?.seekTo(position.toInt())
         }
     }
 
@@ -628,23 +295,23 @@ class MediaPlayerFragment : Media3PlayerFragment() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val params = PlaybackParams()
             params.speed = speed
-            player?.playbackParams = params
+            playbackService?.player?.playbackParams = params
             chatFragment?.updateSpeed(speed)
         }
     }
 
     override fun changeVolume(volume: Float) {
-        player?.setVolume(volume, volume)
+        playbackService?.player?.setVolume(volume, volume)
     }
 
     override fun updateProgress() {
         with(binding.playerControls) {
             if (root.isVisible && !progressBar.isPressed) {
-                val currentPosition = player?.currentPosition?.toLong() ?: 0
+                val currentPosition = playbackService?.player?.currentPosition?.toLong() ?: 0
                 position.text = DateUtils.formatElapsedTime(currentPosition / 1000)
                 progressBar.setPosition(currentPosition)
                 root.removeCallbacks(updateProgressAction)
-                player?.let { player ->
+                playbackService?.player?.let { player ->
                     if (player.isPlaying) {
                         val speed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                             player.playbackParams.speed
@@ -663,6 +330,10 @@ class MediaPlayerFragment : Media3PlayerFragment() {
         }
     }
 
+    override fun restartPlayer() {
+        playbackService?.restartPlayer()
+    }
+
     override fun toggleAudioCompressor() {
         val enabled = playbackService?.toggleDynamicsProcessing()
         if (enabled == true) {
@@ -673,269 +344,82 @@ class MediaPlayerFragment : Media3PlayerFragment() {
     }
 
     override fun changeQuality(selectedQuality: VideoQuality?) {
-        viewModel.previousQuality = viewModel.quality
-        viewModel.quality = selectedQuality
-        viewModel.quality?.let { quality ->
-            player?.let { player ->
-                when (quality.name) {
-                    AUDIO_ONLY_QUALITY -> {
-                        player.setDisplay(null)
-                        binding.playerSurface.visibility = View.GONE
-                        quality.url?.let {
-                            val position = player.currentPosition.toLong()
-                            player.reset()
-                            if (playbackService?.offlineVideoId != null) {
-                                player.setDataSource(requireContext(), it.toUri())
-                            } else {
-                                player.setDataSource(it)
-                            }
-                            playbackService?.seekPosition = position
-                            player.prepareAsync()
-                        }
-                    }
-                    CHAT_ONLY_QUALITY -> {
-                        player.stop()
-                        playbackService?.updatePlayingState()
-                        updatePlayingState()
-                    }
-                    else -> {
-                        quality.url?.let {
-                            val position = player.currentPosition.toLong()
-                            player.reset()
-                            if (playbackService?.offlineVideoId != null) {
-                                player.setDataSource(requireContext(), it.toUri())
-                            } else {
-                                player.setDataSource(it)
-                            }
-                            playbackService?.seekPosition = position
-                            player.prepareAsync()
-                        }
-                        if (surfaceCreated) {
-                            player.setDisplay(binding.playerSurface.holder)
-                        }
-                        binding.playerSurface.visibility = View.VISIBLE
-                    }
-                }
-                val cellular = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-                    val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-                    networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
-                } else {
-                    false
-                }
-                if ((!cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_QUALITY, "saved") == "saved") || (cellular && requireContext().prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
-                    requireContext().prefs().edit { putString(C.PLAYER_QUALITY, quality.name) }
-                }
-            }
-        }
+        playbackService?.changeQuality(selectedQuality)
     }
 
     override fun startAudioOnly() {
-        player?.let { player ->
-            if (playbackService != null) {
-                savePosition()
-                if (viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
-                    viewModel.restoreQuality = true
-                    viewModel.previousQuality = viewModel.quality
-                    viewModel.quality = viewModel.qualities?.find { it.name == AUDIO_ONLY_QUALITY }
-                    viewModel.quality?.let { quality ->
-                        if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
-                            player.setDisplay(null)
-                            binding.playerSurface.visibility = View.GONE
-                        }
-                        if (requireContext().prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
-                            quality.url?.let { url ->
-                                val position = player.currentPosition.toLong()
-                                player.reset()
-                                if (playbackService?.offlineVideoId != null) {
-                                    player.setDataSource(requireContext(), url.toUri())
-                                } else {
-                                    player.setDataSource(url)
-                                }
-                                playbackService?.seekPosition = position
-                                player.prepareAsync()
-                            }
-                        }
-                    }
-                }
-                playbackService?.setSleepTimer((activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
-            }
+        if (playbackService != null) {
+            playbackService?.startAudioOnly()
+            playbackService?.setSleepTimer((activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
         }
-        playbackService?.preparedListener = null
-        playbackService?.seekCompleteListener = null
-        playbackService?.completionListener = null
-        playbackService?.infoListener = null
-        playbackService?.videoSizeListener = null
-        playbackService?.errorListener = null
-        playbackService?.pauseListener = null
-        playbackService?.speedListener = null
+        playbackService?.playerListener = null
         surfaceHolderCallback?.let { binding.playerSurface.holder.removeCallback(it) }
         surfaceHolderCallback = null
+        playbackService?.serviceListener = null
         serviceConnection?.let { requireContext().unbindService(it) }
         serviceConnection = null
         playbackService = null
     }
 
-    override fun downloadVideo() {
-        val totalDuration = player?.duration?.toLong()
-        val qualities = viewModel.qualities?.filter { !it.url.isNullOrBlank() }
-        DownloadDialog.newVideoInstance(
-            id = requireArguments().getString(KEY_VIDEO_ID),
-            channelId = requireArguments().getString(KEY_CHANNEL_ID),
-            channelLogin = requireArguments().getString(KEY_CHANNEL_LOGIN),
-            channelName = requireArguments().getString(KEY_CHANNEL_NAME),
-            channelImage = requireArguments().getString(KEY_CHANNEL_IMAGE),
-            gameId = requireArguments().getString(KEY_GAME_ID),
-            gameSlug = requireArguments().getString(KEY_GAME_SLUG),
-            gameName = requireArguments().getString(KEY_GAME_NAME),
-            title = requireArguments().getString(KEY_TITLE),
-            thumbnail = requireArguments().getString(KEY_THUMBNAIL),
-            createdAt = requireArguments().getString(KEY_CREATED_AT),
-            durationSeconds = requireArguments().getInt(KEY_DURATION_SECONDS),
-            type = requireArguments().getString(KEY_VIDEO_TYPE),
-            animatedPreviewUrl = requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW),
-            totalDuration = totalDuration,
-            currentPosition = getCurrentPosition(),
-            qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
-            qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
-            qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
-        ).show(childFragmentManager, null)
-    }
-
-    override fun close() {
-        savePosition()
-        player?.pause()
+    override fun close(deleteStates: Boolean) {
+        playbackService?.player?.pause()
         playbackService?.updatePlayingState()
         updatePlayingState()
-        playbackService?.preparedListener = null
-        playbackService?.seekCompleteListener = null
-        playbackService?.completionListener = null
-        playbackService?.infoListener = null
-        playbackService?.videoSizeListener = null
-        playbackService?.errorListener = null
-        playbackService?.pauseListener = null
-        playbackService?.speedListener = null
+        playbackService?.player?.stop()
+        if (deleteStates) {
+            viewModel.deletePlaybackStates()
+        }
+        playbackService?.playerListener = null
         surfaceHolderCallback?.let { binding.playerSurface.holder.removeCallback(it) }
         surfaceHolderCallback = null
+        playbackService?.serviceListener = null
         serviceConnection?.let { requireContext().unbindService(it) }
         serviceConnection = null
         playbackService?.stopSelf()
         playbackService = null
     }
 
+    override fun retry(item: String) {
+        playbackService?.retry(item)
+    }
+
     override fun onStop() {
         super.onStop()
-        player?.let { player ->
-            if (playbackService != null) {
-                savePosition()
-                val isInteractive = (requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager).let {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
-                        it.isInteractive
-                    } else {
-                        @Suppress("DEPRECATION")
-                        it.isScreenOn
-                    }
-                }
-                val isInPIPMode = when {
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> requireActivity().isInPictureInPictureMode
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> !useController && isMaximized
-                    else -> false
-                }
-                if ((!isInPIPMode && isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true))
-                    || (!isInPIPMode && !isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
-                    || (isInPIPMode && isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, false))
-                    || (isInPIPMode && !isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
-                    if (player.isPlaying && viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
-                        viewModel.restoreQuality = true
-                        viewModel.previousQuality = viewModel.quality
-                        viewModel.quality = viewModel.qualities?.find { it.name == AUDIO_ONLY_QUALITY }
-                        viewModel.quality?.let { quality ->
-                            if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
-                                player.setDisplay(null)
-                                binding.playerSurface.visibility = View.GONE
-                            }
-                            if (requireContext().prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
-                                quality.url?.let { url ->
-                                    val position = player.currentPosition.toLong()
-                                    player.reset()
-                                    if (playbackService?.offlineVideoId != null) {
-                                        player.setDataSource(requireContext(), url.toUri())
-                                    } else {
-                                        player.setDataSource(url)
-                                    }
-                                    playbackService?.seekPosition = position
-                                    player.prepareAsync()
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    viewModel.resume = player.isPlaying
-                    player.pause()
-                    playbackService?.updatePlayingState()
-                    updatePlayingState()
-                }
-                playbackService?.setSleepTimer((activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
+        if (playbackService != null) {
+            val isInPIPMode = when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> requireActivity().isInPictureInPictureMode
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> !useController && isMaximized
+                else -> false
             }
+            playbackService?.stop(isInPIPMode)
+            playbackService?.setSleepTimer((activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
         }
         binding.playerControls.root.removeCallbacks(updateProgressAction)
-        playbackService?.preparedListener = null
-        playbackService?.seekCompleteListener = null
-        playbackService?.completionListener = null
-        playbackService?.infoListener = null
-        playbackService?.videoSizeListener = null
-        playbackService?.errorListener = null
-        playbackService?.pauseListener = null
-        playbackService?.speedListener = null
+        playbackService?.playerListener = null
         surfaceHolderCallback?.let { binding.playerSurface.holder.removeCallback(it) }
         surfaceHolderCallback = null
+        playbackService?.serviceListener = null
         serviceConnection?.let { requireContext().unbindService(it) }
         serviceConnection = null
     }
 
     override fun onNetworkRestored() {
         if (isResumed) {
-            if (videoType == STREAM) {
+            if (playbackService?.type == BasePlaybackService.STREAM) {
                 restartPlayer()
             } else {
-                val position = player?.currentPosition?.toLong()
+                val position = playbackService?.player?.currentPosition?.toLong()
                 playbackService?.seekPosition = position
-                player?.prepareAsync()
+                playbackService?.player?.prepareAsync()
             }
         }
     }
 
     override fun onNetworkLost() {
-        if (videoType != STREAM && isResumed) {
-            player?.stop()
+        if (playbackService?.type != BasePlaybackService.STREAM && isResumed) {
+            playbackService?.player?.stop()
             playbackService?.updatePlayingState()
             updatePlayingState()
-        }
-    }
-
-    companion object {
-        fun newInstance(item: Stream): MediaPlayerFragment {
-            return MediaPlayerFragment().apply {
-                arguments = getStreamArguments(item)
-            }
-        }
-
-        fun newInstance(item: Video, offset: Long?, ignoreSavedPosition: Boolean): MediaPlayerFragment {
-            return MediaPlayerFragment().apply {
-                arguments = getVideoArguments(item, offset, ignoreSavedPosition)
-            }
-        }
-
-        fun newInstance(item: Clip): MediaPlayerFragment {
-            return MediaPlayerFragment().apply {
-                arguments = getClipArguments(item)
-            }
-        }
-
-        fun newInstance(item: OfflineVideo): MediaPlayerFragment {
-            return MediaPlayerFragment().apply {
-                arguments = getOfflineVideoArguments(item)
-            }
         }
     }
 }

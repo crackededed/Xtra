@@ -357,13 +357,17 @@ class MainActivity : AppCompatActivity() {
             },
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
-        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+        if (prefs.getString(C.PLAYER, C.EXOPLAYER) == C.MEDIA_PLAYER || prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
             lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.playbackStates.collectLatest { states ->
                         val savedState = states.firstOrNull()
                         if (savedState != null) {
-                            val fragment = ExoPlayerFragment().apply {
+                            (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? PlayerFragment)?.close()
+                            val fragment = when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
+                                C.MEDIA_PLAYER -> MediaPlayerFragment()
+                                else -> ExoPlayerFragment()
+                            }.apply {
                                 if (savedState.type == BasePlaybackService.OFFLINE_VIDEO) {
                                     arguments = Bundle().apply {
                                         putBoolean(PlayerFragment.KEY_OFFLINE, true)
@@ -819,161 +823,135 @@ class MainActivity : AppCompatActivity() {
 //Navigation listeners
 
     fun startStream(stream: Stream) {
-        when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
-            C.MEDIA_PLAYER -> {
-                val fragment = MediaPlayerFragment.newInstance(stream)
-                startPlayer(fragment)
-            }
-            else -> {
-                if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
-                    (playerFragment as? ExoPlayerFragment)?.close2()
-                    playerFragment = null
-                    viewModel.savePlaybackState(PlaybackState(
-                        type = BasePlaybackService.STREAM,
-                        streamId = stream.id,
-                        channelId = stream.channelId,
-                        channelLogin = stream.channelLogin,
-                        channelName = stream.channelName,
-                        channelImage = stream.channelImage,
-                        gameId = stream.gameId,
-                        gameSlug = stream.gameSlug,
-                        gameName = stream.gameName,
-                        title = stream.title,
-                        thumbnail = stream.thumbnail,
-                        createdAt = stream.createdAt,
-                        viewerCount = stream.viewerCount,
-                    ))
-                    val fragment = ExoPlayerFragment()
-                    startPlayer(fragment)
-                } else {
-                    val fragment = Media3Fragment.newInstance(stream)
-                    startPlayer(fragment)
-                }
-            }
+        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+            (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close()
+            val fragment = Media3Fragment.newInstance(stream)
+            startPlayer(fragment)
+            return
         }
+        (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close(deleteStates = false)
+        viewModel.savePlaybackState(PlaybackState(
+            type = BasePlaybackService.STREAM,
+            streamId = stream.id,
+            channelId = stream.channelId,
+            channelLogin = stream.channelLogin,
+            channelName = stream.channelName,
+            channelImage = stream.channelImage,
+            gameId = stream.gameId,
+            gameSlug = stream.gameSlug,
+            gameName = stream.gameName,
+            title = stream.title,
+            thumbnail = stream.thumbnail,
+            createdAt = stream.createdAt,
+            viewerCount = stream.viewerCount,
+        ))
+        val fragment = when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
+            C.MEDIA_PLAYER -> MediaPlayerFragment()
+            else -> ExoPlayerFragment()
+        }
+        startPlayer(fragment)
     }
 
     fun startVideo(video: Video, offset: Long?, ignoreSavedPosition: Boolean = false) {
-        when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
-            C.MEDIA_PLAYER -> {
-                val fragment = MediaPlayerFragment.newInstance(video, offset, ignoreSavedPosition)
-                startPlayer(fragment)
-            }
-            else -> {
-                if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
-                    (playerFragment as? ExoPlayerFragment)?.close2()
-                    playerFragment = null
-                    viewModel.savePlaybackState(PlaybackState(
-                        type = BasePlaybackService.VIDEO,
-                        videoId = video.id,
-                        channelId = video.channelId,
-                        channelLogin = video.channelLogin,
-                        channelName = video.channelName,
-                        channelImage = video.channelImage,
-                        gameId = video.gameId,
-                        gameSlug = video.gameSlug,
-                        gameName = video.gameName,
-                        title = video.title,
-                        thumbnail = video.thumbnail,
-                        createdAt = video.createdAt,
-                        durationSeconds = video.durationSeconds,
-                        videoType = video.type,
-                        videoAnimatedPreviewURL = video.animatedPreviewURL,
-                        position = offset,
-                    ))
-                    if (prefs.getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
-                        video.id?.toLongOrNull()?.let { id ->
-                            viewModel.saveVideoPosition(id, offset ?: 0)
-                        }
-                    }
-                    val fragment = ExoPlayerFragment()
-                    startPlayer(fragment)
-                } else {
-                    val fragment = Media3Fragment.newInstance(video, offset, ignoreSavedPosition)
-                    startPlayer(fragment)
-                }
-            }
+        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+            (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close()
+            val fragment = Media3Fragment.newInstance(video, offset, ignoreSavedPosition)
+            startPlayer(fragment)
+            return
         }
+        (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close(deleteStates = false)
+        viewModel.savePlaybackState(PlaybackState(
+            type = BasePlaybackService.VIDEO,
+            videoId = video.id,
+            channelId = video.channelId,
+            channelLogin = video.channelLogin,
+            channelName = video.channelName,
+            channelImage = video.channelImage,
+            gameId = video.gameId,
+            gameSlug = video.gameSlug,
+            gameName = video.gameName,
+            title = video.title,
+            thumbnail = video.thumbnail,
+            createdAt = video.createdAt,
+            durationSeconds = video.durationSeconds,
+            videoType = video.type,
+            videoAnimatedPreviewURL = video.animatedPreviewURL,
+            position = offset,
+        ))
+        val fragment = when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
+            C.MEDIA_PLAYER -> MediaPlayerFragment()
+            else -> ExoPlayerFragment()
+        }
+        startPlayer(fragment)
     }
 
     fun startClip(clip: Clip) {
-        when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
-            C.MEDIA_PLAYER -> {
-                val fragment = MediaPlayerFragment.newInstance(clip)
-                startPlayer(fragment)
-            }
-            else -> {
-                if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
-                    (playerFragment as? ExoPlayerFragment)?.close2()
-                    playerFragment = null
-                    viewModel.savePlaybackState(PlaybackState(
-                        type = BasePlaybackService.CLIP,
-                        videoId = clip.videoId,
-                        clipId = clip.id,
-                        channelId = clip.channelId,
-                        channelLogin = clip.channelLogin,
-                        channelName = clip.channelName,
-                        channelImage = clip.channelImage,
-                        gameId = clip.gameId,
-                        gameSlug = clip.gameSlug,
-                        gameName = clip.gameName,
-                        title = clip.title,
-                        thumbnail = clip.thumbnail,
-                        createdAt = clip.createdAt,
-                        durationSeconds = clip.durationSeconds,
-                        videoOffsetSeconds = clip.videoOffsetSeconds,
-                        videoAnimatedPreviewURL = clip.videoAnimatedPreviewURL,
-                    ))
-                    val fragment = ExoPlayerFragment()
-                    startPlayer(fragment)
-                } else {
-                    val fragment = Media3Fragment.newInstance(clip)
-                    startPlayer(fragment)
-                }
-            }
+        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+            (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close()
+            val fragment = Media3Fragment.newInstance(clip)
+            startPlayer(fragment)
+            return
         }
+        (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close(deleteStates = false)
+        viewModel.savePlaybackState(PlaybackState(
+            type = BasePlaybackService.CLIP,
+            videoId = clip.videoId,
+            clipId = clip.id,
+            channelId = clip.channelId,
+            channelLogin = clip.channelLogin,
+            channelName = clip.channelName,
+            channelImage = clip.channelImage,
+            gameId = clip.gameId,
+            gameSlug = clip.gameSlug,
+            gameName = clip.gameName,
+            title = clip.title,
+            thumbnail = clip.thumbnail,
+            createdAt = clip.createdAt,
+            durationSeconds = clip.durationSeconds,
+            videoOffsetSeconds = clip.videoOffsetSeconds,
+            videoAnimatedPreviewURL = clip.videoAnimatedPreviewURL,
+        ))
+        val fragment = when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
+            C.MEDIA_PLAYER -> MediaPlayerFragment()
+            else -> ExoPlayerFragment()
+        }
+        startPlayer(fragment)
     }
 
     fun startOfflineVideo(video: OfflineVideo) {
-        when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
-            C.MEDIA_PLAYER -> {
-                val fragment = MediaPlayerFragment.newInstance(video)
-                startPlayer(fragment)
-            }
-            else -> {
-                if (prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
-                    (playerFragment as? ExoPlayerFragment)?.close2()
-                    playerFragment = null
-                    viewModel.savePlaybackState(PlaybackState(
-                        type = BasePlaybackService.OFFLINE_VIDEO,
-                        offlineVideoId = video.id,
-                        channelId = video.channelId,
-                        channelLogin = video.channelLogin,
-                        channelName = video.channelName,
-                        channelImage = video.channelLogo,
-                        gameId = video.gameId,
-                        gameSlug = video.gameSlug,
-                        gameName = video.gameName,
-                        title = video.name,
-                    ))
-                    val fragment = ExoPlayerFragment().apply {
-                        arguments = Bundle().apply {
-                            putBoolean(PlayerFragment.KEY_OFFLINE, true)
-                        }
-                    }
-                    startPlayer(fragment)
-                } else {
-                    val fragment = Media3Fragment.newInstance(video)
-                    startPlayer(fragment)
-                }
+        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+            (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close()
+            val fragment = Media3Fragment.newInstance(video)
+            startPlayer(fragment)
+            return
+        }
+        (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close(deleteStates = false)
+        viewModel.savePlaybackState(PlaybackState(
+            type = BasePlaybackService.OFFLINE_VIDEO,
+            offlineVideoId = video.id,
+            channelId = video.channelId,
+            channelLogin = video.channelLogin,
+            channelName = video.channelName,
+            channelImage = video.channelLogo,
+            gameId = video.gameId,
+            gameSlug = video.gameSlug,
+            gameName = video.gameName,
+            title = video.name,
+        ))
+        val fragment = when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
+            C.MEDIA_PLAYER -> MediaPlayerFragment()
+            else -> ExoPlayerFragment()
+        }.apply {
+            arguments = Bundle().apply {
+                putBoolean(PlayerFragment.KEY_OFFLINE, true)
             }
         }
+        startPlayer(fragment)
     }
 
 //Player methods
 
     private fun startPlayer(fragment: Fragment) {
-        (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? PlayerFragment)?.close()
         playerFragment = fragment
         supportFragmentManager.beginTransaction()
             .replace(R.id.playerContainer, fragment).commit()

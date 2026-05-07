@@ -4,14 +4,11 @@ import android.net.Uri
 import android.net.http.HttpEngine
 import android.os.Build
 import android.os.ext.SdkExtensions
-import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.HttpDataSource
 import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.NotificationUser
 import com.github.andreyasadchy.xtra.model.ShownNotification
@@ -22,9 +19,6 @@ import com.github.andreyasadchy.xtra.model.ui.Game
 import com.github.andreyasadchy.xtra.model.ui.LocalChannelFollow
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.model.ui.User
-import com.github.andreyasadchy.xtra.player.lowlatency.CronetDataSource
-import com.github.andreyasadchy.xtra.player.lowlatency.HttpEngineDataSource
-import com.github.andreyasadchy.xtra.player.lowlatency.OkHttpDataSource
 import com.github.andreyasadchy.xtra.repository.BookmarksRepository
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
@@ -35,9 +29,7 @@ import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.body
-import com.github.andreyasadchy.xtra.util.NetworkUtils.code
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
-import com.github.andreyasadchy.xtra.util.NetworkUtils.request
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import kotlinx.coroutines.Dispatchers
@@ -50,18 +42,11 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.chromium.net.CronetEngine
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
-import java.net.InetSocketAddress
-import java.net.Proxy
-import java.net.ProxySelector
-import java.net.SocketAddress
-import java.net.URI
 import java.util.concurrent.ExecutorService
 
 class Media3PlayerViewModel(
@@ -114,69 +99,6 @@ class Media3PlayerViewModel(
     val isFollowing: StateFlow<Boolean?> = _isFollowing
     val follow = MutableStateFlow<Pair<Boolean, String?>?>(null)
 
-    @OptIn(UnstableApi::class)
-    fun getDataSourceFactory(networkLibrary: String?, proxyMultivariantPlaylist: Boolean = false, proxyMediaPlaylist: Boolean = false, proxyHost: String? = null, proxyPort: Int? = null, proxyUser: String? = null, proxyPassword: String? = null, useProxy: (() -> Boolean)? = { false }): HttpDataSource.Factory {
-        val multivariantPlaylistProxyClient = if (proxyMultivariantPlaylist && !proxyHost.isNullOrBlank() && proxyPort != null) {
-            okHttpClient.value.newBuilder().apply {
-                proxySelector(
-                    object : ProxySelector() {
-                        override fun select(u: URI): List<Proxy> {
-                            return if (Regex(ExoPlayerService.MULTIVARIANT_PLAYLIST_REGEX).matches(u.host)) {
-                                listOf(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)), Proxy.NO_PROXY)
-                            } else {
-                                listOf(Proxy.NO_PROXY)
-                            }
-                        }
-
-                        override fun connectFailed(u: URI, sa: SocketAddress, e: IOException) {}
-                    }
-                )
-                if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
-                    proxyAuthenticator { _, response ->
-                        response.request.newBuilder().header(
-                            "Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)
-                        ).build()
-                    }
-                }
-            }.build()
-        } else null
-        val mediaPlaylistProxyClient = if (proxyMediaPlaylist && !proxyHost.isNullOrBlank() && proxyPort != null) {
-            okHttpClient.value.newBuilder().apply {
-                proxySelector(
-                    object : ProxySelector() {
-                        override fun select(u: URI): List<Proxy> {
-                            return if (Regex(ExoPlayerService.MEDIA_PLAYLIST_REGEX).matches(u.host)) {
-                                listOf(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)), Proxy.NO_PROXY)
-                            } else {
-                                listOf(Proxy.NO_PROXY)
-                            }
-                        }
-
-                        override fun connectFailed(u: URI, sa: SocketAddress, e: IOException) {}
-                    }
-                )
-                if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
-                    proxyAuthenticator { _, response ->
-                        response.request.newBuilder().header(
-                            "Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)
-                        ).build()
-                    }
-                }
-            }.build()
-        } else null
-        return when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
-                HttpEngineDataSource.Factory(httpEngine.value, cronetExecutor.value, multivariantPlaylistProxyClient, mediaPlaylistProxyClient, useProxy)
-            }
-            networkLibrary == C.CRONET && cronetEngine.value != null -> {
-                CronetDataSource.Factory(cronetEngine.value, cronetExecutor.value, multivariantPlaylistProxyClient, mediaPlaylistProxyClient, useProxy)
-            }
-            else -> {
-                OkHttpDataSource.Factory(multivariantPlaylistProxyClient ?: okHttpClient.value, mediaPlaylistProxyClient, useProxy)
-            }
-        }
-    }
-
     suspend fun checkPlaylist(networkLibrary: String?, url: String): Boolean = withContext(Dispatchers.IO) {
         try {
             val playlist = when {
@@ -222,54 +144,6 @@ class Media3PlayerViewModel(
             } == true
         } catch (e: Exception) {
             false
-        }
-    }
-
-    suspend fun loadPlaylist(url: String, networkLibrary: String?, proxyMultivariantPlaylist: Boolean = false, proxyHost: String? = null, proxyPort: Int? = null, proxyUser: String? = null, proxyPassword: String? = null): Pair<String?, Int?>? = withContext(Dispatchers.IO) {
-        try {
-            val useProxy = !useCustomProxy && proxyMultivariantPlaylist && !proxyHost.isNullOrBlank() && proxyPort != null
-            when {
-                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null && !useProxy -> {
-                    val response = suspendCancellableCoroutine { continuation ->
-                        httpEngine.value!!.newUrlRequestBuilder(url, cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
-                    }
-                    if (response.first.httpStatusCode in 200..299) {
-                        String(response.second) to null
-                    } else {
-                        null to response.first.httpStatusCode
-                    }
-                }
-                networkLibrary == C.CRONET && cronetEngine.value != null && !useProxy -> {
-                    val response = suspendCancellableCoroutine { continuation ->
-                        cronetEngine.value!!.newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).build().start()
-                    }
-                    if (response.first.httpStatusCode in 200..299) {
-                        String(response.second) to null
-                    } else {
-                        null to response.first.httpStatusCode
-                    }
-                }
-                else -> {
-                    okHttpClient.value.newBuilder().apply {
-                        if (useProxy) {
-                            proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
-                            if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
-                                proxyAuthenticator { _, response ->
-                                    response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
-                                }
-                            }
-                        }
-                    }.build().newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
-                        if (response.isSuccessful) {
-                            response.body.string() to null
-                        } else {
-                            null to response.code
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            null
         }
     }
 
