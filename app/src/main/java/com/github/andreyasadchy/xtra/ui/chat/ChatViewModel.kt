@@ -952,6 +952,11 @@ class ChatViewModel @Inject constructor(
                     onRewardMessage(chatMessage, networkLibrary, isLoggedIn, accountId, channelId)
                 } else {
                     onChatMessage(chatMessage, networkLibrary, isLoggedIn, accountId, channelId)
+                    if (chatMessage.msgId == "unraid") {
+                        if (!hideRaid.value) {
+                            hideRaid.value = true
+                        }
+                    }
                 }
             }
         }
@@ -979,15 +984,7 @@ class ChatViewModel @Inject constructor(
 
         override suspend fun onNotice(message: String) {
             if (!isLoggedIn) {
-                val result = ChatUtils.parseNotice(applicationContext, message)
-                val chatMessage = result.first
-                val messageId = result.second
-                onMessage(chatMessage)
-                if (messageId == "unraid") {
-                    if (!hideRaid.value) {
-                        hideRaid.value = true
-                    }
-                }
+                onMessage(ChatUtils.parseNotice(applicationContext, message))
             }
         }
 
@@ -1014,15 +1011,7 @@ class ChatViewModel @Inject constructor(
         }
 
         override suspend fun onNotice(message: String) {
-            val result = ChatUtils.parseNotice(applicationContext, message)
-            val chatMessage = result.first
-            val messageId = result.second
-            onMessage(chatMessage)
-            if (messageId == "unraid") {
-                if (!hideRaid.value) {
-                    hideRaid.value = true
-                }
-            }
+            onMessage(ChatUtils.parseNotice(applicationContext, message))
         }
 
         override suspend fun onUserState(message: String) {
