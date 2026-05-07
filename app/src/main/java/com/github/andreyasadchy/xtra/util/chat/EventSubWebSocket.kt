@@ -12,7 +12,7 @@ import javax.net.ssl.X509TrustManager
 import kotlin.concurrent.schedule
 
 class EventSubWebSocket(
-    private val trustManager: X509TrustManager?,
+    private val trustManager: Lazy<X509TrustManager>,
     private val listener: Listener,
 ) {
     private var webSocket: WebSocket? = null

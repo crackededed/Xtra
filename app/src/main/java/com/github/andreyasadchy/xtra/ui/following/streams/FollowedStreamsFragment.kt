@@ -23,19 +23,18 @@ import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.common.StreamsAdapter
 import com.github.andreyasadchy.xtra.ui.common.StreamsCompactAdapter
+import com.github.andreyasadchy.xtra.ui.following.streams.FollowedStreamsViewModel.Companion.FollowedStreamsViewModelFactory
 import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class FollowedStreamsFragment : PagedListFragment(), Scrollable {
 
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: FollowedStreamsViewModel by viewModels()
+    private val viewModel: FollowedStreamsViewModel by viewModels { FollowedStreamsViewModelFactory }
     private lateinit var pagingAdapter: PagingDataAdapter<Stream, out RecyclerView.ViewHolder>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

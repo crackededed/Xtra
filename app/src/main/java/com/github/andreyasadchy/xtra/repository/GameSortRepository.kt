@@ -4,11 +4,8 @@ import com.github.andreyasadchy.xtra.db.GameSortDao
 import com.github.andreyasadchy.xtra.model.ui.GameSort
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class GameSortRepository @Inject constructor(
+class GameSortRepository(
     private val gameSortDao: GameSortDao,
 ) {
 

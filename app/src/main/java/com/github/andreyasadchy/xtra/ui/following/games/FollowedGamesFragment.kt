@@ -21,17 +21,16 @@ import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
 import com.github.andreyasadchy.xtra.model.ui.Game
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
+import com.github.andreyasadchy.xtra.ui.following.games.FollowedGamesViewModel.Companion.FollowedGamesViewModelFactory
 import com.github.andreyasadchy.xtra.ui.games.GamesFragmentDirections
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class FollowedGamesFragment : PagedListFragment(), Scrollable {
 
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: FollowedGamesViewModel by viewModels()
+    private val viewModel: FollowedGamesViewModel by viewModels { FollowedGamesViewModelFactory }
     private lateinit var pagingAdapter: PagingDataAdapter<Game, out RecyclerView.ViewHolder>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

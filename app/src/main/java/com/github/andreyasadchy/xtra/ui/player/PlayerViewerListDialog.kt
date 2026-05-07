@@ -16,17 +16,15 @@ import com.github.andreyasadchy.xtra.databinding.FragmentViewerListBinding
 import com.github.andreyasadchy.xtra.model.ui.ChannelViewerList
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
+import com.github.andreyasadchy.xtra.ui.player.PlayerViewerListViewModel.Companion.PlayerViewerListViewModelFactory
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-
-@AndroidEntryPoint
 class PlayerViewerListDialog : BottomSheetDialogFragment(), IntegrityDialog.Listener {
 
     companion object {
@@ -44,7 +42,7 @@ class PlayerViewerListDialog : BottomSheetDialogFragment(), IntegrityDialog.List
 
     private var _binding: FragmentViewerListBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: PlayerViewerListViewModel by viewModels()
+    private val viewModel: PlayerViewerListViewModel by viewModels { PlayerViewerListViewModelFactory }
 
     private val moderatorsListItems = mutableListOf<String>()
     private var moderatorsListOffset = 0

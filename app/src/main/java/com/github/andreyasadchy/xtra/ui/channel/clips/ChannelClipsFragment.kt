@@ -23,6 +23,7 @@ import com.github.andreyasadchy.xtra.databinding.SortBarBinding
 import com.github.andreyasadchy.xtra.model.ui.ChannelSort
 import com.github.andreyasadchy.xtra.model.ui.Clip
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentArgs
+import com.github.andreyasadchy.xtra.ui.channel.clips.ChannelClipsViewModel.Companion.ChannelClipsViewModelFactory
 import com.github.andreyasadchy.xtra.ui.common.ClipsAdapter
 import com.github.andreyasadchy.xtra.ui.common.FragmentHost
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
@@ -31,17 +32,15 @@ import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.common.Sortable
 import com.github.andreyasadchy.xtra.ui.common.VideosSortDialog
 import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortDialog.OnFilter {
 
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
     private val args: ChannelPagerFragmentArgs by navArgs()
-    private val viewModel: ChannelClipsViewModel by viewModels()
+    private val viewModel: ChannelClipsViewModel by viewModels { ChannelClipsViewModelFactory }
     private lateinit var pagingAdapter: PagingDataAdapter<Clip, out RecyclerView.ViewHolder>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

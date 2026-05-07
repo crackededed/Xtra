@@ -2,10 +2,14 @@ package com.github.andreyasadchy.xtra.ui.games
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
+import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
@@ -13,16 +17,12 @@ import com.github.andreyasadchy.xtra.repository.datasource.GamesDataSource
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
-import javax.inject.Inject
 
-@HiltViewModel
-class GamesViewModel @Inject constructor(
-    @ApplicationContext applicationContext: Context,
+class GamesViewModel(
+    applicationContext: Context,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
 ) : ViewModel() {
@@ -34,7 +34,7 @@ class GamesViewModel @Inject constructor(
         get() = filter.value?.tags ?: emptyArray()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val flow = filter.flatMapLatest { filter ->
+    val flow = filter.flatMapLatest {
         Pager(
             PagingConfig(pageSize = 30, prefetchDistance = 10, initialLoadSize = 30)
         ) {
@@ -57,4 +57,14 @@ class GamesViewModel @Inject constructor(
     class Filter(
         val tags: Array<Tag>?,
     )
+
+    companion object {
+        val GamesViewModelFactory = viewModelFactory {
+            initializer {
+                val application = (this[APPLICATION_KEY] as XtraApp)
+                val xtraModule = application.xtraModule
+                GamesViewModel(application.applicationContext, xtraModule.graphQLRepository, xtraModule.helixRepository)
+            }
+        }
+    }
 }

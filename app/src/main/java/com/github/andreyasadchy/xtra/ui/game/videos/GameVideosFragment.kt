@@ -31,20 +31,19 @@ import com.github.andreyasadchy.xtra.ui.common.VideosAdapter
 import com.github.andreyasadchy.xtra.ui.common.VideosSortDialog
 import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentArgs
+import com.github.andreyasadchy.xtra.ui.game.videos.GameVideosViewModel.Companion.GameVideosViewModelFactory
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class GameVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSortDialog.OnFilter {
 
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
     private val args: GamePagerFragmentArgs by navArgs()
-    private val viewModel: GameVideosViewModel by viewModels()
+    private val viewModel: GameVideosViewModel by viewModels { GameVideosViewModelFactory }
     private lateinit var pagingAdapter: PagingDataAdapter<Video, out RecyclerView.ViewHolder>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

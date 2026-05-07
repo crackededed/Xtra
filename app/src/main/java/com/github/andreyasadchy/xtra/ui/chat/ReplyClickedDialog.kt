@@ -19,9 +19,7 @@ import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
 class ReplyClickedDialog : BottomSheetDialogFragment() {
 
     interface OnButtonClickListener {

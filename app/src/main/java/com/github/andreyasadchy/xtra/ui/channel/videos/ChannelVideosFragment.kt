@@ -23,6 +23,7 @@ import com.github.andreyasadchy.xtra.databinding.SortBarBinding
 import com.github.andreyasadchy.xtra.model.ui.ChannelSort
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentArgs
+import com.github.andreyasadchy.xtra.ui.channel.videos.ChannelVideosViewModel.Companion.ChannelVideosViewModelFactory
 import com.github.andreyasadchy.xtra.ui.common.FragmentHost
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
@@ -34,17 +35,15 @@ import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class ChannelVideosFragment : PagedListFragment(), Scrollable, Sortable, VideosSortDialog.OnFilter {
 
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
     private val args: ChannelPagerFragmentArgs by navArgs()
-    private val viewModel: ChannelVideosViewModel by viewModels()
+    private val viewModel: ChannelVideosViewModel by viewModels { ChannelVideosViewModelFactory }
     private lateinit var pagingAdapter: PagingDataAdapter<Video, out RecyclerView.ViewHolder>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

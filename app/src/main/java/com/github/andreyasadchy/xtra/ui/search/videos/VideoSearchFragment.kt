@@ -26,19 +26,18 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.search.RecentSearchAdapter
 import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragment
 import com.github.andreyasadchy.xtra.ui.search.Searchable
+import com.github.andreyasadchy.xtra.ui.search.videos.VideoSearchViewModel.Companion.VideoSearchViewModelFactory
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class VideoSearchFragment : PagedListFragment(), Searchable {
 
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: VideoSearchViewModel by viewModels()
+    private val viewModel: VideoSearchViewModel by viewModels { VideoSearchViewModelFactory }
     private lateinit var pagingAdapter: PagingDataAdapter<Video, out RecyclerView.ViewHolder>
     private var recentSearchAdapter = RecentSearchAdapter({ (parentFragment as? SearchPagerFragment)?.setQuery(it.query) }, { viewModel.deleteRecentSearch(it) })
 

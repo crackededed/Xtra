@@ -16,14 +16,13 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.databinding.DialogSearchTagsBinding
 import com.github.andreyasadchy.xtra.model.ui.Tag
+import com.github.andreyasadchy.xtra.ui.common.SearchTagsViewModel.Companion.SearchTagsViewModelFactory
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class SearchTagsDialog : DialogFragment() {
 
     interface OnTagSelectedListener {
@@ -44,7 +43,7 @@ class SearchTagsDialog : DialogFragment() {
 
     private var _binding: DialogSearchTagsBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: SearchTagsViewModel by viewModels()
+    private val viewModel: SearchTagsViewModel by viewModels { SearchTagsViewModelFactory }
     private lateinit var pagingAdapter: PagingDataAdapter<Tag, out RecyclerView.ViewHolder>
     private var listener: OnTagSelectedListener? = null
 

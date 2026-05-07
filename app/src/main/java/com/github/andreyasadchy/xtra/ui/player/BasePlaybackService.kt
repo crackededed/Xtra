@@ -2,55 +2,24 @@ package com.github.andreyasadchy.xtra.ui.player
 
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.net.http.HttpEngine
 import androidx.annotation.OptIn
 import androidx.lifecycle.LifecycleService
 import androidx.media3.common.util.UnstableApi
+import com.github.andreyasadchy.xtra.XtraModule
 import com.github.andreyasadchy.xtra.model.PlaybackState
 import com.github.andreyasadchy.xtra.model.VideoQuality
-import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
-import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
-import dagger.Lazy
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
-import okhttp3.OkHttpClient
-import org.chromium.net.CronetEngine
-import java.util.concurrent.ExecutorService
-import javax.inject.Inject
 
 @OptIn(UnstableApi::class)
-@AndroidEntryPoint
 abstract class BasePlaybackService : LifecycleService() {
 
-    @Inject
-    @JvmField
-    var httpEngine: Lazy<HttpEngine>? = null
-
-    @Inject
-    @JvmField
-    var cronetEngine: Lazy<CronetEngine>? = null
-
-    @Inject
-    lateinit var cronetExecutor: ExecutorService
-
-    @Inject
-    lateinit var okHttpClient: OkHttpClient
-
-    @Inject
-    lateinit var json: Json
-
-    @Inject
-    lateinit var playerRepository: PlayerRepository
-
-    @Inject
-    lateinit var offlineVideosRepository: OfflineVideosRepository
+    lateinit var xtraModule: XtraModule
 
     val integrity = MutableSharedFlow<String?>()
 
@@ -101,7 +70,7 @@ abstract class BasePlaybackService : LifecycleService() {
     open fun retry(item: String) {}
 
     protected suspend fun restorePlaybackState() {
-        val savedState = playerRepository.getPlaybackStates().firstOrNull()
+        val savedState = xtraModule.playerRepository.getPlaybackStates().firstOrNull()
         if (savedState != null) {
             type = savedState.type
             streamId = savedState.streamId
@@ -126,12 +95,12 @@ abstract class BasePlaybackService : LifecycleService() {
             savedPosition = savedState.position
             paused = savedState.paused
             qualities = savedState.qualities?.let { qualities ->
-                json.decodeFromString<JsonArray>(qualities).map {
-                    json.decodeFromJsonElement<VideoQuality>(it)
+                xtraModule.json.decodeFromString<JsonArray>(qualities).map {
+                    xtraModule.json.decodeFromJsonElement<VideoQuality>(it)
                 }
             }
-            quality = savedState.quality?.let { json.decodeFromString(it) }
-            previousQuality = savedState.previousQuality?.let { json.decodeFromString(it) }
+            quality = savedState.quality?.let { xtraModule.json.decodeFromString(it) }
+            previousQuality = savedState.previousQuality?.let { xtraModule.json.decodeFromString(it) }
             restoreQuality = savedState.restoreQuality
             playlistUrl = savedState.playlistUrl
             restorePlaylist = savedState.restorePlaylist
@@ -167,19 +136,19 @@ abstract class BasePlaybackService : LifecycleService() {
             qualities = qualities?.let { qualities ->
                 buildJsonArray {
                     qualities.forEach {
-                        add(json.encodeToJsonElement(it))
+                        add(xtraModule.json.encodeToJsonElement(it))
                     }
                 }.toString()
             },
-            quality = quality?.let { json.encodeToString(it) },
-            previousQuality = previousQuality?.let { json.encodeToString(it) },
+            quality = quality?.let { xtraModule.json.encodeToString(it) },
+            previousQuality = previousQuality?.let { xtraModule.json.encodeToString(it) },
             restoreQuality = restoreQuality,
             playlistUrl = playlistUrl,
             restorePlaylist = restorePlaylist,
             useCustomProxy = useCustomProxy,
             skipAccessToken = skipAccessToken,
         )
-        playerRepository.savePlaybackStates(listOf(item))
+        xtraModule.playerRepository.savePlaybackStates(listOf(item))
     }
 
     protected fun setDefaultQuality() {

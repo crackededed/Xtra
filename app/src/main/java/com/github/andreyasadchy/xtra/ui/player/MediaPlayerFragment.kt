@@ -32,14 +32,12 @@ import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONException
 
 @OptIn(UnstableApi::class)
-@AndroidEntryPoint
 class MediaPlayerFragment : Media3PlayerFragment() {
 
     private var playbackService: MediaPlayerService? = null

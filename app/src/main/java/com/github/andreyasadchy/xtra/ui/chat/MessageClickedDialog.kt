@@ -29,6 +29,7 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.DialogChatMessageClickBinding
 import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.ui.User
+import com.github.andreyasadchy.xtra.ui.chat.MessageClickedViewModel.Companion.MessageClickedViewModelFactory
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
@@ -36,11 +37,9 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listener {
 
     interface OnButtonClickListener {
@@ -69,7 +68,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listen
 
     private var _binding: DialogChatMessageClickBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: MessageClickedViewModel by viewModels()
+    private val viewModel: MessageClickedViewModel by viewModels { MessageClickedViewModelFactory }
 
     private lateinit var listener: OnButtonClickListener
     var adapter: MessageClickedChatAdapter? = null

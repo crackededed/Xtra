@@ -40,6 +40,7 @@ import com.github.andreyasadchy.xtra.ui.login.LoginActivity
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.settings.SettingsActivity
+import com.github.andreyasadchy.xtra.ui.team.TeamViewModel.Companion.TeamViewModelFactory
 import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
@@ -47,20 +48,18 @@ import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.google.android.material.color.MaterialColors
-import dagger.hilt.android.AndroidEntryPoint
 import io.noties.markwon.Markwon
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import io.noties.markwon.linkify.LinkifyPlugin
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.Listener {
 
     private var _binding: FragmentTeamBinding? = null
     private val binding get() = _binding!!
     private val args: TeamFragmentArgs by navArgs()
-    private val viewModel: TeamViewModel by viewModels()
+    private val viewModel: TeamViewModel by viewModels { TeamViewModelFactory }
     private lateinit var pagingAdapter: PagingDataAdapter<Stream, out RecyclerView.ViewHolder>
 
     override fun onCreate(savedInstanceState: Bundle?) {

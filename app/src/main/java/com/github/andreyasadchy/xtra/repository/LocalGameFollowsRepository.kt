@@ -5,11 +5,8 @@ import com.github.andreyasadchy.xtra.model.ui.LocalGameFollow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class LocalGameFollowsRepository @Inject constructor(
+class LocalGameFollowsRepository(
     private val localGameFollowsDao: LocalGameFollowsDao,
 ) {
 

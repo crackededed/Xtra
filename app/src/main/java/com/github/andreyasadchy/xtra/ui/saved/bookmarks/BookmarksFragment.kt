@@ -28,11 +28,11 @@ import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.common.Sortable
 import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
+import com.github.andreyasadchy.xtra.ui.saved.bookmarks.BookmarksViewModel.Companion.BookmarksViewModelFactory
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.time.Duration
@@ -40,12 +40,11 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Calendar
 
-@AndroidEntryPoint
 class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, BookmarksSortDialog.OnFilter, IntegrityDialog.Listener {
 
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: BookmarksViewModel by viewModels()
+    private val viewModel: BookmarksViewModel by viewModels { BookmarksViewModelFactory }
     private lateinit var adapter: ListAdapter<Bookmark, out RecyclerView.ViewHolder>
     override var enableNetworkCheck = false
 
