@@ -116,6 +116,15 @@ class ExoPlayerService : BasePlaybackService() {
     private var updateQualities = false
     private var created = false
 
+    interface Listener {
+        fun started()
+        fun loaded()
+        fun changePlayerMode()
+        fun toast(resId: Int, duration: Int)
+    }
+
+    var serviceListener: Listener? = null
+
     override fun onCreate() {
         super.onCreate()
         xtraModule = (application as XtraApp).xtraModule
@@ -912,7 +921,7 @@ class ExoPlayerService : BasePlaybackService() {
         }
     }
 
-    override fun retry(item: String) {
+    fun retry(item: String) {
         when (item) {
             "refreshStream" -> {
                 lifecycleScope.launch {

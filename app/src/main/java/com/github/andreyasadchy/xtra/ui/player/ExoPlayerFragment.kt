@@ -28,7 +28,6 @@ import androidx.media3.common.VideoSize
 import androidx.media3.common.text.CueGroup
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.hls.HlsManifest
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.model.VideoQuality
@@ -40,9 +39,8 @@ import com.github.andreyasadchy.xtra.util.prefs
 @OptIn(UnstableApi::class)
 class ExoPlayerFragment : PlayerFragment() {
 
+    override var playbackService: ExoPlayerService? = null
     private var serviceConnection: ServiceConnection? = null
-    private val player: ExoPlayer?
-        get() = (playbackService as? ExoPlayerService)?.player
     private var playerListener: Player.Listener? = null
     private val updateProgressAction = Runnable { if (view != null) updateProgress() }
 
@@ -51,7 +49,7 @@ class ExoPlayerFragment : PlayerFragment() {
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 binding.bufferingIndicator.isVisible = playbackState == Player.STATE_BUFFERING
-                val showPlayButton = Util.shouldShowPlayButton(player)
+                val showPlayButton = Util.shouldShowPlayButton(playbackService?.player)
                 if (showPlayButton) {
                     binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
                     binding.playerControls.playPause.visibility = View.VISIBLE
@@ -70,8 +68,8 @@ class ExoPlayerFragment : PlayerFragment() {
             }
 
             override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-                binding.bufferingIndicator.isVisible = player?.playbackState == Player.STATE_BUFFERING
-                val showPlayButton = Util.shouldShowPlayButton(player)
+                binding.bufferingIndicator.isVisible = playbackService?.player?.playbackState == Player.STATE_BUFFERING
+                val showPlayButton = Util.shouldShowPlayButton(playbackService?.player)
                 if (showPlayButton) {
                     binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
                     binding.playerControls.playPause.visibility = View.VISIBLE
@@ -90,7 +88,7 @@ class ExoPlayerFragment : PlayerFragment() {
             }
 
             override fun onAvailableCommandsChanged(availableCommands: Player.Commands) {
-                if (Util.shouldShowPlayButton(player)) {
+                if (Util.shouldShowPlayButton(playbackService?.player)) {
                     binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
                     binding.playerControls.playPause.visibility = View.VISIBLE
                 } else {
@@ -99,14 +97,14 @@ class ExoPlayerFragment : PlayerFragment() {
                         binding.playerControls.playPause.visibility = View.GONE
                     }
                 }
-                val duration = player?.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0
+                val duration = playbackService?.player?.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0
                 binding.playerControls.progressBar.setDuration(duration)
                 binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
                 updateProgress()
             }
 
             override fun onVideoSizeChanged(videoSize: VideoSize) {
-                if (videoSize != VideoSize.UNKNOWN && player?.let { it.playbackState != Player.STATE_IDLE } == true) {
+                if (videoSize != VideoSize.UNKNOWN && playbackService?.player?.let { it.playbackState != Player.STATE_IDLE } == true) {
                     val aspectRatio = (videoSize.width * videoSize.pixelWidthHeightRatio) / videoSize.height
                     binding.aspectRatioFrameLayout.setAspectRatio(aspectRatio)
                 }
@@ -117,7 +115,7 @@ class ExoPlayerFragment : PlayerFragment() {
             }
 
             override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) {
-                val duration = player?.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0
+                val duration = playbackService?.player?.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0
                 binding.playerControls.progressBar.setDuration(duration)
                 binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
                 updateProgress()
@@ -147,7 +145,7 @@ class ExoPlayerFragment : PlayerFragment() {
             }
 
             override fun onTimelineChanged(timeline: Timeline, reason: Int) {
-                val duration = player?.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0
+                val duration = playbackService?.player?.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0
                 binding.playerControls.progressBar.setDuration(duration)
                 binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
                 updateProgress()
@@ -161,7 +159,7 @@ class ExoPlayerFragment : PlayerFragment() {
                 }
             }
         }
-        val serviceListener = object : BasePlaybackService.Listener {
+        val serviceListener = object : ExoPlayerService.Listener {
             override fun started() {
                 if (view != null) {
                     if (!started && (isInitialized || !enableNetworkCheck)) {
@@ -203,10 +201,10 @@ class ExoPlayerFragment : PlayerFragment() {
                     val binder = service as ExoPlayerService.ServiceBinder
                     playbackService = binder.getService()
                     playbackService?.serviceListener = serviceListener
-                    player?.setVideoSurfaceView(binding.playerSurface)
-                    player?.addListener(listener)
+                    playbackService?.player?.setVideoSurfaceView(binding.playerSurface)
+                    playbackService?.player?.addListener(listener)
                     playerListener = listener
-                    val endTime = (playbackService as? ExoPlayerService)?.setSleepTimer(-1)
+                    val endTime = playbackService?.setSleepTimer(-1)
                     if (endTime != null && endTime > 0L) {
                         val duration = endTime - System.currentTimeMillis()
                         if (duration > 0L) {
@@ -217,7 +215,7 @@ class ExoPlayerFragment : PlayerFragment() {
                             (activity as? MainActivity)?.closePlayer()
                         }
                     }
-                    player?.let { player ->
+                    playbackService?.player?.let { player ->
                         if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
                             requireView().keepScreenOn = player.isPlaying
                         }
@@ -245,9 +243,8 @@ class ExoPlayerFragment : PlayerFragment() {
                                 changeQuality(playbackService?.previousQuality)
                             }
                         }
-
                     }
-                    player?.let { player ->
+                    playbackService?.player?.let { player ->
                         setPipActions(player.playbackState != Player.STATE_ENDED && player.playbackState != Player.STATE_IDLE && player.playWhenReady)
                     }
                 }
@@ -265,51 +262,51 @@ class ExoPlayerFragment : PlayerFragment() {
         serviceConnection = connection
     }
 
-    override fun getCurrentPosition() = player?.currentPosition
+    override fun getCurrentPosition() = playbackService?.player?.currentPosition
 
-    override fun getCurrentSpeed() = player?.playbackParameters?.speed
+    override fun getCurrentSpeed() = playbackService?.player?.playbackParameters?.speed
 
-    override fun getCurrentVolume() = player?.volume
+    override fun getCurrentVolume() = playbackService?.player?.volume
 
-    override fun getTotalDuration() = (player?.currentManifest as? HlsManifest)?.mediaPlaylist?.durationUs?.div(1000)
+    override fun getTotalDuration() = (playbackService?.player?.currentManifest as? HlsManifest)?.mediaPlaylist?.durationUs?.div(1000)
 
     override fun playPause() {
-        Util.handlePlayPauseButtonAction(player)
+        Util.handlePlayPauseButtonAction(playbackService?.player)
     }
 
     override fun rewind() {
-        player?.seekBack()
+        playbackService?.player?.seekBack()
     }
 
     override fun fastForward() {
-        player?.seekForward()
+        playbackService?.player?.seekForward()
     }
 
     override fun seek(position: Long) {
-        player?.seekTo(position)
+        playbackService?.player?.seekTo(position)
     }
 
     override fun seekToLivePosition() {
-        player?.seekToDefaultPosition()
+        playbackService?.player?.seekToDefaultPosition()
     }
 
     override fun setPlaybackSpeed(speed: Float) {
-        player?.setPlaybackSpeed(speed)
+        playbackService?.player?.setPlaybackSpeed(speed)
     }
 
     override fun changeVolume(volume: Float) {
-        player?.volume = volume
+        playbackService?.player?.volume = volume
     }
 
     override fun updateProgress() {
         with(binding.playerControls) {
             if (root.isVisible && !progressBar.isPressed) {
-                val currentPosition = player?.currentPosition ?: 0
+                val currentPosition = playbackService?.player?.currentPosition ?: 0
                 position.text = DateUtils.formatElapsedTime(currentPosition / 1000)
                 progressBar.setPosition(currentPosition)
-                progressBar.setBufferedPosition(player?.bufferedPosition ?: 0)
+                progressBar.setBufferedPosition(playbackService?.player?.bufferedPosition ?: 0)
                 root.removeCallbacks(updateProgressAction)
-                player?.let { player ->
+                playbackService?.player?.let { player ->
                     if (player.isPlaying) {
                         val speed = player.playbackParameters.speed
                         val delay = if (speed > 0f) {
@@ -325,11 +322,11 @@ class ExoPlayerFragment : PlayerFragment() {
     }
 
     override fun restartPlayer() {
-        (playbackService as? ExoPlayerService)?.restartPlayer()
+        playbackService?.restartPlayer()
     }
 
     override fun toggleAudioCompressor() {
-        val enabled = (playbackService as? ExoPlayerService)?.toggleDynamicsProcessing()
+        val enabled = playbackService?.toggleDynamicsProcessing()
         if (enabled == true) {
             binding.playerControls.audioCompressor.setImageResource(R.drawable.baseline_audio_compressor_on_24dp)
         } else {
@@ -339,7 +336,7 @@ class ExoPlayerFragment : PlayerFragment() {
 
     override fun setSubtitlesButton() {
         with(binding.playerControls) {
-            val textTracks = player?.currentTracks?.groups?.find { it.type == androidx.media3.common.C.TRACK_TYPE_TEXT }
+            val textTracks = playbackService?.player?.currentTracks?.groups?.find { it.type == androidx.media3.common.C.TRACK_TYPE_TEXT }
             if (textTracks != null && requireContext().prefs().getBoolean(C.PLAYER_SUBTITLES, false)) {
                 subtitles.visibility = View.VISIBLE
                 if (textTracks.isSelected) {
@@ -363,14 +360,14 @@ class ExoPlayerFragment : PlayerFragment() {
     }
 
     override fun toggleSubtitles(enabled: Boolean) {
-        (playbackService as? ExoPlayerService)?.toggleSubtitles(enabled)
+        playbackService?.toggleSubtitles(enabled)
     }
 
     override fun showPlaylistTags(mediaPlaylist: Boolean) {
         val tags = if (mediaPlaylist) {
-            (player?.currentManifest as? HlsManifest)?.mediaPlaylist?.tags?.toTypedArray()
+            (playbackService?.player?.currentManifest as? HlsManifest)?.mediaPlaylist?.tags?.toTypedArray()
         } else {
-            (player?.currentManifest as? HlsManifest)?.multivariantPlaylist?.tags?.toTypedArray()
+            (playbackService?.player?.currentManifest as? HlsManifest)?.multivariantPlaylist?.tags?.toTypedArray()
         }?.joinToString("\n")
         if (!tags.isNullOrBlank()) {
             requireContext().getAlertDialogBuilder().apply {
@@ -393,15 +390,15 @@ class ExoPlayerFragment : PlayerFragment() {
     }
 
     override fun changeQuality(selectedQuality: VideoQuality?) {
-        (playbackService as? ExoPlayerService)?.changeQuality(selectedQuality)
+        playbackService?.changeQuality(selectedQuality)
     }
 
     override fun startAudioOnly() {
         if (playbackService != null) {
-            (playbackService as? ExoPlayerService)?.startAudioOnly()
-            (playbackService as? ExoPlayerService)?.setSleepTimer((activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
+            playbackService?.startAudioOnly()
+            playbackService?.setSleepTimer((activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
         }
-        playerListener?.let { player?.removeListener(it) }
+        playerListener?.let { playbackService?.player?.removeListener(it) }
         playerListener = null
         playbackService?.serviceListener = null
         serviceConnection?.let { requireContext().unbindService(it) }
@@ -409,11 +406,13 @@ class ExoPlayerFragment : PlayerFragment() {
         playbackService = null
     }
 
-    override fun close() {
-        player?.pause()
-        player?.stop()
-        viewModel.deletePlaybackStates()
-        playerListener?.let { player?.removeListener(it) }
+    override fun close(deleteStates: Boolean) {
+        playbackService?.player?.pause()
+        playbackService?.player?.stop()
+        if (deleteStates) {
+            viewModel.deletePlaybackStates()
+        }
+        playerListener?.let { playbackService?.player?.removeListener(it) }
         playerListener = null
         playbackService?.serviceListener = null
         serviceConnection?.let { requireContext().unbindService(it) }
@@ -422,16 +421,8 @@ class ExoPlayerFragment : PlayerFragment() {
         playbackService = null
     }
 
-    fun close2() {
-        player?.pause()
-        player?.stop()
-        playerListener?.let { player?.removeListener(it) }
-        playerListener = null
-        playbackService?.serviceListener = null
-        serviceConnection?.let { requireContext().unbindService(it) }
-        serviceConnection = null
-        playbackService?.stopSelf()
-        playbackService = null
+    override fun retry(item: String) {
+        playbackService?.retry(item)
     }
 
     override fun onStop() {
@@ -442,11 +433,11 @@ class ExoPlayerFragment : PlayerFragment() {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> !useController && isMaximized
                 else -> false
             }
-            (playbackService as? ExoPlayerService)?.stop(isInPIPMode)
-            (playbackService as? ExoPlayerService)?.setSleepTimer((activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
+            playbackService?.stop(isInPIPMode)
+            playbackService?.setSleepTimer((activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
         }
         binding.playerControls.root.removeCallbacks(updateProgressAction)
-        playerListener?.let { player?.removeListener(it) }
+        playerListener?.let { playbackService?.player?.removeListener(it) }
         playerListener = null
         playbackService?.serviceListener = null
         serviceConnection?.let { requireContext().unbindService(it) }
@@ -458,14 +449,14 @@ class ExoPlayerFragment : PlayerFragment() {
             if (playbackService?.type == BasePlaybackService.STREAM) {
                 restartPlayer()
             } else {
-                player?.prepare()
+                playbackService?.player?.prepare()
             }
         }
     }
 
     override fun onNetworkLost() {
         if (playbackService?.type != BasePlaybackService.STREAM && isResumed) {
-            player?.stop()
+            playbackService?.player?.stop()
         }
     }
 }
