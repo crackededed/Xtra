@@ -2,9 +2,7 @@ package com.github.andreyasadchy.xtra.ui.player
 
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import androidx.annotation.OptIn
 import androidx.lifecycle.LifecycleService
-import androidx.media3.common.util.UnstableApi
 import com.github.andreyasadchy.xtra.XtraModule
 import com.github.andreyasadchy.xtra.model.PlaybackState
 import com.github.andreyasadchy.xtra.model.VideoQuality
@@ -16,7 +14,6 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 
-@OptIn(UnstableApi::class)
 abstract class BasePlaybackService : LifecycleService() {
 
     lateinit var xtraModule: XtraModule
@@ -58,19 +55,9 @@ abstract class BasePlaybackService : LifecycleService() {
     var started = false
     var loaded = false
 
-    interface Listener {
-        fun started()
-        fun loaded()
-        fun changePlayerMode()
-        fun toast(resId: Int, duration: Int)
-    }
-
-    var serviceListener: Listener? = null
-
-    open fun retry(item: String) {}
-
     protected suspend fun restorePlaybackState() {
         val savedState = xtraModule.playerRepository.getPlaybackStates().firstOrNull()
+        xtraModule.playerRepository.deletePlaybackStates()
         if (savedState != null) {
             type = savedState.type
             streamId = savedState.streamId
