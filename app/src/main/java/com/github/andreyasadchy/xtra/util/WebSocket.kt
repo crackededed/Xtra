@@ -34,7 +34,7 @@ import kotlin.random.Random
 
 class WebSocket(
     private val url: String,
-    private val trustManager: X509TrustManager?,
+    private val trustManager: Lazy<X509TrustManager>,
     private val listener: Listener,
     private val headers: Map<String, String>? = null,
     private val sendPings: Boolean = false,
@@ -98,7 +98,7 @@ class WebSocket(
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> SSLContext.getDefault().socketFactory
             else -> {
                 val sslContext = SSLContext.getInstance("TLSv1.3")
-                sslContext.init(null, arrayOf(trustManager), null)
+                sslContext.init(null, arrayOf(trustManager.value), null)
                 sslContext.socketFactory
             }
         }

@@ -8,31 +8,27 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.github.andreyasadchy.xtra.R
-import com.github.andreyasadchy.xtra.repository.NotificationsRepository
+import com.github.andreyasadchy.xtra.XtraApp
+import com.github.andreyasadchy.xtra.XtraModule
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
-import javax.inject.Inject
 
-@HiltWorker
-class LiveNotificationWorker @AssistedInject constructor(
-    @Assisted private val context: Context,
-    @Assisted parameters: WorkerParameters,
+class LiveNotificationWorker(
+    private val context: Context,
+    parameters: WorkerParameters,
 ) : CoroutineWorker(context, parameters) {
 
-    @Inject
-    lateinit var notificationsRepository: NotificationsRepository
+    lateinit var xtraModule: XtraModule
 
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     override suspend fun doWork(): Result {
-        val streams = notificationsRepository.getNewStreams(
+        xtraModule = (context as XtraApp).xtraModule
+        val streams = xtraModule.notificationsRepository.getNewStreams(
             networkLibrary = context.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
             gqlHeaders = TwitchApiHelper.getGQLHeaders(context, true),
             helixHeaders = TwitchApiHelper.getHelixHeaders(context),

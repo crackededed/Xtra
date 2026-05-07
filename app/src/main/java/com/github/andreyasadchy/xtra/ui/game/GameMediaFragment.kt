@@ -43,6 +43,7 @@ import com.github.andreyasadchy.xtra.ui.common.FragmentHost
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.common.Sortable
+import com.github.andreyasadchy.xtra.ui.game.GamePagerViewModel.Companion.GamePagerViewModelFactory
 import com.github.andreyasadchy.xtra.ui.game.clips.GameClipsFragment
 import com.github.andreyasadchy.xtra.ui.game.streams.GameStreamsFragment
 import com.github.andreyasadchy.xtra.ui.game.videos.GameVideosFragment
@@ -59,17 +60,15 @@ import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, IntegrityDialog.Listener {
 
     private var _binding: FragmentGameBinding? = null
     private val binding get() = _binding!!
     private val args: GamePagerFragmentArgs by navArgs()
-    private val viewModel: GamePagerViewModel by viewModels()
+    private val viewModel: GamePagerViewModel by viewModels { GamePagerViewModelFactory }
 
     private var previousItem = -1
 

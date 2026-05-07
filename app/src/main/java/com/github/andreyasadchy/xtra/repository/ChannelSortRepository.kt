@@ -4,11 +4,8 @@ import com.github.andreyasadchy.xtra.db.ChannelSortDao
 import com.github.andreyasadchy.xtra.model.ui.ChannelSort
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class ChannelSortRepository @Inject constructor(
+class ChannelSortRepository(
     private val channelSortDao: ChannelSortDao,
 ) {
 

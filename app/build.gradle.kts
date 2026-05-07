@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
     alias(libs.plugins.navigation.safeargs)
     alias(libs.plugins.apollo)
 }
@@ -67,8 +66,6 @@ android {
         resolutionStrategy.force(listOf(
             "androidx.activity:activity:1.12.0-alpha05",
             "androidx.core:core-ktx:1.17.0",
-            "androidx.hilt:hilt-compiler:1.3.0-alpha02",
-            "androidx.hilt:hilt-work:1.3.0-alpha02",
             "androidx.lifecycle:lifecycle-service:2.10.0-alpha01",
             "androidx.lifecycle:lifecycle-viewmodel:2.10.0-alpha01",
             "androidx.media3:media3-exoplayer:1.8.0",
@@ -137,11 +134,6 @@ dependencies {
     ksp(libs.glide.ksp)
     implementation(libs.glide.okhttp)
     implementation(libs.glide.webpdecoder)
-
-    implementation(libs.hilt)
-    ksp(libs.hilt.compiler)
-    implementation(libs.hilt.work)
-    ksp(libs.hilt.extension.compiler)
 
     implementation(libs.coroutines)
 }

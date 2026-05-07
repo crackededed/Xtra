@@ -3,10 +3,15 @@ package com.github.andreyasadchy.xtra.ui.channel.clips
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
+import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.graphql.type.ClipsPeriod
 import com.github.andreyasadchy.xtra.model.ui.ChannelSort
 import com.github.andreyasadchy.xtra.repository.ChannelSortRepository
@@ -18,16 +23,12 @@ import com.github.andreyasadchy.xtra.ui.common.VideosSortDialog
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
-import javax.inject.Inject
 
-@HiltViewModel
-class ChannelClipsViewModel @Inject constructor(
-    @param:ApplicationContext private val applicationContext: Context,
+class ChannelClipsViewModel(
+    private val applicationContext: Context,
     private val channelSortRepository: ChannelSortRepository,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
@@ -42,7 +43,7 @@ class ChannelClipsViewModel @Inject constructor(
         get() = filter.value?.period ?: VideosSortDialog.PERIOD_WEEK
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val flow = filter.flatMapLatest { filter ->
+    val flow = filter.flatMapLatest {
         Pager(
             PagingConfig(pageSize = 20, prefetchDistance = 3, initialLoadSize = 20)
         ) {
@@ -111,4 +112,15 @@ class ChannelClipsViewModel @Inject constructor(
     class Filter(
         val period: String?,
     )
+
+    companion object {
+        val ChannelClipsViewModelFactory = viewModelFactory {
+            initializer {
+                val savedStateHandle = createSavedStateHandle()
+                val application = (this[APPLICATION_KEY] as XtraApp)
+                val xtraModule = application.xtraModule
+                ChannelClipsViewModel(application.applicationContext, xtraModule.channelSortRepository, xtraModule.graphQLRepository, xtraModule.helixRepository, savedStateHandle)
+            }
+        }
+    }
 }

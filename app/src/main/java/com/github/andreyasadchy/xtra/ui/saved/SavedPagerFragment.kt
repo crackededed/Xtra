@@ -26,6 +26,7 @@ import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.common.Sortable
 import com.github.andreyasadchy.xtra.ui.login.LoginActivity
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
+import com.github.andreyasadchy.xtra.ui.saved.SavedPagerViewModel.Companion.SavedPagerViewModelFactory
 import com.github.andreyasadchy.xtra.ui.saved.downloads.DownloadsFragment
 import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.settings.SettingsActivity
@@ -37,14 +38,12 @@ import com.github.andreyasadchy.xtra.util.reduceDragSensitivity
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
-import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
 class SavedPagerFragment : Fragment(), Scrollable, FragmentHost {
 
     private var _binding: FragmentMediaPagerBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: SavedPagerViewModel by viewModels()
+    private val viewModel: SavedPagerViewModel by viewModels { SavedPagerViewModelFactory }
     private var firstLaunch = true
     private var folderResultLauncher: ActivityResultLauncher<Intent>? = null
     private var fileResultLauncher: ActivityResultLauncher<Intent>? = null

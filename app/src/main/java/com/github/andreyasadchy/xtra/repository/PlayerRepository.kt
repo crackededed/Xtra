@@ -39,7 +39,6 @@ import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
-import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -64,17 +63,14 @@ import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.UUID
 import java.util.concurrent.ExecutorService
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
-@Singleton
-class PlayerRepository @Inject constructor(
-    private val httpEngine: Lazy<HttpEngine>?,
-    private val cronetEngine: Lazy<CronetEngine>?,
-    private val cronetExecutor: ExecutorService,
-    private val okHttpClient: OkHttpClient,
+class PlayerRepository(
+    private val httpEngine: Lazy<HttpEngine?>,
+    private val cronetEngine: Lazy<CronetEngine?>,
+    private val cronetExecutor: Lazy<ExecutorService>,
+    private val okHttpClient: Lazy<OkHttpClient>,
     private val json: Json,
     private val recentEmotes: RecentEmotesDao,
     private val translatedChannelsDao: TranslatedChannelsDao,
@@ -110,7 +106,7 @@ class PlayerRepository @Inject constructor(
         val accessTokenHeaders = getPlaybackAccessTokenHeaders(gqlHeaders, randomDeviceId, xDeviceId, enableIntegrity)
         try {
             val response = if (proxyPlaybackAccessToken && !proxyHost.isNullOrBlank() && proxyPort != null) {
-                okHttpClient.newBuilder().apply {
+                okHttpClient.value.newBuilder().apply {
                     proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
                     if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
                         proxyAuthenticator { _, response ->
@@ -159,7 +155,7 @@ class PlayerRepository @Inject constructor(
                         }
                     }
                 }
-                okHttpClient.newBuilder().apply {
+                okHttpClient.value.newBuilder().apply {
                     proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
                     if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
                         proxyAuthenticator { _, response ->
@@ -340,20 +336,20 @@ class PlayerRepository @Inject constructor(
     suspend fun sendMinuteWatched(networkLibrary: String?, userId: String?, streamId: String?, channelId: String?, channelLogin: String?) = withContext(Dispatchers.IO) {
         val pageResponse = channelLogin?.let {
             when {
-                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                     val response = suspendCancellableCoroutine { continuation ->
-                        httpEngine.get().newUrlRequestBuilder("https://www.twitch.tv/${channelLogin}", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                        httpEngine.value!!.newUrlRequestBuilder("https://www.twitch.tv/${channelLogin}", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                     }
                     String(response.second)
                 }
-                networkLibrary == C.CRONET && cronetEngine != null -> {
+                networkLibrary == C.CRONET && cronetEngine.value != null -> {
                     val response = suspendCancellableCoroutine { continuation ->
-                        cronetEngine.get().newUrlRequestBuilder("https://www.twitch.tv/${channelLogin}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
+                        cronetEngine.value!!.newUrlRequestBuilder("https://www.twitch.tv/${channelLogin}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).build().start()
                     }
                     String(response.second)
                 }
                 else -> {
-                    okHttpClient.newCall(Request.Builder().url("https://www.twitch.tv/${channelLogin}").build()).executeAsync().use { response ->
+                    okHttpClient.value.newCall(Request.Builder().url("https://www.twitch.tv/${channelLogin}").build()).executeAsync().use { response ->
                         response.body.string()
                     }
                 }
@@ -364,20 +360,20 @@ class PlayerRepository @Inject constructor(
             val settingsUrl = settingsRegex.find(pageResponse)?.value
             val settingsResponse = settingsUrl?.let {
                 when {
-                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                         val response = suspendCancellableCoroutine { continuation ->
-                            httpEngine.get().newUrlRequestBuilder(settingsUrl, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                            httpEngine.value!!.newUrlRequestBuilder(settingsUrl, cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
                         }
                         String(response.second)
                     }
-                    networkLibrary == C.CRONET && cronetEngine != null -> {
+                    networkLibrary == C.CRONET && cronetEngine.value != null -> {
                         val response = suspendCancellableCoroutine { continuation ->
-                            cronetEngine.get().newUrlRequestBuilder(settingsUrl, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).build().start()
+                            cronetEngine.value!!.newUrlRequestBuilder(settingsUrl, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).build().start()
                         }
                         String(response.second)
                     }
                     else -> {
-                        okHttpClient.newCall(Request.Builder().url(settingsUrl).build()).executeAsync().use { response ->
+                        okHttpClient.value.newCall(Request.Builder().url(settingsUrl).build()).executeAsync().use { response ->
                             response.body.string()
                         }
                     }
@@ -398,24 +394,24 @@ class PlayerRepository @Inject constructor(
                     }.toString()
                     val spadeRequest = "data=" + Base64.encodeToString(body.toByteArray(), Base64.NO_WRAP)
                     when {
-                        networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                        networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                             suspendCancellableCoroutine { continuation ->
-                                httpEngine.get().newUrlRequestBuilder(spadeUrl, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                                httpEngine.value!!.newUrlRequestBuilder(spadeUrl, cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                                     addHeader("Content-Type", "application/x-www-form-urlencoded")
-                                    setUploadDataProvider(NetworkUtils.byteArrayUploadProvider(spadeRequest.toByteArray()), cronetExecutor)
+                                    setUploadDataProvider(NetworkUtils.byteArrayUploadProvider(spadeRequest.toByteArray()), cronetExecutor.value)
                                 }.build().start()
                             }
                         }
-                        networkLibrary == C.CRONET && cronetEngine != null -> {
+                        networkLibrary == C.CRONET && cronetEngine.value != null -> {
                             suspendCancellableCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
-                                cronetEngine.get().newUrlRequestBuilder(spadeUrl, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
+                                cronetEngine.value!!.newUrlRequestBuilder(spadeUrl, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
                                     addHeader("Content-Type", "application/x-www-form-urlencoded")
-                                    setUploadDataProvider(UploadDataProviders.create(spadeRequest.toByteArray()), cronetExecutor)
+                                    setUploadDataProvider(UploadDataProviders.create(spadeRequest.toByteArray()), cronetExecutor.value)
                                 }.build().start()
                             }
                         }
                         else -> {
-                            okHttpClient.newCall(Request.Builder().apply {
+                            okHttpClient.value.newCall(Request.Builder().apply {
                                 url(spadeUrl)
                                 header("Content-Type", "application/x-www-form-urlencoded")
                                 post(spadeRequest.toRequestBody())
@@ -429,24 +425,24 @@ class PlayerRepository @Inject constructor(
 
     suspend fun loadRecentMessages(networkLibrary: String?, channelLogin: String, limit: String): RecentMessagesResponse = withContext(Dispatchers.IO) {
         when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.get().newUrlRequestBuilder("https://recent-messages.robotty.de/api/v2/recent-messages/${channelLogin}?limit=${limit}", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    httpEngine.value!!.newUrlRequestBuilder("https://recent-messages.robotty.de/api/v2/recent-messages/${channelLogin}?limit=${limit}", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 json.decodeFromString<RecentMessagesResponse>(String(response.second))
             }
-            networkLibrary == C.CRONET && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.get().newUrlRequestBuilder("https://recent-messages.robotty.de/api/v2/recent-messages/${channelLogin}?limit=${limit}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
+                    cronetEngine.value!!.newUrlRequestBuilder("https://recent-messages.robotty.de/api/v2/recent-messages/${channelLogin}?limit=${limit}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 json.decodeFromString<RecentMessagesResponse>(String(response.second))
             }
             else -> {
-                okHttpClient.newCall(Request.Builder().apply {
+                okHttpClient.value.newCall(Request.Builder().apply {
                     url("https://recent-messages.robotty.de/api/v2/recent-messages/${channelLogin}?limit=${limit}")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
@@ -458,24 +454,24 @@ class PlayerRepository @Inject constructor(
 
     suspend fun loadGlobalSTVEmotes(networkLibrary: String?, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
         val response = when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.get().newUrlRequestBuilder("https://7tv.io/v3/emote-sets/global", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    httpEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/emote-sets/global", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 json.decodeFromString<STVEmoteSetResponse>(String(response.second))
             }
-            networkLibrary == C.CRONET && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.get().newUrlRequestBuilder("https://7tv.io/v3/emote-sets/global", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
+                    cronetEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/emote-sets/global", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 json.decodeFromString<STVEmoteSetResponse>(String(response.second))
             }
             else -> {
-                okHttpClient.newCall(Request.Builder().apply {
+                okHttpClient.value.newCall(Request.Builder().apply {
                     url("https://7tv.io/v3/emote-sets/global")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
@@ -488,24 +484,24 @@ class PlayerRepository @Inject constructor(
 
     suspend fun loadSTVEmotes(networkLibrary: String?, channelId: String, useWebp: Boolean): Pair<String?, List<Emote>> = withContext(Dispatchers.IO) {
         val response = when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.get().newUrlRequestBuilder("https://7tv.io/v3/users/twitch/${channelId}", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    httpEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/users/twitch/${channelId}", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 json.decodeFromString<STVChannelResponse>(String(response.second))
             }
-            networkLibrary == C.CRONET && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.get().newUrlRequestBuilder("https://7tv.io/v3/users/twitch/${channelId}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
+                    cronetEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/users/twitch/${channelId}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 json.decodeFromString<STVChannelResponse>(String(response.second))
             }
             else -> {
-                okHttpClient.newCall(Request.Builder().apply {
+                okHttpClient.value.newCall(Request.Builder().apply {
                     url("https://7tv.io/v3/users/twitch/${channelId}")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
@@ -554,24 +550,24 @@ class PlayerRepository @Inject constructor(
 
     suspend fun getSTVUser(networkLibrary: String?, userId: String): String? = withContext(Dispatchers.IO) {
         val response = when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.get().newUrlRequestBuilder("https://7tv.io/v3/users/twitch/${userId}", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    httpEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/users/twitch/${userId}", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 String(response.second)
             }
-            networkLibrary == C.CRONET && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.get().newUrlRequestBuilder("https://7tv.io/v3/users/twitch/${userId}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
+                    cronetEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/users/twitch/${userId}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 String(response.second)
             }
             else -> {
-                okHttpClient.newCall(Request.Builder().apply {
+                okHttpClient.value.newCall(Request.Builder().apply {
                     url("https://7tv.io/v3/users/twitch/${userId}")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
@@ -593,26 +589,26 @@ class PlayerRepository @Inject constructor(
             }
         }.toString()
         when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                 suspendCancellableCoroutine { continuation ->
-                    httpEngine.get().newUrlRequestBuilder("https://7tv.io/v3/users/${stvUserId}/presences", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    httpEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/users/${stvUserId}/presences", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("Content-Type", "application/json")
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                        setUploadDataProvider(NetworkUtils.byteArrayUploadProvider(body.toByteArray()), cronetExecutor)
+                        setUploadDataProvider(NetworkUtils.byteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                     }.build().start()
                 }
             }
-            networkLibrary == C.CRONET && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 suspendCancellableCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
-                    cronetEngine.get().newUrlRequestBuilder("https://7tv.io/v3/users/${stvUserId}/presences", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
+                    cronetEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/users/${stvUserId}/presences", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
                         addHeader("Content-Type", "application/json")
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                        setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor)
+                        setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                     }.build().start()
                 }
             }
             else -> {
-                okHttpClient.newCall(Request.Builder().apply {
+                okHttpClient.value.newCall(Request.Builder().apply {
                     url("https://7tv.io/v3/users/${stvUserId}/presences")
                     header("Content-Type", "application/json")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
@@ -624,24 +620,24 @@ class PlayerRepository @Inject constructor(
 
     suspend fun loadGlobalBTTVEmotes(networkLibrary: String?, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
         val response = when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.get().newUrlRequestBuilder("https://api.betterttv.net/3/cached/emotes/global", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    httpEngine.value!!.newUrlRequestBuilder("https://api.betterttv.net/3/cached/emotes/global", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 json.decodeFromString<List<BTTVResponse>>(String(response.second))
             }
-            networkLibrary == C.CRONET && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.get().newUrlRequestBuilder("https://api.betterttv.net/3/cached/emotes/global", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
+                    cronetEngine.value!!.newUrlRequestBuilder("https://api.betterttv.net/3/cached/emotes/global", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 json.decodeFromString<List<BTTVResponse>>(String(response.second))
             }
             else -> {
-                okHttpClient.newCall(Request.Builder().apply {
+                okHttpClient.value.newCall(Request.Builder().apply {
                     url("https://api.betterttv.net/3/cached/emotes/global")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
@@ -654,24 +650,24 @@ class PlayerRepository @Inject constructor(
 
     suspend fun loadBTTVEmotes(networkLibrary: String?, channelId: String, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
         val response = when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.get().newUrlRequestBuilder("https://api.betterttv.net/3/cached/users/twitch/${channelId}", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    httpEngine.value!!.newUrlRequestBuilder("https://api.betterttv.net/3/cached/users/twitch/${channelId}", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 json.decodeFromString<Map<String, JsonElement>>(String(response.second))
             }
-            networkLibrary == C.CRONET && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.get().newUrlRequestBuilder("https://api.betterttv.net/3/cached/users/twitch/${channelId}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
+                    cronetEngine.value!!.newUrlRequestBuilder("https://api.betterttv.net/3/cached/users/twitch/${channelId}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 json.decodeFromString<Map<String, JsonElement>>(String(response.second))
             }
             else -> {
-                okHttpClient.newCall(Request.Builder().apply {
+                okHttpClient.value.newCall(Request.Builder().apply {
                     url("https://api.betterttv.net/3/cached/users/twitch/${channelId}")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
@@ -711,24 +707,24 @@ class PlayerRepository @Inject constructor(
 
     suspend fun loadGlobalFFZEmotes(networkLibrary: String?, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
         val response = when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.get().newUrlRequestBuilder("https://api.frankerfacez.com/v1/set/global", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    httpEngine.value!!.newUrlRequestBuilder("https://api.frankerfacez.com/v1/set/global", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 json.decodeFromString<FFZGlobalResponse>(String(response.second))
             }
-            networkLibrary == C.CRONET && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.get().newUrlRequestBuilder("https://api.frankerfacez.com/v1/set/global", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
+                    cronetEngine.value!!.newUrlRequestBuilder("https://api.frankerfacez.com/v1/set/global", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 json.decodeFromString<FFZGlobalResponse>(String(response.second))
             }
             else -> {
-                okHttpClient.newCall(Request.Builder().apply {
+                okHttpClient.value.newCall(Request.Builder().apply {
                     url("https://api.frankerfacez.com/v1/set/global")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
@@ -743,24 +739,24 @@ class PlayerRepository @Inject constructor(
 
     suspend fun loadFFZEmotes(networkLibrary: String?, channelId: String, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
         val response = when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.get().newUrlRequestBuilder("https://api.frankerfacez.com/v1/room/id/${channelId}", cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    httpEngine.value!!.newUrlRequestBuilder("https://api.frankerfacez.com/v1/room/id/${channelId}", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 json.decodeFromString<FFZChannelResponse>(String(response.second))
             }
-            networkLibrary == C.CRONET && cronetEngine != null -> {
+            networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.get().newUrlRequestBuilder("https://api.frankerfacez.com/v1/room/id/${channelId}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
+                    cronetEngine.value!!.newUrlRequestBuilder("https://api.frankerfacez.com/v1/room/id/${channelId}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
                 json.decodeFromString<FFZChannelResponse>(String(response.second))
             }
             else -> {
-                okHttpClient.newCall(Request.Builder().apply {
+                okHttpClient.value.newCall(Request.Builder().apply {
                     url("https://api.frankerfacez.com/v1/room/id/${channelId}")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->

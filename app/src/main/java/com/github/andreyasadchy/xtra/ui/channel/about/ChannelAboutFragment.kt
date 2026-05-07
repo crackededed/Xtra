@@ -32,6 +32,7 @@ import androidx.navigation.fragment.navArgs
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentAboutBinding
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentArgs
+import com.github.andreyasadchy.xtra.ui.channel.about.ChannelAboutViewModel.Companion.ChannelAboutViewModelFactory
 import com.github.andreyasadchy.xtra.ui.common.BaseNetworkFragment
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
@@ -39,17 +40,15 @@ import com.github.andreyasadchy.xtra.ui.team.TeamFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.Listener {
 
     private var _binding: FragmentAboutBinding? = null
     private val binding get() = _binding!!
     private val args: ChannelPagerFragmentArgs by navArgs()
-    private val viewModel: ChannelAboutViewModel by viewModels()
+    private val viewModel: ChannelAboutViewModel by viewModels { ChannelAboutViewModelFactory }
     private var panelAdapter: ChannelPanelAdapter? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

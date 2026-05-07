@@ -8,8 +8,12 @@ import android.util.JsonToken
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.github.andreyasadchy.xtra.R
+import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.chat.Badge
 import com.github.andreyasadchy.xtra.model.chat.ChannelPointReward
 import com.github.andreyasadchy.xtra.model.chat.ChatMessage
@@ -46,8 +50,6 @@ import com.github.andreyasadchy.xtra.util.chat.STVEventApiUtils
 import com.github.andreyasadchy.xtra.util.chat.STVEventApiWebSocket
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
@@ -62,18 +64,15 @@ import java.io.File
 import java.io.FileInputStream
 import java.util.Timer
 import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
 import javax.net.ssl.X509TrustManager
 import kotlin.concurrent.scheduleAtFixedRate
 
-
-@HiltViewModel
-class ChatViewModel @Inject constructor(
-    @param:ApplicationContext private val applicationContext: Context,
+class ChatViewModel(
+    private val applicationContext: Context,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
     private val playerRepository: PlayerRepository,
-    private val trustManager: X509TrustManager?,
+    private val trustManager: Lazy<X509TrustManager>,
     private val json: Json,
 ) : ViewModel() {
 
@@ -2877,5 +2876,13 @@ class ChatViewModel @Inject constructor(
         private var savedGlobalSTVEmotes: List<Emote>? = null
         private var savedGlobalBTTVEmotes: List<Emote>? = null
         private var savedGlobalFFZEmotes: List<Emote>? = null
+
+        val ChatViewModelFactory = viewModelFactory {
+            initializer {
+                val application = (this[APPLICATION_KEY] as XtraApp)
+                val xtraModule = application.xtraModule
+                ChatViewModel(application.applicationContext, xtraModule.graphQLRepository, xtraModule.helixRepository, xtraModule.playerRepository, xtraModule.trustManager, xtraModule.json)
+            }
+        }
     }
 }

@@ -1,11 +1,8 @@
 package com.github.andreyasadchy.xtra
 
 import android.app.Application
-import android.net.http.HttpEngine
 import android.os.Build
 import android.os.ext.SdkExtensions
-import androidx.hilt.work.HiltWorkerFactory
-import androidx.work.Configuration
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
@@ -22,52 +19,31 @@ import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.coil.CacheControlCacheStrategy
 import com.github.andreyasadchy.xtra.util.prefs
-import dagger.Lazy
-import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.suspendCancellableCoroutine
-import okhttp3.OkHttpClient
 import okio.Buffer
 import okio.buffer
 import okio.source
-import org.chromium.net.CronetEngine
 import org.chromium.net.apihelpers.UploadDataProviders
-import java.util.concurrent.ExecutorService
-import javax.inject.Inject
+import org.conscrypt.Conscrypt
+import java.security.Security
 
-
-@HiltAndroidApp
-class XtraApp : Application(), Configuration.Provider, SingletonImageLoader.Factory {
+class XtraApp : Application(), SingletonImageLoader.Factory {
 
     companion object {
         lateinit var INSTANCE: Application
     }
 
+    lateinit var xtraModule: XtraModule
+
     override fun onCreate() {
         super.onCreate()
         INSTANCE = this
+        xtraModule = XtraModule(this)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            val conscrypt = Conscrypt.newProvider()
+            Security.insertProviderAt(conscrypt, 1)
+        }
     }
-
-    @Inject
-    lateinit var workerFactory: HiltWorkerFactory
-
-    override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .build()
-
-    @Inject
-    @JvmField
-    var httpEngine: Lazy<HttpEngine>? = null
-
-    @Inject
-    @JvmField
-    var cronetEngine: Lazy<CronetEngine>? = null
-
-    @Inject
-    lateinit var cronetExecutor: ExecutorService
-
-    @Inject
-    lateinit var okHttpClient: OkHttpClient
 
     @OptIn(ExperimentalCoilApi::class)
     override fun newImageLoader(context: PlatformContext): ImageLoader {
@@ -78,7 +54,7 @@ class XtraApp : Application(), Configuration.Provider, SingletonImageLoader.Fact
             components {
                 val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
                 when {
-                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
+                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
                         add(NetworkFetcher.Factory(
                             networkClient = {
                                 object : NetworkClient {
@@ -90,14 +66,14 @@ class XtraApp : Application(), Configuration.Provider, SingletonImageLoader.Fact
                                         }
                                         val requestMillis = System.currentTimeMillis()
                                         val response = suspendCancellableCoroutine { continuation ->
-                                            httpEngine!!.get().newUrlRequestBuilder(request.url, cronetExecutor, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                                            xtraModule.httpEngine.value!!.newUrlRequestBuilder(request.url, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                                                 request.headers.asMap().forEach { entry ->
                                                     entry.value.forEach {
                                                         addHeader(entry.key, it)
                                                     }
                                                 }
                                                 requestBody?.let {
-                                                    setUploadDataProvider(NetworkUtils.byteArrayUploadProvider(requestBody), cronetExecutor)
+                                                    setUploadDataProvider(NetworkUtils.byteArrayUploadProvider(requestBody), xtraModule.cronetExecutor.value)
                                                 }
                                                 setHttpMethod(request.method)
                                             }.build().start()
@@ -122,7 +98,7 @@ class XtraApp : Application(), Configuration.Provider, SingletonImageLoader.Fact
                             cacheStrategy = { CacheControlCacheStrategy() }
                         ))
                     }
-                    networkLibrary == C.CRONET && cronetEngine != null -> {
+                    networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                         add(NetworkFetcher.Factory(
                             networkClient = {
                                 object : NetworkClient {
@@ -134,14 +110,14 @@ class XtraApp : Application(), Configuration.Provider, SingletonImageLoader.Fact
                                         }
                                         val requestMillis = System.currentTimeMillis()
                                         val response = suspendCancellableCoroutine { continuation ->
-                                            cronetEngine!!.get().newUrlRequestBuilder(request.url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor).apply {
+                                            xtraModule.cronetEngine.value!!.newUrlRequestBuilder(request.url, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).apply {
                                                 request.headers.asMap().forEach { entry ->
                                                     entry.value.forEach {
                                                         addHeader(entry.key, it)
                                                     }
                                                 }
                                                 requestBody?.let {
-                                                    setUploadDataProvider(UploadDataProviders.create(requestBody), cronetExecutor)
+                                                    setUploadDataProvider(UploadDataProviders.create(requestBody), xtraModule.cronetExecutor.value)
                                                 }
                                                 setHttpMethod(request.method)
                                             }.build().start()
@@ -168,7 +144,7 @@ class XtraApp : Application(), Configuration.Provider, SingletonImageLoader.Fact
                     }
                     else -> {
                         add(OkHttpNetworkFetcherFactory(
-                            callFactory = { okHttpClient },
+                            callFactory = { xtraModule.okHttpClient.value },
                             cacheStrategy = { CacheControlCacheStrategy() }
                         ))
                     }

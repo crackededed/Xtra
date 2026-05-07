@@ -77,6 +77,7 @@ import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
 import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
+import com.github.andreyasadchy.xtra.ui.player.Media3PlayerViewModel.Companion.Media3PlayerViewModelFactory
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
@@ -87,19 +88,17 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
 @OptIn(UnstableApi::class)
-@AndroidEntryPoint
 abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment.OnSortOptionChanged, IntegrityDialog.Listener {
 
     private var _binding: FragmentPlayerBinding? = null
     protected val binding get() = _binding!!
-    protected val viewModel: Media3PlayerViewModel by viewModels()
+    protected val viewModel: Media3PlayerViewModel by viewModels { Media3PlayerViewModelFactory }
     protected var chatFragment: ChatFragment? = null
 
     protected var videoType: String? = null

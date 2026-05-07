@@ -30,8 +30,9 @@ import androidx.webkit.WebViewClientCompat
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.github.andreyasadchy.xtra.R
+import com.github.andreyasadchy.xtra.XtraApp
+import com.github.andreyasadchy.xtra.XtraModule
 import com.github.andreyasadchy.xtra.databinding.ActivityLoginBinding
-import com.github.andreyasadchy.xtra.repository.AuthRepository
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.applyTheme
@@ -41,18 +42,14 @@ import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.google.android.material.slider.Slider
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.util.regex.Pattern
-import javax.inject.Inject
 import kotlin.math.roundToInt
 
-@AndroidEntryPoint
 class LoginActivity : AppCompatActivity() {
 
-    @Inject
-    lateinit var authRepository: AuthRepository
+    lateinit var xtraModule: XtraModule
 
     private val tokenPattern = Pattern.compile("token=(.+?)(?=&)")
     private var helixToken: String? = null
@@ -71,6 +68,7 @@ class LoginActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        xtraModule = (application as XtraApp).xtraModule
         applyTheme()
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -106,7 +104,7 @@ class LoginActivity : AppCompatActivity() {
                 lifecycleScope.launch {
                     if (!helixClientId.isNullOrBlank() && !oldHelixToken.isNullOrBlank()) {
                         try {
-                            authRepository.revoke(networkLibrary, "client_id=${helixClientId}&token=${oldHelixToken}")
+                            xtraModule.authRepository.revoke(networkLibrary, "client_id=${helixClientId}&token=${oldHelixToken}")
                         } catch (e: Exception) {
 
                         }
@@ -114,7 +112,7 @@ class LoginActivity : AppCompatActivity() {
                     val gqlClientId = gqlHeaders[C.HEADER_CLIENT_ID]
                     if (!gqlClientId.isNullOrBlank() && !oldGQLToken.isNullOrBlank() && oldGQLToken != oldGQLWebToken) {
                         try {
-                            authRepository.revoke(networkLibrary, "client_id=${gqlClientId}&token=${oldGQLToken}")
+                            xtraModule.authRepository.revoke(networkLibrary, "client_id=${gqlClientId}&token=${oldGQLToken}")
                         } catch (e: Exception) {
 
                         }
@@ -122,7 +120,7 @@ class LoginActivity : AppCompatActivity() {
                     val gqlWebClientId = prefs().getString(C.GQL_CLIENT_ID_WEB, "kimne78kx3ncx6brgo4mv6wki5h1ko")
                     if (!gqlWebClientId.isNullOrBlank() && !oldGQLWebToken.isNullOrBlank()) {
                         try {
-                            authRepository.revoke(networkLibrary, "client_id=${gqlWebClientId}&token=${oldGQLWebToken}")
+                            xtraModule.authRepository.revoke(networkLibrary, "client_id=${gqlWebClientId}&token=${oldGQLWebToken}")
                         } catch (e: Exception) {
 
                         }
@@ -559,7 +557,7 @@ class LoginActivity : AppCompatActivity() {
             var userCode: String? = null
             lifecycleScope.launch {
                 try {
-                    val response = authRepository.getDeviceCode(networkLibrary, "client_id=${gqlClientId}&scopes=channel_read+chat%3Aread+user_blocks_edit+user_blocks_read+user_follows_edit+user_read")
+                    val response = xtraModule.authRepository.getDeviceCode(networkLibrary, "client_id=${gqlClientId}&scopes=channel_read+chat%3Aread+user_blocks_edit+user_blocks_read+user_follows_edit+user_read")
                     deviceCode = response.deviceCode
                     userCode = response.userCode
                     codeText.text = userCode
@@ -592,7 +590,7 @@ class LoginActivity : AppCompatActivity() {
                 if (deviceCode != null) {
                     lifecycleScope.launch {
                         try {
-                            val response = authRepository.getToken(networkLibrary, "client_id=${gqlClientId}&device_code=${deviceCode}&grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code")
+                            val response = xtraModule.authRepository.getToken(networkLibrary, "client_id=${gqlClientId}&device_code=${deviceCode}&grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code")
                             val token = response.token
                             if (!token.isNullOrBlank()) {
                                 val valid = validateGQLToken(networkLibrary, gqlClientId, token)
@@ -631,7 +629,7 @@ class LoginActivity : AppCompatActivity() {
 
     private suspend fun validateGQLToken(networkLibrary: String?, gqlClientId: String?, token: String): Boolean {
         return try {
-            val response = authRepository.validate(networkLibrary, TwitchApiHelper.addTokenPrefixGQL(token))
+            val response = xtraModule.authRepository.validate(networkLibrary, TwitchApiHelper.addTokenPrefixGQL(token))
             if (response.clientId.isNotBlank() && response.clientId == gqlClientId) {
                 response.userId?.let { userId = it }
                 response.login?.let { userLogin = it }
@@ -644,7 +642,7 @@ class LoginActivity : AppCompatActivity() {
 
     private suspend fun validateHelixToken(networkLibrary: String?, helixClientId: String?, token: String): Boolean {
         return try {
-            val response = authRepository.validate(networkLibrary, TwitchApiHelper.addTokenPrefixHelix(token))
+            val response = xtraModule.authRepository.validate(networkLibrary, TwitchApiHelper.addTokenPrefixHelix(token))
             if (response.clientId.isNotBlank() && response.clientId == helixClientId) {
                 response.userId?.let { userId = it }
                 response.login?.let { userLogin = it }

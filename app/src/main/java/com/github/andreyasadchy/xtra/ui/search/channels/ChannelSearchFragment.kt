@@ -24,18 +24,17 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.search.RecentSearchAdapter
 import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragment
 import com.github.andreyasadchy.xtra.ui.search.Searchable
+import com.github.andreyasadchy.xtra.ui.search.channels.ChannelSearchViewModel.Companion.ChannelSearchViewModelFactory
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 class ChannelSearchFragment : PagedListFragment(), Searchable {
 
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: ChannelSearchViewModel by viewModels()
+    private val viewModel: ChannelSearchViewModel by viewModels { ChannelSearchViewModelFactory }
     private lateinit var pagingAdapter: PagingDataAdapter<User, out RecyclerView.ViewHolder>
     private var recentSearchAdapter = RecentSearchAdapter({ (parentFragment as? SearchPagerFragment)?.setQuery(it.query) }, { viewModel.deleteRecentSearch(it) })
 

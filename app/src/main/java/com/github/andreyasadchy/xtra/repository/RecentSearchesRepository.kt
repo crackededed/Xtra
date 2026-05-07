@@ -4,11 +4,8 @@ import com.github.andreyasadchy.xtra.db.RecentSearchesDao
 import com.github.andreyasadchy.xtra.model.ui.RecentSearch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class RecentSearchesRepository @Inject constructor(
+class RecentSearchesRepository(
     private val recentSearchesDao: RecentSearchesDao,
 ) {
 
