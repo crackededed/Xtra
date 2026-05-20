@@ -21,14 +21,14 @@ android {
         }
     }
     namespace = "com.github.andreyasadchy.xtra"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.github.andreyasadchy.xtra"
         minSdk = 21
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 121
-        versionName = "2.55.4"
+        versionName = "2.56.0"
     }
 
     buildTypes {
@@ -78,6 +78,7 @@ android {
             "androidx.room:room-runtime:2.8.0-rc01",
             "androidx.webkit:webkit:1.15.0-alpha01",
             "androidx.work:work-runtime:2.10.5",
+            "com.google.android.material:material:1.14.0-alpha08",
             "org.chromium.net:cronet-api:119.6045.31",
         ))
     }
