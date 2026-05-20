@@ -11,8 +11,8 @@ query UserVideos($id: ID, $login: String, $sort: VideoSort, $types: [BroadcastTy
                     broadcastType
                     createdAt
                     game {
-                        id
                         displayName
+                        id
                         slug
                     }
                     id

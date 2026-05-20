@@ -5,9 +5,9 @@ query GameClips($id: ID, $slug: String, $name: String, $languages: [Language!], 
                 cursor
                 node {
                     broadcaster {
+                        displayName
                         id
                         login
-                        displayName
                         profileImageURL(width: 300)
                     }
                     createdAt
