@@ -525,11 +525,6 @@ class MainActivity : AppCompatActivity() {
                                 closePlayer()
                             }
                             startVideo(video, offset, offset != null)
-                            if (prefs.getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
-                                video.id.toLongOrNull()?.let { id ->
-                                    viewModel.savePosition(id, offset ?: 0)
-                                }
-                            }
                         }
                         viewModel.video.value = null
                     }
@@ -1010,6 +1005,11 @@ class MainActivity : AppCompatActivity() {
             videoAnimatedPreviewURL = video.animatedPreviewURL,
             position = offset,
         ))
+        if (ignoreSavedPosition && prefs.getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
+            video.id?.toLongOrNull()?.let { id ->
+                viewModel.saveVideoPosition(id, offset ?: 0)
+            }
+        }
         val fragment = when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
             C.MEDIA_PLAYER -> MediaPlayerFragment()
             else -> ExoPlayerFragment()
