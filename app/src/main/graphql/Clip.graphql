@@ -1,0 +1,24 @@
+query Clip($slug: ID!) {
+    clip(slug: $slug) {
+        broadcaster {
+            displayName
+            id
+            login
+            profileImageURL(width: 300)
+        }
+        createdAt
+        durationSeconds
+        game {
+            displayName
+            id
+            slug
+        }
+        thumbnailURL
+        title
+        video {
+            animatedPreviewURL
+            id
+        }
+        videoOffsetSeconds
+    }
+}

@@ -11,16 +11,16 @@ query UsersStream($ids: [ID!], $logins: [String!]) {
                 }
             }
             createdAt
+            freeformTags {
+                name
+            }
             game {
-                id
                 displayName
+                id
                 slug
             }
             id
             previewImageURL
-            freeformTags {
-                name
-            }
             viewersCount
         }
     }

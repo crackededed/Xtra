@@ -8,16 +8,16 @@ query UserFollowedVideos($languages: [String!], $sort: VideoSort, $type: [Broadc
                     broadcastType
                     createdAt
                     game {
-                        id
                         displayName
+                        id
                         slug
                     }
                     id
                     lengthSeconds
                     owner {
+                        displayName
                         id
                         login
-                        displayName
                         profileImageURL(width: 300)
                     }
                     previewThumbnailURL

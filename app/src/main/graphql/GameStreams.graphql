@@ -8,17 +8,17 @@ query GameStreams($id: ID, $slug: String, $name: String, $sort: StreamSort, $tag
                         broadcastSettings {
                             title
                         }
+                        displayName
                         id
                         login
-                        displayName
                         profileImageURL(width: 300)
                     }
                     createdAt
-                    id
-                    previewImageURL
                     freeformTags {
                         name
                     }
+                    id
+                    previewImageURL
                     viewersCount
                 }
             }
