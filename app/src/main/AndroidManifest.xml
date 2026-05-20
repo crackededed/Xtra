@@ -75,6 +75,14 @@
         </service>
 
         <service
+            android:name=".ui.download.VideoDownloadService"
+            android:foregroundServiceType="specialUse" />
+
+        <service
+            android:name=".ui.download.StreamDownloadService"
+            android:foregroundServiceType="specialUse" />
+
+        <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
             android:enabled="false"
             android:exported="false">
@@ -82,11 +90,6 @@
                 android:name="autoStoreLocales"
                 android:value="true" />
         </service>
-
-        <service
-            android:name="androidx.work.impl.foreground.SystemForegroundService"
-            android:foregroundServiceType="specialUse"
-            tools:node="merge" />
 
         <receiver
             android:name=".util.MediaButtonReceiver"

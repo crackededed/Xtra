@@ -20,8 +20,11 @@ interface OfflineVideosDao {
     @Query("SELECT * FROM videos WHERE url = :url")
     fun getByUrl(url: String): OfflineVideo?
 
-    @Query("SELECT * FROM videos WHERE channel_login = :login AND live = 1 AND status != ${OfflineVideo.STATUS_DOWNLOADED}")
-    fun getLiveDownload(login: String): OfflineVideo?
+    @Query("SELECT * FROM videos WHERE status = ${OfflineVideo.STATUS_DOWNLOADING} OR status = ${OfflineVideo.STATUS_WAITING_FOR_STREAM}")
+    fun getActiveDownloads(): List<OfflineVideo>
+
+    @Query("SELECT * FROM videos WHERE status = ${OfflineVideo.STATUS_WAITING_FOR_WIFI}")
+    fun getWaitingDownloads(): List<OfflineVideo>
 
     @Query("SELECT * FROM videos WHERE videoId = :id")
     fun getByVideoId(id: String): List<OfflineVideo>

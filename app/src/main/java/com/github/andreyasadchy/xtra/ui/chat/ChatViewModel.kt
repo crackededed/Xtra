@@ -2467,6 +2467,7 @@ class ChatViewModel(
                                                                     messages.add(getClearMessage(pair.first, deletedMessage, nameDisplay))
                                                                 }
                                                                 message.contains("CLEARCHAT") -> messages.add(ChatUtils.parseClearChat(applicationContext, message))
+                                                                message.contains("NOTICE") -> messages.add(ChatUtils.parseNotice(applicationContext, message))
                                                             }
                                                             if (reader.peek() != JsonToken.END_ARRAY) {
                                                                 position += 1
@@ -2596,19 +2597,6 @@ class ChatViewModel(
                                                                                 position += 1
                                                                             }
                                                                         }
-                                                                        messages.add(ChatMessage(
-                                                                            id = id,
-                                                                            userId = userId,
-                                                                            userLogin = userLogin,
-                                                                            userName = userName,
-                                                                            message = message.toString(),
-                                                                            color = color,
-                                                                            emotes = emotesList,
-                                                                            badges = badgesList,
-                                                                            bits = 0,
-                                                                            timestamp = offsetSeconds?.times(1000L),
-                                                                            fullMsg = null
-                                                                        ))
                                                                         reader.endObject().also { position += 1 }
                                                                     }
                                                                     else -> position += skipJsonValue(reader)
@@ -2617,6 +2605,19 @@ class ChatViewModel(
                                                                     position += 1
                                                                 }
                                                             }
+                                                            messages.add(ChatMessage(
+                                                                id = id,
+                                                                userId = userId,
+                                                                userLogin = userLogin,
+                                                                userName = userName,
+                                                                message = message.toString(),
+                                                                color = color,
+                                                                emotes = emotesList,
+                                                                badges = badgesList,
+                                                                bits = 0,
+                                                                timestamp = offsetSeconds?.times(1000L),
+                                                                fullMsg = null
+                                                            ))
                                                             reader.endObject().also { position += 1 }
                                                             if (reader.peek() != JsonToken.END_ARRAY) {
                                                                 position += 1
