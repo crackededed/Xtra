@@ -4,8 +4,9 @@ query Video($id: ID) {
         broadcastType
         createdAt
         game {
-            id
             displayName
+            id
+            slug
         }
         lengthSeconds
         owner {

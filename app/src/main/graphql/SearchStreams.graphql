@@ -13,16 +13,16 @@ query SearchStreams($query: String!, $first: Int, $after: Cursor) {
                     profileImageURL(width: 300)
                 }
                 createdAt
+                freeformTags {
+                    name
+                }
                 game {
-                    id
                     displayName
+                    id
                     slug
                 }
                 id
                 previewImageURL
-                freeformTags {
-                    name
-                }
                 viewersCount
             }
         }

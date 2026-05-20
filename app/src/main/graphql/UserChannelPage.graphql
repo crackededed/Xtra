@@ -20,8 +20,8 @@ query UserChannelPage($id: ID, $login: String) {
         stream {
             createdAt
             game {
-                id
                 displayName
+                id
                 slug
             }
             id
