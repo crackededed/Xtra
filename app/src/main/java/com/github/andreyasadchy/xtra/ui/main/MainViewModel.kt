@@ -3,8 +3,11 @@ package com.github.andreyasadchy.xtra.ui.main
 import android.app.Activity
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Context.CONNECTIVITY_SERVICE
 import android.content.Intent
 import android.content.pm.PackageInstaller
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.http.HttpEngine
 import android.os.Build
 import android.os.ext.SdkExtensions
@@ -15,12 +18,6 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.PlaybackState
@@ -37,8 +34,6 @@ import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.repository.LocalChannelFollowsRepository
 import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
-import com.github.andreyasadchy.xtra.ui.download.StreamDownloadWorker
-import com.github.andreyasadchy.xtra.ui.download.VideoDownloadWorker
 import com.github.andreyasadchy.xtra.ui.login.LoginActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
@@ -87,11 +82,13 @@ class MainViewModel(
     var loadingIntegrityToken = false
 
     val checkNetworkStatus = MutableStateFlow(false)
+    val checkCellularStatus = MutableStateFlow(false)
     val isNetworkAvailable = MutableStateFlow<Boolean?>(null)
 
     var isPlayerOpened = false
     val playbackStates = MutableSharedFlow<List<PlaybackState>>()
     var loadingPlaybackStates = false
+    val startDownloadService = MutableSharedFlow<Pair<Int, Boolean>>()
 
     var sleepTimer: Timer? = null
     var sleepTimerEndTime = 0L
@@ -123,6 +120,10 @@ class MainViewModel(
                 loadingPlaybackStates = false
             }
         }
+    }
+
+    suspend fun getWaitingDownloads(): List<OfflineVideo> {
+        return offlineVideosRepository.getWaitingDownloads()
     }
 
     fun loadVideo(videoId: String?, offset: Long?, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
@@ -489,6 +490,15 @@ class MainViewModel(
                         path
                     }
                 }
+                val waitForWifi = if (wifiOnly) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        val connectivityManager = applicationContext.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+                        val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                        networkCapabilities != null && networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                    } else {
+                        false
+                    }
+                } else false
                 val videoId = offlineVideosRepository.save(
                     OfflineVideo(
                         name = title,
@@ -503,25 +513,20 @@ class MainViewModel(
                         uploadDate = createdAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
                         downloadDate = System.currentTimeMillis(),
                         downloadPath = downloadPath,
-                        status = OfflineVideo.STATUS_BLOCKED,
+                        status = if (waitForWifi) {
+                            OfflineVideo.STATUS_WAITING_FOR_WIFI
+                        } else {
+                            OfflineVideo.STATUS_PENDING
+                        },
                         quality = if (!quality.contains("Audio", true)) quality else "audio",
                         downloadChat = downloadChat,
                         downloadChatEmotes = downloadChatEmotes,
                         live = true
                     )
                 ).toInt()
-                WorkManager.getInstance(applicationContext).enqueueUniqueWork(
-                    channelLogin,
-                    ExistingWorkPolicy.REPLACE,
-                    OneTimeWorkRequestBuilder<StreamDownloadWorker>()
-                        .setInputData(workDataOf(StreamDownloadWorker.KEY_VIDEO_ID to videoId))
-                        .setConstraints(
-                            Constraints.Builder()
-                                .setRequiredNetworkType(if (wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED)
-                                .build()
-                        )
-                        .build()
-                )
+                if (!waitForWifi) {
+                    startDownloadService.emit(Pair(videoId, true))
+                }
             }
         }
     }
@@ -620,6 +625,15 @@ class MainViewModel(
                     path
                 }
             }
+            val waitForWifi = if (wifiOnly) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val connectivityManager = applicationContext.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+                    val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                    networkCapabilities != null && networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                } else {
+                    false
+                }
+            } else false
             val videoId = offlineVideosRepository.save(
                 OfflineVideo(
                     sourceUrl = url,
@@ -637,7 +651,11 @@ class MainViewModel(
                     downloadPath = downloadPath,
                     fromTime = from,
                     toTime = to,
-                    status = OfflineVideo.STATUS_BLOCKED,
+                    status = if (waitForWifi) {
+                        OfflineVideo.STATUS_WAITING_FOR_WIFI
+                    } else {
+                        OfflineVideo.STATUS_PENDING
+                    },
                     type = type,
                     videoId = id,
                     quality = if (!quality.contains("Audio", true)) quality else "audio",
@@ -646,19 +664,9 @@ class MainViewModel(
                     playlistToFile = playlistToFile
                 )
             ).toInt()
-            WorkManager.getInstance(applicationContext).enqueueUniqueWork(
-                "download",
-                ExistingWorkPolicy.APPEND_OR_REPLACE,
-                OneTimeWorkRequestBuilder<VideoDownloadWorker>()
-                    .setInputData(workDataOf(VideoDownloadWorker.KEY_VIDEO_ID to videoId))
-                    .addTag(videoId.toString())
-                    .setConstraints(
-                        Constraints.Builder()
-                            .setRequiredNetworkType(if (wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED)
-                            .build()
-                    )
-                    .build()
-            )
+            if (!waitForWifi) {
+                startDownloadService.emit(Pair(videoId, false))
+            }
         }
     }
 
@@ -756,6 +764,15 @@ class MainViewModel(
                     path
                 }
             }
+            val waitForWifi = if (wifiOnly) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val connectivityManager = applicationContext.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+                    val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                    networkCapabilities != null && networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                } else {
+                    false
+                }
+            } else false
             val videoId = offlineVideosRepository.save(
                 OfflineVideo(
                     sourceUrl = url,
@@ -773,7 +790,11 @@ class MainViewModel(
                     uploadDate = createdAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
                     downloadDate = System.currentTimeMillis(),
                     downloadPath = downloadPath,
-                    status = OfflineVideo.STATUS_BLOCKED,
+                    status = if (waitForWifi) {
+                        OfflineVideo.STATUS_WAITING_FOR_WIFI
+                    } else {
+                        OfflineVideo.STATUS_PENDING
+                    },
                     videoId = videoId,
                     clipId = clipId,
                     quality = if (!quality.contains("Audio", true)) quality else "audio",
@@ -781,19 +802,9 @@ class MainViewModel(
                     downloadChatEmotes = downloadChatEmotes
                 )
             ).toInt()
-            WorkManager.getInstance(applicationContext).enqueueUniqueWork(
-                "download",
-                ExistingWorkPolicy.APPEND_OR_REPLACE,
-                OneTimeWorkRequestBuilder<VideoDownloadWorker>()
-                    .setInputData(workDataOf(VideoDownloadWorker.KEY_VIDEO_ID to videoId))
-                    .addTag(videoId.toString())
-                    .setConstraints(
-                        Constraints.Builder()
-                            .setRequiredNetworkType(if (wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED)
-                            .build()
-                    )
-                    .build()
-            )
+            if (!waitForWifi) {
+                startDownloadService.emit(Pair(videoId, false))
+            }
         }
     }
 

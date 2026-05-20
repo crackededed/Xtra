@@ -16,6 +16,16 @@
         app:singleLineTitle="false" />
 
     <SeekBarPreference
+        android:defaultValue="2"
+        android:key="download_limit"
+        android:max="10"
+        android:title="@string/concurrent_downloads"
+        app:iconSpaceReserved="false"
+        app:min="1"
+        app:showSeekBarValue="true"
+        app:singleLineTitle="false" />
+
+    <SeekBarPreference
         android:defaultValue="10"
         android:key="download_concurrent_limit"
         android:max="20"

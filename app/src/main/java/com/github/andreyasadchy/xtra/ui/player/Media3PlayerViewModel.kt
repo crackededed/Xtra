@@ -205,7 +205,7 @@ class Media3PlayerViewModel(
             response.data!!.users?.firstOrNull()?.let {
                 Stream(
                     id = it.stream?.id,
-                    channelId = channelId,
+                    channelId = it.id,
                     channelLogin = it.login,
                     channelName = it.displayName,
                     channelImageURL = it.profileImageURL,
