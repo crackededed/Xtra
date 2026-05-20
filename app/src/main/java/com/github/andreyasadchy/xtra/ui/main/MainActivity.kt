@@ -72,6 +72,8 @@ import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
+import com.github.andreyasadchy.xtra.ui.download.StreamDownloadService
+import com.github.andreyasadchy.xtra.ui.download.VideoDownloadService
 import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.games.GamesFragmentDirections
@@ -82,6 +84,9 @@ import com.github.andreyasadchy.xtra.ui.player.Media3Fragment
 import com.github.andreyasadchy.xtra.ui.player.Media3PlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.MediaPlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.PlayerFragment
+import com.github.andreyasadchy.xtra.ui.saved.SavedMediaFragment
+import com.github.andreyasadchy.xtra.ui.saved.SavedPagerFragment
+import com.github.andreyasadchy.xtra.ui.saved.downloads.DownloadsFragment
 import com.github.andreyasadchy.xtra.ui.team.TeamFragmentDirections
 import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
@@ -116,32 +121,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var navController: NavController
     var playerFragment: Fragment? = null
         private set
-    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: Network) {
-            lifecycleScope.launch {
-                viewModel.checkNetworkStatus.value = true
-            }
-        }
-
-        override fun onLost(network: Network) {
-            lifecycleScope.launch {
-                viewModel.checkNetworkStatus.value = true
-            }
-        }
-    }
-    private val pipActionReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            when (intent?.action) {
-                INTENT_START_AUDIO_ONLY -> {
-                    (playerFragment as? Media3PlayerFragment)?.startAudioOnly() ?: (playerFragment as? PlayerFragment)?.startAudioOnly()
-                    moveTaskToBack(false)
-                }
-                INTENT_PLAY_PAUSE_PLAYER -> {
-                    (playerFragment as? Media3PlayerFragment)?.playPause() ?: (playerFragment as? PlayerFragment)?.playPause()
-                }
-            }
-        }
-    }
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var pipActionReceiver: BroadcastReceiver? = null
     private lateinit var prefs: SharedPreferences
     var settingsResultLauncher: ActivityResultLauncher<Intent>? = null
     var loginResultLauncher: ActivityResultLauncher<Intent>? = null
@@ -265,6 +246,79 @@ class MainActivity : AppCompatActivity() {
         }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.checkCellularStatus.collectLatest {
+                    if (it) {
+                        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+                        val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                        val cellular = networkCapabilities != null && networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                        if (!cellular) {
+                            if (prefs.getBoolean(C.DOWNLOAD_WIFI_ONLY, false)) {
+                                val downloads = viewModel.getWaitingDownloads()
+                                if (downloads.isNotEmpty()) {
+                                    downloads.forEach {
+                                        val intent = if (it.live) {
+                                            Intent(this@MainActivity, StreamDownloadService::class.java).apply {
+                                                action = StreamDownloadService.INTENT_START
+                                                putExtra(StreamDownloadService.KEY_VIDEO_ID, it.id)
+                                            }
+                                        } else {
+                                            Intent(this@MainActivity, VideoDownloadService::class.java).apply {
+                                                action = VideoDownloadService.INTENT_START
+                                                putExtra(VideoDownloadService.KEY_VIDEO_ID, it.id)
+                                            }
+                                        }
+                                        startService(intent)
+                                    }
+                                    val currentFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment)?.childFragmentManager?.fragments?.getOrNull(0)
+                                    if (currentFragment is SavedPagerFragment || currentFragment is SavedMediaFragment) {
+                                        val fragment = currentFragment.childFragmentManager.fragments.find { it is DownloadsFragment }
+                                        if (downloads.any { it.live }) {
+                                            (fragment as? DownloadsFragment)?.bindStreamDownloadService(true)
+                                        }
+                                        if (downloads.any { !it.live }) {
+                                            (fragment as? DownloadsFragment)?.bindVideoDownloadService(true)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        viewModel.checkCellularStatus.value = false
+                    }
+                }
+            }
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.startDownloadService.collect {
+                    val videoId = it.first
+                    val live = it.second
+                    if (live) {
+                        val intent = Intent(this@MainActivity, StreamDownloadService::class.java).apply {
+                            action = StreamDownloadService.INTENT_START
+                            putExtra(StreamDownloadService.KEY_VIDEO_ID, videoId)
+                        }
+                        startService(intent)
+                    } else {
+                        val intent = Intent(this@MainActivity, VideoDownloadService::class.java).apply {
+                            action = VideoDownloadService.INTENT_START
+                            putExtra(VideoDownloadService.KEY_VIDEO_ID, videoId)
+                        }
+                        startService(intent)
+                    }
+                    val currentFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment)?.childFragmentManager?.fragments?.getOrNull(0)
+                    if (currentFragment is SavedPagerFragment || currentFragment is SavedMediaFragment) {
+                        val fragment = currentFragment.childFragmentManager.fragments.find { it is DownloadsFragment }
+                        if (live) {
+                            (fragment as? DownloadsFragment)?.bindStreamDownloadService(true)
+                        } else {
+                            (fragment as? DownloadsFragment)?.bindVideoDownloadService(true)
+                        }
+                    }
+                }
+            }
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.updateUrl.collectLatest {
                     if (it != null) {
                         getAlertDialogBuilder()
@@ -344,22 +398,57 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                lifecycleScope.launch {
+                    viewModel.checkNetworkStatus.value = true
+                }
+            }
+
+            override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+                lifecycleScope.launch {
+                    viewModel.checkCellularStatus.value = true
+                }
+            }
+
+            override fun onLost(network: Network) {
+                lifecycleScope.launch {
+                    viewModel.checkNetworkStatus.value = true
+                }
+            }
+        }
         connectivityManager.registerNetworkCallback(
             NetworkRequest.Builder().apply {
                 addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                 addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                 removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
-            }.build(), networkCallback
+            }.build(),
+            callback
         )
+        networkCallback = callback
+        val pipReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                when (intent?.action) {
+                    INTENT_START_AUDIO_ONLY -> {
+                        (playerFragment as? Media3PlayerFragment)?.startAudioOnly() ?: (playerFragment as? PlayerFragment)?.startAudioOnly()
+                        moveTaskToBack(false)
+                    }
+                    INTENT_PLAY_PAUSE_PLAYER -> {
+                        (playerFragment as? Media3PlayerFragment)?.playPause() ?: (playerFragment as? PlayerFragment)?.playPause()
+                    }
+                }
+            }
+        }
         ContextCompat.registerReceiver(
             this,
-            pipActionReceiver,
+            pipReceiver,
             IntentFilter().apply {
                 addAction(INTENT_START_AUDIO_ONLY)
                 addAction(INTENT_PLAY_PAUSE_PLAYER)
             },
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
+        pipActionReceiver = pipReceiver
         if (prefs.getString(C.PLAYER, C.EXOPLAYER) == C.MEDIA_PLAYER || prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
             lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -555,9 +644,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-        connectivityManager.unregisterNetworkCallback(networkCallback)
-        unregisterReceiver(pipActionReceiver)
+        networkCallback?.let {
+            val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+            connectivityManager.unregisterNetworkCallback(it)
+        }
+        pipActionReceiver?.let { unregisterReceiver(it) }
         if (isFinishing) {
             (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? PlayerFragment)?.close()
         }

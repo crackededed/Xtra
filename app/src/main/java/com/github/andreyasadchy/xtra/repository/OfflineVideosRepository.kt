@@ -22,8 +22,12 @@ class OfflineVideosRepository(
         offlineVideosDao.getByUrl(url)
     }
 
-    suspend fun getLiveDownload(login: String) = withContext(Dispatchers.IO) {
-        offlineVideosDao.getLiveDownload(login)
+    suspend fun getActiveDownloads() = withContext(Dispatchers.IO) {
+        offlineVideosDao.getActiveDownloads()
+    }
+
+    suspend fun getWaitingDownloads() = withContext(Dispatchers.IO) {
+        offlineVideosDao.getWaitingDownloads()
     }
 
     suspend fun getByUserId(id: String) = withContext(Dispatchers.IO) {
