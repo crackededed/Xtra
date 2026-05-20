@@ -1,6 +1,7 @@
 package com.github.andreyasadchy.xtra.ui.saved.downloads
 
 import android.content.ContentResolver
+import android.content.Context
 import android.os.Build
 import android.text.format.DateUtils
 import android.util.TypedValue
@@ -21,6 +22,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentDownloadsListItemBinding
+import com.github.andreyasadchy.xtra.model.ui.DownloadProgress
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
@@ -33,7 +35,6 @@ import kotlin.math.min
 
 class DownloadsAdapter(
     private val fragment: Fragment,
-    private val checkDownloadStatus: (OfflineVideo) -> Unit,
     private val stopDownload: (OfflineVideo) -> Unit,
     private val resumeDownload: (OfflineVideo) -> Unit,
     private val convertVideo: (OfflineVideo) -> Unit,
@@ -59,6 +60,98 @@ class DownloadsAdapter(
 
     override fun onBindViewHolder(holder: PagingViewHolder, position: Int) {
         holder.bind(getItem(position))
+    }
+
+    var activeVideoDownloads: List<DownloadProgress>? = null
+    var activeStreamDownloads: List<DownloadProgress>? = null
+
+    fun updateStatus(binding: FragmentDownloadsListItemBinding, context: Context, item: OfflineVideo, progress: DownloadProgress?) {
+        with(binding) {
+            val itemStatus = if ((item.status == OfflineVideo.STATUS_DOWNLOADING || item.status == OfflineVideo.STATUS_QUEUED || item.status == OfflineVideo.STATUS_WAITING_FOR_STREAM) && progress == null) {
+                OfflineVideo.STATUS_PENDING
+            } else {
+                item.status
+            }
+            options.setOnClickListener { it ->
+                PopupMenu(context, it).apply {
+                    inflate(R.menu.offline_item)
+                    when (itemStatus) {
+                        OfflineVideo.STATUS_DOWNLOADING, OfflineVideo.STATUS_QUEUED, OfflineVideo.STATUS_WAITING_FOR_NETWORK, OfflineVideo.STATUS_WAITING_FOR_WIFI, OfflineVideo.STATUS_WAITING_FOR_STREAM -> {
+                            menu.findItem(R.id.stopDownload).isVisible = true
+                        }
+                        OfflineVideo.STATUS_PENDING -> {
+                            if (item.live) {
+                                menu.findItem(R.id.stopDownload).isVisible = true
+                            }
+                            menu.findItem(R.id.resumeDownload).isVisible = true
+                        }
+                        else -> {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                menu.findItem(R.id.moveVideo).apply {
+                                    isVisible = true
+                                    title = context.getString(
+                                        if (item.url?.toUri()?.scheme == ContentResolver.SCHEME_CONTENT) {
+                                            R.string.move_to_app_storage
+                                        } else {
+                                            R.string.move_to_shared_storage
+                                        }
+                                    )
+                                }
+                            }
+                            if (item.url?.endsWith(".m3u8") == true) {
+                                menu.findItem(R.id.convertVideo).isVisible = true
+                            }
+                            menu.findItem(R.id.updateChatUrl).isVisible = true
+                            if (item.url?.toUri()?.scheme == ContentResolver.SCHEME_CONTENT) {
+                                menu.findItem(R.id.shareVideo).isVisible = true
+                            }
+                        }
+                    }
+                    setOnMenuItemClickListener {
+                        when (it.itemId) {
+                            R.id.stopDownload -> stopDownload(item)
+                            R.id.resumeDownload -> resumeDownload(item)
+                            R.id.convertVideo -> convertVideo(item)
+                            R.id.moveVideo -> moveVideo(item)
+                            R.id.updateChatUrl -> updateChatUrl(item)
+                            R.id.shareVideo -> shareVideo(item)
+                            R.id.delete -> deleteVideo(item)
+                            else -> menu.close()
+                        }
+                        true
+                    }
+                    show()
+                }
+            }
+            if (itemStatus == OfflineVideo.STATUS_DOWNLOADED) {
+                status.visibility = View.GONE
+            } else {
+                downloadProgress.text = when (itemStatus) {
+                    OfflineVideo.STATUS_DOWNLOADING -> {
+                        if (item.live || progress == null) {
+                            context.getString(R.string.downloading)
+                        } else {
+                            context.getString(R.string.downloading_progress, ((progress.progress.toFloat() / progress.maxProgress) * 100f).toInt())
+                        }
+                    }
+                    OfflineVideo.STATUS_MOVING -> context.getString(R.string.download_moving, ((item.progress.toFloat() / item.maxProgress) * 100f).toInt())
+                    OfflineVideo.STATUS_DELETING -> context.getString(R.string.download_deleting, ((item.progress.toFloat() / item.maxProgress) * 100f).toInt())
+                    OfflineVideo.STATUS_CONVERTING -> context.getString(R.string.download_converting, ((item.progress.toFloat() / item.maxProgress) * 100f).toInt())
+                    OfflineVideo.STATUS_QUEUED -> context.getString(R.string.download_queued)
+                    OfflineVideo.STATUS_WAITING_FOR_NETWORK -> context.getString(R.string.download_blocked)
+                    OfflineVideo.STATUS_WAITING_FOR_WIFI -> context.getString(R.string.download_blocked_wifi)
+                    OfflineVideo.STATUS_WAITING_FOR_STREAM -> context.getString(R.string.download_waiting_for_stream)
+                    else -> context.getString(R.string.download_pending)
+                }
+                if (item.downloadChat && itemStatus == OfflineVideo.STATUS_DOWNLOADING && progress != null && !item.live) {
+                    chatDownloadProgress.visibility = View.VISIBLE
+                    chatDownloadProgress.text = context.getString(R.string.chat_downloading_progress, min(((progress.chatProgress.toFloat() / progress.maxChatProgress) * 100f).toInt(), 100))
+                } else {
+                    chatDownloadProgress.visibility = View.GONE
+                }
+                status.visibility = View.VISIBLE
+            }
+        }
     }
 
     inner class PagingViewHolder(
@@ -215,93 +308,12 @@ class DownloadsAdapter(
                         params.setMargins(0, margin, 0, 0)
                         type.layoutParams = params
                     }
-                    options.setOnClickListener { it ->
-                        PopupMenu(context, it).apply {
-                            inflate(R.menu.offline_item)
-                            when (item.status) {
-                                OfflineVideo.STATUS_DOWNLOADING, OfflineVideo.STATUS_BLOCKED, OfflineVideo.STATUS_QUEUED, OfflineVideo.STATUS_QUEUED_WIFI, OfflineVideo.STATUS_WAITING_FOR_STREAM -> {
-                                    menu.findItem(R.id.stopDownload).isVisible = true
-                                }
-                                OfflineVideo.STATUS_PENDING -> {
-                                    if (item.live) {
-                                        menu.findItem(R.id.stopDownload).isVisible = true
-                                    }
-                                    menu.findItem(R.id.resumeDownload).isVisible = true
-                                }
-                                else -> {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                        menu.findItem(R.id.moveVideo).apply {
-                                            isVisible = true
-                                            title = context.getString(
-                                                if (item.url?.toUri()?.scheme == ContentResolver.SCHEME_CONTENT) {
-                                                    R.string.move_to_app_storage
-                                                } else {
-                                                    R.string.move_to_shared_storage
-                                                }
-                                            )
-                                        }
-                                    }
-                                    if (item.url?.endsWith(".m3u8") == true) {
-                                        menu.findItem(R.id.convertVideo).isVisible = true
-                                    }
-                                    menu.findItem(R.id.updateChatUrl).isVisible = true
-                                    if (item.url?.toUri()?.scheme == ContentResolver.SCHEME_CONTENT) {
-                                        menu.findItem(R.id.shareVideo).isVisible = true
-                                    }
-                                }
-                            }
-                            setOnMenuItemClickListener {
-                                when (it.itemId) {
-                                    R.id.stopDownload -> stopDownload(item)
-                                    R.id.resumeDownload -> resumeDownload(item)
-                                    R.id.convertVideo -> convertVideo(item)
-                                    R.id.moveVideo -> moveVideo(item)
-                                    R.id.updateChatUrl -> updateChatUrl(item)
-                                    R.id.shareVideo -> shareVideo(item)
-                                    R.id.delete -> deleteVideo(item)
-                                    else -> menu.close()
-                                }
-                                true
-                            }
-                            show()
-                        }
-                    }
-                    if (item.status == OfflineVideo.STATUS_DOWNLOADED) {
-                        status.visibility = View.GONE
+                    val progress = if (item.live) {
+                        activeStreamDownloads?.find { it.id == item.id }
                     } else {
-                        downloadProgress.text = when (item.status) {
-                            OfflineVideo.STATUS_DOWNLOADING -> {
-                                if (item.live) {
-                                    context.getString(R.string.downloading)
-                                } else {
-                                    context.getString(R.string.downloading_progress, ((item.progress.toFloat() / item.maxProgress) * 100f).toInt())
-                                }
-                            }
-                            OfflineVideo.STATUS_MOVING -> context.getString(R.string.download_moving, ((item.progress.toFloat() / item.maxProgress) * 100f).toInt())
-                            OfflineVideo.STATUS_DELETING -> context.getString(R.string.download_deleting, ((item.progress.toFloat() / item.maxProgress) * 100f).toInt())
-                            OfflineVideo.STATUS_CONVERTING -> context.getString(R.string.download_converting, ((item.progress.toFloat() / item.maxProgress) * 100f).toInt())
-                            OfflineVideo.STATUS_BLOCKED -> context.getString(R.string.download_queued)
-                            OfflineVideo.STATUS_QUEUED -> context.getString(R.string.download_blocked)
-                            OfflineVideo.STATUS_QUEUED_WIFI -> context.getString(R.string.download_blocked_wifi)
-                            OfflineVideo.STATUS_WAITING_FOR_STREAM -> context.getString(R.string.download_waiting_for_stream)
-                            else -> context.getString(R.string.download_pending)
-                        }
-                        if (item.downloadChat && item.status == OfflineVideo.STATUS_DOWNLOADING && !item.live) {
-                            chatDownloadProgress.visibility = View.VISIBLE
-                            chatDownloadProgress.text = context.getString(R.string.chat_downloading_progress, min(((item.chatProgress.toFloat() / item.maxChatProgress) * 100f).toInt(), 100))
-                        } else {
-                            chatDownloadProgress.visibility = View.GONE
-                        }
-                        status.visibility = View.VISIBLE
-                        if (item.status == OfflineVideo.STATUS_DOWNLOADING ||
-                            item.status == OfflineVideo.STATUS_BLOCKED ||
-                            item.status == OfflineVideo.STATUS_QUEUED ||
-                            item.status == OfflineVideo.STATUS_QUEUED_WIFI ||
-                            item.status == OfflineVideo.STATUS_WAITING_FOR_STREAM
-                        ) {
-                            checkDownloadStatus(item)
-                        }
+                        activeVideoDownloads?.find { it.id == item.id }
                     }
+                    updateStatus(binding, context, item, progress)
                 }
             }
         }

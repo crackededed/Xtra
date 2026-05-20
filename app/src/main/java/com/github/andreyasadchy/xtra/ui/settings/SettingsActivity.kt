@@ -1420,6 +1420,9 @@ class SettingsActivity : AppCompatActivity() {
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.download_preferences, rootKey)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                findPreference<SwitchPreferenceCompat>(C.DOWNLOAD_WIFI_ONLY)?.isVisible = false
+            }
             findPreference<Preference>("import_app_downloads")?.setOnPreferenceClickListener {
                 viewModel.importDownloads()
                 true

@@ -15,16 +15,12 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
-import androidx.work.NetworkType
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
 import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import com.github.andreyasadchy.xtra.util.m3u8.Segment
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileInputStream
@@ -38,14 +34,28 @@ class DownloadsViewModel(
 
     var selectedVideo: OfflineVideo? = null
     private val videosInUse = mutableListOf<OfflineVideo>()
-    private val currentDownloads = mutableListOf<Int>()
-    private val liveDownloads = mutableListOf<String>()
 
     val flow = Pager(
         PagingConfig(pageSize = 30, prefetchDistance = 3, initialLoadSize = 30),
     ) {
         offlineVideosRepository.getAll()
     }.flow.cachedIn(viewModelScope)
+
+    suspend fun getActiveDownloads(): List<OfflineVideo> {
+        return offlineVideosRepository.getActiveDownloads()
+    }
+
+    fun updateDownloadStatus(video: OfflineVideo, waitForWifi: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            offlineVideosRepository.update(video.apply {
+                status = if (waitForWifi) {
+                    OfflineVideo.STATUS_WAITING_FOR_WIFI
+                } else {
+                    OfflineVideo.STATUS_PENDING
+                }
+            })
+        }
+    }
 
     fun finishDownload(video: OfflineVideo) {
         video.chatUrl?.let { url ->
@@ -65,100 +75,17 @@ class DownloadsViewModel(
                 applicationContext.contentResolver.openOutputStream(url.toUri(), "wa")!!.bufferedWriter()
             } else {
                 FileOutputStream(url, true).bufferedWriter()
-            }.use { fileWriter ->
-                fileWriter.write("}")
+            }.use { writer ->
+                if (video.liveCommentsArrayStarted) {
+                    writer.write("]")
+                }
+                writer.write("}")
             }
         }
         viewModelScope.launch(Dispatchers.IO) {
             offlineVideosRepository.update(video.apply {
                 status = OfflineVideo.STATUS_DOWNLOADED
             })
-        }
-    }
-
-    fun checkLiveDownloadStatus(channelLogin: String) {
-        if (!liveDownloads.contains(channelLogin)) {
-            liveDownloads.add(channelLogin)
-            viewModelScope.launch(Dispatchers.IO) {
-                WorkManager.getInstance(applicationContext).getWorkInfosForUniqueWorkFlow(channelLogin).collect { list ->
-                    val work = list.lastOrNull()
-                    when {
-                        work == null || work.state.isFinished -> {
-                            offlineVideosRepository.getLiveDownload(channelLogin)?.let { video ->
-                                if (video.status == OfflineVideo.STATUS_DOWNLOADING || video.status == OfflineVideo.STATUS_BLOCKED || video.status == OfflineVideo.STATUS_QUEUED || video.status == OfflineVideo.STATUS_QUEUED_WIFI || video.status == OfflineVideo.STATUS_WAITING_FOR_STREAM) {
-                                    offlineVideosRepository.update(video.apply {
-                                        status = OfflineVideo.STATUS_PENDING
-                                    })
-                                }
-                            }
-                            cancel()
-                        }
-                        work.state == WorkInfo.State.ENQUEUED -> {
-                            offlineVideosRepository.getLiveDownload(channelLogin)?.let { video ->
-                                offlineVideosRepository.update(video.apply {
-                                    status = if (work.constraints.requiredNetworkType == NetworkType.UNMETERED) {
-                                        OfflineVideo.STATUS_QUEUED_WIFI
-                                    } else {
-                                        OfflineVideo.STATUS_QUEUED
-                                    }
-                                })
-                            }
-                        }
-                        work.state == WorkInfo.State.BLOCKED -> {
-                            offlineVideosRepository.getLiveDownload(channelLogin)?.let { video ->
-                                offlineVideosRepository.update(video.apply {
-                                    status = OfflineVideo.STATUS_BLOCKED
-                                })
-                            }
-                        }
-                    }
-                }
-            }.invokeOnCompletion {
-                liveDownloads.remove(channelLogin)
-            }
-        }
-    }
-
-    fun checkDownloadStatus(videoId: Int) {
-        if (!currentDownloads.contains(videoId)) {
-            currentDownloads.add(videoId)
-            viewModelScope.launch(Dispatchers.IO) {
-                WorkManager.getInstance(applicationContext).getWorkInfosByTagFlow(videoId.toString()).collect { list ->
-                    val work = list.lastOrNull()
-                    when {
-                        work == null || work.state.isFinished -> {
-                            offlineVideosRepository.getById(videoId)?.let { video ->
-                                if (video.status == OfflineVideo.STATUS_DOWNLOADING || video.status == OfflineVideo.STATUS_BLOCKED || video.status == OfflineVideo.STATUS_QUEUED || video.status == OfflineVideo.STATUS_QUEUED_WIFI) {
-                                    offlineVideosRepository.update(video.apply {
-                                        status = OfflineVideo.STATUS_PENDING
-                                    })
-                                }
-                            }
-                            cancel()
-                        }
-                        work.state == WorkInfo.State.ENQUEUED -> {
-                            offlineVideosRepository.getById(videoId)?.let { video ->
-                                offlineVideosRepository.update(video.apply {
-                                    status = if (work.constraints.requiredNetworkType == NetworkType.UNMETERED) {
-                                        OfflineVideo.STATUS_QUEUED_WIFI
-                                    } else {
-                                        OfflineVideo.STATUS_QUEUED
-                                    }
-                                })
-                            }
-                        }
-                        work.state == WorkInfo.State.BLOCKED -> {
-                            offlineVideosRepository.getById(videoId)?.let { video ->
-                                offlineVideosRepository.update(video.apply {
-                                    status = OfflineVideo.STATUS_BLOCKED
-                                })
-                            }
-                        }
-                    }
-                }
-            }.invokeOnCompletion {
-                currentDownloads.remove(videoId)
-            }
         }
     }
 
@@ -761,11 +688,6 @@ class DownloadsViewModel(
                     maxProgress = 100
                     status = OfflineVideo.STATUS_DELETING
                 })
-                if (video.live) {
-                    video.channelLogin?.let { WorkManager.getInstance(applicationContext).cancelUniqueWork(it) }
-                } else {
-                    WorkManager.getInstance(applicationContext).cancelAllWorkByTag(video.id.toString())
-                }
                 if (videoUrl != null && !keepFiles) {
                     if (videoUrl.toUri().scheme == ContentResolver.SCHEME_CONTENT) {
                         if (videoUrl.endsWith(".m3u8")) {

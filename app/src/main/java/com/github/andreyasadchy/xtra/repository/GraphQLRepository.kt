@@ -108,7 +108,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -584,6 +583,60 @@ class GraphQLRepository(
             offset = if (offset != null) Optional.Present(offset) else Optional.Absent,
         )
         sendQuery(networkLibrary, headers, query)
+    }
+
+    suspend fun loadQueryVideoCommentsDownload(networkLibrary: String?, headers: Map<String, String>, videoId: String?, offset: Int? = null, cursor: String? = null): VideoMessagesResponse = withContext(Dispatchers.IO) {
+        val query = VideoCommentsQuery(
+            id = Optional.Present(videoId),
+            first = Optional.Present(100),
+            after = Optional.Present(cursor),
+            offset = if (offset != null) Optional.Present(offset) else Optional.Absent,
+        )
+        val body = buildJsonString {
+            query.apply {
+                writeObject {
+                    name("variables")
+                    writeObject {
+                        serializeVariables(this, CustomScalarAdapters.Empty, false)
+                    }
+                    name("query")
+                    value(document().replaceFirst(name(), "null"))
+                }
+            }
+        }
+        val response = when {
+            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+                val response = suspendCancellableCoroutine { continuation ->
+                    httpEngine.value!!.newUrlRequestBuilder("https://gql.twitch.tv/gql/", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                        headers.forEach { addHeader(it.key, it.value) }
+                        addHeader("Content-Type", "application/json")
+                        setUploadDataProvider(NetworkUtils.byteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
+                    }.build().start()
+                }
+                String(response.second)
+            }
+            networkLibrary == C.CRONET && cronetEngine.value != null -> {
+                val response = suspendCancellableCoroutine { continuation ->
+                    cronetEngine.value!!.newUrlRequestBuilder("https://gql.twitch.tv/gql/", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
+                        headers.forEach { addHeader(it.key, it.value) }
+                        addHeader("Content-Type", "application/json")
+                        setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
+                    }.build().start()
+                }
+                String(response.second)
+            }
+            else -> {
+                okHttpClient.value.newCall(Request.Builder().apply {
+                    url("https://gql.twitch.tv/gql/")
+                    headers(headers.toHeaders())
+                    header("Content-Type", "application/json")
+                    post(body.toRequestBody())
+                }.build()).executeAsync().use { response ->
+                    response.body.string()
+                }
+            }
+        }
+        json.decodeFromString<VideoMessagesResponse>(response)
     }
 
     suspend fun loadQueryVideoMoments(networkLibrary: String?, headers: Map<String, String>, videoId: String?): ApolloResponse<VideoMomentsQuery.Data> = withContext(Dispatchers.IO) {
@@ -1099,11 +1152,6 @@ class GraphQLRepository(
     suspend fun loadVideoMessages(networkLibrary: String?, headers: Map<String, String>, videoId: String?, offset: Int? = null, cursor: String? = null): VideoMessagesResponse = withContext(Dispatchers.IO) {
         val body = getVideoMessagesRequestBody(videoId, offset, cursor)
         json.decodeFromString<VideoMessagesResponse>(sendPersistedQuery(networkLibrary, headers, body))
-    }
-
-    suspend fun loadVideoMessagesDownload(networkLibrary: String?, headers: Map<String, String>, videoId: String?, offset: Int? = null, cursor: String? = null): JsonElement = withContext(Dispatchers.IO) {
-        val body = getVideoMessagesRequestBody(videoId, offset, cursor)
-        json.decodeFromString<JsonElement>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
     suspend fun loadVideoGames(networkLibrary: String?, headers: Map<String, String>, videoId: String?): VideoGamesResponse = withContext(Dispatchers.IO) {

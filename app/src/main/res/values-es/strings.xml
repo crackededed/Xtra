@@ -715,4 +715,5 @@
     <string name="account">Account</string>
     <string name="downloading_update_progress">Downloading update… %1$s / %2$s</string>
     <string name="downloading_update">Downloading update…</string>
+    <string name="concurrent_downloads">Concurrent downloads</string>
 </resources>
