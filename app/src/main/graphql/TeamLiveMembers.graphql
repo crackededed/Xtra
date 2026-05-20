@@ -4,9 +4,9 @@ query TeamLiveMembers($name: String!, $first: Int, $after: Cursor) {
             edges {
                 cursor
                 node {
+                    displayName
                     id
                     login
-                    displayName
                     profileImageURL(width: 300)
                     stream {
                         broadcaster {
@@ -15,15 +15,15 @@ query TeamLiveMembers($name: String!, $first: Int, $after: Cursor) {
                             }
                         }
                         createdAt
-                        game {
-                            id
-                            displayName
-                            slug
-                        }
-                        id
                         freeformTags {
                             name
                         }
+                        game {
+                            displayName
+                            id
+                            slug
+                        }
+                        id
                         viewersCount
                     }
                 }
@@ -36,9 +36,9 @@ query TeamLiveMembers($name: String!, $first: Int, $after: Cursor) {
             edges {
                 cursor
                 node {
+                    displayName
                     id
                     login
-                    displayName
                     profileImageURL(width: 300)
                     stream {
                         broadcaster {
@@ -47,15 +47,15 @@ query TeamLiveMembers($name: String!, $first: Int, $after: Cursor) {
                             }
                         }
                         createdAt
-                        game {
-                            id
-                            displayName
-                            slug
-                        }
-                        id
                         freeformTags {
                             name
                         }
+                        game {
+                            displayName
+                            id
+                            slug
+                        }
+                        id
                         viewersCount
                     }
                 }

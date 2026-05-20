@@ -145,6 +145,9 @@ class MainViewModel(
                                 channelLogin = it.owner?.login,
                                 channelName = it.owner?.displayName,
                                 channelImageURL = it.owner?.profileImageURL,
+                                gameId = it.game?.id,
+                                gameSlug = it.game?.slug,
+                                gameName = it.game?.displayName,
                                 title = it.title,
                                 thumbnailURL = it.previewThumbnailURL,
                                 createdAt = it.createdAt?.toString(),
@@ -198,65 +201,98 @@ class MainViewModel(
         if (clip.value == null) {
             viewModelScope.launch {
                 clip.value = try {
-                    val user = try {
-                        graphQLRepository.loadClipData(networkLibrary, gqlHeaders, clipId).data?.clip
-                    } catch (e: Exception) {
-                        null
-                    }
-                    val clip = graphQLRepository.loadClipVideo(networkLibrary, gqlHeaders, clipId).also { response ->
-                        if (enableIntegrity) {
-                            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
-                                integrity.emit("refresh")
-                                return@launch
-                            }
+                    val response = graphQLRepository.loadQueryClip(networkLibrary, gqlHeaders, clipId!!)
+                    if (enableIntegrity) {
+                        response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                            integrity.emit("refresh")
+                            return@launch
                         }
-                    }.data?.clip
-                    Clip(
-                        id = clipId,
-                        channelId = user?.broadcaster?.id,
-                        channelLogin = user?.broadcaster?.login,
-                        channelName = user?.broadcaster?.displayName,
-                        channelImageURL = user?.broadcaster?.profileImageURL,
-                        durationSeconds = clip?.durationSeconds,
-                        videoId = clip?.video?.id,
-                        videoOffsetSeconds = (clip?.videoOffsetSeconds ?: user?.videoOffsetSeconds).let {
-                            if (it != null && clip?.durationSeconds != null) {
-                                max(it - clip.durationSeconds, 0)
+                    }
+                    response.data!!.clip?.let {
+                        Clip(
+                            id = clipId,
+                            channelId = it.broadcaster?.id,
+                            channelLogin = it.broadcaster?.login,
+                            channelName = it.broadcaster?.displayName,
+                            channelImageURL = it.broadcaster?.profileImageURL,
+                            gameId = it.game?.id,
+                            gameSlug = it.game?.slug,
+                            gameName = it.game?.displayName,
+                            title = it.title,
+                            thumbnailURL = it.thumbnailURL,
+                            createdAt = it.createdAt?.toString(),
+                            durationSeconds = it.durationSeconds,
+                            videoId = it.video?.id,
+                            videoOffsetSeconds = if (it.videoOffsetSeconds != null && it.durationSeconds != null) {
+                                max(it.videoOffsetSeconds - it.durationSeconds, 0)
                             } else {
-                                it
-                            }
-                        },
-                    )
+                                it.videoOffsetSeconds
+                            },
+                            videoAnimatedPreviewURL = it.video?.animatedPreviewURL,
+                        )
+                    }
                 } catch (e: Exception) {
-                    if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-                        try {
-                            helixRepository.getClips(
-                                networkLibrary = networkLibrary,
-                                headers = helixHeaders,
-                                ids = clipId?.let { listOf(it) }
-                            ).data.firstOrNull()?.let {
-                                Clip(
-                                    id = it.id,
-                                    channelId = it.channelId,
-                                    channelName = it.channelName,
-                                    gameId = it.gameId,
-                                    title = it.title,
-                                    thumbnailURL = it.thumbnailURL,
-                                    createdAt = it.createdAt,
-                                    viewCount = it.viewCount,
-                                    durationSeconds = it.duration?.toInt(),
-                                    videoId = it.videoId,
-                                    videoOffsetSeconds = if (it.vodOffset != null && it.duration != null) {
-                                        max(it.vodOffset - it.duration.toInt(), 0)
-                                    } else {
-                                        it.vodOffset
-                                    },
-                                )
-                            }
+                    try {
+                        val user = try {
+                            graphQLRepository.loadClipData(networkLibrary, gqlHeaders, clipId).data?.clip
                         } catch (e: Exception) {
                             null
                         }
-                    } else null
+                        val clip = graphQLRepository.loadClipVideo(networkLibrary, gqlHeaders, clipId).also { response ->
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("refresh")
+                                    return@launch
+                                }
+                            }
+                        }.data?.clip
+                        Clip(
+                            id = clipId,
+                            channelId = user?.broadcaster?.id,
+                            channelLogin = user?.broadcaster?.login,
+                            channelName = user?.broadcaster?.displayName,
+                            channelImageURL = user?.broadcaster?.profileImageURL,
+                            durationSeconds = clip?.durationSeconds,
+                            videoId = clip?.video?.id,
+                            videoOffsetSeconds = (clip?.videoOffsetSeconds ?: user?.videoOffsetSeconds).let {
+                                if (it != null && clip?.durationSeconds != null) {
+                                    max(it - clip.durationSeconds, 0)
+                                } else {
+                                    it
+                                }
+                            },
+                        )
+                    } catch (e: Exception) {
+                        if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                            try {
+                                helixRepository.getClips(
+                                    networkLibrary = networkLibrary,
+                                    headers = helixHeaders,
+                                    ids = clipId?.let { listOf(it) }
+                                ).data.firstOrNull()?.let {
+                                    Clip(
+                                        id = it.id,
+                                        channelId = it.channelId,
+                                        channelName = it.channelName,
+                                        gameId = it.gameId,
+                                        title = it.title,
+                                        thumbnailURL = it.thumbnailURL,
+                                        createdAt = it.createdAt,
+                                        viewCount = it.viewCount,
+                                        durationSeconds = it.duration?.toInt(),
+                                        videoId = it.videoId,
+                                        videoOffsetSeconds = if (it.vodOffset != null && it.duration != null) {
+                                            max(it.vodOffset - it.duration.toInt(), 0)
+                                        } else {
+                                            it.vodOffset
+                                        },
+                                    )
+                                }
+                            } catch (e: Exception) {
+                                null
+                            }
+                        } else null
+                    }
                 }
             }
         }

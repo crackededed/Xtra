@@ -13,16 +13,16 @@ query TopStreams($sort: StreamSort, $tags: [String!], $languages: [Language!], $
                     profileImageURL(width: 300)
                 }
                 createdAt
+                freeformTags {
+                    name
+                }
                 game {
-                    id
                     displayName
+                    id
                     slug
                 }
                 id
                 previewImageURL
-                freeformTags {
-                    name
-                }
                 viewersCount
             }
         }

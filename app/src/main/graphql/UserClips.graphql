@@ -7,8 +7,8 @@ query UserClips($id: ID, $login: String, $period: ClipsPeriod, $first: Int, $aft
                     createdAt
                     durationSeconds
                     game {
-                        id
                         displayName
+                        id
                         slug
                     }
                     slug
