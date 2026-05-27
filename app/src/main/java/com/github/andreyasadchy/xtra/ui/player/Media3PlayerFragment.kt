@@ -933,6 +933,7 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                                         channelLogin = requireArguments().getString(KEY_CHANNEL_LOGIN),
                                         channelName = requireArguments().getString(KEY_CHANNEL_NAME),
                                         channelImageURL = requireArguments().getString(KEY_PROFILE_IMAGE_URL),
+                                        createdAt = requireArguments().getString(KEY_VIDEO_CREATED_AT),
                                         animatedPreviewURL = requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW),
                                     ),
                                     offset,
@@ -1079,18 +1080,21 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                         requireArguments().getString(KEY_CHANNEL_ID),
                         requireArguments().getString(KEY_CHANNEL_LOGIN),
                         requireArguments().getString(KEY_VIDEO_ID),
-                        0
+                        requireArguments().getString(KEY_CREATED_AT),
+                        0,
                     )
                     CLIP -> ChatFragment.newInstance(
                         requireArguments().getString(KEY_CHANNEL_ID),
                         requireArguments().getString(KEY_CHANNEL_LOGIN),
                         requireArguments().getString(KEY_VIDEO_ID),
-                        requireArguments().getInt(KEY_VIDEO_OFFSET_SECONDS).takeIf { it != -1 }
+                        requireArguments().getString(KEY_VIDEO_CREATED_AT),
+                        requireArguments().getInt(KEY_VIDEO_OFFSET_SECONDS).takeIf { it != -1 },
                     )
                     OFFLINE_VIDEO -> ChatFragment.newLocalInstance(
                         requireArguments().getString(KEY_CHANNEL_ID),
                         requireArguments().getString(KEY_CHANNEL_LOGIN),
-                        requireArguments().getString(KEY_CHAT_URL)
+                        requireArguments().getString(KEY_VIDEO_CREATED_AT) ?: requireArguments().getString(KEY_CREATED_AT)?.takeIf { requireArguments().getString(KEY_CLIP_ID) == null },
+                        requireArguments().getString(KEY_CHAT_URL),
                     )
                     else -> null
                 }
@@ -2284,6 +2288,7 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                         durationSeconds = requireArguments().getInt(KEY_DURATION_SECONDS),
                         videoId = requireArguments().getString(KEY_VIDEO_ID),
                         videoOffsetSeconds = requireArguments().getInt(KEY_VIDEO_OFFSET_SECONDS),
+                        videoCreatedAt = requireArguments().getString(KEY_VIDEO_CREATED_AT),
                         qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
                         qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
                         qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
@@ -2503,6 +2508,7 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
             putInt(KEY_DURATION_SECONDS, item.durationSeconds ?: 0)
             putString(KEY_VIDEO_ID, item.videoId)
             putInt(KEY_VIDEO_OFFSET_SECONDS, item.videoOffsetSeconds ?: -1)
+            putString(KEY_VIDEO_CREATED_AT, item.videoCreatedAt)
             putString(KEY_VIDEO_ANIMATED_PREVIEW, item.videoAnimatedPreviewURL)
         }
     }
@@ -2511,6 +2517,7 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
         return Bundle().apply {
             putString(KEY_TYPE, OFFLINE_VIDEO)
             putInt(KEY_OFFLINE_VIDEO_ID, item.id)
+            putString(KEY_CLIP_ID, item.clipId)
             putString(KEY_URL, item.url)
             putString(KEY_CHAT_URL, item.chatUrl)
             putString(KEY_CHANNEL_ID, item.channelId)
@@ -2521,6 +2528,8 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
             putString(KEY_GAME_SLUG, item.gameSlug)
             putString(KEY_GAME_NAME, item.gameName)
             putString(KEY_TITLE, item.name)
+            putString(KEY_CREATED_AT, item.uploadDate?.toString())
+            putString(KEY_VIDEO_CREATED_AT, item.videoCreatedAt)
         }
     }
 
@@ -2568,6 +2577,7 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
         protected const val KEY_DURATION_SECONDS = "durationSeconds"
         protected const val KEY_VIDEO_TYPE = "videoType"
         protected const val KEY_VIDEO_OFFSET_SECONDS = "videoOffsetSeconds"
+        protected const val KEY_VIDEO_CREATED_AT = "videoCreatedAt"
         protected const val KEY_VIDEO_ANIMATED_PREVIEW = "videoAnimatedPreview"
         protected const val KEY_OFFSET = "offset"
         protected const val KEY_IGNORE_SAVED_POSITION = "ignoreSavedPosition"

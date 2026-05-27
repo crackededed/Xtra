@@ -24,6 +24,7 @@ class PlaybackState(
     val durationSeconds: Int? = null,
     val videoType: String? = null,
     val videoOffsetSeconds: Int? = null,
+    val videoCreatedAt: String? = null,
     val videoAnimatedPreviewURL: String? = null,
     val position: Long? = null,
     val paused: Boolean = false,

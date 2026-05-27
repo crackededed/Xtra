@@ -30,6 +30,7 @@ import com.github.andreyasadchy.xtra.model.chat.STVBadge
 import com.github.andreyasadchy.xtra.model.chat.STVUser
 import com.github.andreyasadchy.xtra.model.chat.TwitchBadge
 import com.github.andreyasadchy.xtra.model.chat.TwitchEmote
+import com.github.andreyasadchy.xtra.model.chat.VideoChatMessage
 import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
@@ -175,10 +176,10 @@ class ChatViewModel(
         }
     }
 
-    fun startReplay(channelId: String?, channelLogin: String?, chatUrl: String? = null, videoId: String? = null, startTime: Int = 0, getCurrentPosition: () -> Long?, getCurrentSpeed: () -> Float?) {
+    fun startReplay(channelId: String?, channelLogin: String?, chatUrl: String? = null, videoId: String? = null, createdAt: String?, startTime: Int = 0, getCurrentPosition: () -> Long?, getCurrentSpeed: () -> Float?) {
         if (chatReplayManager == null && chatReplayManagerLocal == null) {
             messageLimit = applicationContext.prefs().getInt(C.CHAT_LIMIT, 600)
-            startReplayChat(videoId, startTime, chatUrl, getCurrentPosition, getCurrentSpeed, channelId, channelLogin)
+            startReplayChat(videoId, createdAt, startTime, chatUrl, getCurrentPosition, getCurrentSpeed, channelId, channelLogin)
             if (videoId != null) {
                 loadEmotes(channelId, channelLogin)
             }
@@ -191,9 +192,9 @@ class ChatViewModel(
         }
     }
 
-    fun resumeReplay(channelId: String?, channelLogin: String?, chatUrl: String?, videoId: String?, startTime: Int, getCurrentPosition: () -> Long?, getCurrentSpeed: () -> Float?) {
+    fun resumeReplay(channelId: String?, channelLogin: String?, chatUrl: String?, videoId: String?, createdAt: String?, startTime: Int, getCurrentPosition: () -> Long?, getCurrentSpeed: () -> Float?) {
         if (chatReplayManager?.isActive == false || chatReplayManagerLocal?.isActive == false) {
-            startReplayChat(videoId, startTime, chatUrl, getCurrentPosition, getCurrentSpeed, channelId, channelLogin)
+            startReplayChat(videoId, createdAt, startTime, chatUrl, getCurrentPosition, getCurrentSpeed, channelId, channelLogin)
         }
     }
 
@@ -2339,10 +2340,11 @@ class ChatViewModel(
         }
     }
 
-    fun startReplayChat(videoId: String?, startTime: Int, chatUrl: String?, getCurrentPosition: () -> Long?, getCurrentSpeed: () -> Float?, channelId: String?, channelLogin: String?) {
+    fun startReplayChat(videoId: String?, createdAt: String?, startTime: Int, chatUrl: String?, getCurrentPosition: () -> Long?, getCurrentSpeed: () -> Float?, channelId: String?, channelLogin: String?) {
         stopReplayChat()
         if (!chatUrl.isNullOrBlank()) {
             chatReplayManagerLocal = ChatReplayManagerLocal(
+                createdAt = createdAt?.toLongOrNull() ?: createdAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
                 getCurrentPosition = getCurrentPosition,
                 getCurrentSpeed = getCurrentSpeed,
                 coroutineScope = viewModelScope,
@@ -2358,6 +2360,7 @@ class ChatViewModel(
                     json = json,
                     enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                     videoId = videoId,
+                    createdAt = createdAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
                     startTime = startTime.times(1000L),
                     getCurrentPosition = getCurrentPosition,
                     getCurrentSpeed = getCurrentSpeed,
@@ -2408,7 +2411,8 @@ class ChatViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val nameDisplay = applicationContext.prefs().getString(C.UI_NAME_DISPLAY, "0")
-                val messages = mutableListOf<ChatMessage>()
+                val liveMessages = mutableListOf<ChatMessage>()
+                val messages = mutableListOf<VideoChatMessage>()
                 var startTimeMs = 0L
                 val twitchEmotes = mutableListOf<TwitchEmote>()
                 val twitchBadges = mutableListOf<TwitchBadge>()
@@ -2442,32 +2446,32 @@ class ChatViewModel(
                                                                 message.contains("PRIVMSG") -> {
                                                                     val chatMessage = ChatUtils.parseChatMessage(message, false)
                                                                     if (chatMessage.reply?.message != null) {
-                                                                        messages.add(ChatMessage(
+                                                                        liveMessages.add(ChatMessage(
                                                                             reply = chatMessage.reply,
                                                                             isReply = true,
                                                                             replyParent = chatMessage,
                                                                         ))
                                                                     }
-                                                                    messages.add(chatMessage)
+                                                                    liveMessages.add(chatMessage)
                                                                 }
                                                                 message.contains("USERNOTICE") -> {
                                                                     val chatMessage = ChatUtils.parseChatMessage(message, true)
                                                                     if (chatMessage.reply?.message != null) {
-                                                                        messages.add(ChatMessage(
+                                                                        liveMessages.add(ChatMessage(
                                                                             reply = chatMessage.reply,
                                                                             isReply = true,
                                                                             replyParent = chatMessage,
                                                                         ))
                                                                     }
-                                                                    messages.add(chatMessage)
+                                                                    liveMessages.add(chatMessage)
                                                                 }
                                                                 message.contains("CLEARMSG") -> {
                                                                     val pair = ChatUtils.parseClearMessage(message)
-                                                                    val deletedMessage = pair.second?.let { targetId -> messages.find { it.id == targetId } }
-                                                                    messages.add(getClearMessage(pair.first, deletedMessage, nameDisplay))
+                                                                    val deletedMessage = pair.second?.let { targetId -> liveMessages.find { it.id == targetId } }
+                                                                    liveMessages.add(getClearMessage(pair.first, deletedMessage, nameDisplay))
                                                                 }
-                                                                message.contains("CLEARCHAT") -> messages.add(ChatUtils.parseClearChat(applicationContext, message))
-                                                                message.contains("NOTICE") -> messages.add(ChatUtils.parseNotice(applicationContext, message))
+                                                                message.contains("CLEARCHAT") -> liveMessages.add(ChatUtils.parseClearChat(applicationContext, message))
+                                                                message.contains("NOTICE") -> liveMessages.add(ChatUtils.parseNotice(applicationContext, message))
                                                             }
                                                             if (reader.peek() != JsonToken.END_ARRAY) {
                                                                 position += 1
@@ -2482,6 +2486,7 @@ class ChatViewModel(
                                                             val message = StringBuilder()
                                                             var id: String? = null
                                                             var offsetSeconds: Int? = null
+                                                            var createdAt: String? = null
                                                             var userId: String? = null
                                                             var userLogin: String? = null
                                                             var userName: String? = null
@@ -2507,6 +2512,7 @@ class ChatViewModel(
                                                                         reader.endObject().also { position += 1 }
                                                                     }
                                                                     "contentOffsetSeconds" -> offsetSeconds = reader.nextInt().also { position += it.toString().length }
+                                                                    "createdAt" -> createdAt = reader.nextString().also { position += it.length + 2 }
                                                                     "message" -> {
                                                                         reader.beginObject().also { position += 1 }
                                                                         while (reader.hasNext()) {
@@ -2605,8 +2611,10 @@ class ChatViewModel(
                                                                     position += 1
                                                                 }
                                                             }
-                                                            messages.add(ChatMessage(
+                                                            messages.add(VideoChatMessage(
                                                                 id = id,
+                                                                offsetSeconds = offsetSeconds,
+                                                                createdAt = createdAt,
                                                                 userId = userId,
                                                                 userLogin = userLogin,
                                                                 userName = userName,
@@ -2614,8 +2622,6 @@ class ChatViewModel(
                                                                 color = color,
                                                                 emotes = emotesList,
                                                                 badges = badgesList,
-                                                                bits = 0,
-                                                                timestamp = offsetSeconds?.times(1000L),
                                                                 fullMsg = null
                                                             ))
                                                             reader.endObject().also { position += 1 }
@@ -2816,9 +2822,9 @@ class ChatViewModel(
                         loadEmotes(channelId, channelLogin)
                     }
                 }
-                if (messages.isNotEmpty()) {
+                if (liveMessages.isNotEmpty() || messages.isNotEmpty()) {
                     viewModelScope.launch {
-                        chatReplayManagerLocal?.setMessages(messages, startTimeMs)
+                        chatReplayManagerLocal?.setMessages(liveMessages, messages, startTimeMs)
                     }
                 }
             } catch (e: Exception) {

@@ -17,6 +17,7 @@ query GameClips($id: ID, $slug: String, $name: String, $languages: [Language!], 
                     title
                     video {
                         animatedPreviewURL
+                        createdAt
                         id
                     }
                     videoOffsetSeconds

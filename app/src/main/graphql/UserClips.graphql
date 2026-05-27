@@ -16,6 +16,7 @@ query UserClips($id: ID, $login: String, $period: ClipsPeriod, $first: Int, $aft
                     title
                     video {
                         animatedPreviewURL
+                        createdAt
                         id
                     }
                     videoOffsetSeconds
