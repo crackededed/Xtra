@@ -66,6 +66,7 @@ class GameClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSortD
                 durationSeconds = it.durationSeconds,
                 videoId = it.videoId,
                 videoOffsetSeconds = it.videoOffsetSeconds,
+                videoCreatedAt = it.videoCreatedAt,
             ).show(childFragmentManager, null)
         }
         pagingAdapter = ClipsAdapter(this, showDialog, showGame = false)

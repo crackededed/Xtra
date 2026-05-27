@@ -45,6 +45,7 @@ class OfflineVideo(
     var status: Int = STATUS_PENDING,
     val type: String? = null,
     var videoId: String? = null,
+    val videoCreatedAt: String? = null,
     val clipId: String? = null,
     val quality: String? = null,
     val downloadChat: Boolean = false,

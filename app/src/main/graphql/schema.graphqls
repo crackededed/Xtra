@@ -454,6 +454,7 @@ type Video {
 type VideoComment {
     commenter: User
     contentOffsetSeconds: Int
+    createdAt: Time
     id: ID
     message: VideoCommentMessage
 }

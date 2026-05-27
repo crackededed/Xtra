@@ -6,6 +6,7 @@ import com.github.andreyasadchy.xtra.model.chat.TwitchEmote
 import com.github.andreyasadchy.xtra.model.chat.VideoChatMessage
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -22,6 +23,7 @@ class ChatReplayManager(
     private val json: Json,
     private val enableIntegrity: Boolean,
     private val videoId: String,
+    private val createdAt: Long?,
     private val startTime: Long,
     private val getCurrentPosition: () -> Long?,
     private val getCurrentSpeed: () -> Float?,
@@ -103,6 +105,7 @@ class ChatReplayManager(
                             VideoChatMessage(
                                 id = item.id,
                                 offsetSeconds = item.contentOffsetSeconds,
+                                createdAt = item.createdAt?.toString(),
                                 userId = item.commenter?.id,
                                 userLogin = item.commenter?.login,
                                 userName = item.commenter?.displayName,
@@ -163,6 +166,7 @@ class ChatReplayManager(
                                 VideoChatMessage(
                                     id = item.id,
                                     offsetSeconds = item.contentOffsetSeconds,
+                                    createdAt = null,
                                     userId = item.commenter?.id,
                                     userLogin = item.commenter?.login,
                                     userName = item.commenter?.displayName,
@@ -191,9 +195,13 @@ class ChatReplayManager(
         messageJob = coroutineScope.launch {
             while (isActive) {
                 val message = list.firstOrNull() ?: break
-                if (message.offsetSeconds != null) {
+                val messageOffset = if (createdAt != null && !message.createdAt.isNullOrBlank()) {
+                    TwitchApiHelper.parseIso8601DateUTC(message.createdAt)?.minus(createdAt)
+                } else {
+                    null
+                } ?: message.offsetSeconds?.times(1000L)
+                if (messageOffset != null) {
                     var currentPosition: Long
-                    val messageOffset = message.offsetSeconds.times(1000)
                     while (
                         (getCurrentPosition() ?: 0).let { position ->
                             lastCheckedPosition = position
@@ -223,7 +231,11 @@ class ChatReplayManager(
                     if (list.size <= 25 && !cursor.isNullOrBlank() && !isLoading) {
                         load()
                     }
-                } else if (!isActive) break
+                } else {
+                    if (!isActive) {
+                        break
+                    }
+                }
                 list.remove(message)
             }
         }
