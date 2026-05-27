@@ -66,6 +66,7 @@ class ChannelClipsFragment : PagedListFragment(), Scrollable, Sortable, VideosSo
                 durationSeconds = it.durationSeconds,
                 videoId = it.videoId,
                 videoOffsetSeconds = it.videoOffsetSeconds,
+                videoCreatedAt = it.videoCreatedAt,
             ).show(childFragmentManager, null)
         }
         pagingAdapter = ClipsAdapter(this, showDialog, showChannel = false)

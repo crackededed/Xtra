@@ -91,6 +91,7 @@ class ChannelClipsDataSource(
                     } else {
                         it.videoOffsetSeconds
                     },
+                    videoCreatedAt = it.video?.createdAt?.toString(),
                     videoAnimatedPreviewURL = it.video?.animatedPreviewURL,
                 )
             }

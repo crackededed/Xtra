@@ -10,6 +10,7 @@ query VideoComments($id: ID, $first: Int, $after: Cursor, $offset: Int) {
                         login
                     }
                     contentOffsetSeconds
+                    createdAt
                     id
                     message {
                         fragments {

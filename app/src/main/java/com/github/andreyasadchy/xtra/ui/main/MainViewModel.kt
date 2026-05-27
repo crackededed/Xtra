@@ -212,6 +212,7 @@ class MainViewModel(
                             } else {
                                 it.videoOffsetSeconds
                             },
+                            videoCreatedAt = it.video?.createdAt?.toString(),
                             videoAnimatedPreviewURL = it.video?.animatedPreviewURL,
                         )
                     }
@@ -682,7 +683,7 @@ class MainViewModel(
         }
     }
 
-    fun downloadClip(networkLibrary: String?, filesDir: String, clipId: String?, title: String?, createdAt: String?, durationSeconds: Int?, videoId: String?, videoOffsetSeconds: Int?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, url: String, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {
+    fun downloadClip(networkLibrary: String?, filesDir: String, clipId: String?, title: String?, createdAt: String?, durationSeconds: Int?, videoId: String?, videoOffsetSeconds: Int?, videoCreatedAt: String?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, url: String, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {
         viewModelScope.launch {
             val downloadedThumbnail = clipId.takeIf { !it.isNullOrBlank() }?.let { id ->
                 thumbnail.takeIf { !it.isNullOrBlank() }?.let {
@@ -804,6 +805,7 @@ class MainViewModel(
                         OfflineVideo.STATUS_PENDING
                     },
                     videoId = videoId,
+                    videoCreatedAt = videoCreatedAt,
                     clipId = clipId,
                     quality = if (!quality.contains("Audio", true)) quality else "audio",
                     downloadChat = downloadChat,

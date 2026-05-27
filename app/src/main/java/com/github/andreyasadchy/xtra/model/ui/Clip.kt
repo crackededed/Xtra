@@ -21,6 +21,7 @@ class Clip(
     val durationSeconds: Int? = null,
     val videoId: String? = null,
     val videoOffsetSeconds: Int? = null,
+    val videoCreatedAt: String? = null,
     val videoAnimatedPreviewURL: String? = null,
 ) : Parcelable {
 

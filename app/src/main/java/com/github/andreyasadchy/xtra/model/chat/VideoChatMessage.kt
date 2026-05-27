@@ -3,6 +3,7 @@ package com.github.andreyasadchy.xtra.model.chat
 class VideoChatMessage(
     val id: String?,
     val offsetSeconds: Int?,
+    val createdAt: String?,
     val userId: String?,
     val userLogin: String?,
     val userName: String?,

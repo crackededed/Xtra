@@ -853,6 +853,7 @@ class MainActivity : AppCompatActivity() {
             createdAt = clip.createdAt,
             durationSeconds = clip.durationSeconds,
             videoOffsetSeconds = clip.videoOffsetSeconds,
+            videoCreatedAt = clip.videoCreatedAt,
             videoAnimatedPreviewURL = clip.videoAnimatedPreviewURL,
         ))
         val fragment = when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
@@ -881,6 +882,8 @@ class MainActivity : AppCompatActivity() {
             gameSlug = video.gameSlug,
             gameName = video.gameName,
             title = video.name,
+            createdAt = video.uploadDate?.toString(),
+            videoCreatedAt = video.videoCreatedAt,
         ))
         val fragment = when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
             C.MEDIA_PLAYER -> MediaPlayerFragment()
@@ -997,8 +1000,8 @@ class MainActivity : AppCompatActivity() {
         viewModel.downloadVideo(prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP), filesDir, id, title, createdAt, type, channelId, channelLogin, channelName, channelImage, thumbnail, gameId, gameSlug, gameName, url, downloadPath, quality, from, to, downloadChat, downloadChatEmotes, playlistToFile, wifiOnly)
     }
 
-    fun downloadClip(filesDir: String, clipId: String?, title: String?, createdAt: String?, durationSeconds: Int?, videoId: String?, videoOffsetSeconds: Int?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, url: String, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {
-        viewModel.downloadClip(prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP), filesDir, clipId, title, createdAt, durationSeconds, videoId, videoOffsetSeconds, channelId, channelLogin, channelName, channelImage, thumbnail, gameId, gameSlug, gameName, url, downloadPath, quality, downloadChat, downloadChatEmotes, wifiOnly)
+    fun downloadClip(filesDir: String, clipId: String?, title: String?, createdAt: String?, durationSeconds: Int?, videoId: String?, videoOffsetSeconds: Int?, videoCreatedAt: String?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, url: String, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {
+        viewModel.downloadClip(prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP), filesDir, clipId, title, createdAt, durationSeconds, videoId, videoOffsetSeconds, videoCreatedAt, channelId, channelLogin, channelName, channelImage, thumbnail, gameId, gameSlug, gameName, url, downloadPath, quality, downloadChat, downloadChatEmotes, wifiOnly)
     }
 
     fun popFragment() {
