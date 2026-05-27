@@ -17,6 +17,7 @@ query Clip($slug: ID!) {
         title
         video {
             animatedPreviewURL
+            createdAt
             id
         }
         videoOffsetSeconds

@@ -73,6 +73,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
         private const val KEY_DURATION_SECONDS = "durationSeconds"
         private const val KEY_VIDEO_TYPE = "videoType"
         private const val KEY_VIDEO_OFFSET_SECONDS = "videoOffsetSeconds"
+        private const val KEY_VIDEO_CREATED_AT = "videoCreatedAt"
         private const val KEY_VIDEO_ANIMATED_PREVIEW = "animatedPreviewUrl"
         private const val KEY_VIDEO_TOTAL_DURATION = "totalDuration"
         private const val KEY_VIDEO_CURRENT_POSITION = "currentPosition"
@@ -129,7 +130,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
             }
         }
 
-        fun newClipInstance(id: String?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, gameId: String?, gameSlug: String?, gameName: String?, title: String?, thumbnail: String?, createdAt: String?, durationSeconds: Int?, videoId: String?, videoOffsetSeconds: Int?, qualityNames: Array<String>? = null, qualityCodecs: Array<String>? = null, qualityUrls: Array<String>? = null): DownloadDialog {
+        fun newClipInstance(id: String?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, gameId: String?, gameSlug: String?, gameName: String?, title: String?, thumbnail: String?, createdAt: String?, durationSeconds: Int?, videoId: String?, videoOffsetSeconds: Int?, videoCreatedAt: String?, qualityNames: Array<String>? = null, qualityCodecs: Array<String>? = null, qualityUrls: Array<String>? = null): DownloadDialog {
             return DownloadDialog().apply {
                 arguments = Bundle().apply {
                     putString(KEY_TYPE, CLIP)
@@ -147,6 +148,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                     putInt(KEY_DURATION_SECONDS, durationSeconds ?: -1)
                     putString(KEY_VIDEO_ID, videoId)
                     putInt(KEY_VIDEO_OFFSET_SECONDS, videoOffsetSeconds ?: -1)
+                    putString(KEY_VIDEO_CREATED_AT, videoCreatedAt)
                     putStringArray(KEY_QUALITY_NAMES, qualityNames)
                     putStringArray(KEY_QUALITY_CODECS, qualityCodecs)
                     putStringArray(KEY_QUALITY_URLS, qualityUrls)
@@ -637,6 +639,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                                 durationSeconds = requireArguments().getInt(KEY_DURATION_SECONDS),
                                 videoId = requireArguments().getString(KEY_VIDEO_ID),
                                 videoOffsetSeconds = requireArguments().getInt(KEY_VIDEO_OFFSET_SECONDS),
+                                videoCreatedAt = requireArguments().getString(KEY_VIDEO_CREATED_AT),
                                 channelId = requireArguments().getString(KEY_CHANNEL_ID),
                                 channelLogin = requireArguments().getString(KEY_CHANNEL_LOGIN),
                                 channelName = requireArguments().getString(KEY_CHANNEL_NAME),

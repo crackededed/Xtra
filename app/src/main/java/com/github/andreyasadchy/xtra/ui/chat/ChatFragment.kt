@@ -786,6 +786,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                             channelId = channelId,
                             channelLogin = channelLogin,
                             chatUrl = chatUrl,
+                            createdAt = args.getString(KEY_CREATED_AT),
                             getCurrentPosition = if (parentFragment is Media3PlayerFragment) (parentFragment as Media3PlayerFragment)::getCurrentPosition else (parentFragment as PlayerFragment)::getCurrentPosition,
                             getCurrentSpeed = if (parentFragment is Media3PlayerFragment) (parentFragment as Media3PlayerFragment)::getCurrentSpeed else (parentFragment as PlayerFragment)::getCurrentSpeed
                         )
@@ -823,6 +824,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         channelId = channelId,
                         channelLogin = channelLogin,
                         videoId = videoId,
+                        createdAt = args.getString(KEY_CREATED_AT),
                         startTime = startTime,
                         getCurrentPosition = if (parentFragment is Media3PlayerFragment) (parentFragment as Media3PlayerFragment)::getCurrentPosition else (parentFragment as PlayerFragment)::getCurrentPosition,
                         getCurrentSpeed = if (parentFragment is Media3PlayerFragment) (parentFragment as Media3PlayerFragment)::getCurrentSpeed else (parentFragment as PlayerFragment)::getCurrentSpeed
@@ -845,6 +847,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                 channelLogin = channelLogin,
                 chatUrl = args.getString(KEY_CHAT_URL),
                 videoId = args.getString(KEY_VIDEO_ID),
+                createdAt = args.getString(KEY_CREATED_AT),
                 startTime = args.getInt(KEY_START_TIME),
                 getCurrentPosition = if (parentFragment is Media3PlayerFragment) (parentFragment as Media3PlayerFragment)::getCurrentPosition else (parentFragment as PlayerFragment)::getCurrentPosition,
                 getCurrentSpeed = if (parentFragment is Media3PlayerFragment) (parentFragment as Media3PlayerFragment)::getCurrentSpeed else (parentFragment as PlayerFragment)::getCurrentSpeed
@@ -1208,6 +1211,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                     channelLogin = channelLogin,
                     chatUrl = args.getString(KEY_CHAT_URL),
                     videoId = args.getString(KEY_VIDEO_ID),
+                    createdAt = args.getString(KEY_CREATED_AT),
                     startTime = args.getInt(KEY_START_TIME),
                     getCurrentPosition = if (parentFragment is Media3PlayerFragment) (parentFragment as Media3PlayerFragment)::getCurrentPosition else (parentFragment as PlayerFragment)::getCurrentPosition,
                     getCurrentSpeed = if (parentFragment is Media3PlayerFragment) (parentFragment as Media3PlayerFragment)::getCurrentSpeed else (parentFragment as PlayerFragment)::getCurrentSpeed
@@ -1279,6 +1283,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
         private const val KEY_CHANNEL_NAME = "channel_name"
         private const val KEY_STREAM_ID = "streamId"
         private const val KEY_VIDEO_ID = "videoId"
+        private const val KEY_CREATED_AT = "createdAt"
         private const val KEY_CHAT_URL = "chatUrl"
         private const val KEY_START_TIME = "startTime"
 
@@ -1294,23 +1299,25 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
             }
         }
 
-        fun newInstance(channelId: String?, channelLogin: String?, videoId: String?, startTime: Int?): ChatFragment {
+        fun newInstance(channelId: String?, channelLogin: String?, videoId: String?, createdAt: String?, startTime: Int?): ChatFragment {
             return ChatFragment().apply {
                 arguments = Bundle().apply {
                     putBoolean(KEY_IS_LIVE, false)
                     putString(KEY_CHANNEL_ID, channelId)
                     putString(KEY_CHANNEL_LOGIN, channelLogin)
                     putString(KEY_VIDEO_ID, videoId)
+                    putString(KEY_CREATED_AT, createdAt)
                     putInt(KEY_START_TIME, (startTime ?: -1))
                 }
             }
         }
 
-        fun newLocalInstance(channelId: String?, channelLogin: String?, chatUrl: String?): ChatFragment {
+        fun newLocalInstance(channelId: String?, channelLogin: String?, createdAt: String?, chatUrl: String?): ChatFragment {
             return ChatFragment().apply {
                 arguments = Bundle().apply {
                     putString(KEY_CHANNEL_ID, channelId)
                     putString(KEY_CHANNEL_LOGIN, channelLogin)
+                    putString(KEY_CREATED_AT, createdAt)
                     putString(KEY_CHAT_URL, chatUrl)
                 }
             }

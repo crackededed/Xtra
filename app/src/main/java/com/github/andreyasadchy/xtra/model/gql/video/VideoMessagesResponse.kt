@@ -35,6 +35,7 @@ class VideoMessagesResponse(
     class Comment(
         val id: String? = null,
         val contentOffsetSeconds: Int? = null,
+        val createdAt: String? = null,
         val message: Message? = null,
         val commenter: Commenter? = null,
     )

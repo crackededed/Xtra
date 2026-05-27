@@ -934,6 +934,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                         channelLogin = playbackService?.channelLogin,
                                         channelName = playbackService?.channelName,
                                         channelImageURL = playbackService?.channelImage,
+                                        createdAt = playbackService?.videoCreatedAt,
                                         animatedPreviewURL = playbackService?.videoAnimatedPreviewURL,
                                     ),
                                     offset,
@@ -1057,17 +1058,20 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         playbackService?.channelId,
                         playbackService?.channelLogin,
                         playbackService?.videoId,
-                        0
+                        playbackService?.createdAt,
+                        0,
                     )
                     BasePlaybackService.CLIP -> ChatFragment.newInstance(
                         playbackService?.channelId,
                         playbackService?.channelLogin,
                         playbackService?.videoId,
-                        playbackService?.videoOffsetSeconds.takeIf { it != -1 }
+                        playbackService?.videoCreatedAt,
+                        playbackService?.videoOffsetSeconds.takeIf { it != -1 },
                     )
                     BasePlaybackService.OFFLINE_VIDEO -> ChatFragment.newLocalInstance(
                         playbackService?.channelId,
                         playbackService?.channelLogin,
+                        playbackService?.videoCreatedAt ?: playbackService?.createdAt?.takeIf { playbackService?.clipId == null },
                         playbackService?.chatUrl,
                     )
                     else -> null
@@ -2107,6 +2111,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         durationSeconds = playbackService?.durationSeconds,
                         videoId = playbackService?.videoId,
                         videoOffsetSeconds = playbackService?.videoOffsetSeconds,
+                        videoCreatedAt = playbackService?.videoCreatedAt,
                         qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
                         qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
                         qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
