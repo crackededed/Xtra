@@ -452,15 +452,15 @@ class PlayerRepository(
         }
     }
 
-    suspend fun loadGlobalSTVEmotes(networkLibrary: String?, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
-        val response = when {
+    suspend fun loadGlobalSTVEmotesResponse(networkLibrary: String?): String = withContext(Dispatchers.IO) {
+        when {
             networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/emote-sets/global", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
-                json.decodeFromString<STVEmoteSetResponse>(String(response.second))
+                String(response.second)
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
@@ -468,29 +468,33 @@ class PlayerRepository(
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
-                json.decodeFromString<STVEmoteSetResponse>(String(response.second))
+                String(response.second)
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
                     url("https://7tv.io/v3/emote-sets/global")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
-                    json.decodeFromString<STVEmoteSetResponse>(response.body.string())
+                    response.body.string()
                 }
             }
         }
+    }
+
+    suspend fun loadGlobalSTVEmotes(response: String, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
+        val response = json.decodeFromString<STVEmoteSetResponse>(response)
         parseSTVEmotes(response.emotes, useWebp, Emote.GLOBAL_STV)
     }
 
-    suspend fun loadSTVEmotes(networkLibrary: String?, channelId: String, useWebp: Boolean): Pair<String?, List<Emote>> = withContext(Dispatchers.IO) {
-        val response = when {
+    suspend fun loadSTVEmotesResponse(networkLibrary: String?, channelId: String): String = withContext(Dispatchers.IO) {
+        when {
             networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/users/twitch/${channelId}", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
-                json.decodeFromString<STVChannelResponse>(String(response.second))
+                String(response.second)
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
@@ -498,17 +502,21 @@ class PlayerRepository(
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
-                json.decodeFromString<STVChannelResponse>(String(response.second))
+                String(response.second)
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
                     url("https://7tv.io/v3/users/twitch/${channelId}")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
-                    json.decodeFromString<STVChannelResponse>(response.body.string())
+                    response.body.string()
                 }
             }
         }
+    }
+
+    suspend fun loadSTVEmotes(response: String, useWebp: Boolean): Pair<String?, List<Emote>> = withContext(Dispatchers.IO) {
+        val response = json.decodeFromString<STVChannelResponse>(response)
         val set = response.emoteSet
         Pair(set.id, parseSTVEmotes(set.emotes, useWebp, Emote.CHANNEL_STV))
     }
@@ -618,15 +626,15 @@ class PlayerRepository(
         }
     }
 
-    suspend fun loadGlobalBTTVEmotes(networkLibrary: String?, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
-        val response = when {
+    suspend fun loadGlobalBTTVEmotesResponse(networkLibrary: String?): String = withContext(Dispatchers.IO) {
+        when {
             networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.value!!.newUrlRequestBuilder("https://api.betterttv.net/3/cached/emotes/global", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
-                json.decodeFromString<List<BTTVResponse>>(String(response.second))
+                String(response.second)
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
@@ -634,29 +642,33 @@ class PlayerRepository(
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
-                json.decodeFromString<List<BTTVResponse>>(String(response.second))
+                String(response.second)
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
                     url("https://api.betterttv.net/3/cached/emotes/global")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
-                    json.decodeFromString<List<BTTVResponse>>(response.body.string())
+                    response.body.string()
                 }
             }
         }
+    }
+
+    suspend fun loadGlobalBTTVEmotes(response: String, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
+        val response = json.decodeFromString<List<BTTVResponse>>(response)
         parseBTTVEmotes(response, useWebp, Emote.GLOBAL_BTTV)
     }
 
-    suspend fun loadBTTVEmotes(networkLibrary: String?, channelId: String, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
-        val response = when {
+    suspend fun loadBTTVEmotesResponse(networkLibrary: String?, channelId: String): String = withContext(Dispatchers.IO) {
+        when {
             networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.value!!.newUrlRequestBuilder("https://api.betterttv.net/3/cached/users/twitch/${channelId}", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
-                json.decodeFromString<Map<String, JsonElement>>(String(response.second))
+                String(response.second)
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
@@ -664,17 +676,21 @@ class PlayerRepository(
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
-                json.decodeFromString<Map<String, JsonElement>>(String(response.second))
+                String(response.second)
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
                     url("https://api.betterttv.net/3/cached/users/twitch/${channelId}")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
-                    json.decodeFromString<Map<String, JsonElement>>(response.body.string())
+                    response.body.string()
                 }
             }
         }
+    }
+
+    suspend fun loadBTTVEmotes(response: String, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
+        val response = json.decodeFromString<Map<String, JsonElement>>(response)
         parseBTTVEmotes(
             response.entries.filter { it.key != "bots" && it.value is JsonArray }.map { entry ->
                 (entry.value as JsonArray).map { json.decodeFromJsonElement<BTTVResponse>(it) }
@@ -705,15 +721,15 @@ class PlayerRepository(
         }
     }
 
-    suspend fun loadGlobalFFZEmotes(networkLibrary: String?, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
-        val response = when {
+    suspend fun loadGlobalFFZEmotesResponse(networkLibrary: String?): String = withContext(Dispatchers.IO) {
+        when {
             networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.value!!.newUrlRequestBuilder("https://api.frankerfacez.com/v1/set/global", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
-                json.decodeFromString<FFZGlobalResponse>(String(response.second))
+                String(response.second)
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
@@ -721,31 +737,35 @@ class PlayerRepository(
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
-                json.decodeFromString<FFZGlobalResponse>(String(response.second))
+                String(response.second)
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
                     url("https://api.frankerfacez.com/v1/set/global")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
-                    json.decodeFromString<FFZGlobalResponse>(response.body.string())
+                    response.body.string()
                 }
             }
         }
+    }
+
+    suspend fun loadGlobalFFZEmotes(response: String, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
+        val response = json.decodeFromString<FFZGlobalResponse>(response)
         response.sets.entries.filter { it.key.toIntOrNull()?.let { set -> response.globalSets.contains(set) } == true }.flatMap {
             it.value.emoticons?.let { emotes -> parseFFZEmotes(emotes, useWebp, Emote.GLOBAL_FFZ) } ?: emptyList()
         }
     }
 
-    suspend fun loadFFZEmotes(networkLibrary: String?, channelId: String, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
-        val response = when {
+    suspend fun loadFFZEmotesResponse(networkLibrary: String?, channelId: String): String = withContext(Dispatchers.IO) {
+        when {
             networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     httpEngine.value!!.newUrlRequestBuilder("https://api.frankerfacez.com/v1/room/id/${channelId}", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
-                json.decodeFromString<FFZChannelResponse>(String(response.second))
+                String(response.second)
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
@@ -753,17 +773,21 @@ class PlayerRepository(
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build().start()
                 }
-                json.decodeFromString<FFZChannelResponse>(String(response.second))
+                String(response.second)
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
                     url("https://api.frankerfacez.com/v1/room/id/${channelId}")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
-                    json.decodeFromString<FFZChannelResponse>(response.body.string())
+                    response.body.string()
                 }
             }
         }
+    }
+
+    suspend fun loadFFZEmotes(response: String, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
+        val response = json.decodeFromString<FFZChannelResponse>(response)
         response.sets.entries.flatMap {
             it.value.emoticons?.let { emotes -> parseFFZEmotes(emotes, useWebp, Emote.CHANNEL_FFZ) } ?: emptyList()
         }

@@ -59,12 +59,17 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.util.Timer
 import java.util.concurrent.ConcurrentHashMap
+import java.util.zip.DeflaterOutputStream
+import java.util.zip.InflaterOutputStream
 import javax.net.ssl.X509TrustManager
 import kotlin.concurrent.scheduleAtFixedRate
 
@@ -270,55 +275,133 @@ class ChatViewModel(
                 }
             } else {
                 viewModelScope.launch {
-                    try {
-                        val emotes = playerRepository.loadGlobalSTVEmotes(networkLibrary, useWebp)
-                        if (emotes.isNotEmpty()) {
-                            savedGlobalSTVEmotes = emotes
-                            synchronized(thirdPartyEmotes) {
-                                thirdPartyEmotes.addAll(emotes)
-                                thirdPartyEmotes.sortBy { it.source }
-                            }
-                            if (!reloadMessages.value) {
-                                reloadMessages.value = true
-                            }
-                            thirdPartyEmotesUpdated.emit(Unit)
-                            synchronized(autoCompleteList) {
-                                autoCompleteList.addAll(emotes.filter { it !in autoCompleteList })
-                            }
-                            synchronized(allEmotes) {
-                                allEmotes.addAll(emotes.filter { it.name !in allEmotes }.mapNotNull { it.name })
-                            }
+                    val pair = try {
+                        withTimeout(20000) {
+                            playerRepository.loadGlobalSTVEmotesResponse(networkLibrary) to true
                         }
                     } catch (e: Exception) {
+                        try {
+                            val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/global.stv").use {
+                                it.readBytes()
+                            }
+                            val decompressedStream = ByteArrayOutputStream()
+                            InflaterOutputStream(decompressedStream).use {
+                                it.write(compressedBytes)
+                            }
+                            decompressedStream.toByteArray().decodeToString() to false
+                        } catch (e: Exception) {
+                            null to false
+                        }
+                    }
+                    val response = pair.first
+                    val online = pair.second
+                    if (response != null) {
+                        try {
+                            val emotes = playerRepository.loadGlobalSTVEmotes(response, useWebp)
+                            if (emotes.isNotEmpty()) {
+                                savedGlobalSTVEmotes = emotes
+                                synchronized(thirdPartyEmotes) {
+                                    thirdPartyEmotes.addAll(emotes)
+                                    thirdPartyEmotes.sortBy { it.source }
+                                }
+                                if (!reloadMessages.value) {
+                                    reloadMessages.value = true
+                                }
+                                thirdPartyEmotesUpdated.emit(Unit)
+                                synchronized(autoCompleteList) {
+                                    autoCompleteList.addAll(emotes.filter { it !in autoCompleteList })
+                                }
+                                synchronized(allEmotes) {
+                                    allEmotes.addAll(emotes.filter { it.name !in allEmotes }.mapNotNull { it.name })
+                                }
+                                if (online) {
+                                    val directory = File(applicationContext.cacheDir, "emote_responses")
+                                    directory.mkdir()
+                                    val compressedStream = ByteArrayOutputStream()
+                                    DeflaterOutputStream(compressedStream).use {
+                                        it.write(response.toByteArray())
+                                    }
+                                    val compressedBytes = compressedStream.toByteArray()
+                                    FileOutputStream("${applicationContext.cacheDir}/emote_responses/global.stv").use {
+                                        it.write(compressedBytes)
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
 
+                        }
                     }
                 }
             }
             if (!channelId.isNullOrBlank()) {
                 viewModelScope.launch {
-                    try {
-                        val response = playerRepository.loadSTVEmotes(networkLibrary, channelId, useWebp)
-                        val setId = response.first
-                        val emotes = response.second
-                        if (emotes.isNotEmpty()) {
-                            channelSTVEmoteSetId = setId
-                            synchronized(thirdPartyEmotes) {
-                                thirdPartyEmotes.addAll(emotes)
-                                thirdPartyEmotes.sortBy { it.source }
-                            }
-                            if (!reloadMessages.value) {
-                                reloadMessages.value = true
-                            }
-                            thirdPartyEmotesUpdated.emit(Unit)
-                            synchronized(autoCompleteList) {
-                                autoCompleteList.addAll(emotes.filter { it !in autoCompleteList })
-                            }
-                            synchronized(allEmotes) {
-                                allEmotes.addAll(emotes.filter { it.name !in allEmotes }.mapNotNull { it.name })
-                            }
+                    val pair = try {
+                        withTimeout(20000) {
+                            playerRepository.loadSTVEmotesResponse(networkLibrary, channelId) to true
                         }
                     } catch (e: Exception) {
+                        try {
+                            val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/${channelId}.stv").use {
+                                it.readBytes()
+                            }
+                            val decompressedStream = ByteArrayOutputStream()
+                            InflaterOutputStream(decompressedStream).use {
+                                it.write(compressedBytes)
+                            }
+                            decompressedStream.toByteArray().decodeToString() to false
+                        } catch (e: Exception) {
+                            null to false
+                        }
+                    }
+                    val response = pair.first
+                    val online = pair.second
+                    if (response != null) {
+                        try {
+                            val emotesResponse = playerRepository.loadSTVEmotes(response, useWebp)
+                            val setId = emotesResponse.first
+                            val emotes = emotesResponse.second
+                            if (emotes.isNotEmpty()) {
+                                channelSTVEmoteSetId = setId
+                                synchronized(thirdPartyEmotes) {
+                                    thirdPartyEmotes.addAll(emotes)
+                                    thirdPartyEmotes.sortBy { it.source }
+                                }
+                                if (!reloadMessages.value) {
+                                    reloadMessages.value = true
+                                }
+                                thirdPartyEmotesUpdated.emit(Unit)
+                                synchronized(autoCompleteList) {
+                                    autoCompleteList.addAll(emotes.filter { it !in autoCompleteList })
+                                }
+                                synchronized(allEmotes) {
+                                    allEmotes.addAll(emotes.filter { it.name !in allEmotes }.mapNotNull { it.name })
+                                }
+                                if (online) {
+                                    val directory = File(applicationContext.cacheDir, "emote_responses")
+                                    directory.mkdir()
+                                    val files = directory.listFiles()
+                                    if (files != null && files.size >= 100) {
+                                        files.minBy { it.lastModified() }.delete()
+                                    }
+                                    val compressedStream = ByteArrayOutputStream()
+                                    DeflaterOutputStream(compressedStream).use {
+                                        it.write(response.toByteArray())
+                                    }
+                                    val compressedBytes = compressedStream.toByteArray()
+                                    FileOutputStream("${applicationContext.cacheDir}/emote_responses/${channelId}.stv").use {
+                                        it.write(compressedBytes)
+                                    }
+                                } else {
+                                    onMessage(ChatMessage(systemMsg = ContextCompat.getString(applicationContext, R.string.loaded_cached_stv_emotes)))
+                                }
+                            } else {
+                                if (online) {
+                                    File("${applicationContext.cacheDir}/emote_responses/${channelId}.stv").delete()
+                                }
+                            }
+                        } catch (e: Exception) {
 
+                        }
                     }
                 }
             }
@@ -344,52 +427,132 @@ class ChatViewModel(
                 }
             } else {
                 viewModelScope.launch {
-                    try {
-                        val emotes = playerRepository.loadGlobalBTTVEmotes(networkLibrary, useWebp)
-                        if (emotes.isNotEmpty()) {
-                            savedGlobalBTTVEmotes = emotes
-                            synchronized(thirdPartyEmotes) {
-                                thirdPartyEmotes.addAll(emotes)
-                                thirdPartyEmotes.sortBy { it.source }
-                            }
-                            if (!reloadMessages.value) {
-                                reloadMessages.value = true
-                            }
-                            thirdPartyEmotesUpdated.emit(Unit)
-                            synchronized(autoCompleteList) {
-                                autoCompleteList.addAll(emotes.filter { it !in autoCompleteList })
-                            }
-                            synchronized(allEmotes) {
-                                allEmotes.addAll(emotes.filter { it.name !in allEmotes }.mapNotNull { it.name })
-                            }
+                    val pair = try {
+                        withTimeout(20000) {
+                            playerRepository.loadGlobalBTTVEmotesResponse(networkLibrary) to true
                         }
                     } catch (e: Exception) {
+                        try {
+                            val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/global.bttv").use {
+                                it.readBytes()
+                            }
+                            val decompressedStream = ByteArrayOutputStream()
+                            InflaterOutputStream(decompressedStream).use {
+                                it.write(compressedBytes)
+                            }
+                            decompressedStream.toByteArray().decodeToString() to false
+                        } catch (e: Exception) {
+                            null to false
+                        }
+                    }
+                    val response = pair.first
+                    val online = pair.second
+                    if (response != null) {
+                        try {
+                            val emotes = playerRepository.loadGlobalBTTVEmotes(response, useWebp)
+                            if (emotes.isNotEmpty()) {
+                                savedGlobalBTTVEmotes = emotes
+                                synchronized(thirdPartyEmotes) {
+                                    thirdPartyEmotes.addAll(emotes)
+                                    thirdPartyEmotes.sortBy { it.source }
+                                }
+                                if (!reloadMessages.value) {
+                                    reloadMessages.value = true
+                                }
+                                thirdPartyEmotesUpdated.emit(Unit)
+                                synchronized(autoCompleteList) {
+                                    autoCompleteList.addAll(emotes.filter { it !in autoCompleteList })
+                                }
+                                synchronized(allEmotes) {
+                                    allEmotes.addAll(emotes.filter { it.name !in allEmotes }.mapNotNull { it.name })
+                                }
+                                if (online) {
+                                    val directory = File(applicationContext.cacheDir, "emote_responses")
+                                    directory.mkdir()
+                                    val compressedStream = ByteArrayOutputStream()
+                                    DeflaterOutputStream(compressedStream).use {
+                                        it.write(response.toByteArray())
+                                    }
+                                    val compressedBytes = compressedStream.toByteArray()
+                                    FileOutputStream("${applicationContext.cacheDir}/emote_responses/global.bttv").use {
+                                        it.write(compressedBytes)
+                                    }
+                                } else {
+                                    onMessage(ChatMessage(systemMsg = ContextCompat.getString(applicationContext, R.string.loaded_cached_bttv_emotes)))
+                                }
+                            }
+                        } catch (e: Exception) {
 
+                        }
                     }
                 }
             }
             if (!channelId.isNullOrBlank()) {
                 viewModelScope.launch {
-                    try {
-                        val emotes = playerRepository.loadBTTVEmotes(networkLibrary, channelId, useWebp)
-                        if (emotes.isNotEmpty()) {
-                            synchronized(thirdPartyEmotes) {
-                                thirdPartyEmotes.addAll(emotes)
-                                thirdPartyEmotes.sortBy { it.source }
-                            }
-                            if (!reloadMessages.value) {
-                                reloadMessages.value = true
-                            }
-                            thirdPartyEmotesUpdated.emit(Unit)
-                            synchronized(autoCompleteList) {
-                                autoCompleteList.addAll(emotes.filter { it !in autoCompleteList })
-                            }
-                            synchronized(allEmotes) {
-                                allEmotes.addAll(emotes.filter { it.name !in allEmotes }.mapNotNull { it.name })
-                            }
+                    val pair = try {
+                        withTimeout(20000) {
+                            playerRepository.loadBTTVEmotesResponse(networkLibrary, channelId) to true
                         }
                     } catch (e: Exception) {
+                        try {
+                            val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/${channelId}.bttv").use {
+                                it.readBytes()
+                            }
+                            val decompressedStream = ByteArrayOutputStream()
+                            InflaterOutputStream(decompressedStream).use {
+                                it.write(compressedBytes)
+                            }
+                            decompressedStream.toByteArray().decodeToString() to false
+                        } catch (e: Exception) {
+                            null to false
+                        }
+                    }
+                    val response = pair.first
+                    val online = pair.second
+                    if (response != null) {
+                        try {
+                            val emotes = playerRepository.loadBTTVEmotes(response, useWebp)
+                            if (emotes.isNotEmpty()) {
+                                synchronized(thirdPartyEmotes) {
+                                    thirdPartyEmotes.addAll(emotes)
+                                    thirdPartyEmotes.sortBy { it.source }
+                                }
+                                if (!reloadMessages.value) {
+                                    reloadMessages.value = true
+                                }
+                                thirdPartyEmotesUpdated.emit(Unit)
+                                synchronized(autoCompleteList) {
+                                    autoCompleteList.addAll(emotes.filter { it !in autoCompleteList })
+                                }
+                                synchronized(allEmotes) {
+                                    allEmotes.addAll(emotes.filter { it.name !in allEmotes }.mapNotNull { it.name })
+                                }
+                                if (online) {
+                                    val directory = File(applicationContext.cacheDir, "emote_responses")
+                                    directory.mkdir()
+                                    val files = directory.listFiles()
+                                    if (files != null && files.size >= 100) {
+                                        files.minBy { it.lastModified() }.delete()
+                                    }
+                                    val compressedStream = ByteArrayOutputStream()
+                                    DeflaterOutputStream(compressedStream).use {
+                                        it.write(response.toByteArray())
+                                    }
+                                    val compressedBytes = compressedStream.toByteArray()
+                                    FileOutputStream("${applicationContext.cacheDir}/emote_responses/${channelId}.bttv").use {
+                                        it.write(compressedBytes)
+                                    }
+                                } else {
+                                    onMessage(ChatMessage(systemMsg = ContextCompat.getString(applicationContext, R.string.loaded_cached_ffz_emotes)))
+                                }
+                            } else {
+                                if (online) {
+                                    File("${applicationContext.cacheDir}/emote_responses/${channelId}.bttv").delete()
+                                }
+                            }
+                        } catch (e: Exception) {
 
+                        }
                     }
                 }
             }
@@ -415,52 +578,128 @@ class ChatViewModel(
                 }
             } else {
                 viewModelScope.launch {
-                    try {
-                        val emotes = playerRepository.loadGlobalFFZEmotes(networkLibrary, useWebp)
-                        if (emotes.isNotEmpty()) {
-                            savedGlobalFFZEmotes = emotes
-                            synchronized(thirdPartyEmotes) {
-                                thirdPartyEmotes.addAll(emotes)
-                                thirdPartyEmotes.sortBy { it.source }
-                            }
-                            if (!reloadMessages.value) {
-                                reloadMessages.value = true
-                            }
-                            thirdPartyEmotesUpdated.emit(Unit)
-                            synchronized(autoCompleteList) {
-                                autoCompleteList.addAll(emotes.filter { it !in autoCompleteList })
-                            }
-                            synchronized(allEmotes) {
-                                allEmotes.addAll(emotes.filter { it.name !in allEmotes }.mapNotNull { it.name })
-                            }
+                    val pair = try {
+                        withTimeout(20000) {
+                            playerRepository.loadGlobalFFZEmotesResponse(networkLibrary) to true
                         }
                     } catch (e: Exception) {
+                        try {
+                            val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/global.ffz").use {
+                                it.readBytes()
+                            }
+                            val decompressedStream = ByteArrayOutputStream()
+                            InflaterOutputStream(decompressedStream).use {
+                                it.write(compressedBytes)
+                            }
+                            decompressedStream.toByteArray().decodeToString() to false
+                        } catch (e: Exception) {
+                            null to false
+                        }
+                    }
+                    val response = pair.first
+                    val online = pair.second
+                    if (response != null) {
+                        try {
+                            val emotes = playerRepository.loadGlobalFFZEmotes(response, useWebp)
+                            if (emotes.isNotEmpty()) {
+                                savedGlobalFFZEmotes = emotes
+                                synchronized(thirdPartyEmotes) {
+                                    thirdPartyEmotes.addAll(emotes)
+                                    thirdPartyEmotes.sortBy { it.source }
+                                }
+                                if (!reloadMessages.value) {
+                                    reloadMessages.value = true
+                                }
+                                thirdPartyEmotesUpdated.emit(Unit)
+                                synchronized(autoCompleteList) {
+                                    autoCompleteList.addAll(emotes.filter { it !in autoCompleteList })
+                                }
+                                synchronized(allEmotes) {
+                                    allEmotes.addAll(emotes.filter { it.name !in allEmotes }.mapNotNull { it.name })
+                                }
+                                if (online) {
+                                    val directory = File(applicationContext.cacheDir, "emote_responses")
+                                    directory.mkdir()
+                                    val compressedStream = ByteArrayOutputStream()
+                                    DeflaterOutputStream(compressedStream).use {
+                                        it.write(response.toByteArray())
+                                    }
+                                    val compressedBytes = compressedStream.toByteArray()
+                                    FileOutputStream("${applicationContext.cacheDir}/emote_responses/global.ffz").use {
+                                        it.write(compressedBytes)
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
 
+                        }
                     }
                 }
             }
             if (!channelId.isNullOrBlank()) {
                 viewModelScope.launch {
-                    try {
-                        val emotes = playerRepository.loadFFZEmotes(networkLibrary, channelId, useWebp)
-                        if (emotes.isNotEmpty()) {
-                            synchronized(thirdPartyEmotes) {
-                                thirdPartyEmotes.addAll(emotes)
-                                thirdPartyEmotes.sortBy { it.source }
-                            }
-                            if (!reloadMessages.value) {
-                                reloadMessages.value = true
-                            }
-                            thirdPartyEmotesUpdated.emit(Unit)
-                            synchronized(autoCompleteList) {
-                                autoCompleteList.addAll(emotes.filter { it !in autoCompleteList })
-                            }
-                            synchronized(allEmotes) {
-                                allEmotes.addAll(emotes.filter { it.name !in allEmotes }.mapNotNull { it.name })
-                            }
+                    val pair = try {
+                        withTimeout(20000) {
+                            playerRepository.loadFFZEmotesResponse(networkLibrary, channelId) to true
                         }
                     } catch (e: Exception) {
+                        try {
+                            val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/${channelId}.ffz").use {
+                                it.readBytes()
+                            }
+                            val decompressedStream = ByteArrayOutputStream()
+                            InflaterOutputStream(decompressedStream).use {
+                                it.write(compressedBytes)
+                            }
+                            decompressedStream.toByteArray().decodeToString() to false
+                        } catch (e: Exception) {
+                            null to false
+                        }
+                    }
+                    val response = pair.first
+                    val online = pair.second
+                    if (response != null) {
+                        try {
+                            val emotes = playerRepository.loadFFZEmotes(response, useWebp)
+                            if (emotes.isNotEmpty()) {
+                                synchronized(thirdPartyEmotes) {
+                                    thirdPartyEmotes.addAll(emotes)
+                                    thirdPartyEmotes.sortBy { it.source }
+                                }
+                                if (!reloadMessages.value) {
+                                    reloadMessages.value = true
+                                }
+                                thirdPartyEmotesUpdated.emit(Unit)
+                                synchronized(autoCompleteList) {
+                                    autoCompleteList.addAll(emotes.filter { it !in autoCompleteList })
+                                }
+                                synchronized(allEmotes) {
+                                    allEmotes.addAll(emotes.filter { it.name !in allEmotes }.mapNotNull { it.name })
+                                }
+                                if (online) {
+                                    val directory = File(applicationContext.cacheDir, "emote_responses")
+                                    directory.mkdir()
+                                    val files = directory.listFiles()
+                                    if (files != null && files.size >= 100) {
+                                        files.minBy { it.lastModified() }.delete()
+                                    }
+                                    val compressedStream = ByteArrayOutputStream()
+                                    DeflaterOutputStream(compressedStream).use {
+                                        it.write(response.toByteArray())
+                                    }
+                                    val compressedBytes = compressedStream.toByteArray()
+                                    FileOutputStream("${applicationContext.cacheDir}/emote_responses/${channelId}.ffz").use {
+                                        it.write(compressedBytes)
+                                    }
+                                }
+                            } else {
+                                if (online) {
+                                    File("${applicationContext.cacheDir}/emote_responses/${channelId}.ffz").delete()
+                                }
+                            }
+                        } catch (e: Exception) {
 
+                        }
                     }
                 }
             }
