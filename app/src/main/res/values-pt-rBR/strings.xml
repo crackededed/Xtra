@@ -711,4 +711,7 @@
     <string name="downloading_update_progress">Downloading update… %1$s / %2$s</string>
     <string name="downloading_update">Downloading update…</string>
     <string name="concurrent_downloads">Concurrent downloads</string>
+    <string name="loaded_cached_stv_emotes">Loaded cached 7TV emotes</string>
+    <string name="loaded_cached_bttv_emotes">Loaded cached BTTV emotes</string>
+    <string name="loaded_cached_ffz_emotes">Loaded cached FFZ emotes</string>
 </resources>
