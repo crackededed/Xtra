@@ -876,7 +876,8 @@ class VideoDownloadService : LifecycleService() {
                         })
                         add(launch(Dispatchers.IO) {
                             try {
-                                val emotes = xtraModule.playerRepository.loadGlobalSTVEmotes(networkLibrary, useWebp)
+                                val response = xtraModule.playerRepository.loadGlobalSTVEmotesResponse(networkLibrary)
+                                val emotes = xtraModule.playerRepository.loadGlobalSTVEmotes(response, useWebp)
                                 emoteList.addAll(emotes)
                                 emoteList.sortBy { it.source }
                             } catch (e: Exception) {
@@ -885,7 +886,8 @@ class VideoDownloadService : LifecycleService() {
                         })
                         add(launch(Dispatchers.IO) {
                             try {
-                                val emotes = xtraModule.playerRepository.loadGlobalBTTVEmotes(networkLibrary, useWebp)
+                                val response = xtraModule.playerRepository.loadGlobalBTTVEmotesResponse(networkLibrary)
+                                val emotes = xtraModule.playerRepository.loadGlobalBTTVEmotes(response, useWebp)
                                 emoteList.addAll(emotes)
                                 emoteList.sortBy { it.source }
                             } catch (e: Exception) {
@@ -894,7 +896,8 @@ class VideoDownloadService : LifecycleService() {
                         })
                         add(launch(Dispatchers.IO) {
                             try {
-                                val emotes = xtraModule.playerRepository.loadGlobalFFZEmotes(networkLibrary, useWebp)
+                                val response = xtraModule.playerRepository.loadGlobalFFZEmotesResponse(networkLibrary)
+                                val emotes = xtraModule.playerRepository.loadGlobalFFZEmotes(response, useWebp)
                                 emoteList.addAll(emotes)
                                 emoteList.sortBy { it.source }
                             } catch (e: Exception) {
@@ -904,7 +907,8 @@ class VideoDownloadService : LifecycleService() {
                         if (channelId != null) {
                             add(launch(Dispatchers.IO) {
                                 try {
-                                    val emotes = xtraModule.playerRepository.loadSTVEmotes(networkLibrary, channelId, useWebp).second
+                                    val response = xtraModule.playerRepository.loadSTVEmotesResponse(networkLibrary, channelId)
+                                    val emotes = xtraModule.playerRepository.loadSTVEmotes(response, useWebp).second
                                     emoteList.addAll(emotes)
                                     emoteList.sortBy { it.source }
                                 } catch (e: Exception) {
@@ -913,7 +917,8 @@ class VideoDownloadService : LifecycleService() {
                             })
                             add(launch(Dispatchers.IO) {
                                 try {
-                                    val emotes = xtraModule.playerRepository.loadBTTVEmotes(networkLibrary, channelId, useWebp)
+                                    val response = xtraModule.playerRepository.loadBTTVEmotesResponse(networkLibrary, channelId)
+                                    val emotes = xtraModule.playerRepository.loadBTTVEmotes(response, useWebp)
                                     emoteList.addAll(emotes)
                                     emoteList.sortBy { it.source }
                                 } catch (e: Exception) {
@@ -922,7 +927,8 @@ class VideoDownloadService : LifecycleService() {
                             })
                             add(launch(Dispatchers.IO) {
                                 try {
-                                    val emotes = xtraModule.playerRepository.loadFFZEmotes(networkLibrary, channelId, useWebp)
+                                    val response = xtraModule.playerRepository.loadFFZEmotesResponse(networkLibrary, channelId)
+                                    val emotes = xtraModule.playerRepository.loadFFZEmotes(response, useWebp)
                                     emoteList.addAll(emotes)
                                     emoteList.sortBy { it.source }
                                 } catch (e: Exception) {
