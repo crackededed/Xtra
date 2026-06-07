@@ -30,7 +30,6 @@ import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.body
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
-import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -49,6 +48,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.ExecutorService
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 class Media3PlayerViewModel(
     private val httpEngine: Lazy<HttpEngine?>,
@@ -129,13 +129,13 @@ class Media3PlayerViewModel(
             }
             playlist.segments.lastOrNull()?.let { segment ->
                 segment.title?.let { it.contains("Amazon") || it.contains("Adform") || it.contains("DCM") } == true ||
-                        segment.programDateTime?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let { segmentStartTime ->
+                        segment.programDateTime?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }?.let { segmentStartTime ->
                             playlist.dateRanges.find { dateRange ->
                                 (dateRange.id.startsWith("stitched-ad-") || dateRange.rangeClass == "twitch-stitched-ad" || dateRange.ad) &&
-                                        dateRange.endDate?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let { endTime ->
+                                        dateRange.endDate?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }?.let { endTime ->
                                             segmentStartTime < endTime
                                         } == true ||
-                                        dateRange.startDate.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let { startTime ->
+                                        dateRange.startDate.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }?.let { startTime ->
                                             (dateRange.duration ?: dateRange.plannedDuration)?.let { (it * 1000f).toLong() }?.let { duration ->
                                                 segmentStartTime < (startTime + duration)
                                             } == true
@@ -597,7 +597,9 @@ class Media3PlayerViewModel(
                             _isFollowing.value = true
                             follow.value = Pair(true, null)
                             if (liveNotificationsEnabled) {
-                                startedAt.takeUnless { it.isNullOrBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let {
+                                startedAt.takeUnless { it.isNullOrBlank() }?.let {
+                                    Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                                }?.let {
                                     notificationsRepository.saveList(listOf(ShownNotification(channelId, it)))
                                 }
                             }
@@ -610,7 +612,9 @@ class Media3PlayerViewModel(
                             notificationsRepository.saveUser(NotificationUser(channelId))
                         }
                         if (liveNotificationsEnabled) {
-                            startedAt.takeUnless { it.isNullOrBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let {
+                            startedAt.takeUnless { it.isNullOrBlank() }?.let {
+                                Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                            }?.let {
                                 notificationsRepository.saveList(listOf(ShownNotification(channelId, it)))
                             }
                         }

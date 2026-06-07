@@ -18,6 +18,7 @@ import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
+import kotlin.time.Instant
 
 class FollowedChannelsAdapter(
     private val fragment: Fragment,
@@ -86,7 +87,11 @@ class FollowedChannelsAdapter(
                         username.visibility = View.GONE
                     }
                     if (item.lastBroadcast != null) {
-                        val text = item.lastBroadcast?.let { TwitchApiHelper.formatTimeString(context, it) }
+                        val text = item.lastBroadcast?.let {
+                            Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.let { time ->
+                                TwitchApiHelper.formatDate(context, time)
+                            }
+                        }
                         if (text != null) {
                             userStream.visibility = View.VISIBLE
                             userStream.text = context.getString(R.string.last_broadcast_date, text)
@@ -97,7 +102,11 @@ class FollowedChannelsAdapter(
                         userStream.visibility = View.GONE
                     }
                     if (item.followedAt != null) {
-                        val text = TwitchApiHelper.formatTimeString(context, item.followedAt!!)
+                        val text = item.followedAt?.let {
+                            Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.let { time ->
+                                TwitchApiHelper.formatDate(context, time)
+                            }
+                        }
                         if (text != null) {
                             userFollowed.visibility = View.VISIBLE
                             userFollowed.text = context.getString(R.string.followed_at, text)

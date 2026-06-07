@@ -1,5 +1,6 @@
 package com.github.andreyasadchy.xtra.ui.common
 
+import android.text.format.DateUtils
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -27,6 +28,8 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class StreamsCompactAdapter(
     private val fragment: Fragment,
@@ -143,7 +146,14 @@ class StreamsCompactAdapter(
                         viewers.visibility = View.GONE
                     }
                     if (context.prefs().getBoolean(C.UI_UPTIME, true) && item.createdAt != null) {
-                        val text = TwitchApiHelper.getUptime(startedAt = item.createdAt)
+                        val text = item.createdAt?.let {
+                            Instant.parseOrNull(it)?.takeIf { time -> time.toEpochMilliseconds() > 0 }?.let { createdAt ->
+                                val uptime = Clock.System.now() - createdAt
+                                if (uptime.isPositive()) {
+                                    DateUtils.formatElapsedTime(uptime.inWholeSeconds)
+                                } else null
+                            }
+                        }
                         if (text != null) {
                             uptime.visibility = View.VISIBLE
                             uptime.text = text

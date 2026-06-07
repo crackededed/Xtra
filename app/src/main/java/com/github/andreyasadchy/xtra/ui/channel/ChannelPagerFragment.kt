@@ -7,6 +7,7 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -71,6 +72,8 @@ import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, IntegrityDialog.Listener {
 
@@ -648,14 +651,20 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
             }
             if (requireContext().prefs().getBoolean(C.UI_UPTIME, true)) {
                 if (stream?.createdAt != null) {
-                    TwitchApiHelper.getUptime(stream.createdAt).let {
-                        if (it != null) {
-                            streamLayout.visibility = View.VISIBLE
-                            uptime.visibility = View.VISIBLE
-                            uptime.text = getString(R.string.uptime, it)
-                        } else {
-                            uptime.visibility = View.GONE
+                    val text = stream.createdAt?.let {
+                        Instant.parseOrNull(it)?.takeIf { time -> time.toEpochMilliseconds() > 0 }?.let { createdAt ->
+                            val uptime = Clock.System.now() - createdAt
+                            if (uptime.isPositive()) {
+                                DateUtils.formatElapsedTime(uptime.inWholeSeconds)
+                            } else null
                         }
+                    }
+                    if (text != null) {
+                        streamLayout.visibility = View.VISIBLE
+                        uptime.visibility = View.VISIBLE
+                        uptime.text = getString(R.string.uptime, text)
+                    } else {
+                        uptime.visibility = View.GONE
                     }
                 }
             }
@@ -665,13 +674,16 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
     private fun updateUserLayout(user: User) {
         with(binding) {
             if (viewModel.stream.value?.viewerCount == null && user.lastBroadcast != null) {
-                TwitchApiHelper.formatTimeString(requireContext(), user.lastBroadcast!!).let {
-                    if (it != null)  {
-                        lastBroadcast.visibility = View.VISIBLE
-                        lastBroadcast.text = getString(R.string.last_broadcast_date, it)
-                    } else {
-                        lastBroadcast.visibility = View.GONE
+                val text = user.lastBroadcast?.let {
+                    Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.let { time ->
+                        TwitchApiHelper.formatDate(requireContext(), time)
                     }
+                }
+                if (text != null)  {
+                    lastBroadcast.visibility = View.VISIBLE
+                    lastBroadcast.text = getString(R.string.last_broadcast_date, text)
+                } else {
+                    lastBroadcast.visibility = View.GONE
                 }
             }
             if (!userImage.isVisible && user.profileImage != null) {
@@ -704,8 +716,11 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                 bannerImage.visibility = View.GONE
             }
             if (user.createdAt != null) {
+                val text = Instant.parseOrNull(user.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.let {
+                    TwitchApiHelper.formatDate(requireContext(), it)
+                }
                 userCreated.visibility = View.VISIBLE
-                userCreated.text = getString(R.string.created_at, TwitchApiHelper.formatTimeString(requireContext(), user.createdAt))
+                userCreated.text = getString(R.string.created_at, text)
                 if (user.bannerImageURL != null) {
                     userCreated.setTextColor(Color.LTGRAY)
                     userCreated.setShadowLayer(4f, 0f, 0f, Color.BLACK)
@@ -714,8 +729,8 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                 userCreated.visibility = View.GONE
             }
             if (user.followerCount != null) {
-                userFollowers.visibility = View.VISIBLE
                 val count = user.followerCount
+                userFollowers.visibility = View.VISIBLE
                 userFollowers.text = resources.getQuantityString(
                     R.plurals.followers,
                     count,

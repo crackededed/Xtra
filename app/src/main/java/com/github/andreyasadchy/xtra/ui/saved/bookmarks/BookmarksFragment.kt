@@ -1,6 +1,5 @@
 package com.github.andreyasadchy.xtra.ui.saved.bookmarks
 
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -35,10 +34,9 @@ import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.time.Duration
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import java.util.Calendar
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
 
 class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, BookmarksSortDialog.OnFilter, IntegrityDialog.Listener {
 
@@ -158,35 +156,22 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
                                 if (it.type?.lowercase() == "archive") {
                                     val userType = it.userType ?: it.userBroadcasterType
                                     if (userType != null && it.createdAt != null) {
-                                        val time = TwitchApiHelper.parseIso8601DateUTC(it.createdAt)
-                                        val days = when (userType.lowercase()) {
-                                            "" -> 14
-                                            "affiliate" -> 14
-                                            else -> 60
-                                        }
-                                        if (time != null) {
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                                val date = Instant.ofEpochMilli(time).plus(days.toLong(), ChronoUnit.DAYS)
-                                                val diff = Duration.between(Instant.now(), date)
-                                                if (!diff.isNegative) {
-                                                    diff.seconds
-                                                } else null
-                                            } else {
-                                                val currentTime = Calendar.getInstance().time.time
-                                                val calendar = Calendar.getInstance()
-                                                calendar.timeInMillis = time
-                                                calendar.add(Calendar.DAY_OF_MONTH, days)
-                                                val diff = ((calendar.time.time - currentTime) / 1000)
-                                                if (diff >= 0) {
-                                                    diff
-                                                } else null
+                                        Instant.parseOrNull(it.createdAt)?.takeIf { time -> time.toEpochMilliseconds() > 0 }?.let { time ->
+                                            val days = when (userType.lowercase()) {
+                                                "" -> 14
+                                                "affiliate" -> 14
+                                                else -> 60
                                             }
-                                        } else null
+                                            val timeLeft = (time + days.days) - Clock.System.now()
+                                            if (timeLeft.isPositive()) {
+                                                timeLeft.inWholeSeconds
+                                            } else null
+                                        }
                                     } else null
                                 } else null
                             })
                             BookmarksSortDialog.SORT_CREATED_AT -> list.sortedWith(compareBy(nullsLast()) {
-                                it.createdAt?.let { createdAt -> TwitchApiHelper.parseIso8601DateUTC(createdAt) }
+                                it.createdAt?.let { createdAt -> Instant.parseOrNull(createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }
                             })
                             else -> list.sortedWith(compareBy(nullsLast()) { it.id })
                         }
@@ -196,35 +181,22 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
                                 if (it.type?.lowercase() == "archive") {
                                     val userType = it.userType ?: it.userBroadcasterType
                                     if (userType != null && it.createdAt != null) {
-                                        val time = TwitchApiHelper.parseIso8601DateUTC(it.createdAt)
-                                        val days = when (userType.lowercase()) {
-                                            "" -> 14
-                                            "affiliate" -> 14
-                                            else -> 60
-                                        }
-                                        if (time != null) {
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                                val date = Instant.ofEpochMilli(time).plus(days.toLong(), ChronoUnit.DAYS)
-                                                val diff = Duration.between(Instant.now(), date)
-                                                if (!diff.isNegative) {
-                                                    diff.seconds
-                                                } else null
-                                            } else {
-                                                val currentTime = Calendar.getInstance().time.time
-                                                val calendar = Calendar.getInstance()
-                                                calendar.timeInMillis = time
-                                                calendar.add(Calendar.DAY_OF_MONTH, days)
-                                                val diff = ((calendar.time.time - currentTime) / 1000)
-                                                if (diff >= 0) {
-                                                    diff
-                                                } else null
+                                        Instant.parseOrNull(it.createdAt)?.takeIf { time -> time.toEpochMilliseconds() > 0 }?.let { time ->
+                                            val days = when (userType.lowercase()) {
+                                                "" -> 14
+                                                "affiliate" -> 14
+                                                else -> 60
                                             }
-                                        } else null
+                                            val timeLeft = (time + days.days) - Clock.System.now()
+                                            if (timeLeft.isPositive()) {
+                                                timeLeft.inWholeSeconds
+                                            } else null
+                                        }
                                     } else null
                                 } else null
                             })
                             BookmarksSortDialog.SORT_CREATED_AT -> list.sortedWith(compareByDescending(nullsFirst()) {
-                                it.createdAt?.let { createdAt -> TwitchApiHelper.parseIso8601DateUTC(createdAt) }
+                                it.createdAt?.let { createdAt -> Instant.parseOrNull(createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }
                             })
                             else -> list.sortedWith(compareByDescending(nullsFirst()) { it.id })
                         }

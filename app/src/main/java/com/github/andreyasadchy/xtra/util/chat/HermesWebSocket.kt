@@ -1,6 +1,5 @@
 package com.github.andreyasadchy.xtra.util.chat
 
-import android.os.Build
 import com.github.andreyasadchy.xtra.util.WebSocket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -8,18 +7,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.text.SimpleDateFormat
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import java.util.Calendar
-import java.util.Locale
-import java.util.TimeZone
 import java.util.Timer
 import javax.net.ssl.X509TrustManager
 import kotlin.concurrent.schedule
 import kotlin.concurrent.scheduleAtFixedRate
+import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 class HermesWebSocket(
@@ -65,7 +57,7 @@ class HermesWebSocket(
                 put("authenticate", JSONObject().apply {
                     put("token", gqlToken)
                 })
-                put("timestamp", getCurrentTime())
+                put("timestamp", Clock.System.now().toString())
             }.toString()
             webSocket?.write(authenticate)
         }
@@ -99,21 +91,9 @@ class HermesWebSocket(
                         put("topic", it.value)
                     })
                 })
-                put("timestamp", getCurrentTime())
+                put("timestamp", Clock.System.now().toString())
             }.toString()
             webSocket?.write(subscribe)
-        }
-    }
-
-    private fun getCurrentTime(): String {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val date = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC)
-            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(date)
-        } else {
-            val calendar = Calendar.getInstance()
-            val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-            format.timeZone = TimeZone.getTimeZone("UTC")
-            format.format(calendar.time)
         }
     }
 

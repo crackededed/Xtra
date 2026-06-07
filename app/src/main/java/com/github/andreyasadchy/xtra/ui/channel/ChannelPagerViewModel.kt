@@ -26,7 +26,6 @@ import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.body
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
-import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +38,7 @@ import org.chromium.net.CronetEngine
 import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.ExecutorService
+import kotlin.time.Instant
 
 class ChannelPagerViewModel(
     private val localChannelFollowsRepository: LocalChannelFollowsRepository,
@@ -182,7 +182,9 @@ class ChannelPagerViewModel(
                         _notificationsEnabled.value = true
                         notifications.value = Pair(true, errorMessage)
                         if (notificationsEnabled) {
-                            _stream.value?.createdAt.takeUnless { it.isNullOrBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let {
+                            _stream.value?.createdAt.takeUnless { it.isNullOrBlank() }?.let {
+                                Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                            }?.let {
                                 notificationsRepository.saveList(listOf(ShownNotification(channelId, it)))
                             }
                         }
@@ -192,7 +194,9 @@ class ChannelPagerViewModel(
                     _notificationsEnabled.value = true
                     notifications.value = Pair(true, null)
                     if (notificationsEnabled) {
-                        _stream.value?.createdAt.takeUnless { it.isNullOrBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let {
+                        _stream.value?.createdAt.takeUnless { it.isNullOrBlank() }?.let {
+                            Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                        }?.let {
                             notificationsRepository.saveList(listOf(ShownNotification(channelId, it)))
                         }
                     }
@@ -298,7 +302,9 @@ class ChannelPagerViewModel(
                                 _notificationsEnabled.value = true
                             }
                             if (liveNotificationsEnabled) {
-                                _stream.value?.createdAt.takeUnless { it.isNullOrBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let {
+                                _stream.value?.createdAt.takeUnless { it.isNullOrBlank() }?.let {
+                                    Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                                }?.let {
                                     notificationsRepository.saveList(listOf(ShownNotification(channelId, it)))
                                 }
                             }
@@ -312,7 +318,9 @@ class ChannelPagerViewModel(
                             _notificationsEnabled.value = true
                         }
                         if (liveNotificationsEnabled) {
-                            _stream.value?.createdAt.takeUnless { it.isNullOrBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let {
+                            _stream.value?.createdAt.takeUnless { it.isNullOrBlank() }?.let {
+                                Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                            }?.let {
                                 notificationsRepository.saveList(listOf(ShownNotification(channelId, it)))
                             }
                         }

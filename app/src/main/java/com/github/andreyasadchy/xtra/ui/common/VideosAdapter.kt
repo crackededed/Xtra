@@ -26,6 +26,7 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
+import kotlin.time.Instant
 
 class VideosAdapter(
     private val fragment: Fragment,
@@ -90,7 +91,9 @@ class VideosAdapter(
                         .transition(DrawableTransitionOptions.withCrossFade())
                         .into(thumbnail)
                     if (item.createdAt != null) {
-                        val text = TwitchApiHelper.formatTimeString(context, item.createdAt)
+                        val text = Instant.parseOrNull(item.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.let {
+                            TwitchApiHelper.formatDate(context, it)
+                        }
                         if (text != null) {
                             date.visibility = View.VISIBLE
                             date.text = text
