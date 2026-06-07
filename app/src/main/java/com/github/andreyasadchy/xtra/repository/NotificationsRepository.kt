@@ -6,9 +6,9 @@ import com.github.andreyasadchy.xtra.model.NotificationUser
 import com.github.andreyasadchy.xtra.model.ShownNotification
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.time.Instant
 
 class NotificationsRepository(
     private val shownNotificationsDao: ShownNotificationsDao,
@@ -45,7 +45,7 @@ class NotificationsRepository(
         }
         val liveList = list.mapNotNull { stream ->
             stream.channelId.takeUnless { it.isNullOrBlank() }?.let { channelId ->
-                stream.createdAt.takeUnless { it.isNullOrBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let { createdAt ->
+                stream.createdAt.takeUnless { it.isNullOrBlank() }?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }?.let { createdAt ->
                     ShownNotification(channelId, createdAt)
                 }
             }

@@ -28,6 +28,7 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
+import kotlin.time.Instant
 
 class ClipsAdapter(
     private val fragment: Fragment,
@@ -76,7 +77,9 @@ class ClipsAdapter(
                         }.build()
                     )
                     if (item.createdAt != null) {
-                        val text = item.createdAt.let { TwitchApiHelper.formatTimeString(context, it) }
+                        val text = Instant.parseOrNull(item.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.let {
+                            TwitchApiHelper.formatDate(context, it)
+                        }
                         if (text != null) {
                             date.visibility = View.VISIBLE
                             date.text = text

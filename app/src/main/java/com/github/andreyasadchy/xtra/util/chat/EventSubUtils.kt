@@ -8,8 +8,8 @@ import com.github.andreyasadchy.xtra.model.chat.ChannelPointReward
 import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.chat.RoomState
 import com.github.andreyasadchy.xtra.model.chat.TwitchEmote
-import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import org.json.JSONObject
+import kotlin.time.Instant
 
 object EventSubUtils {
     fun parseChatMessage(json: JSONObject, timestamp: String?): ChatMessage {
@@ -66,7 +66,7 @@ object EventSubUtils {
             bits = json.optJSONObject("cheer")?.let { cheer -> if (!cheer.isNull("bits")) cheer.optInt("bits").takeIf { it > 0 } else null },
             msgId = if (!json.isNull("message_type")) json.optString("message_type").takeIf { it.isNotBlank() && !it.equals("text", true) } else null,
             reward = if (!json.isNull("channel_points_custom_reward_id")) json.optString("channel_points_custom_reward_id").takeIf { it.isNotBlank() }?.let { ChannelPointReward(id = it) } else null,
-            timestamp = timestamp?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
+            timestamp = timestamp?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } },
             fullMsg = json.toString()
         )
     }
@@ -126,7 +126,7 @@ object EventSubUtils {
                 isAction = messageText.startsWith(ChatUtils.ACTION),
                 systemMsg = systemMsg,
                 msgId = if (!json.isNull("notice_type")) json.optString("notice_type").takeIf { it.isNotBlank() } else null,
-                timestamp = timestamp?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
+                timestamp = timestamp?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } },
                 fullMsg = json.toString()
             )
         } else {
@@ -135,7 +135,7 @@ object EventSubUtils {
                 userLogin = if (!json.isNull("chatter_user_login")) json.optString("chatter_user_login").takeIf { it.isNotBlank() } else null,
                 userName = if (!json.isNull("chatter_user_name")) json.optString("chatter_user_name").takeIf { it.isNotBlank() } else null,
                 systemMsg = systemMsg,
-                timestamp = timestamp?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
+                timestamp = timestamp?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } },
                 fullMsg = json.toString()
             )
         }
@@ -144,7 +144,7 @@ object EventSubUtils {
     fun parseClearChat(context: Context, json: JSONObject, timestamp: String?): ChatMessage {
         return ChatMessage(
             systemMsg = ContextCompat.getString(context, R.string.chat_clear),
-            timestamp = timestamp?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
+            timestamp = timestamp?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } },
             fullMsg = json.toString()
         )
     }

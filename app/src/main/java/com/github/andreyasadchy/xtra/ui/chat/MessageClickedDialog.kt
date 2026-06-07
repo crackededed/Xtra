@@ -39,6 +39,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlin.time.Instant
 
 class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listener {
 
@@ -317,9 +318,12 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listen
                 userName.visibility = View.GONE
             }
             if (user.createdAt != null) {
+                val text = Instant.parseOrNull(user.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.let {
+                    TwitchApiHelper.formatDate(requireContext(), it)
+                }
                 userLayout.visibility = View.VISIBLE
                 userCreated.visibility = View.VISIBLE
-                userCreated.text = getString(R.string.created_at, TwitchApiHelper.formatTimeString(requireContext(), user.createdAt))
+                userCreated.text = getString(R.string.created_at, text)
                 if (user.bannerImageURL != null) {
                     userCreated.setTextColor(Color.LTGRAY)
                     userCreated.setShadowLayer(4f, 0f, 0f, Color.BLACK)
@@ -328,9 +332,14 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listen
                 userCreated.visibility = View.GONE
             }
             if (user.followedAt != null) {
+                val text = user.followedAt?.let {
+                    Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.let { time ->
+                        TwitchApiHelper.formatDate(requireContext(), time)
+                    }
+                }
                 userLayout.visibility = View.VISIBLE
                 userFollowed.visibility = View.VISIBLE
-                userFollowed.text = getString(R.string.followed_at, TwitchApiHelper.formatTimeString(requireContext(), user.followedAt!!))
+                userFollowed.text = getString(R.string.followed_at, text)
                 if (user.bannerImageURL != null) {
                     userFollowed.setTextColor(Color.LTGRAY)
                     userFollowed.setShadowLayer(4f, 0f, 0f, Color.BLACK)

@@ -73,6 +73,7 @@ import java.util.zip.InflaterOutputStream
 import javax.net.ssl.X509TrustManager
 import kotlin.concurrent.scheduleAtFixedRate
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 class ChatViewModel(
     private val applicationContext: Context,
@@ -2584,7 +2585,7 @@ class ChatViewModel(
         stopReplayChat()
         if (!chatUrl.isNullOrBlank()) {
             chatReplayManagerLocal = ChatReplayManagerLocal(
-                createdAt = createdAt?.toLongOrNull() ?: createdAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
+                createdAt = createdAt?.toLongOrNull() ?: createdAt?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } },
                 getCurrentPosition = getCurrentPosition,
                 getCurrentSpeed = getCurrentSpeed,
                 coroutineScope = viewModelScope,
@@ -2600,7 +2601,7 @@ class ChatViewModel(
                     json = json,
                     enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                     videoId = videoId,
-                    createdAt = createdAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
+                    createdAt = createdAt?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } },
                     startTime = startTime.times(1000L),
                     getCurrentPosition = getCurrentPosition,
                     getCurrentSpeed = getCurrentSpeed,
@@ -2677,7 +2678,10 @@ class ChatViewModel(
                                         when (reader.peek()) {
                                             JsonToken.NAME -> {
                                                 when (reader.nextName().also { position += it.length + 3 }) {
-                                                    "liveStartTime" -> { TwitchApiHelper.parseIso8601DateUTC(reader.nextString().also { position += it.length + 2 })?.let { startTimeMs = it } }
+                                                    "liveStartTime" -> {
+                                                        val time = reader.nextString().also { position += it.length + 2 }
+                                                        Instant.parseOrNull(time)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.let { startTimeMs = it }
+                                                    }
                                                     "liveComments" -> {
                                                         reader.beginArray().also { position += 1 }
                                                         while (reader.hasNext()) {
