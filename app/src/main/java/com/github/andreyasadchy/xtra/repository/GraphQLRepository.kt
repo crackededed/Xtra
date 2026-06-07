@@ -119,8 +119,8 @@ import okio.buffer
 import okio.source
 import org.chromium.net.CronetEngine
 import org.chromium.net.apihelpers.UploadDataProviders
-import java.util.UUID
 import java.util.concurrent.ExecutorService
+import kotlin.uuid.Uuid
 
 class GraphQLRepository(
     private val httpEngine: Lazy<HttpEngine?>,
@@ -924,8 +924,7 @@ class GraphQLRepository(
         }.toString()
         val headers = if (headers["X-Device-Id"] == null) {
             headers.toMutableMap().apply {
-                val randomId = UUID.randomUUID().toString().replace("-", "").substring(0, 32)
-                put("X-Device-Id", randomId)
+                put("X-Device-Id", Uuid.random().toHexString())
             }
         } else headers
         json.decodeFromString<ChannelSuggestionsResponse>(sendPersistedQuery(networkLibrary, headers, body))

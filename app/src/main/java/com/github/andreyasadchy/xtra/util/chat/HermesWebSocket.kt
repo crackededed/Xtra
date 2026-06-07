@@ -17,10 +17,10 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 import java.util.Timer
-import java.util.UUID
 import javax.net.ssl.X509TrustManager
 import kotlin.concurrent.schedule
 import kotlin.concurrent.scheduleAtFixedRate
+import kotlin.uuid.Uuid
 
 class HermesWebSocket(
     private val channelId: String,
@@ -60,7 +60,7 @@ class HermesWebSocket(
     private suspend fun subscribe() = withContext(Dispatchers.IO) {
         if (!userId.isNullOrBlank() && !gqlToken.isNullOrBlank() && collectPoints) {
             val authenticate = JSONObject().apply {
-                put("id", UUID.randomUUID().toString().replace("-", "").substring(0, 21))
+                put("id", Uuid.random().toHexString().substring(0, 21))
                 put("type", "authenticate")
                 put("authenticate", JSONObject().apply {
                     put("token", gqlToken)
@@ -70,28 +70,28 @@ class HermesWebSocket(
             webSocket?.write(authenticate)
         }
         topics = buildMap {
-            put(UUID.randomUUID().toString().replace("-", "").substring(0, 21), "video-playback-by-id.$channelId")
-            put(UUID.randomUUID().toString().replace("-", "").substring(0, 21), "broadcast-settings-update.$channelId")
-            put(UUID.randomUUID().toString().replace("-", "").substring(0, 21), "community-points-channel-v1.$channelId")
+            put(Uuid.random().toHexString().substring(0, 21), "video-playback-by-id.$channelId")
+            put(Uuid.random().toHexString().substring(0, 21), "broadcast-settings-update.$channelId")
+            put(Uuid.random().toHexString().substring(0, 21), "community-points-channel-v1.$channelId")
             if (showRaids) {
-                put(UUID.randomUUID().toString().replace("-", "").substring(0, 21), "raid.$channelId")
+                put(Uuid.random().toHexString().substring(0, 21), "raid.$channelId")
             }
             if (showPolls) {
-                put(UUID.randomUUID().toString().replace("-", "").substring(0, 21), "polls.$channelId")
+                put(Uuid.random().toHexString().substring(0, 21), "polls.$channelId")
             }
             if (showPredictions) {
-                put(UUID.randomUUID().toString().replace("-", "").substring(0, 21), "predictions-channel-v1.$channelId")
+                put(Uuid.random().toHexString().substring(0, 21), "predictions-channel-v1.$channelId")
             }
             if (!userId.isNullOrBlank() && !gqlToken.isNullOrBlank()) {
                 if (collectPoints) {
-                    put(UUID.randomUUID().toString().replace("-", "").substring(0, 21), "community-points-user-v1.$userId")
+                    put(Uuid.random().toHexString().substring(0, 21), "community-points-user-v1.$userId")
                 }
             }
         }
         topics.forEach {
             val subscribe = JSONObject().apply {
                 put("type", "subscribe")
-                put("id", UUID.randomUUID().toString().replace("-", "").substring(0, 21))
+                put("id", Uuid.random().toHexString().substring(0, 21))
                 put("subscribe", JSONObject().apply {
                     put("id", it.key)
                     put("type", "pubsub")
