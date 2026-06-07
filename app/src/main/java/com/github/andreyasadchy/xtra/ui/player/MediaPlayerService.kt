@@ -62,6 +62,7 @@ import java.net.Proxy
 import java.util.Timer
 import kotlin.concurrent.schedule
 import kotlin.concurrent.scheduleAtFixedRate
+import kotlin.time.Duration.Companion.milliseconds
 
 class MediaPlayerService : BasePlaybackService() {
 
@@ -515,14 +516,14 @@ class MediaPlayerService : BasePlaybackService() {
                                     useCustomProxy = false
                                     serviceListener?.toast(R.string.proxy_error, Toast.LENGTH_LONG)
                                     lifecycleScope.launch {
-                                        delay(1500L)
+                                        delay(1500.milliseconds)
                                         restartPlayer()
                                     }
                                 }
                                 else -> {
                                     serviceListener?.toast(R.string.player_error, Toast.LENGTH_SHORT)
                                     lifecycleScope.launch {
-                                        delay(1500L)
+                                        delay(1500.milliseconds)
                                         restartPlayer()
                                     }
                                 }
@@ -717,7 +718,7 @@ class MediaPlayerService : BasePlaybackService() {
                                 else -> {
                                     serviceListener?.toast(R.string.player_error, Toast.LENGTH_SHORT)
                                     lifecycleScope.launch {
-                                        delay(1500L)
+                                        delay(1500.milliseconds)
                                         player.prepare()
                                     }
                                 }

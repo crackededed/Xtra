@@ -15,6 +15,7 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.X509TrustManager
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.seconds
 
 class ChatReadIRCSocket(
     private val useSSL: Boolean,
@@ -55,7 +56,7 @@ class ChatReadIRCSocket(
                 }
             }
             close()
-            delay(1000)
+            delay(1.seconds)
         }
     }
 

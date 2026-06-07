@@ -41,6 +41,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 class SearchPagerFragment : BaseNetworkFragment(), FragmentHost {
 
@@ -238,7 +239,7 @@ class SearchPagerFragment : BaseNetworkFragment(), FragmentHost {
                 job?.cancel()
                 if (newText.isNotEmpty()) {
                     job = lifecycleScope.launch {
-                        delay(750)
+                        delay(750.milliseconds)
                         withResumed {
                             (currentFragment as? Searchable)?.search(newText)
                         }

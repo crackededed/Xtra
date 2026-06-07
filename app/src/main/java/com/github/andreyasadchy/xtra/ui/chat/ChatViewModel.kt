@@ -72,6 +72,7 @@ import java.util.zip.DeflaterOutputStream
 import java.util.zip.InflaterOutputStream
 import javax.net.ssl.X509TrustManager
 import kotlin.concurrent.scheduleAtFixedRate
+import kotlin.time.Duration.Companion.seconds
 
 class ChatViewModel(
     private val applicationContext: Context,
@@ -276,7 +277,7 @@ class ChatViewModel(
             } else {
                 viewModelScope.launch {
                     val pair = try {
-                        withTimeout(20000) {
+                        withTimeout(20.seconds) {
                             playerRepository.loadGlobalSTVEmotesResponse(networkLibrary) to true
                         }
                     } catch (e: Exception) {
@@ -336,7 +337,7 @@ class ChatViewModel(
             if (!channelId.isNullOrBlank()) {
                 viewModelScope.launch {
                     val pair = try {
-                        withTimeout(20000) {
+                        withTimeout(20.seconds) {
                             playerRepository.loadSTVEmotesResponse(networkLibrary, channelId) to true
                         }
                     } catch (e: Exception) {
@@ -428,7 +429,7 @@ class ChatViewModel(
             } else {
                 viewModelScope.launch {
                     val pair = try {
-                        withTimeout(20000) {
+                        withTimeout(20.seconds) {
                             playerRepository.loadGlobalBTTVEmotesResponse(networkLibrary) to true
                         }
                     } catch (e: Exception) {
@@ -490,7 +491,7 @@ class ChatViewModel(
             if (!channelId.isNullOrBlank()) {
                 viewModelScope.launch {
                     val pair = try {
-                        withTimeout(20000) {
+                        withTimeout(20.seconds) {
                             playerRepository.loadBTTVEmotesResponse(networkLibrary, channelId) to true
                         }
                     } catch (e: Exception) {
@@ -579,7 +580,7 @@ class ChatViewModel(
             } else {
                 viewModelScope.launch {
                     val pair = try {
-                        withTimeout(20000) {
+                        withTimeout(20.seconds) {
                             playerRepository.loadGlobalFFZEmotesResponse(networkLibrary) to true
                         }
                     } catch (e: Exception) {
@@ -639,7 +640,7 @@ class ChatViewModel(
             if (!channelId.isNullOrBlank()) {
                 viewModelScope.launch {
                     val pair = try {
-                        withTimeout(20000) {
+                        withTimeout(20.seconds) {
                             playerRepository.loadFFZEmotesResponse(networkLibrary, channelId) to true
                         }
                     } catch (e: Exception) {
@@ -1852,7 +1853,7 @@ class ChatViewModel(
     fun startPollTimeout(hide: () -> Unit) {
         pollTimeoutJob?.cancel()
         pollTimeoutJob = viewModelScope.launch {
-            delay(20000)
+            delay(20.seconds)
             hide()
         }
     }
@@ -1860,7 +1861,7 @@ class ChatViewModel(
     fun startPredictionTimeout(hide: () -> Unit) {
         predictionTimeoutJob?.cancel()
         predictionTimeoutJob = viewModelScope.launch {
-            delay(20000)
+            delay(20.seconds)
             hide()
         }
     }
