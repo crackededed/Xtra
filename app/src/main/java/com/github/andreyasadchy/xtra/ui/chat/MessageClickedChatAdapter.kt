@@ -87,18 +87,23 @@ class MessageClickedChatAdapter(
     var selectedMessage: ChatMessage?,
 ) : RecyclerView.Adapter<MessageClickedChatAdapter.ViewHolder>() {
 
+    val type = selectedMessage?.type
     val userId = selectedMessage?.userId
     val userLogin = selectedMessage?.userLogin
-    val messages = if (!userId.isNullOrBlank() || !userLogin.isNullOrBlank()) {
-        synchronized(messages) {
-            messages.filter {
-                (!userId.isNullOrBlank() && (it.userId == userId || it.replyParent?.userId == userId)) ||
-                        (!userLogin.isNullOrBlank() && (it.userLogin == userLogin || it.replyParent?.userLogin == userLogin))
-            }.toMutableList().ifEmpty { null }
-        }
+    val messages = if (type == ChatMessage.USER_MESSAGE) {
+        if (!userId.isNullOrBlank() || !userLogin.isNullOrBlank()) {
+            synchronized(messages) {
+                messages.filter {
+                    (!userId.isNullOrBlank() && (it.userId == userId || it.replyParent?.userId == userId)) ||
+                            (!userLogin.isNullOrBlank() && (it.userLogin == userLogin || it.replyParent?.userLogin == userLogin))
+                }.toMutableList()
+            }
+        } else null
     } else {
-        null
-    } ?: selectedMessage?.let { mutableListOf(it) } ?: mutableListOf()
+        synchronized(messages) {
+            messages.filter { it.type == type }.toMutableList()
+        }
+    }?.ifEmpty { null } ?: selectedMessage?.let { mutableListOf(it) } ?: mutableListOf()
 
     var messageClickListener: ((ChatMessage, ChatMessage?) -> Unit)? = null
 
@@ -251,7 +256,7 @@ class MessageClickedChatAdapter(
             textView.apply {
                 text = formattedMessage
                 textSize = messageTextSize
-                if (chatMessage.isReply) {
+                if (chatMessage.type == ChatMessage.REPLY_MESSAGE) {
                     movementMethod = null
                     maxLines = 2
                     ellipsize = TextUtils.TruncateAt.END

@@ -209,7 +209,7 @@ class ReplyClickedDialog : BottomSheetDialogFragment() {
 
     fun newMessage(message: ChatMessage) {
         adapter?.let { adapter ->
-            if ((message.reply?.threadParentId == adapter.threadParentId || message.id == adapter.threadParentId) && !message.isReply) {
+            if ((message.reply?.threadParentId == adapter.threadParentId || message.id == adapter.threadParentId) && message.type != ChatMessage.REPLY_MESSAGE) {
                 synchronized(adapter.messages) {
                     if (adapter.messages.size >= (messageLimit ?: requireContext().prefs().getInt(C.CHAT_LIMIT, 600).also { messageLimit = it })) {
                         adapter.messages.removeAt(0)
@@ -232,7 +232,7 @@ class ReplyClickedDialog : BottomSheetDialogFragment() {
                 val left = (messageLimit ?: requireContext().prefs().getInt(C.CHAT_LIMIT, 600).also { messageLimit = it }) - adapter.messages.size
                 if (left > 0) {
                     val items = messages.filter { message ->
-                        (message.reply?.threadParentId == adapter.threadParentId || message.id == adapter.threadParentId) && !message.isReply
+                        (message.reply?.threadParentId == adapter.threadParentId || message.id == adapter.threadParentId) && message.type != ChatMessage.REPLY_MESSAGE
                     }.takeLast(left)
                     adapter.messages.addAll(0, items)
                     adapter.notifyItemRangeInserted(0, items.size)
