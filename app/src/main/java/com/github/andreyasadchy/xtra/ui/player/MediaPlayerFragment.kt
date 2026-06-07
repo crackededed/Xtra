@@ -162,6 +162,7 @@ class MediaPlayerFragment : PlayerFragment() {
                             (activity as? MainActivity)?.closePlayer()
                         }
                     }
+                    playbackService?.setStopServiceTimer(false)
                     playbackService?.player?.let { player ->
                         if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
                             requireView().keepScreenOn = player.isPlaying
@@ -351,6 +352,7 @@ class MediaPlayerFragment : PlayerFragment() {
         if (playbackService != null) {
             playbackService?.startAudioOnly()
             playbackService?.setSleepTimer((activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
+            playbackService?.setStopServiceTimer(true)
         }
         playbackService?.playerListener = null
         surfaceHolderCallback?.let { binding.playerSurface.holder.removeCallback(it) }
@@ -393,6 +395,7 @@ class MediaPlayerFragment : PlayerFragment() {
             }
             playbackService?.stop(isInPIPMode)
             playbackService?.setSleepTimer((activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
+            playbackService?.setStopServiceTimer(true)
         }
         binding.playerControls.root.removeCallbacks(updateProgressAction)
         playbackService?.playerListener = null
