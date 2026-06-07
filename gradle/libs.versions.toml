@@ -7,7 +7,7 @@ coil = "3.4.0"
 conscrypt = "2.5.3"
 constraintlayout = "2.2.1"
 coordinatorlayout = "1.3.0"
-core = "1.18.0"
+core = "1.19.0"
 coroutines = "1.11.0"
 cronet = "143.7445.0"
 fragment = "1.8.9"
@@ -41,7 +41,7 @@ coil-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "
 conscrypt = { module = "org.conscrypt:conscrypt-android", version.ref = "conscrypt" }
 constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
 coordinatorlayout = { module = "androidx.coordinatorlayout:coordinatorlayout", version.ref = "coordinatorlayout" }
-core-ktx = { module = "androidx.core:core-ktx", version.ref = "core" }
+core = { module = "androidx.core:core", version.ref = "core" }
 coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 cronet-api = { module = "org.chromium.net:cronet-api", version.ref = "cronet" }
 fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragment" }
