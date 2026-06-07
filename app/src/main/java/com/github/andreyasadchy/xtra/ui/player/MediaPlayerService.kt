@@ -84,6 +84,7 @@ class MediaPlayerService : BasePlaybackService() {
     private var sleepTimerEndTime = 0L
     private var lastSavedPosition: Long? = null
     private var savePositionTimer: Timer? = null
+    private var stopServiceTimer: Timer? = null
 
     var seekPosition: Long? = null
     var startPlayer = true
@@ -1554,6 +1555,23 @@ class MediaPlayerService : BasePlaybackService() {
         return endTime
     }
 
+    fun setStopServiceTimer(start: Boolean) {
+        if (start) {
+            if (stopServiceTimer == null && player?.isPlaying == false) {
+                stopServiceTimer = Timer().apply {
+                    schedule(600000) {
+                        Handler(Looper.getMainLooper()).post {
+                            stopSelf()
+                        }
+                    }
+                }
+            }
+        } else {
+            stopServiceTimer?.cancel()
+            stopServiceTimer = null
+        }
+    }
+
     fun toggleDynamicsProcessing(): Boolean {
         if (dynamicsProcessing?.enabled == true) {
             dynamicsProcessing?.enabled = false
@@ -1636,10 +1654,21 @@ class MediaPlayerService : BasePlaybackService() {
                         }
                     }
                 }
+                stopServiceTimer?.cancel()
+                stopServiceTimer = null
             } else {
                 savePositionTimer?.cancel()
                 savePositionTimer = null
                 updateSavedPosition()
+                if (stopServiceTimer == null && serviceListener == null) {
+                    stopServiceTimer = Timer().apply {
+                        schedule(600000) {
+                            Handler(Looper.getMainLooper()).post {
+                                stopSelf()
+                            }
+                        }
+                    }
+                }
             }
         }
     }

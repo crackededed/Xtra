@@ -115,6 +115,7 @@ class ExoPlayerService : BasePlaybackService() {
     private var sleepTimerEndTime = 0L
     private var lastSavedPosition: Long? = null
     private var savePositionTimer: Timer? = null
+    private var stopServiceTimer: Timer? = null
 
     private var playingAds = false
     private var proxyMediaPlaylist = false
@@ -430,10 +431,21 @@ class ExoPlayerService : BasePlaybackService() {
                                 }
                             }
                         }
+                        stopServiceTimer?.cancel()
+                        stopServiceTimer = null
                     } else {
                         savePositionTimer?.cancel()
                         savePositionTimer = null
                         updateSavedPosition()
+                        if (stopServiceTimer == null && serviceListener == null) {
+                            stopServiceTimer = Timer().apply {
+                                schedule(600000) {
+                                    Handler(Looper.getMainLooper()).post {
+                                        stopSelf()
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -1693,6 +1705,23 @@ class ExoPlayerService : BasePlaybackService() {
             sleepTimerEndTime = System.currentTimeMillis() + duration
         }
         return endTime
+    }
+
+    fun setStopServiceTimer(start: Boolean) {
+        if (start) {
+            if (stopServiceTimer == null && player?.isPlaying == false) {
+                stopServiceTimer = Timer().apply {
+                    schedule(600000) {
+                        Handler(Looper.getMainLooper()).post {
+                            stopSelf()
+                        }
+                    }
+                }
+            }
+        } else {
+            stopServiceTimer?.cancel()
+            stopServiceTimer = null
+        }
     }
 
     fun toggleDynamicsProcessing(): Boolean {
