@@ -63,10 +63,10 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.net.InetSocketAddress
 import java.net.Proxy
-import java.util.UUID
 import java.util.concurrent.ExecutorService
 import kotlin.math.roundToInt
 import kotlin.random.Random
+import kotlin.uuid.Uuid
 
 class PlayerRepository(
     private val httpEngine: Lazy<HttpEngine?>,
@@ -266,9 +266,9 @@ class PlayerRepository(
             gqlHeaders
         } else {
             gqlHeaders.toMutableMap().apply {
+                // X-Device-Id or Device-ID removes "commercial break in progress" (length 16 or 32)
                 if (randomDeviceId != false) {
-                    val randomId = UUID.randomUUID().toString().replace("-", "").substring(0, 32) //X-Device-Id or Device-ID removes "commercial break in progress" (length 16 or 32)
-                    put("X-Device-Id", randomId)
+                    put("X-Device-Id", Uuid.random().toHexString())
                 } else {
                     xDeviceId?.let { put("X-Device-Id", it) }
                 }
