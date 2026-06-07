@@ -9,7 +9,6 @@ import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.chat.Reply
 import com.github.andreyasadchy.xtra.model.chat.TwitchEmote
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
-import kotlin.collections.set
 
 object RecentMessageUtils {
     fun parseChatMessage(message: String, userNotice: Boolean): ChatMessage {
@@ -25,6 +24,7 @@ object RecentMessageUtils {
         val msgIndex = messageInfo.indexOf(" ", messageInfo.indexOf("#", messageInfo.indexOf(":") + 1) + 1)
         return if (msgIndex == -1 && userNotice) { // no user message & is user notice
             ChatMessage(
+                type = ChatMessage.USER_MESSAGE,
                 userId = prefixes["user-id"],
                 userLogin = userLogin,
                 userName = prefixes["display-name"]?.replace("\\s", " "),
@@ -66,6 +66,7 @@ object RecentMessageUtils {
                 }
             }
             ChatMessage(
+                type = ChatMessage.USER_MESSAGE,
                 id = prefixes["id"],
                 userId = prefixes["user-id"],
                 userLogin = userLogin,
@@ -104,6 +105,7 @@ object RecentMessageUtils {
         val msg = messageInfo.substring(if (msgIndex != -1) msgIndex + 1 else index2 + 1)
         return Pair(
             ChatMessage(
+                type = ChatMessage.USER_MESSAGE,
                 userLogin = login,
                 message = msg,
                 timestamp = prefixes["tmi-sent-ts"]?.toLong(),
@@ -130,6 +132,11 @@ object RecentMessageUtils {
             ContextCompat.getString(context, R.string.chat_clear)
         }
         return ChatMessage(
+            type = if (login != null) {
+                ChatMessage.USER_MESSAGE
+            } else {
+                ChatMessage.NOTICE_MESSAGE
+            },
             userId = prefixes["target-user-id"],
             userLogin = login,
             systemMsg = text,
@@ -147,6 +154,7 @@ object RecentMessageUtils {
         val index2 = messageInfo.indexOf(" ", messageInfo.indexOf("#") + 1)
         val text = messageInfo.substring(if (msgIndex != -1) msgIndex + 1 else index2 + 1)
         return ChatMessage(
+            type = ChatMessage.NOTICE_MESSAGE,
             systemMsg = TwitchApiHelper.getNoticeString(context, msgId, text),
             fullMsg = message
         )

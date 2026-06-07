@@ -36,6 +36,7 @@ object PubSubUtils {
         val defaultImage = reward?.optJSONObject("default_image")
         val input = if (redemption?.isNull("user_input") == false) redemption.optString("user_input").takeIf { it.isNotBlank() } else null
         return ChatMessage(
+            type = ChatMessage.USER_MESSAGE,
             userId = if (user?.isNull("id") == false) user.optString("id").takeIf { it.isNotBlank() } else null,
             userLogin = if (user?.isNull("login") == false) user.optString("login").takeIf { it.isNotBlank() } else null,
             userName = if (user?.isNull("display_name") == false) user.optString("display_name").takeIf { it.isNotBlank() } else null,
