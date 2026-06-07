@@ -10,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.max
+import kotlin.time.Duration.Companion.milliseconds
 
 class ChatReplayManagerLocal(
     private val createdAt: Long?,
@@ -132,7 +133,7 @@ class ChatReplayManagerLocal(
                                 currentPosition < messageOffset
                             }
                         ) {
-                            delay(max((messageOffset - currentPosition).div(playbackSpeed ?: 1f).toLong(), 0))
+                            delay(max((messageOffset - currentPosition).div(playbackSpeed ?: 1f).toLong(), 0).milliseconds)
                         }
                         if (!isActive) {
                             break
@@ -160,7 +161,7 @@ class ChatReplayManagerLocal(
                                 currentPosition < messageOffset
                             }
                         ) {
-                            delay(max((messageOffset - currentPosition).div(playbackSpeed ?: 1f).toLong(), 0))
+                            delay(max((messageOffset - currentPosition).div(playbackSpeed ?: 1f).toLong(), 0).milliseconds)
                         }
                         if (!isActive) {
                             break

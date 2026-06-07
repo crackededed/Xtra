@@ -96,6 +96,8 @@ import java.util.Timer
 import kotlin.concurrent.schedule
 import kotlin.concurrent.scheduleAtFixedRate
 import kotlin.math.floor
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(UnstableApi::class)
 class ExoPlayerService : BasePlaybackService() {
@@ -245,7 +247,7 @@ class ExoPlayerService : BasePlaybackService() {
                                             proxyMediaPlaylist = true
                                             lifecycleScope.launch {
                                                 for (i in 0 until 10) {
-                                                    delay(10000)
+                                                    delay(10.seconds)
                                                     if (!checkPlaylist(prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), playlist)) {
                                                         break
                                                     }
@@ -292,14 +294,14 @@ class ExoPlayerService : BasePlaybackService() {
                                         useCustomProxy = false
                                         serviceListener?.toast(R.string.proxy_error, Toast.LENGTH_LONG)
                                         lifecycleScope.launch {
-                                            delay(1500L)
+                                            delay(1500.milliseconds)
                                             restartPlayer()
                                         }
                                     }
                                     else -> {
                                         serviceListener?.toast(R.string.player_error, Toast.LENGTH_SHORT)
                                         lifecycleScope.launch {
-                                            delay(1500L)
+                                            delay(1500.milliseconds)
                                             restartPlayer()
                                         }
                                     }
@@ -391,7 +393,7 @@ class ExoPlayerService : BasePlaybackService() {
                                     else -> {
                                         serviceListener?.toast(R.string.player_error, Toast.LENGTH_SHORT)
                                         lifecycleScope.launch {
-                                            delay(1500L)
+                                            delay(1500.milliseconds)
                                             player?.prepare()
                                         }
                                     }

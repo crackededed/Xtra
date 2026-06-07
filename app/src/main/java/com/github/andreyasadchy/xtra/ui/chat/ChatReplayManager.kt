@@ -15,6 +15,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlin.math.max
+import kotlin.time.Duration.Companion.milliseconds
 
 class ChatReplayManager(
     private val networkLibrary: String?,
@@ -209,7 +210,7 @@ class ChatReplayManager(
                             currentPosition < messageOffset
                         }
                     ) {
-                        delay(max((messageOffset - currentPosition).div(playbackSpeed ?: 1f).toLong(), 0))
+                        delay(max((messageOffset - currentPosition).div(playbackSpeed ?: 1f).toLong(), 0).milliseconds)
                     }
                     if (!isActive) {
                         break

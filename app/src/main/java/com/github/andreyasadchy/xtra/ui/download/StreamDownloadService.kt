@@ -73,6 +73,8 @@ import java.net.Proxy
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.max
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class StreamDownloadService : LifecycleService() {
 
@@ -382,7 +384,7 @@ class StreamDownloadService : LifecycleService() {
             if (endTime == null || currentTime < endTime) {
                 val timeTaken = currentTime - startTime
                 if (timeTaken < offlineCheck) {
-                    delay(offlineCheck - timeTaken)
+                    delay((offlineCheck - timeTaken).milliseconds)
                 }
                 startTime = System.currentTimeMillis()
             } else {
@@ -843,7 +845,7 @@ class StreamDownloadService : LifecycleService() {
             }
             val timeTaken = System.currentTimeMillis() - startTime
             if ((timeTaken) < liveCheck) {
-                delay(liveCheck - timeTaken)
+                delay((liveCheck - timeTaken).milliseconds)
             }
             startTime = System.currentTimeMillis()
         }
@@ -852,7 +854,7 @@ class StreamDownloadService : LifecycleService() {
     private suspend fun updateStreamInfo(offlineVideo: OfflineVideo, channelLogin: String, networkLibrary: String?) = withContext(Dispatchers.IO) {
         var attempt = 1
         while (attempt <= 10) {
-            delay(10000L)
+            delay(10.seconds)
             val channelId = offlineVideo.channelId
             val stream = try {
                 xtraModule.graphQLRepository.loadQueryUsersStream(

@@ -85,6 +85,7 @@ import org.chromium.net.CronetProvider
 import java.io.File
 import java.util.Collections
 import java.util.Locale
+import kotlin.time.Duration.Companion.milliseconds
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -148,7 +149,7 @@ class SettingsActivity : AppCompatActivity() {
                 job?.cancel()
                 if (newText.isNotEmpty()) {
                     job = lifecycleScope.launch {
-                        delay(750)
+                        delay(750.milliseconds)
                         withResumed {
                             (supportFragmentManager.findFragmentById(R.id.navHostFragment)?.childFragmentManager?.fragments?.getOrNull(0) as? SettingsSearchFragment)?.search(newText)
                         }

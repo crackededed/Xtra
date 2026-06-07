@@ -48,6 +48,7 @@ import org.chromium.net.CronetEngine
 import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.ExecutorService
+import kotlin.time.Duration.Companion.minutes
 
 class Media3PlayerViewModel(
     private val httpEngine: Lazy<HttpEngine?>,
@@ -168,12 +169,12 @@ class Media3PlayerViewModel(
                 while (isActive) {
                     try {
                         updateStreamInfo(channelId, channelLogin, networkLibrary, helixHeaders, gqlHeaders, enableIntegrity)
-                        delay(300000L)
+                        delay(5.minutes)
                     } catch (e: Exception) {
                         if (e.message == C.FAILED_INTEGRITY_CHECK) {
                             integrity.emit("stream")
                         }
-                        delay(60000L)
+                        delay(1.minutes)
                     }
                 }
             }
