@@ -2,12 +2,11 @@ package com.github.andreyasadchy.xtra.ui.view
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.widget.FrameLayout
 import com.github.andreyasadchy.xtra.R
-import kotlin.math.max
-import kotlin.math.min
 
 class PlayerLayout : FrameLayout {
 
@@ -18,6 +17,9 @@ class PlayerLayout : FrameLayout {
     var isPortrait = false
     var scaleFactor = 1f
         private set
+    private var lastScaleFactor = 1f
+    private var lastTranslationX = 0f
+    private var lastTranslationY = 0f
     private var lastTouchX = 0f
     private var lastTouchY = 0f
     private var activePointerId = -1
@@ -31,8 +33,32 @@ class PlayerLayout : FrameLayout {
             view?.scaleX = scaleFactor
             view?.scaleY = scaleFactor
             
-            // Constrain translation after scaling
             applyConstraints(view)
+            return true
+        }
+    })
+
+    private val doubleTapGestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+        override fun onDoubleTap(e: MotionEvent): Boolean {
+            val view = findViewById<FrameLayout>(R.id.aspectRatioFrameLayout) ?: return false
+            if (scaleFactor > 1f) {
+                lastScaleFactor = scaleFactor
+                lastTranslationX = view.translationX
+                lastTranslationY = view.translationY
+                
+                scaleFactor = 1f
+                view.scaleX = scaleFactor
+                view.scaleY = scaleFactor
+                view.translationX = 0f
+                view.translationY = 0f
+            } else {
+                scaleFactor = if (lastScaleFactor > 1f) lastScaleFactor else 2f
+                view.scaleX = scaleFactor
+                view.scaleY = scaleFactor
+                view.translationX = lastTranslationX
+                view.translationY = lastTranslationY
+                applyConstraints(view)
+            }
             return true
         }
     })
@@ -51,8 +77,20 @@ class PlayerLayout : FrameLayout {
         view.translationY = view.translationY.coerceIn(-maxTranslationY, maxTranslationY)
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        if (isPortrait) {
+            val playerHeight = (measuredWidth / (16f / 9f)).toInt()
+            super.onMeasure(
+                widthMeasureSpec,
+                MeasureSpec.makeMeasureSpec(playerHeight, MeasureSpec.EXACTLY)
+            )
+        }
+    }
+
     override fun onTouchEvent(event: MotionEvent): Boolean {
         scaleGestureDetector.onTouchEvent(event)
+        doubleTapGestureDetector.onTouchEvent(event)
         
         val view = findViewById<FrameLayout>(R.id.aspectRatioFrameLayout) ?: return false
 
@@ -76,7 +114,7 @@ class PlayerLayout : FrameLayout {
                         
                         lastTouchX = x
                         lastTouchY = y
-                        return true // Pan handled
+                        return true
                     }
                 }
             }
@@ -85,16 +123,5 @@ class PlayerLayout : FrameLayout {
             }
         }
         return scaleGestureDetector.isInProgress || scaleFactor > 1f
-    }
-
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        if (isPortrait) {
-            val playerHeight = (measuredWidth / (16f / 9f)).toInt()
-            super.onMeasure(
-                widthMeasureSpec,
-                MeasureSpec.makeMeasureSpec(playerHeight, MeasureSpec.EXACTLY)
-            )
-        }
     }
 }
