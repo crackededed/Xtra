@@ -62,8 +62,8 @@ class ExoPlayerFragment : PlayerFragment() {
                 setPipActions(!showPlayButton)
                 updateProgress()
                 controllerAutoHide = !showPlayButton
-                if (playbackService?.type != BasePlaybackService.STREAM && useController) {
-                    showController()
+                if (useController) {
+                    showController(show = playbackService?.type != BasePlaybackService.STREAM && playbackState == Player.STATE_ENDED)
                 }
             }
 
@@ -82,8 +82,8 @@ class ExoPlayerFragment : PlayerFragment() {
                 setPipActions(!showPlayButton)
                 updateProgress()
                 controllerAutoHide = !showPlayButton
-                if (playbackService?.type != BasePlaybackService.STREAM && useController) {
-                    showController()
+                if (useController) {
+                    showController(show = playbackService?.type != BasePlaybackService.STREAM && playbackService?.player?.playbackState == Player.STATE_ENDED)
                 }
             }
 
