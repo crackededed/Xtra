@@ -466,7 +466,7 @@ class MainActivity : AppCompatActivity() {
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
         pipActionReceiver = pipReceiver
-        if (prefs.getString(C.PLAYER, C.EXOPLAYER) == C.MEDIA_PLAYER || prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+        if (prefs.getString(C.PLAYER, C.EXOPLAYER) == C.MEDIA_PLAYER || prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
             lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.playbackStates.collectLatest { states ->
@@ -892,7 +892,7 @@ class MainActivity : AppCompatActivity() {
                 if (playerFragment != null) {
                     (playerFragment as? Media3PlayerFragment)?.maximize() ?: (playerFragment as? PlayerFragment)?.maximize()
                 } else {
-                    if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+                    if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
                         viewModel.getPlaybackStates()
                     }
                 }
@@ -916,7 +916,7 @@ class MainActivity : AppCompatActivity() {
 //Navigation listeners
 
     fun startStream(stream: Stream) {
-        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
             (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close()
             val fragment = Media3Fragment.newInstance(stream)
             startPlayer(fragment)
@@ -946,7 +946,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun startVideo(video: Video, offset: Long?, ignoreSavedPosition: Boolean = false) {
-        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
             (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close()
             val fragment = Media3Fragment.newInstance(video, offset, ignoreSavedPosition)
             startPlayer(fragment)
@@ -984,7 +984,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun startClip(clip: Clip) {
-        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
             (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close()
             val fragment = Media3Fragment.newInstance(clip)
             startPlayer(fragment)
@@ -1018,7 +1018,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun startOfflineVideo(video: OfflineVideo) {
-        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
             (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close()
             val fragment = Media3Fragment.newInstance(video)
             startPlayer(fragment)
@@ -1083,7 +1083,7 @@ class MainActivity : AppCompatActivity() {
         if (playerFragment == null) {
             playerFragment = supportFragmentManager.findFragmentById(R.id.playerContainer) as? Media3PlayerFragment ?: supportFragmentManager.findFragmentById(R.id.playerContainer) as? PlayerFragment
             if (playerFragment == null) {
-                if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, false)) {
+                if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
                     viewModel.getPlaybackStates()
                 }
             }
