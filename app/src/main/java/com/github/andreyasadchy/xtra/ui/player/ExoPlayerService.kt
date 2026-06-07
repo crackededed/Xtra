@@ -178,6 +178,7 @@ class ExoPlayerService : BasePlaybackService() {
                 }
 
                 override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+                    updatePlaybackState()
                     updateMetadata()
                     updateNotification()
                     if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED && !timeline.isEmpty && qualities?.find { it.name == AUTO_QUALITY } != null) {
@@ -1240,7 +1241,6 @@ class ExoPlayerService : BasePlaybackService() {
     private fun updatePlaybackState() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             player?.let { player ->
-                val isLive = player.isCurrentMediaItemLive
                 session?.setPlaybackState(
                     PlaybackState.Builder().apply {
                         setState(
@@ -1263,24 +1263,14 @@ class ExoPlayerService : BasePlaybackService() {
                                 Player.STATE_ENDED -> PlaybackState.STATE_STOPPED
                                 else -> PlaybackState.STATE_NONE
                             },
-                            if (!isLive) {
-                                player.currentPosition
-                            } else {
-                                -1
-                            },
-                            if (player.isPlaying && !isLive) {
+                            player.currentPosition,
+                            if (player.isPlaying) {
                                 player.playbackParameters.speed
                             } else {
                                 0f
                             }
                         )
-                        setBufferedPosition(
-                            if (!isLive) {
-                                player.bufferedPosition
-                            } else {
-                                -1
-                            }
-                        )
+                        setBufferedPosition(player.bufferedPosition)
                         setActions(
                             (PlaybackState.ACTION_STOP
                                     or PlaybackState.ACTION_PAUSE
@@ -1288,23 +1278,18 @@ class ExoPlayerService : BasePlaybackService() {
                                     or PlaybackState.ACTION_REWIND
                                     or PlaybackState.ACTION_FAST_FORWARD
                                     or PlaybackState.ACTION_SET_RATING
-                                    or PlaybackState.ACTION_PLAY_PAUSE).let {
-                                if (!isLive) {
-                                    it or PlaybackState.ACTION_SEEK_TO
+                                    or PlaybackState.ACTION_PLAY_PAUSE
+                                    or PlaybackState.ACTION_SEEK_TO).let {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    (it or PlaybackState.ACTION_PREPARE).let {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                            it or PlaybackState.ACTION_SET_PLAYBACK_SPEED
+                                        } else {
+                                            it
+                                        }
+                                    }
                                 } else {
                                     it
-                                }.let {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                        (it or PlaybackState.ACTION_PREPARE).let {
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                                it or PlaybackState.ACTION_SET_PLAYBACK_SPEED
-                                            } else {
-                                                it
-                                            }
-                                        }
-                                    } else {
-                                        it
-                                    }
                                 }
                             }
                         )
@@ -1395,14 +1380,7 @@ class ExoPlayerService : BasePlaybackService() {
                         putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, bitmap)
                         putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, bitmap)
                     }
-                    putLong(
-                        MediaMetadata.METADATA_KEY_DURATION,
-                        if (!player.isCurrentMediaItemLive) {
-                            player.duration
-                        } else {
-                            -1
-                        }
-                    )
+                    putLong(MediaMetadata.METADATA_KEY_DURATION, player.duration)
                 }.build()
             )
         }
