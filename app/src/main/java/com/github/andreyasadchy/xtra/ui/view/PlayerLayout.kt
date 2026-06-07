@@ -16,12 +16,13 @@ class PlayerLayout : FrameLayout {
     constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
     var isPortrait = false
-    private var scaleFactor = 1f
+    var scaleFactor = 1f
+        private set
     private var lastTouchX = 0f
     private var lastTouchY = 0f
     private var activePointerId = -1
 
-    private val scaleGestureDetector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+    val scaleGestureDetector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
         override fun onScale(detector: ScaleGestureDetector): Boolean {
             scaleFactor *= detector.scaleFactor
             scaleFactor = scaleFactor.coerceIn(1f, 3f)
@@ -50,21 +51,10 @@ class PlayerLayout : FrameLayout {
         view.translationY = view.translationY.coerceIn(-maxTranslationY, maxTranslationY)
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        if (isPortrait) {
-            val playerHeight = (measuredWidth / (16f / 9f)).toInt()
-            super.onMeasure(
-                widthMeasureSpec,
-                MeasureSpec.makeMeasureSpec(playerHeight, MeasureSpec.EXACTLY)
-            )
-        }
-    }
-
     override fun onTouchEvent(event: MotionEvent): Boolean {
         scaleGestureDetector.onTouchEvent(event)
         
-        val view = findViewById<FrameLayout>(R.id.aspectRatioFrameLayout) ?: return true
+        val view = findViewById<FrameLayout>(R.id.aspectRatioFrameLayout) ?: return false
 
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
@@ -86,6 +76,7 @@ class PlayerLayout : FrameLayout {
                         
                         lastTouchX = x
                         lastTouchY = y
+                        return true // Pan handled
                     }
                 }
             }
@@ -93,11 +84,17 @@ class PlayerLayout : FrameLayout {
                 activePointerId = -1
             }
         }
-        return true
+        return scaleGestureDetector.isInProgress || scaleFactor > 1f
     }
 
-    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        scaleGestureDetector.onTouchEvent(ev)
-        return super.onInterceptTouchEvent(ev)
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        if (isPortrait) {
+            val playerHeight = (measuredWidth / (16f / 9f)).toInt()
+            super.onMeasure(
+                widthMeasureSpec,
+                MeasureSpec.makeMeasureSpec(playerHeight, MeasureSpec.EXACTLY)
+            )
+        }
     }
 }

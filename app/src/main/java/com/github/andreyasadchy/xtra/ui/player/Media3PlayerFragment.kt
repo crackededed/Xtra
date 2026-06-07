@@ -451,6 +451,9 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
             }
 
             dragView.setOnTouchListener { _, event ->
+                if (binding.playerLayout.onTouchEvent(event)) {
+                    return@setOnTouchListener true
+                }
                 if (!isAnimating) {
                     when (event.actionMasked) {
                         MotionEvent.ACTION_DOWN -> {
@@ -468,7 +471,7 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                                 val pointerId = event.getPointerId(pointerIndex)
                                 val x = event.getX(pointerIndex)
                                 val y = event.getY(pointerIndex)
-                                if (x in 0f..playerLayout.width.toFloat() && y in 0f..playerLayout.height.toFloat()) {
+                                if (x in 0f..binding.playerLayout.width.toFloat() && y in 0f..binding.playerLayout.height.toFloat()) {
                                     activePointerId = pointerId
                                     lastX = x * slidingLayout.scaleX
                                     lastY = y * slidingLayout.scaleY
