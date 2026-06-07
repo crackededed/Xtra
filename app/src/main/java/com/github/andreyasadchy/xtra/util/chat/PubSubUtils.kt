@@ -5,8 +5,8 @@ import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.chat.Poll
 import com.github.andreyasadchy.xtra.model.chat.Prediction
 import com.github.andreyasadchy.xtra.model.chat.Raid
-import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import org.json.JSONObject
+import kotlin.time.Instant
 
 object PubSubUtils {
     fun parsePlaybackMessage(message: JSONObject): PlaybackMessage? {
@@ -51,7 +51,7 @@ object PubSubUtils {
                 url4x = if (rewardImage?.isNull("url_4x") == false) { rewardImage.optString("url_4x").takeIf { it.isNotBlank() } } else { null }
                     ?: if (defaultImage?.isNull("url_4x") == false) defaultImage.optString("url_4x").takeIf { it.isNotBlank() } else null,
             ),
-            timestamp = if (messageData?.isNull("timestamp") == false) messageData.optString("timestamp").takeIf { it.isNotBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) } else null,
+            timestamp = if (messageData?.isNull("timestamp") == false) messageData.optString("timestamp").takeIf { it.isNotBlank() }?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } } else null,
             fullMsg = message.toString(),
         )
     }
@@ -63,7 +63,7 @@ object PubSubUtils {
         return Pair(
             PointsEarned(
                 pointsGained = pointGain?.optInt("total_points"),
-                timestamp = if (messageData?.isNull("timestamp") == false) messageData.optString("timestamp").takeIf { it.isNotBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) } else null,
+                timestamp = if (messageData?.isNull("timestamp") == false) messageData.optString("timestamp").takeIf { it.isNotBlank() }?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } } else null,
                 fullMsg = message.toString()
             ),
             messageChannelId
@@ -140,7 +140,7 @@ object PubSubUtils {
         return if (prediction != null) {
             Prediction(
                 id = if (!prediction.isNull("id")) prediction.optString("id").takeIf { it.isNotBlank() } else null,
-                createdAt = if (!prediction.isNull("created_at")) prediction.optString("created_at").takeIf { it.isNotBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) } else null,
+                createdAt = if (!prediction.isNull("created_at")) prediction.optString("created_at").takeIf { it.isNotBlank() }?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } } else null,
                 outcomes = outcomesList,
                 predictionWindowSeconds = if (!prediction.isNull("prediction_window_seconds")) prediction.optInt("prediction_window_seconds") else null,
                 status = if (!prediction.isNull("status")) prediction.optString("status").takeIf { it.isNotBlank() } else null,

@@ -2,7 +2,6 @@ package com.github.andreyasadchy.xtra.ui.chat
 
 import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.chat.VideoChatMessage
-import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -11,6 +10,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
 
 class ChatReplayManagerLocal(
     private val createdAt: Long?,
@@ -97,7 +97,7 @@ class ChatReplayManagerLocal(
                         list.addAll(
                             messages.filter { message ->
                                 val messageOffset = if (createdAt != null && !message.createdAt.isNullOrBlank()) {
-                                    TwitchApiHelper.parseIso8601DateUTC(message.createdAt)?.minus(createdAt)
+                                    Instant.parseOrNull(message.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.minus(createdAt)
                                 } else {
                                     null
                                 } ?: message.offsetSeconds?.times(1000L)
@@ -148,7 +148,7 @@ class ChatReplayManagerLocal(
                 } else {
                     val message = list.firstOrNull() ?: break
                     val messageOffset = if (createdAt != null && !message.createdAt.isNullOrBlank()) {
-                        TwitchApiHelper.parseIso8601DateUTC(message.createdAt)?.minus(createdAt)
+                        Instant.parseOrNull(message.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.minus(createdAt)
                     } else {
                         null
                     } ?: message.offsetSeconds?.times(1000L)

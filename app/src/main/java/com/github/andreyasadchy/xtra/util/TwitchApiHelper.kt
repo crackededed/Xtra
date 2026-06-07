@@ -12,23 +12,18 @@ import androidx.core.content.ContextCompat
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.XtraApp
 import org.json.JSONObject
-import java.lang.Integer.parseInt
 import java.math.RoundingMode
 import java.text.NumberFormat
-import java.text.ParseException
 import java.text.SimpleDateFormat
-import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.Year
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import java.util.TimeZone
 
 object TwitchApiHelper {
 
@@ -87,79 +82,36 @@ object TwitchApiHelper {
         return (h * 3600) + (m * 60) + s
     }
 
-    fun getDurationFromSeconds(context: Context, input: String?, text: Boolean = true): String? {
-        if (input != null) {
-            val duration = try {
-                parseInt(input)
-            } catch (e: NumberFormatException) {
-                return null
-            }
+    fun getDurationFromSeconds(context: Context, input: String?): String? {
+        return input?.toIntOrNull()?.let { duration ->
             val days = (duration / 86400)
             val hours = ((duration % 86400) / 3600)
             val minutes = (((duration % 86400) % 3600) / 60)
             val seconds = (duration % 60)
-            return if (text) String.format((if (days != 0) (days.toString() + context.getString(R.string.days) + " ") else "") +
-                    (if (hours != 0) (hours.toString() + context.getString(R.string.hours) + " ") else "") +
-                    (if (minutes != 0) (minutes.toString() + context.getString(R.string.minutes) + " ") else "") +
-                    (if (seconds != 0) (seconds.toString() + context.getString(R.string.seconds) + " ") else "")).trim() else
-                String.format((if (days != 0) ("$days:") else "") +
-                        (if (hours != 0) (if (hours < 10 && days != 0) "0$hours:" else "$hours:") else (if (days != 0) "00:" else "")) +
-                        (if (minutes != 0) (if (minutes < 10 && (hours != 0||days != 0)) "0$minutes:" else "$minutes:") else (if (hours != 0||days != 0) "00:" else "")) +
-                        (if (seconds != 0) (if (seconds < 10 && (minutes != 0||hours != 0||days != 0)) "0$seconds" else "$seconds") else (if (minutes != 0||hours != 0||days != 0) "00" else "")))
-        } else return null
-    }
-
-    fun getUptime(startedAt: String?): String? {
-        return if (startedAt != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val createdAt = try {
-                    Instant.parse(startedAt)
-                } catch (e: DateTimeParseException) {
-                    null
+            buildString {
+                if (days > 0) {
+                    append("$days${context.getString(R.string.days)}")
                 }
-                if (createdAt != null) {
-                    val diff = Duration.between(createdAt, Instant.now())
-                    if (!diff.isNegative) {
-                        DateUtils.formatElapsedTime(diff.seconds)
-                    } else null
-                } else null
-            } else {
-                val currentTime = Calendar.getInstance().time.time
-                val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
-                format.timeZone = TimeZone.getTimeZone("UTC")
-                val createdAt = try {
-                    format.parse(startedAt)?.time
-                } catch (e: ParseException) {
-                    null
+                if (hours > 0) {
+                    if (isNotBlank()) {
+                        append(" ")
+                    }
+                    append("$hours${context.getString(R.string.hours)}")
                 }
-                val diff = if (createdAt != null) ((currentTime - createdAt) / 1000) else null
-                if (diff != null && diff >= 0) {
-                    DateUtils.formatElapsedTime(diff)
-                } else null
+                if (minutes > 0) {
+                    if (isNotBlank()) {
+                        append(" ")
+                    }
+                    append("$minutes${context.getString(R.string.minutes)}")
+                }
+                if (seconds > 0) {
+                    if (isNotBlank()) {
+                        append(" ")
+                    }
+                    append("$seconds${context.getString(R.string.seconds)}")
+                }
             }
-        } else null
-    }
-
-    fun getVodTimeLeft(context: Context, input: String?, days: Int): String? {
-        val time = input?.let { parseIso8601DateUTC(it) }
-        return if (time != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val date = Instant.ofEpochMilli(time).plus(days.toLong(), ChronoUnit.DAYS)
-                val diff = Duration.between(Instant.now(), date)
-                if (!diff.isNegative) {
-                    getDurationFromSeconds(context, diff.seconds.toString(), true)
-                } else null
-            } else {
-                val currentTime = Calendar.getInstance().time.time
-                val calendar = Calendar.getInstance()
-                calendar.timeInMillis = time
-                calendar.add(Calendar.DAY_OF_MONTH, days)
-                val diff = ((calendar.time.time - currentTime) / 1000)
-                if (diff >= 0) {
-                    getDurationFromSeconds(context, diff.toString(), true)
-                } else null
-            }
-        } else null
+        }
     }
 
     fun getMinutesLeft(hour: Int, minute: Int): Int {
@@ -205,57 +157,10 @@ object TwitchApiHelper {
         }
     }
 
-    fun getClipTime(days: Int): String {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val date = LocalDateTime.ofInstant(Instant.now().minus(days.toLong(), ChronoUnit.DAYS), ZoneOffset.UTC)
-            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").format(date)
-        } else {
-            val calendar = Calendar.getInstance()
-            calendar.add(Calendar.DAY_OF_YEAR, -days)
-            val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
-            format.timeZone = TimeZone.getTimeZone("UTC")
-            format.format(calendar.time)
-        }
-    }
-
-    fun parseIso8601DateUTC(date: String): Long? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            try {
-                Instant.parse(date).toEpochMilli().takeIf { it > 0 }
-            } catch (e: DateTimeParseException) {
-                null
-            }
-        } else {
-            try {
-                val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
-                format.timeZone = TimeZone.getTimeZone("UTC")
-                format.parse(date)?.time?.takeIf { it > 0 }
-            } catch (e: ParseException) {
-                try {
-                    val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
-                    format.timeZone = TimeZone.getTimeZone("UTC")
-                    format.parse(date)?.time?.takeIf { it > 0 }
-                } catch (e: ParseException) {
-                    try {
-                        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZ", Locale.getDefault())
-                        format.timeZone = TimeZone.getTimeZone("UTC")
-                        format.parse(date)?.time?.takeIf { it > 0 }
-                    } catch (e: ParseException) {
-                        null
-                    }
-                }
-            }
-        }
-    }
-
-    fun formatTimeString(context: Context, iso8601date: String): String? {
-        return parseIso8601DateUTC(iso8601date)?.let { formatTime(context, it) }
-    }
-
-    fun formatTime(context: Context, date: Long): String {
+    fun formatDate(context: Context, time: Long): String {
         val format = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val currentYear = Year.now().value
-            val year = LocalDateTime.ofInstant(Instant.ofEpochMilli(date), ZoneOffset.UTC).year
+            val year = LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneOffset.UTC).year
             if (year == currentYear) {
                 DateUtils.FORMAT_NO_YEAR
             } else {
@@ -264,7 +169,7 @@ object TwitchApiHelper {
         } else {
             val currentYear = Calendar.getInstance().get(Calendar.YEAR)
             val year = Calendar.getInstance().let {
-                it.timeInMillis = date
+                it.timeInMillis = time
                 it.get(Calendar.YEAR)
             }
             if (year == currentYear) {
@@ -273,7 +178,7 @@ object TwitchApiHelper {
                 DateUtils.FORMAT_SHOW_DATE
             }
         }
-        return DateUtils.formatDateTime(context, date, format)
+        return DateUtils.formatDateTime(context, time, format)
     }
 
     fun formatCount(count: Int, compact: Boolean): String {

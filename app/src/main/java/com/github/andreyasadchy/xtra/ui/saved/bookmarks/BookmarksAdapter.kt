@@ -29,7 +29,11 @@ import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper.getDurationFromSeconds
 import com.github.andreyasadchy.xtra.util.prefs
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
 
 class BookmarksAdapter(
     private val fragment: Fragment,
@@ -144,7 +148,9 @@ class BookmarksAdapter(
                         }.build()
                     )
                     if (item.createdAt != null) {
-                        val text = TwitchApiHelper.formatTimeString(context, item.createdAt)
+                        val text = Instant.parseOrNull(item.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.let {
+                            TwitchApiHelper.formatDate(context, it)
+                        }
                         if (text != null) {
                             date.visibility = View.VISIBLE
                             date.text = text
@@ -155,16 +161,20 @@ class BookmarksAdapter(
                         date.visibility = View.GONE
                     }
                     if (item.type?.lowercase() == "archive" && userType != null && item.createdAt != null && context.prefs().getBoolean(C.UI_BOOKMARK_TIME_LEFT, true) && !ignore) {
-                        val time = TwitchApiHelper.getVodTimeLeft(context, item.createdAt,
-                            when (userType.lowercase()) {
+                        val text = Instant.parseOrNull(item.createdAt)?.takeIf { time -> time.toEpochMilliseconds() > 0 }?.let { createdAt ->
+                            val days = when (userType.lowercase()) {
                                 "" -> 14
                                 "affiliate" -> 14
                                 else -> 60
                             }
-                        )
-                        if (!time.isNullOrBlank()) {
+                            val timeLeft = (createdAt + days.days) - Clock.System.now()
+                            if (timeLeft.isPositive()) {
+                                getDurationFromSeconds(context, timeLeft.inWholeSeconds.toString())
+                            } else null
+                        }
+                        if (text != null) {
                             views.visibility = View.VISIBLE
-                            views.text = context.getString(R.string.vod_time_left, time)
+                            views.text = context.getString(R.string.vod_time_left, text)
                         } else {
                             views.visibility = View.GONE
                         }
