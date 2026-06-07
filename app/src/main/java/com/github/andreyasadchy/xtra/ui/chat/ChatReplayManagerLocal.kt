@@ -34,10 +34,13 @@ class ChatReplayManagerLocal(
     fun setMessages(newLiveMessages: List<ChatMessage>, newMessages: List<VideoChatMessage>, newStartTime: Long) {
         if (newLiveMessages.isNotEmpty()) {
             liveMessages = newLiveMessages
+            if (createdAt != null) {
+                startTime = newStartTime - createdAt
+            }
         } else {
             messages = newMessages
+            startTime = newStartTime
         }
-        startTime = newStartTime
         if (started) {
             start()
         }

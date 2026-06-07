@@ -166,7 +166,7 @@ class ChatReplayManager(
                                 VideoChatMessage(
                                     id = item.id,
                                     offsetSeconds = item.contentOffsetSeconds,
-                                    createdAt = null,
+                                    createdAt = item.createdAt,
                                     userId = item.commenter?.id,
                                     userLogin = item.commenter?.login,
                                     userName = item.commenter?.displayName,
