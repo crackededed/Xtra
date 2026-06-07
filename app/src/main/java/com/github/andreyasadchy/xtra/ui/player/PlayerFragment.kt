@@ -1552,7 +1552,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 }
             } else {
                 controllerHideOnTouch = false
-                showController(true)
+                showController(force = true)
                 updateProgress()
                 requireView().keepScreenOn = true
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
@@ -1564,32 +1564,34 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         }
     }
 
-    protected fun showController(force: Boolean = false) {
+    protected fun showController(show: Boolean = true, force: Boolean = false) {
         if (!controllerIsAnimating) {
             if (!binding.playerControls.root.isVisible) {
                 binding.playerControls.root.removeCallbacks(controllerHideAction)
-                controllerAnimation = binding.playerControls.root.animate().apply {
-                    alpha(1f)
-                    setDuration(250L)
-                    setListener(
-                        object : AnimatorListenerAdapter() {
-                            override fun onAnimationStart(animation: Animator) {
-                                controllerIsAnimating = true
-                                if (view != null) {
-                                    binding.playerControls.root.visibility = View.VISIBLE
+                if (show) {
+                    controllerAnimation = binding.playerControls.root.animate().apply {
+                        alpha(1f)
+                        setDuration(250L)
+                        setListener(
+                            object : AnimatorListenerAdapter() {
+                                override fun onAnimationStart(animation: Animator) {
+                                    controllerIsAnimating = true
+                                    if (view != null) {
+                                        binding.playerControls.root.visibility = View.VISIBLE
+                                    }
                                 }
-                            }
 
-                            override fun onAnimationEnd(animation: Animator) {
-                                controllerIsAnimating = false
-                                setListener(null)
-                                if (view != null && controllerAutoHide && controllerHideOnTouch && !binding.playerControls.progressBar.isPressed) {
-                                    binding.playerControls.root.postDelayed(controllerHideAction, 3000)
+                                override fun onAnimationEnd(animation: Animator) {
+                                    controllerIsAnimating = false
+                                    setListener(null)
+                                    if (view != null && controllerAutoHide && controllerHideOnTouch && !binding.playerControls.progressBar.isPressed) {
+                                        binding.playerControls.root.postDelayed(controllerHideAction, 3000)
+                                    }
                                 }
                             }
-                        }
-                    )
-                    start()
+                        )
+                        start()
+                    }
                 }
             } else {
                 binding.playerControls.root.removeCallbacks(controllerHideAction)
@@ -1940,7 +1942,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             }
             useController = true
             if (!controllerHideOnTouch) {
-                showController(true)
+                showController(force = true)
                 updateProgress()
             }
             if (isPortrait) {
