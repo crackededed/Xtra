@@ -29,6 +29,7 @@ import android.os.Looper
 import android.os.PowerManager
 import android.os.ext.SdkExtensions
 import android.util.Base64
+import android.view.KeyEvent
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
@@ -235,6 +236,49 @@ class MediaPlayerService : BasePlaybackService() {
                                 }
                             }
                         }
+                    }
+                }
+
+                override fun onMediaButtonEvent(mediaButtonIntent: Intent): Boolean {
+                    val eventHandled = super.onMediaButtonEvent(mediaButtonIntent)
+                    return if (eventHandled) {
+                        true
+                    } else {
+                        if (mediaButtonIntent.action == Intent.ACTION_MEDIA_BUTTON) {
+                            val keyEvent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                mediaButtonIntent.getParcelableExtra(Intent.EXTRA_KEY_EVENT, KeyEvent::class.java)
+                            } else {
+                                @Suppress("DEPRECATION")
+                                mediaButtonIntent.getParcelableExtra(Intent.EXTRA_KEY_EVENT)
+                            }
+                            if (keyEvent != null && keyEvent.action == KeyEvent.ACTION_DOWN) {
+                                when (keyEvent.keyCode) {
+                                    KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                                        player?.let { player ->
+                                            val position = player.currentPosition - rewindMs
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                                player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
+                                            } else {
+                                                player.seekTo(position.toInt())
+                                            }
+                                        }
+                                        true
+                                    }
+                                    KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                                        player?.let { player ->
+                                            val position = player.currentPosition + fastForwardMs
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                                player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
+                                            } else {
+                                                player.seekTo(position.toInt())
+                                            }
+                                        }
+                                        true
+                                    }
+                                    else -> false
+                                }
+                            } else false
+                        } else false
                     }
                 }
             }

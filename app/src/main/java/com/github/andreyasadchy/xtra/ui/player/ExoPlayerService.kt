@@ -24,6 +24,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
 import android.os.ext.SdkExtensions
+import android.view.KeyEvent
 import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
@@ -519,6 +520,35 @@ class ExoPlayerService : BasePlaybackService() {
                     when (action) {
                         INTENT_REWIND -> player?.seekBack()
                         INTENT_FAST_FORWARD -> player?.seekForward()
+                    }
+                }
+
+                override fun onMediaButtonEvent(mediaButtonIntent: Intent): Boolean {
+                    val eventHandled = super.onMediaButtonEvent(mediaButtonIntent)
+                    return if (eventHandled) {
+                        true
+                    } else {
+                        if (mediaButtonIntent.action == Intent.ACTION_MEDIA_BUTTON) {
+                            val keyEvent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                mediaButtonIntent.getParcelableExtra(Intent.EXTRA_KEY_EVENT, KeyEvent::class.java)
+                            } else {
+                                @Suppress("DEPRECATION")
+                                mediaButtonIntent.getParcelableExtra(Intent.EXTRA_KEY_EVENT)
+                            }
+                            if (keyEvent != null && keyEvent.action == KeyEvent.ACTION_DOWN) {
+                                when (keyEvent.keyCode) {
+                                    KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                                        player?.seekBack()
+                                        true
+                                    }
+                                    KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                                        player?.seekForward()
+                                        true
+                                    }
+                                    else -> false
+                                }
+                            } else false
+                        } else false
                     }
                 }
             }
