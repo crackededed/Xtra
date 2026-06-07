@@ -37,6 +37,7 @@ import com.github.andreyasadchy.xtra.ui.view.CenteredImageSpan
 import com.github.andreyasadchy.xtra.ui.view.NamePaintImageSpan
 import com.github.andreyasadchy.xtra.ui.view.NamePaintSpan
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
+import java.text.NumberFormat
 import java.util.Random
 import kotlin.math.floor
 import kotlin.math.pow
@@ -137,9 +138,10 @@ object ChatAdapterUtils {
                             end = builderIndex++
                         ))
                         if (chatMessage.reward.cost != null) {
-                            builder.append("${chatMessage.reward.cost}")
-                            builder.setSpan(ForegroundColorSpan(getSavedColor("#999999", savedColors, useReadableColors, isLightTheme)), builderIndex, builderIndex + chatMessage.reward.cost.toString().length, SPAN_EXCLUSIVE_EXCLUSIVE)
-                            builderIndex += chatMessage.reward.cost.toString().length
+                            val cost = NumberFormat.getInstance().format(chatMessage.reward.cost)
+                            builder.append(cost)
+                            builder.setSpan(ForegroundColorSpan(getSavedColor("#999999", savedColors, useReadableColors, isLightTheme)), builderIndex, builderIndex + cost.length, SPAN_EXCLUSIVE_EXCLUSIVE)
+                            builderIndex += cost.length
                         }
                     }
                 }
@@ -175,8 +177,9 @@ object ChatAdapterUtils {
                         end = builderIndex++
                     ))
                     if (chatMessage.reward.cost != null) {
-                        builder.append("${chatMessage.reward.cost}")
-                        builderIndex += chatMessage.reward.cost.toString().length
+                        val cost = NumberFormat.getInstance().format(chatMessage.reward.cost)
+                        builder.append(cost)
+                        builderIndex += cost.length
                     }
                     builder.append("\n")
                     builderIndex += 1

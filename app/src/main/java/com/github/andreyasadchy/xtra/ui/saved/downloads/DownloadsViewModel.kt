@@ -166,7 +166,7 @@ class DownloadsViewModel(
                     offlineVideosRepository.update(video.apply {
                         thumbnail.let {
                             if (it == null || it == url || !File(it).exists()) {
-                                newVideoFileUri
+                                thumbnail = newVideoFileUri
                             }
                         }
                         url = newVideoFileUri
