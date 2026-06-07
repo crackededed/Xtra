@@ -336,7 +336,7 @@ class MediaPlayerService : BasePlaybackService() {
                 playerListener?.onError(player, width, height)
             }
             player.setOnErrorListener { player, what, extra ->
-                updatePlaybackState(true)
+                updatePlaybackState()
                 updateNotification()
                 playerListener?.onError(player, what, extra)
                 return@setOnErrorListener true
@@ -1096,9 +1096,8 @@ class MediaPlayerService : BasePlaybackService() {
         }
     }
 
-    private fun updatePlaybackState(error: Boolean = false) {
+    private fun updatePlaybackState() {
         player?.let { player ->
-            val isLive = !error && player.duration == -1
             session?.setPlaybackState(
                 PlaybackState.Builder().apply {
                     setState(
@@ -1107,12 +1106,8 @@ class MediaPlayerService : BasePlaybackService() {
                         } else {
                             PlaybackState.STATE_PLAYING
                         },
-                        if (!isLive) {
-                            player.currentPosition.toLong()
-                        } else {
-                            -1
-                        },
-                        if (player.isPlaying && !isLive) {
+                        player.currentPosition.toLong(),
+                        if (player.isPlaying) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                                 player.playbackParams.speed
                             } else {
@@ -1129,23 +1124,18 @@ class MediaPlayerService : BasePlaybackService() {
                                 or PlaybackState.ACTION_REWIND
                                 or PlaybackState.ACTION_FAST_FORWARD
                                 or PlaybackState.ACTION_SET_RATING
-                                or PlaybackState.ACTION_PLAY_PAUSE).let {
-                            if (!isLive) {
-                                it or PlaybackState.ACTION_SEEK_TO
+                                or PlaybackState.ACTION_PLAY_PAUSE
+                                or PlaybackState.ACTION_SEEK_TO).let {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                (it or PlaybackState.ACTION_PREPARE).let {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                        it or PlaybackState.ACTION_SET_PLAYBACK_SPEED
+                                    } else {
+                                        it
+                                    }
+                                }
                             } else {
                                 it
-                            }.let {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                    (it or PlaybackState.ACTION_PREPARE).let {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                            it or PlaybackState.ACTION_SET_PLAYBACK_SPEED
-                                        } else {
-                                            it
-                                        }
-                                    }
-                                } else {
-                                    it
-                                }
                             }
                         }
                     )
