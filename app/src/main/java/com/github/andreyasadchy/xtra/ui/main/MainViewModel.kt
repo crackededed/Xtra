@@ -62,6 +62,7 @@ import java.io.FileOutputStream
 import java.util.Timer
 import java.util.concurrent.ExecutorService
 import kotlin.math.max
+import kotlin.time.Instant
 
 class MainViewModel(
     private val applicationContext: Context,
@@ -543,7 +544,7 @@ class MainViewModel(
                         gameId = gameId,
                         gameSlug = gameSlug,
                         gameName = gameName,
-                        uploadDate = createdAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
+                        uploadDate = createdAt?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } },
                         downloadDate = System.currentTimeMillis(),
                         downloadPath = downloadPath,
                         status = if (waitForWifi) {
@@ -675,7 +676,7 @@ class MainViewModel(
                     gameId = gameId,
                     gameSlug = gameSlug,
                     gameName = gameName,
-                    uploadDate = createdAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
+                    uploadDate = createdAt?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } },
                     downloadDate = System.currentTimeMillis(),
                     downloadPath = downloadPath,
                     fromTime = from,
@@ -812,7 +813,7 @@ class MainViewModel(
                     gameSlug = gameSlug,
                     gameName = gameName,
                     duration = durationSeconds?.times(1000L),
-                    uploadDate = createdAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) },
+                    uploadDate = createdAt?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } },
                     downloadDate = System.currentTimeMillis(),
                     downloadPath = downloadPath,
                     status = if (waitForWifi) {
@@ -914,7 +915,9 @@ class MainViewModel(
                     response["assets"]?.jsonArray?.find {
                         it.jsonObject.getValue("content_type").jsonPrimitive.contentOrNull == "application/vnd.android.package-archive"
                     }?.jsonObject?.let { obj ->
-                        obj.getValue("updated_at").jsonPrimitive.contentOrNull?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let {
+                        obj.getValue("updated_at").jsonPrimitive.contentOrNull?.let {
+                            Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                        }?.let {
                             if (it > lastChecked) {
                                 updateSize = obj["size"]?.jsonPrimitive?.longOrNull
                                 obj.getValue("browser_download_url").jsonPrimitive.contentOrNull

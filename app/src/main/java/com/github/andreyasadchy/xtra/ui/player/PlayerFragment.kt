@@ -85,6 +85,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
 
 @OptIn(UnstableApi::class)
 abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment.OnSortOptionChanged, IntegrityDialog.Listener {
@@ -826,7 +827,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                         !uptimeLayout.isVisible
                                     ) {
                                         stream.createdAt?.let { date ->
-                                            TwitchApiHelper.parseIso8601DateUTC(date)?.let { createdAt ->
+                                            Instant.parseOrNull(date)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.let { createdAt ->
                                                 updateUptime(createdAt)
                                             }
                                         }
@@ -848,7 +849,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     }
                     if (requireContext().prefs().getBoolean(C.PLAYER_SHOW_UPTIME, true)) {
                         playbackService?.createdAt?.let {
-                            TwitchApiHelper.parseIso8601DateUTC(it)?.let { createdAt ->
+                            Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.let { createdAt ->
                                 updateUptime(createdAt)
                             }
                         }

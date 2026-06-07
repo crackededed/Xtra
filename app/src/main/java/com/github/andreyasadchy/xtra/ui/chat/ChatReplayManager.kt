@@ -6,7 +6,6 @@ import com.github.andreyasadchy.xtra.model.chat.TwitchEmote
 import com.github.andreyasadchy.xtra.model.chat.VideoChatMessage
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.util.C
-import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -16,6 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlin.math.max
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
 
 class ChatReplayManager(
     private val networkLibrary: String?,
@@ -197,7 +197,7 @@ class ChatReplayManager(
             while (isActive) {
                 val message = list.firstOrNull() ?: break
                 val messageOffset = if (createdAt != null && !message.createdAt.isNullOrBlank()) {
-                    TwitchApiHelper.parseIso8601DateUTC(message.createdAt)?.minus(createdAt)
+                    Instant.parseOrNull(message.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.minus(createdAt)
                 } else {
                     null
                 } ?: message.offsetSeconds?.times(1000L)

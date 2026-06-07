@@ -216,13 +216,13 @@ class DownloadsAdapter(
                     }
                     item.uploadDate?.let {
                         date.visibility = View.VISIBLE
-                        date.text = context.getString(R.string.uploaded_date, TwitchApiHelper.formatTime(context, it))
+                        date.text = context.getString(R.string.uploaded_date, TwitchApiHelper.formatDate(context, it))
                     } ?: {
                         date.visibility = View.GONE
                     }
                     if (item.downloadDate != null) {
                         downloadDate.visibility = View.VISIBLE
-                        downloadDate.text = context.getString(R.string.downloaded_date, TwitchApiHelper.formatTime(context, item.downloadDate))
+                        downloadDate.text = context.getString(R.string.downloaded_date, TwitchApiHelper.formatDate(context, item.downloadDate))
                     } else {
                         downloadDate.visibility = View.GONE
                     }

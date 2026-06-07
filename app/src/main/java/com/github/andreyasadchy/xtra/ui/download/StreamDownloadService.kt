@@ -72,6 +72,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.max
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 class StreamDownloadService : LifecycleService() {
 
@@ -950,7 +951,7 @@ class StreamDownloadService : LifecycleService() {
                     gameId = stream.gameId
                     gameSlug = stream.gameSlug
                     gameName = stream.gameName
-                    uploadDate = stream.createdAt?.let { TwitchApiHelper.parseIso8601DateUTC(it) }
+                    uploadDate = stream.createdAt?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }
                 })
                 break
             }

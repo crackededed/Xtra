@@ -25,7 +25,6 @@ import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
-import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -42,6 +41,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.ExecutorService
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 class PlayerViewModel(
     private val httpEngine: Lazy<HttpEngine?>,
@@ -445,7 +445,9 @@ class PlayerViewModel(
                             _isFollowing.value = true
                             follow.value = Pair(true, null)
                             if (liveNotificationsEnabled) {
-                                startedAt.takeUnless { it.isNullOrBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let {
+                                startedAt.takeUnless { it.isNullOrBlank() }?.let {
+                                    Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                                }?.let {
                                     notificationsRepository.saveList(listOf(ShownNotification(channelId, it)))
                                 }
                             }
@@ -458,7 +460,9 @@ class PlayerViewModel(
                             notificationsRepository.saveUser(NotificationUser(channelId))
                         }
                         if (liveNotificationsEnabled) {
-                            startedAt.takeUnless { it.isNullOrBlank() }?.let { TwitchApiHelper.parseIso8601DateUTC(it) }?.let {
+                            startedAt.takeUnless { it.isNullOrBlank() }?.let {
+                                Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                            }?.let {
                                 notificationsRepository.saveList(listOf(ShownNotification(channelId, it)))
                             }
                         }

@@ -26,6 +26,8 @@ import com.github.andreyasadchy.xtra.util.prefs
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
 
 class ChannelClipsViewModel(
     private val applicationContext: Context,
@@ -49,18 +51,19 @@ class ChannelClipsViewModel(
         ) {
             val started = when (period) {
                 VideosSortDialog.PERIOD_ALL -> null
-                else -> TwitchApiHelper.getClipTime(
-                    when (period) {
+                else -> {
+                    val days = when (period) {
                         VideosSortDialog.PERIOD_DAY -> 1
                         VideosSortDialog.PERIOD_WEEK -> 7
                         VideosSortDialog.PERIOD_MONTH -> 30
                         else -> 7
                     }
-                )
+                    (Clock.System.now() - days.days).toString()
+                }
             }
             val ended = when (period) {
                 VideosSortDialog.PERIOD_ALL -> null
-                else -> TwitchApiHelper.getClipTime(0)
+                else -> Clock.System.now().toString()
             }
             val gqlQueryPeriod = when (period) {
                 VideosSortDialog.PERIOD_DAY -> ClipsPeriod.LAST_DAY
