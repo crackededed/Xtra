@@ -215,6 +215,7 @@ class ExoPlayerFragment : PlayerFragment() {
                             (activity as? MainActivity)?.closePlayer()
                         }
                     }
+                    playbackService?.setStopServiceTimer(false)
                     playbackService?.player?.let { player ->
                         if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
                             requireView().keepScreenOn = player.isPlaying
@@ -397,6 +398,7 @@ class ExoPlayerFragment : PlayerFragment() {
         if (playbackService != null) {
             playbackService?.startAudioOnly()
             playbackService?.setSleepTimer((activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
+            playbackService?.setStopServiceTimer(true)
         }
         playerListener?.let { playbackService?.player?.removeListener(it) }
         playerListener = null
@@ -435,6 +437,7 @@ class ExoPlayerFragment : PlayerFragment() {
             }
             playbackService?.stop(isInPIPMode)
             playbackService?.setSleepTimer((activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
+            playbackService?.setStopServiceTimer(true)
         }
         binding.playerControls.root.removeCallbacks(updateProgressAction)
         playerListener?.let { playbackService?.player?.removeListener(it) }
