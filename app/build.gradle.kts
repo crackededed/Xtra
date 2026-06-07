@@ -28,7 +28,7 @@ android {
         minSdk = 23
         targetSdk = 37
         versionCode = 121
-        versionName = "2.56.2"
+        versionName = "2.57.0"
     }
 
     buildTypes {
@@ -78,7 +78,7 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
     implementation(libs.coordinatorlayout)
-    implementation(libs.core.ktx)
+    implementation(libs.core)
     implementation(libs.fragment.ktx)
     implementation(libs.lifecycle.service)
     implementation(libs.lifecycle.viewmodel)
