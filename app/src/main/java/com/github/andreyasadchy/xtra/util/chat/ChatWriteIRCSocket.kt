@@ -14,6 +14,7 @@ import java.net.Socket
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.X509TrustManager
+import kotlin.time.Duration.Companion.seconds
 
 class ChatWriteIRCSocket(
     private val useSSL: Boolean,
@@ -56,7 +57,7 @@ class ChatWriteIRCSocket(
                 }
             }
             close()
-            delay(1000)
+            delay(1.seconds)
         }
     }
 

@@ -31,6 +31,8 @@ import javax.net.ssl.X509TrustManager
 import kotlin.concurrent.schedule
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 class WebSocket(
     private val url: String,
@@ -82,9 +84,9 @@ class WebSocket(
             }
             if (delayReconnect) {
                 delayReconnect = false
-                delay(60000)
+                delay(1.minutes)
             } else {
-                delay(1000)
+                delay(1.seconds)
             }
         }
     }
@@ -392,7 +394,7 @@ class WebSocket(
             try {
                 val currentSocket = socket
                 writeControlFrame(OPCODE_CLOSE, ByteBuffer.allocate(2).putShort(1000).array())
-                delay(5000)
+                delay(5.seconds)
                 currentSocket?.close()
             } catch (e: Exception) {
 

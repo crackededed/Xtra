@@ -89,6 +89,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.math.max
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(UnstableApi::class)
 abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment.OnSortOptionChanged, IntegrityDialog.Listener {
@@ -2169,7 +2170,7 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                 }
                 val activity = requireActivity()
                 activity.lifecycleScope.launch {
-                    delay(500L)
+                    delay(500.milliseconds)
                     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                 }
             }
