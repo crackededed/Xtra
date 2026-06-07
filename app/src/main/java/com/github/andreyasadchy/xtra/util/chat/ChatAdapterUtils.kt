@@ -61,7 +61,7 @@ object ChatAdapterUtils {
         var translated = false
         var builderIndex = 0
         when {
-            chatMessage.isReply -> {
+            chatMessage.type == ChatMessage.REPLY_MESSAGE -> {
                 val userName = if (chatMessage.reply?.userName != null && chatMessage.reply.userLogin != null && !chatMessage.reply.userLogin.equals(chatMessage.reply.userName, true)) {
                     when (nameDisplay) {
                         "0" -> "${chatMessage.reply.userName}(${chatMessage.reply.userLogin})"

@@ -870,8 +870,8 @@ class ChatViewModel(
                     }?.let {
                         if (it.reply?.message != null) {
                             list.add(ChatMessage(
+                                type = ChatMessage.REPLY_MESSAGE,
                                 reply = it.reply,
-                                isReply = true,
                                 replyParent = it,
                             ))
                         }
@@ -930,6 +930,7 @@ class ChatViewModel(
         val message = ContextCompat.getString(applicationContext, R.string.chat_clearmsg).format(userName, deletedMessage?.message ?: chatMessage.message)
         val messageIndex = message.indexOf(": ") + 2
         return ChatMessage(
+            type = ChatMessage.USER_MESSAGE,
             userId = deletedMessage?.userId,
             userLogin = login,
             userName = deletedMessage?.userName,
@@ -1184,8 +1185,8 @@ class ChatViewModel(
                 val chatMessage = ChatUtils.parseChatMessage(message, userNotice)
                 if (chatMessage.reply?.message != null) {
                     onMessage(ChatMessage(
+                        type = ChatMessage.REPLY_MESSAGE,
                         reply = chatMessage.reply,
-                        isReply = true,
                         replyParent = chatMessage,
                     ))
                 }
@@ -1368,9 +1369,15 @@ class ChatViewModel(
             if (playbackMessage != null) {
                 playbackMessage.live?.let {
                     if (it) {
-                        onMessage(ChatMessage(systemMsg = ContextCompat.getString(applicationContext, R.string.stream_live).format(channelLogin)))
+                        onMessage(ChatMessage(
+                            type = ChatMessage.NOTICE_MESSAGE,
+                            systemMsg = ContextCompat.getString(applicationContext, R.string.stream_live).format(channelLogin),
+                        ))
                     } else {
-                        onMessage(ChatMessage(systemMsg = ContextCompat.getString(applicationContext, R.string.stream_offline).format(channelLogin)))
+                        onMessage(ChatMessage(
+                            type = ChatMessage.NOTICE_MESSAGE,
+                            systemMsg = ContextCompat.getString(applicationContext, R.string.stream_offline).format(channelLogin),
+                        ))
                     }
                 }
                 _playbackMessage.value = playbackMessage
@@ -1397,6 +1404,7 @@ class ChatViewModel(
                 val messageChannelId = result.second
                 if (channelId == messageChannelId) {
                     onMessage(ChatMessage(
+                        type = ChatMessage.NOTICE_MESSAGE,
                         systemMsg = ContextCompat.getString(applicationContext, R.string.points_earned).format(points.pointsGained),
                         timestamp = points.timestamp,
                         fullMsg = points.fullMsg
@@ -1779,6 +1787,7 @@ class ChatViewModel(
             }.let { item ->
                 if (item != null) {
                     onChatMessage(ChatMessage(
+                        type = ChatMessage.USER_MESSAGE,
                         id = message.id ?: item.id,
                         userId = message.userId ?: item.userId,
                         userLogin = message.userLogin ?: item.userLogin,
@@ -2691,8 +2700,8 @@ class ChatViewModel(
                                                                     val chatMessage = ChatUtils.parseChatMessage(message, false)
                                                                     if (chatMessage.reply?.message != null) {
                                                                         liveMessages.add(ChatMessage(
+                                                                            type = ChatMessage.REPLY_MESSAGE,
                                                                             reply = chatMessage.reply,
-                                                                            isReply = true,
                                                                             replyParent = chatMessage,
                                                                         ))
                                                                     }
@@ -2702,8 +2711,8 @@ class ChatViewModel(
                                                                     val chatMessage = ChatUtils.parseChatMessage(message, true)
                                                                     if (chatMessage.reply?.message != null) {
                                                                         liveMessages.add(ChatMessage(
+                                                                            type = ChatMessage.REPLY_MESSAGE,
                                                                             reply = chatMessage.reply,
-                                                                            isReply = true,
                                                                             replyParent = chatMessage,
                                                                         ))
                                                                     }
