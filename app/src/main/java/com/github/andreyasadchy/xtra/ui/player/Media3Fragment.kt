@@ -51,6 +51,8 @@ import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.floor
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(UnstableApi::class)
 class Media3Fragment : Media3PlayerFragment() {
@@ -280,7 +282,7 @@ class Media3Fragment : Media3PlayerFragment() {
                                                         viewModel.usingProxy = true
                                                         viewLifecycleOwner.lifecycleScope.launch {
                                                             for (i in 0 until 10) {
-                                                                delay(10000)
+                                                                delay(10.seconds)
                                                                 if (!viewModel.checkPlaylist(requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), playlist)) {
                                                                     break
                                                                 }
@@ -357,7 +359,7 @@ class Media3Fragment : Media3PlayerFragment() {
                                                     Toast.makeText(requireContext(), R.string.proxy_error, Toast.LENGTH_LONG).show()
                                                     viewModel.useCustomProxy = false
                                                     viewLifecycleOwner.lifecycleScope.launch {
-                                                        delay(1500L)
+                                                        delay(1500.milliseconds)
                                                         try {
                                                             restartPlayer()
                                                         } catch (e: Exception) {
@@ -367,7 +369,7 @@ class Media3Fragment : Media3PlayerFragment() {
                                                 else -> {
                                                     Toast.makeText(requireContext(), R.string.player_error, Toast.LENGTH_SHORT).show()
                                                     viewLifecycleOwner.lifecycleScope.launch {
-                                                        delay(1500L)
+                                                        delay(1500.milliseconds)
                                                         try {
                                                             restartPlayer()
                                                         } catch (e: Exception) {
@@ -405,7 +407,7 @@ class Media3Fragment : Media3PlayerFragment() {
                                                 else -> {
                                                     Toast.makeText(requireContext(), R.string.player_error, Toast.LENGTH_SHORT).show()
                                                     viewLifecycleOwner.lifecycleScope.launch {
-                                                        delay(1500L)
+                                                        delay(1500.milliseconds)
                                                         try {
                                                             player?.prepare()
                                                         } catch (e: Exception) {
