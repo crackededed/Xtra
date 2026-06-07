@@ -271,7 +271,7 @@ object C {
     const val DEBUG_API_COMMANDS = "debug_api_commands"
     const val DEBUG_API_CHAT_MESSAGES = "debug_api_chat_messages"
     const val DEBUG_WEBSOCKET_INFO = "debug_websocket_info"
-    const val DEBUG_USE_CUSTOM_PLAYBACK_SERVICE = "debug_use_custom_playback_service"
+    const val DEBUG_USE_CUSTOM_PLAYBACK_SERVICE = "debug_use_custom_playback_service_v2"
     const val DEBUG_EVENT_SUB_CHAT = "debug_eventsub_chat"
     const val DEBUG_PLAYER_MENU_PLAYLIST_TAGS = "debug_player_menu_playlist_tags"
     const val ENABLE_INTEGRITY = "enable_integrity"

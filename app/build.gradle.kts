@@ -28,7 +28,7 @@ android {
         minSdk = 16
         targetSdk = 37
         versionCode = 121
-        versionName = "2.56.2"
+        versionName = "2.57.0"
     }
 
     buildTypes {
@@ -99,6 +99,7 @@ android {
 
 dependencies {
     implementation("androidx.multidex:multidex:2.0.1")
+    implementation("androidx.core:core-ktx:1.13.0-alpha01")
     implementation("androidx.room:room-ktx:2.6.1")
     implementation("androidx.media:media:1.6.0")
     implementation("com.google.guava:guava:33.2.1-android") // exoplayer
@@ -114,7 +115,6 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
     implementation(libs.coordinatorlayout)
-    implementation(libs.core.ktx)
     implementation(libs.fragment.ktx)
     implementation(libs.lifecycle.service)
     implementation(libs.lifecycle.viewmodel)
