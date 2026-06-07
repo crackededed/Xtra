@@ -217,6 +217,7 @@ class ChatReplayManager(
                     }
                     listener.onChatMessage(
                         ChatMessage(
+                            type = ChatMessage.USER_MESSAGE,
                             id = message.id,
                             userId = message.userId,
                             userLogin = message.userLogin,

@@ -54,6 +54,7 @@ object EventSubUtils {
             }
         }
         return ChatMessage(
+            type = ChatMessage.USER_MESSAGE,
             id = if (!json.isNull("message_id")) json.optString("message_id").takeIf { it.isNotBlank() } else null,
             userId = if (!json.isNull("chatter_user_id")) json.optString("chatter_user_id").takeIf { it.isNotBlank() } else null,
             userLogin = if (!json.isNull("chatter_user_login")) json.optString("chatter_user_login").takeIf { it.isNotBlank() } else null,
@@ -115,6 +116,7 @@ object EventSubUtils {
                 }
             }
             ChatMessage(
+                type = ChatMessage.USER_MESSAGE,
                 id = if (!json.isNull("message_id")) json.optString("message_id").takeIf { it.isNotBlank() } else null,
                 userId = if (!json.isNull("chatter_user_id")) json.optString("chatter_user_id").takeIf { it.isNotBlank() } else null,
                 userLogin = if (!json.isNull("chatter_user_login")) json.optString("chatter_user_login").takeIf { it.isNotBlank() } else null,
@@ -131,6 +133,7 @@ object EventSubUtils {
             )
         } else {
             ChatMessage(
+                type = ChatMessage.USER_MESSAGE,
                 userId = if (!json.isNull("chatter_user_id")) json.optString("chatter_user_id").takeIf { it.isNotBlank() } else null,
                 userLogin = if (!json.isNull("chatter_user_login")) json.optString("chatter_user_login").takeIf { it.isNotBlank() } else null,
                 userName = if (!json.isNull("chatter_user_name")) json.optString("chatter_user_name").takeIf { it.isNotBlank() } else null,
@@ -143,6 +146,7 @@ object EventSubUtils {
 
     fun parseClearChat(context: Context, json: JSONObject, timestamp: String?): ChatMessage {
         return ChatMessage(
+            type = ChatMessage.NOTICE_MESSAGE,
             systemMsg = ContextCompat.getString(context, R.string.chat_clear),
             timestamp = timestamp?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } },
             fullMsg = json.toString()

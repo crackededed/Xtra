@@ -235,7 +235,7 @@ class ChatAdapter(
             textView.apply {
                 text = formattedMessage
                 textSize = messageTextSize
-                if (chatMessage.isReply) {
+                if (chatMessage.type == ChatMessage.REPLY_MESSAGE) {
                     movementMethod = null
                     maxLines = 2
                     ellipsize = TextUtils.TruncateAt.END

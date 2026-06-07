@@ -88,7 +88,7 @@ class ReplyClickedChatAdapter(
     val threadParentId = selectedMessage?.reply?.threadParentId
     val messages = synchronized(messages) {
         messages.filter {
-            (it.reply?.threadParentId == threadParentId || it.id == threadParentId) && !it.isReply
+            (it.reply?.threadParentId == threadParentId || it.id == threadParentId) && it.type != ChatMessage.REPLY_MESSAGE
         }.toMutableList()
     }.ifEmpty {
         selectedMessage?.let { mutableListOf(it) } ?: mutableListOf()
