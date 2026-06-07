@@ -48,7 +48,7 @@ class MediaPlayerFragment : PlayerFragment() {
             }
 
             override fun onCompletion(player: MediaPlayer) {
-                updatePlayingState()
+                updatePlayingState(true)
             }
 
             override fun onInfo(player: MediaPlayer, what: Int, extra: Int) {
@@ -210,7 +210,7 @@ class MediaPlayerFragment : PlayerFragment() {
         serviceConnection = connection
     }
 
-    private fun updatePlayingState() {
+    private fun updatePlayingState(ended: Boolean = false) {
         playbackService?.player?.let { player ->
             val isPlaying = player.isPlaying
             if (!isPlaying) {
@@ -224,8 +224,8 @@ class MediaPlayerFragment : PlayerFragment() {
             }
             setPipActions(isPlaying)
             controllerAutoHide = isPlaying
-            if (playbackService?.type != BasePlaybackService.STREAM && useController) {
-                showController()
+            if (useController) {
+                showController(show = playbackService?.type != BasePlaybackService.STREAM && ended)
             }
             updateProgress()
             if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
