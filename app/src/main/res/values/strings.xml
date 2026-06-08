@@ -660,6 +660,7 @@
     <string name="use_webp_images">Use WebP images</string>
     <string name="use_background_audio">Play audio in the background</string>
     <string name="avoid_rounded_corners">Avoid rounded screen corners</string>
+    <string name="pinch_to_zoom">Pinch to zoom</string>
     <string name="api_web_gql_token">Web GQL token</string>
     <string name="chat_size_modifier">Size modifier</string>
     <string name="chat_emote_size">Emote size</string>

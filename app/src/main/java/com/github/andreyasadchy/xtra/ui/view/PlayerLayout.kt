@@ -15,6 +15,7 @@ class PlayerLayout : FrameLayout {
     constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
     var isPortrait = false
+    var isZoomEnabled = false
     var scaleFactor = 1f
         private set
     private var lastScaleFactor = 1f
@@ -89,6 +90,8 @@ class PlayerLayout : FrameLayout {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (!isZoomEnabled) return false
+
         scaleGestureDetector.onTouchEvent(event)
         doubleTapGestureDetector.onTouchEvent(event)
         

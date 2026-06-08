@@ -79,6 +79,13 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="false"
+        android:key="player_pinch_to_zoom"
+        android:title="@string/pinch_to_zoom"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
         android:key="player_move_freely"
         android:title="@string/move_player_freely"
         app:iconSpaceReserved="false"

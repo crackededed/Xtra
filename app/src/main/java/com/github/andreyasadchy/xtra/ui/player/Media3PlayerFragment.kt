@@ -250,6 +250,8 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
             val touchSlopRange = -touchSlop.toFloat()..touchSlop.toFloat()
             val longPressTimeout = ViewConfiguration.getLongPressTimeout()
             val moveFreely = requireContext().prefs().getBoolean(C.PLAYER_MOVE_FREELY, false)
+            val pinchToZoom = requireContext().prefs().getBoolean(C.PLAYER_PINCH_TO_ZOOM, false)
+            binding.playerLayout.isZoomEnabled = pinchToZoom
             val doubleTap = requireContext().prefs().getBoolean(C.PLAYER_DOUBLE_TAP, true) && !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)
             val controllerTapDetector = GestureDetector(
                 requireContext(),

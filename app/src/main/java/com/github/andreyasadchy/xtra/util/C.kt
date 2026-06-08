@@ -180,6 +180,7 @@ object C {
     const val PLAYER_HANDLE_AUDIO_BECOMING_NOISY = "player_handle_audio_becoming_noisy"
     const val PLAYER_ROUNDED_CORNER_PADDING = "player_rounded_corner_padding"
     const val PLAYER_MOVE_FREELY = "player_move_freely"
+    const val PLAYER_PINCH_TO_ZOOM = "player_pinch_to_zoom"
     const val PLAYER_KEEP_CHAT_OPEN = "player_keep_chat_open"
     const val PLAYER_HIDE_ADS = "player_hide_ads"
     const val PLAYER_PROXY = "player_proxy"
