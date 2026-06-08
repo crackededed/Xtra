@@ -19,8 +19,10 @@ class PlayerLayout : FrameLayout {
     var scaleFactor = 1f
         private set
     private var lastScaleFactor = 1f
-    private var lastTranslationX = 0f
-    private var lastTranslationY = 0f
+    private var normalizedTranslationX = 0f
+    private var normalizedTranslationY = 0f
+    private var lastNormalizedTranslationX = 0f
+    private var lastNormalizedTranslationY = 0f
     private var lastTouchX = 0f
     private var lastTouchY = 0f
     private var activePointerId = -1
@@ -38,44 +40,79 @@ class PlayerLayout : FrameLayout {
             return true
         }
     })
+private val doubleTapGestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+    override fun onDoubleTap(e: MotionEvent): Boolean {
+        val view = findViewById<FrameLayout>(R.id.aspectRatioFrameLayout) ?: return false
+        if (scaleFactor > 1f) {
+            lastScaleFactor = scaleFactor
+            lastNormalizedTranslationX = normalizedTranslationX
+            lastNormalizedTranslationY = normalizedTranslationY
 
-    private val doubleTapGestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-        override fun onDoubleTap(e: MotionEvent): Boolean {
-            val view = findViewById<FrameLayout>(R.id.aspectRatioFrameLayout) ?: return false
-            if (scaleFactor > 1f) {
-                lastScaleFactor = scaleFactor
-                lastTranslationX = view.translationX
-                lastTranslationY = view.translationY
-                
-                scaleFactor = 1f
-                view.scaleX = scaleFactor
-                view.scaleY = scaleFactor
-                view.translationX = 0f
-                view.translationY = 0f
-            } else {
-                scaleFactor = if (lastScaleFactor > 1f) lastScaleFactor else 2f
-                view.scaleX = scaleFactor
-                view.scaleY = scaleFactor
-                view.translationX = lastTranslationX
-                view.translationY = lastTranslationY
-                applyConstraints(view)
-            }
-            return true
+            scaleFactor = 1f
+            view.scaleX = scaleFactor
+            view.scaleY = scaleFactor
+            view.translationX = 0f
+            view.translationY = 0f
+            normalizedTranslationX = 0f
+            normalizedTranslationY = 0f
+        } else {
+            scaleFactor = if (lastScaleFactor > 1f) lastScaleFactor else 2f
+            view.scaleX = scaleFactor
+            view.scaleY = scaleFactor
+
+            normalizedTranslationX = lastNormalizedTranslationX
+            normalizedTranslationY = lastNormalizedTranslationY
+
+            val maxTranslationX = (view.width * (scaleFactor - 1f)) / 2f
+            val maxTranslationY = (view.height * (scaleFactor - 1f)) / 2f
+            view.translationX = normalizedTranslationX * maxTranslationX
+            view.translationY = normalizedTranslationY * maxTranslationY
+
+            applyConstraints(view)
         }
-    })
-
+        return true
+    }
+})
     private fun applyConstraints(view: FrameLayout?) {
-        if (view == null || scaleFactor <= 1f) {
-            view?.translationX = 0f
-            view?.translationY = 0f
+        if (view == null) return
+        
+        if (scaleFactor <= 1f) {
+            view.translationX = 0f
+            view.translationY = 0f
+            normalizedTranslationX = 0f
+            normalizedTranslationY = 0f
             return
         }
 
         val maxTranslationX = (view.width * (scaleFactor - 1f)) / 2f
         val maxTranslationY = (view.height * (scaleFactor - 1f)) / 2f
         
-        view.translationX = view.translationX.coerceIn(-maxTranslationX, maxTranslationX)
-        view.translationY = view.translationY.coerceIn(-maxTranslationY, maxTranslationY)
+        if (maxTranslationX > 0) {
+            view.translationX = view.translationX.coerceIn(-maxTranslationX, maxTranslationX)
+            normalizedTranslationX = view.translationX / maxTranslationX
+        } else {
+            view.translationX = 0f
+            normalizedTranslationX = 0f
+        }
+        
+        if (maxTranslationY > 0) {
+            view.translationY = view.translationY.coerceIn(-maxTranslationY, maxTranslationY)
+            normalizedTranslationY = view.translationY / maxTranslationY
+        } else {
+            view.translationY = 0f
+            normalizedTranslationY = 0f
+        }
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        val view = findViewById<FrameLayout>(R.id.aspectRatioFrameLayout)
+        if (view != null && scaleFactor > 1f) {
+            val maxTranslationX = (view.width * (scaleFactor - 1f)) / 2f
+            val maxTranslationY = (view.height * (scaleFactor - 1f)) / 2f
+            view.translationX = normalizedTranslationX * maxTranslationX
+            view.translationY = normalizedTranslationY * maxTranslationY
+        }
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
