@@ -59,7 +59,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
@@ -278,9 +277,7 @@ class ChatViewModel(
             } else {
                 viewModelScope.launch {
                     val pair = try {
-                        withTimeout(20.seconds) {
-                            playerRepository.loadGlobalSTVEmotesResponse(networkLibrary) to true
-                        }
+                        playerRepository.loadGlobalSTVEmotesResponse(networkLibrary) to true
                     } catch (e: Exception) {
                         try {
                             val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/global.stv").use {
@@ -338,9 +335,7 @@ class ChatViewModel(
             if (!channelId.isNullOrBlank()) {
                 viewModelScope.launch {
                     val pair = try {
-                        withTimeout(20.seconds) {
-                            playerRepository.loadSTVEmotesResponse(networkLibrary, channelId) to true
-                        }
+                        playerRepository.loadSTVEmotesResponse(networkLibrary, channelId) to true
                     } catch (e: Exception) {
                         try {
                             val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/${channelId}.stv").use {
@@ -430,9 +425,7 @@ class ChatViewModel(
             } else {
                 viewModelScope.launch {
                     val pair = try {
-                        withTimeout(20.seconds) {
-                            playerRepository.loadGlobalBTTVEmotesResponse(networkLibrary) to true
-                        }
+                        playerRepository.loadGlobalBTTVEmotesResponse(networkLibrary) to true
                     } catch (e: Exception) {
                         try {
                             val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/global.bttv").use {
@@ -492,9 +485,7 @@ class ChatViewModel(
             if (!channelId.isNullOrBlank()) {
                 viewModelScope.launch {
                     val pair = try {
-                        withTimeout(20.seconds) {
-                            playerRepository.loadBTTVEmotesResponse(networkLibrary, channelId) to true
-                        }
+                        playerRepository.loadBTTVEmotesResponse(networkLibrary, channelId) to true
                     } catch (e: Exception) {
                         try {
                             val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/${channelId}.bttv").use {
@@ -581,9 +572,7 @@ class ChatViewModel(
             } else {
                 viewModelScope.launch {
                     val pair = try {
-                        withTimeout(20.seconds) {
-                            playerRepository.loadGlobalFFZEmotesResponse(networkLibrary) to true
-                        }
+                        playerRepository.loadGlobalFFZEmotesResponse(networkLibrary) to true
                     } catch (e: Exception) {
                         try {
                             val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/global.ffz").use {
@@ -641,9 +630,7 @@ class ChatViewModel(
             if (!channelId.isNullOrBlank()) {
                 viewModelScope.launch {
                     val pair = try {
-                        withTimeout(20.seconds) {
-                            playerRepository.loadFFZEmotesResponse(networkLibrary, channelId) to true
-                        }
+                        playerRepository.loadFFZEmotesResponse(networkLibrary, channelId) to true
                     } catch (e: Exception) {
                         try {
                             val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/${channelId}.ffz").use {

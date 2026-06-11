@@ -20,9 +20,14 @@ import okio.ForwardingSource
 import okio.buffer
 import org.chromium.net.CronetException
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
 import java.nio.channels.WritableByteChannel
+import java.util.PriorityQueue
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -31,6 +36,13 @@ object NetworkUtils {
     private const val CONTENT_LENGTH_HEADER_NAME = "Content-Length"
     private const val MAX_ARRAY_SIZE = Int.MAX_VALUE - 8
     private const val BYTE_BUFFER_CAPACITY = 32 * 1024
+
+    private const val DEFAULT_TIMEOUT_MS = 20_000L
+    private const val IDLE_TIMEOUT_MS = 60_000L
+    private val lock = ReentrantLock()
+    private val condition = lock.newCondition()
+    private val timeoutQueue = PriorityQueue<Timeout>()
+    private var timeoutThread: TimeoutThread? = null
 
     fun interface ProgressListener {
         fun update(bytesRead: Int)
@@ -44,6 +56,7 @@ object NetworkUtils {
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     class ByteArrayUrlCallback(
         val continuation: Continuation<HttpEngineResponse>,
+        val timeout: HttpEngineTimeout,
         val progressListener: ProgressListener? = null,
     ): UrlRequest.Callback {
         private lateinit var mResponseBodyStream: ByteArrayOutputStream
@@ -69,15 +82,18 @@ object NetworkUtils {
             byteBuffer.flip()
             mResponseBodyChannel.write(byteBuffer)
             byteBuffer.clear()
+            timeout.updateTimeout()
             progressListener?.update(mResponseBodyStream.size())
             request.read(byteBuffer)
         }
 
         override fun onSucceeded(request: UrlRequest, info: UrlResponseInfo) {
+            timeout.stop()
             continuation.resume(HttpEngineResponse(info, mResponseBodyStream.toByteArray()))
         }
 
         override fun onFailed(request: UrlRequest, info: UrlResponseInfo?, error: HttpException) {
+            timeout.stop()
             continuation.resumeWithException(error)
         }
 
@@ -119,6 +135,7 @@ object NetworkUtils {
 
     class ByteArrayCronetCallback(
         val continuation: Continuation<CronetResponse>,
+        val timeout: CronetTimeout,
         val progressListener: ProgressListener? = null,
     ): org.chromium.net.UrlRequest.Callback() {
         private lateinit var mResponseBodyStream: ByteArrayOutputStream
@@ -144,19 +161,125 @@ object NetworkUtils {
             byteBuffer.flip()
             mResponseBodyChannel.write(byteBuffer)
             byteBuffer.clear()
+            timeout.updateTimeout()
             progressListener?.update(mResponseBodyStream.size())
             request.read(byteBuffer)
         }
 
         override fun onSucceeded(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo) {
+            timeout.stop()
             continuation.resume(CronetResponse(info, mResponseBodyStream.toByteArray()))
         }
 
         override fun onFailed(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo, error: CronetException) {
+            timeout.stop()
             continuation.resumeWithException(error)
         }
 
         override fun onCanceled(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo) {
+        }
+    }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    class HttpEngineTimeout(timeout: Long = DEFAULT_TIMEOUT_MS): Timeout(timeout) {
+        lateinit var request: UrlRequest
+        lateinit var continuation: Continuation<HttpEngineResponse>
+
+        fun start(request: UrlRequest, continuation: Continuation<HttpEngineResponse>) {
+            this.request = request
+            this.continuation = continuation
+            updateTimeout()
+        }
+
+        override fun timeout() {
+            request.cancel()
+            continuation.resumeWithException(IOException("Timed out"))
+        }
+    }
+
+    class CronetTimeout(timeout: Long = DEFAULT_TIMEOUT_MS): Timeout(timeout) {
+        lateinit var request: org.chromium.net.UrlRequest
+        lateinit var continuation: Continuation<CronetResponse>
+
+        fun start(request: org.chromium.net.UrlRequest, continuation: Continuation<CronetResponse>) {
+            this.request = request
+            this.continuation = continuation
+            updateTimeout()
+        }
+
+        override fun timeout() {
+            request.cancel()
+            continuation.resumeWithException(IOException("Timed out"))
+        }
+    }
+
+    abstract class Timeout(val timeout: Long): Comparable<Timeout> {
+        var timeoutAt = System.currentTimeMillis() + timeout
+
+        fun updateTimeout() {
+            lock.withLock {
+                timeoutQueue.remove(this)
+                timeoutAt = System.currentTimeMillis() + timeout
+                timeoutQueue.add(this)
+                if (timeoutQueue.peek() == this) {
+                    condition.signal()
+                    if (timeoutThread == null) {
+                        val thread = TimeoutThread()
+                        timeoutThread = thread
+                        thread.start()
+                    }
+                }
+            }
+        }
+
+        fun stop() {
+            lock.withLock {
+                timeoutQueue.remove(this)
+                if (timeoutQueue.peek() == this) {
+                    condition.signal()
+                }
+            }
+        }
+
+        abstract fun timeout()
+
+        override fun compareTo(other: Timeout): Int {
+            return 0L.compareTo(other.timeoutAt - timeoutAt)
+        }
+    }
+
+    private class TimeoutThread: Thread("TimeoutThread") {
+        init {
+            isDaemon = true
+        }
+
+        override fun run() {
+            while (true) {
+                try {
+                    lock.withLock {
+                        while (true) {
+                            val item = timeoutQueue.peek()
+                            if (item == null) {
+                                val startTime = System.currentTimeMillis()
+                                condition.await(IDLE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                                if (timeoutQueue.peek() == null && System.currentTimeMillis() - startTime >= IDLE_TIMEOUT_MS) {
+                                    break
+                                }
+                            } else {
+                                val waitTime = item.timeoutAt - System.currentTimeMillis()
+                                if (waitTime > 0) {
+                                    condition.await(waitTime, TimeUnit.MILLISECONDS)
+                                } else {
+                                    timeoutQueue.remove().timeout()
+                                }
+                            }
+                        }
+                    }
+                    break
+                } catch (_: InterruptedException) {
+                }
+            }
+            timeoutThread = null
         }
     }
 

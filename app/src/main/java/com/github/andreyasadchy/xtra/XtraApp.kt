@@ -66,10 +66,11 @@ class XtraApp : Application(), SingletonImageLoader.Factory {
                                         }
                                         val requestMillis = System.currentTimeMillis()
                                         val response = suspendCancellableCoroutine { continuation ->
+                                            val timeout = NetworkUtils.HttpEngineTimeout()
                                             val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
                                                 request.url,
                                                 xtraModule.cronetExecutor.value,
-                                                NetworkUtils.ByteArrayUrlCallback(continuation)
+                                                NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                                             ).apply {
                                                 request.headers.asMap().forEach { entry ->
                                                     entry.value.forEach {
@@ -81,9 +82,11 @@ class XtraApp : Application(), SingletonImageLoader.Factory {
                                                 }
                                                 setHttpMethod(request.method)
                                             }.build()
+                                            timeout.start(request, continuation)
                                             request.start()
                                             continuation.invokeOnCancellation {
                                                 request.cancel()
+                                                timeout.stop()
                                             }
                                         }
                                         val responseMillis = System.currentTimeMillis()
@@ -118,9 +121,10 @@ class XtraApp : Application(), SingletonImageLoader.Factory {
                                         }
                                         val requestMillis = System.currentTimeMillis()
                                         val response = suspendCancellableCoroutine { continuation ->
+                                            val timeout = NetworkUtils.CronetTimeout()
                                             val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
                                                 request.url,
-                                                NetworkUtils.ByteArrayCronetCallback(continuation),
+                                                NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                                                 xtraModule.cronetExecutor.value
                                             ).apply {
                                                 request.headers.asMap().forEach { entry ->
@@ -133,9 +137,11 @@ class XtraApp : Application(), SingletonImageLoader.Factory {
                                                 }
                                                 setHttpMethod(request.method)
                                             }.build()
+                                            timeout.start(request, continuation)
                                             request.start()
                                             continuation.invokeOnCancellation {
                                                 request.cancel()
+                                                timeout.stop()
                                             }
                                         }
                                         val responseMillis = System.currentTimeMillis()
