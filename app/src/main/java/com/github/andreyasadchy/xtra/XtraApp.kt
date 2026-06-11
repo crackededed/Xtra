@@ -1,8 +1,8 @@
 package com.github.andreyasadchy.xtra
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.os.Build
-import android.os.ext.SdkExtensions
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
@@ -54,7 +54,7 @@ class XtraApp : Application(), SingletonImageLoader.Factory {
             components {
                 val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
                 when {
-                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                    networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                         add(NetworkFetcher.Factory(
                             networkClient = {
                                 object : NetworkClient {
@@ -66,30 +66,38 @@ class XtraApp : Application(), SingletonImageLoader.Factory {
                                         }
                                         val requestMillis = System.currentTimeMillis()
                                         val response = suspendCancellableCoroutine { continuation ->
-                                            xtraModule.httpEngine.value!!.newUrlRequestBuilder(request.url, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                                            val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                                                request.url,
+                                                xtraModule.cronetExecutor.value,
+                                                NetworkUtils.ByteArrayUrlCallback(continuation)
+                                            ).apply {
                                                 request.headers.asMap().forEach { entry ->
                                                     entry.value.forEach {
                                                         addHeader(entry.key, it)
                                                     }
                                                 }
                                                 requestBody?.let {
-                                                    setUploadDataProvider(NetworkUtils.byteArrayUploadProvider(requestBody), xtraModule.cronetExecutor.value)
+                                                    setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(requestBody), xtraModule.cronetExecutor.value)
                                                 }
                                                 setHttpMethod(request.method)
-                                            }.build().start()
+                                            }.build()
+                                            request.start()
+                                            continuation.invokeOnCancellation {
+                                                request.cancel()
+                                            }
                                         }
                                         val responseMillis = System.currentTimeMillis()
                                         return block(
                                             NetworkResponse(
-                                                code = response.first.httpStatusCode,
+                                                code = response.info.httpStatusCode,
                                                 requestMillis = requestMillis,
                                                 responseMillis = responseMillis,
                                                 headers = NetworkHeaders.Builder().apply {
-                                                    response.first.headers.asList.forEach {
+                                                    response.info.headers.asList.forEach {
                                                         add(it.key, it.value)
                                                     }
                                                 }.build(),
-                                                body = response.second.inputStream().source().buffer().let(::NetworkResponseBody),
+                                                body = response.body.inputStream().source().buffer().let(::NetworkResponseBody),
                                             )
                                         )
                                     }
@@ -110,7 +118,11 @@ class XtraApp : Application(), SingletonImageLoader.Factory {
                                         }
                                         val requestMillis = System.currentTimeMillis()
                                         val response = suspendCancellableCoroutine { continuation ->
-                                            xtraModule.cronetEngine.value!!.newUrlRequestBuilder(request.url, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).apply {
+                                            val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                                                request.url,
+                                                NetworkUtils.ByteArrayCronetCallback(continuation),
+                                                xtraModule.cronetExecutor.value
+                                            ).apply {
                                                 request.headers.asMap().forEach { entry ->
                                                     entry.value.forEach {
                                                         addHeader(entry.key, it)
@@ -120,20 +132,24 @@ class XtraApp : Application(), SingletonImageLoader.Factory {
                                                     setUploadDataProvider(UploadDataProviders.create(requestBody), xtraModule.cronetExecutor.value)
                                                 }
                                                 setHttpMethod(request.method)
-                                            }.build().start()
+                                            }.build()
+                                            request.start()
+                                            continuation.invokeOnCancellation {
+                                                request.cancel()
+                                            }
                                         }
                                         val responseMillis = System.currentTimeMillis()
                                         return block(
                                             NetworkResponse(
-                                                code = response.first.httpStatusCode,
+                                                code = response.info.httpStatusCode,
                                                 requestMillis = requestMillis,
                                                 responseMillis = responseMillis,
                                                 headers = NetworkHeaders.Builder().apply {
-                                                    response.first.allHeadersAsList.forEach {
+                                                    response.info.allHeadersAsList.forEach {
                                                         add(it.key, it.value)
                                                     }
                                                 }.build(),
-                                                body = response.second.inputStream().source().buffer().let(::NetworkResponseBody),
+                                                body = response.body.inputStream().source().buffer().let(::NetworkResponseBody),
                                             )
                                         )
                                     }
