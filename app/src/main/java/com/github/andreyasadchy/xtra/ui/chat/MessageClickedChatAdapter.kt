@@ -116,8 +116,8 @@ class MessageClickedChatAdapter(
             messages.getOrNull(position)
         } ?: return
         val result = ChatAdapterUtils.prepareChatMessage(
-            chatMessage, holder.textView, enableTimestamps, timestampFormat, firstMsgVisibility, firstChatMsg, redeemedChatMsg, redeemedNoMsg,
-            rewardChatMsg, replyMessage, { url, name, format, isAnimated, source, thirdParty, emoteId -> imageClick(url, name, format, isAnimated, source, thirdParty, emoteId) },
+            chatMessage, fragment.requireContext(), holder.textView, enableTimestamps, timestampFormat, firstMsgVisibility, firstChatMsg,
+            redeemedChatMsg, redeemedNoMsg, rewardChatMsg, replyMessage, { url, name, format, isAnimated, source, thirdParty, emoteId -> imageClick(url, name, format, isAnimated, source, thirdParty, emoteId) },
             useRandomColors, random, useReadableColors, isLightTheme, nameDisplay, useBoldNames, showNamePaints, namePaints, showSTVBadges,
             stvBadges, showPersonalEmotes, personalEmoteSets, stvUsers, showSystemMessageEmotes, enableOverlayEmotes, loggedInUser, chatUrl,
             getEmoteBytes, userColors, savedColors, translateAllMessages, translateMessage, showLanguageDownloadDialog, false, localTwitchEmotes,

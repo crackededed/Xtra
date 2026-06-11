@@ -774,7 +774,6 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                 viewModel.translateAllMessages.collectLatest {
                                     if (it != null) {
                                         adapter?.translateAllMessages = it
-                                        viewModel.translateAllMessages.value = null
                                     }
                                 }
                             }

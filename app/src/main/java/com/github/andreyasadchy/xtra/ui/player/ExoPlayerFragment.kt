@@ -127,7 +127,9 @@ class ExoPlayerFragment : PlayerFragment() {
             }
 
             override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
-                chatFragment?.updateSpeed(playbackParameters.speed)
+                if (chatFragment?.context != null) { // TODO
+                    chatFragment?.updateSpeed(playbackParameters.speed)
+                }
             }
 
             override fun onIsPlayingChanged(isPlaying: Boolean) {
