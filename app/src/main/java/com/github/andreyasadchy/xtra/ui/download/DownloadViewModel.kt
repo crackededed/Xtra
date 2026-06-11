@@ -1,8 +1,7 @@
 package com.github.andreyasadchy.xtra.ui.download
 
+import android.annotation.SuppressLint
 import android.net.http.HttpEngine
-import android.os.Build
-import android.os.ext.SdkExtensions
 import android.util.Base64
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -58,20 +57,36 @@ class DownloadViewModel(
                             val url = playerRepository.loadStreamPlaylistUrl(networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, false, null, null, null, null, enableIntegrity)
                             val playlist = withContext(Dispatchers.IO) {
                                 when {
-                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                                         val response = suspendCancellableCoroutine { continuation ->
-                                            httpEngine.value!!.newUrlRequestBuilder(url, cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                                            val request = httpEngine.value!!.newUrlRequestBuilder(
+                                                url,
+                                                cronetExecutor.value,
+                                                NetworkUtils.ByteArrayUrlCallback(continuation)
+                                            ).build()
+                                            request.start()
+                                            continuation.invokeOnCancellation {
+                                                request.cancel()
+                                            }
                                         }
-                                        if (response.first.httpStatusCode in 200..299) {
-                                            String(response.second)
+                                        if (response.info.httpStatusCode in 200..299) {
+                                            response.body.decodeToString()
                                         } else null
                                     }
                                     networkLibrary == C.CRONET && cronetEngine.value != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
-                                            cronetEngine.value!!.newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).build().start()
+                                            val request = cronetEngine.value!!.newUrlRequestBuilder(
+                                                url,
+                                                NetworkUtils.ByteArrayCronetCallback(continuation),
+                                                cronetExecutor.value
+                                            ).build()
+                                            request.start()
+                                            continuation.invokeOnCancellation {
+                                                request.cancel()
+                                            }
                                         }
-                                        if (response.first.httpStatusCode in 200..299) {
-                                            String(response.second)
+                                        if (response.info.httpStatusCode in 200..299) {
+                                            response.body.decodeToString()
                                         } else null
                                     }
                                     else -> {
@@ -145,20 +160,36 @@ class DownloadViewModel(
                         backupQualities = result.second
                         val playlist = withContext(Dispatchers.IO) {
                             when {
-                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+                                networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        httpEngine.value!!.newUrlRequestBuilder(url, cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                                        val request = httpEngine.value!!.newUrlRequestBuilder(
+                                            url,
+                                            cronetExecutor.value,
+                                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                                        ).build()
+                                        request.start()
+                                        continuation.invokeOnCancellation {
+                                            request.cancel()
+                                        }
                                     }
-                                    if (response.first.httpStatusCode in 200..299) {
-                                        String(response.second)
+                                    if (response.info.httpStatusCode in 200..299) {
+                                        response.body.decodeToString()
                                     } else null
                                 }
                                 networkLibrary == C.CRONET && cronetEngine.value != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        cronetEngine.value!!.newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).build().start()
+                                        val request = cronetEngine.value!!.newUrlRequestBuilder(
+                                            url,
+                                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                                            cronetExecutor.value
+                                        ).build()
+                                        request.start()
+                                        continuation.invokeOnCancellation {
+                                            request.cancel()
+                                        }
                                     }
-                                    if (response.first.httpStatusCode in 200..299) {
-                                        String(response.second)
+                                    if (response.info.httpStatusCode in 200..299) {
+                                        response.body.decodeToString()
                                     } else null
                                 }
                                 else -> {

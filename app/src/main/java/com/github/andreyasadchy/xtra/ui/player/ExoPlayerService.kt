@@ -1,5 +1,6 @@
 package com.github.andreyasadchy.xtra.ui.player
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -23,7 +24,6 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
-import android.os.ext.SdkExtensions
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.annotation.OptIn
@@ -392,7 +392,7 @@ class ExoPlayerService : BasePlaybackService() {
                                                             DefaultDataSource.Factory(
                                                                 this@ExoPlayerService,
                                                                 when {
-                                                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                                                    networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                                                         HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, null, null) { false }
                                                                     }
                                                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
@@ -776,7 +776,7 @@ class ExoPlayerService : BasePlaybackService() {
                             DefaultDataSource.Factory(
                                 this@ExoPlayerService,
                                 when {
-                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                         HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, multivariantPlaylistProxyClient, mediaPlaylistProxyClient) { proxyMediaPlaylist }
                                     }
                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
@@ -864,7 +864,7 @@ class ExoPlayerService : BasePlaybackService() {
                             DefaultDataSource.Factory(
                                 this@ExoPlayerService,
                                 when {
-                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                         HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, null, null) { false }
                                     }
                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
@@ -942,7 +942,7 @@ class ExoPlayerService : BasePlaybackService() {
                             DefaultDataSource.Factory(
                                 this@ExoPlayerService,
                                 when {
-                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                         HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, null, null) { false }
                                     }
                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
@@ -1125,19 +1125,35 @@ class ExoPlayerService : BasePlaybackService() {
     suspend fun checkPlaylist(networkLibrary: String?, url: String): Boolean = withContext(Dispatchers.IO) {
         try {
             val playlist = when {
-                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                     val response = suspendCancellableCoroutine { continuation ->
-                        xtraModule.httpEngine.value!!.newUrlRequestBuilder(url, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                        val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                            url,
+                            xtraModule.cronetExecutor.value,
+                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                        ).build()
+                        request.start()
+                        continuation.invokeOnCancellation {
+                            request.cancel()
+                        }
                     }
-                    response.second.inputStream().use {
+                    response.body.inputStream().use {
                         PlaylistUtils.parseMediaPlaylist(it)
                     }
                 }
                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                     val response = suspendCancellableCoroutine { continuation ->
-                        xtraModule.cronetEngine.value!!.newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).build().start()
+                        val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                            url,
+                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                            xtraModule.cronetExecutor.value
+                        ).build()
+                        request.start()
+                        continuation.invokeOnCancellation {
+                            request.cancel()
+                        }
                     }
-                    response.second.inputStream().use {
+                    response.body.inputStream().use {
                         PlaylistUtils.parseMediaPlaylist(it)
                     }
                 }
@@ -1323,20 +1339,36 @@ class ExoPlayerService : BasePlaybackService() {
                         val scheme = url.toUri().scheme
                         val response = if (scheme == "https" || scheme == "http") {
                             when {
-                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        xtraModule.httpEngine.value!!.newUrlRequestBuilder(url, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                                        val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                                            url,
+                                            xtraModule.cronetExecutor.value,
+                                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                                        ).build()
+                                        request.start()
+                                        continuation.invokeOnCancellation {
+                                            request.cancel()
+                                        }
                                     }
-                                    if (response.first.httpStatusCode in 200..299) {
-                                        response.second
+                                    if (response.info.httpStatusCode in 200..299) {
+                                        response.body
                                     } else null
                                 }
                                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        xtraModule.cronetEngine.value!!.newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).build().start()
+                                        val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                                            url,
+                                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                                            xtraModule.cronetExecutor.value
+                                        ).build()
+                                        request.start()
+                                        continuation.invokeOnCancellation {
+                                            request.cancel()
+                                        }
                                     }
-                                    if (response.first.httpStatusCode in 200..299) {
-                                        response.second
+                                    if (response.info.httpStatusCode in 200..299) {
+                                        response.body
                                     } else null
                                 }
                                 else -> {
@@ -1401,20 +1433,36 @@ class ExoPlayerService : BasePlaybackService() {
                         val scheme = url.toUri().scheme
                         val response = if (scheme == "https" || scheme == "http") {
                             when {
-                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        xtraModule.httpEngine.value!!.newUrlRequestBuilder(url, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                                        val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                                            url,
+                                            xtraModule.cronetExecutor.value,
+                                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                                        ).build()
+                                        request.start()
+                                        continuation.invokeOnCancellation {
+                                            request.cancel()
+                                        }
                                     }
-                                    if (response.first.httpStatusCode in 200..299) {
-                                        response.second
+                                    if (response.info.httpStatusCode in 200..299) {
+                                        response.body
                                     } else null
                                 }
                                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        xtraModule.cronetEngine.value!!.newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).build().start()
+                                        val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                                            url,
+                                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                                            xtraModule.cronetExecutor.value
+                                        ).build()
+                                        request.start()
+                                        continuation.invokeOnCancellation {
+                                            request.cancel()
+                                        }
                                     }
-                                    if (response.first.httpStatusCode in 200..299) {
-                                        response.second
+                                    if (response.info.httpStatusCode in 200..299) {
+                                        response.body
                                     } else null
                                 }
                                 else -> {

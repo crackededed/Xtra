@@ -1,5 +1,6 @@
 package com.github.andreyasadchy.xtra.ui.download
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -13,7 +14,6 @@ import android.net.NetworkCapabilities
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.os.ext.SdkExtensions
 import android.provider.DocumentsContract
 import android.util.Base64
 import android.util.JsonReader
@@ -220,20 +220,36 @@ class StreamDownloadService : LifecycleService() {
         var playlistUrl = xtraModule.playerRepository.loadStreamPlaylistUrl(networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, false, null, null, null, null, false)
         while (true) {
             val playlist = when {
-                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                     val response = suspendCancellableCoroutine { continuation ->
-                        xtraModule.httpEngine.value!!.newUrlRequestBuilder(playlistUrl, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                        val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                            playlistUrl,
+                            xtraModule.cronetExecutor.value,
+                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                        ).build()
+                        request.start()
+                        continuation.invokeOnCancellation {
+                            request.cancel()
+                        }
                     }
-                    if (response.first.httpStatusCode in 200..299) {
-                        String(response.second)
+                    if (response.info.httpStatusCode in 200..299) {
+                        response.body.decodeToString()
                     } else null
                 }
                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                     val response = suspendCancellableCoroutine { continuation ->
-                        xtraModule.cronetEngine.value!!.newUrlRequestBuilder(playlistUrl, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).build().start()
+                        val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                            playlistUrl,
+                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                            xtraModule.cronetExecutor.value
+                        ).build()
+                        request.start()
+                        continuation.invokeOnCancellation {
+                            request.cancel()
+                        }
                     }
-                    if (response.first.httpStatusCode in 200..299) {
-                        String(response.second)
+                    if (response.info.httpStatusCode in 200..299) {
+                        response.body.decodeToString()
                     } else null
                 }
                 else -> {
@@ -412,20 +428,36 @@ class StreamDownloadService : LifecycleService() {
             }
         } else {
             when {
-                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                     val response = suspendCancellableCoroutine { continuation ->
-                        xtraModule.httpEngine.value!!.newUrlRequestBuilder(playlistUrl, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                        val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                            playlistUrl,
+                            xtraModule.cronetExecutor.value,
+                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                        ).build()
+                        request.start()
+                        continuation.invokeOnCancellation {
+                            request.cancel()
+                        }
                     }
-                    if (response.first.httpStatusCode in 200..299) {
-                        String(response.second)
+                    if (response.info.httpStatusCode in 200..299) {
+                        response.body.decodeToString()
                     } else null
                 }
                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                     val response = suspendCancellableCoroutine { continuation ->
-                        xtraModule.cronetEngine.value!!.newUrlRequestBuilder(playlistUrl, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).build().start()
+                        val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                            playlistUrl,
+                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                            xtraModule.cronetExecutor.value
+                        ).build()
+                        request.start()
+                        continuation.invokeOnCancellation {
+                            request.cancel()
+                        }
                     }
-                    if (response.first.httpStatusCode in 200..299) {
-                        String(response.second)
+                    if (response.info.httpStatusCode in 200..299) {
+                        response.body.decodeToString()
                     } else null
                 }
                 else -> {
@@ -475,12 +507,20 @@ class StreamDownloadService : LifecycleService() {
         var lastUrl = downloadProgress.lastSegmentUrl
         var initSegmentUri: String?
         val playlist = when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+            networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
-                    xtraModule.httpEngine.value!!.newUrlRequestBuilder(sourceUrl, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                    val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                        sourceUrl,
+                        xtraModule.cronetExecutor.value,
+                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                    ).build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                if (response.first.httpStatusCode in 200..299) {
-                    response.second.inputStream().use {
+                if (response.info.httpStatusCode in 200..299) {
+                    response.body.inputStream().use {
                         PlaylistUtils.parseMediaPlaylist(it)
                     }
                 } else {
@@ -489,10 +529,18 @@ class StreamDownloadService : LifecycleService() {
             }
             networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    xtraModule.cronetEngine.value!!.newUrlRequestBuilder(sourceUrl, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).build().start()
+                    val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                        sourceUrl,
+                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        xtraModule.cronetExecutor.value
+                    ).build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                if (response.first.httpStatusCode in 200..299) {
-                    response.second.inputStream().use {
+                if (response.info.httpStatusCode in 200..299) {
+                    response.body.inputStream().use {
                         PlaylistUtils.parseMediaPlaylist(it)
                     }
                 } else {
@@ -554,36 +602,52 @@ class StreamDownloadService : LifecycleService() {
             } else {
                 "$path${File.separator}$fileName"
             }
-            val initSegmentBytes = initSegmentUri?.let {
+            val initSegmentBytes = initSegmentUri?.let { url ->
                 when {
-                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                    networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                         val response = suspendCancellableCoroutine { continuation ->
-                            xtraModule.httpEngine.value!!.newUrlRequestBuilder(it, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                            val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                                url,
+                                xtraModule.cronetExecutor.value,
+                                NetworkUtils.ByteArrayUrlCallback(continuation)
+                            ).build()
+                            request.start()
+                            continuation.invokeOnCancellation {
+                                request.cancel()
+                            }
                         }
                         if (isShared) {
                             contentResolver.openOutputStream(fileUri.toUri(), "wa")!!
                         } else {
                             FileOutputStream(fileUri, true)
                         }.use {
-                            it.write(response.second)
+                            it.write(response.body)
                         }
-                        response.second.size.toLong()
+                        response.body.size.toLong()
                     }
                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                         val response = suspendCancellableCoroutine { continuation ->
-                            xtraModule.cronetEngine.value!!.newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).build().start()
+                            val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                                url,
+                                NetworkUtils.ByteArrayCronetCallback(continuation),
+                                xtraModule.cronetExecutor.value
+                            ).build()
+                            request.start()
+                            continuation.invokeOnCancellation {
+                                request.cancel()
+                            }
                         }
                         if (isShared) {
                             contentResolver.openOutputStream(fileUri.toUri(), "wa")!!
                         } else {
                             FileOutputStream(fileUri, true)
                         }.use {
-                            it.write(response.second)
+                            it.write(response.body)
                         }
-                        response.second.size.toLong()
+                        response.body.size.toLong()
                     }
                     else -> {
-                        okHttpClient.value.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
+                        okHttpClient.value.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                             if (isShared) {
                                 contentResolver.openOutputStream(fileUri.toUri(), "wa")!!
                             } else {
@@ -620,9 +684,17 @@ class StreamDownloadService : LifecycleService() {
             requestSemaphore.acquire()
             launch(Dispatchers.IO) {
                 when {
-                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                    networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                         val response = suspendCancellableCoroutine { continuation ->
-                            xtraModule.httpEngine.value!!.newUrlRequestBuilder(url, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                            val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                                url,
+                                xtraModule.cronetExecutor.value,
+                                NetworkUtils.ByteArrayUrlCallback(continuation)
+                            ).build()
+                            request.start()
+                            continuation.invokeOnCancellation {
+                                request.cancel()
+                            }
                         }
                         val mutex = Mutex()
                         if (count.value != index) {
@@ -635,15 +707,23 @@ class StreamDownloadService : LifecycleService() {
                             } else {
                                 FileOutputStream(videoFileUri, true)
                             }.use {
-                                it.write(response.second)
+                                it.write(response.body)
                             }
-                            downloadProgress.bytes += response.second.size
+                            downloadProgress.bytes += response.body.size
                             downloadProgress.lastSegmentUrl += lastUrl
                         }
                     }
                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                         val response = suspendCancellableCoroutine { continuation ->
-                            xtraModule.cronetEngine.value!!.newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).build().start()
+                            val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                                url,
+                                NetworkUtils.ByteArrayCronetCallback(continuation),
+                                xtraModule.cronetExecutor.value
+                            ).build()
+                            request.start()
+                            continuation.invokeOnCancellation {
+                                request.cancel()
+                            }
                         }
                         val mutex = Mutex()
                         if (count.value != index) {
@@ -656,9 +736,9 @@ class StreamDownloadService : LifecycleService() {
                             } else {
                                 FileOutputStream(videoFileUri, true)
                             }.use {
-                                it.write(response.second)
+                                it.write(response.body)
                             }
-                            downloadProgress.bytes += response.second.size
+                            downloadProgress.bytes += response.body.size
                             downloadProgress.lastSegmentUrl += lastUrl
                         }
                     }
@@ -706,12 +786,20 @@ class StreamDownloadService : LifecycleService() {
         firstJobs.joinAll()
         while (true) {
             val playlist = when {
-                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                     val response = suspendCancellableCoroutine { continuation ->
-                        xtraModule.httpEngine.value!!.newUrlRequestBuilder(sourceUrl, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                        val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                            sourceUrl,
+                            xtraModule.cronetExecutor.value,
+                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                        ).build()
+                        request.start()
+                        continuation.invokeOnCancellation {
+                            request.cancel()
+                        }
                     }
-                    if (response.first.httpStatusCode in 200..299) {
-                        response.second.inputStream().use {
+                    if (response.info.httpStatusCode in 200..299) {
+                        response.body.inputStream().use {
                             PlaylistUtils.parseMediaPlaylist(it)
                         }
                     } else {
@@ -720,10 +808,18 @@ class StreamDownloadService : LifecycleService() {
                 }
                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                     val response = suspendCancellableCoroutine { continuation ->
-                        xtraModule.cronetEngine.value!!.newUrlRequestBuilder(sourceUrl, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).build().start()
+                        val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                            sourceUrl,
+                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                            xtraModule.cronetExecutor.value
+                        ).build()
+                        request.start()
+                        continuation.invokeOnCancellation {
+                            request.cancel()
+                        }
                     }
-                    if (response.first.httpStatusCode in 200..299) {
-                        response.second.inputStream().use {
+                    if (response.info.httpStatusCode in 200..299) {
+                        response.body.inputStream().use {
                             PlaylistUtils.parseMediaPlaylist(it)
                         }
                     } else {
@@ -751,9 +847,17 @@ class StreamDownloadService : LifecycleService() {
                     requestSemaphore.acquire()
                     launch(Dispatchers.IO) {
                         when {
-                            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                            networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                 val response = suspendCancellableCoroutine { continuation ->
-                                    xtraModule.httpEngine.value!!.newUrlRequestBuilder(url, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                                    val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                                        url,
+                                        xtraModule.cronetExecutor.value,
+                                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                                    ).build()
+                                    request.start()
+                                    continuation.invokeOnCancellation {
+                                        request.cancel()
+                                    }
                                 }
                                 val mutex = Mutex()
                                 if (count.value != index) {
@@ -766,15 +870,23 @@ class StreamDownloadService : LifecycleService() {
                                     } else {
                                         FileOutputStream(videoFileUri, true)
                                     }.use {
-                                        it.write(response.second)
+                                        it.write(response.body)
                                     }
-                                    downloadProgress.bytes += response.second.size
+                                    downloadProgress.bytes += response.body.size
                                     downloadProgress.lastSegmentUrl += lastUrl
                                 }
                             }
                             networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                 val response = suspendCancellableCoroutine { continuation ->
-                                    xtraModule.cronetEngine.value!!.newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).build().start()
+                                    val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                                        url,
+                                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                                        xtraModule.cronetExecutor.value
+                                    ).build()
+                                    request.start()
+                                    continuation.invokeOnCancellation {
+                                        request.cancel()
+                                    }
                                 }
                                 val mutex = Mutex()
                                 if (count.value != index) {
@@ -787,9 +899,9 @@ class StreamDownloadService : LifecycleService() {
                                     } else {
                                         FileOutputStream(videoFileUri, true)
                                     }.use {
-                                        it.write(response.second)
+                                        it.write(response.body)
                                     }
-                                    downloadProgress.bytes += response.second.size
+                                    downloadProgress.bytes += response.body.size
                                     downloadProgress.lastSegmentUrl += lastUrl
                                 }
                             }
@@ -907,35 +1019,51 @@ class StreamDownloadService : LifecycleService() {
             }
             if (stream != null) {
                 val downloadedThumbnail = stream.id.takeIf { !it.isNullOrBlank() }?.let { id ->
-                    stream.thumbnail.takeIf { !it.isNullOrBlank() }?.let {
+                    stream.thumbnail.takeIf { !it.isNullOrBlank() }?.let { url ->
                         val filesDir = filesDir.path
                         File(filesDir, "thumbnails").mkdir()
                         val filePath = filesDir + File.separator + "thumbnails" + File.separator + id
                         launch(Dispatchers.IO) {
                             try {
                                 when {
-                                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                    networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                         val response = suspendCancellableCoroutine { continuation ->
-                                            xtraModule.httpEngine.value!!.newUrlRequestBuilder(it, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                                            val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                                                url,
+                                                xtraModule.cronetExecutor.value,
+                                                NetworkUtils.ByteArrayUrlCallback(continuation)
+                                            ).build()
+                                            request.start()
+                                            continuation.invokeOnCancellation {
+                                                request.cancel()
+                                            }
                                         }
-                                        if (response.first.httpStatusCode in 200..299) {
+                                        if (response.info.httpStatusCode in 200..299) {
                                             FileOutputStream(filePath).use {
-                                                it.write(response.second)
+                                                it.write(response.body)
                                             }
                                         }
                                     }
                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
-                                            xtraModule.cronetEngine.value!!.newUrlRequestBuilder(it, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).build().start()
+                                            val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                                                url,
+                                                NetworkUtils.ByteArrayCronetCallback(continuation),
+                                                xtraModule.cronetExecutor.value
+                                            ).build()
+                                            request.start()
+                                            continuation.invokeOnCancellation {
+                                                request.cancel()
+                                            }
                                         }
-                                        if (response.first.httpStatusCode in 200..299) {
+                                        if (response.info.httpStatusCode in 200..299) {
                                             FileOutputStream(filePath).use {
-                                                it.write(response.second)
+                                                it.write(response.body)
                                             }
                                         }
                                     }
                                     else -> {
-                                        okHttpClient.value.newCall(Request.Builder().url(it).build()).executeAsync().use { response ->
+                                        okHttpClient.value.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                                             if (response.isSuccessful) {
                                                 FileOutputStream(filePath).use { outputStream ->
                                                     response.body.byteStream().use { inputStream ->
@@ -1376,17 +1504,33 @@ class StreamDownloadService : LifecycleService() {
                                 else -> emote.url1x
                             }!!
                             val response = when {
-                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        xtraModule.httpEngine.value!!.newUrlRequestBuilder(url, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                                        val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                                            url,
+                                            xtraModule.cronetExecutor.value,
+                                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                                        ).build()
+                                        request.start()
+                                        continuation.invokeOnCancellation {
+                                            request.cancel()
+                                        }
                                     }
-                                    response.second
+                                    response.body
                                 }
                                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        xtraModule.cronetEngine.value!!.newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).build().start()
+                                        val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                                            url,
+                                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                                            xtraModule.cronetExecutor.value
+                                        ).build()
+                                        request.start()
+                                        continuation.invokeOnCancellation {
+                                            request.cancel()
+                                        }
                                     }
-                                    response.second
+                                    response.body
                                 }
                                 else -> {
                                     okHttpClient.value.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
@@ -1443,17 +1587,33 @@ class StreamDownloadService : LifecycleService() {
                                 else -> badge.url1x
                             }!!
                             val response = when {
-                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        xtraModule.httpEngine.value!!.newUrlRequestBuilder(url, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                                        val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                                            url,
+                                            xtraModule.cronetExecutor.value,
+                                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                                        ).build()
+                                        request.start()
+                                        continuation.invokeOnCancellation {
+                                            request.cancel()
+                                        }
                                     }
-                                    response.second
+                                    response.body
                                 }
                                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        xtraModule.cronetEngine.value!!.newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).build().start()
+                                        val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                                            url,
+                                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                                            xtraModule.cronetExecutor.value
+                                        ).build()
+                                        request.start()
+                                        continuation.invokeOnCancellation {
+                                            request.cancel()
+                                        }
                                     }
-                                    response.second
+                                    response.body
                                 }
                                 else -> {
                                     okHttpClient.value.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
@@ -1512,17 +1672,33 @@ class StreamDownloadService : LifecycleService() {
                                 else -> cheerEmote.url1x
                             }!!
                             val response = when {
-                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        xtraModule.httpEngine.value!!.newUrlRequestBuilder(url, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                                        val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                                            url,
+                                            xtraModule.cronetExecutor.value,
+                                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                                        ).build()
+                                        request.start()
+                                        continuation.invokeOnCancellation {
+                                            request.cancel()
+                                        }
                                     }
-                                    response.second
+                                    response.body
                                 }
                                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        xtraModule.cronetEngine.value!!.newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).build().start()
+                                        val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                                            url,
+                                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                                            xtraModule.cronetExecutor.value
+                                        ).build()
+                                        request.start()
+                                        continuation.invokeOnCancellation {
+                                            request.cancel()
+                                        }
                                     }
-                                    response.second
+                                    response.body
                                 }
                                 else -> {
                                     okHttpClient.value.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
@@ -1582,17 +1758,33 @@ class StreamDownloadService : LifecycleService() {
                                 else -> emote.url1x
                             }!!
                             val response = when {
-                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        xtraModule.httpEngine.value!!.newUrlRequestBuilder(url, xtraModule.cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                                        val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
+                                            url,
+                                            xtraModule.cronetExecutor.value,
+                                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                                        ).build()
+                                        request.start()
+                                        continuation.invokeOnCancellation {
+                                            request.cancel()
+                                        }
                                     }
-                                    response.second
+                                    response.body
                                 }
                                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
-                                        xtraModule.cronetEngine.value!!.newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), xtraModule.cronetExecutor.value).build().start()
+                                        val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                                            url,
+                                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                                            xtraModule.cronetExecutor.value
+                                        ).build()
+                                        request.start()
+                                        continuation.invokeOnCancellation {
+                                            request.cancel()
+                                        }
                                     }
-                                    response.second
+                                    response.body
                                 }
                                 else -> {
                                     okHttpClient.value.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
