@@ -34,16 +34,19 @@ class AuthRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         addHeader("Authorization", token)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode != 401) {
@@ -54,16 +57,19 @@ class AuthRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         addHeader("Authorization", token)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode != 401) {
@@ -92,33 +98,39 @@ class AuthRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         addHeader("Content-Type", "application/x-www-form-urlencoded")
                         setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 suspendCancellableCoroutine<NetworkUtils.CronetResponse> { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         addHeader("Content-Type", "application/x-www-form-urlencoded")
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
             }
@@ -137,34 +149,40 @@ class AuthRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         addHeader("Content-Type", "application/x-www-form-urlencoded")
                         setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<DeviceCodeResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         addHeader("Content-Type", "application/x-www-form-urlencoded")
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<DeviceCodeResponse>(response.body.decodeToString())
@@ -186,34 +204,40 @@ class AuthRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         addHeader("Content-Type", "application/x-www-form-urlencoded")
                         setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<TokenResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         addHeader("Content-Type", "application/x-www-form-urlencoded")
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<TokenResponse>(response.body.decodeToString())

@@ -147,18 +147,21 @@ class GraphQLRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.inputStream().source().buffer().jsonReader().use {
@@ -167,18 +170,21 @@ class GraphQLRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.inputStream().source().buffer().jsonReader().use {
@@ -205,36 +211,42 @@ class GraphQLRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
@@ -624,7 +636,7 @@ class GraphQLRepository(
         sendQuery(networkLibrary, headers, query)
     }
 
-    suspend fun loadQueryVideoCommentsDownload(networkLibrary: String?, headers: Map<String, String>, videoId: String?, offset: Int? = null, cursor: String? = null): VideoMessagesResponse = withContext(Dispatchers.IO) {
+    suspend fun loadQueryVideoCommentsDownload(networkLibrary: String?, timeout: Long, okHttpClient: Lazy<OkHttpClient>, headers: Map<String, String>, videoId: String?, offset: Int? = null, cursor: String? = null): VideoMessagesResponse = withContext(Dispatchers.IO) {
         val url = "https://gql.twitch.tv/gql/"
         val query = VideoCommentsQuery(
             id = Optional.Present(videoId),
@@ -647,36 +659,42 @@ class GraphQLRepository(
         val response = when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout(timeout)
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout(timeout)
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()

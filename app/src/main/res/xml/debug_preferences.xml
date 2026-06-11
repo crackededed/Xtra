@@ -93,14 +93,4 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
-    <ListPreference
-        android:defaultValue="OkHttp"
-        android:entries="@array/networkLibraryEntries"
-        android:entryValues="@array/networkLibraryEntries"
-        android:key="network_library"
-        android:summary="%s"
-        android:title="@string/network_library"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
 </androidx.preference.PreferenceScreen>

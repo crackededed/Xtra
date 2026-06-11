@@ -115,6 +115,16 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <ListPreference
+        android:defaultValue="OkHttp"
+        android:entries="@array/networkLibraryEntries"
+        android:entryValues="@array/networkLibraryEntries"
+        android:key="network_library"
+        android:summary="%s"
+        android:title="@string/network_library"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
     <Preference
         android:key="download_settings"
         android:title="@string/download_settings"

@@ -114,14 +114,17 @@ class VideoSearchViewModel(
                                 when {
                                     networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                                         val response = suspendCancellableCoroutine { continuation ->
+                                            val timeout = NetworkUtils.HttpEngineTimeout()
                                             val request = httpEngine.value!!.newUrlRequestBuilder(
                                                 url,
                                                 cronetExecutor.value,
-                                                NetworkUtils.ByteArrayUrlCallback(continuation)
+                                                NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                                             ).build()
+                                            timeout.start(request, continuation)
                                             request.start()
                                             continuation.invokeOnCancellation {
                                                 request.cancel()
+                                                timeout.stop()
                                             }
                                         }
                                         if (response.info.httpStatusCode in 200..299) {
@@ -132,14 +135,17 @@ class VideoSearchViewModel(
                                     }
                                     networkLibrary == C.CRONET && cronetEngine.value != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
+                                            val timeout = NetworkUtils.CronetTimeout()
                                             val request = cronetEngine.value!!.newUrlRequestBuilder(
                                                 url,
-                                                NetworkUtils.ByteArrayCronetCallback(continuation),
+                                                NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                                                 cronetExecutor.value
                                             ).build()
+                                            timeout.start(request, continuation)
                                             request.start()
                                             continuation.invokeOnCancellation {
                                                 request.cancel()
+                                                timeout.stop()
                                             }
                                         }
                                         if (response.info.httpStatusCode in 200..299) {
@@ -176,14 +182,17 @@ class VideoSearchViewModel(
                                 when {
                                     networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                                         val response = suspendCancellableCoroutine { continuation ->
+                                            val timeout = NetworkUtils.HttpEngineTimeout()
                                             val request = httpEngine.value!!.newUrlRequestBuilder(
                                                 url,
                                                 cronetExecutor.value,
-                                                NetworkUtils.ByteArrayUrlCallback(continuation)
+                                                NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                                             ).build()
+                                            timeout.start(request, continuation)
                                             request.start()
                                             continuation.invokeOnCancellation {
                                                 request.cancel()
+                                                timeout.stop()
                                             }
                                         }
                                         if (response.info.httpStatusCode in 200..299) {
@@ -194,14 +203,17 @@ class VideoSearchViewModel(
                                     }
                                     networkLibrary == C.CRONET && cronetEngine.value != null -> {
                                         val response = suspendCancellableCoroutine { continuation ->
+                                            val timeout = NetworkUtils.CronetTimeout()
                                             val request = cronetEngine.value!!.newUrlRequestBuilder(
                                                 url,
-                                                NetworkUtils.ByteArrayCronetCallback(continuation),
+                                                NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                                                 cronetExecutor.value
                                             ).build()
+                                            timeout.start(request, continuation)
                                             request.start()
                                             continuation.invokeOnCancellation {
                                                 request.cancel()
+                                                timeout.stop()
                                             }
                                         }
                                         if (response.info.httpStatusCode in 200..299) {
