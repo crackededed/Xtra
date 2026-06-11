@@ -29,8 +29,11 @@ import androidx.media3.common.text.CueGroup
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.exoplayer.hls.HlsManifest
+import androidx.navigation.fragment.findNavController
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.model.VideoQuality
+import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
+import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
@@ -194,6 +197,41 @@ class ExoPlayerFragment : PlayerFragment() {
             override fun toast(resId: Int, duration: Int) {
                 if (view != null) {
                     Toast.makeText(requireContext(), resId, duration).show()
+                }
+            }
+
+            override fun updateVideoInfo() {
+                if (view != null) {
+                    with(binding.playerControls) {
+                        val titleText = playbackService?.title
+                        if (!titleText.isNullOrBlank() && requireContext().prefs().getBoolean(C.PLAYER_TITLE, true)) {
+                            title.visibility = View.VISIBLE
+                            title.text = titleText
+                        }
+                        val gameName = playbackService?.gameName
+                        if (!gameName.isNullOrBlank() && requireContext().prefs().getBoolean(C.PLAYER_CATEGORY, true)) {
+                            category.visibility = View.VISIBLE
+                            category.text = gameName
+                            category.setOnClickListener {
+                                findNavController().navigate(
+                                    if (requireContext().prefs().getBoolean(C.UI_GAME_PAGER, true)) {
+                                        GamePagerFragmentDirections.actionGlobalGamePagerFragment(
+                                            gameId = playbackService?.gameId,
+                                            gameSlug = playbackService?.gameSlug,
+                                            gameName = gameName
+                                        )
+                                    } else {
+                                        GameMediaFragmentDirections.actionGlobalGameMediaFragment(
+                                            gameId = playbackService?.gameId,
+                                            gameSlug = playbackService?.gameSlug,
+                                            gameName = gameName
+                                        )
+                                    }
+                                )
+                                minimize()
+                            }
+                        }
+                    }
                 }
             }
         }

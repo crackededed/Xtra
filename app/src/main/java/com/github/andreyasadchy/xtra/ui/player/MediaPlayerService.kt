@@ -41,6 +41,7 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.VideoPosition
 import com.github.andreyasadchy.xtra.model.VideoQuality
+import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.MediaButtonReceiver
@@ -110,6 +111,7 @@ class MediaPlayerService : BasePlaybackService() {
         fun loaded()
         fun changePlayerMode()
         fun toast(resId: Int, duration: Int)
+        fun updateVideoInfo()
         fun changeSurfaceVisibility(visible: Boolean) {}
     }
 
@@ -413,6 +415,9 @@ class MediaPlayerService : BasePlaybackService() {
                     started = true
                     serviceListener?.started()
                     loadVideo(restorePauseState)
+                    if (title == null) {
+                        updateVideoInfo()
+                    }
                 }
                 CLIP -> {
                     started = true
@@ -943,6 +948,85 @@ class MediaPlayerService : BasePlaybackService() {
                     }
                 }
             }
+        }
+    }
+
+    private suspend fun updateVideoInfo() {
+        val video = try {
+            val response = xtraModule.graphQLRepository.loadQueryVideo(
+                networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
+                headers = TwitchApiHelper.getGQLHeaders(this),
+                id = videoId
+            )
+            if (prefs().getBoolean(C.ENABLE_INTEGRITY, false)) {
+                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                    integrity.emit("refresh")
+                    return
+                }
+            }
+            response.data!!.let { item ->
+                item.video?.let {
+                    Video(
+                        id = videoId,
+                        channelId = it.owner?.id,
+                        channelLogin = it.owner?.login,
+                        channelName = it.owner?.displayName,
+                        channelImageURL = it.owner?.profileImageURL,
+                        gameId = it.game?.id,
+                        gameSlug = it.game?.slug,
+                        gameName = it.game?.displayName,
+                        title = it.title,
+                        thumbnailURL = it.previewThumbnailURL,
+                        createdAt = it.createdAt?.toString(),
+                        durationSeconds = it.lengthSeconds,
+                        type = it.broadcastType?.toString(),
+                        animatedPreviewURL = it.animatedPreviewURL,
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            val helixHeaders = TwitchApiHelper.getHelixHeaders(this)
+            if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                try {
+                    xtraModule.helixRepository.getVideos(
+                        networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
+                        headers = helixHeaders,
+                        ids = videoId?.let { listOf(it) }
+                    ).data.firstOrNull()?.let {
+                        Video(
+                            id = it.id,
+                            channelId = it.channelId,
+                            channelLogin = it.channelLogin,
+                            channelName = it.channelName,
+                            title = it.title,
+                            thumbnailURL = it.thumbnailURL,
+                            createdAt = it.createdAt,
+                            viewCount = it.viewCount,
+                            durationSeconds = it.duration?.let { duration -> TwitchApiHelper.getDuration(duration) },
+                        )
+                    }
+                } catch (e: Exception) {
+                    null
+                }
+            } else null
+        }
+        if (video != null) {
+            channelId = video.channelId
+            channelLogin = video.channelLogin
+            channelName = video.channelName
+            channelImage = video.channelImage
+            gameId = video.gameId
+            gameSlug = video.gameSlug
+            gameName = video.gameName
+            title = video.title
+            thumbnail = video.thumbnail
+            createdAt = video.createdAt
+            durationSeconds = video.durationSeconds
+            videoType = video.type
+            videoAnimatedPreviewURL = video.animatedPreviewURL
+            updateMetadata()
+            updateNotification()
+            serviceListener?.updateVideoInfo()
         }
     }
 
