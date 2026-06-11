@@ -1,5 +1,6 @@
 package com.github.andreyasadchy.xtra.ui.player
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Intent
 import android.media.audiofx.DynamicsProcessing
@@ -7,7 +8,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.ext.SdkExtensions
 import androidx.annotation.OptIn
 import androidx.core.content.edit
 import androidx.core.net.toUri
@@ -241,7 +241,7 @@ class PlaybackService : MediaSessionService() {
                                         DefaultDataSource.Factory(
                                             this@PlaybackService,
                                             when {
-                                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                                networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                                     HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, multivariantPlaylistProxyClient, mediaPlaylistProxyClient) { proxyMediaPlaylist }
                                                 }
                                                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
@@ -315,7 +315,7 @@ class PlaybackService : MediaSessionService() {
                                         DefaultDataSource.Factory(
                                             this@PlaybackService,
                                             when {
-                                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                                networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                                     HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, null, null) { false }
                                                 }
                                                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
@@ -361,7 +361,7 @@ class PlaybackService : MediaSessionService() {
                                         DefaultDataSource.Factory(
                                             this@PlaybackService,
                                             when {
-                                                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && xtraModule.httpEngine.value != null -> {
+                                                networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                                     HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, null, null) { false }
                                                 }
                                                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {

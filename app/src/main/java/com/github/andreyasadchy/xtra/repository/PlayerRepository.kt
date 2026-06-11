@@ -1,8 +1,7 @@
 package com.github.andreyasadchy.xtra.repository
 
+import android.annotation.SuppressLint
 import android.net.http.HttpEngine
-import android.os.Build
-import android.os.ext.SdkExtensions
 import android.util.Base64
 import androidx.core.net.toUri
 import com.apollographql.apollo.api.CustomScalarAdapters
@@ -337,21 +336,38 @@ class PlayerRepository(
 
     suspend fun sendMinuteWatched(networkLibrary: String?, userId: String?, streamId: String?, channelId: String?, channelLogin: String?) = withContext(Dispatchers.IO) {
         val pageResponse = channelLogin?.let {
+            val pageUrl = "https://www.twitch.tv/${channelLogin}"
             when {
-                networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+                networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                     val response = suspendCancellableCoroutine { continuation ->
-                        httpEngine.value!!.newUrlRequestBuilder("https://www.twitch.tv/${channelLogin}", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                        val request = httpEngine.value!!.newUrlRequestBuilder(
+                            pageUrl,
+                            cronetExecutor.value,
+                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                        ).build()
+                        request.start()
+                        continuation.invokeOnCancellation {
+                            request.cancel()
+                        }
                     }
-                    String(response.second)
+                    response.body.decodeToString()
                 }
                 networkLibrary == C.CRONET && cronetEngine.value != null -> {
                     val response = suspendCancellableCoroutine { continuation ->
-                        cronetEngine.value!!.newUrlRequestBuilder("https://www.twitch.tv/${channelLogin}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).build().start()
+                        val request = cronetEngine.value!!.newUrlRequestBuilder(
+                            pageUrl,
+                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                            cronetExecutor.value
+                        ).build()
+                        request.start()
+                        continuation.invokeOnCancellation {
+                            request.cancel()
+                        }
                     }
-                    String(response.second)
+                    response.body.decodeToString()
                 }
                 else -> {
-                    okHttpClient.value.newCall(Request.Builder().url("https://www.twitch.tv/${channelLogin}").build()).executeAsync().use { response ->
+                    okHttpClient.value.newCall(Request.Builder().url(pageUrl).build()).executeAsync().use { response ->
                         response.body.string()
                     }
                 }
@@ -362,17 +378,33 @@ class PlayerRepository(
             val settingsUrl = settingsRegex.find(pageResponse)?.value
             val settingsResponse = settingsUrl?.let {
                 when {
-                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+                    networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                         val response = suspendCancellableCoroutine { continuation ->
-                            httpEngine.value!!.newUrlRequestBuilder(settingsUrl, cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                            val request = httpEngine.value!!.newUrlRequestBuilder(
+                                settingsUrl,
+                                cronetExecutor.value,
+                                NetworkUtils.ByteArrayUrlCallback(continuation)
+                            ).build()
+                            request.start()
+                            continuation.invokeOnCancellation {
+                                request.cancel()
+                            }
                         }
-                        String(response.second)
+                        response.body.decodeToString()
                     }
                     networkLibrary == C.CRONET && cronetEngine.value != null -> {
                         val response = suspendCancellableCoroutine { continuation ->
-                            cronetEngine.value!!.newUrlRequestBuilder(settingsUrl, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).build().start()
+                            val request = cronetEngine.value!!.newUrlRequestBuilder(
+                                settingsUrl,
+                                NetworkUtils.ByteArrayCronetCallback(continuation),
+                                cronetExecutor.value
+                            ).build()
+                            request.start()
+                            continuation.invokeOnCancellation {
+                                request.cancel()
+                            }
                         }
-                        String(response.second)
+                        response.body.decodeToString()
                     }
                     else -> {
                         okHttpClient.value.newCall(Request.Builder().url(settingsUrl).build()).executeAsync().use { response ->
@@ -396,20 +428,36 @@ class PlayerRepository(
                     }.toString()
                     val spadeRequest = "data=" + Base64.encodeToString(body.toByteArray(), Base64.NO_WRAP)
                     when {
-                        networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+                        networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                             suspendCancellableCoroutine { continuation ->
-                                httpEngine.value!!.newUrlRequestBuilder(spadeUrl, cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                                val request = httpEngine.value!!.newUrlRequestBuilder(
+                                    spadeUrl,
+                                    cronetExecutor.value,
+                                    NetworkUtils.ByteArrayUrlCallback(continuation)
+                                ).apply {
                                     addHeader("Content-Type", "application/x-www-form-urlencoded")
-                                    setUploadDataProvider(NetworkUtils.byteArrayUploadProvider(spadeRequest.toByteArray()), cronetExecutor.value)
-                                }.build().start()
+                                    setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(spadeRequest.toByteArray()), cronetExecutor.value)
+                                }.build()
+                                request.start()
+                                continuation.invokeOnCancellation {
+                                    request.cancel()
+                                }
                             }
                         }
                         networkLibrary == C.CRONET && cronetEngine.value != null -> {
-                            suspendCancellableCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
-                                cronetEngine.value!!.newUrlRequestBuilder(spadeUrl, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
+                            suspendCancellableCoroutine<NetworkUtils.CronetResponse> { continuation ->
+                                val request = cronetEngine.value!!.newUrlRequestBuilder(
+                                    spadeUrl,
+                                    NetworkUtils.ByteArrayCronetCallback(continuation),
+                                    cronetExecutor.value
+                                ).apply {
                                     addHeader("Content-Type", "application/x-www-form-urlencoded")
                                     setUploadDataProvider(UploadDataProviders.create(spadeRequest.toByteArray()), cronetExecutor.value)
-                                }.build().start()
+                                }.build()
+                                request.start()
+                                continuation.invokeOnCancellation {
+                                    request.cancel()
+                                }
                             }
                         }
                         else -> {
@@ -426,26 +474,43 @@ class PlayerRepository(
     }
 
     suspend fun loadRecentMessages(networkLibrary: String?, channelLogin: String, limit: String): RecentMessagesResponse = withContext(Dispatchers.IO) {
+        val url = "https://recent-messages.robotty.de/api/v2/recent-messages/${channelLogin}?limit=${limit}"
         when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+            networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.value!!.newUrlRequestBuilder("https://recent-messages.robotty.de/api/v2/recent-messages/${channelLogin}?limit=${limit}", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    val request = httpEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        cronetExecutor.value,
+                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                json.decodeFromString<RecentMessagesResponse>(String(response.second))
+                json.decodeFromString<RecentMessagesResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.value!!.newUrlRequestBuilder("https://recent-messages.robotty.de/api/v2/recent-messages/${channelLogin}?limit=${limit}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
+                    val request = cronetEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        cronetExecutor.value
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                json.decodeFromString<RecentMessagesResponse>(String(response.second))
+                json.decodeFromString<RecentMessagesResponse>(response.body.decodeToString())
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
-                    url("https://recent-messages.robotty.de/api/v2/recent-messages/${channelLogin}?limit=${limit}")
+                    url(url)
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
                     json.decodeFromString<RecentMessagesResponse>(response.body.string())
@@ -455,26 +520,43 @@ class PlayerRepository(
     }
 
     suspend fun loadGlobalSTVEmotesResponse(networkLibrary: String?): String = withContext(Dispatchers.IO) {
+        val url = "https://7tv.io/v3/emote-sets/global"
         when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+            networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/emote-sets/global", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    val request = httpEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        cronetExecutor.value,
+                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                String(response.second)
+                response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/emote-sets/global", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
+                    val request = cronetEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        cronetExecutor.value
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                String(response.second)
+                response.body.decodeToString()
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
-                    url("https://7tv.io/v3/emote-sets/global")
+                    url(url)
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
                     response.body.string()
@@ -489,26 +571,43 @@ class PlayerRepository(
     }
 
     suspend fun loadSTVEmotesResponse(networkLibrary: String?, channelId: String): String = withContext(Dispatchers.IO) {
+        val url = "https://7tv.io/v3/users/twitch/${channelId}"
         when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+            networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/users/twitch/${channelId}", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    val request = httpEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        cronetExecutor.value,
+                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                String(response.second)
+                response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/users/twitch/${channelId}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
+                    val request = cronetEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        cronetExecutor.value
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                String(response.second)
+                response.body.decodeToString()
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
-                    url("https://7tv.io/v3/users/twitch/${channelId}")
+                    url(url)
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
                     response.body.string()
@@ -559,26 +658,43 @@ class PlayerRepository(
     }
 
     suspend fun getSTVUser(networkLibrary: String?, userId: String): String? = withContext(Dispatchers.IO) {
+        val url = "https://7tv.io/v3/users/twitch/${userId}"
         val response = when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+            networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/users/twitch/${userId}", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    val request = httpEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        cronetExecutor.value,
+                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                String(response.second)
+                response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/users/twitch/${userId}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
+                    val request = cronetEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        cronetExecutor.value
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                String(response.second)
+                response.body.decodeToString()
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
-                    url("https://7tv.io/v3/users/twitch/${userId}")
+                    url(url)
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
                     response.body.string()
@@ -589,6 +705,7 @@ class PlayerRepository(
     }
 
     suspend fun sendSTVPresence(networkLibrary: String?, stvUserId: String, channelId: String, sessionId: String?, self: Boolean) = withContext(Dispatchers.IO) {
+        val url = "https://7tv.io/v3/users/${stvUserId}/presences"
         val body = buildJsonObject {
             put("kind", 1)
             put("passive", self)
@@ -599,27 +716,43 @@ class PlayerRepository(
             }
         }.toString()
         when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+            networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 suspendCancellableCoroutine { continuation ->
-                    httpEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/users/${stvUserId}/presences", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    val request = httpEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        cronetExecutor.value,
+                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                    ).apply {
                         addHeader("Content-Type", "application/json")
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                        setUploadDataProvider(NetworkUtils.byteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
-                    }.build().start()
+                        setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
-                suspendCancellableCoroutine<Pair<org.chromium.net.UrlResponseInfo, ByteArray>> { continuation ->
-                    cronetEngine.value!!.newUrlRequestBuilder("https://7tv.io/v3/users/${stvUserId}/presences", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
+                suspendCancellableCoroutine<NetworkUtils.CronetResponse> { continuation ->
+                    val request = cronetEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        cronetExecutor.value
+                    ).apply {
                         addHeader("Content-Type", "application/json")
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
-                    url("https://7tv.io/v3/users/${stvUserId}/presences")
+                    url(url)
                     header("Content-Type", "application/json")
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     post(body.toRequestBody())
@@ -629,26 +762,43 @@ class PlayerRepository(
     }
 
     suspend fun loadGlobalBTTVEmotesResponse(networkLibrary: String?): String = withContext(Dispatchers.IO) {
+        val url = "https://api.betterttv.net/3/cached/emotes/global"
         when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+            networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.value!!.newUrlRequestBuilder("https://api.betterttv.net/3/cached/emotes/global", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    val request = httpEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        cronetExecutor.value,
+                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                String(response.second)
+                response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.value!!.newUrlRequestBuilder("https://api.betterttv.net/3/cached/emotes/global", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
+                    val request = cronetEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        cronetExecutor.value
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                String(response.second)
+                response.body.decodeToString()
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
-                    url("https://api.betterttv.net/3/cached/emotes/global")
+                    url(url)
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
                     response.body.string()
@@ -663,26 +813,43 @@ class PlayerRepository(
     }
 
     suspend fun loadBTTVEmotesResponse(networkLibrary: String?, channelId: String): String = withContext(Dispatchers.IO) {
+        val url = "https://api.betterttv.net/3/cached/users/twitch/${channelId}"
         when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+            networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.value!!.newUrlRequestBuilder("https://api.betterttv.net/3/cached/users/twitch/${channelId}", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    val request = httpEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        cronetExecutor.value,
+                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                String(response.second)
+                response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.value!!.newUrlRequestBuilder("https://api.betterttv.net/3/cached/users/twitch/${channelId}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
+                    val request = cronetEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        cronetExecutor.value
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                String(response.second)
+                response.body.decodeToString()
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
-                    url("https://api.betterttv.net/3/cached/users/twitch/${channelId}")
+                    url(url)
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
                     response.body.string()
@@ -724,26 +891,43 @@ class PlayerRepository(
     }
 
     suspend fun loadGlobalFFZEmotesResponse(networkLibrary: String?): String = withContext(Dispatchers.IO) {
+        val url = "https://api.frankerfacez.com/v1/set/global"
         when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+            networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.value!!.newUrlRequestBuilder("https://api.frankerfacez.com/v1/set/global", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    val request = httpEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        cronetExecutor.value,
+                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                String(response.second)
+                response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.value!!.newUrlRequestBuilder("https://api.frankerfacez.com/v1/set/global", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
+                    val request = cronetEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        cronetExecutor.value
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                String(response.second)
+                response.body.decodeToString()
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
-                    url("https://api.frankerfacez.com/v1/set/global")
+                    url(url)
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
                     response.body.string()
@@ -760,26 +944,43 @@ class PlayerRepository(
     }
 
     suspend fun loadFFZEmotesResponse(networkLibrary: String?, channelId: String): String = withContext(Dispatchers.IO) {
+        val url = "https://api.frankerfacez.com/v1/room/id/${channelId}"
         when {
-            networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+            networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
-                    httpEngine.value!!.newUrlRequestBuilder("https://api.frankerfacez.com/v1/room/id/${channelId}", cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).apply {
+                    val request = httpEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        cronetExecutor.value,
+                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                String(response.second)
+                response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
-                    cronetEngine.value!!.newUrlRequestBuilder("https://api.frankerfacez.com/v1/room/id/${channelId}", NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).apply {
+                    val request = cronetEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        cronetExecutor.value
+                    ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
-                    }.build().start()
+                    }.build()
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                    }
                 }
-                String(response.second)
+                response.body.decodeToString()
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
-                    url("https://api.frankerfacez.com/v1/room/id/${channelId}")
+                    url(url)
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->
                     response.body.string()
