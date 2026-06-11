@@ -97,12 +97,12 @@ class ChatAdapter(
             messages.getOrNull(position)
         } ?: return
         val result = ChatAdapterUtils.prepareChatMessage(
-            chatMessage, holder.textView, enableTimestamps, timestampFormat, firstMsgVisibility, firstChatMsg, redeemedChatMsg, redeemedNoMsg,
-            rewardChatMsg, replyMessage, null, useRandomColors, random, useReadableColors, isLightTheme, nameDisplay, useBoldNames, showNamePaints,
-            namePaints, showSTVBadges, stvBadges, showPersonalEmotes, personalEmoteSets, stvUsers, enableOverlayEmotes, showSystemMessageEmotes,
-            loggedInUser, chatUrl, getEmoteBytes, userColors, savedColors, translateAllMessages, translateMessage, showLanguageDownloadDialog,
-            true, localTwitchEmotes, thirdPartyEmotes, globalBadges, channelBadges, cheerEmotes, savedLocalTwitchEmotes, savedLocalBadges,
-            savedLocalCheerEmotes, savedLocalEmotes
+            chatMessage, fragment.requireContext(), holder.textView, enableTimestamps, timestampFormat, firstMsgVisibility, firstChatMsg,
+            redeemedChatMsg, redeemedNoMsg, rewardChatMsg, replyMessage, null, useRandomColors, random, useReadableColors, isLightTheme,
+            nameDisplay, useBoldNames, showNamePaints, namePaints, showSTVBadges, stvBadges, showPersonalEmotes, personalEmoteSets, stvUsers,
+            enableOverlayEmotes, showSystemMessageEmotes, loggedInUser, chatUrl, getEmoteBytes, userColors, savedColors, translateAllMessages,
+            translateMessage, showLanguageDownloadDialog, true, localTwitchEmotes, thirdPartyEmotes, globalBadges, channelBadges, cheerEmotes,
+            savedLocalTwitchEmotes, savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes
         )
         holder.bind(chatMessage, result.builder)
         ChatAdapterUtils.loadImages(
