@@ -155,8 +155,8 @@ class MainViewModel(
                                     channelLogin = it.channelLogin,
                                     channelName = it.channelName,
                                     title = it.title,
-                                    createdAt = it.createdAt,
                                     thumbnailURL = it.thumbnailURL,
+                                    createdAt = it.createdAt,
                                     viewCount = it.viewCount,
                                     durationSeconds = it.duration?.let { duration -> TwitchApiHelper.getDuration(duration) },
                                 )
