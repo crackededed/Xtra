@@ -338,28 +338,34 @@ class PlayerRepository(
             when {
                 networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                     val response = suspendCancellableCoroutine { continuation ->
+                        val timeout = NetworkUtils.HttpEngineTimeout()
                         val request = httpEngine.value!!.newUrlRequestBuilder(
                             pageUrl,
                             cronetExecutor.value,
-                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                            NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                         ).build()
+                        timeout.start(request, continuation)
                         request.start()
                         continuation.invokeOnCancellation {
                             request.cancel()
+                            timeout.stop()
                         }
                     }
                     response.body.decodeToString()
                 }
                 networkLibrary == C.CRONET && cronetEngine.value != null -> {
                     val response = suspendCancellableCoroutine { continuation ->
+                        val timeout = NetworkUtils.CronetTimeout()
                         val request = cronetEngine.value!!.newUrlRequestBuilder(
                             pageUrl,
-                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                            NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                             cronetExecutor.value
                         ).build()
+                        timeout.start(request, continuation)
                         request.start()
                         continuation.invokeOnCancellation {
                             request.cancel()
+                            timeout.stop()
                         }
                     }
                     response.body.decodeToString()
@@ -378,28 +384,34 @@ class PlayerRepository(
                 when {
                     networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                         val response = suspendCancellableCoroutine { continuation ->
+                            val timeout = NetworkUtils.HttpEngineTimeout()
                             val request = httpEngine.value!!.newUrlRequestBuilder(
                                 settingsUrl,
                                 cronetExecutor.value,
-                                NetworkUtils.ByteArrayUrlCallback(continuation)
+                                NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                             ).build()
+                            timeout.start(request, continuation)
                             request.start()
                             continuation.invokeOnCancellation {
                                 request.cancel()
+                                timeout.stop()
                             }
                         }
                         response.body.decodeToString()
                     }
                     networkLibrary == C.CRONET && cronetEngine.value != null -> {
                         val response = suspendCancellableCoroutine { continuation ->
+                            val timeout = NetworkUtils.CronetTimeout()
                             val request = cronetEngine.value!!.newUrlRequestBuilder(
                                 settingsUrl,
-                                NetworkUtils.ByteArrayCronetCallback(continuation),
+                                NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                                 cronetExecutor.value
                             ).build()
+                            timeout.start(request, continuation)
                             request.start()
                             continuation.invokeOnCancellation {
                                 request.cancel()
+                                timeout.stop()
                             }
                         }
                         response.body.decodeToString()
@@ -428,33 +440,39 @@ class PlayerRepository(
                     when {
                         networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                             suspendCancellableCoroutine { continuation ->
+                                val timeout = NetworkUtils.HttpEngineTimeout()
                                 val request = httpEngine.value!!.newUrlRequestBuilder(
                                     spadeUrl,
                                     cronetExecutor.value,
-                                    NetworkUtils.ByteArrayUrlCallback(continuation)
+                                    NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                                 ).apply {
                                     addHeader("Content-Type", "application/x-www-form-urlencoded")
                                     setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(spadeRequest.toByteArray()), cronetExecutor.value)
                                 }.build()
+                                timeout.start(request, continuation)
                                 request.start()
                                 continuation.invokeOnCancellation {
                                     request.cancel()
+                                    timeout.stop()
                                 }
                             }
                         }
                         networkLibrary == C.CRONET && cronetEngine.value != null -> {
                             suspendCancellableCoroutine<NetworkUtils.CronetResponse> { continuation ->
+                                val timeout = NetworkUtils.CronetTimeout()
                                 val request = cronetEngine.value!!.newUrlRequestBuilder(
                                     spadeUrl,
-                                    NetworkUtils.ByteArrayCronetCallback(continuation),
+                                    NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                                     cronetExecutor.value
                                 ).apply {
                                     addHeader("Content-Type", "application/x-www-form-urlencoded")
                                     setUploadDataProvider(UploadDataProviders.create(spadeRequest.toByteArray()), cronetExecutor.value)
                                 }.build()
+                                timeout.start(request, continuation)
                                 request.start()
                                 continuation.invokeOnCancellation {
                                     request.cancel()
+                                    timeout.stop()
                                 }
                             }
                         }
@@ -476,32 +494,38 @@ class PlayerRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<RecentMessagesResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<RecentMessagesResponse>(response.body.decodeToString())
@@ -522,32 +546,38 @@ class PlayerRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
@@ -573,32 +603,38 @@ class PlayerRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
@@ -660,32 +696,38 @@ class PlayerRepository(
         val response = when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
@@ -716,35 +758,41 @@ class PlayerRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         addHeader("Content-Type", "application/json")
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                         setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 suspendCancellableCoroutine<NetworkUtils.CronetResponse> { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         addHeader("Content-Type", "application/json")
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
             }
@@ -764,32 +812,38 @@ class PlayerRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
@@ -815,32 +869,38 @@ class PlayerRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
@@ -893,32 +953,38 @@ class PlayerRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
@@ -946,32 +1012,38 @@ class PlayerRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 response.body.decodeToString()

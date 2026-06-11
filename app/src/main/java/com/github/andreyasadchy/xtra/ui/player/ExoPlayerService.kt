@@ -1127,14 +1127,17 @@ class ExoPlayerService : BasePlaybackService() {
             val playlist = when {
                 networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                     val response = suspendCancellableCoroutine { continuation ->
+                        val timeout = NetworkUtils.HttpEngineTimeout()
                         val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
                             url,
                             xtraModule.cronetExecutor.value,
-                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                            NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                         ).build()
+                        timeout.start(request, continuation)
                         request.start()
                         continuation.invokeOnCancellation {
                             request.cancel()
+                            timeout.stop()
                         }
                     }
                     response.body.inputStream().use {
@@ -1143,14 +1146,17 @@ class ExoPlayerService : BasePlaybackService() {
                 }
                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                     val response = suspendCancellableCoroutine { continuation ->
+                        val timeout = NetworkUtils.CronetTimeout()
                         val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
                             url,
-                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                            NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                             xtraModule.cronetExecutor.value
                         ).build()
+                        timeout.start(request, continuation)
                         request.start()
                         continuation.invokeOnCancellation {
                             request.cancel()
+                            timeout.stop()
                         }
                     }
                     response.body.inputStream().use {
@@ -1341,14 +1347,17 @@ class ExoPlayerService : BasePlaybackService() {
                             when {
                                 networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                     val response = suspendCancellableCoroutine { continuation ->
+                                        val timeout = NetworkUtils.HttpEngineTimeout()
                                         val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
                                             url,
                                             xtraModule.cronetExecutor.value,
-                                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                                            NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                                         ).build()
+                                        timeout.start(request, continuation)
                                         request.start()
                                         continuation.invokeOnCancellation {
                                             request.cancel()
+                                            timeout.stop()
                                         }
                                     }
                                     if (response.info.httpStatusCode in 200..299) {
@@ -1357,14 +1366,17 @@ class ExoPlayerService : BasePlaybackService() {
                                 }
                                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
+                                        val timeout = NetworkUtils.CronetTimeout()
                                         val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
                                             url,
-                                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                                            NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                                             xtraModule.cronetExecutor.value
                                         ).build()
+                                        timeout.start(request, continuation)
                                         request.start()
                                         continuation.invokeOnCancellation {
                                             request.cancel()
+                                            timeout.stop()
                                         }
                                     }
                                     if (response.info.httpStatusCode in 200..299) {
@@ -1435,14 +1447,17 @@ class ExoPlayerService : BasePlaybackService() {
                             when {
                                 networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
                                     val response = suspendCancellableCoroutine { continuation ->
+                                        val timeout = NetworkUtils.HttpEngineTimeout()
                                         val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
                                             url,
                                             xtraModule.cronetExecutor.value,
-                                            NetworkUtils.ByteArrayUrlCallback(continuation)
+                                            NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                                         ).build()
+                                        timeout.start(request, continuation)
                                         request.start()
                                         continuation.invokeOnCancellation {
                                             request.cancel()
+                                            timeout.stop()
                                         }
                                     }
                                     if (response.info.httpStatusCode in 200..299) {
@@ -1451,14 +1466,17 @@ class ExoPlayerService : BasePlaybackService() {
                                 }
                                 networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                     val response = suspendCancellableCoroutine { continuation ->
+                                        val timeout = NetworkUtils.CronetTimeout()
                                         val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
                                             url,
-                                            NetworkUtils.ByteArrayCronetCallback(continuation),
+                                            NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                                             xtraModule.cronetExecutor.value
                                         ).build()
+                                        timeout.start(request, continuation)
                                         request.start()
                                         continuation.invokeOnCancellation {
                                             request.cancel()
+                                            timeout.stop()
                                         }
                                     }
                                     if (response.info.httpStatusCode in 200..299) {
