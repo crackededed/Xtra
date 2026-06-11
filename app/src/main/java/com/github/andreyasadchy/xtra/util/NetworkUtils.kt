@@ -20,7 +20,6 @@ import okio.ForwardingSource
 import okio.buffer
 import org.chromium.net.CronetException
 import java.io.ByteArrayOutputStream
-import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
 import java.nio.channels.WritableByteChannel
@@ -37,126 +36,134 @@ object NetworkUtils {
         fun update(bytesRead: Int)
     }
 
-    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
-    fun byteArrayUrlCallback(continuation: Continuation<Pair<UrlResponseInfo, ByteArray>>, progressListener: ProgressListener? = null): UrlRequest.Callback {
-        return object : UrlRequest.Callback {
-            private lateinit var mResponseBodyStream: ByteArrayOutputStream
-            private lateinit var mResponseBodyChannel: WritableByteChannel
-
-            override fun onRedirectReceived(request: UrlRequest, info: UrlResponseInfo, newLocationUrl: String) {
-                request.followRedirect()
-            }
-
-            override fun onResponseStarted(request: UrlRequest, info: UrlResponseInfo) {
-                val bodyLength = info.headers.asMap[CONTENT_LENGTH_HEADER_NAME]?.takeIf { it.size == 1 }?.getOrNull(0)?.toLongOrNull() ?: -1
-                require(bodyLength <= MAX_ARRAY_SIZE) { "The body is too large and wouldn't fit in a byte array!" }
-                mResponseBodyStream = if (bodyLength >= 0) {
-                    ByteArrayOutputStream(bodyLength.toInt())
-                } else {
-                    ByteArrayOutputStream()
-                }
-                mResponseBodyChannel = Channels.newChannel(mResponseBodyStream)
-                request.read(ByteBuffer.allocateDirect(BYTE_BUFFER_CAPACITY))
-            }
-
-            override fun onReadCompleted(request: UrlRequest, info: UrlResponseInfo, byteBuffer: ByteBuffer) {
-                byteBuffer.flip()
-                mResponseBodyChannel.write(byteBuffer)
-                byteBuffer.clear()
-                progressListener?.update(mResponseBodyStream.size())
-                request.read(byteBuffer)
-            }
-
-            override fun onSucceeded(request: UrlRequest, info: UrlResponseInfo) {
-                continuation.resume(Pair(info, mResponseBodyStream.toByteArray()))
-            }
-
-            override fun onFailed(request: UrlRequest, info: UrlResponseInfo?, error: HttpException) {
-                continuation.resumeWithException(error)
-            }
-
-            override fun onCanceled(request: UrlRequest, info: UrlResponseInfo?) {
-                continuation.resumeWithException(IOException("The request was canceled!"))
-            }
-        }
-    }
+    class HttpEngineResponse(
+        val info: UrlResponseInfo,
+        val body: ByteArray,
+    )
 
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
-    fun byteArrayUploadProvider(data: ByteArray, offset: Int = 0, length: Int = data.size): UploadDataProvider {
-        return object : UploadDataProvider() {
-            private val mUploadBuffer = ByteBuffer.wrap(data, offset, length).slice()
+    class ByteArrayUrlCallback(
+        val continuation: Continuation<HttpEngineResponse>,
+        val progressListener: ProgressListener? = null,
+    ): UrlRequest.Callback {
+        private lateinit var mResponseBodyStream: ByteArrayOutputStream
+        private lateinit var mResponseBodyChannel: WritableByteChannel
 
-            override fun getLength(): Long {
-                return mUploadBuffer.limit().toLong()
-            }
+        override fun onRedirectReceived(request: UrlRequest, info: UrlResponseInfo, newLocationUrl: String) {
+            request.followRedirect()
+        }
 
-            override fun read(uploadDataSink: UploadDataSink, byteBuffer: ByteBuffer) {
-                check(byteBuffer.hasRemaining())
-                if (byteBuffer.remaining() >= mUploadBuffer.remaining()) {
-                    byteBuffer.put(mUploadBuffer)
-                } else {
-                    val oldLimit = mUploadBuffer.limit()
-                    mUploadBuffer.limit(mUploadBuffer.position() + byteBuffer.remaining())
-                    byteBuffer.put(mUploadBuffer)
-                    mUploadBuffer.limit(oldLimit)
-                }
-                uploadDataSink.onReadSucceeded(false)
+        override fun onResponseStarted(request: UrlRequest, info: UrlResponseInfo) {
+            val bodyLength = info.headers.asMap[CONTENT_LENGTH_HEADER_NAME]?.takeIf { it.size == 1 }?.getOrNull(0)?.toLongOrNull() ?: -1
+            require(bodyLength <= MAX_ARRAY_SIZE) { "The body is too large and wouldn't fit in a byte array!" }
+            mResponseBodyStream = if (bodyLength >= 0) {
+                ByteArrayOutputStream(bodyLength.toInt())
+            } else {
+                ByteArrayOutputStream()
             }
+            mResponseBodyChannel = Channels.newChannel(mResponseBodyStream)
+            request.read(ByteBuffer.allocateDirect(BYTE_BUFFER_CAPACITY))
+        }
 
-            override fun rewind(uploadDataSink: UploadDataSink) {
-                mUploadBuffer.position(0)
-                uploadDataSink.onRewindSucceeded()
-            }
+        override fun onReadCompleted(request: UrlRequest, info: UrlResponseInfo, byteBuffer: ByteBuffer) {
+            byteBuffer.flip()
+            mResponseBodyChannel.write(byteBuffer)
+            byteBuffer.clear()
+            progressListener?.update(mResponseBodyStream.size())
+            request.read(byteBuffer)
+        }
+
+        override fun onSucceeded(request: UrlRequest, info: UrlResponseInfo) {
+            continuation.resume(HttpEngineResponse(info, mResponseBodyStream.toByteArray()))
+        }
+
+        override fun onFailed(request: UrlRequest, info: UrlResponseInfo?, error: HttpException) {
+            continuation.resumeWithException(error)
+        }
+
+        override fun onCanceled(request: UrlRequest, info: UrlResponseInfo?) {
         }
     }
 
-    fun byteArrayCronetUrlCallback(continuation: Continuation<Pair<org.chromium.net.UrlResponseInfo, ByteArray>>, progressListener: ProgressListener? = null): org.chromium.net.UrlRequest.Callback {
-        return object : org.chromium.net.UrlRequest.Callback() {
-            private lateinit var mResponseBodyStream: ByteArrayOutputStream
-            private lateinit var mResponseBodyChannel: WritableByteChannel
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    class ByteArrayUploadProvider(data: ByteArray, offset: Int = 0, length: Int = data.size): UploadDataProvider() {
+        private val mUploadBuffer = ByteBuffer.wrap(data, offset, length).slice()
 
-            override fun onRedirectReceived(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo, newLocationUrl: String) {
-                request.followRedirect()
-            }
+        override fun getLength(): Long {
+            return mUploadBuffer.limit().toLong()
+        }
 
-            override fun onResponseStarted(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo) {
-                val bodyLength = info.allHeaders[CONTENT_LENGTH_HEADER_NAME]?.takeIf { it.size == 1 }?.getOrNull(0)?.toLongOrNull() ?: -1
-                require(bodyLength <= MAX_ARRAY_SIZE) { "The body is too large and wouldn't fit in a byte array!" }
-                mResponseBodyStream = if (bodyLength >= 0) {
-                    ByteArrayOutputStream(bodyLength.toInt())
-                } else {
-                    ByteArrayOutputStream()
-                }
-                mResponseBodyChannel = Channels.newChannel(mResponseBodyStream)
-                request.read(ByteBuffer.allocateDirect(BYTE_BUFFER_CAPACITY))
+        override fun read(uploadDataSink: UploadDataSink, byteBuffer: ByteBuffer) {
+            check(byteBuffer.hasRemaining())
+            if (byteBuffer.remaining() >= mUploadBuffer.remaining()) {
+                byteBuffer.put(mUploadBuffer)
+            } else {
+                val oldLimit = mUploadBuffer.limit()
+                mUploadBuffer.limit(mUploadBuffer.position() + byteBuffer.remaining())
+                byteBuffer.put(mUploadBuffer)
+                mUploadBuffer.limit(oldLimit)
             }
+            uploadDataSink.onReadSucceeded(false)
+        }
 
-            override fun onReadCompleted(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo, byteBuffer: ByteBuffer) {
-                byteBuffer.flip()
-                mResponseBodyChannel.write(byteBuffer)
-                byteBuffer.clear()
-                progressListener?.update(mResponseBodyStream.size())
-                request.read(byteBuffer)
-            }
-
-            override fun onSucceeded(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo) {
-                continuation.resume(Pair(info, mResponseBodyStream.toByteArray()))
-            }
-
-            override fun onFailed(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo, error: CronetException) {
-                continuation.resumeWithException(error)
-            }
-
-            override fun onCanceled(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo) {
-                continuation.resumeWithException(IOException("The request was canceled!"))
-            }
+        override fun rewind(uploadDataSink: UploadDataSink) {
+            mUploadBuffer.position(0)
+            uploadDataSink.onRewindSucceeded()
         }
     }
 
-    fun progressInterceptor(progressListener: ProgressListener?): Interceptor {
-        return Interceptor { chain ->
+    class CronetResponse(
+        val info: org.chromium.net.UrlResponseInfo,
+        val body: ByteArray,
+    )
+
+    class ByteArrayCronetCallback(
+        val continuation: Continuation<CronetResponse>,
+        val progressListener: ProgressListener? = null,
+    ): org.chromium.net.UrlRequest.Callback() {
+        private lateinit var mResponseBodyStream: ByteArrayOutputStream
+        private lateinit var mResponseBodyChannel: WritableByteChannel
+
+        override fun onRedirectReceived(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo, newLocationUrl: String) {
+            request.followRedirect()
+        }
+
+        override fun onResponseStarted(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo) {
+            val bodyLength = info.allHeaders[CONTENT_LENGTH_HEADER_NAME]?.takeIf { it.size == 1 }?.getOrNull(0)?.toLongOrNull() ?: -1
+            require(bodyLength <= MAX_ARRAY_SIZE) { "The body is too large and wouldn't fit in a byte array!" }
+            mResponseBodyStream = if (bodyLength >= 0) {
+                ByteArrayOutputStream(bodyLength.toInt())
+            } else {
+                ByteArrayOutputStream()
+            }
+            mResponseBodyChannel = Channels.newChannel(mResponseBodyStream)
+            request.read(ByteBuffer.allocateDirect(BYTE_BUFFER_CAPACITY))
+        }
+
+        override fun onReadCompleted(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo, byteBuffer: ByteBuffer) {
+            byteBuffer.flip()
+            mResponseBodyChannel.write(byteBuffer)
+            byteBuffer.clear()
+            progressListener?.update(mResponseBodyStream.size())
+            request.read(byteBuffer)
+        }
+
+        override fun onSucceeded(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo) {
+            continuation.resume(CronetResponse(info, mResponseBodyStream.toByteArray()))
+        }
+
+        override fun onFailed(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo, error: CronetException) {
+            continuation.resumeWithException(error)
+        }
+
+        override fun onCanceled(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo) {
+        }
+    }
+
+    class ProgressInterceptor(val progressListener: ProgressListener?): Interceptor {
+        override fun intercept(chain: Interceptor.Chain): Response {
             val response = chain.proceed(chain.request())
-            response.newBuilder().apply {
+            return response.newBuilder().apply {
                 body(
                     object : ResponseBody() {
                         private var bufferedSource: BufferedSource? = null

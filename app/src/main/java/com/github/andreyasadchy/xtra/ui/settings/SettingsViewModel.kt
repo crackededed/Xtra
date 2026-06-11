@@ -1,13 +1,12 @@
 package com.github.andreyasadchy.xtra.ui.settings
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInstaller
 import android.net.Uri
 import android.net.http.HttpEngine
-import android.os.Build
-import android.os.ext.SdkExtensions
 import android.provider.DocumentsContract
 import android.util.JsonReader
 import androidx.appcompat.app.AppCompatDelegate
@@ -274,17 +273,33 @@ class SettingsViewModel(
             updateUrl.emit(
                 try {
                     val response = when {
-                        networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+                        networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                             val response = suspendCancellableCoroutine { continuation ->
-                                httpEngine.value!!.newUrlRequestBuilder(url, cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation)).build().start()
+                                val request = httpEngine.value!!.newUrlRequestBuilder(
+                                    url,
+                                    cronetExecutor.value,
+                                    NetworkUtils.ByteArrayUrlCallback(continuation)
+                                ).build()
+                                request.start()
+                                continuation.invokeOnCancellation {
+                                    request.cancel()
+                                }
                             }
-                            json.decodeFromString<JsonObject>(String(response.second))
+                            json.decodeFromString<JsonObject>(response.body.decodeToString())
                         }
                         networkLibrary == C.CRONET && cronetEngine.value != null -> {
                             val response = suspendCancellableCoroutine { continuation ->
-                                cronetEngine.value!!.newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation), cronetExecutor.value).build().start()
+                                val request = cronetEngine.value!!.newUrlRequestBuilder(
+                                    url,
+                                    NetworkUtils.ByteArrayCronetCallback(continuation),
+                                    cronetExecutor.value
+                                ).build()
+                                request.start()
+                                continuation.invokeOnCancellation {
+                                    request.cancel()
+                                }
                             }
-                            json.decodeFromString<JsonObject>(String(response.second))
+                            json.decodeFromString<JsonObject>(response.body.decodeToString())
                         }
                         else -> {
                             okHttpClient.value.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
@@ -320,25 +335,41 @@ class SettingsViewModel(
                     }
                 }
                 val response = when {
-                    networkLibrary == C.HTTP_ENGINE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine.value != null -> {
+                    networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                         val response = suspendCancellableCoroutine { continuation ->
-                            httpEngine.value!!.newUrlRequestBuilder(url, cronetExecutor.value, NetworkUtils.byteArrayUrlCallback(continuation, progressListener)).build().start()
+                            val request = httpEngine.value!!.newUrlRequestBuilder(
+                                url,
+                                cronetExecutor.value,
+                                NetworkUtils.ByteArrayUrlCallback(continuation, progressListener)
+                            ).build()
+                            request.start()
+                            continuation.invokeOnCancellation {
+                                request.cancel()
+                            }
                         }
-                        if (response.first.httpStatusCode in 200..299) {
-                            response.second
+                        if (response.info.httpStatusCode in 200..299) {
+                            response.body
                         } else null
                     }
                     networkLibrary == C.CRONET && cronetEngine.value != null -> {
                         val response = suspendCancellableCoroutine { continuation ->
-                            cronetEngine.value!!.newUrlRequestBuilder(url, NetworkUtils.byteArrayCronetUrlCallback(continuation, progressListener), cronetExecutor.value).build().start()
+                            val request = cronetEngine.value!!.newUrlRequestBuilder(
+                                url,
+                                NetworkUtils.ByteArrayCronetCallback(continuation, progressListener),
+                                cronetExecutor.value
+                            ).build()
+                            request.start()
+                            continuation.invokeOnCancellation {
+                                request.cancel()
+                            }
                         }
-                        if (response.first.httpStatusCode in 200..299) {
-                            response.second
+                        if (response.info.httpStatusCode in 200..299) {
+                            response.body
                         } else null
                     }
                     else -> {
                         okHttpClient.value.newBuilder().apply {
-                            addNetworkInterceptor(NetworkUtils.progressInterceptor(progressListener))
+                            addNetworkInterceptor(NetworkUtils.ProgressInterceptor(progressListener))
                         }.build().newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
                             if (response.isSuccessful) {
                                 response.body.bytes()
