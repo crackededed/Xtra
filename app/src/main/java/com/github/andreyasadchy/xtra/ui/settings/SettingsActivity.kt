@@ -381,6 +381,25 @@ class SettingsActivity : AppCompatActivity() {
                 findNavController().navigate(SettingsNavGraphDirections.actionGlobalApiTokenSettingsFragment())
                 true
             }
+            val httpEngine = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7
+            val cronet = CronetProvider.getAllProviders(requireContext()).any { it.isEnabled }
+            if (!httpEngine || !cronet) {
+                findPreference<ListPreference>(C.NETWORK_LIBRARY)?.apply {
+                    when {
+                        !httpEngine && !cronet -> {
+                            isVisible = false
+                        }
+                        !cronet -> {
+                            setEntries(R.array.networkLibraryEntriesNoCronet)
+                            setEntryValues(R.array.networkLibraryEntriesNoCronet)
+                        }
+                        else -> {
+                            setEntries(R.array.networkLibraryEntriesNoHttpEngine)
+                            setEntryValues(R.array.networkLibraryEntriesNoHttpEngine)
+                        }
+                    }
+                }
+            }
             findPreference<Preference>("download_settings")?.setOnPreferenceClickListener {
                 requireActivity().findViewById<AppBarLayout>(R.id.appBar)?.setExpanded(true)
                 findNavController().navigate(SettingsNavGraphDirections.actionGlobalDownloadSettingsFragment())
@@ -1206,25 +1225,6 @@ class SettingsActivity : AppCompatActivity() {
             findPreference<Preference>("get_integrity_token")?.setOnPreferenceClickListener {
                 IntegrityDialog.newInstance(null).show(childFragmentManager, null)
                 true
-            }
-            val httpEngine = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7
-            val cronet = CronetProvider.getAllProviders(requireContext()).any { it.isEnabled }
-            if (!httpEngine || !cronet) {
-                findPreference<ListPreference>(C.NETWORK_LIBRARY)?.apply {
-                    when {
-                        !httpEngine && !cronet -> {
-                            isVisible = false
-                        }
-                        !cronet -> {
-                            setEntries(R.array.networkLibraryEntriesNoCronet)
-                            setEntryValues(R.array.networkLibraryEntriesNoCronet)
-                        }
-                        else -> {
-                            setEntries(R.array.networkLibraryEntriesNoHttpEngine)
-                            setEntryValues(R.array.networkLibraryEntriesNoHttpEngine)
-                        }
-                    }
-                }
             }
         }
 

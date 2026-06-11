@@ -54,32 +54,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<GamesResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<GamesResponse>(response.body.decodeToString())
@@ -103,32 +109,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<GamesResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<GamesResponse>(response.body.decodeToString())
@@ -156,32 +168,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<StreamsResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<StreamsResponse>(response.body.decodeToString())
@@ -206,32 +224,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<StreamsResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<StreamsResponse>(response.body.decodeToString())
@@ -260,32 +284,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<ClipsResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<ClipsResponse>(response.body.decodeToString())
@@ -316,32 +346,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<VideosResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<VideosResponse>(response.body.decodeToString())
@@ -365,32 +401,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<UsersResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<UsersResponse>(response.body.decodeToString())
@@ -415,32 +457,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<GamesResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<GamesResponse>(response.body.decodeToString())
@@ -466,32 +514,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<ChannelSearchResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<ChannelSearchResponse>(response.body.decodeToString())
@@ -517,32 +571,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<FollowsResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<FollowsResponse>(response.body.decodeToString())
@@ -568,32 +628,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<FollowsResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<FollowsResponse>(response.body.decodeToString())
@@ -618,32 +684,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<UserEmotesResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<UserEmotesResponse>(response.body.decodeToString())
@@ -666,32 +738,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<EmoteSetsResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<EmoteSetsResponse>(response.body.decodeToString())
@@ -712,32 +790,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<BadgesResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<BadgesResponse>(response.body.decodeToString())
@@ -760,32 +844,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<BadgesResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<BadgesResponse>(response.body.decodeToString())
@@ -808,32 +898,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<CheerEmotesResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<CheerEmotesResponse>(response.body.decodeToString())
@@ -859,32 +955,38 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<ChatUsersResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 json.decodeFromString<ChatUsersResponse>(response.body.decodeToString())
@@ -917,18 +1019,21 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -939,18 +1044,21 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -987,18 +1095,21 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1009,18 +1120,21 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1058,18 +1172,21 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1080,18 +1197,21 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1132,18 +1252,21 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1154,18 +1277,21 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1200,17 +1326,20 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("DELETE")
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1221,17 +1350,20 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("DELETE")
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1265,17 +1397,20 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("DELETE")
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1286,17 +1421,20 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("DELETE")
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1328,16 +1466,19 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1348,16 +1489,19 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1389,17 +1533,20 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("PUT")
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1410,17 +1557,20 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("PUT")
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1454,18 +1604,21 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1476,18 +1629,21 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1530,19 +1686,22 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                         setHttpMethod("PATCH")
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1553,9 +1712,10 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
@@ -1563,9 +1723,11 @@ class HelixRepository(
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                         setHttpMethod("PATCH")
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1600,18 +1762,21 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1622,18 +1787,21 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1667,16 +1835,19 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1687,16 +1858,19 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1728,17 +1902,20 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("DELETE")
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1749,17 +1926,20 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("DELETE")
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1792,16 +1972,19 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1812,16 +1995,19 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1852,17 +2038,20 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("DELETE")
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1873,17 +2062,20 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("DELETE")
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1916,16 +2108,19 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1936,16 +2131,19 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1977,17 +2175,20 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("DELETE")
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -1998,17 +2199,20 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         setHttpMethod("DELETE")
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -2044,18 +2248,21 @@ class HelixRepository(
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
                         url,
                         cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation)
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
@@ -2066,18 +2273,21 @@ class HelixRepository(
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
                         url,
-                        NetworkUtils.ByteArrayCronetCallback(continuation),
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                         cronetExecutor.value
                     ).apply {
                         headers.forEach { addHeader(it.key, it.value) }
                         addHeader("Content-Type", "application/json")
                         setUploadDataProvider(UploadDataProviders.create(body.toByteArray()), cronetExecutor.value)
                     }.build()
+                    timeout.start(request, continuation)
                     request.start()
                     continuation.invokeOnCancellation {
                         request.cancel()
+                        timeout.stop()
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
