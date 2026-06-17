@@ -152,6 +152,14 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                     dismiss()
                 }
             }
+            if (requireContext().prefs().getBoolean(C.PLAYER_MENU_SHARE, true)) {
+                menuShare.visibility = View.VISIBLE
+                menuShare.setOnClickListener {
+                    (parentFragment as? Media3PlayerFragment)?.share() ?:
+                    (parentFragment as? PlayerFragment)?.share()
+                    dismiss()
+                }
+            }
             if (type != BasePlaybackService.CLIP && requireContext().prefs().getBoolean(C.PLAYER_MENU_SLEEP, true)) {
                 menuTimer.visibility = View.VISIBLE
                 menuTimer.setOnClickListener {
