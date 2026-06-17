@@ -590,8 +590,8 @@
     <string name="remaining_time">残り %s</string>
     <string name="show_predictions">予測を表示</string>
     <string name="prediction_title">現在の予測： %s</string>
-    <string name="prediction_locked">固定済み</string>
-    <string name="prediction_refunded">返金済み</string>
+    <string name="prediction_locked">固定</string>
+    <string name="prediction_refunded">返金</string>
     <string name="poll_choice">%1$d%% (%2$s): %3$s</string>
     <string name="poll_choice_winner">🏆%1$d%% (%2$s): %3$s</string>
     <string name="prediction_outcome">%1$d%% (%2$s💎, %3$s👥): %4$s</string>
