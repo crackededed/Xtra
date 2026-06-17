@@ -148,15 +148,13 @@ object ChatUtils {
         )
     }
 
-    fun parseNotice(context: Context, message: String): ChatMessage {
+    fun parseNotice(message: String): ChatMessage {
         val parts = message.substring(1).split(" ".toRegex(), 2)
-        val prefixes = splitAndMakeMap(parts[0], ";", "=")
         val messageInfo = parts[1]
-        val msgId = prefixes["msg-id"]
         val text = messageInfo.substring(messageInfo.indexOf(":", messageInfo.indexOf(":") + 1) + 1)
         return ChatMessage(
             type = ChatMessage.NOTICE_MESSAGE,
-            systemMsg = TwitchApiHelper.getNoticeString(context, msgId, text),
+            systemMsg = text,
             fullMsg = message
         )
     }
