@@ -852,7 +852,7 @@ class ChatViewModel(
                                 RecentMessageUtils.parseClearChat(applicationContext, message)
                             } else null
                         }
-                        message.contains("NOTICE") -> RecentMessageUtils.parseNotice(applicationContext, message)
+                        message.contains("NOTICE") -> RecentMessageUtils.parseNotice(message)
                         else -> null
                     }?.let {
                         if (it.reply?.message != null) {
@@ -1213,7 +1213,7 @@ class ChatViewModel(
 
         override suspend fun onNotice(message: String) {
             if (!isLoggedIn) {
-                onMessage(ChatUtils.parseNotice(applicationContext, message))
+                onMessage(ChatUtils.parseNotice(message))
             }
         }
 
@@ -1240,7 +1240,7 @@ class ChatViewModel(
         }
 
         override suspend fun onNotice(message: String) {
-            onMessage(ChatUtils.parseNotice(applicationContext, message))
+            onMessage(ChatUtils.parseNotice(message))
         }
 
         override suspend fun onUserState(message: String) {
@@ -2711,7 +2711,7 @@ class ChatViewModel(
                                                                     liveMessages.add(getClearMessage(pair.first, deletedMessage, nameDisplay))
                                                                 }
                                                                 message.contains("CLEARCHAT") -> liveMessages.add(ChatUtils.parseClearChat(applicationContext, message))
-                                                                message.contains("NOTICE") -> liveMessages.add(ChatUtils.parseNotice(applicationContext, message))
+                                                                message.contains("NOTICE") -> liveMessages.add(ChatUtils.parseNotice(message))
                                                             }
                                                             if (reader.peek() != JsonToken.END_ARRAY) {
                                                                 position += 1
