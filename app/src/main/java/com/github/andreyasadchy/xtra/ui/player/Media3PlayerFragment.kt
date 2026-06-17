@@ -43,6 +43,7 @@ import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.content.res.use
+import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -1612,6 +1613,74 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
             gameSlug = requireArguments().getString(KEY_GAME_SLUG),
             gameName = requireArguments().getString(KEY_GAME_NAME),
         )
+    }
+
+    fun share() {
+        when (videoType) {
+            STREAM -> {
+                requireArguments().getString(KEY_CHANNEL_LOGIN)?.let { channelLogin ->
+                    startActivity(Intent.createChooser(Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, "https://twitch.tv/${channelLogin}")
+                        requireArguments().getString(KEY_CHANNEL_NAME)?.let {
+                            putExtra(Intent.EXTRA_TITLE, it)
+                        }
+                        type = "text/plain"
+                    }, null))
+                }
+            }
+            VIDEO -> {
+                requireArguments().getString(KEY_VIDEO_ID)?.let { videoId ->
+                    val position = getCurrentPosition()?.let { position ->
+                        val totalSeconds = position / 1000
+                        val hours = (totalSeconds / 3600).let { if (it < 10) "0$it" else "$it" }
+                        val minutes = ((totalSeconds % 3600) / 60).let { if (it < 10) "0$it" else "$it" }
+                        val seconds = (totalSeconds % 60).let { if (it < 10) "0$it" else "$it" }
+                        "?t=${hours}h${minutes}m${seconds}s"
+                    } ?: ""
+                    startActivity(Intent.createChooser(Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, "https://twitch.tv/videos/${videoId}${position}")
+                        requireArguments().getString(KEY_TITLE)?.let {
+                            putExtra(Intent.EXTRA_TITLE, it)
+                        }
+                        type = "text/plain"
+                    }, null))
+                }
+            }
+            CLIP -> {
+                requireArguments().getString(KEY_CLIP_ID)?.let { clipId ->
+                    requireArguments().getString(KEY_CHANNEL_LOGIN)?.let { channelLogin ->
+                        startActivity(Intent.createChooser(Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_TEXT, "https://twitch.tv/${channelLogin}/clip/${clipId}")
+                            requireArguments().getString(KEY_TITLE)?.let {
+                                putExtra(Intent.EXTRA_TITLE, it)
+                            }
+                            type = "text/plain"
+                        }, null))
+                    }
+                }
+            }
+            OFFLINE_VIDEO -> {
+                viewModel.quality?.url?.let { videoUrl ->
+                    val uri = if (videoUrl.endsWith(".m3u8")) {
+                        videoUrl.substringBefore("%2F").toUri()
+                    } else {
+                        videoUrl.toUri()
+                    }
+                    startActivity(Intent.createChooser(Intent().apply {
+                        action = Intent.ACTION_SEND
+                        setDataAndType(uri, requireContext().contentResolver.getType(uri))
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+                        requireArguments().getString(KEY_TITLE)?.let {
+                            putExtra(Intent.EXTRA_TITLE, it)
+                        }
+                    }, null))
+                }
+            }
+        }
     }
 
     protected fun setDefaultQuality() {
