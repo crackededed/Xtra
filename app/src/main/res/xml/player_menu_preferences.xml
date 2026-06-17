@@ -45,6 +45,13 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
+        android:key="player_menu_share"
+        android:title="@string/share"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
         android:key="player_menu_sleep"
         android:title="@string/sleep_timer"
         app:iconSpaceReserved="false"
