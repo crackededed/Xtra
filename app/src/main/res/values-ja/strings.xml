@@ -590,8 +590,8 @@
     <string name="remaining_time">残り %s</string>
     <string name="show_predictions">予測を表示</string>
     <string name="prediction_title">現在の予測： %s</string>
-    <string name="prediction_locked">Locked</string>
-    <string name="prediction_refunded">Refunded</string>
+    <string name="prediction_locked">固定済み</string>
+    <string name="prediction_refunded">返金済み</string>
     <string name="poll_choice">%1$d%% (%2$s): %3$s</string>
     <string name="poll_choice_winner">🏆%1$d%% (%2$s): %3$s</string>
     <string name="prediction_outcome">%1$d%% (%2$s💎, %3$s👥): %4$s</string>
@@ -655,7 +655,7 @@
     <string name="translate_message">メッセージを翻訳</string>
     <string name="translated_message">Translated from %1$s: %2$s</string>
     <string name="translate_failed">%s からの翻訳に失敗しました。 ここをタップして言語モデルをダウンロードしてください</string>
-    <string name="translate_failed_id">Failed to identify language</string>
+    <string name="translate_failed_id">言語を識別できませんでした</string>
     <string name="download_language_model_message">%s の言語モデルをダウンロードしますか？</string>
     <string name="translate_from_selected">選択した言語から翻訳</string>
     <string name="translate_all_messages">このチャンネルのすべてのメッセージを翻訳</string>
@@ -667,7 +667,7 @@
     <string name="invalid_directory">無効なディレクトリ</string>
     <string name="suggestions">提案</string>
     <string name="languages">言語</string>
-    <string name="recent">Recently started</string>
+    <string name="recent">最近開始</string>
     <string name="filters">フィルター</string>
     <string name="sort_by">Sort by: %1$s</string>
     <string name="following_tabs">フォロー中のタブ</string>
@@ -711,7 +711,7 @@
     <string name="downloading_update_progress">アップデートをダウンロード中… %1$s / %2$s</string>
     <string name="downloading_update">アップデートをダウンロード中…</string>
     <string name="concurrent_downloads">同時ダウンロード</string>
-    <string name="loaded_cached_stv_emotes">Loaded cached 7TV emotes</string>
-    <string name="loaded_cached_bttv_emotes">Loaded cached BTTV emotes</string>
-    <string name="loaded_cached_ffz_emotes">Loaded cached FFZ emotes</string>
+    <string name="loaded_cached_stv_emotes">キャッシュされた7TVエモートをロード</string>
+    <string name="loaded_cached_bttv_emotes">キャッシュされたBTTVエモートをロード</string>
+    <string name="loaded_cached_ffz_emotes">キャッシュされたFFZエモートをロード</string>
 </resources>
