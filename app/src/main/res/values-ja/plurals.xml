@@ -16,15 +16,15 @@
         <item quantity="other">%s 人の配信者</item>
     </plurals>
     <plurals name="languages">
-        <item quantity="other">Languages: %s</item>
+        <item quantity="other">言語: %s</item>
     </plurals>
     <plurals name="tags">
-        <item quantity="other">Tags: %s</item>
+        <item quantity="other">タグ: %s</item>
     </plurals>
     <plurals name="followers">
         <item quantity="other">%s フォロワー</item>
     </plurals>
     <plurals name="members">
-        <item quantity="other">%s members</item>
+        <item quantity="other">%s メンバー</item>
     </plurals>
 </resources>
