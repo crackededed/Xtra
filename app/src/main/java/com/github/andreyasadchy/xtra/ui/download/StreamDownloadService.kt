@@ -1473,7 +1473,7 @@ class StreamDownloadService : LifecycleService() {
                 message.contains("USERNOTICE") -> ChatUtils.parseChatMessage(message, true)
                 message.contains("CLEARMSG") -> ChatUtils.parseClearMessage(message).first
                 message.contains("CLEARCHAT") -> ChatUtils.parseClearChat(this@StreamDownloadService, message)
-                message.contains("NOTICE") -> ChatUtils.parseNotice(this@StreamDownloadService, message)
+                message.contains("NOTICE") -> ChatUtils.parseNotice(message)
                 else -> null
             }
             if (chatMessage != null) {
