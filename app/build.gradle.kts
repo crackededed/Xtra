@@ -28,7 +28,7 @@ android {
         minSdk = 21
         targetSdk = 37
         versionCode = 121
-        versionName = "2.57.2"
+        versionName = "2.57.3"
     }
 
     buildTypes {
@@ -79,6 +79,9 @@ android {
             "androidx.webkit:webkit:1.15.0-alpha01",
             "androidx.work:work-runtime:2.10.5",
             "com.google.android.material:material:1.14.0-alpha08",
+            "io.coil-kt.coil3:coil:3.4.0",
+            "io.coil-kt.coil3:coil-gif:3.4.0",
+            "io.coil-kt.coil3:coil-network-okhttp:3.4.0",
             "org.chromium.net:cronet-api:119.6045.31",
         ))
     }
