@@ -284,12 +284,13 @@ class VideoDownloadService : LifecycleService() {
         for (segment in playlist.segments) {
             val startTime = totalDuration
             val duration = (segment.duration * 1000f).toLong()
-            if (startTime < from) {
-                totalDuration += duration
+            val endTime = startTime + duration
+            if (endTime <= from) {
+                totalDuration = endTime
             } else {
                 if (startTime < to) {
                     segments.add(segment.copy(uri = segment.uri.replace("-unmuted", "-muted")))
-                    totalDuration += duration
+                    totalDuration = endTime
                     downloadDuration += duration
                     if (startPosition == -1L) {
                         startPosition = startTime
