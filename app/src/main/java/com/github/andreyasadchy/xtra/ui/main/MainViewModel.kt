@@ -181,6 +181,12 @@ class MainViewModel(
         playerRepository.saveVideoPosition(VideoPosition(id, position))
     }
 
+    fun saveOfflineVideoPosition(id: Int, position: Long) {
+        viewModelScope.launch {
+            offlineVideosRepository.updatePosition(id, position)
+        }
+    }
+
     fun loadClip(clipId: String?, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
         if (clip.value == null) {
             viewModelScope.launch {

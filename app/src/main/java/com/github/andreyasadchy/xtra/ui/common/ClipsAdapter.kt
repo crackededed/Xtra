@@ -67,7 +67,10 @@ class ClipsAdapter(
                     root.setOnClickListener {
                         (fragment.activity as MainActivity).startClip(item)
                     }
-                    root.setOnLongClickListener { showDownloadDialog(item); true }
+                    root.setOnLongClickListener {
+                        showDownloadDialog(item)
+                        true
+                    }
                     fragment.requireContext().imageLoader.enqueue(
                         ImageRequest.Builder(fragment.requireContext()).apply {
                             data(item.thumbnail)
@@ -152,7 +155,7 @@ class ClipsAdapter(
                         userImage.visibility = View.GONE
                         username.visibility = View.GONE
                     }
-                    if (item.title != null && item.title != "") {
+                    if (!item.title.isNullOrBlank()) {
                         title.visibility = View.VISIBLE
                         title.text = item.title.trim()
                     } else {
