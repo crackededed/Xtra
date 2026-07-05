@@ -15,6 +15,7 @@ class ChatMessage(
     val bits: Int? = null,
     val systemMsg: String? = null,
     val msgId: String? = null,
+    val targetMsgId: String? = null,
     val reward: ChannelPointReward? = null,
     val reply: Reply? = null,
     val replyParent: ChatMessage? = null,
