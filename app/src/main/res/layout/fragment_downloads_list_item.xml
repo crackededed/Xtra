@@ -60,18 +60,18 @@
             <com.github.andreyasadchy.xtra.ui.view.TextWithShadow
                 android:id="@+id/sourceStart"
                 style="@style/ThumbnailItem"
+                android:layout_marginBottom="5dp"
                 tools:text="13:37:69" />
 
             <com.github.andreyasadchy.xtra.ui.view.TextWithShadow
                 android:id="@+id/sourceEnd"
                 style="@style/ThumbnailItem"
-                tools:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
                 tools:text="69:13:37" />
 
             <com.github.andreyasadchy.xtra.ui.view.TextWithShadow
                 android:id="@+id/type"
                 style="@style/ThumbnailItem"
-                tools:layout_marginTop="5dp"
                 tools:text="type" />
 
         </LinearLayout>
