@@ -27,8 +27,8 @@ android {
         applicationId = "com.github.andreyasadchy.xtra"
         minSdk = 23
         targetSdk = 37
-        versionCode = 341
-        versionName = "2.57.3"
+        versionCode = 342
+        versionName = "2.57.4"
     }
 
     buildTypes {
@@ -57,7 +57,7 @@ android {
 }
 
 dependencies {
-    implementation("com.google.guava:guava:33.3.1-android") // exoplayer
+    compileOnly("com.google.j2objc:j2objc-annotations:3.0.0") // OkHttpDataSource SettableFuture
 
     implementation(libs.material)
     implementation(libs.markwon.core)
