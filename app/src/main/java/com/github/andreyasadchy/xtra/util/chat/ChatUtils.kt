@@ -7,7 +7,6 @@ import com.github.andreyasadchy.xtra.model.chat.Badge
 import com.github.andreyasadchy.xtra.model.chat.ChannelPointReward
 import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.chat.Reply
-import com.github.andreyasadchy.xtra.model.chat.RoomState
 import com.github.andreyasadchy.xtra.model.chat.TwitchEmote
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 
@@ -15,117 +14,171 @@ object ChatUtils {
 
     const val ACTION = "\u0001ACTION"
 
-    fun parseChatMessage(message: String, userNotice: Boolean): ChatMessage {
-        val parts = message.substring(1).split(" ".toRegex(), 2)
-        val prefixes = splitAndMakeMap(parts[0], ";", "=")
-        val messageInfo = parts[1] //:<user>!<user>@<user>.tmi.twitch.tv PRIVMSG #<channelName> :<message>
-        val userLogin = prefixes["login"] ?: try {
-            messageInfo.substring(1, messageInfo.indexOf("!"))
-        } catch (e: Exception) {
-            null
-        }
-        val systemMsg = prefixes["system-msg"]?.replace("\\s", " ")
-        val msgIndex = messageInfo.indexOf(":", messageInfo.indexOf(":") + 1)
-        return if (msgIndex == -1 && userNotice) { // no user message & is user notice
-            ChatMessage(
-                type = ChatMessage.USER_MESSAGE,
-                userId = prefixes["user-id"],
-                userLogin = userLogin,
-                userName = prefixes["display-name"]?.replace("\\s", " "),
-                systemMsg = systemMsg ?: messageInfo,
-                msgId = prefixes["msg-id"],
-                timestamp = prefixes["tmi-sent-ts"]?.toLong(),
-                fullMsg = message
-            )
-        } else {
-            val userMessage: String
-            val isAction: Boolean
-            messageInfo.substring(msgIndex + 1).let { //from <message>
-                if (!it.startsWith(ACTION)) {
-                    userMessage = it
-                    isAction = false
-                } else {
-                    userMessage = it.substring(8, it.lastIndex)
-                    isAction = true
+    class IRCMessage(
+        val tags: Map<String, String>,
+        val prefix: String?,
+        val command: String?,
+        val params: List<String>,
+        val fullMessage: String,
+    )
+
+    fun parseIRCMessage(message: String): IRCMessage {
+        var index = 0
+        val tags = if (message.startsWith('@')) {
+            index += 1
+            val next = message.indexOf(' ', index)
+            if (next != -1) {
+                val start = index
+                index = next
+                buildMap {
+                    message.substring(start, index).split(';').forEach { tag ->
+                        val split = tag.split('=')
+                        val key = split.getOrNull(0)
+                        val value = split.getOrNull(1)
+                        if (key != null && !value.isNullOrEmpty()) {
+                            put(key, value.replace("\\:", ";").replace("\\s", " "))
+                        }
+                    }
                 }
-            }
-            val emotesList = mutableListOf<TwitchEmote>()
-            val emotes = prefixes["emotes"]
-            if (emotes != null) {
-                val entries = splitAndMakeMap(emotes, "/", ":").entries
-                entries.forEach { emote ->
-                    emote.value?.split(",")?.forEach { indexes ->
-                        val index = indexes.split("-")
-                        emotesList.add(TwitchEmote(id = emote.key, begin = index[0].toInt(), end = index[1].toInt()))
+            } else emptyMap()
+        } else emptyMap()
+        while (message.getOrNull(index) == ' ') {
+            index += 1
+        }
+        val prefix = if (message.getOrNull(index) == ':') {
+            index += 1
+            val next = message.indexOf(' ', index)
+            if (next != -1) {
+                val start = index
+                index = next
+                message.substring(start, index)
+            } else null
+        } else null
+        while (message.getOrNull(index) == ' ') {
+            index += 1
+        }
+        val next = message.indexOf(' ', index)
+        val command = if (next != -1) {
+            val start = index
+            index = next
+            message.substring(start, index)
+        } else null
+        val params = mutableListOf<String>()
+        var nextChar = message.getOrNull(index)
+        while (nextChar != null) {
+            when (nextChar) {
+                ' ' -> index += 1
+                ':' -> {
+                    index += 1
+                    params.add(message.substring(index))
+                    break
+                }
+                else -> {
+                    val next = message.indexOf(' ', index)
+                    if (next != -1) {
+                        val start = index
+                        index = next
+                        params.add(message.substring(start, index))
+                    } else {
+                        // Recent messages api removes ":" prefix from some messages
+                        params.add(message.substring(index))
+                        break
                     }
                 }
             }
-            val badgesList = mutableListOf<Badge>()
-            val badges = prefixes["badges"]
-            if (badges != null) {
-                val entries = splitAndMakeMap(badges, ",", "/").entries
-                entries.forEach {
-                    it.value?.let { value ->
-                        badgesList.add(Badge(it.key, value))
-                    }
-                }
-            }
-            ChatMessage(
-                type = ChatMessage.USER_MESSAGE,
-                id = prefixes["id"],
-                userId = prefixes["user-id"],
-                userLogin = userLogin,
-                userName = prefixes["display-name"]?.replace("\\s", " "),
-                message = userMessage,
-                color = prefixes["color"],
-                emotes = emotesList,
-                badges = badgesList,
-                isAction = isAction,
-                isFirst = prefixes["first-msg"] == "1",
-                bits = prefixes["bits"]?.toIntOrNull(),
-                systemMsg = systemMsg,
-                msgId = prefixes["msg-id"],
-                reward = prefixes["custom-reward-id"]?.let { ChannelPointReward(id = it) },
-                reply = prefixes["reply-thread-parent-msg-id"]?.let {
-                    Reply(
-                        threadParentId = it,
-                        userLogin = prefixes["reply-parent-user-login"],
-                        userName = prefixes["reply-parent-display-name"]?.replace("\\s", " "),
-                        message = prefixes["reply-parent-msg-body"]?.replace("\\s", " ")
-                    )
-                },
-                timestamp = prefixes["tmi-sent-ts"]?.toLong(),
-                fullMsg = message
-            )
+            nextChar = message.getOrNull(index)
         }
+        return IRCMessage(tags, prefix, command, params, message)
     }
 
-    fun parseClearMessage(message: String): Pair<ChatMessage, String?> {
-        val parts = message.substring(1).split(" ".toRegex(), 2)
-        val prefixes = splitAndMakeMap(parts[0], ";", "=")
-        val login = prefixes["login"]
-        val messageInfo = parts[1]
-        val msgIndex = messageInfo.indexOf(":", messageInfo.indexOf(":") + 1)
-        val msg = if (msgIndex != -1) messageInfo.substring(msgIndex + 1) else null
-        return Pair(
-            ChatMessage(
-                type = ChatMessage.USER_MESSAGE,
-                userLogin = login,
-                message = msg,
-                timestamp = prefixes["tmi-sent-ts"]?.toLong(),
-                fullMsg = message
-            ),
-            prefixes["target-msg-id"]
+    fun parseChatMessage(message: IRCMessage): ChatMessage {
+        val userLogin = message.tags["login"] ?: message.prefix?.substringBefore('!', "")
+        val emotes = message.tags["emotes"]?.let { value ->
+            buildList {
+                value.split('/').forEach { emote ->
+                    val split = emote.split(':')
+                    val id = split.getOrNull(0)
+                    val positions = split.getOrNull(1)
+                    if (id != null && positions != null) {
+                        positions.split(',').forEach { range ->
+                            val split = range.split("-")
+                            val start = split.getOrNull(0)?.toIntOrNull()
+                            val end = split.getOrNull(1)?.toIntOrNull()
+                            if (start != null && end != null) {
+                                add(TwitchEmote(id = id, begin = start, end = end))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        val badges = message.tags["badges"]?.let { value ->
+            value.split(',').mapNotNull { badge ->
+                val split = badge.split("/")
+                val id = split.getOrNull(0)
+                val version = split.getOrNull(1)
+                if (id != null && version != null) {
+                    Badge(id, version)
+                } else null
+            }
+        }
+        var userMessage = if (message.params.size >= 2) {
+            message.params.lastOrNull()
+        } else null
+        val isAction = userMessage?.startsWith(ACTION) == true
+        if (isAction) {
+            userMessage = userMessage.substring(8, userMessage.lastIndex)
+        }
+        return ChatMessage(
+            type = ChatMessage.USER_MESSAGE,
+            id = message.tags["id"],
+            userId = message.tags["user-id"],
+            userLogin = userLogin,
+            userName = message.tags["display-name"],
+            message = userMessage,
+            color = message.tags["color"],
+            emotes = emotes,
+            badges = badges,
+            isAction = isAction,
+            isFirst = message.tags["first-msg"] == "1",
+            bits = message.tags["bits"]?.toIntOrNull(),
+            systemMsg = message.tags["system-msg"],
+            msgId = message.tags["msg-id"],
+            reward = message.tags["custom-reward-id"]?.let {
+                ChannelPointReward(id = it)
+            },
+            reply = message.tags["reply-thread-parent-msg-id"]?.let {
+                Reply(
+                    threadParentId = it,
+                    userLogin = message.tags["reply-parent-user-login"],
+                    userName = message.tags["reply-parent-display-name"],
+                    message = message.tags["reply-parent-msg-body"]
+                )
+            },
+            timestamp = message.tags["tmi-sent-ts"]?.toLongOrNull(),
+            fullMsg = message.fullMessage
         )
     }
 
-    fun parseClearChat(context: Context, message: String): ChatMessage {
-        val parts = message.substring(1).split(" ".toRegex(), 2)
-        val prefixes = splitAndMakeMap(parts[0], ";", "=")
-        val duration = prefixes["ban-duration"]
-        val messageInfo = parts[1]
-        val userIndex = messageInfo.indexOf(":", messageInfo.indexOf(":") + 1)
-        val login = if (userIndex != -1) messageInfo.substring(userIndex + 1) else null
+    fun parseClearMessage(message: IRCMessage): ChatMessage {
+        val userMessage = if (message.params.size >= 2) {
+            message.params.lastOrNull()
+        } else null
+        return ChatMessage(
+            type = ChatMessage.USER_MESSAGE,
+            userLogin = message.tags["login"],
+            message = userMessage,
+            targetMsgId = message.tags["target-msg-id"],
+            timestamp = message.tags["tmi-sent-ts"]?.toLongOrNull(),
+            fullMsg = message.fullMessage
+        )
+    }
+
+    fun parseClearChat(context: Context, message: IRCMessage): ChatMessage {
+        val duration = message.tags["ban-duration"]
+        val login = if (message.params.size >= 2) {
+            message.params.lastOrNull()
+        } else null
         val text = if (login != null) {
             if (duration != null) {
                 ContextCompat.getString(context, R.string.chat_timeout).format(login, TwitchApiHelper.getDurationFromSeconds(context, duration))
@@ -141,51 +194,22 @@ object ChatUtils {
             } else {
                 ChatMessage.NOTICE_MESSAGE
             },
-            userId = prefixes["target-user-id"],
+            userId = message.tags["target-user-id"],
             userLogin = login,
             systemMsg = text,
-            timestamp = prefixes["tmi-sent-ts"]?.toLong(),
-            fullMsg = message
+            timestamp = message.tags["tmi-sent-ts"]?.toLongOrNull(),
+            fullMsg = message.fullMessage
         )
     }
 
-    fun parseNotice(message: String): ChatMessage {
-        val parts = message.substring(1).split(" ".toRegex(), 2)
-        val messageInfo = parts[1]
-        val text = messageInfo.substring(messageInfo.indexOf(":", messageInfo.indexOf(":") + 1) + 1)
+    fun parseNotice(message: IRCMessage): ChatMessage {
+        val text = if (message.params.size >= 2) {
+            message.params.lastOrNull()
+        } else null
         return ChatMessage(
             type = ChatMessage.NOTICE_MESSAGE,
             systemMsg = text,
-            fullMsg = message
+            fullMsg = message.fullMessage
         )
-    }
-
-    fun parseRoomState(message: String): RoomState {
-        val parts = message.substring(1).split(" ".toRegex(), 2)
-        val prefixes = splitAndMakeMap(parts[0], ";", "=")
-        return RoomState(
-            emote = prefixes["emote-only"],
-            followers = prefixes["followers-only"],
-            unique = prefixes["r9k"],
-            slow = prefixes["slow"],
-            subs = prefixes["subs-only"]
-        )
-    }
-
-    fun parseEmoteSets(message: String): List<String>? {
-        val parts = message.substring(1).split(" ".toRegex(), 2)
-        val prefixes = splitAndMakeMap(parts[0], ";", "=")
-        val sets = prefixes["emote-sets"]
-        return sets?.split(",")?.dropLastWhile { it.isEmpty() }
-    }
-
-    private fun splitAndMakeMap(string: String, splitRegex: String, mapRegex: String): Map<String, String?> {
-        val list = string.split(splitRegex.toRegex()).dropLastWhile { it.isEmpty() }
-        val map = LinkedHashMap<String, String?>()
-        for (pair in list) {
-            val kv = pair.split(mapRegex.toRegex()).dropLastWhile { it.isEmpty() }
-            map[kv[0]] = if (kv.size == 2) kv[1] else null
-        }
-        return map
     }
 }
