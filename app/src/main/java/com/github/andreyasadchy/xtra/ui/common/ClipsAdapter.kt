@@ -63,7 +63,10 @@ class ClipsAdapter(
                     root.setOnClickListener {
                         (fragment.activity as MainActivity).startClip(item)
                     }
-                    root.setOnLongClickListener { showDownloadDialog(item); true }
+                    root.setOnLongClickListener {
+                        showDownloadDialog(item)
+                        true
+                    }
                     Glide.with(fragment)
                         .load(item.thumbnail)
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
@@ -145,7 +148,7 @@ class ClipsAdapter(
                         userImage.visibility = View.GONE
                         username.visibility = View.GONE
                     }
-                    if (item.title != null && item.title != "") {
+                    if (!item.title.isNullOrBlank()) {
                         title.visibility = View.VISIBLE
                         title.text = item.title.trim()
                     } else {

@@ -1051,7 +1051,7 @@ class MainActivity : AppCompatActivity() {
         startPlayer(fragment)
     }
 
-    fun startOfflineVideo(video: OfflineVideo) {
+    fun startOfflineVideo(video: OfflineVideo, offset: Long? = null) {
         if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
             (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close()
             val fragment = Media3Fragment.newInstance(video)
@@ -1073,6 +1073,9 @@ class MainActivity : AppCompatActivity() {
             createdAt = video.uploadDate?.toString(),
             videoCreatedAt = video.videoCreatedAt,
         ))
+        if (offset != null && prefs.getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
+            viewModel.saveOfflineVideoPosition(video.id, offset)
+        }
         val fragment = when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
             C.MEDIA_PLAYER -> MediaPlayerFragment()
             else -> ExoPlayerFragment()

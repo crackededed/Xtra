@@ -81,10 +81,22 @@ class VideosAdapter(
                 if (item != null) {
                     val context = fragment.requireContext()
                     val position = item.id?.toLongOrNull()?.let { id -> positions?.find { it.id == id }?.position }
+                    val startFromBeginning = position != null && item.durationSeconds != null && item.durationSeconds > 0 && position >= (item.durationSeconds * 1000)
                     root.setOnClickListener {
-                        (fragment.activity as MainActivity).startVideo(item, position)
+                        (fragment.activity as MainActivity).startVideo(
+                            item,
+                            if (startFromBeginning) {
+                                0
+                            } else {
+                                position
+                            },
+                            startFromBeginning
+                        )
                     }
-                    root.setOnLongClickListener { showDownloadDialog(item); true }
+                    root.setOnLongClickListener {
+                        showDownloadDialog(item)
+                        true
+                    }
                     Glide.with(fragment)
                         .load(item.thumbnail)
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
@@ -183,7 +195,7 @@ class VideosAdapter(
                         userImage.visibility = View.GONE
                         username.visibility = View.GONE
                     }
-                    if (item.title != null && item.title != "") {
+                    if (!item.title.isNullOrBlank()) {
                         title.visibility = View.VISIBLE
                         title.text = item.title.trim()
                     } else {

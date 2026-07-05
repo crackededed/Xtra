@@ -112,6 +112,7 @@ class BookmarksAdapter(
                     }
                     val durationSeconds = item.duration?.let { duration -> duration.toIntOrNull() ?: TwitchApiHelper.getDuration(duration) }
                     val position = item.videoId?.toLongOrNull()?.let { id -> positions?.find { it.id == id }?.position }
+                    val startFromBeginning = position != null && durationSeconds != null && durationSeconds > 0 && position >= (durationSeconds * 1000)
                     val ignore = ignored?.find { it.userId == item.userId } != null
                     val userType = item.userType ?: item.userBroadcasterType
                     root.setOnClickListener {
@@ -131,10 +132,19 @@ class BookmarksAdapter(
                                 durationSeconds = durationSeconds,
                                 type = item.type,
                                 animatedPreviewURL = item.animatedPreviewURL,
-                            ), position
+                            ),
+                            if (startFromBeginning) {
+                                0
+                            } else {
+                                position
+                            },
+                            startFromBeginning
                         )
                     }
-                    root.setOnLongClickListener { deleteVideo(item); true }
+                    root.setOnLongClickListener {
+                        deleteVideo(item)
+                        true
+                    }
                     Glide.with(fragment)
                         .load(item.thumbnail)
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
@@ -228,7 +238,7 @@ class BookmarksAdapter(
                     } else {
                         progressBar.visibility = View.GONE
                     }
-                    if (item.title != null) {
+                    if (!item.title.isNullOrBlank()) {
                         title.visibility = View.VISIBLE
                         title.text = item.title.trim()
                     } else {

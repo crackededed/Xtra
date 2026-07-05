@@ -4,14 +4,11 @@ import android.content.ContentResolver
 import android.content.Context
 import android.os.Build
 import android.text.format.DateUtils
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.net.toUri
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingDataAdapter
@@ -190,19 +187,33 @@ class DownloadsAdapter(
                             }
                         )
                     }
+                    val videoDuration = item.duration
+                    val position = item.lastWatchPosition
+                    val startFromBeginning = position != null && videoDuration != null && videoDuration > 0 && position >= videoDuration
                     root.setOnClickListener {
-                        (fragment.activity as MainActivity).startOfflineVideo(item)
+                        (fragment.activity as MainActivity).startOfflineVideo(
+                            item,
+                            if (startFromBeginning) {
+                                0
+                            } else {
+                                null
+                            }
+                        )
                     }
-                    root.setOnLongClickListener { deleteVideo(item); true }
+                    root.setOnLongClickListener {
+                        deleteVideo(item)
+                        true
+                    }
                     Glide.with(fragment)
                         .load(item.thumbnail)
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
                         .transition(DrawableTransitionOptions.withCrossFade())
                         .into(userImage)
-                    item.uploadDate?.let {
+                    val uploadDate = item.uploadDate
+                    if (uploadDate != null) {
                         date.visibility = View.VISIBLE
-                        date.text = context.getString(R.string.uploaded_date, TwitchApiHelper.formatDate(context, it))
-                    } ?: {
+                        date.text = context.getString(R.string.uploaded_date, TwitchApiHelper.formatDate(context, uploadDate))
+                    } else {
                         date.visibility = View.GONE
                     }
                     if (item.downloadDate != null) {
@@ -253,10 +264,11 @@ class DownloadsAdapter(
                     } else {
                         username.visibility = View.GONE
                     }
-                    item.name?.let {
+                    val name = item.name
+                    if (name != null) {
                         title.visibility = View.VISIBLE
-                        title.text = it.trim()
-                    } ?: {
+                        title.text = name.trim()
+                    } else {
                         title.visibility = View.GONE
                     }
                     if (item.gameName != null) {
@@ -266,47 +278,30 @@ class DownloadsAdapter(
                     } else {
                         gameName.visibility = View.GONE
                     }
-                    item.duration?.let { itemDuration ->
+                    if (videoDuration != null) {
                         duration.visibility = View.VISIBLE
-                        duration.text = DateUtils.formatElapsedTime(itemDuration / 1000L)
-                        item.sourceStartPosition?.let { sourceStartPosition ->
+                        duration.text = DateUtils.formatElapsedTime(videoDuration / 1000L)
+                        val startPosition = item.sourceStartPosition
+                        if (startPosition != null) {
                             sourceStart.visibility = View.VISIBLE
-                            sourceStart.text = context.getString(R.string.source_vod_start, DateUtils.formatElapsedTime(sourceStartPosition / 1000L))
+                            sourceStart.text = context.getString(R.string.source_vod_start, DateUtils.formatElapsedTime(startPosition / 1000L))
                             sourceEnd.visibility = View.VISIBLE
-                            sourceEnd.text = context.getString(R.string.source_vod_end, DateUtils.formatElapsedTime((sourceStartPosition + itemDuration) / 1000L))
-                        } ?: {
+                            sourceEnd.text = context.getString(R.string.source_vod_end, DateUtils.formatElapsedTime((startPosition + videoDuration) / 1000L))
+                        } else {
                             sourceStart.visibility = View.GONE
                             sourceEnd.visibility = View.GONE
                         }
-                        if (context.prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true) && item.lastWatchPosition != null && itemDuration > 0L) {
-                            progressBar.progress = (item.lastWatchPosition!!.toFloat() / itemDuration * 100).toInt()
+                        if (context.prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true) && position != null && videoDuration > 0L) {
+                            progressBar.progress = ((position.toFloat() / videoDuration) * 100).toInt()
                             progressBar.visibility = View.VISIBLE
                         } else {
                             progressBar.visibility = View.GONE
                         }
-                    } ?: {
+                    } else {
                         duration.visibility = View.GONE
                         sourceStart.visibility = View.GONE
                         sourceEnd.visibility = View.GONE
                         progressBar.visibility = View.GONE
-                    }
-                    if (sourceEnd.isVisible && sourceStart.isVisible) {
-                        val params = LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT
-                        )
-                        val margin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, context.resources.displayMetrics).toInt()
-                        params.setMargins(0, margin, 0, 0)
-                        sourceEnd.layoutParams = params
-                    }
-                    if (type.isVisible && (sourceStart.isVisible || sourceEnd.isVisible)) {
-                        val params = LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT
-                        )
-                        val margin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, context.resources.displayMetrics).toInt()
-                        params.setMargins(0, margin, 0, 0)
-                        type.layoutParams = params
                     }
                     val progress = if (item.live) {
                         activeStreamDownloads?.find { it.id == item.id }

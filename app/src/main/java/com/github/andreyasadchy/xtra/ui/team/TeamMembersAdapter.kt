@@ -111,9 +111,10 @@ class TeamMembersAdapter(
                         root.setOnClickListener {
                             (fragment.activity as MainActivity).startStream(item)
                         }
-                        if (item.title != null && item.title != "") {
+                        val streamTitle = item.title
+                        if (!streamTitle.isNullOrBlank()) {
                             title.visibility = View.VISIBLE
-                            title.text = item.title?.trim()
+                            title.text = streamTitle.trim()
                         } else {
                             title.visibility = View.GONE
                         }
