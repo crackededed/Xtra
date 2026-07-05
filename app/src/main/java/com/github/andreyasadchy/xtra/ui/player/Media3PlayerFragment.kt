@@ -591,11 +591,20 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                 root.setOnTouchListener { _, event ->
                     controllerTapDetector.onTouchEvent(event)
                 }
-                playPause.setOnClickListener { playPause() }
+                playPause.setOnClickListener {
+                    showController(force = true)
+                    playPause()
+                }
                 rewind.text = ((requireContext().prefs().getString(C.PLAYER_REWIND, "10000")?.toLongOrNull() ?: 10000) / 1000).toString()
-                rewind.setOnClickListener { rewind() }
+                rewind.setOnClickListener {
+                    showController(force = true)
+                    rewind()
+                }
                 fastForward.text = ((requireContext().prefs().getString(C.PLAYER_FORWARD, "10000")?.toLongOrNull() ?: 10000) / 1000).toString()
-                fastForward.setOnClickListener { fastForward() }
+                fastForward.setOnClickListener {
+                    showController(force = true)
+                    fastForward()
+                }
                 progressBar.addListener(
                     object : TimeBar.OnScrubListener {
                         override fun onScrubStart(timeBar: TimeBar, position: Long) {
@@ -681,15 +690,22 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                 }
                 if (requireContext().prefs().getBoolean(C.PLAYER_VOLUME_BUTTON, true)) {
                     volume.visibility = View.VISIBLE
-                    volume.setOnClickListener { showVolumeDialog() }
+                    volume.setOnClickListener {
+                        showController(force = true)
+                        showVolumeDialog()
+                    }
                 }
                 if (requireContext().prefs().getBoolean(C.PLAYER_SETTINGS, true)) {
                     quality.visibility = View.VISIBLE
-                    quality.setOnClickListener { showQualityDialog() }
+                    quality.setOnClickListener {
+                        showController(force = true)
+                        showQualityDialog()
+                    }
                 }
                 if (requireContext().prefs().getBoolean(C.PLAYER_MODE, false)) {
                     audioOnly.visibility = View.VISIBLE
                     audioOnly.setOnClickListener {
+                        showController(force = true)
                         if (viewModel.quality?.name == AUDIO_ONLY_QUALITY) {
                             changeQuality(viewModel.previousQuality)
                         } else {
@@ -706,12 +722,14 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                         audioCompressor.setImageResource(R.drawable.baseline_audio_compressor_off_24dp)
                     }
                     audioCompressor.setOnClickListener {
+                        showController(force = true)
                         toggleAudioCompressor()
                     }
                 }
                 if (requireContext().prefs().getBoolean(C.PLAYER_MENU, true)) {
                     menu.visibility = View.VISIBLE
                     menu.setOnClickListener {
+                        showController(force = true)
                         PlayerSettingsDialog.newInstance(
                             type = videoType,
                             speedText = getCurrentSpeed()?.let { speed ->
@@ -739,7 +757,10 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                     ) {
                         if (requireContext().prefs().getBoolean(C.PLAYER_CHAT_BAR_TOGGLE, false) && !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)) {
                             toggleChatInput.visibility = View.VISIBLE
-                            toggleChatInput.setOnClickListener { toggleChatBar() }
+                            toggleChatInput.setOnClickListener {
+                                showController(force = true)
+                                toggleChatBar()
+                            }
                         }
                         slidingLayout.viewTreeObserver.addOnGlobalLayoutListener {
                             if (slidingLayout.isKeyboardShown) {
@@ -797,14 +818,23 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                     }
                     if (requireContext().prefs().getBoolean(C.PLAYER_RESTART, true)) {
                         restart.visibility = View.VISIBLE
-                        restart.setOnClickListener { restartPlayer() }
+                        restart.setOnClickListener {
+                            showController(force = true)
+                            restartPlayer()
+                        }
                     }
                     if (requireContext().prefs().getBoolean(C.PLAYER_SEEK_LIVE, false)) {
                         seekLive.visibility = View.VISIBLE
-                        seekLive.setOnClickListener { seekToLivePosition() }
+                        seekLive.setOnClickListener {
+                            showController(force = true)
+                            seekToLivePosition()
+                        }
                     }
                     if (requireContext().prefs().getBoolean(C.PLAYER_VIEWER_LIST, false)) {
-                        viewersLayout.setOnClickListener { openViewerList() }
+                        viewersLayout.setOnClickListener {
+                            showController(force = true)
+                            openViewerList()
+                        }
                     }
                     if (requireContext().prefs().getBoolean(C.PLAYER_SHOW_UPTIME, true)) {
                         requireArguments().getString(KEY_STARTED_AT)?.let {
@@ -828,7 +858,10 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                 } else {
                     if (requireContext().prefs().getBoolean(C.PLAYER_SPEED_BUTTON, true)) {
                         speed.visibility = View.VISIBLE
-                        speed.setOnClickListener { showSpeedDialog() }
+                        speed.setOnClickListener {
+                            showController(force = true)
+                            showSpeedDialog()
+                        }
                     }
                 }
                 if (videoType == VIDEO) {
@@ -871,7 +904,10 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                                     if (!list.isNullOrEmpty()) {
                                         if (requireContext().prefs().getBoolean(C.PLAYER_GAMES_BUTTON, true)) {
                                             vodGames.visibility = View.VISIBLE
-                                            vodGames.setOnClickListener { showVodGames() }
+                                            vodGames.setOnClickListener {
+                                                showController(force = true)
+                                                showVodGames()
+                                            }
                                         }
                                         (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setVodGames()
                                     }
@@ -944,7 +980,10 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                 } else {
                     if (requireContext().prefs().getBoolean(C.PLAYER_SLEEP, false)) {
                         sleepTimer.visibility = View.VISIBLE
-                        sleepTimer.setOnClickListener { showSleepTimerDialog() }
+                        sleepTimer.setOnClickListener {
+                            showController(force = true)
+                            showSleepTimerDialog()
+                        }
                     }
                 }
                 if (videoType == OFFLINE_VIDEO) {
@@ -989,12 +1028,16 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                     }
                     if (requireContext().prefs().getBoolean(C.PLAYER_DOWNLOAD, false)) {
                         download.visibility = View.VISIBLE
-                        download.setOnClickListener { showDownloadDialog() }
+                        download.setOnClickListener {
+                            showController(force = true)
+                            showDownloadDialog()
+                        }
                     }
                     val setting = requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0
                     if (requireContext().prefs().getBoolean(C.PLAYER_FOLLOW, false) && (setting == 0 || setting == 1)) {
                         follow.visibility = View.VISIBLE
                         follow.setOnClickListener {
+                            showController(force = true)
                             viewModel.isFollowing.value?.let {
                                 if (it) {
                                     requireContext().getAlertDialogBuilder()
@@ -1150,6 +1193,7 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                         fullscreen.visibility = View.VISIBLE
                         fullscreen.setImageResource(R.drawable.baseline_fullscreen_black_24)
                         fullscreen.setOnClickListener {
+                            showController(force = true)
                             requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                         }
                     }
@@ -1224,22 +1268,32 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                         fullscreen.visibility = View.VISIBLE
                         fullscreen.setImageResource(R.drawable.baseline_fullscreen_exit_black_24)
                         fullscreen.setOnClickListener {
+                            showController(force = true)
                             requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                             requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                         }
                     }
                     if (requireContext().prefs().getBoolean(C.PLAYER_ASPECT, true)) {
                         aspectRatio.visibility = View.VISIBLE
-                        aspectRatio.setOnClickListener { setResizeMode() }
+                        aspectRatio.setOnClickListener {
+                            showController(force = true)
+                            setResizeMode()
+                        }
                     }
                     if (requireContext().prefs().getBoolean(C.PLAYER_CHAT_TOGGLE, true) && !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)) {
                         toggleChat.visibility = View.VISIBLE
                         if (isChatOpen) {
                             toggleChat.setImageResource(R.drawable.baseline_speaker_notes_off_black_24)
-                            toggleChat.setOnClickListener { hideChat() }
+                            toggleChat.setOnClickListener {
+                                showController(force = true)
+                                hideChat()
+                            }
                         } else {
                             toggleChat.setImageResource(R.drawable.baseline_speaker_notes_black_24)
-                            toggleChat.setOnClickListener { showChat() }
+                            toggleChat.setOnClickListener {
+                                showController(force = true)
+                                showChat()
+                            }
                         }
                     }
                 }
@@ -1392,7 +1446,10 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
             binding.playerControls.toggleChat.apply {
                 visibility = View.VISIBLE
                 setImageResource(R.drawable.baseline_speaker_notes_black_24)
-                setOnClickListener { showChat() }
+                setOnClickListener {
+                    showController(force = true)
+                    showChat()
+                }
             }
         }
         requireContext().prefs().edit { putBoolean(C.KEY_CHAT_OPENED, false) }
@@ -1405,7 +1462,10 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
             binding.playerControls.toggleChat.apply {
                 visibility = View.VISIBLE
                 setImageResource(R.drawable.baseline_speaker_notes_off_black_24)
-                setOnClickListener { hideChat() }
+                setOnClickListener {
+                    showController(force = true)
+                    hideChat()
+                }
             }
         }
         requireContext().prefs().edit { putBoolean(C.KEY_CHAT_OPENED, true) }

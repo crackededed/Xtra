@@ -667,12 +667,14 @@ class Media3Fragment : Media3PlayerFragment() {
                 if (textTracks.isSelected) {
                     subtitles.setImageResource(androidx.media3.ui.R.drawable.exo_ic_subtitle_on)
                     subtitles.setOnClickListener {
+                        showController(force = true)
                         toggleSubtitles(false)
                         requireContext().prefs().edit { putBoolean(C.PLAYER_SUBTITLES_ENABLED, false) }
                     }
                 } else {
                     subtitles.setImageResource(androidx.media3.ui.R.drawable.exo_ic_subtitle_off)
                     subtitles.setOnClickListener {
+                        showController(force = true)
                         toggleSubtitles(true)
                         requireContext().prefs().edit { putBoolean(C.PLAYER_SUBTITLES_ENABLED, true) }
                     }
