@@ -79,7 +79,9 @@ class SearchStreamsDataSource(
                     createdAt = it.createdAt?.toString(),
                     viewerCount = it.viewersCount,
                     tags = it.freeformTags?.mapNotNull { tag -> tag.name },
-                )
+                ).takeIf { stream ->
+                    stream.channelId != null || stream.channelLogin != null
+                }
             }
         }
         offset = data.edges.lastOrNull()?.cursor?.toString()
@@ -114,7 +116,9 @@ class SearchStreamsDataSource(
                     title = it.title,
                     createdAt = it.startedAt,
                     tags = it.tags,
-                )
+                ).takeIf { stream ->
+                    stream.channelId != null || stream.channelLogin != null
+                }
             } else null
         }
         offset = response.pagination?.cursor
