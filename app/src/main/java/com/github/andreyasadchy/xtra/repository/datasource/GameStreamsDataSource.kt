@@ -98,7 +98,9 @@ class GameStreamsDataSource(
                     createdAt = it.createdAt?.toString(),
                     viewerCount = it.viewersCount,
                     tags = it.freeformTags?.mapNotNull { tag -> tag.name },
-                )
+                ).takeIf { stream ->
+                    stream.channelId != null || stream.channelLogin != null
+                }
             }
         }
         offset = items.lastOrNull()?.cursor?.toString()
@@ -119,7 +121,7 @@ class GameStreamsDataSource(
         }
         val data = response.data!!.game.streams
         val items = data.edges
-        val list = items.map { item ->
+        val list = items.mapNotNull { item ->
             item.node.let {
                 Stream(
                     id = it.id,
@@ -135,7 +137,9 @@ class GameStreamsDataSource(
                     createdAt = it.createdAt,
                     viewerCount = it.viewersCount,
                     tags = it.freeformTags?.mapNotNull { tag -> tag.name },
-                )
+                ).takeIf { stream ->
+                    stream.channelId != null || stream.channelLogin != null
+                }
             }
         }
         offset = items.lastOrNull()?.cursor
@@ -164,7 +168,7 @@ class GameStreamsDataSource(
                 ids = it,
             ).data
         }
-        val list = response.data.map {
+        val list = response.data.mapNotNull {
             Stream(
                 id = it.id,
                 channelId = it.channelId,
@@ -180,7 +184,9 @@ class GameStreamsDataSource(
                 createdAt = it.startedAt,
                 viewerCount = it.viewerCount,
                 tags = it.tags,
-            )
+            ).takeIf { stream ->
+                stream.channelId != null || stream.channelLogin != null
+            }
         }
         offset = response.pagination?.cursor
         return LoadResult.Page(

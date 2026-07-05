@@ -84,7 +84,9 @@ class StreamsDataSource(
                     createdAt = it.createdAt?.toString(),
                     viewerCount = it.viewersCount,
                     tags = it.freeformTags?.mapNotNull { tag -> tag.name },
-                )
+                ).takeIf { stream ->
+                    stream.channelId != null || stream.channelLogin != null
+                }
             }
         }
         offset = items.lastOrNull()?.cursor?.toString()
@@ -105,7 +107,7 @@ class StreamsDataSource(
         }
         val data = response.data!!.streams
         val items = data.edges
-        val list = items.map { item ->
+        val list = items.mapNotNull { item ->
             item.node.let {
                 Stream(
                     id = it.id,
@@ -121,7 +123,9 @@ class StreamsDataSource(
                     createdAt = it.createdAt,
                     viewerCount = it.viewersCount,
                     tags = it.freeformTags?.mapNotNull { tag -> tag.name },
-                )
+                ).takeIf { stream ->
+                    stream.channelId != null || stream.channelLogin != null
+                }
             }
         }
         offset = items.lastOrNull()?.cursor
@@ -149,7 +153,7 @@ class StreamsDataSource(
                 ids = it
             ).data
         }
-        val list = response.data.map {
+        val list = response.data.mapNotNull {
             Stream(
                 id = it.id,
                 channelId = it.channelId,
@@ -165,7 +169,9 @@ class StreamsDataSource(
                 createdAt = it.startedAt,
                 viewerCount = it.viewerCount,
                 tags = it.tags,
-            )
+            ).takeIf { stream ->
+                stream.channelId != null || stream.channelLogin != null
+            }
         }
         offset = response.pagination?.cursor
         return LoadResult.Page(
