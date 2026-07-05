@@ -1432,26 +1432,26 @@ class StreamDownloadService : LifecycleService() {
             channelLogin = channelLogin,
             trustManager = xtraModule.trustManager,
             listener = object : ChatReadWebSocket.Listener {
-                override suspend fun onChatMessage(message: String, userNotice: Boolean) {
+                override suspend fun onChatMessage(message: ChatUtils.IRCMessage, userNotice: Boolean) {
                     saveMessage(offlineVideo, downloadProgress, message, isShared, fileUri, downloadEmotes, networkLibrary, emoteQuality, savedTwitchEmotes, savedBadges, savedEmotes, globalBadgeList, channelBadgeList, cheerEmoteList, emoteList)
                 }
 
-                override suspend fun onClearMessage(message: String) {
+                override suspend fun onClearMessage(message: ChatUtils.IRCMessage) {
                     saveMessage(offlineVideo, downloadProgress, message, isShared, fileUri, downloadEmotes, networkLibrary, emoteQuality, savedTwitchEmotes, savedBadges, savedEmotes, globalBadgeList, channelBadgeList, cheerEmoteList, emoteList)
                 }
 
-                override suspend fun onClearChat(message: String) {
+                override suspend fun onClearChat(message: ChatUtils.IRCMessage) {
                     saveMessage(offlineVideo, downloadProgress, message, isShared, fileUri, downloadEmotes, networkLibrary, emoteQuality, savedTwitchEmotes, savedBadges, savedEmotes, globalBadgeList, channelBadgeList, cheerEmoteList, emoteList)
                 }
 
-                override suspend fun onNotice(message: String) {
+                override suspend fun onNotice(message: ChatUtils.IRCMessage) {
                     saveMessage(offlineVideo, downloadProgress, message, isShared, fileUri, downloadEmotes, networkLibrary, emoteQuality, savedTwitchEmotes, savedBadges, savedEmotes, globalBadgeList, channelBadgeList, cheerEmoteList, emoteList)
                 }
             }
         ).apply { connect(this@withContext) }
     }
 
-    private suspend fun saveMessage(offlineVideo: OfflineVideo, downloadProgress: DownloadProgress, message: String, isShared: Boolean, fileUri: String, downloadEmotes: Boolean, networkLibrary: String?, emoteQuality: String, savedTwitchEmotes: MutableList<String>, savedBadges: MutableList<Pair<String, String>>, savedEmotes: MutableList<String>, globalBadgeList: List<TwitchBadge>, channelBadgeList: List<TwitchBadge>, cheerEmoteList: List<CheerEmote>, emoteList: List<Emote>) = withContext(Dispatchers.IO) {
+    private suspend fun saveMessage(offlineVideo: OfflineVideo, downloadProgress: DownloadProgress, message: ChatUtils.IRCMessage, isShared: Boolean, fileUri: String, downloadEmotes: Boolean, networkLibrary: String?, emoteQuality: String, savedTwitchEmotes: MutableList<String>, savedBadges: MutableList<Pair<String, String>>, savedEmotes: MutableList<String>, globalBadgeList: List<TwitchBadge>, channelBadgeList: List<TwitchBadge>, cheerEmoteList: List<CheerEmote>, emoteList: List<Emote>) = withContext(Dispatchers.IO) {
         var position = downloadProgress.chatBytes
         var liveCommentsArrayStarted = downloadProgress.liveCommentsArrayStarted
         if (isShared) {
@@ -1465,15 +1465,14 @@ class StreamDownloadService : LifecycleService() {
                 writer.write("\"liveComments\":".also { position += it.length })
                 writer.write("[".also { position += 1 })
             }
-            writer.write(JsonPrimitive(message).toString().also { position += it.toByteArray().size })
+            writer.write(JsonPrimitive(message.fullMessage).toString().also { position += it.toByteArray().size })
         }
         if (downloadEmotes) {
-            val chatMessage = when {
-                message.contains("PRIVMSG") -> ChatUtils.parseChatMessage(message, false)
-                message.contains("USERNOTICE") -> ChatUtils.parseChatMessage(message, true)
-                message.contains("CLEARMSG") -> ChatUtils.parseClearMessage(message).first
-                message.contains("CLEARCHAT") -> ChatUtils.parseClearChat(this@StreamDownloadService, message)
-                message.contains("NOTICE") -> ChatUtils.parseNotice(message)
+            val chatMessage = when (message.command) {
+                "PRIVMSG", "USERNOTICE" -> ChatUtils.parseChatMessage(message)
+                "CLEARMSG" -> ChatUtils.parseClearMessage(message)
+                "CLEARCHAT" -> ChatUtils.parseClearChat(this@StreamDownloadService, message)
+                "NOTICE" -> ChatUtils.parseNotice(message)
                 else -> null
             }
             if (chatMessage != null) {

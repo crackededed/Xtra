@@ -46,7 +46,6 @@ import com.github.andreyasadchy.xtra.util.chat.EventSubUtils
 import com.github.andreyasadchy.xtra.util.chat.EventSubWebSocket
 import com.github.andreyasadchy.xtra.util.chat.HermesWebSocket
 import com.github.andreyasadchy.xtra.util.chat.PubSubUtils
-import com.github.andreyasadchy.xtra.util.chat.RecentMessageUtils
 import com.github.andreyasadchy.xtra.util.chat.STVEventApiUtils
 import com.github.andreyasadchy.xtra.util.chat.STVEventApiWebSocket
 import com.github.andreyasadchy.xtra.util.prefs
@@ -833,26 +832,29 @@ class ChatViewModel(
             try {
                 val list = mutableListOf<ChatMessage>()
                 playerRepository.loadRecentMessages(networkLibrary, channelLogin, applicationContext.prefs().getInt(C.CHAT_RECENT_LIMIT, 100).toString()).messages.forEach { message ->
-                    when {
-                        message.contains("PRIVMSG") -> RecentMessageUtils.parseChatMessage(message, false)
-                        message.contains("USERNOTICE") -> {
+                    val ircMessage = ChatUtils.parseIRCMessage(message)
+                    when (ircMessage.command) {
+                        "PRIVMSG" -> ChatUtils.parseChatMessage(ircMessage)
+                        "USERNOTICE" -> {
                             if (applicationContext.prefs().getBoolean(C.CHAT_SHOW_USER_NOTICE, true)) {
-                                RecentMessageUtils.parseChatMessage(message, true)
+                                ChatUtils.parseChatMessage(ircMessage)
                             } else null
                         }
-                        message.contains("CLEARMSG") -> {
+                        "CLEARMSG" -> {
                             if (applicationContext.prefs().getBoolean(C.CHAT_SHOW_CLEAR_MSG, true)) {
-                                val pair = RecentMessageUtils.parseClearMessage(message)
-                                val deletedMessage = pair.second?.let { targetId -> list.find { it.id == targetId } }
-                                getClearMessage(pair.first, deletedMessage, applicationContext.prefs().getString(C.UI_NAME_DISPLAY, "0"))
+                                val chatMessage = ChatUtils.parseClearMessage(ircMessage)
+                                val deletedMessage = chatMessage.targetMsgId?.let { targetId ->
+                                    list.find { it.id == targetId }
+                                }
+                                getClearMessage(chatMessage, deletedMessage, applicationContext.prefs().getString(C.UI_NAME_DISPLAY, "0"))
                             } else null
                         }
-                        message.contains("CLEARCHAT") -> {
+                        "CLEARCHAT" -> {
                             if (applicationContext.prefs().getBoolean(C.CHAT_SHOW_CLEAR_CHAT, true)) {
-                                RecentMessageUtils.parseClearChat(applicationContext, message)
+                                ChatUtils.parseClearChat(applicationContext, ircMessage)
                             } else null
                         }
-                        message.contains("NOTICE") -> RecentMessageUtils.parseNotice(message)
+                        "NOTICE" -> ChatUtils.parseNotice(ircMessage)
                         else -> null
                     }?.let {
                         if (it.reply?.message != null) {
@@ -1167,9 +1169,9 @@ class ChatViewModel(
             onMessage(ChatMessage(systemMsg = ContextCompat.getString(applicationContext, R.string.chat_join).format(channelLogin)))
         }
 
-        override suspend fun onChatMessage(message: String, userNotice: Boolean) {
+        override suspend fun onChatMessage(message: ChatUtils.IRCMessage, userNotice: Boolean) {
             if (!userNotice || showUserNotice) {
-                val chatMessage = ChatUtils.parseChatMessage(message, userNotice)
+                val chatMessage = ChatUtils.parseChatMessage(message)
                 if (chatMessage.reply?.message != null) {
                     onMessage(ChatMessage(
                         type = ChatMessage.REPLY_MESSAGE,
@@ -1190,12 +1192,10 @@ class ChatViewModel(
             }
         }
 
-        override suspend fun onClearMessage(message: String) {
+        override suspend fun onClearMessage(message: ChatUtils.IRCMessage) {
             if (showClearMsg) {
-                val result = ChatUtils.parseClearMessage(message)
-                val chatMessage = result.first
-                val targetId = result.second
-                val deletedMessage = targetId?.let { targetId ->
+                val chatMessage = ChatUtils.parseClearMessage(message)
+                val deletedMessage = chatMessage.targetMsgId?.let { targetId ->
                     synchronized(chatMessages) {
                         chatMessages.find { it.id == targetId }
                     }
@@ -1205,20 +1205,26 @@ class ChatViewModel(
             }
         }
 
-        override suspend fun onClearChat(message: String) {
+        override suspend fun onClearChat(message: ChatUtils.IRCMessage) {
             if (showClearChat) {
                 onMessage(ChatUtils.parseClearChat(applicationContext, message))
             }
         }
 
-        override suspend fun onNotice(message: String) {
+        override suspend fun onNotice(message: ChatUtils.IRCMessage) {
             if (!isLoggedIn) {
                 onMessage(ChatUtils.parseNotice(message))
             }
         }
 
-        override suspend fun onRoomState(message: String) {
-            roomState.value = ChatUtils.parseRoomState(message)
+        override suspend fun onRoomState(message: ChatUtils.IRCMessage) {
+            roomState.value = RoomState(
+                emote = message.tags["emote-only"],
+                followers = message.tags["followers-only"],
+                unique = message.tags["r9k"],
+                slow = message.tags["slow"],
+                subs = message.tags["subs-only"]
+            )
         }
 
         override suspend fun onDisconnect(message: String, fullMsg: String?) {
@@ -1239,12 +1245,12 @@ class ChatViewModel(
             }
         }
 
-        override suspend fun onNotice(message: String) {
+        override suspend fun onNotice(message: ChatUtils.IRCMessage) {
             onMessage(ChatUtils.parseNotice(message))
         }
 
-        override suspend fun onUserState(message: String) {
-            val emoteSets = ChatUtils.parseEmoteSets(message)
+        override suspend fun onUserState(message: ChatUtils.IRCMessage) {
+            val emoteSets = message.tags["emote-sets"]?.split(",")
             if (emoteSets != null && savedEmoteSets != emoteSets) {
                 savedEmoteSets = emoteSets
                 if (!loadedUserEmotes) {
@@ -2682,9 +2688,10 @@ class ChatViewModel(
                                                         reader.beginArray().also { position += 1 }
                                                         while (reader.hasNext()) {
                                                             val message = reader.nextString().also { position += it.length + 2 + it.count { c -> c == '"' || c == '\\' } }
-                                                            when {
-                                                                message.contains("PRIVMSG") -> {
-                                                                    val chatMessage = ChatUtils.parseChatMessage(message, false)
+                                                            val ircMessage = ChatUtils.parseIRCMessage(message)
+                                                            when (ircMessage.command) {
+                                                                "PRIVMSG", "USERNOTICE" -> {
+                                                                    val chatMessage = ChatUtils.parseChatMessage(ircMessage)
                                                                     if (chatMessage.reply?.message != null) {
                                                                         liveMessages.add(ChatMessage(
                                                                             type = ChatMessage.REPLY_MESSAGE,
@@ -2694,24 +2701,15 @@ class ChatViewModel(
                                                                     }
                                                                     liveMessages.add(chatMessage)
                                                                 }
-                                                                message.contains("USERNOTICE") -> {
-                                                                    val chatMessage = ChatUtils.parseChatMessage(message, true)
-                                                                    if (chatMessage.reply?.message != null) {
-                                                                        liveMessages.add(ChatMessage(
-                                                                            type = ChatMessage.REPLY_MESSAGE,
-                                                                            reply = chatMessage.reply,
-                                                                            replyParent = chatMessage,
-                                                                        ))
+                                                                "CLEARMSG" -> {
+                                                                    val chatMessage = ChatUtils.parseClearMessage(ircMessage)
+                                                                    val deletedMessage = chatMessage.targetMsgId?.let { targetId ->
+                                                                        liveMessages.find { it.id == targetId }
                                                                     }
-                                                                    liveMessages.add(chatMessage)
+                                                                    liveMessages.add(getClearMessage(chatMessage, deletedMessage, nameDisplay))
                                                                 }
-                                                                message.contains("CLEARMSG") -> {
-                                                                    val pair = ChatUtils.parseClearMessage(message)
-                                                                    val deletedMessage = pair.second?.let { targetId -> liveMessages.find { it.id == targetId } }
-                                                                    liveMessages.add(getClearMessage(pair.first, deletedMessage, nameDisplay))
-                                                                }
-                                                                message.contains("CLEARCHAT") -> liveMessages.add(ChatUtils.parseClearChat(applicationContext, message))
-                                                                message.contains("NOTICE") -> liveMessages.add(ChatUtils.parseNotice(message))
+                                                                "CLEARCHAT" -> liveMessages.add(ChatUtils.parseClearChat(applicationContext, ircMessage))
+                                                                "NOTICE" -> liveMessages.add(ChatUtils.parseNotice(ircMessage))
                                                             }
                                                             if (reader.peek() != JsonToken.END_ARRAY) {
                                                                 position += 1
