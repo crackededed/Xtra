@@ -44,6 +44,7 @@ import androidx.media3.common.util.ConditionVariable;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.common.util.Util;
 import androidx.media3.datasource.BaseDataSource;
+import androidx.media3.datasource.DataSource;
 import androidx.media3.datasource.DataSourceException;
 import androidx.media3.datasource.DataSpec;
 import androidx.media3.datasource.HttpDataSource;
@@ -53,38 +54,25 @@ import androidx.media3.datasource.TransferListener;
 import com.github.andreyasadchy.xtra.ui.player.ExoPlayerService;
 import com.google.common.base.Ascii;
 import com.google.common.base.Predicate;
-import com.google.common.io.ByteStreams;
 import com.google.common.net.HttpHeaders;
 import com.google.common.primitives.Longs;
-import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 import kotlin.jvm.functions.Function0;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 /**
  * DataSource without intermediate buffer based on {@link HttpEngine} set using {@link UrlRequest}.
@@ -114,9 +102,10 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
     private boolean handleSetCookieRequests;
     private boolean keepPostFor302Redirects;
 
-    @Nullable private final Call.Factory multivariantPlaylistProxyClient; // xtra: proxy
-    @Nullable private final Call.Factory mediaPlaylistProxyClient;
-    private final Function0<Boolean> proxyMediaPlaylist;
+    private final boolean proxyMultivariantPlaylist; // xtra: proxy
+    private final boolean proxyMediaPlaylist;
+    @Nullable private final HttpEngine proxyClient;
+    private final Function0<Boolean> getProxyMediaPlaylist;
 
     /**
      * Creates an instance.
@@ -128,12 +117,13 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
      *     However, to avoid slowing down overall network performance, care must be taken to make
      *     sure response handling is a fast operation when using a direct executor.
      */
-    public Factory(HttpEngine httpEngine, Executor executor, @Nullable Call.Factory multivariantPlaylistProxyClient, @Nullable Call.Factory mediaPlaylistProxyClient, Function0<Boolean> proxyMediaPlaylist) {
+    public Factory(HttpEngine httpEngine, Executor executor, boolean proxyMultivariantPlaylist, boolean proxyMediaPlaylist, @Nullable HttpEngine proxyClient, Function0<Boolean> getProxyMediaPlaylist) {
       this.httpEngine = checkNotNull(httpEngine);
       this.executor = executor;
-      this.multivariantPlaylistProxyClient = multivariantPlaylistProxyClient; // xtra: proxy
-      this.mediaPlaylistProxyClient = mediaPlaylistProxyClient;
+      this.proxyMultivariantPlaylist = proxyMultivariantPlaylist; // xtra: proxy
       this.proxyMediaPlaylist = proxyMediaPlaylist;
+      this.proxyClient = proxyClient;
+      this.getProxyMediaPlaylist = getProxyMediaPlaylist;
       defaultRequestProperties = new RequestProperties();
       requestPriority = REQUEST_PRIORITY_MEDIUM;
       connectTimeoutMs = DEFAULT_CONNECT_TIMEOUT_MILLIS;
@@ -285,9 +275,10 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
           new HttpEngineDataSource(
               httpEngine,
               executor,
-              multivariantPlaylistProxyClient, // xtra: proxy
-              mediaPlaylistProxyClient,
+              proxyMultivariantPlaylist, // xtra: proxy
               proxyMediaPlaylist,
+              proxyClient,
+              getProxyMediaPlaylist,
               requestPriority,
               connectTimeoutMs,
               readTimeoutMs,
@@ -388,19 +379,19 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
 
   private volatile long currentConnectTimeoutMs;
 
-  @Nullable private final Call.Factory multivariantPlaylistProxyClient; // xtra: proxy
-  @Nullable private final Call.Factory mediaPlaylistProxyClient;
-  private final Function0<Boolean> proxyMediaPlaylist;
-  @Nullable private Response response;
-  @Nullable private InputStream responseByteStream;
+  private final boolean proxyMultivariantPlaylist; // xtra: proxy
+  private final boolean proxyMediaPlaylist;
+  @Nullable private final HttpEngine proxyClient;
+  private final Function0<Boolean> getProxyMediaPlaylist;
 
   @UnstableApi
   /* package */ HttpEngineDataSource(
       HttpEngine httpEngine,
       Executor executor,
-      @Nullable Call.Factory multivariantPlaylistProxyClient, // xtra: proxy
-      @Nullable Call.Factory mediaPlaylistProxyClient,
-      Function0<Boolean> proxyMediaPlaylist,
+      boolean proxyMultivariantPlaylist, // xtra: proxy
+      boolean proxyMediaPlaylist,
+      @Nullable HttpEngine proxyClient,
+      Function0<Boolean> getProxyMediaPlaylist,
       int requestPriority,
       int connectTimeoutMs,
       int readTimeoutMs,
@@ -413,9 +404,10 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
     super(/* isNetwork= */ true);
     this.httpEngine = checkNotNull(httpEngine);
     this.executor = checkNotNull(executor);
-    this.multivariantPlaylistProxyClient = multivariantPlaylistProxyClient; // xtra: proxy
-    this.mediaPlaylistProxyClient = mediaPlaylistProxyClient;
+    this.proxyMultivariantPlaylist = proxyMultivariantPlaylist; // xtra: proxy
     this.proxyMediaPlaylist = proxyMediaPlaylist;
+    this.proxyClient = proxyClient;
+    this.getProxyMediaPlaylist = getProxyMediaPlaylist;
     this.requestPriority = requestPriority;
     this.connectTimeoutMs = connectTimeoutMs;
     this.readTimeoutMs = readTimeoutMs;
@@ -496,16 +488,6 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
       } else {
         throw new OpenException(
             e, dataSpec, PlaybackException.ERROR_CODE_IO_UNSPECIFIED, Status.IDLE);
-      }
-    }
-    String host = dataSpec.uri.getHost(); // xtra: proxy
-    if (host != null) {
-      if (host.matches(ExoPlayerService.MULTIVARIANT_PLAYLIST_REGEX) && multivariantPlaylistProxyClient != null) {
-        return openOkHttp(dataSpec, multivariantPlaylistProxyClient);
-      } else {
-        if (host.matches(ExoPlayerService.MEDIA_PLAYLIST_REGEX) && mediaPlaylistProxyClient != null && proxyMediaPlaylist.invoke()) {
-          return openOkHttp(dataSpec, mediaPlaylistProxyClient);
-        }
       }
     }
     urlRequestWrapper.start();
@@ -753,9 +735,7 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
     if (transferStarted) {
       transferStarted = false;
       transferEnded();
-      closeConnectionQuietly(); // xtra: proxy
     }
-    response = null; // xtra: proxy
   }
 
   /** Returns current {@link UrlRequest.Callback}. May be null if the data source is not opened. */
@@ -775,6 +755,16 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
 
   private UrlRequest.Builder buildRequestBuilder(
       DataSpec dataSpec, UrlRequest.Callback urlRequestCallback) throws IOException {
+    HttpEngine httpEngine; // xtra: proxy
+    String host = dataSpec.uri.getHost();
+    if (proxyClient != null && host != null &&
+            ((proxyMultivariantPlaylist && host.matches(ExoPlayerService.MULTIVARIANT_PLAYLIST_REGEX)) ||
+                    (proxyMediaPlaylist && host.matches(ExoPlayerService.MEDIA_PLAYLIST_REGEX) && getProxyMediaPlaylist.invoke()))
+    ) {
+      httpEngine = proxyClient;
+    } else {
+      httpEngine = this.httpEngine;
+    }
     UrlRequest.Builder requestBuilder =
         httpEngine
             .newUrlRequestBuilder(dataSpec.uri.toString(), executor, urlRequestCallback)
@@ -820,7 +810,7 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
     requestBuilder.setHttpMethod(dataSpec.getHttpMethodString());
     if (dataSpec.httpBody != null) {
       requestBuilder.setUploadDataProvider(
-              new ByteArrayUploadDataProvider(dataSpec.httpBody), executor);
+          new ByteArrayUploadDataProvider(dataSpec.httpBody), executor);
     }
     return requestBuilder;
   }
@@ -931,18 +921,6 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
    */
   @SuppressWarnings("ReferenceEquality")
   private void readInternal(ByteBuffer buffer, DataSpec dataSpec) throws HttpDataSourceException {
-    if (responseByteStream != null) { // xtra: proxy
-      try {
-        int read = Channels.newChannel(responseByteStream).read(buffer);
-        if (read == -1) {
-          finished = true;
-        }
-      } catch (IOException e) {
-        throw HttpDataSourceException.createForIOException(
-            e, dataSpec, HttpDataSourceException.TYPE_READ);
-      }
-      return;
-    }
     castNonNull(currentUrlRequestWrapper).read(buffer);
     try {
       if (!operation.block(readTimeoutMs)) {
@@ -1012,171 +990,6 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
     dst.put(src);
     src.limit(limit);
     return remaining;
-  }
-
-  // xtra: proxy
-  private long openOkHttp(DataSpec dataSpec, Call.Factory callFactory) throws HttpDataSourceException {
-    transferInitializing(dataSpec);
-
-    Request request = makeRequest(dataSpec);
-    Response response;
-    ResponseBody responseBody;
-    Call call = callFactory.newCall(request);
-
-    try {
-      this.response = executeCall(call);
-      response = this.response;
-      responseBody = checkNotNull(response.body());
-      responseByteStream = responseBody.byteStream();
-    } catch (IOException e) {
-      throw HttpDataSourceException.createForIOException(
-          e, dataSpec, HttpDataSourceException.TYPE_OPEN);
-    }
-
-    int responseCode = response.code();
-
-    // Check for a valid response code.
-    if (!response.isSuccessful()) {
-      if (responseCode == 416) {
-        long documentSize =
-            HttpUtil.getDocumentSize(response.headers().get(HttpHeaders.CONTENT_RANGE));
-        if (dataSpec.position == documentSize) {
-          transferStarted = true;
-          transferStarted(dataSpec);
-          return dataSpec.length != C.LENGTH_UNSET ? dataSpec.length : 0;
-        }
-      }
-
-      byte[] errorResponseBody;
-      try {
-        errorResponseBody = ByteStreams.toByteArray(checkNotNull(responseByteStream));
-      } catch (IOException e) {
-        errorResponseBody = Util.EMPTY_BYTE_ARRAY;
-      }
-      Map<String, List<String>> headers = response.headers().toMultimap();
-      closeConnectionQuietly();
-      @Nullable
-      IOException cause =
-          responseCode == 416
-              ? new DataSourceException(PlaybackException.ERROR_CODE_IO_READ_POSITION_OUT_OF_RANGE)
-              : null;
-      throw new InvalidResponseCodeException(
-          responseCode, response.message(), cause, headers, dataSpec, errorResponseBody);
-    }
-
-    // Check for a valid content type.
-    @Nullable MediaType mediaType = responseBody.contentType();
-    String contentType = mediaType != null ? mediaType.toString() : "";
-    if (contentTypePredicate != null && !contentTypePredicate.apply(contentType)) {
-      closeConnectionQuietly();
-      throw new InvalidContentTypeException(contentType, dataSpec);
-    }
-
-    // If we requested a range starting from a non-zero position and received a 200 rather than a
-    // 206, then the server does not support partial requests. We'll need to manually skip to the
-    // requested position.
-    long bytesToSkip = responseCode == 200 && dataSpec.position != 0 ? dataSpec.position : 0;
-
-    // Determine the length of the data to be read, after skipping.
-    if (dataSpec.length != C.LENGTH_UNSET) {
-      bytesRemaining = dataSpec.length;
-    } else {
-      long contentLength = responseBody.contentLength();
-      bytesRemaining = contentLength != -1 ? (contentLength - bytesToSkip) : C.LENGTH_UNSET;
-    }
-
-    transferStarted = true;
-    transferStarted(dataSpec);
-
-    try {
-      skipFully(bytesToSkip, dataSpec);
-    } catch (HttpDataSourceException e) {
-      closeConnectionQuietly();
-      throw e;
-    }
-
-    return bytesRemaining;
-  }
-
-  private Request makeRequest(DataSpec dataSpec) throws HttpDataSourceException {
-    long position = dataSpec.position;
-    long length = dataSpec.length;
-
-    @Nullable HttpUrl url = HttpUrl.parse(dataSpec.uri.toString());
-    if (url == null) {
-      throw new HttpDataSourceException(
-          "Malformed URL",
-          dataSpec,
-          PlaybackException.ERROR_CODE_FAILED_RUNTIME_CHECK,
-          HttpDataSourceException.TYPE_OPEN);
-    }
-
-    Request.Builder builder = new Request.Builder().url(url);
-
-    Map<String, String> headers = new HashMap<>();
-    if (defaultRequestProperties != null) {
-      headers.putAll(defaultRequestProperties.getSnapshot());
-    }
-
-    headers.putAll(requestProperties.getSnapshot());
-    headers.putAll(dataSpec.httpRequestHeaders);
-
-    for (Map.Entry<String, String> header : headers.entrySet()) {
-      builder.header(header.getKey(), header.getValue());
-    }
-
-    @Nullable String rangeHeader = buildRangeRequestHeader(position, length);
-    if (rangeHeader != null) {
-      builder.addHeader(HttpHeaders.RANGE, rangeHeader);
-    }
-    if (userAgent != null) {
-      builder.addHeader(HttpHeaders.USER_AGENT, userAgent);
-    }
-    if (!dataSpec.isFlagSet(DataSpec.FLAG_ALLOW_GZIP)) {
-      builder.addHeader(HttpHeaders.ACCEPT_ENCODING, "identity");
-    }
-
-    @Nullable RequestBody requestBody = null;
-    if (dataSpec.httpBody != null) {
-      requestBody = RequestBody.create(dataSpec.httpBody);
-    } else if (dataSpec.httpMethod == DataSpec.HTTP_METHOD_POST) {
-      // OkHttp requires a non-null body for POST requests.
-      requestBody = RequestBody.create(Util.EMPTY_BYTE_ARRAY);
-    }
-    builder.method(dataSpec.getHttpMethodString(), requestBody);
-    return builder.build();
-  }
-
-  private Response executeCall(Call call) throws IOException {
-    SettableFuture<Response> future = SettableFuture.create();
-    call.enqueue(
-        new Callback() {
-          @Override
-          public void onFailure(Call call, IOException e) {
-            future.setException(e);
-          }
-
-          @Override
-          public void onResponse(Call call, Response response) {
-            future.set(response);
-          }
-        });
-
-    try {
-      return future.get();
-    } catch (InterruptedException e) {
-      call.cancel();
-      throw new InterruptedIOException();
-    } catch (ExecutionException ee) {
-      throw new IOException(ee);
-    }
-  }
-
-  private void closeConnectionQuietly() {
-    if (response != null) {
-      checkNotNull(response.body()).close();
-    }
-    responseByteStream = null;
   }
 
   /**

@@ -11,6 +11,8 @@ import android.content.pm.ServiceInfo
 import android.graphics.drawable.Icon
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.net.http.HttpEngine
+import android.net.http.ProxyOptions
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
@@ -62,6 +64,9 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import okhttp3.Credentials
 import okhttp3.Request
+import org.chromium.net.CronetEngine
+import org.chromium.net.CronetProvider
+import org.chromium.net.QuicOptions
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -213,7 +218,7 @@ class StreamDownloadService : LifecycleService() {
         val quality = offlineVideo.quality
         var startTime = System.currentTimeMillis()
         var endTime = startWait?.let { System.currentTimeMillis() + it }
-        var playlistUrl = xtraModule.playerRepository.loadStreamPlaylistUrl(networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, false, null, null, null, null, false)
+        var playlistUrl = xtraModule.playerRepository.loadStreamPlaylistUrl(this@StreamDownloadService, networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, false, null, null, null, null, false)
         while (true) {
             val playlist = when {
                 networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
@@ -388,7 +393,7 @@ class StreamDownloadService : LifecycleService() {
                     }
                     endTime = endWait?.let { System.currentTimeMillis() + it }
                     if (continueDownloading) {
-                        playlistUrl = xtraModule.playerRepository.loadStreamPlaylistUrl(networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, false, null, null, null, null, false)
+                        playlistUrl = xtraModule.playerRepository.loadStreamPlaylistUrl(this@StreamDownloadService, networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, false, null, null, null, null, false)
                     }
                 }
             }
@@ -407,48 +412,103 @@ class StreamDownloadService : LifecycleService() {
 
     private suspend fun proxyPlaylist(playlistUrl: String, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, supportedCodecs: String?, proxyPlaybackAccessToken: Boolean, proxyMultivariantPlaylist: Boolean, proxyHost: String, proxyPort: Int, proxyUser: String?, proxyPassword: String?): String? = withContext(Dispatchers.IO) {
         val playlistUrl = if (proxyPlaybackAccessToken) {
-            xtraModule.playerRepository.loadStreamPlaylistUrl(networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, true, proxyHost, proxyPort, proxyUser, proxyPassword, false)
+            xtraModule.playerRepository.loadStreamPlaylistUrl(this@StreamDownloadService, networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, true, proxyHost, proxyPort, proxyUser, proxyPassword, false)
         } else {
             playlistUrl
         }
-        if (proxyMultivariantPlaylist) {
-            okHttpClient.value.newBuilder().apply {
-                proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
-                if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
-                    proxyAuthenticator { _, response ->
-                        response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
+        when {
+            networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
+                val httpEngine = if (proxyMultivariantPlaylist) {
+                    val proxyHeaders = if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                        listOf(android.util.Pair("Proxy-Authorization", Base64.encodeToString("$proxyUser:$proxyPassword".toByteArray(), Base64.NO_WRAP)))
+                    } else emptyList()
+                    HttpEngine.Builder(application).apply {
+                        setProxyOptions(ProxyOptions.fromProxyList(
+                            listOf(
+                                android.net.http.Proxy.createHttpProxy(
+                                    android.net.http.Proxy.SCHEME_HTTP,
+                                    proxyHost,
+                                    proxyPort,
+                                    xtraModule.cronetExecutor.value,
+                                    object : android.net.http.Proxy.HttpConnectCallback {
+                                        override fun onBeforeRequest(request: android.net.http.Proxy.HttpConnectCallback.Request) {
+                                            request.proceed(proxyHeaders)
+                                        }
+
+                                        override fun onResponseReceived(responseHeaders: List<android.util.Pair<String?, String?>?>, statusCode: Int): Int {
+                                            return android.net.http.Proxy.HttpConnectCallback.RESPONSE_ACTION_PROCEED
+                                        }
+                                    }
+                                )
+                            ),
+                            ProxyOptions.ALL_PROXIES_FAILED_BEHAVIOR_DISALLOW_DIRECT
+                        ))
+                    }.build()
+                } else {
+                    xtraModule.httpEngine.value!!
+                }
+                val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout(CRONET_TIMEOUT)
+                    val request = httpEngine.newUrlRequestBuilder(
+                        playlistUrl,
+                        xtraModule.cronetExecutor.value,
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
+                    ).build()
+                    timeout.start(request, continuation)
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                        timeout.stop()
                     }
                 }
-            }.build().newCall(Request.Builder().url(playlistUrl).build()).executeAsync().use { response ->
-                if (response.isSuccessful) {
-                    response.body.string()
+                if (response.info.httpStatusCode in 200..299) {
+                    response.body.decodeToString()
                 } else null
             }
-        } else {
-            when {
-                networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
-                    val response = suspendCancellableCoroutine { continuation ->
-                        val timeout = NetworkUtils.HttpEngineTimeout(CRONET_TIMEOUT)
-                        val request = xtraModule.httpEngine.value!!.newUrlRequestBuilder(
-                            playlistUrl,
-                            xtraModule.cronetExecutor.value,
-                            NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
-                        ).build()
-                        timeout.start(request, continuation)
-                        request.start()
-                        continuation.invokeOnCancellation {
-                            request.cancel()
-                            timeout.stop()
+            networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
+                val cronetEngine = if (proxyMultivariantPlaylist) {
+                    if (CronetProvider.getAllProviders(application).any { it.isEnabled }) {
+                        val proxyHeaders = if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                            mapOf("Proxy-Authorization" to Base64.encodeToString("$proxyUser:$proxyPassword".toByteArray(), Base64.NO_WRAP)).entries.toList()
+                        } else emptyList()
+                        val builder = CronetEngine.Builder(application).apply {
+                            val userAgent = "Cronet/" + defaultUserAgent.substringAfter("Cronet/", "").substringBefore(')')
+                            setUserAgent(userAgent)
+                            @QuicOptions.Experimental
+                            setQuicOptions(QuicOptions.builder().setHandshakeUserAgent(userAgent).build())
                         }
-                    }
-                    if (response.info.httpStatusCode in 200..299) {
-                        response.body.decodeToString()
+                        try {
+                            @org.chromium.net.ProxyOptions.Experimental
+                            builder.setProxyOptions(org.chromium.net.ProxyOptions(
+                                listOf(
+                                    org.chromium.net.Proxy(
+                                        org.chromium.net.Proxy.HTTP,
+                                        proxyHost,
+                                        proxyPort,
+                                        xtraModule.cronetExecutor.value,
+                                        object : org.chromium.net.Proxy.Callback() {
+                                            override fun onBeforeTunnelRequest(request: Request) {
+                                                request.proceed(proxyHeaders)
+                                            }
+
+                                            override fun onTunnelHeadersReceived(responseHeaders: List<Map.Entry<String?, String?>?>, statusCode: Int): Boolean {
+                                                return true
+                                            }
+                                        }
+                                    )
+                                )
+                            ))
+                        } catch (e: UnsupportedOperationException) {
+                            null
+                        }?.build()
                     } else null
+                } else {
+                    xtraModule.cronetEngine.value!!
                 }
-                networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
+                if (cronetEngine != null) {
                     val response = suspendCancellableCoroutine { continuation ->
                         val timeout = NetworkUtils.CronetTimeout(CRONET_TIMEOUT)
-                        val request = xtraModule.cronetEngine.value!!.newUrlRequestBuilder(
+                        val request = cronetEngine.newUrlRequestBuilder(
                             playlistUrl,
                             NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
                             xtraModule.cronetExecutor.value
@@ -463,13 +523,38 @@ class StreamDownloadService : LifecycleService() {
                     if (response.info.httpStatusCode in 200..299) {
                         response.body.decodeToString()
                     } else null
-                }
-                else -> {
-                    okHttpClient.value.newCall(Request.Builder().url(playlistUrl).build()).executeAsync().use { response ->
+                } else {
+                    okHttpClient.value.newBuilder().apply {
+                        proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
+                        if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                            proxyAuthenticator { _, response ->
+                                response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
+                            }
+                        }
+                    }.build().newCall(Request.Builder().url(playlistUrl).build()).executeAsync().use { response ->
                         if (response.isSuccessful) {
                             response.body.string()
                         } else null
                     }
+                }
+            }
+            else -> {
+                val okHttpClient = if (proxyMultivariantPlaylist) {
+                    okHttpClient.value.newBuilder().apply {
+                        proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
+                        if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                            proxyAuthenticator { _, response ->
+                                response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
+                            }
+                        }
+                    }.build()
+                } else {
+                    okHttpClient.value
+                }
+                okHttpClient.newCall(Request.Builder().url(playlistUrl).build()).executeAsync().use { response ->
+                    if (response.isSuccessful) {
+                        response.body.string()
+                    } else null
                 }
             }
         }
