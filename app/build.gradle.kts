@@ -28,7 +28,7 @@ android {
         minSdk = 16
         targetSdk = 37
         versionCode = 121
-        versionName = "2.57.3"
+        versionName = "2.57.4"
     }
 
     buildTypes {
@@ -102,7 +102,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.0-alpha01")
     implementation("androidx.room:room-ktx:2.6.1")
     implementation("androidx.media:media:1.6.0")
-    implementation("com.google.guava:guava:33.2.1-android") // exoplayer
+    compileOnly("com.google.j2objc:j2objc-annotations:3.0.0") // OkHttpDataSource SettableFuture
     implementation("com.google.android.gms:play-services-cronet:18.0.1")
     implementation("com.google.mlkit:language-id:17.0.1")
     implementation("com.google.mlkit:translate:16.1.2")

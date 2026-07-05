@@ -175,12 +175,12 @@ object NetworkUtils {
             continuation.resume(CronetResponse(info, mResponseBodyStream.toByteArray()))
         }
 
-        override fun onFailed(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo, error: CronetException) {
+        override fun onFailed(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo?, error: CronetException) {
             timeout.stop()
             continuation.resumeWithException(error)
         }
 
-        override fun onCanceled(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo) {
+        override fun onCanceled(request: org.chromium.net.UrlRequest, info: org.chromium.net.UrlResponseInfo?) {
         }
     }
 

@@ -1,6 +1,7 @@
 package com.github.andreyasadchy.xtra.ui.player
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.net.Uri
 import android.net.http.HttpEngine
 import androidx.lifecycle.ViewModel
@@ -50,6 +51,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
 class Media3PlayerViewModel(
+    private val applicationContext: Context,
     private val httpEngine: Lazy<HttpEngine?>,
     private val cronetEngine: Lazy<CronetEngine?>,
     private val cronetExecutor: Lazy<ExecutorService>,
@@ -173,7 +175,7 @@ class Media3PlayerViewModel(
         if (streamResult.value == null) {
             viewModelScope.launch {
                 try {
-                    streamResult.value = playerRepository.loadStreamPlaylistUrl(networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity)
+                    streamResult.value = playerRepository.loadStreamPlaylistUrl(applicationContext, networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity)
                 } catch (e: Exception) {
                     if (e.message == C.FAILED_INTEGRITY_CHECK) {
                         integrity.emit("refreshStream")
@@ -728,7 +730,7 @@ class Media3PlayerViewModel(
             initializer {
                 val application = (this[APPLICATION_KEY] as XtraApp)
                 val xtraModule = application.xtraModule
-                Media3PlayerViewModel(xtraModule.httpEngine, xtraModule.cronetEngine, xtraModule.cronetExecutor, xtraModule.okHttpClient, xtraModule.graphQLRepository, xtraModule.helixRepository, xtraModule.playerRepository, xtraModule.bookmarksRepository, xtraModule.offlineVideosRepository, xtraModule.localChannelFollowsRepository, xtraModule.notificationsRepository)
+                Media3PlayerViewModel(application.applicationContext, xtraModule.httpEngine, xtraModule.cronetEngine, xtraModule.cronetExecutor, xtraModule.okHttpClient, xtraModule.graphQLRepository, xtraModule.helixRepository, xtraModule.playerRepository, xtraModule.bookmarksRepository, xtraModule.offlineVideosRepository, xtraModule.localChannelFollowsRepository, xtraModule.notificationsRepository)
             }
         }
     }

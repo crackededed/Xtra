@@ -1,7 +1,9 @@
 package com.github.andreyasadchy.xtra.repository
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.net.http.HttpEngine
+import android.net.http.ProxyOptions
 import android.util.Base64
 import androidx.core.net.toUri
 import com.apollographql.apollo.api.CustomScalarAdapters
@@ -81,10 +83,10 @@ class PlayerRepository(
     private val helixRepository: HelixRepository,
 ) {
 
-    suspend fun loadStreamPlaylistUrl(networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, supportedCodecs: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): String = withContext(Dispatchers.IO) {
-        val accessToken = loadStreamPlaybackAccessToken(networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity).let { token ->
+    suspend fun loadStreamPlaylistUrl(context: Context, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, supportedCodecs: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): String = withContext(Dispatchers.IO) {
+        val accessToken = loadStreamPlaybackAccessToken(context, networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity).let { token ->
             if (token.second?.contains("\"forbidden\":true") == true && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-                loadStreamPlaybackAccessToken(networkLibrary, gqlHeaders.filterNot { it.key == C.HEADER_TOKEN }, channelLogin, randomDeviceId, xDeviceId, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity)
+                loadStreamPlaybackAccessToken(context, networkLibrary, gqlHeaders.filterNot { it.key == C.HEADER_TOKEN }, channelLogin, randomDeviceId, xDeviceId, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity)
             } else token
         }
         val signature = accessToken.first
@@ -103,28 +105,102 @@ class PlayerRepository(
         }.build().toString()
     }
 
-    private suspend fun loadStreamPlaybackAccessToken(networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): Pair<String?, String?> = withContext(Dispatchers.IO) {
+    private suspend fun loadStreamPlaybackAccessToken(context: Context, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): Pair<String?, String?> = withContext(Dispatchers.IO) {
         val accessTokenHeaders = getPlaybackAccessTokenHeaders(gqlHeaders, randomDeviceId, xDeviceId, enableIntegrity)
+        val url = "https://gql.twitch.tv/gql/"
+        val headers = accessTokenHeaders.filterKeys { it == C.HEADER_CLIENT_ID || it == "X-Device-Id" }
         try {
+            val body = graphQLRepository.getPlaybackAccessTokenRequestBody(channelLogin, "", playerType)
             val response = if (proxyPlaybackAccessToken && !proxyHost.isNullOrBlank() && proxyPort != null) {
-                okHttpClient.value.newBuilder().apply {
-                    proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
-                    if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
-                        proxyAuthenticator { _, response ->
-                            response.request.newBuilder().header(
-                                "Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)
-                            ).build()
+                when {
+                    networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
+                        val proxyHeaders = if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                            listOf(android.util.Pair("Proxy-Authorization", Base64.encodeToString("$proxyUser:$proxyPassword".toByteArray(), Base64.NO_WRAP)))
+                        } else emptyList()
+                        val proxyClient = HttpEngine.Builder(context).apply {
+                            setProxyOptions(ProxyOptions.fromProxyList(
+                                listOf(
+                                    android.net.http.Proxy.createHttpProxy(
+                                        android.net.http.Proxy.SCHEME_HTTP,
+                                        proxyHost,
+                                        proxyPort,
+                                        cronetExecutor.value,
+                                        object : android.net.http.Proxy.HttpConnectCallback {
+                                            override fun onBeforeRequest(request: android.net.http.Proxy.HttpConnectCallback.Request) {
+                                                request.proceed(proxyHeaders)
+                                            }
+
+                                            override fun onResponseReceived(responseHeaders: List<android.util.Pair<String?, String?>?>, statusCode: Int): Int {
+                                                return android.net.http.Proxy.HttpConnectCallback.RESPONSE_ACTION_PROCEED
+                                            }
+                                        }
+                                    )
+                                ),
+                                ProxyOptions.ALL_PROXIES_FAILED_BEHAVIOR_DISALLOW_DIRECT
+                            ))
+                        }.build()
+                        val response = suspendCancellableCoroutine { continuation ->
+                            val timeout = NetworkUtils.HttpEngineTimeout()
+                            val request = proxyClient.newUrlRequestBuilder(
+                                url,
+                                cronetExecutor.value,
+                                NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
+                            ).apply {
+                                headers.forEach { addHeader(it.key, it.value) }
+                                addHeader("Content-Type", "application/json")
+                                setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
+                            }.build()
+                            timeout.start(request, continuation)
+                            request.start()
+                            continuation.invokeOnCancellation {
+                                request.cancel()
+                                timeout.stop()
+                            }
+                        }
+                        json.decodeFromString<PlaybackAccessTokenResponse>(response.body.decodeToString())
+                    }
+                    networkLibrary == C.CRONET && cronetEngine.value != null -> {
+                        okHttpClient.value.newBuilder().apply {
+                            proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
+                            if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                                proxyAuthenticator { _, response ->
+                                    response.request.newBuilder().header(
+                                        "Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)
+                                    ).build()
+                                }
+                            }
+                        }.build().newCall(Request.Builder().apply {
+                            url(url)
+                            headers.forEach {
+                                addHeader(it.key, it.value)
+                            }
+                            header("Content-Type", "application/json")
+                            post(body.toRequestBody())
+                        }.build()).executeAsync().use { response ->
+                            json.decodeFromString<PlaybackAccessTokenResponse>(response.body.string())
                         }
                     }
-                }.build().newCall(Request.Builder().apply {
-                    url("https://gql.twitch.tv/gql/")
-                    accessTokenHeaders.filterKeys { it == C.HEADER_CLIENT_ID || it == "X-Device-Id" }.forEach {
-                        addHeader(it.key, it.value)
+                    else -> {
+                        okHttpClient.value.newBuilder().apply {
+                            proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
+                            if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                                proxyAuthenticator { _, response ->
+                                    response.request.newBuilder().header(
+                                        "Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)
+                                    ).build()
+                                }
+                            }
+                        }.build().newCall(Request.Builder().apply {
+                            url(url)
+                            headers.forEach {
+                                addHeader(it.key, it.value)
+                            }
+                            header("Content-Type", "application/json")
+                            post(body.toRequestBody())
+                        }.build()).executeAsync().use { response ->
+                            json.decodeFromString<PlaybackAccessTokenResponse>(response.body.string())
+                        }
                     }
-                    header("Content-Type", "application/json")
-                    post(graphQLRepository.getPlaybackAccessTokenRequestBody(channelLogin, "", playerType).toRequestBody())
-                }.build()).executeAsync().use { response ->
-                    json.decodeFromString<PlaybackAccessTokenResponse>(response.body.string())
                 }
             } else {
                 graphQLRepository.loadPlaybackAccessToken(
@@ -156,25 +232,100 @@ class PlayerRepository(
                         }
                     }
                 }
-                okHttpClient.value.newBuilder().apply {
-                    proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
-                    if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
-                        proxyAuthenticator { _, response ->
-                            response.request.newBuilder().header(
-                                "Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)
-                            ).build()
+                when {
+                    networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
+                        val proxyHeaders = if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                            listOf(android.util.Pair("Proxy-Authorization", Base64.encodeToString("$proxyUser:$proxyPassword".toByteArray(), Base64.NO_WRAP)))
+                        } else emptyList()
+                        val httpEngine = HttpEngine.Builder(context).apply {
+                            setProxyOptions(ProxyOptions.fromProxyList(
+                                listOf(
+                                    android.net.http.Proxy.createHttpProxy(
+                                        android.net.http.Proxy.SCHEME_HTTP,
+                                        proxyHost,
+                                        proxyPort,
+                                        cronetExecutor.value,
+                                        object : android.net.http.Proxy.HttpConnectCallback {
+                                            override fun onBeforeRequest(request: android.net.http.Proxy.HttpConnectCallback.Request) {
+                                                request.proceed(proxyHeaders)
+                                            }
+
+                                            override fun onResponseReceived(responseHeaders: List<android.util.Pair<String?, String?>?>, statusCode: Int): Int {
+                                                return android.net.http.Proxy.HttpConnectCallback.RESPONSE_ACTION_PROCEED
+                                            }
+                                        }
+                                    )
+                                ),
+                                ProxyOptions.ALL_PROXIES_FAILED_BEHAVIOR_DISALLOW_DIRECT
+                            ))
+                        }.build()
+                        val response = suspendCancellableCoroutine { continuation ->
+                            val timeout = NetworkUtils.HttpEngineTimeout()
+                            val request = httpEngine.newUrlRequestBuilder(
+                                url,
+                                cronetExecutor.value,
+                                NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
+                            ).apply {
+                                headers.forEach { addHeader(it.key, it.value) }
+                                addHeader("Content-Type", "application/json")
+                                setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
+                            }.build()
+                            timeout.start(request, continuation)
+                            request.start()
+                            continuation.invokeOnCancellation {
+                                request.cancel()
+                                timeout.stop()
+                            }
+                        }
+                        response.body.inputStream().source().buffer().jsonReader().use {
+                            query.parseResponse(it)
                         }
                     }
-                }.build().newCall(Request.Builder().apply {
-                    url("https://gql.twitch.tv/gql/")
-                    accessTokenHeaders.filterKeys { it == C.HEADER_CLIENT_ID || it == "X-Device-Id" }.forEach {
-                        addHeader(it.key, it.value)
+                    networkLibrary == C.CRONET && cronetEngine.value != null -> {
+                        okHttpClient.value.newBuilder().apply {
+                            proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
+                            if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                                proxyAuthenticator { _, response ->
+                                    response.request.newBuilder().header(
+                                        "Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)
+                                    ).build()
+                                }
+                            }
+                        }.build().newCall(Request.Builder().apply {
+                            url(url)
+                            headers.forEach {
+                                addHeader(it.key, it.value)
+                            }
+                            header("Content-Type", "application/json")
+                            post(body.toRequestBody())
+                        }.build()).executeAsync().use { response ->
+                            response.body.byteStream().source().buffer().jsonReader().use {
+                                query.parseResponse(it)
+                            }
+                        }
                     }
-                    header("Content-Type", "application/json")
-                    post(body.toRequestBody())
-                }.build()).executeAsync().use { response ->
-                    response.body.byteStream().source().buffer().jsonReader().use {
-                        query.parseResponse(it)
+                    else -> {
+                        okHttpClient.value.newBuilder().apply {
+                            proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
+                            if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                                proxyAuthenticator { _, response ->
+                                    response.request.newBuilder().header(
+                                        "Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)
+                                    ).build()
+                                }
+                            }
+                        }.build().newCall(Request.Builder().apply {
+                            url(url)
+                            headers.forEach {
+                                addHeader(it.key, it.value)
+                            }
+                            header("Content-Type", "application/json")
+                            post(body.toRequestBody())
+                        }.build()).executeAsync().use { response ->
+                            response.body.byteStream().source().buffer().jsonReader().use {
+                                query.parseResponse(it)
+                            }
+                        }
                     }
                 }
             } else {
