@@ -79,7 +79,10 @@ class FiltersAdapter(
                             )
                         }
                     }
-                    root.setOnLongClickListener { deleteFilter(item); true }
+                    root.setOnLongClickListener {
+                        deleteFilter(item)
+                        true
+                    }
                     if (item.gameName != null) {
                         gameName.visibility = View.VISIBLE
                         gameName.text = item.gameName
