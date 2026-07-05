@@ -58,12 +58,12 @@ class ChatReadWebSocket(
 
     interface Listener {
         suspend fun onConnect() {}
-        suspend fun onChatMessage(message: String, userNotice: Boolean) {}
-        suspend fun onClearMessage(message: String) {}
-        suspend fun onClearChat(message: String) {}
-        suspend fun onNotice(message: String) {}
-        suspend fun onRoomState(message: String) {}
-        suspend fun onUserState(message: String) {}
+        suspend fun onChatMessage(message: ChatUtils.IRCMessage, userNotice: Boolean) {}
+        suspend fun onClearMessage(message: ChatUtils.IRCMessage) {}
+        suspend fun onClearChat(message: ChatUtils.IRCMessage) {}
+        suspend fun onNotice(message: ChatUtils.IRCMessage) {}
+        suspend fun onRoomState(message: ChatUtils.IRCMessage) {}
+        suspend fun onUserState(message: ChatUtils.IRCMessage) {}
         suspend fun onDisconnect(message: String, fullMsg: String?) {}
     }
 
@@ -80,27 +80,30 @@ class ChatReadWebSocket(
 
         override suspend fun onMessage(webSocket: WebSocket, message: String) {
             message.removeSuffix("\r\n").split("\r\n").forEach {
-                it.run {
-                    when {
-                        contains("PRIVMSG") -> listener.onChatMessage(this, false)
-                        contains("USERNOTICE") -> listener.onChatMessage(this, true)
-                        contains("CLEARMSG") -> listener.onClearMessage(this)
-                        contains("CLEARCHAT") -> listener.onClearChat(this)
-                        contains("NOTICE") -> listener.onNotice(this)
-                        contains("ROOMSTATE") -> listener.onRoomState(this)
-                        contains("USERSTATE") -> listener.onUserState(this)
-                        startsWith("PING") -> {
-                            webSocket.write("PONG")
-                        }
-                        startsWith("PONG") -> {
-                            pingTimer?.cancel()
-                            pongTimer?.cancel()
-                            startPingTimer()
-                        }
-                        startsWith("RECONNECT") -> {
-                            pingTimer?.cancel()
-                            pongTimer?.cancel()
-                            webSocket.disconnect()
+                when {
+                    it.startsWith("PING") -> {
+                        webSocket.write("PONG")
+                    }
+                    it.startsWith("PONG") -> {
+                        pingTimer?.cancel()
+                        pongTimer?.cancel()
+                        startPingTimer()
+                    }
+                    it.startsWith("RECONNECT") -> {
+                        pingTimer?.cancel()
+                        pongTimer?.cancel()
+                        webSocket.disconnect()
+                    }
+                    else -> {
+                        val ircMessage = ChatUtils.parseIRCMessage(it)
+                        when (ircMessage.command) {
+                            "PRIVMSG" -> listener.onChatMessage(ircMessage, false)
+                            "USERNOTICE" -> listener.onChatMessage(ircMessage, true)
+                            "CLEARMSG" -> listener.onClearMessage(ircMessage)
+                            "CLEARCHAT" -> listener.onClearChat(ircMessage)
+                            "NOTICE" -> listener.onNotice(ircMessage)
+                            "ROOMSTATE" -> listener.onRoomState(ircMessage)
+                            "USERSTATE" -> listener.onUserState(ircMessage)
                         }
                     }
                 }
