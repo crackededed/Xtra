@@ -692,7 +692,7 @@ class ExoPlayerService : BasePlaybackService() {
                                                         HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, false, false, null) { false }
                                                     }
                                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
-                                                        CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, false, false, null, null, null) { false }
+                                                        CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, null, null) { false }
                                                     }
                                                     else -> {
                                                         OkHttpDataSource.Factory(xtraModule.okHttpClient.value, null) { false }
