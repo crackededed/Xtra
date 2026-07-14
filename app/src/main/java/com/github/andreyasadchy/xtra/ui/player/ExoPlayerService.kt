@@ -434,7 +434,7 @@ class ExoPlayerService : BasePlaybackService() {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     updatePlaybackState()
                     if (isPlaying) {
-                        if (savePositionTimer == null && (videoId != null || offlineVideoId != null)) {
+                        if (savePositionTimer == null && type != STREAM) {
                             savePositionTimer = Timer().apply {
                                 scheduleAtFixedRate(30000, 30000) {
                                     Handler(Looper.getMainLooper()).post {
@@ -623,9 +623,78 @@ class ExoPlayerService : BasePlaybackService() {
                 VIDEO -> {
                     started = true
                     serviceListener?.started()
-                    loadVideo(restorePauseState)
-                    if (title == null) {
-                        updateVideoInfo()
+                    if (videoId != null) {
+                        loadVideo(restorePauseState)
+                        if (title == null) {
+                            updateVideoInfo()
+                        }
+                    } else {
+                        videoUrl?.let { videoUrl ->
+                            val template = videoUrl.removeSuffix("/chunked/index-dvr.m3u8")
+                            val list = TwitchApiHelper.defaultQualityList.map { quality ->
+                                val name = if (quality == "chunked") {
+                                    "source"
+                                } else {
+                                    quality
+                                }
+                                val url = "${template}/${quality}/index-dvr.m3u8"
+                                VideoQuality(name, url = url)
+                            }
+                            qualities = list
+                                .sortedByDescending {
+                                    it.bitrate
+                                }
+                                .sortedByDescending {
+                                    it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
+                                }
+                                .sortedByDescending {
+                                    it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
+                                }
+                                .toMutableList().apply {
+                                    find { it.name.equals("source", true) }?.let { source ->
+                                        remove(source)
+                                        add(0, VideoQuality(SOURCE_QUALITY, source.codecs, source.bitrate, source.url))
+                                    }
+                                    val audio = find { it.name?.startsWith("audio", true) == true }
+                                    audio?.let { remove(it) }
+                                    add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.bitrate, audio?.url))
+                                }
+                            quality = qualities?.firstOrNull()
+                            serviceListener?.changePlayerMode()
+                            val url = quality?.url
+                            if (url != null) {
+                                player?.let { player ->
+                                    val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
+                                    player.setMediaSource(
+                                        HlsMediaSource.Factory(
+                                            DefaultDataSource.Factory(
+                                                this@ExoPlayerService,
+                                                when {
+                                                    networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
+                                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, false, false, null) { false }
+                                                    }
+                                                    networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
+                                                        CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, null, null) { false }
+                                                    }
+                                                    else -> {
+                                                        OkHttpDataSource.Factory(xtraModule.okHttpClient.value, null) { false }
+                                                    }
+                                                }
+                                            )
+                                        ).apply {
+                                            setPlaylistParserFactory(CustomHlsPlaylistParserFactory())
+                                        }.createMediaSource(
+                                            MediaItem.fromUri(url)
+                                        )
+                                    )
+                                    player.volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
+                                    player.setPlaybackSpeed(prefs().getFloat(C.PLAYER_SPEED, 1f))
+                                    player.prepare()
+                                    player.playWhenReady = !restorePauseState || !paused
+                                    player.seekTo(savedPosition ?: 0)
+                                }
+                            }
+                        }
                     }
                 }
                 CLIP -> {

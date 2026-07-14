@@ -556,4 +556,6 @@
     <string name="loaded_cached_stv_emotes">Geladene zwischengespeicherte 7TV-Emotes</string>
     <string name="loaded_cached_bttv_emotes">Geladene zwischengespeicherte BTTV-Emotes</string>
     <string name="loaded_cached_ffz_emotes">Geladene zwischengespeicherte FFZ-Emotes</string>
+    <string name="find_unlisted_video">Find unlisted video</string>
+    <string name="video_not_found">Video not found</string>
 </resources>

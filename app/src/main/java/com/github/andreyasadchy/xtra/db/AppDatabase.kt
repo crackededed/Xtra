@@ -36,7 +36,7 @@ import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
         RecentSearch::class,
         PlaybackState::class
     ],
-    version = 36,
+    version = 37,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
