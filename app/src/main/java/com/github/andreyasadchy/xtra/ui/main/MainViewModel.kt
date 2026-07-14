@@ -41,11 +41,14 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
@@ -58,7 +61,9 @@ import okhttp3.Request
 import org.chromium.net.CronetEngine
 import java.io.File
 import java.io.FileOutputStream
+import java.security.MessageDigest
 import java.util.Timer
+import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutorService
 import kotlin.math.max
 import kotlin.time.Instant
@@ -93,6 +98,7 @@ class MainViewModel(
     var sleepTimer: Timer? = null
     var sleepTimerEndTime = 0L
 
+    val videoUrl = MutableStateFlow<String?>(null)
     val video = MutableStateFlow<Pair<Video?, Long?>?>(null)
     val clip = MutableStateFlow<Clip?>(null)
     val user = MutableStateFlow<User?>(null)
@@ -124,6 +130,104 @@ class MainViewModel(
 
     suspend fun getWaitingDownloads(): List<OfflineVideo> {
         return offlineVideosRepository.getWaitingDownloads()
+    }
+
+    fun findVideoUrl(networkLibrary: String?, streamId: String?, channelLogin: String?, streamCreatedAt: String?) {
+        val createdAtSeconds = streamCreatedAt?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { time -> time > 0 }?.div(1000) }
+        if (streamId != null && channelLogin != null && createdAtSeconds != null) {
+            val data = "${channelLogin}_${streamId}_${createdAtSeconds}"
+            val messageDigest = MessageDigest.getInstance("SHA-1")
+            messageDigest.update(data.toByteArray())
+            val hash = messageDigest.digest().toHexString().take(20)
+            viewModelScope.launch(Dispatchers.IO) {
+                val semaphore = Semaphore(10)
+                val jobs = mutableListOf<Job>()
+                val result = MutableStateFlow<String?>(null)
+                for (domain in TwitchApiHelper.vodDomains) {
+                    semaphore.acquire()
+                    if (result.value != null) {
+                        break
+                    }
+                    val url = "${domain}/${hash}_${data}/chunked/index-dvr.m3u8"
+                    jobs.add(
+                        viewModelScope.launch(Dispatchers.IO) {
+                            try {
+                                when {
+                                    networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
+                                        val response = suspendCancellableCoroutine { continuation ->
+                                            val timeout = NetworkUtils.HttpEngineTimeout()
+                                            val request = httpEngine.value!!.newUrlRequestBuilder(
+                                                url,
+                                                cronetExecutor.value,
+                                                NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
+                                            ).build()
+                                            timeout.start(request, continuation)
+                                            request.start()
+                                            continuation.invokeOnCancellation {
+                                                request.cancel()
+                                                timeout.stop()
+                                            }
+                                        }
+                                        if (response.info.httpStatusCode in 200..299) {
+                                            result.value = url
+                                            jobs.forEach {
+                                                it.cancel()
+                                            }
+                                        }
+                                    }
+                                    networkLibrary == C.CRONET && cronetEngine.value != null -> {
+                                        val response = suspendCancellableCoroutine { continuation ->
+                                            val timeout = NetworkUtils.CronetTimeout()
+                                            val request = cronetEngine.value!!.newUrlRequestBuilder(
+                                                url,
+                                                NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
+                                                cronetExecutor.value
+                                            ).build()
+                                            timeout.start(request, continuation)
+                                            request.start()
+                                            continuation.invokeOnCancellation {
+                                                request.cancel()
+                                                timeout.stop()
+                                            }
+                                        }
+                                        if (response.info.httpStatusCode in 200..299) {
+                                            result.value = url
+                                            jobs.forEach {
+                                                it.cancel()
+                                            }
+                                        }
+                                    }
+                                    else -> {
+                                        okHttpClient.value.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
+                                            if (response.isSuccessful) {
+                                                result.value = url
+                                                jobs.forEach {
+                                                    it.cancel()
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } catch (e: CancellationException) {
+                                ensureActive()
+                            } catch (e: Exception) {
+
+                            }
+                        }.also {
+                            it.invokeOnCompletion {
+                                semaphore.release()
+                            }
+                        }
+                    )
+                }
+                jobs.joinAll()
+                videoUrl.value = if (result.value != null) {
+                    result.value
+                } else {
+                    ""
+                }
+            }
+        }
     }
 
     fun loadVideo(videoId: String?, offset: Long?, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {

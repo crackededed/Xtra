@@ -52,6 +52,13 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
+        android:key="player_menu_find_vod"
+        android:title="@string/find_unlisted_video"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
         android:key="player_menu_sleep"
         android:title="@string/sleep_timer"
         app:iconSpaceReserved="false"

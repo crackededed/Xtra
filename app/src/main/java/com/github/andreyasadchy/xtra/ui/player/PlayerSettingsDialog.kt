@@ -76,6 +76,13 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                         dismiss()
                     }
                 }
+                if (requireContext().prefs().getBoolean(C.PLAYER_MENU_FIND_VOD, true)) {
+                    menuFindVod.visibility = View.VISIBLE
+                    menuFindVod.setOnClickListener {
+                        (parentFragment as? PlayerFragment)?.findVideoUrl()
+                        dismiss()
+                    }
+                }
                 if (requireContext().prefs().getBoolean(C.PLAYER_MENU_RESTART, false)) {
                     menuRestart.visibility = View.VISIBLE
                     menuRestart.setOnClickListener {

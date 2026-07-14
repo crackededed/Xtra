@@ -290,6 +290,12 @@ class XtraModule(application: Application) {
                     db.execSQL("DROP TABLE playback_states")
                     db.execSQL("ALTER TABLE playback_states1 RENAME TO playback_states")
                 },
+                Migration(36, 37) { db ->
+                    db.execSQL("CREATE TABLE IF NOT EXISTS playback_states1 (type TEXT, streamId TEXT, videoId TEXT, clipId TEXT, offlineVideoId INTEGER, channelId TEXT, channelLogin TEXT, channelName TEXT, channelImage TEXT, gameId TEXT, gameSlug TEXT, gameName TEXT, title TEXT, thumbnail TEXT, createdAt TEXT, viewerCount INTEGER, durationSeconds INTEGER, videoType TEXT, videoOffsetSeconds INTEGER, videoCreatedAt TEXT, videoAnimatedPreviewURL TEXT, videoUrl TEXT, position INTEGER, paused INTEGER NOT NULL, qualities TEXT, quality TEXT, previousQuality TEXT, restoreQuality INTEGER NOT NULL, playlistUrl TEXT, restorePlaylist INTEGER NOT NULL, useCustomProxy INTEGER NOT NULL, skipAccessToken INTEGER NOT NULL, id INTEGER NOT NULL, PRIMARY KEY (id))")
+                    db.execSQL("INSERT INTO playback_states1 (type, streamId, videoId, clipId, offlineVideoId, channelId, channelLogin, channelName, channelImage, gameId, gameSlug, gameName, title, thumbnail, createdAt, viewerCount, durationSeconds, videoType, videoOffsetSeconds, videoCreatedAt, videoAnimatedPreviewURL, position, paused, qualities, quality, previousQuality, restoreQuality, playlistUrl, restorePlaylist, useCustomProxy, skipAccessToken, id) SELECT type, streamId, videoId, clipId, offlineVideoId, channelId, channelLogin, channelName, channelImage, gameId, gameSlug, gameName, title, thumbnail, createdAt, viewerCount, durationSeconds, videoType, videoOffsetSeconds, videoCreatedAt, videoAnimatedPreviewURL, position, paused, qualities, quality, previousQuality, restoreQuality, playlistUrl, restorePlaylist, useCustomProxy, skipAccessToken, id FROM playback_states")
+                    db.execSQL("DROP TABLE playback_states")
+                    db.execSQL("ALTER TABLE playback_states1 RENAME TO playback_states")
+                },
             )
         }.build()
     }
