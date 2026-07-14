@@ -1306,14 +1306,14 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         }
     }
 
-    fun getQualityMap(): Map<String, VideoQuality>? {
+    fun getQualities(): List<Pair<String, VideoQuality>>? {
         val qualities = playbackService?.qualities
         return if (!qualities.isNullOrEmpty()) {
             val hideCodecs = qualities.all {
                 val codec = it.codecs?.substringBefore('.')
                 codec == "avc1" || codec == "mp4a" || codec.isNullOrBlank()
             }
-            qualities.associateBy { quality ->
+            qualities.map { quality ->
                 when (quality.name) {
                     BasePlaybackService.AUTO_QUALITY -> getString(R.string.auto)
                     BasePlaybackService.SOURCE_QUALITY -> getString(R.string.source)
@@ -1333,19 +1333,20 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                             "${quality.name} $codecName"
                         }
                     }
-                }
+                } to quality
             }
         } else null
     }
 
     fun showQualityDialog() {
-        val qualities = getQualityMap()
+        val qualities = getQualities()
         if (!qualities.isNullOrEmpty()) {
             RadioButtonDialogFragment.newInstance(
                 REQUEST_CODE_QUALITY,
-                qualities.keys,
-                qualities.values.map { it.name.toString() }.toTypedArray(),
-                qualities.values.indexOf(qualities.values.find { it.name == playbackService?.quality?.name })
+                qualities.map { it.first },
+                qualities.map { it.second.name.toString() }.toTypedArray(),
+                qualities.map { it.second.url.toString() }.toTypedArray(),
+                qualities.indexOf(qualities.find { it.second.name == playbackService?.quality?.name && it.second.url == playbackService?.quality?.url })
             ).show(childFragmentManager, "closeOnPip")
         }
     }
@@ -1358,8 +1359,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 RadioButtonDialogFragment.newInstance(
                     REQUEST_CODE_SPEED,
                     speedList,
-                    null,
-                    speedList.indexOf(speed.toString())
+                    checkedIndex = speedList.indexOf(speed.toString())
                 ).show(childFragmentManager, "closeOnPip")
             }
         }
@@ -1474,7 +1474,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     fun setQualityText() {
         (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.let { dialog ->
-            val label = getQualityMap()?.entries?.find { it.value == playbackService?.quality }?.key
+            val label = getQualities()?.find { it.second == playbackService?.quality }?.first
             dialog.setQuality(label)
         }
     }
@@ -2147,6 +2147,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         createdAt = playbackService?.createdAt,
                         qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
                         qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+                        qualityBitrates = qualities?.map { it.bitrate.toString() }?.toTypedArray(),
                         qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
                     ).show(childFragmentManager, null)
                 }
@@ -2171,6 +2172,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         currentPosition = getCurrentPosition(),
                         qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
                         qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+                        qualityBitrates = qualities?.map { it.bitrate.toString() }?.toTypedArray(),
                         qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
                     ).show(childFragmentManager, null)
                 }
@@ -2194,6 +2196,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         videoCreatedAt = playbackService?.videoCreatedAt,
                         qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
                         qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+                        qualityBitrates = qualities?.map { it.bitrate.toString() }?.toTypedArray(),
                         qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
                     ).show(childFragmentManager, null)
                 }
@@ -2231,10 +2234,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         (activity as? MainActivity)?.setSleepTimer(durationMs)
     }
 
-    override fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: String?) {
+    override fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: String?, tag2: String?) {
         when (requestCode) {
             REQUEST_CODE_QUALITY -> {
-                changeQuality(playbackService?.qualities?.find { it.name == tag })
+                changeQuality(playbackService?.qualities?.find { it.name == tag && it.url == tag2 })
                 changePlayerMode()
                 setQualityText()
             }

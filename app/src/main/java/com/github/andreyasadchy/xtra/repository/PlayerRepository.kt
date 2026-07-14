@@ -448,7 +448,7 @@ class PlayerRepository(
                             appendQueryParameter("sig", accessToken?.signature)
                             appendQueryParameter("token", accessToken?.value)
                         }.build().toString()
-                        VideoQuality(name, quality.codecs, url)
+                        VideoQuality(name, quality.codecs, quality.bitrate, url)
                     } else null
                 }
             }
@@ -476,7 +476,7 @@ class PlayerRepository(
                             appendQueryParameter("sig", accessToken?.signature)
                             appendQueryParameter("token", accessToken?.value)
                         }.build().toString()
-                        VideoQuality(name, quality.codecs, url)
+                        VideoQuality(name, quality.codecs, quality.bitrate, url)
                     } else null
                 }
             }

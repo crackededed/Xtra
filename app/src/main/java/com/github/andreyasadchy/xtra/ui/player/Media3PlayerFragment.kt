@@ -933,6 +933,9 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                                     }
                                     viewModel.qualities = filtered
                                         .sortedByDescending {
+                                            it.bitrate
+                                        }
+                                        .sortedByDescending {
                                             it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                                         }
                                         .sortedByDescending {
@@ -997,7 +1000,7 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                                 if (it != null) {
                                     val url = requireArguments().getString(KEY_URL)
                                     viewModel.qualities = listOf(
-                                        VideoQuality(SOURCE_QUALITY, null, url),
+                                        VideoQuality(SOURCE_QUALITY, url = url),
                                         VideoQuality(AUDIO_ONLY_QUALITY),
                                     )
                                     setDefaultQuality()
@@ -1343,14 +1346,14 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
         }
     }
 
-    fun getQualityMap(): Map<String, VideoQuality>? {
+    fun getQualities(): List<Pair<String, VideoQuality>>? {
         val qualities = viewModel.qualities
         return if (!qualities.isNullOrEmpty()) {
             val hideCodecs = qualities.all {
                 val codec = it.codecs?.substringBefore('.')
                 codec == "avc1" || codec == "mp4a" || codec.isNullOrBlank()
             }
-            qualities.associateBy { quality ->
+            qualities.map { quality ->
                 when (quality.name) {
                     "auto" -> getString(R.string.auto)
                     "source" -> getString(R.string.source)
@@ -1370,19 +1373,20 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                             "${quality.name} $codecName"
                         }
                     }
-                }
+                } to quality
             }
         } else null
     }
 
     fun showQualityDialog() {
-        val qualities = getQualityMap()
+        val qualities = getQualities()
         if (!qualities.isNullOrEmpty()) {
             RadioButtonDialogFragment.newInstance(
                 REQUEST_CODE_QUALITY,
-                qualities.keys,
-                qualities.values.map { it.name.toString() }.toTypedArray(),
-                qualities.values.indexOf(viewModel.quality)
+                qualities.map { it.first },
+                qualities.map { it.second.name.toString() }.toTypedArray(),
+                qualities.map { it.second.url.toString() }.toTypedArray(),
+                qualities.indexOf(qualities.find { it.second.name == viewModel.quality?.name && it.second.url == viewModel.quality?.url })
             ).show(childFragmentManager, "closeOnPip")
         }
     }
@@ -1395,8 +1399,7 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                 RadioButtonDialogFragment.newInstance(
                     REQUEST_CODE_SPEED,
                     speedList,
-                    null,
-                    speedList.indexOf(speed.toString())
+                    checkedIndex = speedList.indexOf(speed.toString())
                 ).show(childFragmentManager, "closeOnPip")
             }
         }
@@ -1511,7 +1514,7 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
 
     fun setQualityText() {
         (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setQuality(
-            getQualityMap()?.entries?.find { it.value == viewModel.quality }?.key
+            getQualities()?.find { it.second == viewModel.quality }?.first
         )
     }
 
@@ -2140,9 +2143,12 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
             requireArguments().getString(KEY_VIDEO_ANIMATED_PREVIEW)?.let { preview ->
                 val urls = TwitchApiHelper.getVideoUrlsFromPreview(preview, requireArguments().getString(KEY_VIDEO_TYPE), viewModel.backupQualities)
                 val list = urls.map {
-                    VideoQuality(it.key, null, it.value)
+                    VideoQuality(it.key, url = it.value)
                 }
                 viewModel.qualities = list
+                    .sortedByDescending {
+                        it.bitrate
+                    }
                     .sortedByDescending {
                         it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                     }
@@ -2152,12 +2158,11 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                     .toMutableList().apply {
                         find { it.name.equals("source", true) }?.let { source ->
                             remove(source)
-                            add(0, VideoQuality(SOURCE_QUALITY, source.codecs, source.url))
+                            add(0, VideoQuality(SOURCE_QUALITY, source.codecs, source.bitrate, source.url))
                         }
-                        val audio = find { it.name?.startsWith("audio", true) == true }?.also {
-                            remove(it)
-                        }
-                        add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.url))
+                        val audio = find { it.name?.startsWith("audio", true) == true }
+                        audio?.let { remove(it) }
+                        add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.bitrate, audio?.url))
                     }
                 viewModel.quality = viewModel.qualities?.firstOrNull()
                 viewModel.quality?.url
@@ -2396,6 +2401,7 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                         createdAt = requireArguments().getString(KEY_STARTED_AT),
                         qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
                         qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+                        qualityBitrates = qualities?.map { it.bitrate.toString() }?.toTypedArray(),
                         qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
                     ).show(childFragmentManager, null)
                 }
@@ -2422,6 +2428,7 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                         videoCreatedAt = requireArguments().getString(KEY_VIDEO_CREATED_AT),
                         qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
                         qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+                        qualityBitrates = qualities?.map { it.bitrate.toString() }?.toTypedArray(),
                         qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
                     ).show(childFragmentManager, null)
                 }
@@ -2459,10 +2466,10 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
         (activity as? MainActivity)?.setSleepTimer(durationMs)
     }
 
-    override fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: String?) {
+    override fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: String?, tag2: String?) {
         when (requestCode) {
             REQUEST_CODE_QUALITY -> {
-                changeQuality(viewModel.qualities?.find { it.name == tag })
+                changeQuality(viewModel.qualities?.find { it.name == tag && it.url == tag2 })
                 changePlayerMode()
                 setQualityText()
             }

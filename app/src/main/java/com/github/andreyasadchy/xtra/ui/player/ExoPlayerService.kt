@@ -35,6 +35,7 @@ import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.AudioAttributes
+import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
@@ -190,11 +191,14 @@ class ExoPlayerService : BasePlaybackService() {
                             val name = variant.format.label?.takeIf { it.isNotBlank() }
                                 ?: playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.takeIf { it.isNotBlank() }
                             if (name != null) {
-                                VideoQuality(name, variant.format.codecs, variant.url.toString())
+                                VideoQuality(name, variant.format.codecs, variant.format.bitrate, variant.url.toString())
                             } else null
                         }
                         if (!list.isNullOrEmpty()) {
                             qualities = list.asSequence()
+                                .sortedByDescending {
+                                    it.bitrate
+                                }
                                 .sortedByDescending {
                                     it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                                 }
@@ -205,12 +209,11 @@ class ExoPlayerService : BasePlaybackService() {
                                     add(0, VideoQuality(AUTO_QUALITY))
                                     find { it.name.equals("source", true) }?.let { source ->
                                         remove(source)
-                                        add(1, VideoQuality(SOURCE_QUALITY, source.codecs, source.url))
+                                        add(1, VideoQuality(SOURCE_QUALITY, source.codecs, source.bitrate, source.url))
                                     }
-                                    val audio = find { it.name?.startsWith("audio", true) == true }?.also {
-                                        remove(it)
-                                    }
-                                    add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.url))
+                                    val audio = find { it.name?.startsWith("audio", true) == true }
+                                    audio?.let { remove(it) }
+                                    add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.bitrate, audio?.url))
                                     if (type == STREAM) {
                                         add(VideoQuality(CHAT_ONLY_QUALITY))
                                     }
@@ -363,9 +366,12 @@ class ExoPlayerService : BasePlaybackService() {
                                         videoAnimatedPreviewURL?.let { preview ->
                                             val urls = TwitchApiHelper.getVideoUrlsFromPreview(preview, videoType, backupQualities)
                                             val list = urls.map {
-                                                VideoQuality(it.key, null, it.value)
+                                                VideoQuality(it.key, url = it.value)
                                             }
                                             qualities = list
+                                                .sortedByDescending {
+                                                    it.bitrate
+                                                }
                                                 .sortedByDescending {
                                                     it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                                                 }
@@ -375,12 +381,11 @@ class ExoPlayerService : BasePlaybackService() {
                                                 .toMutableList().apply {
                                                     find { it.name.equals("source", true) }?.let { source ->
                                                         remove(source)
-                                                        add(0, VideoQuality(SOURCE_QUALITY, source.codecs, source.url))
+                                                        add(0, VideoQuality(SOURCE_QUALITY, source.codecs, source.bitrate, source.url))
                                                     }
-                                                    val audio = find { it.name?.startsWith("audio", true) == true }?.also {
-                                                        remove(it)
-                                                    }
-                                                    add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.url))
+                                                    val audio = find { it.name?.startsWith("audio", true) == true }
+                                                    audio?.let { remove(it) }
+                                                    add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.bitrate, audio?.url))
                                                 }
                                             quality = qualities?.firstOrNull()
                                             serviceListener?.changePlayerMode()
@@ -660,7 +665,7 @@ class ExoPlayerService : BasePlaybackService() {
                             serviceListener?.started()
                             if (qualities.isNullOrEmpty()) {
                                 qualities = listOf(
-                                    VideoQuality(SOURCE_QUALITY, null, video.url),
+                                    VideoQuality(SOURCE_QUALITY, url = video.url),
                                     VideoQuality(AUDIO_ONLY_QUALITY),
                                 )
                                 setDefaultQuality()
@@ -1084,6 +1089,9 @@ class ExoPlayerService : BasePlaybackService() {
                     }
                     qualities = filtered
                         .sortedByDescending {
+                            it.bitrate
+                        }
+                        .sortedByDescending {
                             it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                         }
                         .sortedByDescending {
@@ -1215,27 +1223,32 @@ class ExoPlayerService : BasePlaybackService() {
                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
                                     if (!player.currentTracks.isEmpty) {
-                                        player.currentTracks.groups.find { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO }?.let {
+                                        player.currentTracks.groups.find { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO }?.let { trackGroup ->
                                             val selectedQuality = quality.name?.split("p")
                                             val targetResolution = selectedQuality?.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
                                             val targetFps = selectedQuality?.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
-                                            if (it.mediaTrackGroup.length > 0) {
+                                            val targetBitrate = quality.bitrate
+                                            if (trackGroup.mediaTrackGroup.length > 0) {
                                                 if (targetResolution != null) {
-                                                    val formats = mutableListOf<Triple<Int, Int, Float>>()
-                                                    for (i in 0 until it.mediaTrackGroup.length) {
-                                                        val format = it.mediaTrackGroup.getFormat(i)
-                                                        formats.add(Triple(i, format.height, format.frameRate))
+                                                    val formats = mutableListOf<Pair<Int, Format>>()
+                                                    for (i in 0 until trackGroup.mediaTrackGroup.length) {
+                                                        formats.add(i to trackGroup.mediaTrackGroup.getFormat(i))
                                                     }
-                                                    val list = formats.sortedWith(
-                                                        compareByDescending<Triple<Int, Int, Float>> { it.third }.thenByDescending { it.second }
-                                                    )
+                                                    val list = formats
+                                                        .sortedByDescending { it.second.bitrate }
+                                                        .sortedByDescending { it.second.frameRate }
+                                                        .sortedByDescending { it.second.height }
                                                     list.find {
-                                                        (targetResolution == it.second && targetFps >= floor(it.third)) || targetResolution > it.second || it == list.last()
+                                                        (targetResolution == it.second.height
+                                                                && targetFps >= floor(it.second.frameRate)
+                                                                && (targetBitrate == null || targetBitrate >= it.second.bitrate))
+                                                                || targetResolution > it.second.height
+                                                                || it == list.last()
                                                     }?.first?.let { index ->
-                                                        setOverrideForType(TrackSelectionOverride(it.mediaTrackGroup, index))
+                                                        setOverrideForType(TrackSelectionOverride(trackGroup.mediaTrackGroup, index))
                                                     }
                                                 } else {
-                                                    setOverrideForType(TrackSelectionOverride(it.mediaTrackGroup, 0))
+                                                    setOverrideForType(TrackSelectionOverride(trackGroup.mediaTrackGroup, 0))
                                                 }
                                             }
                                         }

@@ -2,6 +2,7 @@ query ClipUrls($slug: ID!) {
     clip(slug: $slug) {
         assets {
             videoQualities {
+                bitrate
                 codecs
                 frameRate
                 quality

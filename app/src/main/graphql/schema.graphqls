@@ -126,6 +126,7 @@ type ClipEdge {
 }
 
 type ClipVideoQuality {
+    bitrate: Int
     codecs: String
     frameRate: Float
     quality: String
