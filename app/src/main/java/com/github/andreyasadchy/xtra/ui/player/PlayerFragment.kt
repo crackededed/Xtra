@@ -2128,6 +2128,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         }
     }
 
+    fun findVideoUrl() {
+        (activity as? MainActivity)?.findVideoUrl(playbackService?.streamId, playbackService?.channelLogin, playbackService?.createdAt)
+    }
+
     fun showDownloadDialog() {
         if (playbackService?.loaded == true) {
             when (playbackService?.type) {

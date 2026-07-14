@@ -167,9 +167,17 @@ class ExoPlayerFragment : PlayerFragment() {
         val serviceListener = object : ExoPlayerService.Listener {
             override fun started() {
                 if (view != null) {
-                    if (!started && (isInitialized || !enableNetworkCheck)) {
-                        started = true
-                        start()
+                    if (!started) {
+                        if (isInitialized || !enableNetworkCheck) {
+                            started = true
+                            start()
+                        }
+                    } else {
+                        chatFragment?.startReplayChatLoad()
+                        if (playbackService?.restoreQuality == true) {
+                            playbackService?.restoreQuality = false
+                            changeQuality(playbackService?.previousQuality)
+                        }
                     }
                 }
             }

@@ -42,6 +42,7 @@ abstract class BasePlaybackService : LifecycleService() {
     var videoOffsetSeconds: Int? = null
     var videoCreatedAt: String? = null
     var videoAnimatedPreviewURL: String? = null
+    var videoUrl: String? = null
     var savedPosition: Long? = null
     var paused = false
     var qualities: List<VideoQuality>? = null
@@ -82,6 +83,7 @@ abstract class BasePlaybackService : LifecycleService() {
             videoOffsetSeconds = savedState.videoOffsetSeconds
             videoCreatedAt = savedState.videoCreatedAt
             videoAnimatedPreviewURL = savedState.videoAnimatedPreviewURL
+            videoUrl = savedState.videoUrl
             savedPosition = savedState.position
             paused = savedState.paused
             qualities = savedState.qualities?.let { qualities ->
@@ -122,6 +124,7 @@ abstract class BasePlaybackService : LifecycleService() {
             videoOffsetSeconds = videoOffsetSeconds,
             videoCreatedAt = videoCreatedAt,
             videoAnimatedPreviewURL = videoAnimatedPreviewURL,
+            videoUrl = videoUrl,
             position = position,
             paused = paused,
             qualities = qualities?.let { qualities ->
