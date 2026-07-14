@@ -113,24 +113,21 @@ class GamePagerViewModel(
         }
     }
 
-    fun isFollowingGame(gameId: String?, gameSlug: String?, gameName: String?, setting: Int, networkLibrary: String?, gqlHeaders: Map<String, String>) {
+    fun isFollowingGame(gameId: String?, setting: Int, networkLibrary: String?, gqlHeaders: Map<String, String>) {
         if (_isFollowing.value == null) {
             viewModelScope.launch {
                 try {
-                    val isFollowing = if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-                        graphQLRepository.loadQueryFollowingGame(
-                            networkLibrary = networkLibrary,
-                            headers = gqlHeaders,
-                            id = gameId,
-                            slug = gameSlug.takeIf { gameId.isNullOrBlank() },
-                            name = gameName.takeIf { gameId.isNullOrBlank() && gameSlug.isNullOrBlank() },
-                        ).data?.game?.self?.follow?.followedAt != null
-                    } else {
-                        gameId?.let {
-                            localGameFollowsRepository.getById(it)
-                        } != null
+                    if (!gameId.isNullOrBlank()) {
+                        _isFollowing.value = if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                            graphQLRepository.loadQueryFollowingGame(
+                                networkLibrary = networkLibrary,
+                                headers = gqlHeaders,
+                                id = gameId,
+                            ).data?.game?.self?.follow?.followedAt != null
+                        } else {
+                            localGameFollowsRepository.getById(gameId) != null
+                        }
                     }
-                    _isFollowing.value = isFollowing
                 } catch (e: Exception) {
 
                 }
@@ -141,23 +138,23 @@ class GamePagerViewModel(
     fun saveFollowGame(gameId: String?, gameSlug: String?, gameName: String?, setting: Int, filesDir: String, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
         viewModelScope.launch {
             try {
-                if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-                    val errorMessage = graphQLRepository.loadFollowGame(networkLibrary, gqlHeaders, gameId).also { response ->
-                        if (enableIntegrity) {
-                            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
-                                integrity.emit("follow")
-                                return@launch
+                if (!gameId.isNullOrBlank()) {
+                    if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                        val errorMessage = graphQLRepository.loadFollowGame(networkLibrary, gqlHeaders, gameId).also { response ->
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("follow")
+                                    return@launch
+                                }
                             }
+                        }.errors?.firstOrNull()?.message
+                        if (!errorMessage.isNullOrBlank()) {
+                            follow.value = Pair(true, errorMessage)
+                        } else {
+                            _isFollowing.value = true
+                            follow.value = Pair(true, null)
                         }
-                    }.errors?.firstOrNull()?.message
-                    if (!errorMessage.isNullOrBlank()) {
-                        follow.value = Pair(true, errorMessage)
                     } else {
-                        _isFollowing.value = true
-                        follow.value = Pair(true, null)
-                    }
-                } else {
-                    if (!gameId.isNullOrBlank()) {
                         File(filesDir, "box_art").mkdir()
                         val path = filesDir + File.separator + "box_art" + File.separator + gameId
                         viewModelScope.launch(Dispatchers.IO) {
@@ -247,23 +244,23 @@ class GamePagerViewModel(
     fun deleteFollowGame(gameId: String?, setting: Int, networkLibrary: String?, gqlHeaders: Map<String, String>, enableIntegrity: Boolean) {
         viewModelScope.launch {
             try {
-                if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-                    val errorMessage = graphQLRepository.loadUnfollowGame(networkLibrary, gqlHeaders, gameId).also { response ->
-                        if (enableIntegrity) {
-                            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
-                                integrity.emit("unfollow")
-                                return@launch
+                if (!gameId.isNullOrBlank()) {
+                    if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                        val errorMessage = graphQLRepository.loadUnfollowGame(networkLibrary, gqlHeaders, gameId).also { response ->
+                            if (enableIntegrity) {
+                                response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                    integrity.emit("unfollow")
+                                    return@launch
+                                }
                             }
+                        }.errors?.firstOrNull()?.message
+                        if (!errorMessage.isNullOrBlank()) {
+                            follow.value = Pair(false, errorMessage)
+                        } else {
+                            _isFollowing.value = false
+                            follow.value = Pair(false, null)
                         }
-                    }.errors?.firstOrNull()?.message
-                    if (!errorMessage.isNullOrBlank()) {
-                        follow.value = Pair(false, errorMessage)
                     } else {
-                        _isFollowing.value = false
-                        follow.value = Pair(false, null)
-                    }
-                } else {
-                    if (gameId != null) {
                         localGameFollowsRepository.getById(gameId)?.let { localGameFollowsRepository.delete(it) }
                         _isFollowing.value = false
                         follow.value = Pair(false, null)
