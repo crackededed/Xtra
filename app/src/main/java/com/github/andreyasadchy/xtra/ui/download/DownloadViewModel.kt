@@ -109,23 +109,27 @@ class DownloadViewModel(
                             if (!playlist.isNullOrBlank()) {
                                 val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                                 val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                                val bitrates = Regex("BANDWIDTH=(\\d+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toIntOrNull() }.toMutableList()
                                 val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
                                 names.mapIndexedNotNull { index, name ->
                                     urls.getOrNull(index)?.let { url ->
-                                        VideoQuality(name, codecs.getOrNull(index), url)
+                                        VideoQuality(name, codecs.getOrNull(index), bitrates.getOrNull(index), url)
                                     }
                                 }
                             } else {
                                 default.map {
-                                    VideoQuality(it, null, "")
+                                    VideoQuality(it, url = "")
                                 }
                             }
                         } else {
                             default.map {
-                                VideoQuality(it, null, "")
+                                VideoQuality(it, url = "")
                             }
                         }
                         _qualities.value = list
+                            .sortedByDescending {
+                                it.bitrate
+                            }
                             .sortedByDescending {
                                 it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                             }
@@ -135,11 +139,11 @@ class DownloadViewModel(
                             .toMutableList().apply {
                                 find { it.name.equals("source", true) }?.let { source ->
                                     remove(source)
-                                    add(0, VideoQuality("source", source.codecs, source.url))
+                                    add(0, VideoQuality("source", source.codecs, source.bitrate, source.url))
                                 }
                                 find { it.name?.startsWith("audio", true) == true }?.let { audio ->
                                     remove(audio)
-                                    add(VideoQuality("audio_only", audio.codecs, audio.url))
+                                    add(VideoQuality("audio_only", audio.codecs, audio.bitrate, audio.url))
                                 }
                             }
                     } catch (e: Exception) {
@@ -147,7 +151,7 @@ class DownloadViewModel(
                             integrity.emit("stream")
                         } else {
                             _qualities.value = default.map {
-                                VideoQuality(it, null, "")
+                                VideoQuality(it, url = "")
                             }
                         }
                     }
@@ -218,6 +222,7 @@ class DownloadViewModel(
                         if (!playlist.isNullOrBlank()) {
                             val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                             val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                            val bitrates = Regex("BANDWIDTH=(\\d+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toIntOrNull() }.toMutableList()
                             val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
                             playlist.lines().filter { it.startsWith("#EXT-X-SESSION-DATA") }.let { list ->
                                 if (list.isNotEmpty()) {
@@ -259,11 +264,15 @@ class DownloadViewModel(
                                                                     if (!skip) {
                                                                         val name = obj.optString("IVS_NAME")
                                                                         val codec = obj.optString("CODECS")
+                                                                        val bitrate = obj.optInt("BANDWIDTH")
                                                                         val newVariantId = obj.optString("STABLE-VARIANT-ID")
                                                                         if (!name.isNullOrBlank() && !newVariantId.isNullOrBlank()) {
                                                                             names.add(name)
                                                                             if (!codec.isNullOrBlank()) {
                                                                                 codecs.add(codec)
+                                                                            }
+                                                                            if (bitrate > 0) {
+                                                                                bitrates.add(bitrate)
                                                                             }
                                                                             urls.add(url.replace(
                                                                                 "$variantId/index-",
@@ -287,10 +296,13 @@ class DownloadViewModel(
                             }
                             val list = names.mapIndexedNotNull { index, name ->
                                 urls.getOrNull(index)?.let { url ->
-                                    VideoQuality(name, codecs.getOrNull(index), url)
+                                    VideoQuality(name, codecs.getOrNull(index), bitrates.getOrNull(index), url)
                                 }
                             }
                             _qualities.value = list
+                                .sortedByDescending {
+                                    it.bitrate
+                                }
                                 .sortedByDescending {
                                     it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                                 }
@@ -300,20 +312,23 @@ class DownloadViewModel(
                                 .toMutableList().apply {
                                     find { it.name.equals("source", true) }?.let { source ->
                                         remove(source)
-                                        add(0, VideoQuality("source", source.codecs, source.url))
+                                        add(0, VideoQuality("source", source.codecs, source.bitrate, source.url))
                                     }
                                     find { it.name?.startsWith("audio", true) == true }?.let { audio ->
                                         remove(audio)
-                                        add(VideoQuality("audio_only", audio.codecs, audio.url))
+                                        add(VideoQuality("audio_only", audio.codecs, audio.bitrate, audio.url))
                                     }
                                 }
                         } else {
                             if (!animatedPreviewUrl.isNullOrBlank()) {
                                 val urls = TwitchApiHelper.getVideoUrlsFromPreview(animatedPreviewUrl, videoType, backupQualities)
                                 val list = urls.map {
-                                    VideoQuality(it.key, null, it.value)
+                                    VideoQuality(it.key, url = it.value)
                                 }
                                 _qualities.value = list
+                                    .sortedByDescending {
+                                        it.bitrate
+                                    }
                                     .sortedByDescending {
                                         it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                                     }
@@ -323,11 +338,11 @@ class DownloadViewModel(
                                     .toMutableList().apply {
                                         find { it.name.equals("source", true) }?.let { source ->
                                             remove(source)
-                                            add(0, VideoQuality("source", source.codecs, source.url))
+                                            add(0, VideoQuality("source", source.codecs, source.bitrate, source.url))
                                         }
                                         find { it.name?.startsWith("audio", true) == true }?.let { audio ->
                                             remove(audio)
-                                            add(VideoQuality("audio_only", audio.codecs, audio.url))
+                                            add(VideoQuality("audio_only", audio.codecs, audio.bitrate, audio.url))
                                         }
                                     }
                             } else {
@@ -357,6 +372,9 @@ class DownloadViewModel(
                         val list = playerRepository.loadClipQualities(networkLibrary, gqlHeaders, clipId, enableIntegrity)
                         if (list != null) {
                             _qualities.value = list
+                                .sortedByDescending {
+                                    it.bitrate
+                                }
                                 .sortedByDescending {
                                     it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
                                 }

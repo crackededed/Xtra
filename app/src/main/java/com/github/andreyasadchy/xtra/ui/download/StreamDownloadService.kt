@@ -563,13 +563,17 @@ class StreamDownloadService : LifecycleService() {
     private suspend fun getQualities(playlist: String): List<VideoQuality> = withContext(Dispatchers.IO) {
         val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
         val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+        val bitrates = Regex("BANDWIDTH=(\\d+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toIntOrNull() }.toMutableList()
         val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
         val list = names.mapIndexedNotNull { index, name ->
             urls.getOrNull(index)?.let { url ->
-                VideoQuality(name, codecs.getOrNull(index), url)
+                VideoQuality(name, codecs.getOrNull(index), bitrates.getOrNull(index), url)
             }
         }
         list
+            .sortedByDescending {
+                it.bitrate
+            }
             .sortedByDescending {
                 it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
             }
@@ -579,11 +583,11 @@ class StreamDownloadService : LifecycleService() {
             .toMutableList().apply {
                 find { it.name.equals("source", true) }?.let { source ->
                     remove(source)
-                    add(0, VideoQuality("source", source.codecs, source.url))
+                    add(0, VideoQuality("source", source.codecs, source.bitrate, source.url))
                 }
                 find { it.name?.startsWith("audio", true) == true }?.let { audio ->
                     remove(audio)
-                    add(VideoQuality("audio_only", audio.codecs, audio.url))
+                    add(VideoQuality("audio_only", audio.codecs, audio.bitrate, audio.url))
                 }
             }
     }
