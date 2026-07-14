@@ -141,6 +141,7 @@ object C {
     const val PLAYER_MENU_BOOKMARK = "player_menu_bookmark"
     const val PLAYER_MENU_DOWNLOAD = "player_menu_download"
     const val PLAYER_MENU_SHARE = "player_menu_share"
+    const val PLAYER_MENU_FIND_VOD = "player_menu_find_vod"
     const val PLAYER_MENU_SLEEP = "player_menu_sleep"
     const val PLAYER_MENU_ASPECT = "player_menu_aspect"
     const val PLAYER_MENU_VOLUME = "player_menu_volume"

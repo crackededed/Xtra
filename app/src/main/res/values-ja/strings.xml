@@ -556,4 +556,6 @@
     <string name="loaded_cached_stv_emotes">キャッシュされた7TVエモートをロード</string>
     <string name="loaded_cached_bttv_emotes">キャッシュされたBTTVエモートをロード</string>
     <string name="loaded_cached_ffz_emotes">キャッシュされたFFZエモートをロード</string>
+    <string name="find_unlisted_video">Find unlisted video</string>
+    <string name="video_not_found">Video not found</string>
 </resources>
