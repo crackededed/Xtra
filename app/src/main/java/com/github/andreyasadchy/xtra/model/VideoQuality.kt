@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 class VideoQuality(
     val name: String? = null,
     val codecs: String? = null,
+    val bitrate: Int? = null,
     val url: String? = null,
 )

@@ -33,6 +33,7 @@ class ClipUrlsResponse(
 
     @Serializable
     class Quality(
+        val bitrate: Int? = null,
         val codecs: String? = null,
         val sourceURL: String,
         val frameRate: Float? = null,
