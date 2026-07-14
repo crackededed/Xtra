@@ -28,7 +28,7 @@ android {
         minSdk = 16
         targetSdk = 37
         versionCode = 121
-        versionName = "2.57.4"
+        versionName = "2.58.0"
     }
 
     buildTypes {
@@ -93,6 +93,7 @@ android {
             "com.squareup.okhttp3:okhttp:3.12.13",
             "com.squareup.okhttp3:logging-interceptor:3.12.13",
             "org.chromium.net:cronet-api:119.6045.31",
+            "org.conscrypt:conscrypt-android:2.5.3",
         ))
     }
 }

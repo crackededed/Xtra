@@ -179,33 +179,49 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                     R.id.toggleNotifications -> {
                         viewModel.notificationsEnabled.value?.let {
                             if (it) {
-                                args.channelId?.let {
-                                    viewModel.disableNotifications(requireContext().tokenPrefs().getString(C.USER_ID, null), it, setting, requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), TwitchApiHelper.getGQLHeaders(requireContext(), true), requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false))
-                                }
+                                viewModel.disableNotifications(
+                                    requireContext().tokenPrefs().getString(C.USER_ID, null),
+                                    args.channelId,
+                                    setting,
+                                    requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
+                                    TwitchApiHelper.getGQLHeaders(requireContext(), true),
+                                    requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false)
+                                )
                             } else {
-                                args.channelId?.let {
-                                    val notificationsEnabled = requireContext().prefs().getBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false)
-                                    viewModel.enableNotifications(requireContext().tokenPrefs().getString(C.USER_ID, null), it, setting, notificationsEnabled, requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), TwitchApiHelper.getGQLHeaders(requireContext(), true), requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false))
-                                    if (!notificationsEnabled) {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                                            ActivityCompat.checkSelfPermission(activity, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                                            ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
-                                        }
-                                        viewModel.updateNotifications(requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), TwitchApiHelper.getGQLHeaders(requireContext(), true), TwitchApiHelper.getHelixHeaders(requireContext()))
-                                        WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(
-                                            "live_notifications",
-                                            ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
-                                            PeriodicWorkRequestBuilder<LiveNotificationWorker>(15, TimeUnit.MINUTES)
-                                                .setInitialDelay(1, TimeUnit.MINUTES)
-                                                .setConstraints(
-                                                    Constraints.Builder()
-                                                        .setRequiredNetworkType(NetworkType.CONNECTED)
-                                                        .build()
-                                                )
-                                                .build()
-                                        )
-                                        requireContext().prefs().edit { putBoolean(C.LIVE_NOTIFICATIONS_ENABLED, true) }
+                                val notificationsEnabled = requireContext().prefs().getBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false)
+                                viewModel.enableNotifications(
+                                    requireContext().tokenPrefs().getString(C.USER_ID, null),
+                                    args.channelId,
+                                    setting,
+                                    notificationsEnabled,
+                                    requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
+                                    TwitchApiHelper.getGQLHeaders(requireContext(), true),
+                                    requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false)
+                                )
+                                if (!args.channelId.isNullOrBlank() && !notificationsEnabled) {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                        ActivityCompat.checkSelfPermission(activity, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                                    ) {
+                                        ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
                                     }
+                                    viewModel.updateNotifications(
+                                        requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
+                                        TwitchApiHelper.getGQLHeaders(requireContext(), true),
+                                        TwitchApiHelper.getHelixHeaders(requireContext())
+                                    )
+                                    WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(
+                                        "live_notifications",
+                                        ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+                                        PeriodicWorkRequestBuilder<LiveNotificationWorker>(15, TimeUnit.MINUTES)
+                                            .setInitialDelay(1, TimeUnit.MINUTES)
+                                            .setConstraints(
+                                                Constraints.Builder()
+                                                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                                                    .build()
+                                            )
+                                            .build()
+                                    )
+                                    requireContext().prefs().edit { putBoolean(C.LIVE_NOTIFICATIONS_ENABLED, true) }
                                 }
                             }
                         }

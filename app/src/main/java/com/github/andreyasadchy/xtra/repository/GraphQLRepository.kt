@@ -394,7 +394,7 @@ class GraphQLRepository(
         sendQuery(networkLibrary, headers, query)
     }
 
-    suspend fun loadQueryFollowingGame(networkLibrary: String?, headers: Map<String, String>, id: String?, slug: String?, name: String?): ApolloResponse<SelfFollowingGameQuery.Data> = withContext(Dispatchers.IO) {
+    suspend fun loadQueryFollowingGame(networkLibrary: String?, headers: Map<String, String>, id: String? = null, slug: String? = null, name: String? = null): ApolloResponse<SelfFollowingGameQuery.Data> = withContext(Dispatchers.IO) {
         val query = SelfFollowingGameQuery(
             id = if (!id.isNullOrBlank()) Optional.Present(id) else Optional.Absent,
             slug = if (!slug.isNullOrBlank()) Optional.Present(slug) else Optional.Absent,

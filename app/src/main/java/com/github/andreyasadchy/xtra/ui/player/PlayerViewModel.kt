@@ -440,27 +440,15 @@ class PlayerViewModel(
             viewModelScope.launch {
                 try {
                     if (!channelId.isNullOrBlank()) {
-                        if (setting == 0 && !userId.isNullOrBlank() && userId != channelId) {
-                            try {
-                                if (gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) throw Exception()
-                                val follower = graphQLRepository.loadQueryFollowingUser(
-                                    networkLibrary = networkLibrary,
-                                    headers = gqlHeaders,
-                                    id = channelId,
-                                    login = channelLogin.takeIf { channelId.isBlank() },
-                                ).data?.user?.self?.follower
-                                _isFollowing.value = follower?.followedAt != null
-                            } catch (e: Exception) {
-                                val following = helixRepository.getUserFollows(
-                                    networkLibrary = networkLibrary,
-                                    headers = helixHeaders,
-                                    userId = userId,
-                                    targetId = channelId,
-                                ).data.firstOrNull()?.id == channelId
-                                _isFollowing.value = following
-                            }
+                        _isFollowing.value = if (setting == 0 && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank() && userId != channelId) {
+                            graphQLRepository.loadQueryFollowingUser(
+                                networkLibrary = networkLibrary,
+                                headers = gqlHeaders,
+                                id = channelId,
+                                login = channelLogin.takeIf { channelId.isBlank() },
+                            ).data?.user?.self?.follower?.followedAt != null
                         } else {
-                            _isFollowing.value = localChannelFollowsRepository.getById(channelId) != null
+                            localChannelFollowsRepository.getById(channelId) != null
                         }
                     }
                 } catch (e: Exception) {

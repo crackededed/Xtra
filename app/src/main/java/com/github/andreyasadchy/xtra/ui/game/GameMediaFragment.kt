@@ -330,8 +330,6 @@ class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
         if (setting < 2) {
             viewModel.isFollowingGame(
                 args.gameId,
-                args.gameSlug,
-                args.gameName,
                 setting,
                 requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                 TwitchApiHelper.getGQLHeaders(requireContext(), true),
@@ -485,8 +483,6 @@ class GameMediaFragment : BaseNetworkFragment(), Scrollable, FragmentHost, Integ
                 if (setting < 2) {
                     viewModel.isFollowingGame(
                         args.gameId,
-                        args.gameSlug,
-                        args.gameName,
                         setting,
                         requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                         TwitchApiHelper.getGQLHeaders(requireContext(), true),
