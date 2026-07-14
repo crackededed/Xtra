@@ -22,7 +22,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 class RadioButtonDialogFragment : BottomSheetDialogFragment() {
 
     interface OnSortOptionChanged {
-        fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: String?)
+        fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: String?, tag2: String?)
     }
 
     companion object {
@@ -30,14 +30,16 @@ class RadioButtonDialogFragment : BottomSheetDialogFragment() {
         private const val REQUEST_CODE = "requestCode"
         private const val LABELS = "labels"
         private const val TAGS = "tags"
+        private const val TAGS2 = "tags2"
         private const val CHECKED = "checked"
 
-        fun newInstance(requestCode: Int, labels: Collection<CharSequence>, tags: Array<String>? = null, checkedIndex: Int): RadioButtonDialogFragment {
+        fun newInstance(requestCode: Int, labels: Collection<CharSequence>, tags: Array<String>? = null, tags2: Array<String>? = null, checkedIndex: Int): RadioButtonDialogFragment {
             return RadioButtonDialogFragment().apply {
                 arguments = Bundle().apply {
                     putInt(REQUEST_CODE, requestCode)
                     putCharSequenceArrayList(LABELS, ArrayList(labels))
                     putStringArray(TAGS, tags)
+                    putStringArray(TAGS2, tags2)
                     putInt(CHECKED, checkedIndex)
                 }
             }
@@ -62,10 +64,11 @@ class RadioButtonDialogFragment : BottomSheetDialogFragment() {
             }
         }
         val checkedId = arguments.getInt(CHECKED)
+        val tags2 = arguments.getStringArray(TAGS2)
         val clickListener = View.OnClickListener { v ->
             val clickedId = v.id
             if (clickedId != checkedId) {
-                listenerSort.onChange(arguments.getInt(REQUEST_CODE), clickedId, (v as RadioButton).text, v.tag as String?)
+                listenerSort.onChange(arguments.getInt(REQUEST_CODE), clickedId, (v as RadioButton).text, v.tag as String?, tags2?.getOrNull(clickedId))
             }
             dismiss()
         }
