@@ -48,4 +48,12 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <Preference
+        android:key="request_local_network_permission"
+        android:summary="@string/access_local_network_desc"
+        android:title="@string/access_local_network_title"
+        app:iconSpaceReserved="false"
+        app:isPreferenceVisible="false"
+        app:singleLineTitle="false" />
+
 </androidx.preference.PreferenceScreen>

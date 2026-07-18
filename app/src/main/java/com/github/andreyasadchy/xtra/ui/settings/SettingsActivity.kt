@@ -1283,6 +1283,17 @@ class SettingsActivity : AppCompatActivity() {
     class ProxySettingsFragment : MaterialPreferenceFragment() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.proxy_preferences, rootKey)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN &&
+                ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_LOCAL_NETWORK) != PackageManager.PERMISSION_GRANTED
+            ) {
+                findPreference<Preference>("request_local_network_permission")?.apply {
+                    isVisible = true
+                    setOnPreferenceClickListener {
+                        ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_LOCAL_NETWORK), 1)
+                        true
+                    }
+                }
+            }
         }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
