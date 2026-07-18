@@ -162,7 +162,7 @@ class ChatViewModel(
     val autoCompleteList = mutableListOf<Any?>()
     private val chatters = ConcurrentHashMap<String, Chatter>()
 
-    fun startLive(networkLibrary: String?, channelId: String?, channelLogin: String?, channelName: String?, streamId: String?) {
+    fun startLive(networkLibrary: String?, recentMessagesUrl: String?, channelId: String?, channelLogin: String?, channelName: String?, streamId: String?) {
         if (chatReadIRCSocket == null && chatReadWebSocket == null && eventSub == null && channelLogin != null) {
             messageLimit = applicationContext.prefs().getInt(C.CHAT_LIMIT, 600)
             this.streamId = streamId
@@ -170,7 +170,7 @@ class ChatViewModel(
             addChatter(channelName)
             loadEmotes(channelId, channelLogin)
             if (applicationContext.prefs().getBoolean(C.CHAT_RECENT, true)) {
-                loadRecentMessages(networkLibrary, channelLogin)
+                loadRecentMessages(networkLibrary, recentMessagesUrl, channelLogin)
             }
             val isLoggedIn = !applicationContext.tokenPrefs().getString(C.USERNAME, null).isNullOrBlank() &&
                     (!TwitchApiHelper.getGQLHeaders(applicationContext, true)[C.HEADER_TOKEN].isNullOrBlank() ||
@@ -827,62 +827,64 @@ class ChatViewModel(
         loadEmotes(channelId, channelLogin)
     }
 
-    fun loadRecentMessages(networkLibrary: String?, channelLogin: String) {
-        viewModelScope.launch {
-            try {
-                val list = mutableListOf<ChatMessage>()
-                playerRepository.loadRecentMessages(networkLibrary, channelLogin, applicationContext.prefs().getInt(C.CHAT_RECENT_LIMIT, 100).toString()).messages.forEach { message ->
-                    val ircMessage = ChatUtils.parseIRCMessage(message)
-                    when (ircMessage.command) {
-                        "PRIVMSG" -> ChatUtils.parseChatMessage(ircMessage)
-                        "USERNOTICE" -> {
-                            if (applicationContext.prefs().getBoolean(C.CHAT_SHOW_USER_NOTICE, true)) {
-                                ChatUtils.parseChatMessage(ircMessage)
-                            } else null
-                        }
-                        "CLEARMSG" -> {
-                            if (applicationContext.prefs().getBoolean(C.CHAT_SHOW_CLEAR_MSG, true)) {
-                                val chatMessage = ChatUtils.parseClearMessage(ircMessage)
-                                val deletedMessage = chatMessage.targetMsgId?.let { targetId ->
-                                    list.find { it.id == targetId }
-                                }
-                                getClearMessage(chatMessage, deletedMessage, applicationContext.prefs().getString(C.UI_NAME_DISPLAY, "0"))
-                            } else null
-                        }
-                        "CLEARCHAT" -> {
-                            if (applicationContext.prefs().getBoolean(C.CHAT_SHOW_CLEAR_CHAT, true)) {
-                                ChatUtils.parseClearChat(applicationContext, ircMessage)
-                            } else null
-                        }
-                        "NOTICE" -> ChatUtils.parseNotice(ircMessage)
-                        else -> null
-                    }?.let {
-                        if (it.reply?.message != null) {
-                            list.add(ChatMessage(
-                                type = ChatMessage.REPLY_MESSAGE,
-                                reply = it.reply,
-                                replyParent = it,
-                            ))
-                        }
-                        list.add(it)
-                    }
-                }
-                if (list.isNotEmpty()) {
-                    synchronized(chatMessages) {
-                        val left = messageLimit - chatMessages.size
-                        if (left > 0) {
-                            val items = list.takeLast(left)
-                            chatMessages.addAll(0, items)
-                            Pair(items, chatMessages.lastIndex)
-                        } else null
-                    }.let {
-                        if (it != null) {
-                            addMessages.emit(it)
+    fun loadRecentMessages(networkLibrary: String?, recentMessagesUrl: String?, channelLogin: String) {
+        if (!recentMessagesUrl.isNullOrBlank()) {
+            viewModelScope.launch {
+                try {
+                    val list = mutableListOf<ChatMessage>()
+                    playerRepository.loadRecentMessages(networkLibrary, recentMessagesUrl, channelLogin, applicationContext.prefs().getInt(C.CHAT_RECENT_LIMIT, 100).toString()).messages.forEach { message ->
+                        val ircMessage = ChatUtils.parseIRCMessage(message)
+                        when (ircMessage.command) {
+                            "PRIVMSG" -> ChatUtils.parseChatMessage(ircMessage)
+                            "USERNOTICE" -> {
+                                if (applicationContext.prefs().getBoolean(C.CHAT_SHOW_USER_NOTICE, true)) {
+                                    ChatUtils.parseChatMessage(ircMessage)
+                                } else null
+                            }
+                            "CLEARMSG" -> {
+                                if (applicationContext.prefs().getBoolean(C.CHAT_SHOW_CLEAR_MSG, true)) {
+                                    val chatMessage = ChatUtils.parseClearMessage(ircMessage)
+                                    val deletedMessage = chatMessage.targetMsgId?.let { targetId ->
+                                        list.find { it.id == targetId }
+                                    }
+                                    getClearMessage(chatMessage, deletedMessage, applicationContext.prefs().getString(C.UI_NAME_DISPLAY, "0"))
+                                } else null
+                            }
+                            "CLEARCHAT" -> {
+                                if (applicationContext.prefs().getBoolean(C.CHAT_SHOW_CLEAR_CHAT, true)) {
+                                    ChatUtils.parseClearChat(applicationContext, ircMessage)
+                                } else null
+                            }
+                            "NOTICE" -> ChatUtils.parseNotice(ircMessage)
+                            else -> null
+                        }?.let {
+                            if (it.reply?.message != null) {
+                                list.add(ChatMessage(
+                                    type = ChatMessage.REPLY_MESSAGE,
+                                    reply = it.reply,
+                                    replyParent = it,
+                                ))
+                            }
+                            list.add(it)
                         }
                     }
-                }
-            } catch (e: Exception) {
+                    if (list.isNotEmpty()) {
+                        synchronized(chatMessages) {
+                            val left = messageLimit - chatMessages.size
+                            if (left > 0) {
+                                val items = list.takeLast(left)
+                                chatMessages.addAll(0, items)
+                                Pair(items, chatMessages.lastIndex)
+                            } else null
+                        }.let {
+                            if (it != null) {
+                                addMessages.emit(it)
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
 
+                }
             }
         }
     }

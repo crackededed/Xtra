@@ -559,4 +559,5 @@
     <string name="loaded_cached_ffz_emotes">Loaded cached FFZ emotes</string>
     <string name="find_unlisted_video">Find unlisted video</string>
     <string name="video_not_found">Video not found</string>
+    <string name="recent_messages_api_url">Recent messages API URL</string>
 </resources>

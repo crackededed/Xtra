@@ -642,8 +642,8 @@ class PlayerRepository(
         }
     }
 
-    suspend fun loadRecentMessages(networkLibrary: String?, channelLogin: String, limit: String): RecentMessagesResponse = withContext(Dispatchers.IO) {
-        val url = "https://recent-messages.robotty.de/api/v2/recent-messages/${channelLogin}?limit=${limit}"
+    suspend fun loadRecentMessages(networkLibrary: String?, recentMessagesUrl: String, channelLogin: String, limit: String): RecentMessagesResponse = withContext(Dispatchers.IO) {
+        val url = recentMessagesUrl.replace("\$channel", channelLogin) + "?limit=${limit}"
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->

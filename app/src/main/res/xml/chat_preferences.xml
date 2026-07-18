@@ -116,6 +116,14 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <EditTextPreference
+        android:defaultValue="https://recent-messages.robotty.de/api/v2/recent-messages/$channel"
+        android:key="chat_recent_messages_url"
+        android:summary="@string/stream_proxy_url_desc"
+        android:title="@string/recent_messages_api_url"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
     <SeekBarPreference
         android:defaultValue="100"
         android:key="chat_recent_limit"
