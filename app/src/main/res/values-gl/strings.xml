@@ -559,4 +559,6 @@
     <string name="find_unlisted_video">Find unlisted video</string>
     <string name="video_not_found">Video not found</string>
     <string name="recent_messages_api_url">Recent messages API URL</string>
+    <string name="access_local_network_title">Grant local network permission</string>
+    <string name="access_local_network_desc">Required for connecting to local proxies</string>
 </resources>	
