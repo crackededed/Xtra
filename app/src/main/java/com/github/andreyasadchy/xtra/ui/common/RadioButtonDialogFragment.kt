@@ -68,7 +68,7 @@ class RadioButtonDialogFragment : BottomSheetDialogFragment() {
         val clickListener = View.OnClickListener { v ->
             val clickedId = v.id
             if (clickedId != checkedId) {
-                listenerSort.onChange(arguments.getInt(REQUEST_CODE), clickedId, (v as RadioButton).text, v.tag as String?, tags2?.getOrNull(clickedId))
+                listenerSort.onChange(arguments.getInt(REQUEST_CODE), clickedId, (v as RadioButton).text, v.tag as String?, tags2?.getOrNull(clickedId)?.takeIf { it != "null" })
             }
             dismiss()
         }
@@ -77,7 +77,7 @@ class RadioButtonDialogFragment : BottomSheetDialogFragment() {
             val button = AppCompatRadioButton(context).apply {
                 id = index
                 text = label
-                tag = tags?.getOrNull(index)
+                tag = tags?.getOrNull(index)?.takeIf { it != "null" }
                 setOnClickListener(clickListener)
             }
             radioGroup.addView(button, params)
