@@ -21,6 +21,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
+import android.os.ext.SdkExtensions
 import android.text.format.Formatter
 import android.view.Menu
 import android.view.View
@@ -99,6 +100,7 @@ import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.google.android.material.color.MaterialColors
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.chromium.net.CronetProvider
 import java.util.Timer
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.schedule
@@ -1460,7 +1462,18 @@ class MainActivity : AppCompatActivity() {
                 if (!prefs.getBoolean("ui_theme_rounded_corners", true)) {
                     putString(C.UI_THEME_ROUNDED_CORNERS, "2")
                 }
-                putInt(C.SETTINGS_VERSION, 12)
+            }
+        }
+        if (version < 13) {
+            prefs.edit {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7) {
+                    putString(C.NETWORK_LIBRARY, C.HTTP_ENGINE)
+                } else {
+                    if (CronetProvider.getAllProviders(this@MainActivity).any { it.isEnabled }) {
+                        putString(C.NETWORK_LIBRARY, C.CRONET)
+                    }
+                }
+                putInt(C.SETTINGS_VERSION, 13)
             }
         }
     }
