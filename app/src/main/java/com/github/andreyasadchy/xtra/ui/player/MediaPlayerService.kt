@@ -125,8 +125,8 @@ class MediaPlayerService : BasePlaybackService() {
     private fun create(restorePauseState: Boolean) {
         if (!created) {
             created = true
-            val rewindMs = prefs().getString(C.PLAYER_REWIND, "10000")?.toLongOrNull() ?: 10000
-            val fastForwardMs = prefs().getString(C.PLAYER_FORWARD, "10000")?.toLongOrNull() ?: 10000
+            val rewindMs = (prefs().getString(C.PLAYER_REWIND, "10")?.toLongOrNull() ?: 10) * 1000
+            val fastForwardMs = (prefs().getString(C.PLAYER_FORWARD, "10")?.toLongOrNull() ?: 10) * 1000
             val sessionCallback = object : MediaSession.Callback() {
                 override fun onPrepare() {
                     player?.prepareAsync()
@@ -1875,7 +1875,7 @@ class MediaPlayerService : BasePlaybackService() {
         when (intent?.action) {
             INTENT_REWIND -> {
                 player?.let { player ->
-                    val rewindMs = prefs().getString(C.PLAYER_REWIND, "10000")?.toLongOrNull() ?: 10000
+                    val rewindMs = (prefs().getString(C.PLAYER_REWIND, "10")?.toLongOrNull() ?: 10) * 1000
                     val position = player.currentPosition - rewindMs
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
@@ -1897,7 +1897,7 @@ class MediaPlayerService : BasePlaybackService() {
             }
             INTENT_FAST_FORWARD -> {
                 player?.let { player ->
-                    val fastForwardMs = prefs().getString(C.PLAYER_FORWARD, "10000")?.toLongOrNull() ?: 10000
+                    val fastForwardMs = (prefs().getString(C.PLAYER_FORWARD, "10")?.toLongOrNull() ?: 10) * 1000
                     val position = player.currentPosition + fastForwardMs
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         player.seekTo(position, MediaPlayer.SEEK_CLOSEST)

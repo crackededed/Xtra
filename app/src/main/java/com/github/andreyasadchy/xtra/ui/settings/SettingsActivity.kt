@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.ext.SdkExtensions
+import android.text.InputType
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -910,6 +911,28 @@ class SettingsActivity : AppCompatActivity() {
                 requireActivity().findViewById<AppBarLayout>(R.id.appBar)?.setExpanded(true)
                 findNavController().navigate(SettingsNavGraphDirections.actionGlobalPlayerMenuSettingsFragment())
                 true
+            }
+            findPreference<EditTextPreference>(C.PLAYER_REWIND)?.apply {
+                summary = getString(R.string.seconds_full, requireContext().prefs().getString(C.PLAYER_REWIND, "10"))
+                setOnPreferenceChangeListener { _, newValue ->
+                    summary = getString(R.string.seconds_full, newValue.toString())
+                    true
+                }
+                setOnBindEditTextListener {
+                    it.inputType = InputType.TYPE_CLASS_NUMBER
+                    it.setSelection(it.text.length)
+                }
+            }
+            findPreference<EditTextPreference>(C.PLAYER_FORWARD)?.apply {
+                summary = getString(R.string.seconds_full, requireContext().prefs().getString(C.PLAYER_FORWARD, "10"))
+                setOnPreferenceChangeListener { _, newValue ->
+                    summary = getString(R.string.seconds_full, newValue.toString())
+                    true
+                }
+                setOnBindEditTextListener {
+                    it.inputType = InputType.TYPE_CLASS_NUMBER
+                    it.setSelection(it.text.length)
+                }
             }
         }
 

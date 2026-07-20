@@ -1278,6 +1278,12 @@ class MainActivity : AppCompatActivity() {
                         putString(C.NETWORK_LIBRARY, C.CRONET)
                     }
                 }
+                prefs.getString("playerRewind", null)?.toLongOrNull()?.let {
+                    putString(C.PLAYER_REWIND, (it / 1000).toString())
+                }
+                prefs.getString("playerForward", null)?.toLongOrNull()?.let {
+                    putString(C.PLAYER_FORWARD, (it / 1000).toString())
+                }
                 putInt(C.SETTINGS_VERSION, 13)
             }
         }
