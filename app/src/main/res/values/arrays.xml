@@ -142,22 +142,6 @@
         <item>6</item>
     </string-array>
 
-    <string-array name="playerSeekEntries">
-        <item>5</item>
-        <item>10</item>
-        <item>15</item>
-        <item>30</item>
-        <item>60</item>
-    </string-array>
-
-    <string-array name="playerSeekValues">
-        <item>5000</item>
-        <item>10000</item>
-        <item>15000</item>
-        <item>30000</item>
-        <item>60000</item>
-    </string-array>
-
     <string-array name="playerQualityEntries">
         <item>@string/saved_value</item>
         <item>@string/auto</item>
