@@ -308,7 +308,7 @@ class MediaPlayerFragment : PlayerFragment() {
 
     override fun rewind() {
         playbackService?.player?.let { player ->
-            val rewindMs = requireContext().prefs().getString(C.PLAYER_REWIND, "10000")?.toLongOrNull() ?: 10000
+            val rewindMs = (requireContext().prefs().getString(C.PLAYER_REWIND, "10")?.toLongOrNull() ?: 10) * 1000
             val position = player.currentPosition - rewindMs
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
@@ -320,7 +320,7 @@ class MediaPlayerFragment : PlayerFragment() {
 
     override fun fastForward() {
         playbackService?.player?.let { player ->
-            val fastForwardMs = requireContext().prefs().getString(C.PLAYER_FORWARD, "10000")?.toLongOrNull() ?: 10000
+            val fastForwardMs = (requireContext().prefs().getString(C.PLAYER_FORWARD, "10")?.toLongOrNull() ?: 10) * 1000
             val position = player.currentPosition + fastForwardMs
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
