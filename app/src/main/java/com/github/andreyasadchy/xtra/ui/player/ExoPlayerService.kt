@@ -376,7 +376,7 @@ class ExoPlayerService : BasePlaybackService() {
                                                                 this@ExoPlayerService,
                                                                 when {
                                                                     networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
-                                                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, false, false, null) { false }
+                                                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, false, false, null, null, null) { false }
                                                                     }
                                                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                                                         CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, null, null) { false }
@@ -671,7 +671,7 @@ class ExoPlayerService : BasePlaybackService() {
                                                 this@ExoPlayerService,
                                                 when {
                                                     networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
-                                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, false, false, null) { false }
+                                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, false, false, null, null, null) { false }
                                                     }
                                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                                         CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, null, null) { false }
@@ -800,8 +800,9 @@ class ExoPlayerService : BasePlaybackService() {
                                             val proxyHeaders = if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
                                                 listOf(android.util.Pair("Proxy-Authorization", Base64.encodeToString("$proxyUser:$proxyPassword".toByteArray(), Base64.NO_WRAP)))
                                             } else emptyList()
-                                            HttpEngine.Builder(application).apply {
-                                                setProxyOptions(ProxyOptions.fromProxyList(
+                                            val builder = HttpEngine.Builder(application)
+                                            try {
+                                                builder.setProxyOptions(ProxyOptions.fromProxyList(
                                                     listOf(
                                                         android.net.http.Proxy.createHttpProxy(
                                                             android.net.http.Proxy.SCHEME_HTTP,
@@ -821,9 +822,59 @@ class ExoPlayerService : BasePlaybackService() {
                                                     ),
                                                     ProxyOptions.ALL_PROXIES_FAILED_BEHAVIOR_DISALLOW_DIRECT
                                                 ))
+                                            } catch (e: NoClassDefFoundError) {
+                                                null
+                                            }?.build()
+                                        } else null
+                                        val multivariantPlaylistProxyClient = if (proxyMultivariantPlaylist && proxyClient == null) {
+                                            xtraModule.okHttpClient.value.newBuilder().apply {
+                                                proxySelector(
+                                                    object : ProxySelector() {
+                                                        override fun select(u: URI): List<Proxy> {
+                                                            return if (Regex(MULTIVARIANT_PLAYLIST_REGEX).matches(u.host)) {
+                                                                listOf(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)), Proxy.NO_PROXY)
+                                                            } else {
+                                                                listOf(Proxy.NO_PROXY)
+                                                            }
+                                                        }
+
+                                                        override fun connectFailed(u: URI, sa: SocketAddress, e: IOException) {}
+                                                    }
+                                                )
+                                                if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                                                    proxyAuthenticator { _, response ->
+                                                        response.request.newBuilder().header(
+                                                            "Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)
+                                                        ).build()
+                                                    }
+                                                }
                                             }.build()
                                         } else null
-                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, proxyMultivariantPlaylist, proxyMediaPlaylist, proxyClient) { proxyMediaPlaylist }
+                                        val mediaPlaylistProxyClient = if (proxyMediaPlaylist && proxyClient == null) {
+                                            xtraModule.okHttpClient.value.newBuilder().apply {
+                                                proxySelector(
+                                                    object : ProxySelector() {
+                                                        override fun select(u: URI): List<Proxy> {
+                                                            return if (Regex(MEDIA_PLAYLIST_REGEX).matches(u.host)) {
+                                                                listOf(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)), Proxy.NO_PROXY)
+                                                            } else {
+                                                                listOf(Proxy.NO_PROXY)
+                                                            }
+                                                        }
+
+                                                        override fun connectFailed(u: URI, sa: SocketAddress, e: IOException) {}
+                                                    }
+                                                )
+                                                if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                                                    proxyAuthenticator { _, response ->
+                                                        response.request.newBuilder().header(
+                                                            "Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)
+                                                        ).build()
+                                                    }
+                                                }
+                                            }.build()
+                                        } else null
+                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, proxyMultivariantPlaylist, proxyMediaPlaylist, proxyClient, multivariantPlaylistProxyClient, mediaPlaylistProxyClient) { proxyMediaPlaylist }
                                     }
                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                         val proxyMultivariantPlaylist = prefs().getBoolean(C.PROXY_MULTIVARIANT_PLAYLIST, false) && !proxyHost.isNullOrBlank() && proxyPort != null
@@ -1010,7 +1061,7 @@ class ExoPlayerService : BasePlaybackService() {
                                 this@ExoPlayerService,
                                 when {
                                     networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
-                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, false, false, null) { false }
+                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, false, false, null, null, null) { false }
                                     }
                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                         CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, null, null) { false }
@@ -1170,7 +1221,7 @@ class ExoPlayerService : BasePlaybackService() {
                                 this@ExoPlayerService,
                                 when {
                                     networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
-                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, false, false, null) { false }
+                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, false, false, null, null, null) { false }
                                     }
                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                         CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, null, null) { false }

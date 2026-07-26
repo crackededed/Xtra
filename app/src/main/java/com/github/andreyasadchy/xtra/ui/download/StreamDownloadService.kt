@@ -430,8 +430,9 @@ class StreamDownloadService : LifecycleService() {
                     val proxyHeaders = if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
                         listOf(android.util.Pair("Proxy-Authorization", Base64.encodeToString("$proxyUser:$proxyPassword".toByteArray(), Base64.NO_WRAP)))
                     } else emptyList()
-                    HttpEngine.Builder(application).apply {
-                        setProxyOptions(ProxyOptions.fromProxyList(
+                    val builder = HttpEngine.Builder(application)
+                    try {
+                        builder.setProxyOptions(ProxyOptions.fromProxyList(
                             listOf(
                                 android.net.http.Proxy.createHttpProxy(
                                     android.net.http.Proxy.SCHEME_HTTP,
@@ -451,27 +452,44 @@ class StreamDownloadService : LifecycleService() {
                             ),
                             ProxyOptions.ALL_PROXIES_FAILED_BEHAVIOR_DISALLOW_DIRECT
                         ))
-                    }.build()
+                    } catch (e: NoClassDefFoundError) {
+                        null
+                    }?.build()
                 } else {
                     xtraModule.httpEngine.value!!
                 }
-                val response = suspendCancellableCoroutine { continuation ->
-                    val timeout = NetworkUtils.HttpEngineTimeout(CRONET_TIMEOUT)
-                    val request = httpEngine.newUrlRequestBuilder(
-                        playlistUrl,
-                        xtraModule.cronetExecutor.value,
-                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
-                    ).build()
-                    timeout.start(request, continuation)
-                    request.start()
-                    continuation.invokeOnCancellation {
-                        request.cancel()
-                        timeout.stop()
+                if (httpEngine != null) {
+                    val response = suspendCancellableCoroutine { continuation ->
+                        val timeout = NetworkUtils.HttpEngineTimeout(CRONET_TIMEOUT)
+                        val request = httpEngine.newUrlRequestBuilder(
+                            playlistUrl,
+                            xtraModule.cronetExecutor.value,
+                            NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
+                        ).build()
+                        timeout.start(request, continuation)
+                        request.start()
+                        continuation.invokeOnCancellation {
+                            request.cancel()
+                            timeout.stop()
+                        }
+                    }
+                    if (response.info.httpStatusCode in 200..299) {
+                        response.body.decodeToString()
+                    } else null
+                } else {
+                    okHttpClient.value.newBuilder().apply {
+                        proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
+                        if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                            proxyAuthenticator { _, response ->
+                                response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
+                            }
+                        }
+                    }.build().newCall(Request.Builder().url(playlistUrl).build()).executeAsync().use { response ->
+                        if (response.isSuccessful) {
+                            response.body.string()
+                        } else null
                     }
                 }
-                if (response.info.httpStatusCode in 200..299) {
-                    response.body.decodeToString()
-                } else null
             }
             networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                 val cronetEngine = if (proxyMultivariantPlaylist) {
