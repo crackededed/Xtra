@@ -556,9 +556,9 @@
     <string name="loaded_cached_stv_emotes">Geladene zwischengespeicherte 7TV-Emotes</string>
     <string name="loaded_cached_bttv_emotes">Geladene zwischengespeicherte BTTV-Emotes</string>
     <string name="loaded_cached_ffz_emotes">Geladene zwischengespeicherte FFZ-Emotes</string>
-    <string name="find_unlisted_video">Find unlisted video</string>
-    <string name="video_not_found">Video not found</string>
-    <string name="recent_messages_api_url">Recent messages API URL</string>
-    <string name="access_local_network_title">Grant local network permission</string>
-    <string name="access_local_network_desc">Required for connecting to local proxies</string>
+    <string name="find_unlisted_video">Finde nicht gelistete Videos</string>
+    <string name="video_not_found">Video nicht gefunden</string>
+    <string name="recent_messages_api_url">API-URL für aktuelle Nachrichten</string>
+    <string name="access_local_network_title">Berechtigung für lokales Netzwerk erteilen</string>
+    <string name="access_local_network_desc">Erforderlich für die Verbindung zu lokalen Proxys</string>
 </resources>
