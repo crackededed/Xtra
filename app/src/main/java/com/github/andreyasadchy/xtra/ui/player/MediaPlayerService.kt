@@ -563,8 +563,9 @@ class MediaPlayerService : BasePlaybackService() {
                                     val proxyHeaders = if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
                                         listOf(android.util.Pair("Proxy-Authorization", Base64.encodeToString("$proxyUser:$proxyPassword".toByteArray(), Base64.NO_WRAP)))
                                     } else emptyList()
-                                    HttpEngine.Builder(application).apply {
-                                        setProxyOptions(ProxyOptions.fromProxyList(
+                                    val builder = HttpEngine.Builder(application)
+                                    try {
+                                        builder.setProxyOptions(ProxyOptions.fromProxyList(
                                             listOf(
                                                 android.net.http.Proxy.createHttpProxy(
                                                     android.net.http.Proxy.SCHEME_HTTP,
@@ -584,28 +585,47 @@ class MediaPlayerService : BasePlaybackService() {
                                             ),
                                             ProxyOptions.ALL_PROXIES_FAILED_BEHAVIOR_DISALLOW_DIRECT
                                         ))
-                                    }.build()
+                                    } catch (e: NoClassDefFoundError) {
+                                        null
+                                    }?.build()
                                 } else {
                                     xtraModule.httpEngine.value!!
                                 }
-                                val response = suspendCancellableCoroutine { continuation ->
-                                    val timeout = NetworkUtils.HttpEngineTimeout()
-                                    val request = httpEngine.newUrlRequestBuilder(
-                                        url,
-                                        xtraModule.cronetExecutor.value,
-                                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
-                                    ).build()
-                                    timeout.start(request, continuation)
-                                    request.start()
-                                    continuation.invokeOnCancellation {
-                                        request.cancel()
-                                        timeout.stop()
+                                if (httpEngine != null) {
+                                    val response = suspendCancellableCoroutine { continuation ->
+                                        val timeout = NetworkUtils.HttpEngineTimeout()
+                                        val request = httpEngine.newUrlRequestBuilder(
+                                            url,
+                                            xtraModule.cronetExecutor.value,
+                                            NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
+                                        ).build()
+                                        timeout.start(request, continuation)
+                                        request.start()
+                                        continuation.invokeOnCancellation {
+                                            request.cancel()
+                                            timeout.stop()
+                                        }
                                     }
-                                }
-                                if (response.info.httpStatusCode in 200..299) {
-                                    response.body.decodeToString() to null
+                                    if (response.info.httpStatusCode in 200..299) {
+                                        response.body.decodeToString() to null
+                                    } else {
+                                        null to response.info.httpStatusCode
+                                    }
                                 } else {
-                                    null to response.info.httpStatusCode
+                                    xtraModule.okHttpClient.value.newBuilder().apply {
+                                        proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort!!)))
+                                        if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                                            proxyAuthenticator { _, response ->
+                                                response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
+                                            }
+                                        }
+                                    }.build().newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
+                                        if (response.isSuccessful) {
+                                            response.body.string() to null
+                                        } else {
+                                            null to response.code
+                                        }
+                                    }
                                 }
                             }
                             networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {

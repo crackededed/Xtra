@@ -117,8 +117,9 @@ class PlayerRepository(
                         val proxyHeaders = if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
                             listOf(android.util.Pair("Proxy-Authorization", Base64.encodeToString("$proxyUser:$proxyPassword".toByteArray(), Base64.NO_WRAP)))
                         } else emptyList()
-                        val proxyClient = HttpEngine.Builder(context).apply {
-                            setProxyOptions(ProxyOptions.fromProxyList(
+                        val builder = HttpEngine.Builder(context)
+                        val httpEngine = try {
+                            builder.setProxyOptions(ProxyOptions.fromProxyList(
                                 listOf(
                                     android.net.http.Proxy.createHttpProxy(
                                         android.net.http.Proxy.SCHEME_HTTP,
@@ -138,26 +139,50 @@ class PlayerRepository(
                                 ),
                                 ProxyOptions.ALL_PROXIES_FAILED_BEHAVIOR_DISALLOW_DIRECT
                             ))
-                        }.build()
-                        val response = suspendCancellableCoroutine { continuation ->
-                            val timeout = NetworkUtils.HttpEngineTimeout()
-                            val request = proxyClient.newUrlRequestBuilder(
-                                url,
-                                cronetExecutor.value,
-                                NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
-                            ).apply {
-                                headers.forEach { addHeader(it.key, it.value) }
-                                addHeader("Content-Type", "application/json")
-                                setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
-                            }.build()
-                            timeout.start(request, continuation)
-                            request.start()
-                            continuation.invokeOnCancellation {
-                                request.cancel()
-                                timeout.stop()
+                        } catch (e: NoClassDefFoundError) {
+                            null
+                        }?.build()
+                        if (httpEngine != null) {
+                            val response = suspendCancellableCoroutine { continuation ->
+                                val timeout = NetworkUtils.HttpEngineTimeout()
+                                val request = httpEngine.newUrlRequestBuilder(
+                                    url,
+                                    cronetExecutor.value,
+                                    NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
+                                ).apply {
+                                    headers.forEach { addHeader(it.key, it.value) }
+                                    addHeader("Content-Type", "application/json")
+                                    setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
+                                }.build()
+                                timeout.start(request, continuation)
+                                request.start()
+                                continuation.invokeOnCancellation {
+                                    request.cancel()
+                                    timeout.stop()
+                                }
+                            }
+                            json.decodeFromString<PlaybackAccessTokenResponse>(response.body.decodeToString())
+                        } else {
+                            okHttpClient.value.newBuilder().apply {
+                                proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
+                                if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                                    proxyAuthenticator { _, response ->
+                                        response.request.newBuilder().header(
+                                            "Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)
+                                        ).build()
+                                    }
+                                }
+                            }.build().newCall(Request.Builder().apply {
+                                url(url)
+                                headers.forEach {
+                                    addHeader(it.key, it.value)
+                                }
+                                header("Content-Type", "application/json")
+                                post(body.toRequestBody())
+                            }.build()).executeAsync().use { response ->
+                                json.decodeFromString<PlaybackAccessTokenResponse>(response.body.string())
                             }
                         }
-                        json.decodeFromString<PlaybackAccessTokenResponse>(response.body.decodeToString())
                     }
                     networkLibrary == C.CRONET && cronetEngine.value != null -> {
                         val cronetEngine = if (CronetProvider.getAllProviders(context).any { it.isEnabled }) {
@@ -294,8 +319,9 @@ class PlayerRepository(
                         val proxyHeaders = if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
                             listOf(android.util.Pair("Proxy-Authorization", Base64.encodeToString("$proxyUser:$proxyPassword".toByteArray(), Base64.NO_WRAP)))
                         } else emptyList()
-                        val httpEngine = HttpEngine.Builder(context).apply {
-                            setProxyOptions(ProxyOptions.fromProxyList(
+                        val builder = HttpEngine.Builder(context)
+                        val httpEngine = try {
+                            builder.setProxyOptions(ProxyOptions.fromProxyList(
                                 listOf(
                                     android.net.http.Proxy.createHttpProxy(
                                         android.net.http.Proxy.SCHEME_HTTP,
@@ -315,27 +341,53 @@ class PlayerRepository(
                                 ),
                                 ProxyOptions.ALL_PROXIES_FAILED_BEHAVIOR_DISALLOW_DIRECT
                             ))
-                        }.build()
-                        val response = suspendCancellableCoroutine { continuation ->
-                            val timeout = NetworkUtils.HttpEngineTimeout()
-                            val request = httpEngine.newUrlRequestBuilder(
-                                url,
-                                cronetExecutor.value,
-                                NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
-                            ).apply {
-                                headers.forEach { addHeader(it.key, it.value) }
-                                addHeader("Content-Type", "application/json")
-                                setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
-                            }.build()
-                            timeout.start(request, continuation)
-                            request.start()
-                            continuation.invokeOnCancellation {
-                                request.cancel()
-                                timeout.stop()
+                        } catch (e: NoClassDefFoundError) {
+                            null
+                        }?.build()
+                        if (httpEngine != null) {
+                            val response = suspendCancellableCoroutine { continuation ->
+                                val timeout = NetworkUtils.HttpEngineTimeout()
+                                val request = httpEngine.newUrlRequestBuilder(
+                                    url,
+                                    cronetExecutor.value,
+                                    NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
+                                ).apply {
+                                    headers.forEach { addHeader(it.key, it.value) }
+                                    addHeader("Content-Type", "application/json")
+                                    setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
+                                }.build()
+                                timeout.start(request, continuation)
+                                request.start()
+                                continuation.invokeOnCancellation {
+                                    request.cancel()
+                                    timeout.stop()
+                                }
                             }
-                        }
-                        response.body.inputStream().source().buffer().jsonReader().use {
-                            query.parseResponse(it)
+                            response.body.inputStream().source().buffer().jsonReader().use {
+                                query.parseResponse(it)
+                            }
+                        } else {
+                            okHttpClient.value.newBuilder().apply {
+                                proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
+                                if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                                    proxyAuthenticator { _, response ->
+                                        response.request.newBuilder().header(
+                                            "Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)
+                                        ).build()
+                                    }
+                                }
+                            }.build().newCall(Request.Builder().apply {
+                                url(url)
+                                headers.forEach {
+                                    addHeader(it.key, it.value)
+                                }
+                                header("Content-Type", "application/json")
+                                post(body.toRequestBody())
+                            }.build()).executeAsync().use { response ->
+                                response.body.byteStream().source().buffer().jsonReader().use {
+                                    query.parseResponse(it)
+                                }
+                            }
                         }
                     }
                     networkLibrary == C.CRONET && cronetEngine.value != null -> {
