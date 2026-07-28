@@ -158,9 +158,9 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
                                     if (userType != null && it.createdAt != null) {
                                         Instant.parseOrNull(it.createdAt)?.takeIf { time -> time.toEpochMilliseconds() > 0 }?.let { time ->
                                             val days = when (userType.lowercase()) {
-                                                "" -> 14
+                                                "" -> 7
                                                 "affiliate" -> 14
-                                                else -> 60
+                                                else -> 60 // Partners, Prime, Turbo
                                             }
                                             val timeLeft = (time + days.days) - Clock.System.now()
                                             if (timeLeft.isPositive()) {
