@@ -154,13 +154,16 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
                         when (viewModel.sort) {
                             BookmarksSortDialog.SORT_EXPIRES_AT -> list.sortedWith(compareBy(nullsLast()) {
                                 if (it.type?.lowercase() == "archive") {
-                                    val userType = it.userType ?: it.userBroadcasterType
-                                    if (userType != null && it.createdAt != null) {
+                                    if (it.createdAt != null) {
                                         Instant.parseOrNull(it.createdAt)?.takeIf { time -> time.toEpochMilliseconds() > 0 }?.let { time ->
-                                            val days = when (userType.lowercase()) {
-                                                "" -> 7
-                                                "affiliate" -> 14
-                                                else -> 60 // Partners, Prime, Turbo
+                                            val userType = it.userType ?: it.userBroadcasterType
+                                            val days = if (userType.isNullOrBlank()) {
+                                                7
+                                            } else {
+                                                when (userType.lowercase()) {
+                                                    "affiliate" -> 14
+                                                    else -> 60 // Partners, Prime, Turbo
+                                                }
                                             }
                                             val timeLeft = (time + days.days) - Clock.System.now()
                                             if (timeLeft.isPositive()) {
@@ -179,13 +182,16 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
                         when (viewModel.sort) {
                             BookmarksSortDialog.SORT_EXPIRES_AT -> list.sortedWith(compareByDescending(nullsFirst()) {
                                 if (it.type?.lowercase() == "archive") {
-                                    val userType = it.userType ?: it.userBroadcasterType
-                                    if (userType != null && it.createdAt != null) {
+                                    if (it.createdAt != null) {
                                         Instant.parseOrNull(it.createdAt)?.takeIf { time -> time.toEpochMilliseconds() > 0 }?.let { time ->
-                                            val days = when (userType.lowercase()) {
-                                                "" -> 7
-                                                "affiliate" -> 14
-                                                else -> 60 // Partners, Prime, Turbo
+                                            val userType = it.userType ?: it.userBroadcasterType
+                                            val days = if (userType.isNullOrBlank()) {
+                                                7
+                                            } else {
+                                                when (userType.lowercase()) {
+                                                    "affiliate" -> 14
+                                                    else -> 60 // Partners, Prime, Turbo
+                                                }
                                             }
                                             val timeLeft = (time + days.days) - Clock.System.now()
                                             if (timeLeft.isPositive()) {
