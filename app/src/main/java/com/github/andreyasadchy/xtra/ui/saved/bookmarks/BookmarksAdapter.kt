@@ -173,9 +173,9 @@ class BookmarksAdapter(
                     if (item.type?.lowercase() == "archive" && userType != null && item.createdAt != null && context.prefs().getBoolean(C.UI_BOOKMARK_TIME_LEFT, true) && !ignore) {
                         val text = Instant.parseOrNull(item.createdAt)?.takeIf { time -> time.toEpochMilliseconds() > 0 }?.let { createdAt ->
                             val days = when (userType.lowercase()) {
-                                "" -> 14
+                                "" -> 7
                                 "affiliate" -> 14
-                                else -> 60
+                                else -> 60 // Partners, Prime, Turbo
                             }
                             val timeLeft = (createdAt + days.days) - Clock.System.now()
                             if (timeLeft.isPositive()) {
