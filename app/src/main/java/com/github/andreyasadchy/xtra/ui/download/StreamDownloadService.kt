@@ -1263,8 +1263,8 @@ class StreamDownloadService : LifecycleService() {
                 })
                 add(launch(Dispatchers.IO) {
                     try {
-                        val response = xtraModule.playerRepository.loadGlobalSTVEmotesResponse(networkLibrary)
-                        val emotes = xtraModule.playerRepository.loadGlobalSTVEmotes(response, useWebp)
+                        val response = xtraModule.playerRepository.loadGlobalSTVEmoteSetResponse(networkLibrary)
+                        val emotes = xtraModule.playerRepository.loadSTVEmoteSet(response, useWebp, true).second
                         emoteList.addAll(emotes)
                         emoteList.sortBy { it.source }
                     } catch (e: Exception) {
@@ -1294,8 +1294,19 @@ class StreamDownloadService : LifecycleService() {
                 if (channelId != null) {
                     add(launch(Dispatchers.IO) {
                         try {
-                            val response = xtraModule.playerRepository.loadSTVEmotesResponse(networkLibrary, channelId)
-                            val emotes = xtraModule.playerRepository.loadSTVEmotes(response, useWebp).second
+                            val userResponse = xtraModule.playerRepository.loadSTVUserResponse(networkLibrary, channelId)
+                            val user = xtraModule.playerRepository.loadSTVUser(userResponse, useWebp)
+                            val userSetId = user.first
+                            val userEmotes = user.second
+                            val emotes = if (!userEmotes.isNullOrEmpty()) {
+                                userEmotes
+                            } else {
+                                if (!userSetId.isNullOrBlank()) {
+                                    val emoteSetResponse = xtraModule.playerRepository.loadSTVEmoteSetResponse(networkLibrary, userSetId)
+                                    val emoteSet = xtraModule.playerRepository.loadSTVEmoteSet(emoteSetResponse, useWebp, false)
+                                    emoteSet.second
+                                } else emptyList()
+                            }
                             emoteList.addAll(emotes)
                             emoteList.sortBy { it.source }
                         } catch (e: Exception) {
