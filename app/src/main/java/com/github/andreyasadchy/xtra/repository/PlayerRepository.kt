@@ -35,7 +35,6 @@ import com.github.andreyasadchy.xtra.model.misc.FFZResponse
 import com.github.andreyasadchy.xtra.model.misc.RecentMessagesResponse
 import com.github.andreyasadchy.xtra.model.misc.STVChannelResponse
 import com.github.andreyasadchy.xtra.model.misc.STVEmoteSetResponse
-import com.github.andreyasadchy.xtra.model.misc.STVResponse
 import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
@@ -862,7 +861,7 @@ class PlayerRepository(
         }
     }
 
-    suspend fun loadGlobalSTVEmotesResponse(networkLibrary: String?): String = withContext(Dispatchers.IO) {
+    suspend fun loadGlobalSTVEmoteSetResponse(networkLibrary: String?): String = withContext(Dispatchers.IO) {
         val url = "https://7tv.io/v3/emote-sets/global"
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
@@ -914,12 +913,64 @@ class PlayerRepository(
         }
     }
 
-    suspend fun loadGlobalSTVEmotes(response: String, useWebp: Boolean): List<Emote> = withContext(Dispatchers.IO) {
-        val response = json.decodeFromString<STVEmoteSetResponse>(response)
-        parseSTVEmotes(response.emotes, useWebp, Emote.GLOBAL_STV)
+    suspend fun loadSTVEmoteSetResponse(networkLibrary: String?, setId: String): String = withContext(Dispatchers.IO) {
+        val url = "https://7tv.io/v3/emote-sets/${setId}"
+        when {
+            networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
+                val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.HttpEngineTimeout()
+                    val request = httpEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        cronetExecutor.value,
+                        NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
+                    ).apply {
+                        addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
+                    }.build()
+                    timeout.start(request, continuation)
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                        timeout.stop()
+                    }
+                }
+                response.body.decodeToString()
+            }
+            networkLibrary == C.CRONET && cronetEngine.value != null -> {
+                val response = suspendCancellableCoroutine { continuation ->
+                    val timeout = NetworkUtils.CronetTimeout()
+                    val request = cronetEngine.value!!.newUrlRequestBuilder(
+                        url,
+                        NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
+                        cronetExecutor.value
+                    ).apply {
+                        addHeader("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
+                    }.build()
+                    timeout.start(request, continuation)
+                    request.start()
+                    continuation.invokeOnCancellation {
+                        request.cancel()
+                        timeout.stop()
+                    }
+                }
+                response.body.decodeToString()
+            }
+            else -> {
+                okHttpClient.value.newCall(Request.Builder().apply {
+                    url(url)
+                    header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
+                }.build()).executeAsync().use { response ->
+                    response.body.string()
+                }
+            }
+        }
     }
 
-    suspend fun loadSTVEmotesResponse(networkLibrary: String?, channelId: String): String = withContext(Dispatchers.IO) {
+    suspend fun loadSTVEmoteSet(response: String, useWebp: Boolean, global: Boolean): Pair<String?, List<Emote>> = withContext(Dispatchers.IO) {
+        val response = json.decodeFromString<STVEmoteSetResponse>(response)
+        Pair(response.id, parseSTVEmotes(response.emotes, useWebp, if (global) Emote.GLOBAL_STV else Emote.CHANNEL_STV))
+    }
+
+    suspend fun loadSTVUserResponse(networkLibrary: String?, channelId: String): String = withContext(Dispatchers.IO) {
         val url = "https://7tv.io/v3/users/twitch/${channelId}"
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
@@ -971,13 +1022,12 @@ class PlayerRepository(
         }
     }
 
-    suspend fun loadSTVEmotes(response: String, useWebp: Boolean): Pair<String?, List<Emote>> = withContext(Dispatchers.IO) {
+    suspend fun loadSTVUser(response: String, useWebp: Boolean): Pair<String?, List<Emote>?> = withContext(Dispatchers.IO) {
         val response = json.decodeFromString<STVChannelResponse>(response)
-        val set = response.emoteSet
-        Pair(set.id, parseSTVEmotes(set.emotes, useWebp, Emote.CHANNEL_STV))
+        Pair(response.emoteSetId, response.emoteSet?.emotes?.let { parseSTVEmotes(it, useWebp, Emote.CHANNEL_STV) })
     }
 
-    private fun parseSTVEmotes(response: List<STVResponse>, useWebp: Boolean, source: Int): List<Emote> {
+    private fun parseSTVEmotes(response: List<STVEmoteSetResponse.Emote>, useWebp: Boolean, source: Int): List<Emote> {
         return response.mapNotNull { emote ->
             emote.name?.takeIf { it.isNotBlank() }?.let { name ->
                 emote.data?.let { data ->

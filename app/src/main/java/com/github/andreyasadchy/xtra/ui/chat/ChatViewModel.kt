@@ -276,7 +276,7 @@ class ChatViewModel(
             } else {
                 viewModelScope.launch {
                     val pair = try {
-                        playerRepository.loadGlobalSTVEmotesResponse(networkLibrary) to true
+                        playerRepository.loadGlobalSTVEmoteSetResponse(networkLibrary) to true
                     } catch (e: Exception) {
                         try {
                             val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/global.stv").use {
@@ -295,7 +295,7 @@ class ChatViewModel(
                     val online = pair.second
                     if (response != null) {
                         try {
-                            val emotes = playerRepository.loadGlobalSTVEmotes(response, useWebp)
+                            val emotes = playerRepository.loadSTVEmoteSet(response, useWebp, true).second
                             if (emotes.isNotEmpty()) {
                                 savedGlobalSTVEmotes = emotes
                                 synchronized(thirdPartyEmotes) {
@@ -333,8 +333,30 @@ class ChatViewModel(
             }
             if (!channelId.isNullOrBlank()) {
                 viewModelScope.launch {
-                    val pair = try {
-                        playerRepository.loadSTVEmotesResponse(networkLibrary, channelId) to true
+                    var response: String? = null
+                    var setId: String? = null
+                    var emotes: List<Emote>? = null
+                    var online = false
+                    try {
+                        val userResponse = playerRepository.loadSTVUserResponse(networkLibrary, channelId)
+                        val user = playerRepository.loadSTVUser(userResponse, useWebp)
+                        val userSetId = user.first
+                        val userEmotes = user.second
+                        if (!userEmotes.isNullOrEmpty()) {
+                            response = userResponse
+                            setId = userSetId
+                            emotes = userEmotes
+                            online = true
+                        } else {
+                            if (!userSetId.isNullOrBlank()) {
+                                val emoteSetResponse = playerRepository.loadSTVEmoteSetResponse(networkLibrary, userSetId)
+                                val emoteSet = playerRepository.loadSTVEmoteSet(emoteSetResponse, useWebp, false)
+                                response = emoteSetResponse
+                                setId = userSetId
+                                emotes = emoteSet.second
+                                online = true
+                            }
+                        }
                     } catch (e: Exception) {
                         try {
                             val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/${channelId}.stv").use {
@@ -344,19 +366,26 @@ class ChatViewModel(
                             InflaterOutputStream(decompressedStream).use {
                                 it.write(compressedBytes)
                             }
-                            decompressedStream.toByteArray().decodeToString() to false
+                            val savedResponse = decompressedStream.toByteArray().decodeToString()
+                            val user = playerRepository.loadSTVUser(savedResponse, useWebp)
+                            val userEmotes = user.second
+                            if (!userEmotes.isNullOrEmpty()) {
+                                setId = user.first
+                                emotes = userEmotes
+                            } else {
+                                val emoteSet = playerRepository.loadSTVEmoteSet(savedResponse, useWebp, false)
+                                setId = emoteSet.first
+                                emotes = emoteSet.second
+                            }
+                            response = savedResponse
+                            online = false
                         } catch (e: Exception) {
-                            null to false
+
                         }
                     }
-                    val response = pair.first
-                    val online = pair.second
                     if (response != null) {
                         try {
-                            val emotesResponse = playerRepository.loadSTVEmotes(response, useWebp)
-                            val setId = emotesResponse.first
-                            val emotes = emotesResponse.second
-                            if (emotes.isNotEmpty()) {
+                            if (!emotes.isNullOrEmpty()) {
                                 channelSTVEmoteSetId = setId
                                 synchronized(thirdPartyEmotes) {
                                     thirdPartyEmotes.addAll(emotes)
