@@ -10,6 +10,7 @@ import android.net.http.HttpEngine
 import android.provider.DocumentsContract
 import android.util.JsonReader
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
@@ -35,9 +36,12 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
+import com.github.andreyasadchy.xtra.util.prefs
+import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import com.github.andreyasadchy.xtra.util.m3u8.Segment
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
@@ -489,7 +493,6 @@ class SettingsViewModel(
     fun toggleNotifications(enabled: Boolean, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>) {
         viewModelScope.launch(Dispatchers.IO) {
             if (enabled) {
-                notificationsRepository.getNewStreams(networkLibrary, gqlHeaders, helixHeaders)
                 WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
                     "live_notifications",
                     ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
@@ -502,6 +505,20 @@ class SettingsViewModel(
                         )
                         .build()
                 )
+                try {
+                    if (notificationsRepository.syncNotificationUsers(networkLibrary, gqlHeaders)) {
+                        applicationContext.tokenPrefs().getString(C.USER_ID, null)?.let { userId ->
+                            applicationContext.prefs().edit {
+                                putString(C.LIVE_NOTIFICATION_USERS_SYNCED, userId)
+                            }
+                        }
+                    }
+                    notificationsRepository.getNewStreams(networkLibrary, gqlHeaders, helixHeaders)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // The worker will retry after a transient API failure.
+                }
             } else {
                 WorkManager.getInstance(applicationContext).cancelUniqueWork("live_notifications")
             }

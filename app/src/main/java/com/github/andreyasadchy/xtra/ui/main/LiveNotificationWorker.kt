@@ -1,39 +1,45 @@
 package com.github.andreyasadchy.xtra.ui.main
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
+import android.content.pm.PackageManager
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.XtraApp
-import com.github.andreyasadchy.xtra.XtraModule
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
+import kotlinx.coroutines.CancellationException
 
 class LiveNotificationWorker(
     private val context: Context,
     parameters: WorkerParameters,
 ) : CoroutineWorker(context, parameters) {
 
-    lateinit var xtraModule: XtraModule
-
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     override suspend fun doWork(): Result {
-        xtraModule = (context as XtraApp).xtraModule
-        val streams = xtraModule.notificationsRepository.getNewStreams(
-            networkLibrary = context.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
-            gqlHeaders = TwitchApiHelper.getGQLHeaders(context, true),
-            helixHeaders = TwitchApiHelper.getHelixHeaders(context),
-        )
-        if (streams.isNotEmpty()) {
+        val streams = try {
+            (context as XtraApp).xtraModule.notificationsRepository.getNewStreams(
+                networkLibrary = context.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
+                gqlHeaders = TwitchApiHelper.getGQLHeaders(context, true),
+                helixHeaders = TwitchApiHelper.getHelixHeaders(context),
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return Result.retry()
+        }
+        if (streams.isNotEmpty() && canPostNotifications()) {
             val channelId = context.getString(R.string.notification_live_channel_id)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 if (notificationManager.getNotificationChannel(channelId) == null) {
@@ -89,6 +95,11 @@ class LiveNotificationWorker(
         }
         return Result.success()
     }
+
+    private fun canPostNotifications() =
+        (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) &&
+            NotificationManagerCompat.from(context).areNotificationsEnabled()
 
     companion object {
         const val GROUP_KEY = "com.github.andreyasadchy.xtra.LIVE_NOTIFICATIONS"

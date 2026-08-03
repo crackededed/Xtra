@@ -475,6 +475,11 @@ class PlayerViewModel(
                         } else {
                             _isFollowing.value = true
                             follow.value = Pair(true, null)
+                            if (!disableNotifications) {
+                                notificationsRepository.saveUser(NotificationUser(channelId))
+                            } else {
+                                notificationsRepository.deleteUser(NotificationUser(channelId))
+                            }
                             if (liveNotificationsEnabled) {
                                 startedAt.takeUnless { it.isNullOrBlank() }?.let {
                                     Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
@@ -523,6 +528,7 @@ class PlayerViewModel(
                         } else {
                             _isFollowing.value = false
                             follow.value = Pair(false, null)
+                            notificationsRepository.deleteUser(NotificationUser(channelId))
                         }
                     } else {
                         localChannelFollowsRepository.getById(channelId)?.let { localChannelFollowsRepository.delete(it) }

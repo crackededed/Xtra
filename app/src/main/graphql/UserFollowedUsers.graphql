@@ -7,6 +7,13 @@ query UserFollowedUsers($first: Int, $after: Cursor) {
                 node {
                     displayName
                     id
+                    self {
+                        follower {
+                            notificationSettings {
+                                isEnabled
+                            }
+                        }
+                    }
                     lastBroadcast {
                         startedAt
                     }
