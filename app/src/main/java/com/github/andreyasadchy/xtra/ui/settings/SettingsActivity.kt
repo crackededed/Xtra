@@ -252,6 +252,7 @@ class SettingsActivity : AppCompatActivity() {
         private val viewModel: SettingsViewModel by activityViewModels { SettingsViewModelFactory }
         private var backupResultLauncher: ActivityResultLauncher<Intent>? = null
         private var restoreResultLauncher: ActivityResultLauncher<Intent>? = null
+        private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
         private var updateDownloadDialogBinding: DialogUpdateDownloadBinding? = null
         private var updateDownloadDialog: AlertDialog? = null
 
@@ -285,6 +286,23 @@ class SettingsActivity : AppCompatActivity() {
                     )
                 }
             }
+            notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+                if (granted) {
+                    findPreference<SwitchPreferenceCompat>("live_notifications_enabled")?.let {
+                        it.isChecked = true
+                        toggleLiveNotifications(true)
+                    }
+                }
+            }
+        }
+
+        private fun toggleLiveNotifications(enabled: Boolean) {
+            viewModel.toggleNotifications(
+                enabled = enabled,
+                networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
+                gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), true),
+                helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext())
+            )
         }
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -338,18 +356,16 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
             findPreference<SwitchPreferenceCompat>("live_notifications_enabled")?.setOnPreferenceChangeListener { _, newValue ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                val enabled = newValue as Boolean
+                if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                     ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
                 ) {
-                    ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    false
+                } else {
+                    toggleLiveNotifications(enabled)
+                    true
                 }
-                viewModel.toggleNotifications(
-                    enabled = newValue as Boolean,
-                    networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
-                    gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), true),
-                    helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext())
-                )
-                true
             }
             findPreference<Preference>("theme_settings")?.setOnPreferenceClickListener {
                 requireActivity().findViewById<AppBarLayout>(R.id.appBar)?.setExpanded(true)

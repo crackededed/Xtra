@@ -178,6 +178,7 @@ class ChannelPagerViewModel(
                         if (!errorMessage.isNullOrBlank()) {
                             notifications.value = Pair(true, errorMessage)
                         } else {
+                            notificationsRepository.saveUser(NotificationUser(channelId))
                             _notificationsEnabled.value = true
                             notifications.value = Pair(true, errorMessage)
                             if (notificationsEnabled) {
@@ -223,6 +224,7 @@ class ChannelPagerViewModel(
                         if (!errorMessage.isNullOrBlank()) {
                             notifications.value = Pair(false, errorMessage)
                         } else {
+                            notificationsRepository.deleteUser(NotificationUser(channelId))
                             _notificationsEnabled.value = false
                             notifications.value = Pair(false, errorMessage)
                         }
@@ -289,7 +291,10 @@ class ChannelPagerViewModel(
                             _isFollowing.value = true
                             follow.value = Pair(true, null)
                             if (!disableNotifications) {
+                                notificationsRepository.saveUser(NotificationUser(channelId))
                                 _notificationsEnabled.value = true
+                            } else {
+                                notificationsRepository.deleteUser(NotificationUser(channelId))
                             }
                             if (liveNotificationsEnabled) {
                                 _stream.value?.createdAt.takeUnless { it.isNullOrBlank() }?.let {
@@ -341,6 +346,7 @@ class ChannelPagerViewModel(
                             _isFollowing.value = false
                             follow.value = Pair(false, null)
                             _notificationsEnabled.value = false
+                            notificationsRepository.deleteUser(NotificationUser(channelId))
                         }
                     } else {
                         localChannelFollowsRepository.getById(channelId)?.let { localChannelFollowsRepository.delete(it) }

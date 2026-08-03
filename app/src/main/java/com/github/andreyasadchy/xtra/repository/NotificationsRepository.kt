@@ -6,6 +6,7 @@ import com.github.andreyasadchy.xtra.model.NotificationUser
 import com.github.andreyasadchy.xtra.model.ShownNotification
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.util.C
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.time.Instant
@@ -19,28 +20,41 @@ class NotificationsRepository(
 
     suspend fun getNewStreams(networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>): List<Stream> = withContext(Dispatchers.IO) {
         val list = mutableListOf<Stream>()
-        notificationUsersDao.getAll().map { it.channelId }.takeIf { it.isNotEmpty() }?.let {
-            try {
-                gqlQueryLocal(networkLibrary, gqlHeaders, it)
-            } catch (e: Exception) {
-                if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-                    try {
-                        helixLocal(networkLibrary, helixHeaders, it)
-                    } catch (e: Exception) {
-                        return@withContext emptyList()
+        val notificationIds = notificationUsersDao.getAll().map { it.channelId }
+        if (notificationIds.isNotEmpty() &&
+            gqlHeaders[C.HEADER_TOKEN].isNullOrBlank() &&
+            helixHeaders[C.HEADER_TOKEN].isNullOrBlank()
+        ) {
+            return@withContext emptyList()
+        }
+        if (notificationIds.isNotEmpty()) {
+            val localStreams = if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                try {
+                    gqlQueryLocal(networkLibrary, gqlHeaders, notificationIds)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (gqlException: Exception) {
+                    if (helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                        throw gqlException
                     }
-                } else return@withContext emptyList()
-            }.let { list.addAll(it) }
+                    helixLocal(networkLibrary, helixHeaders, notificationIds)
+                }
+            } else {
+                helixLocal(networkLibrary, helixHeaders, notificationIds)
+            }
+            list.addAll(localStreams)
         }
         if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
             try {
                 gqlQueryLoad(networkLibrary, gqlHeaders)
+                    .filterNot { item -> list.any { it.channelId == item.channelId } }
+                    .let(list::addAll)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                return@withContext emptyList()
-            }.mapNotNull { item ->
-                item.takeIf { list.find { it.channelId == item.channelId } == null }
-            }.let {
-                list.addAll(it)
+                if (list.isEmpty()) {
+                    throw e
+                }
             }
         }
         val liveList = list.mapNotNull { stream ->
@@ -59,6 +73,28 @@ class NotificationsRepository(
             item.takeIf { oldList.find { it.channelId == item.channelId }.let { it == null || it.startedAt < item.startedAt } }?.channelId
         }
         list.filter { it.channelId in newStreams }
+    }
+
+    suspend fun syncNotificationUsers(networkLibrary: String?, gqlHeaders: Map<String, String>) = withContext(Dispatchers.IO) {
+        if (gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+            return@withContext false
+        }
+        val users = mutableListOf<NotificationUser>()
+        var offset: String? = null
+        do {
+            val response = graphQLRepository.loadQueryUserFollowedUsers(networkLibrary, gqlHeaders, 100, offset)
+            response.errors?.firstOrNull()?.let { throw Exception(it.message) }
+            val data = response.data!!.user!!.follows!!
+            val items = data.edges!!
+            users.addAll(items.mapNotNull { item ->
+                item?.node?.takeIf {
+                    it.self?.follower?.notificationSettings?.isEnabled == true
+                }?.id?.let(::NotificationUser)
+            })
+            offset = items.lastOrNull()?.cursor?.toString()
+        } while (!offset.isNullOrBlank() && data.pageInfo?.hasNextPage == true)
+        notificationUsersDao.replaceAll(users)
+        true
     }
 
     private suspend fun gqlQueryLoad(networkLibrary: String?, gqlHeaders: Map<String, String>): List<Stream> {
