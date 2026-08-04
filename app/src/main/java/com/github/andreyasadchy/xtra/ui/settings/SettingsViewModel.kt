@@ -37,6 +37,7 @@ import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import com.github.andreyasadchy.xtra.util.m3u8.Segment
+import com.github.andreyasadchy.xtra.util.prefs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
