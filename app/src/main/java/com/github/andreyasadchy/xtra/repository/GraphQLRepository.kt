@@ -131,7 +131,7 @@ class GraphQLRepository(
 ) {
 
     private suspend fun <T: Query.Data> sendQuery(networkLibrary: String?, headers: Map<String, String>, query: Query<T>): ApolloResponse<T> = withContext(Dispatchers.IO) {
-        val url = "https://gql.twitch.tv/gql/"
+        val url = "https://gql.twitch.tv/gql"
         val body = buildJsonString {
             query.apply {
                 writeObject {
@@ -207,7 +207,7 @@ class GraphQLRepository(
     }
 
     private suspend fun sendPersistedQuery(networkLibrary: String?, headers: Map<String, String>, body: String): String = withContext(Dispatchers.IO) {
-        val url = "https://gql.twitch.tv/gql/"
+        val url = "https://gql.twitch.tv/gql"
         when {
             networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
@@ -637,7 +637,7 @@ class GraphQLRepository(
     }
 
     suspend fun loadQueryVideoCommentsDownload(networkLibrary: String?, timeout: Long, okHttpClient: Lazy<OkHttpClient>, headers: Map<String, String>, videoId: String?, offset: Int? = null, cursor: String? = null): VideoMessagesResponse = withContext(Dispatchers.IO) {
-        val url = "https://gql.twitch.tv/gql/"
+        val url = "https://gql.twitch.tv/gql"
         val query = VideoCommentsQuery(
             id = Optional.Present(videoId),
             first = Optional.Present(100),
