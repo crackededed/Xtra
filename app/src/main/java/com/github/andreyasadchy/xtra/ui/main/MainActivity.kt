@@ -237,7 +237,7 @@ class MainActivity : AppCompatActivity() {
                                 ) {
                                     viewModel.checkUpdates(
                                         prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP),
-                                        prefs.getString(C.UPDATE_URL, null) ?: "https://api.github.com/repos/crackededed/xtra/releases/tags/latest",
+                                        prefs.getString(C.UPDATE_URL, null)?.takeUnless { it == C.LEGACY_UPDATE_URL } ?: C.DEFAULT_UPDATE_URL,
                                         tokenPrefs().getLong(C.UPDATE_LAST_CHECKED, 0)
                                     )
                                 }
@@ -1273,6 +1273,9 @@ class MainActivity : AppCompatActivity() {
 
     @OptIn(UnstableApi::class)
     private fun migrateSettings() {
+        if (prefs.getString(C.UPDATE_URL, null) == C.LEGACY_UPDATE_URL) {
+            prefs.edit { putString(C.UPDATE_URL, C.DEFAULT_UPDATE_URL) }
+        }
         val version = prefs.getInt(C.SETTINGS_VERSION, 0).let {
             if (it == 0 && !prefs.getBoolean(C.FIRST_LAUNCH2, true)) {
                 when {

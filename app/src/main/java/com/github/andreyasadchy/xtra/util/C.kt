@@ -264,6 +264,8 @@ object C {
     const val VALIDATE_TOKENS = "validate_tokens"
     const val UPDATE_LAST_CHECKED = "update_last_checked"
     const val UPDATE_URL = "update_url"
+    const val DEFAULT_UPDATE_URL = "https://api.github.com/repos/thiscallnet/xtra/releases/tags/latest"
+    const val LEGACY_UPDATE_URL = "https://api.github.com/repos/crackededed/xtra/releases/tags/latest"
     const val UPDATE_CHECK_ENABLED = "update_check_enabled"
     const val UPDATE_CHECK_FREQUENCY = "update_check_frequency"
     const val UPDATE_USE_BROWSER = "update_use_browser"
