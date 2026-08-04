@@ -31,7 +31,13 @@ import com.github.andreyasadchy.xtra.model.chat.STVUser
 import com.github.andreyasadchy.xtra.model.chat.TwitchBadge
 import com.github.andreyasadchy.xtra.model.chat.TwitchEmote
 import com.github.andreyasadchy.xtra.model.chat.VideoChatMessage
+import com.github.andreyasadchy.xtra.model.gql.chat.ChannelPointContextResponse
+import com.github.andreyasadchy.xtra.model.gql.chat.WatchStreakResponse
+import com.github.andreyasadchy.xtra.model.ui.ChannelPoints
+import com.github.andreyasadchy.xtra.model.ui.ChannelPointReward as ChannelPointRewardInfo
 import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
+import com.github.andreyasadchy.xtra.model.ui.WatchStreak
+import com.github.andreyasadchy.xtra.model.ui.WatchStreakReward
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
@@ -59,6 +65,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonPrimitive
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -93,6 +101,8 @@ class ChatViewModel(
     private var eventSub: EventSubWebSocket? = null
     private var hermesWebSocket: HermesWebSocket? = null
     private var pubSubJob: Job? = null
+    private var channelPointsJob: Job? = null
+    private var watchStreakJob: Job? = null
     private var stvEventApi: STVEventApiWebSocket? = null
     private var stvEventApiJob: Job? = null
     private var stvUserId: String? = null
@@ -124,10 +134,12 @@ class ChatViewModel(
     val raidClicked = MutableStateFlow<Raid?>(null)
     var raidClosed = false
     val poll = MutableStateFlow<Poll?>(null)
+    val activePoll = MutableStateFlow<Poll?>(null)
     var pollClosed = false
     val pollSecondsLeft = MutableStateFlow<Int?>(null)
     var pollTimer: Timer? = null
     val prediction = MutableStateFlow<Prediction?>(null)
+    val activePrediction = MutableStateFlow<Prediction?>(null)
     var predictionClosed = false
     val predictionSecondsLeft = MutableStateFlow<Int?>(null)
     var predictionTimer: Timer? = null
@@ -144,6 +156,8 @@ class ChatViewModel(
     var channelSTVEmoteSetId: String? = null
     var userSTVEmoteSetId: String? = null
     val translateAllMessages = MutableStateFlow<Boolean?>(null)
+    val channelPoints = MutableStateFlow<ChannelPoints?>(null)
+    val watchStreak = MutableStateFlow<WatchStreak?>(null)
 
     val reloadMessages = MutableStateFlow(false)
     val hideRaid = MutableStateFlow(false)
@@ -988,6 +1002,114 @@ class ChatViewModel(
         }
     }
 
+    private fun updateChannelPoints(response: ChannelPointContextResponse) {
+        val channel = response.data?.community?.channel ?: return
+        val balance = channel.self.communityPoints?.balance ?: return
+        val settings = channel.communityPointsSettings
+        val customRewards = settings?.customRewards.orEmpty()
+            .asSequence()
+            .filter { it.isEnabled != false && it.isPaused != true && it.isInStock != false }
+            .mapNotNull { reward ->
+                val title = reward.title
+                val cost = reward.cost
+                if (!title.isNullOrBlank() && cost != null) {
+                    ChannelPointRewardInfo(title = title, cost = cost, prompt = reward.prompt)
+                } else null
+            }
+        val automaticRewards = settings?.automaticRewards.orEmpty()
+            .asSequence()
+            .filter { it.isEnabled != false && it.isInStock != false }
+            .mapNotNull { reward ->
+                val type = reward.type
+                val cost = reward.cost
+                if (!type.isNullOrBlank() && cost != null) {
+                    ChannelPointRewardInfo(
+                        title = type.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() },
+                        cost = cost,
+                    )
+                } else null
+            }
+        val rewards = (customRewards + automaticRewards)
+            .sortedBy { it.cost }
+            .take(8)
+            .toList()
+        val watchStreakRewards = settings?.earning?.watchStreakPoints.orEmpty()
+            .mapIndexedNotNull { index, reward ->
+                reward.points?.takeIf { it > 0 }?.let { points ->
+                    WatchStreakReward(streakLength = reward.streakLength ?: index + 2, points = points)
+                }
+            }
+        channelPoints.value = ChannelPoints(
+            balance = balance,
+            rewards = rewards,
+            watchStreakRewards = watchStreakRewards,
+        )
+    }
+
+    private fun updateWatchStreak(streakCount: Int?, pointsAwarded: Int? = null) {
+        if (streakCount != null && streakCount > 0) {
+            val previous = watchStreak.value
+            watchStreak.value = WatchStreak(
+                streakCount = streakCount,
+                nextMilestone = previous?.nextMilestone,
+                rewardPoints = previous?.rewardPoints,
+                pointsAwarded = pointsAwarded,
+            )
+        }
+    }
+
+    private fun JsonElement?.toIntOrNull(): Int? = this?.jsonPrimitive?.content?.toIntOrNull()
+
+    private fun updateWatchStreakStatus(response: WatchStreakResponse) {
+        val milestone = response.data?.channel?.self?.watchStreakMilestone ?: return
+        val streakCount = milestone.watchStreakMilestone?.value.toIntOrNull() ?: return
+        watchStreak.value = WatchStreak(
+            streakCount = streakCount,
+            nextMilestone = milestone.watchStreakThreshold.toIntOrNull(),
+            rewardPoints = milestone.watchStreakCopoBonus.toIntOrNull(),
+        )
+    }
+
+    private fun loadWatchStreak(
+        networkLibrary: String?,
+        gqlHeaders: Map<String, String>,
+        channelId: String?,
+    ) {
+        if (channelId.isNullOrBlank() || gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+            return
+        }
+        watchStreakJob?.cancel()
+        watchStreakJob = viewModelScope.launch {
+            try {
+                updateWatchStreakStatus(graphQLRepository.loadWatchStreak(networkLibrary, gqlHeaders, channelId))
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    private fun loadChannelPoints(
+        networkLibrary: String?,
+        gqlHeaders: Map<String, String>,
+        channelLogin: String?,
+        enableIntegrity: Boolean,
+    ) {
+        if (channelLogin.isNullOrBlank() || gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+            return
+        }
+        channelPointsJob?.cancel()
+        channelPointsJob = viewModelScope.launch {
+            try {
+                val response = graphQLRepository.loadChannelPointsContext(networkLibrary, gqlHeaders, channelLogin)
+                if (enableIntegrity && response.errors?.any { it.message == C.FAILED_INTEGRITY_CHECK } == true) {
+                    integrity.emit("refresh")
+                    return@launch
+                }
+                updateChannelPoints(response)
+            } catch (_: Exception) {
+            }
+        }
+    }
+
     fun startLiveChat(channelId: String?, channelLogin: String) {
         stopLiveChat()
         started = true
@@ -1005,14 +1127,18 @@ class ChatViewModel(
         val nameDisplay = applicationContext.prefs().getString(C.UI_NAME_DISPLAY, "0")
         val useApiChatMessages = applicationContext.prefs().getBoolean(C.DEBUG_API_CHAT_MESSAGES, true)
         val showWebSocketDebugInfo = applicationContext.prefs().getBoolean(C.DEBUG_WEBSOCKET_INFO, false)
+        if (isLoggedIn) {
+            loadChannelPoints(networkLibrary, gqlHeaders, channelLogin, enableIntegrity)
+            loadWatchStreak(networkLibrary, gqlHeaders, channelId)
+        }
         if (applicationContext.prefs().getBoolean(C.DEBUG_EVENT_SUB_CHAT, false) && !helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-            eventSub = EventSubWebSocket(trustManager, EventSubListener(helixHeaders, channelLogin, showUserNotice, showClearChat, usePubSub, networkLibrary, isLoggedIn, accountId, channelId))
+            eventSub = EventSubWebSocket(trustManager, EventSubListener(helixHeaders, gqlHeaders, channelLogin, showUserNotice, showClearChat, usePubSub, networkLibrary, isLoggedIn, accountId, channelId))
             chatReadJob = eventSub?.connect(viewModelScope)
         } else {
             val gqlToken = gqlHeaders[C.HEADER_TOKEN]?.removePrefix("OAuth ")
             val helixToken = helixHeaders[C.HEADER_TOKEN]?.removePrefix("Bearer ")
             if (applicationContext.prefs().getBoolean(C.CHAT_USE_WEBSOCKET, true)) {
-                chatReadWebSocket = ChatReadWebSocket(channelLogin, trustManager, ChatReadListener(channelLogin, nameDisplay, showUserNotice, showClearMsg, showClearChat, usePubSub, networkLibrary, isLoggedIn, accountId, channelId))
+                chatReadWebSocket = ChatReadWebSocket(channelLogin, trustManager, ChatReadListener(channelLogin, nameDisplay, showUserNotice, showClearMsg, showClearChat, usePubSub, networkLibrary, gqlHeaders, isLoggedIn, accountId, channelId))
                 chatReadJob = chatReadWebSocket?.connect(viewModelScope)
                 if (isLoggedIn && (!gqlToken.isNullOrBlank() || !helixHeaders[C.HEADER_TOKEN].isNullOrBlank() && !useApiChatMessages)) {
                     chatWriteWebSocket = ChatWriteWebSocket(
@@ -1026,7 +1152,7 @@ class ChatViewModel(
                 }
             } else {
                 val useSSL = applicationContext.prefs().getBoolean(C.CHAT_USE_SSL, true)
-                chatReadIRCSocket = ChatReadIRCSocket(useSSL, channelLogin, trustManager, ChatReadListener(channelLogin, nameDisplay, showUserNotice, showClearMsg, showClearChat, usePubSub, networkLibrary, isLoggedIn, accountId, channelId))
+                chatReadIRCSocket = ChatReadIRCSocket(useSSL, channelLogin, trustManager, ChatReadListener(channelLogin, nameDisplay, showUserNotice, showClearMsg, showClearChat, usePubSub, networkLibrary, gqlHeaders, isLoggedIn, accountId, channelId))
                 chatReadJob = viewModelScope.launch(Dispatchers.IO) {
                     chatReadIRCSocket?.start()
                 }
@@ -1069,6 +1195,7 @@ class ChatViewModel(
                     } else null
                 },
                 collectPoints = collectPoints,
+                listenForPoints = isLoggedIn,
                 showRaids = applicationContext.prefs().getBoolean(C.CHAT_RAIDS_SHOW, true),
                 showPolls = applicationContext.prefs().getBoolean(C.CHAT_POLLS_SHOW, true),
                 showPredictions = applicationContext.prefs().getBoolean(C.CHAT_PREDICTIONS_SHOW, true),
@@ -1102,6 +1229,14 @@ class ChatViewModel(
     }
 
     fun stopLiveChat() {
+        channelPointsJob?.cancel()
+        channelPointsJob = null
+        watchStreakJob?.cancel()
+        watchStreakJob = null
+        channelPoints.value = null
+        watchStreak.value = null
+        activePoll.value = null
+        activePrediction.value = null
         if (started) {
             started = false
             if (chatReadIRCSocket != null) {
@@ -1192,6 +1327,7 @@ class ChatViewModel(
         private val showClearChat: Boolean,
         private val usePubSub: Boolean,
         private val networkLibrary: String?,
+        private val gqlHeaders: Map<String, String>,
         private val isLoggedIn: Boolean,
         private val accountId: String?,
         private val channelId: String?,
@@ -1201,6 +1337,16 @@ class ChatViewModel(
         }
 
         override suspend fun onChatMessage(message: ChatUtils.IRCMessage, userNotice: Boolean) {
+            if (userNotice && message.tags["msg-id"] == "viewermilestone" &&
+                message.tags["msg-param-category"] == "watch-streak" &&
+                message.tags["user-id"] == accountId
+            ) {
+                updateWatchStreak(
+                    message.tags["msg-param-value"]?.toIntOrNull(),
+                    message.tags["msg-param-copoReward"]?.toIntOrNull(),
+                )
+                loadWatchStreak(networkLibrary, gqlHeaders, channelId)
+            }
             if (!userNotice || showUserNotice) {
                 val chatMessage = ChatUtils.parseChatMessage(message)
                 if (chatMessage.reply?.message != null) {
@@ -1302,6 +1448,7 @@ class ChatViewModel(
 
     private inner class EventSubListener(
         private val helixHeaders: Map<String, String>,
+        private val gqlHeaders: Map<String, String>,
         private val channelLogin: String,
         private val showUserNotice: Boolean,
         private val showClearChat: Boolean,
@@ -1344,6 +1491,14 @@ class ChatViewModel(
         }
 
         override suspend fun onUserNotice(event: JSONObject, timestamp: String?) {
+            if (event.optString("notice_type") == "watch_streak" && event.optString("chatter_user_id") == accountId) {
+                val streak = event.optJSONObject("watch_streak")
+                updateWatchStreak(
+                    streak?.optInt("streak_count")?.takeIf { it > 0 },
+                    streak?.optInt("channel_points_awarded")?.takeIf { it > 0 },
+                )
+                loadWatchStreak(networkLibrary, gqlHeaders, channelId)
+            }
             if (showUserNotice) {
                 onChatMessage(EventSubUtils.parseUserNotice(event, timestamp), networkLibrary, isLoggedIn, accountId, channelId)
             }
@@ -1422,10 +1577,13 @@ class ChatViewModel(
         }
 
         override suspend fun onPointsEarned(message: JSONObject) {
+            val result = PubSubUtils.parsePointsEarned(message)
+            val points = result.first
+            val messageChannelId = result.second
+            if (channelId == messageChannelId) {
+                loadChannelPoints(networkLibrary, gqlHeaders, channelLogin, enableIntegrity)
+            }
             if (notifyPoints) {
-                val result = PubSubUtils.parsePointsEarned(message)
-                val points = result.first
-                val messageChannelId = result.second
                 if (channelId == messageChannelId) {
                     onMessage(ChatMessage(
                         type = ChatMessage.NOTICE_MESSAGE,
@@ -1449,6 +1607,7 @@ class ChatViewModel(
                                     return@launch
                                 }
                             }
+                            updateChannelPoints(response)
                             response.data?.community?.channel?.self?.communityPoints?.availableClaim?.id?.let { claimId ->
                                 val response = graphQLRepository.loadClaimPoints(networkLibrary, gqlHeaders, channelId, claimId)
                                 if (enableIntegrity) {
@@ -1457,6 +1616,7 @@ class ChatViewModel(
                                         return@launch
                                     }
                                 }
+                                loadChannelPoints(networkLibrary, gqlHeaders, channelLogin, enableIntegrity)
                             }
                         } catch (e: Exception) {
 
@@ -1533,6 +1693,7 @@ class ChatViewModel(
                     } else if (it.status == "COMPLETED" || it.status == "TERMINATED") {
                         pollClosed = false
                     }
+                    activePoll.value = it.takeIf { poll -> poll.status == "ACTIVE" }
                     poll.value = it
                 }
             }
@@ -1568,6 +1729,7 @@ class ChatViewModel(
                     } else if (it.status == "LOCKED" || it.status == "CANCEL_PENDING" || it.status == "RESOLVE_PENDING") {
                         predictionClosed = false
                     }
+                    activePrediction.value = it.takeIf { prediction -> prediction.status == "ACTIVE" }
                     prediction.value = it
                 }
             }
@@ -1888,6 +2050,7 @@ class ChatViewModel(
         pollTimeoutJob?.cancel()
         pollTimeoutJob = viewModelScope.launch {
             delay(20.seconds)
+            activePoll.value = null
             hide()
         }
     }
@@ -1896,6 +2059,7 @@ class ChatViewModel(
         predictionTimeoutJob?.cancel()
         predictionTimeoutJob = viewModelScope.launch {
             delay(20.seconds)
+            activePrediction.value = null
             hide()
         }
     }

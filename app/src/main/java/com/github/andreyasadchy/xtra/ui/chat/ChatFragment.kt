@@ -41,7 +41,11 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentChatBinding
 import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.chat.Emote
+import com.github.andreyasadchy.xtra.model.chat.Poll
+import com.github.andreyasadchy.xtra.model.chat.Prediction
+import com.github.andreyasadchy.xtra.model.ui.ChannelPoints
 import com.github.andreyasadchy.xtra.model.ui.Stream
+import com.github.andreyasadchy.xtra.model.ui.WatchStreak
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.chat.ChatViewModel.Companion.ChatViewModelFactory
 import com.github.andreyasadchy.xtra.ui.common.BaseNetworkFragment
@@ -64,13 +68,14 @@ import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickListener, ReplyClickedDialog.OnButtonClickListener {
+class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickListener, ReplyClickedDialog.OnButtonClickListener, ChannelPointsDialog.Listener {
 
     private var _binding: FragmentChatBinding? = null
     private val binding get() = _binding!!
@@ -98,6 +103,14 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
 
     private var languageIdentifier: LanguageIdentifier? = null
     private val translators = mutableMapOf<String, Translator>()
+
+    override fun channelPointsFlow(): StateFlow<ChannelPoints?> = viewModel.channelPoints
+
+    override fun watchStreakFlow(): StateFlow<WatchStreak?> = viewModel.watchStreak
+
+    override fun activePollFlow(): StateFlow<Poll?> = viewModel.activePoll
+
+    override fun activePredictionFlow(): StateFlow<Prediction?> = viewModel.activePrediction
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentChatBinding.inflate(inflater, container, false)
@@ -240,6 +253,20 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                 }
                             }
                         }
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                                viewModel.channelPoints.collectLatest { points ->
+                                    if (points != null) {
+                                        val balance = NumberFormat.getInstance().format(points.balance)
+                                        channelPoints.text = balance
+                                        channelPoints.contentDescription = getString(R.string.channel_points_balance, balance)
+                                        channelPoints.visibility = View.VISIBLE
+                                    } else {
+                                        channelPoints.visibility = View.GONE
+                                    }
+                                }
+                            }
+                        }
                         autoCompleteAdapter = AutoCompleteAdapter(
                             requireContext(),
                             R.layout.auto_complete_emotes_list_item,
@@ -316,6 +343,11 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                 toggleEmoteMenu(true)
                             } else {
                                 toggleEmoteMenu(false)
+                            }
+                        }
+                        channelPoints.setOnClickListener {
+                            if (childFragmentManager.findFragmentByTag(ChannelPointsDialog.TAG) == null) {
+                                ChannelPointsDialog().show(childFragmentManager, ChannelPointsDialog.TAG)
                             }
                         }
                         messagingEnabled = true

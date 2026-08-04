@@ -21,11 +21,12 @@ class ChannelPointContextResponse(
     @Serializable
     class Channel(
         val self: Self,
+        val communityPointsSettings: CommunityPointsSettings? = null,
     )
 
     @Serializable
     class Self(
-        val communityPoints: Points,
+        val communityPoints: Points? = null,
     )
 
     @Serializable
@@ -37,5 +38,41 @@ class ChannelPointContextResponse(
     @Serializable
     class Claim(
         val id: String? = null,
+    )
+
+    @Serializable
+    class CommunityPointsSettings(
+        val customRewards: List<CustomReward> = emptyList(),
+        val automaticRewards: List<AutomaticReward> = emptyList(),
+        val earning: Earning? = null,
+    )
+
+    @Serializable
+    class CustomReward(
+        val title: String? = null,
+        val cost: Int? = null,
+        val prompt: String? = null,
+        val isEnabled: Boolean? = null,
+        val isPaused: Boolean? = null,
+        val isInStock: Boolean? = null,
+    )
+
+    @Serializable
+    class AutomaticReward(
+        val type: String? = null,
+        val cost: Int? = null,
+        val isEnabled: Boolean? = null,
+        val isInStock: Boolean? = null,
+    )
+
+    @Serializable
+    class Earning(
+        val watchStreakPoints: List<WatchStreakPoint> = emptyList(),
+    )
+
+    @Serializable
+    class WatchStreakPoint(
+        val streakLength: Int? = null,
+        val points: Int? = null,
     )
 }

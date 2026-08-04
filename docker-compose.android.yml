@@ -1,0 +1,21 @@
+services:
+  android-build:
+    build:
+      context: .
+      dockerfile: Dockerfile.android
+    image: xtra-android-build:local
+    working_dir: /workspace
+    environment:
+      ANDROID_HOME: /opt/android-sdk
+      ANDROID_SDK_ROOT: /opt/android-sdk
+      GRADLE_USER_HOME: /gradle-cache
+    volumes:
+      - .:/workspace
+      - xtra-gradle-cache:/gradle-cache
+      - xtra-android-sdk:/opt/android-sdk
+
+volumes:
+  xtra-gradle-cache:
+    name: xtra-gradle-cache
+  xtra-android-sdk:
+    name: xtra-android-sdk

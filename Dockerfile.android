@@ -1,0 +1,39 @@
+FROM eclipse-temurin:21-jdk-jammy
+
+ARG CMDLINE_TOOLS_VERSION=13114758
+ARG CMDLINE_TOOLS_SHA256=7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee
+
+ENV ANDROID_SDK_ROOT=/opt/android-sdk \
+    ANDROID_HOME=/opt/android-sdk \
+    GRADLE_USER_HOME=/gradle-cache \
+    PATH=/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/platform-tools:/opt/android-sdk/build-tools/36.0.0:${PATH}
+
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y ca-certificates curl unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p "${ANDROID_SDK_ROOT}/cmdline-tools" \
+    && curl --fail --silent --show-error --location \
+        "https://dl.google.com/android/repository/commandlinetools-linux-${CMDLINE_TOOLS_VERSION}_latest.zip" \
+        --output /tmp/cmdline-tools.zip \
+    && echo "${CMDLINE_TOOLS_SHA256}  /tmp/cmdline-tools.zip" | sha256sum --check --status \
+    && unzip -q /tmp/cmdline-tools.zip -d /tmp \
+    && mv /tmp/cmdline-tools "${ANDROID_SDK_ROOT}/cmdline-tools/latest" \
+    && yes | sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" --licenses >/dev/null \
+    && sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" \
+        "platform-tools" \
+        "platforms;android-37.0" \
+        "build-tools;36.0.0" \
+    && rm -f /tmp/cmdline-tools.zip
+
+RUN printf '%s\n' \
+        '#!/usr/bin/env sh' \
+        'set -eu' \
+        'cd /workspace' \
+        'exec bash -c "$(tr -d "\r" < gradlew)" /workspace/gradlew "$@"' \
+    > /usr/local/bin/xtra-gradle \
+    && chmod +x /usr/local/bin/xtra-gradle
+
+WORKDIR /workspace
+ENTRYPOINT ["/usr/local/bin/xtra-gradle"]
+CMD [":app:assembleDebug", "--no-daemon"]

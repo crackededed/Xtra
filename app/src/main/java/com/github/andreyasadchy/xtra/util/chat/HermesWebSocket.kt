@@ -20,6 +20,7 @@ class HermesWebSocket(
     private val gqlClientId: String?,
     private val gqlToken: String?,
     private val collectPoints: Boolean,
+    private val listenForPoints: Boolean,
     private val showRaids: Boolean,
     private val showPolls: Boolean,
     private val showPredictions: Boolean,
@@ -50,7 +51,7 @@ class HermesWebSocket(
     }
 
     private suspend fun subscribe() = withContext(Dispatchers.IO) {
-        if (!userId.isNullOrBlank() && !gqlToken.isNullOrBlank() && collectPoints) {
+        if (!userId.isNullOrBlank() && !gqlToken.isNullOrBlank() && listenForPoints) {
             val authenticate = JSONObject().apply {
                 put("id", Uuid.random().toHexString().substring(0, 21))
                 put("type", "authenticate")
@@ -75,7 +76,7 @@ class HermesWebSocket(
                 put(Uuid.random().toHexString().substring(0, 21), "predictions-channel-v1.$channelId")
             }
             if (!userId.isNullOrBlank() && !gqlToken.isNullOrBlank()) {
-                if (collectPoints) {
+                if (listenForPoints) {
                     put(Uuid.random().toHexString().substring(0, 21), "community-points-user-v1.$userId")
                 }
             }

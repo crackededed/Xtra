@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="36dp"
+    android:height="36dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@color/watchStreakOrange"
+        android:pathData="M13.5,0.67C13.5,0.67 14.5,4.38 12,6.5C10.18,8.03 9.3,9.78 9.55,11.5C8.48,10.62 8,9.37 8.16,7.82C5.73,9.57 4,12.41 4,15.5C4,20.19 7.81,24 12.5,24C17.19,24 21,20.19 21,15.5C21,9.5 17.5,5.2 13.5,0.67ZM12.5,21C10.01,21 8,18.99 8,16.5C8,14.63 9.08,12.96 10.7,12.13C10.87,13.45 11.55,14.45 12.75,15.13C12.13,13.23 13.2,11.74 14.42,10.64C15.57,12.22 17,14.07 17,16.5C17,18.99 14.99,21 12.5,21Z" />
+</vector>
