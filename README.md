@@ -15,7 +15,7 @@ Xtra is a Twitch player and browser for Android.
 
 You can find released APKs [here](https://github.com/thiscallnet/Xtra/releases/tag/latest).
 
-[Xtra subreddit](https://www.reddit.com/r/XtraForTwitch)
+[![Join the Xtra community on Discord](https://img.shields.io/badge/Join%20the%20community-Discord-5865F2?logo=discord&logoColor=white)](https://discord.gg/2cKy8DNgPX)
 
 ## License
 Xtra is licensed under the [GNU Affero General Public License v3.0](LICENSE).
