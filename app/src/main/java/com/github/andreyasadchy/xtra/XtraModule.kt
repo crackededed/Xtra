@@ -296,6 +296,10 @@ class XtraModule(application: Application) {
                     db.execSQL("DROP TABLE playback_states")
                     db.execSQL("ALTER TABLE playback_states1 RENAME TO playback_states")
                 },
+                // Version 39 only contained the removed notification log table.
+                Migration(39, 37) { db ->
+                    db.execSQL("DROP TABLE IF EXISTS live_notification_logs")
+                },
             )
         }.build()
     }

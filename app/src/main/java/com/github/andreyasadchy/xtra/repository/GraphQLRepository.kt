@@ -76,6 +76,7 @@ import com.github.andreyasadchy.xtra.model.gql.chat.GlobalCheerEmotesResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.ModeratorsResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.UserEmotesResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.VipsResponse
+import com.github.andreyasadchy.xtra.model.gql.chat.WatchStreakResponse
 import com.github.andreyasadchy.xtra.model.gql.clip.ClipDataResponse
 import com.github.andreyasadchy.xtra.model.gql.clip.ClipUrlsResponse
 import com.github.andreyasadchy.xtra.model.gql.clip.ClipVideoResponse
@@ -128,6 +129,22 @@ class GraphQLRepository(
     private val okHttpClient: Lazy<OkHttpClient>,
     private val json: Json,
 ) {
+
+    private val watchStreakQuery = """
+        query RewardList(${'$'}channelID: ID!, ${'$'}shouldIncludeAllSuspendedStreaks: Boolean = false) {
+            channel(id: ${'$'}channelID) {
+                self {
+                    watchStreakMilestone(shouldIncludeAllSuspendedStreaks: ${'$'}shouldIncludeAllSuspendedStreaks) {
+                        watchStreakMilestone {
+                            value
+                        }
+                        watchStreakThreshold
+                        watchStreakCopoBonus
+                    }
+                }
+            }
+        }
+    """.trimIndent()
 
     private suspend fun <T: Query.Data> sendQuery(networkLibrary: String?, headers: Map<String, String>, query: Query<T>): ApolloResponse<T> = withContext(Dispatchers.IO) {
         val url = "https://gql.twitch.tv/gql"
@@ -1470,6 +1487,18 @@ class GraphQLRepository(
             }
         }.toString()
         json.decodeFromString<ChannelPointContextResponse>(sendPersistedQuery(networkLibrary, headers, body))
+    }
+
+    suspend fun loadWatchStreak(networkLibrary: String?, headers: Map<String, String>, channelId: String): WatchStreakResponse = withContext(Dispatchers.IO) {
+        val body = buildJsonObject {
+            put("operationName", "RewardList")
+            put("query", watchStreakQuery)
+            putJsonObject("variables") {
+                put("channelID", channelId)
+                put("shouldIncludeAllSuspendedStreaks", false)
+            }
+        }.toString()
+        json.decodeFromString<WatchStreakResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
     suspend fun loadClaimPoints(networkLibrary: String?, headers: Map<String, String>, channelId: String?, claimId: String?): ErrorResponse = withContext(Dispatchers.IO) {

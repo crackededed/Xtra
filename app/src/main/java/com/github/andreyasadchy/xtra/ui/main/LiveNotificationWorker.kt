@@ -28,18 +28,38 @@ class LiveNotificationWorker(
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     override suspend fun doWork(): Result {
+        if (!canPostNotifications()) {
+            return Result.success()
+        }
+        val xtraApp = context as XtraApp
+        val gqlHeaders = TwitchApiHelper.getGQLHeaders(context, true)
+        val helixHeaders = TwitchApiHelper.getHelixHeaders(context)
+        val useLocalFollows = (context.prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0) != 0
+        if (!useLocalFollows) {
+            try {
+                xtraApp.xtraModule.notificationsRepository.syncNotificationUsers(
+                    networkLibrary = context.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
+                    gqlHeaders = gqlHeaders,
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Keep the previous IDs so Helix can still be used as a fallback.
+            }
+        }
         val streams = try {
-            (context as XtraApp).xtraModule.notificationsRepository.getNewStreams(
+            xtraApp.xtraModule.notificationsRepository.getNewStreams(
                 networkLibrary = context.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
-                gqlHeaders = TwitchApiHelper.getGQLHeaders(context, true),
-                helixHeaders = TwitchApiHelper.getHelixHeaders(context),
+                gqlHeaders = gqlHeaders,
+                helixHeaders = helixHeaders,
+                includeFollowedStreams = !useLocalFollows,
             )
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             return Result.retry()
         }
-        if (streams.isNotEmpty() && canPostNotifications()) {
+        if (streams.isNotEmpty()) {
             val channelId = context.getString(R.string.notification_live_channel_id)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 if (notificationManager.getNotificationChannel(channelId) == null) {
@@ -96,10 +116,18 @@ class LiveNotificationWorker(
         return Result.success()
     }
 
-    private fun canPostNotifications() =
-        (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) &&
-            NotificationManagerCompat.from(context).areNotificationsEnabled()
+    private fun canPostNotifications(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return false
+        }
+        if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+            return false
+        }
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.O ||
+            notificationManager.getNotificationChannel(context.getString(R.string.notification_live_channel_id))?.importance != NotificationManager.IMPORTANCE_NONE
+    }
 
     companion object {
         const val GROUP_KEY = "com.github.andreyasadchy.xtra.LIVE_NOTIFICATIONS"

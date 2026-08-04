@@ -30,4 +30,6 @@
     <color name="chatMessageMention">#80680E0E</color>
     <color name="chatMessageSelected">#80163584</color>
     <color name="liveStreamRed">#DD0000</color>
+    <color name="watchStreakOrange">#FFB31A</color>
+    <color name="watchStreakProgress">#00D395</color>
 </resources>

@@ -18,7 +18,12 @@ class NotificationsRepository(
     private val helixRepository: HelixRepository,
 ) {
 
-    suspend fun getNewStreams(networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>): List<Stream> = withContext(Dispatchers.IO) {
+    suspend fun getNewStreams(
+        networkLibrary: String?,
+        gqlHeaders: Map<String, String>,
+        helixHeaders: Map<String, String>,
+        includeFollowedStreams: Boolean = true,
+    ): List<Stream> = withContext(Dispatchers.IO) {
         val list = mutableListOf<Stream>()
         val notificationIds = notificationUsersDao.getAll().map { it.channelId }
         if (notificationIds.isNotEmpty() &&
@@ -44,7 +49,7 @@ class NotificationsRepository(
             }
             list.addAll(localStreams)
         }
-        if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+        if (includeFollowedStreams && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
             try {
                 gqlQueryLoad(networkLibrary, gqlHeaders)
                     .filterNot { item -> list.any { it.channelId == item.channelId } }

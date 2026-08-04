@@ -10,7 +10,6 @@ import android.net.http.HttpEngine
 import android.provider.DocumentsContract
 import android.util.JsonReader
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
@@ -36,8 +35,6 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
-import com.github.andreyasadchy.xtra.util.prefs
-import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import com.github.andreyasadchy.xtra.util.m3u8.Segment
 import kotlinx.coroutines.Dispatchers
@@ -506,14 +503,16 @@ class SettingsViewModel(
                         .build()
                 )
                 try {
-                    if (notificationsRepository.syncNotificationUsers(networkLibrary, gqlHeaders)) {
-                        applicationContext.tokenPrefs().getString(C.USER_ID, null)?.let { userId ->
-                            applicationContext.prefs().edit {
-                                putString(C.LIVE_NOTIFICATION_USERS_SYNCED, userId)
-                            }
-                        }
+                    val useLocalFollows = (applicationContext.prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0) != 0
+                    if (!useLocalFollows) {
+                        notificationsRepository.syncNotificationUsers(networkLibrary, gqlHeaders)
                     }
-                    notificationsRepository.getNewStreams(networkLibrary, gqlHeaders, helixHeaders)
+                    notificationsRepository.getNewStreams(
+                        networkLibrary = networkLibrary,
+                        gqlHeaders = gqlHeaders,
+                        helixHeaders = helixHeaders,
+                        includeFollowedStreams = !useLocalFollows,
+                    )
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
