@@ -63,7 +63,6 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.github.andreyasadchy.xtra.R
-import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.databinding.ActivityMainBinding
 import com.github.andreyasadchy.xtra.databinding.DialogUpdateDownloadBinding
 import com.github.andreyasadchy.xtra.model.PlaybackState
@@ -99,7 +98,6 @@ import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.google.android.material.color.MaterialColors
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import org.chromium.net.CronetProvider
 import java.util.Timer
@@ -611,33 +609,6 @@ class MainActivity : AppCompatActivity() {
                     )
                     .build()
             )
-            syncNotificationUsers()
-        }
-    }
-
-    private fun syncNotificationUsers() {
-        val userId = tokenPrefs().getString(C.USER_ID, null) ?: return
-        if (prefs.getString(C.LIVE_NOTIFICATION_USERS_SYNCED, null) == userId) {
-            return
-        }
-        val gqlHeaders = TwitchApiHelper.getGQLHeaders(this, true)
-        if (gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-            return
-        }
-        lifecycleScope.launch {
-            try {
-                val synced = (application as XtraApp).xtraModule.notificationsRepository.syncNotificationUsers(
-                    networkLibrary = prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP),
-                    gqlHeaders = gqlHeaders,
-                )
-                if (synced) {
-                    prefs.edit { putString(C.LIVE_NOTIFICATION_USERS_SYNCED, userId) }
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                // The worker will retry notification checks without blocking app startup.
-            }
         }
     }
 

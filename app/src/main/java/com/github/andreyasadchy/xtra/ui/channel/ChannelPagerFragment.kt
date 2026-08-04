@@ -201,7 +201,8 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                                     viewModel.updateNotifications(
                                         requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                         TwitchApiHelper.getGQLHeaders(requireContext(), true),
-                                        TwitchApiHelper.getHelixHeaders(requireContext())
+                                        TwitchApiHelper.getHelixHeaders(requireContext()),
+                                        setting == 0,
                                     )
                                     WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(
                                         "live_notifications",

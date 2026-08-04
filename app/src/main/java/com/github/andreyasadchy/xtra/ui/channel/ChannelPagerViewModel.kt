@@ -240,9 +240,14 @@ class ChannelPagerViewModel(
         }
     }
 
-    fun updateNotifications(networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>) {
+    fun updateNotifications(networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, includeFollowedStreams: Boolean) {
         viewModelScope.launch {
-            notificationsRepository.getNewStreams(networkLibrary, gqlHeaders, helixHeaders)
+            notificationsRepository.getNewStreams(
+                networkLibrary = networkLibrary,
+                gqlHeaders = gqlHeaders,
+                helixHeaders = helixHeaders,
+                includeFollowedStreams = includeFollowedStreams,
+            )
         }
     }
 
