@@ -35,13 +35,19 @@ class LiveNotificationWorker(
         val gqlHeaders = TwitchApiHelper.getGQLHeaders(context, true)
         val helixHeaders = TwitchApiHelper.getHelixHeaders(context)
         val useLocalFollows = (context.prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0) != 0
-        val streams = try {
-            if (!useLocalFollows) {
+        if (!useLocalFollows) {
+            try {
                 xtraApp.xtraModule.notificationsRepository.syncNotificationUsers(
                     networkLibrary = context.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                     gqlHeaders = gqlHeaders,
                 )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Keep the previous IDs so Helix can still be used as a fallback.
             }
+        }
+        val streams = try {
             xtraApp.xtraModule.notificationsRepository.getNewStreams(
                 networkLibrary = context.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                 gqlHeaders = gqlHeaders,
