@@ -33,6 +33,7 @@ import com.github.andreyasadchy.xtra.model.chat.Prediction
 import com.github.andreyasadchy.xtra.model.ui.ChannelPoints
 import com.github.andreyasadchy.xtra.model.ui.ChannelPointReward
 import com.github.andreyasadchy.xtra.model.ui.ChannelPointRewardInput
+import com.github.andreyasadchy.xtra.model.ui.ChannelPointRewardRedemption
 import com.github.andreyasadchy.xtra.model.ui.ChannelPointRedemptionResult
 import com.github.andreyasadchy.xtra.model.ui.WatchStreak
 import com.github.andreyasadchy.xtra.ui.view.GridAutofitLayoutManager
@@ -61,6 +62,8 @@ class ChannelPointsDialog : DialogFragment() {
         fun channelName(): String?
         fun channelEmotePickerItems(): List<Emote>
         fun channelEmotePickerUpdates(): Flow<Unit>
+        fun channelPointModifiedEmotePickerItems(): List<Emote>
+        fun channelPointModifiedEmotePickerUpdates(): Flow<Unit>
         fun redeemChannelPointReward(reward: ChannelPointReward, textInput: String?, emoteId: String?)
         fun channelPointRedemptionFlow(): Flow<ChannelPointRedemptionResult>
     }
@@ -370,12 +373,17 @@ class ChannelPointsDialog : DialogFragment() {
             }
             ChannelPointRewardInput.EMOTE -> {
                 var selectedEmoteId: String? = null
+                val modified = reward.redemptionType == ChannelPointRewardRedemption.CHOSEN_MODIFIED_SUB_EMOTE
                 val input = EditText(requireContext()).apply {
                     hint = getString(R.string.channel_points_reward_emote_hint)
                     inputType = InputType.TYPE_CLASS_TEXT
                     setSingleLine(true)
                 }
-                var allEmotes = listener.channelEmotePickerItems()
+                var allEmotes = if (modified) {
+                    listener.channelPointModifiedEmotePickerItems()
+                } else {
+                    listener.channelEmotePickerItems()
+                }
                 val adapter = EmotesAdapter(
                     this,
                     { emote ->
@@ -398,7 +406,11 @@ class ChannelPointsDialog : DialogFragment() {
                     )
                 }
                 val refreshPicker: () -> Unit = {
-                    allEmotes = listener.channelEmotePickerItems()
+                    allEmotes = if (modified) {
+                        listener.channelPointModifiedEmotePickerItems()
+                    } else {
+                        listener.channelEmotePickerItems()
+                    }
                     updatePicker()
                 }
                 input.addTextChangedListener { text ->
@@ -424,7 +436,11 @@ class ChannelPointsDialog : DialogFragment() {
                             topMargin = dp(8)
                         })
                     },
-                    pickerUpdates = listener.channelEmotePickerUpdates(),
+                    pickerUpdates = if (modified) {
+                        listener.channelPointModifiedEmotePickerUpdates()
+                    } else {
+                        listener.channelEmotePickerUpdates()
+                    },
                     refreshPicker = refreshPicker,
                     selectedEmoteId = { selectedEmoteId },
                 )

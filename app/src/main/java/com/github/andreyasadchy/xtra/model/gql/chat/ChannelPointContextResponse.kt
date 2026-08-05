@@ -46,6 +46,7 @@ class ChannelPointContextResponse(
         val image: RewardImage? = null,
         val customRewards: List<CustomReward> = emptyList(),
         val automaticRewards: List<AutomaticReward> = emptyList(),
+        val emoteVariants: List<EmoteVariant> = emptyList(),
         val earning: Earning? = null,
     )
 
@@ -54,6 +55,7 @@ class ChannelPointContextResponse(
         val id: String? = null,
         val title: String? = null,
         val cost: Int? = null,
+        val pricingType: String? = null,
         val prompt: String? = null,
         val isUserInputRequired: Boolean? = null,
         val backgroundColor: String? = null,
@@ -85,6 +87,33 @@ class ChannelPointContextResponse(
         val url1x: String? = null,
         val url2x: String? = null,
         val url4x: String? = null,
+    )
+
+    @Serializable
+    class EmoteVariant(
+        val id: String? = null,
+        val isUnlockable: Boolean? = null,
+        val emote: VariantEmote? = null,
+        val modifications: List<EmoteModification> = emptyList(),
+    )
+
+    @Serializable
+    class EmoteModification(
+        val id: String? = null,
+        val title: String? = null,
+        val emote: VariantEmote? = null,
+        val modifier: Modifier? = null,
+    )
+
+    @Serializable
+    class VariantEmote(
+        val id: String? = null,
+        val token: String? = null,
+    )
+
+    @Serializable
+    class Modifier(
+        val id: String? = null,
     )
 
     @Serializable

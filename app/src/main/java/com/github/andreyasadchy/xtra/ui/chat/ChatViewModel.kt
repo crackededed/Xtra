@@ -132,6 +132,7 @@ class ChatViewModel(
     val hasRecentEmotes = MutableStateFlow(false)
     val userEmotes = mutableListOf<Emote>()
     private val channelEmotes = mutableListOf<Emote>()
+    private val channelPointModifiedEmotes = mutableListOf<Emote>()
     private var loadedUserEmotes = false
     val localTwitchEmotes = mutableListOf<TwitchEmote>()
     val thirdPartyEmotes = mutableListOf<Emote>()
@@ -181,6 +182,7 @@ class ChatViewModel(
     val removeMessages = MutableSharedFlow<Int>()
     val updateUserMessages = MutableSharedFlow<String>()
     val userEmotesUpdated = MutableSharedFlow<Unit>()
+    private val channelPointModifiedEmotesUpdated = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val thirdPartyEmotesUpdated = MutableSharedFlow<Unit>()
 
     private var messageLimit = 600
@@ -1008,14 +1010,25 @@ class ChatViewModel(
         val channel = response.data?.community?.channel ?: return
         val balance = channel.self.communityPoints?.balance ?: return
         val settings = channel.communityPointsSettings
+        updateChannelPointModifiedEmotes(settings)
+        val hasModifiedEmotes = synchronized(channelPointModifiedEmotes) {
+            channelPointModifiedEmotes.isNotEmpty()
+        }
         val customRewards = settings?.customRewards.orEmpty()
             .asSequence()
-            .filter { it.isEnabled != false && it.isPaused != true && it.isInStock != false }
+            .filter {
+                it.isEnabled != false &&
+                    it.isPaused != true &&
+                    it.isInStock != false &&
+                    it.cost != null &&
+                    it.cost > 0 &&
+                    (it.pricingType.isNullOrBlank() || it.pricingType.equals("POINTS", true))
+            }
             .mapNotNull { reward ->
                 val id = reward.id
                 val title = reward.title
                 val cost = reward.cost
-                if (!id.isNullOrBlank() && !title.isNullOrBlank() && cost != null) {
+                if (!id.isNullOrBlank() && !title.isNullOrBlank() && cost != null && cost > 0) {
                     ChannelPointRewardInfo(
                         id = id,
                         title = title,
@@ -1033,13 +1046,25 @@ class ChatViewModel(
             }
         val automaticRewards = settings?.automaticRewards.orEmpty()
             .asSequence()
-            .filter { it.isEnabled != false && it.isInStock != false }
+            .filter {
+                val type = it.type
+                it.isEnabled != false &&
+                    it.isInStock != false &&
+                    (type?.equals("CHOSEN_MODIFIED_SUB_EMOTE_UNLOCK", true) != true || hasModifiedEmotes)
+            }
             .mapNotNull { reward ->
                 val id = reward.id
                 val type = reward.type
                 val cost = reward.cost ?: reward.defaultCost
                 val redemptionType = type?.let(::automaticRewardRedemption)
-                if (!id.isNullOrBlank() && !type.isNullOrBlank() && cost != null && redemptionType != null) {
+                if (
+                    !id.isNullOrBlank() &&
+                    !type.isNullOrBlank() &&
+                    cost != null &&
+                    cost > 0 &&
+                    (reward.pricingType.isNullOrBlank() || reward.pricingType.equals("POINTS", true)) &&
+                    redemptionType != null
+                ) {
                     ChannelPointRewardInfo(
                         id = id,
                         title = automaticRewardTitle(type),
@@ -1082,6 +1107,35 @@ class ChatViewModel(
     private fun ChannelPointContextResponse.AutomaticReward.rewardImageUrl(): String? {
         return image?.url4x ?: image?.url2x ?: image?.url1x ?: image?.url
             ?: defaultImage?.url4x ?: defaultImage?.url2x ?: defaultImage?.url1x ?: defaultImage?.url
+    }
+
+    private fun updateChannelPointModifiedEmotes(
+        settings: ChannelPointContextResponse.CommunityPointsSettings?,
+    ) {
+        val emotes = settings?.emoteVariants.orEmpty()
+            .asSequence()
+            .filter { it.isUnlockable != false }
+            .flatMap { variant ->
+                variant.modifications.asSequence().mapNotNull { modification ->
+                    val id = modification.emote?.id ?: modification.id
+                    val name = modification.emote?.token
+                        ?: modification.title
+                        ?: modification.id
+                    if (id.isNullOrBlank() || name.isNullOrBlank()) {
+                        null
+                    } else {
+                        TwitchEmote(id = id, name = name).toPickerEmote()
+                    }
+                }
+            }
+            .distinctBy { it.id ?: it.name }
+            .sortedBy { it.name.orEmpty().lowercase() }
+            .toList()
+        synchronized(channelPointModifiedEmotes) {
+            channelPointModifiedEmotes.clear()
+            channelPointModifiedEmotes.addAll(emotes)
+        }
+        channelPointModifiedEmotesUpdated.tryEmit(Unit)
     }
 
     private fun automaticRewardTitle(type: String): String = when (type.uppercase()) {
@@ -1176,10 +1230,14 @@ class ChatViewModel(
         if (channelLogin.isNullOrBlank() || gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
             return
         }
+        val expectedChannelId = activeChannelId
         channelPointsJob?.cancel()
         channelPointsJob = viewModelScope.launch {
             try {
                 val response = graphQLRepository.loadChannelPointsContext(networkLibrary, gqlHeaders, channelLogin)
+                if (activeChannelId != expectedChannelId || activeChannelLogin != channelLogin) {
+                    return@launch
+                }
                 if (enableIntegrity && response.errors?.any { it.message == C.FAILED_INTEGRITY_CHECK } == true) {
                     integrity.emit("refresh")
                     return@launch
@@ -1281,6 +1339,14 @@ class ChatViewModel(
         .filter { !it.name.isNullOrBlank() }
         .distinctBy { it.name }
         .sortedBy { it.name.orEmpty().lowercase() }
+
+    fun channelPointModifiedEmotePickerItems(): List<Emote> = synchronized(channelPointModifiedEmotes) {
+        channelPointModifiedEmotes.toList()
+    }
+        .filter { !it.name.isNullOrBlank() && !it.id.isNullOrBlank() }
+        .sortedBy { it.name.orEmpty().lowercase() }
+
+    fun channelPointModifiedEmotePickerUpdates(): Flow<Unit> = channelPointModifiedEmotesUpdated
 
     fun channelEmotePickerUpdates(): Flow<Unit> = userEmotesUpdated
 
@@ -1443,6 +1509,9 @@ class ChatViewModel(
         activeChannelLogin = null
         synchronized(channelEmotes) {
             channelEmotes.clear()
+        }
+        synchronized(channelPointModifiedEmotes) {
+            channelPointModifiedEmotes.clear()
         }
         channelPointsJob?.cancel()
         channelPointsJob = null
