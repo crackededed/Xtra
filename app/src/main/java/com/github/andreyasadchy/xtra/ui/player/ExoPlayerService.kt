@@ -1599,14 +1599,14 @@ class ExoPlayerService : BasePlaybackService() {
                         quality = qualities?.find { it.name == AUDIO_ONLY_QUALITY }
                     }
                     player.currentMediaItem?.let { mediaItem ->
-                        if (prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
+                        if (prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true) && useBackgroundAudioTrack) {
                             player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                 setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                             }.build()
-                            if (!useBackgroundAudioTrack) {
-                                backgroundVideoDisabled = true
-                                serviceListener?.changeSurfaceVisibility(false)
-                            }
+                        }
+                        if (prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true) && !useBackgroundAudioTrack) {
+                            backgroundVideoDisabled = true
+                            serviceListener?.changeSurfaceVisibility(false)
                         }
                         if (useBackgroundAudioTrack) {
                             quality?.url?.let { url ->
@@ -1634,9 +1634,6 @@ class ExoPlayerService : BasePlaybackService() {
         }
         backgroundVideoDisabled = false
         player?.let { player ->
-            player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
-                setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
-            }.build()
             serviceListener?.changeSurfaceVisibility(true)
         }
     }

@@ -453,9 +453,6 @@ class Media3Fragment : Media3PlayerFragment() {
             }
             if (viewModel.backgroundVideoDisabled) {
                 viewModel.backgroundVideoDisabled = false
-                controller.trackSelectionParameters = controller.trackSelectionParameters.buildUpon().apply {
-                    setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
-                }.build()
                 binding.playerSurface.visibility = View.VISIBLE
             }
             controller.addListener(listener)
@@ -1102,14 +1099,14 @@ class Media3Fragment : Media3PlayerFragment() {
                             viewModel.quality = viewModel.qualities?.find { it.name == AUDIO_ONLY_QUALITY }
                         }
                         player.currentMediaItem?.let { mediaItem ->
-                            if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
+                            if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true) && useBackgroundAudioTrack) {
                                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                                     setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
                                 }.build()
-                                if (!useBackgroundAudioTrack) {
-                                    viewModel.backgroundVideoDisabled = true
-                                    binding.playerSurface.visibility = View.GONE
-                                }
+                            }
+                            if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true) && !useBackgroundAudioTrack) {
+                                viewModel.backgroundVideoDisabled = true
+                                binding.playerSurface.visibility = View.GONE
                             }
                             if (useBackgroundAudioTrack) {
                                 viewModel.quality?.url?.let { url ->
