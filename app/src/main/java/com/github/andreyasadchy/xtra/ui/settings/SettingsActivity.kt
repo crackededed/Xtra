@@ -56,6 +56,7 @@ import androidx.preference.forEach
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.github.andreyasadchy.xtra.BuildConfig
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.SettingsNavGraphDirections
 import com.github.andreyasadchy.xtra.databinding.ActivitySettingsBinding
@@ -80,7 +81,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.chromium.net.CronetProvider
+import java.text.DateFormat
 import java.util.Collections
+import java.util.Date
 import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -1432,6 +1435,21 @@ class SettingsActivity : AppCompatActivity() {
     class UpdateSettingsFragment : MaterialPreferenceFragment() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.update_preferences, rootKey)
+            findPreference<Preference>("app_version")?.summary = getString(
+                R.string.app_version_summary,
+                BuildConfig.VERSION_NAME,
+                BuildConfig.VERSION_CODE,
+            )
+            findPreference<Preference>("app_build")?.summary = getString(
+                R.string.app_build_summary,
+                BuildConfig.BUILD_TYPE,
+            )
+            findPreference<Preference>("app_package")?.summary = BuildConfig.APPLICATION_ID
+            findPreference<Preference>("last_update_check")?.summary = requireContext().tokenPrefs()
+                .getLong(C.UPDATE_LAST_CHECKED, 0L)
+                .takeIf { it > 0L }
+                ?.let { DateFormat.getDateTimeInstance().format(Date(it)) }
+                ?: getString(R.string.never)
             findPreference<SwitchPreferenceCompat>("update_check_enabled")?.setOnPreferenceChangeListener { _, newValue ->
                 if (Build.VERSION.SDK_INT == Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
                     newValue == true &&

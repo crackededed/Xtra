@@ -1321,7 +1321,10 @@ class MediaPlayerService : BasePlaybackService() {
     }
 
     private fun scheduleStreamRecovery() {
-        if (type != STREAM || player == null) {
+        if (!prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)
+            || type != STREAM
+            || player == null
+        ) {
             return
         }
         streamRecoveryJob?.cancel()
@@ -1961,7 +1964,9 @@ class MediaPlayerService : BasePlaybackService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         savePosition()
-        if (player?.isPlaying == true && (prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true)
+        if (player?.isPlaying == true
+            && prefs().getBoolean(C.PLAYER_KEEP_PLAYING_AFTER_TASK_REMOVED, true)
+            && (prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true)
                     || prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))) {
             return
         }

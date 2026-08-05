@@ -125,7 +125,10 @@ class PlaybackService : MediaSessionService() {
                 }
 
                 override fun onPlayerError(error: PlaybackException) {
-                    if (backgroundPlayback && player.playWhenReady) {
+                    if (backgroundPlayback
+                        && prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)
+                        && player.playWhenReady
+                    ) {
                         scheduleBackgroundRecovery()
                     }
                 }
@@ -811,6 +814,9 @@ class PlaybackService : MediaSessionService() {
     }
 
     private fun scheduleBackgroundRecovery() {
+        if (!prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)) {
+            return
+        }
         backgroundRecoveryTimer?.cancel()
         val delay = (500L shl backgroundRecoveryAttempt.coerceAtMost(4)).coerceAtMost(8000L)
         backgroundRecoveryAttempt = (backgroundRecoveryAttempt + 1).coerceAtMost(4)
@@ -819,7 +825,11 @@ class PlaybackService : MediaSessionService() {
                 Handler(Looper.getMainLooper()).post {
                     backgroundRecoveryTimer = null
                     val player = mediaSession?.player
-                    if (backgroundPlayback && player?.playWhenReady == true && player.playerError != null) {
+                    if (backgroundPlayback
+                        && prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)
+                        && player?.playWhenReady == true
+                        && player.playerError != null
+                    ) {
                         player.prepare()
                     }
                 }
@@ -834,6 +844,7 @@ class PlaybackService : MediaSessionService() {
         val player = mediaSession?.player
         val keepPlayback = player?.playWhenReady == true
                 && player.playbackState != Player.STATE_ENDED
+                && prefs().getBoolean(C.PLAYER_KEEP_PLAYING_AFTER_TASK_REMOVED, true)
                 && (prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true)
                 || prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
         if (keepPlayback) {

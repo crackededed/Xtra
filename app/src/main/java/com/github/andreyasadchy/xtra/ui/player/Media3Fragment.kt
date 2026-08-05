@@ -516,7 +516,10 @@ class Media3Fragment : Media3PlayerFragment() {
     }
 
     private fun scheduleStreamRecovery() {
-        if (videoType != STREAM || player?.playWhenReady != true) {
+        if (!requireContext().prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)
+            || videoType != STREAM
+            || player?.playWhenReady != true
+        ) {
             return
         }
         streamRecoveryJob?.cancel()

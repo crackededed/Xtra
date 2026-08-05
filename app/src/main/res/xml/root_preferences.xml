@@ -43,9 +43,14 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <PreferenceCategory
+        android:title="@string/background_playback_settings"
+        app:iconSpaceReserved="false" />
+
     <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="player_picture_in_picture"
+        android:summary="@string/picture_in_picture_summary"
         android:title="@string/picture_in_picture"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
@@ -53,6 +58,7 @@
     <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="player_background_audio"
+        android:summary="@string/use_background_audio_summary"
         android:title="@string/use_background_audio"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
@@ -60,6 +66,7 @@
     <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="player_background_audio_locked"
+        android:summary="@string/use_background_audio_locked_summary"
         android:title="@string/use_background_audio_locked"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />

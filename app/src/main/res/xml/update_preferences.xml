@@ -1,6 +1,42 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:title="@string/app_information"
+        app:iconSpaceReserved="false" />
+
+    <Preference
+        android:key="app_version"
+        android:selectable="false"
+        android:title="@string/app_version"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <Preference
+        android:key="app_build"
+        android:selectable="false"
+        android:title="@string/app_build"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <Preference
+        android:key="app_package"
+        android:selectable="false"
+        android:title="@string/app_package"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <Preference
+        android:key="last_update_check"
+        android:selectable="false"
+        android:title="@string/last_update_check"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/update_settings"
+        app:iconSpaceReserved="false" />
+
     <EditTextPreference
         android:defaultValue="https://api.github.com/repos/thiscallnet/xtra/releases/tags/latest"
         android:key="update_url"
