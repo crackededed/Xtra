@@ -1540,7 +1540,10 @@ class ExoPlayerService : BasePlaybackService() {
         streamRecoveryAttempt = (streamRecoveryAttempt + 1).coerceAtMost(3)
         streamRecoveryJob = lifecycleScope.launch {
             delay(delayMs)
-            if (player?.playWhenReady == true && type == STREAM) {
+            if (prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)
+                && player?.playWhenReady == true
+                && type == STREAM
+            ) {
                 loadStream(restart = true)
             }
         }
@@ -2146,11 +2149,14 @@ class ExoPlayerService : BasePlaybackService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         savePosition()
+        val isInteractive = (getSystemService(POWER_SERVICE) as PowerManager).isInteractive
         val keepPlayback = player?.playWhenReady == true
                 && player?.playbackState != Player.STATE_ENDED
                 && prefs().getBoolean(C.PLAYER_KEEP_PLAYING_AFTER_TASK_REMOVED, true)
-                && (prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true)
-                || prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
+                && prefs().getBoolean(
+                    if (isInteractive) C.PLAYER_BACKGROUND_AUDIO else C.PLAYER_BACKGROUND_AUDIO_LOCKED,
+                    true,
+                )
         if (keepPlayback) {
             return
         }

@@ -92,6 +92,8 @@ class MediaPlayerService : BasePlaybackService() {
     var startPlayer = true
     private var backupQualities: List<String>? = null
     private var created = false
+    private var resumeWhenForeground = false
+    private var streamPlaybackRequested = false
     private var streamRecoveryJob: Job? = null
     private var streamRecoveryAttempt = 0
 
@@ -135,23 +137,11 @@ class MediaPlayerService : BasePlaybackService() {
                 }
 
                 override fun onPlay() {
-                    player?.let { player ->
-                        if (player.isPlaying) {
-                            player.pause()
-                        } else {
-                            player.start()
-                        }
-                        updatePlayingState()
-                        playerListener?.onIsPlayingChanged()
-                    }
+                    togglePlayback()
                 }
 
                 override fun onPause() {
-                    player?.let { player ->
-                        player.pause()
-                        updatePlayingState()
-                        playerListener?.onIsPlayingChanged()
-                    }
+                    pausePlayback()
                 }
 
                 override fun onSkipToNext() {
@@ -313,10 +303,14 @@ class MediaPlayerService : BasePlaybackService() {
                     }
                     seekPosition = null
                 }
-                if (startPlayer) {
+                val shouldStart = if (type == STREAM) streamPlaybackRequested else startPlayer
+                if (shouldStart) {
                     player.start()
                 } else {
                     startPlayer = true
+                }
+                if (type == STREAM) {
+                    streamPlaybackRequested = runCatching { player.isPlaying }.getOrDefault(false)
                 }
                 updateMetadata()
                 updatePlayingState()
@@ -348,6 +342,9 @@ class MediaPlayerService : BasePlaybackService() {
             player.setOnErrorListener { player, what, extra ->
                 updatePlaybackState()
                 updateNotification()
+                if (type == STREAM) {
+                    scheduleStreamRecovery()
+                }
                 playerListener?.onError(player, what, extra)
                 return@setOnErrorListener true
             }
@@ -518,6 +515,7 @@ class MediaPlayerService : BasePlaybackService() {
     }
 
     private suspend fun loadStream(restorePauseState: Boolean = false, restart: Boolean = false) {
+        streamPlaybackRequested = !restorePauseState || !paused
         channelLogin?.let { channelLogin ->
             if (restart || qualities.isNullOrEmpty()) {
                 val proxyUrl = prefs().getString(C.PLAYER_PROXY_URL, "")
@@ -1323,6 +1321,7 @@ class MediaPlayerService : BasePlaybackService() {
     private fun scheduleStreamRecovery() {
         if (!prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)
             || type != STREAM
+            || !streamPlaybackRequested
             || player == null
         ) {
             return
@@ -1332,7 +1331,11 @@ class MediaPlayerService : BasePlaybackService() {
         streamRecoveryAttempt = (streamRecoveryAttempt + 1).coerceAtMost(3)
         streamRecoveryJob = lifecycleScope.launch {
             delay(delayMs)
-            if (type == STREAM && player != null) {
+            if (prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)
+                && type == STREAM
+                && streamPlaybackRequested
+                && player != null
+            ) {
                 loadStream(restart = true)
             }
         }
@@ -1366,14 +1369,53 @@ class MediaPlayerService : BasePlaybackService() {
         }
     }
 
+    fun togglePlayback() {
+        player?.let { player ->
+            val isPlaying = runCatching { player.isPlaying }.getOrDefault(false)
+            if (isPlaying) {
+                streamPlaybackRequested = false
+                streamRecoveryJob?.cancel()
+                streamRecoveryJob = null
+                runCatching { player.pause() }
+                updatePlayingState()
+            } else {
+                if (type == STREAM) {
+                    streamPlaybackRequested = true
+                }
+                try {
+                    player.start()
+                    updatePlayingState()
+                } catch (_: IllegalStateException) {
+                    if (type == STREAM) {
+                        scheduleStreamRecovery()
+                    }
+                    updatePlayingState(updatePlaybackIntent = false)
+                }
+            }
+            playerListener?.onIsPlayingChanged()
+        }
+    }
+
+    fun pausePlayback() {
+        streamPlaybackRequested = false
+        streamRecoveryJob?.cancel()
+        streamRecoveryJob = null
+        player?.let { player ->
+            runCatching { player.pause() }
+            updatePlayingState()
+            playerListener?.onIsPlayingChanged()
+        }
+    }
+
     fun stop(isInPIPMode: Boolean) {
         player?.let { player ->
+            resumeWhenForeground = false
             val isInteractive = (getSystemService(POWER_SERVICE) as PowerManager).isInteractive
             if ((!isInPIPMode && isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true))
                 || (!isInPIPMode && !isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
                 || (isInPIPMode && isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, true))
                 || (isInPIPMode && !isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
-                if (player.isPlaying && quality?.name != AUDIO_ONLY_QUALITY) {
+                if (runCatching { player.isPlaying }.getOrDefault(false) && quality?.name != AUDIO_ONLY_QUALITY) {
                     restoreQuality = true
                     previousQuality = quality
                     quality = qualities?.find { it.name == AUDIO_ONLY_QUALITY }
@@ -1397,27 +1439,56 @@ class MediaPlayerService : BasePlaybackService() {
                     }
                 }
             } else {
-                player.pause()
+                streamRecoveryJob?.cancel()
+                streamRecoveryJob = null
+                resumeWhenForeground = runCatching { player.isPlaying }.getOrDefault(false)
+                streamPlaybackRequested = false
+                runCatching { player.pause() }
             }
         }
     }
 
+    fun resumePlaybackIfNeeded() {
+        if (!resumeWhenForeground) {
+            return
+        }
+        resumeWhenForeground = false
+        player?.let { player ->
+            streamPlaybackRequested = type == STREAM
+            try {
+                player.start()
+                updatePlayingState()
+                playerListener?.onIsPlayingChanged()
+            } catch (_: IllegalStateException) {
+                if (type == STREAM) {
+                    scheduleStreamRecovery()
+                }
+                updatePlayingState(updatePlaybackIntent = false)
+            }
+        }
+    }
+
+    fun isStreamPlaybackRequested() = type == STREAM && streamPlaybackRequested
+
     private fun updatePlaybackState() {
         player?.let { player ->
+            val isPlaying = runCatching { player.isPlaying }.getOrDefault(false)
+            val position = runCatching { player.currentPosition.toLong() }.getOrDefault(0L)
+            val speed = if (isPlaying) {
+                runCatching { player.playbackParams.speed }.getOrDefault(1f)
+            } else {
+                0f
+            }
             session?.setPlaybackState(
                 PlaybackState.Builder().apply {
                     setState(
-                        if (!player.isPlaying) {
+                        if (!isPlaying) {
                             PlaybackState.STATE_PAUSED
                         } else {
                             PlaybackState.STATE_PLAYING
                         },
-                        player.currentPosition.toLong(),
-                        if (player.isPlaying) {
-                            player.playbackParams.speed
-                        } else {
-                            0f
-                        }
+                        position,
+                        speed,
                     )
                     setActions(
                         (PlaybackState.ACTION_STOP
@@ -1634,6 +1705,13 @@ class MediaPlayerService : BasePlaybackService() {
 
     private fun sendNotification(bitmap: Bitmap?) {
         player?.let { player ->
+            val isPlaying = runCatching { player.isPlaying }.getOrDefault(false)
+            val position = runCatching { player.currentPosition.toLong() }.getOrDefault(0L)
+            val speed = if (isPlaying) {
+                runCatching { player.playbackParams.speed }.getOrDefault(1f)
+            } else {
+                0f
+            }
             val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 Notification.Builder(this, getString(R.string.notification_playback_channel_id))
             } else {
@@ -1650,8 +1728,8 @@ class MediaPlayerService : BasePlaybackService() {
                 setVisibility(Notification.VISIBILITY_PUBLIC)
                 setOngoing(false)
                 setOnlyAlertOnce(true)
-                if (player.isPlaying && player.playbackParams.speed == 1f) {
-                    setWhen(System.currentTimeMillis() - player.currentPosition)
+                if (isPlaying && speed == 1f) {
+                    setWhen(System.currentTimeMillis() - position)
                     setShowWhen(true)
                     setUsesChronometer(true)
                 }
@@ -1685,7 +1763,7 @@ class MediaPlayerService : BasePlaybackService() {
                         )
                     ).build()
                 )
-                if (!player.isPlaying) {
+                if (!isPlaying) {
                     addAction(
                         Notification.Action.Builder(
                             Icon.createWithResource(this@MediaPlayerService, androidx.media3.session.R.drawable.media3_icon_play),
@@ -1819,20 +1897,22 @@ class MediaPlayerService : BasePlaybackService() {
 
     private fun savePosition() {
         player?.let { player ->
-            if (player.duration != -1) {
+            val duration = runCatching { player.duration }.getOrDefault(-1)
+            val currentPosition = runCatching { player.currentPosition.toLong() }.getOrDefault(0L)
+            if (duration != -1) {
                 if (prefs().getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
                     when (type) {
                         VIDEO -> {
                             videoId?.toLongOrNull()?.let {
                                 runBlocking {
-                                    xtraModule.playerRepository.saveVideoPosition(VideoPosition(it, player.currentPosition.toLong()))
+                                    xtraModule.playerRepository.saveVideoPosition(VideoPosition(it, currentPosition))
                                 }
                             }
                         }
                         OFFLINE_VIDEO -> {
                             offlineVideoId?.let {
                                 runBlocking {
-                                    xtraModule.offlineVideosRepository.updatePosition(it, player.currentPosition.toLong())
+                                    xtraModule.offlineVideosRepository.updatePosition(it, currentPosition)
                                 }
                             }
                         }
@@ -1845,11 +1925,20 @@ class MediaPlayerService : BasePlaybackService() {
         }
     }
 
-    fun updatePlayingState() {
+    fun updatePlayingState(updatePlaybackIntent: Boolean = true) {
         updatePlaybackState()
         updateNotification()
         player?.let { player ->
-            if (player.isPlaying) {
+            val isPlaying = runCatching { player.isPlaying }.getOrDefault(false)
+            if (updatePlaybackIntent && type == STREAM) {
+                streamPlaybackRequested = isPlaying
+                if (!isPlaying) {
+                    streamRecoveryJob?.cancel()
+                    streamRecoveryJob = null
+                    streamRecoveryAttempt = 0
+                }
+            }
+            if (isPlaying) {
                 if (savePositionTimer == null && type != STREAM) {
                     savePositionTimer = Timer().apply {
                         scheduleAtFixedRate(30000, 30000) {
@@ -1880,8 +1969,9 @@ class MediaPlayerService : BasePlaybackService() {
 
     private fun updateSavedPosition() {
         player?.let { player ->
-            if (player.duration != -1) {
-                val currentPosition = player.currentPosition.toLong()
+            val duration = runCatching { player.duration }.getOrDefault(-1)
+            if (duration != -1) {
+                val currentPosition = runCatching { player.currentPosition.toLong() }.getOrDefault(0L)
                 val savedPosition = lastSavedPosition
                 if (savedPosition == null || currentPosition - savedPosition !in 0..2000) {
                     lastSavedPosition = currentPosition
@@ -1904,7 +1994,7 @@ class MediaPlayerService : BasePlaybackService() {
                         }
                     }
                     runBlocking {
-                        savePlaybackState(currentPosition, !player.isPlaying)
+                        savePlaybackState(currentPosition, !runCatching { player.isPlaying }.getOrDefault(false))
                     }
                 }
             }
@@ -1926,15 +2016,7 @@ class MediaPlayerService : BasePlaybackService() {
                 }
             }
             INTENT_PLAY_PAUSE -> {
-                player?.let { player ->
-                    if (player.isPlaying) {
-                        player.pause()
-                    } else {
-                        player.start()
-                    }
-                    updatePlayingState()
-                    playerListener?.onIsPlayingChanged()
-                }
+                togglePlayback()
             }
             INTENT_FAST_FORWARD -> {
                 player?.let { player ->
@@ -1964,13 +2046,17 @@ class MediaPlayerService : BasePlaybackService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         savePosition()
-        if (player?.isPlaying == true
+        val isInteractive = (getSystemService(POWER_SERVICE) as PowerManager).isInteractive
+        if (player?.let { runCatching { it.isPlaying }.getOrDefault(false) } == true
             && prefs().getBoolean(C.PLAYER_KEEP_PLAYING_AFTER_TASK_REMOVED, true)
-            && (prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true)
-                    || prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))) {
+            && prefs().getBoolean(
+                if (isInteractive) C.PLAYER_BACKGROUND_AUDIO else C.PLAYER_BACKGROUND_AUDIO_LOCKED,
+                true,
+            )) {
             return
         }
-        player?.pause()
+        streamPlaybackRequested = false
+        runCatching { player?.pause() }
         updatePlayingState()
         playerListener?.onIsPlayingChanged()
         stopSelf()
@@ -1980,6 +2066,8 @@ class MediaPlayerService : BasePlaybackService() {
         super.onDestroy()
         streamRecoveryJob?.cancel()
         streamRecoveryJob = null
+        resumeWhenForeground = false
+        streamPlaybackRequested = false
         wifiLock?.release()
         player?.release()
         session?.release()

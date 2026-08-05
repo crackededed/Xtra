@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.util.Base64
 import androidx.annotation.OptIn
 import androidx.core.content.edit
@@ -842,11 +843,14 @@ class PlaybackService : MediaSessionService() {
     override fun onTaskRemoved(rootIntent: Intent?) {
         savePosition()
         val player = mediaSession?.player
+        val isInteractive = (getSystemService(POWER_SERVICE) as PowerManager).isInteractive
         val keepPlayback = player?.playWhenReady == true
                 && player.playbackState != Player.STATE_ENDED
                 && prefs().getBoolean(C.PLAYER_KEEP_PLAYING_AFTER_TASK_REMOVED, true)
-                && (prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true)
-                || prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
+                && prefs().getBoolean(
+                    if (isInteractive) C.PLAYER_BACKGROUND_AUDIO else C.PLAYER_BACKGROUND_AUDIO_LOCKED,
+                    true,
+                )
         if (keepPlayback) {
             backgroundPlayback = true
             return

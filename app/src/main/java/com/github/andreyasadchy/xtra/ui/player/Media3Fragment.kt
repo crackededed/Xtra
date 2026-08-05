@@ -280,6 +280,9 @@ class Media3Fragment : Media3PlayerFragment() {
                                 Bundle.EMPTY
                             )?.let { result ->
                                 result.addListener({
+                                    if (!isAdded || view == null) {
+                                        return@addListener
+                                    }
                                     if (result.get().resultCode == SessionResult.RESULT_SUCCESS) {
                                         val playingAds = result.get().extras.getBoolean(PlaybackService.RESULT)
                                         val oldValue = viewModel.playingAds
@@ -357,7 +360,7 @@ class Media3Fragment : Media3PlayerFragment() {
                                             }
                                         }
                                     }
-                                }, MoreExecutors.directExecutor())
+                                }, ContextCompat.getMainExecutor(requireContext()))
                             }
                         }
                     }
@@ -372,6 +375,9 @@ class Media3Fragment : Media3PlayerFragment() {
                                 Bundle.EMPTY
                             )?.let { result ->
                                 result.addListener({
+                                    if (!isAdded || view == null) {
+                                        return@addListener
+                                    }
                                     if (result.get().resultCode == SessionResult.RESULT_SUCCESS) {
                                         val responseCode = result.get().extras.getInt(PlaybackService.RESULT)
                                         val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -398,7 +404,7 @@ class Media3Fragment : Media3PlayerFragment() {
                                             scheduleStreamRecovery()
                                         }
                                     }
-                                }, MoreExecutors.directExecutor())
+                                }, ContextCompat.getMainExecutor(requireContext()))
                             }
                         }
                         VIDEO -> {
@@ -407,6 +413,9 @@ class Media3Fragment : Media3PlayerFragment() {
                                 Bundle.EMPTY
                             )?.let { result ->
                                 result.addListener({
+                                    if (!isAdded || view == null) {
+                                        return@addListener
+                                    }
                                     if (result.get().resultCode == SessionResult.RESULT_SUCCESS) {
                                         val responseCode = result.get().extras.getInt(PlaybackService.RESULT)
                                         val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -436,7 +445,7 @@ class Media3Fragment : Media3PlayerFragment() {
                                             }
                                         }
                                     }
-                                }, MoreExecutors.directExecutor())
+                                }, ContextCompat.getMainExecutor(requireContext()))
                             }
                         }
                     }
@@ -482,8 +491,12 @@ class Media3Fragment : Media3PlayerFragment() {
             }
             if (viewModel.resume) {
                 viewModel.resume = false
-                player?.playWhenReady = true
-                player?.prepare()
+                player?.let { player ->
+                    if (player.playbackState != Player.STATE_ENDED) {
+                        player.playWhenReady = true
+                        player.prepare()
+                    }
+                }
             }
             player?.let { player ->
                 if (viewModel.loaded.value && player.currentMediaItem == null) {
@@ -512,11 +525,13 @@ class Media3Fragment : Media3PlayerFragment() {
             player?.let { player ->
                 setPipActions(player.playbackState != Player.STATE_ENDED && player.playbackState != Player.STATE_IDLE && player.playWhenReady)
             }
-        }, MoreExecutors.directExecutor())
+        }, ContextCompat.getMainExecutor(requireContext()))
     }
 
     private fun scheduleStreamRecovery() {
-        if (!requireContext().prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)
+        val context = context ?: return
+        if (!isAdded || view == null
+            || !context.prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)
             || videoType != STREAM
             || player?.playWhenReady != true
         ) {
@@ -527,7 +542,11 @@ class Media3Fragment : Media3PlayerFragment() {
         streamRecoveryAttempt = (streamRecoveryAttempt + 1).coerceAtMost(3)
         streamRecoveryJob = viewLifecycleOwner.lifecycleScope.launch {
             delay(delayMs)
-            if (player?.playWhenReady == true && isAdded) {
+            if (context.prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)
+                && player?.playWhenReady == true
+                && isAdded
+                && view != null
+            ) {
                 try {
                     restartPlayer()
                 } catch (_: Exception) {
@@ -1095,7 +1114,7 @@ class Media3Fragment : Media3PlayerFragment() {
                         }
                     }
                 } else {
-                    viewModel.resume = player.playWhenReady
+                    viewModel.resume = player.playWhenReady && player.playbackState != Player.STATE_ENDED
                     player.pause()
                 }
                 player.sendCustomCommand(
@@ -1120,7 +1139,9 @@ class Media3Fragment : Media3PlayerFragment() {
     override fun onNetworkRestored() {
         if (isResumed) {
             if (videoType == STREAM) {
-                restartPlayer()
+                if (player?.playWhenReady == true) {
+                    restartPlayer()
+                }
             } else {
                 player?.prepare()
             }

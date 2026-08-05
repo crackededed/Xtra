@@ -501,7 +501,9 @@ class ExoPlayerFragment : PlayerFragment() {
     override fun onNetworkRestored() {
         if (isResumed) {
             if (playbackService?.type == BasePlaybackService.STREAM) {
-                restartPlayer()
+                if (playbackService?.player?.playWhenReady == true) {
+                    restartPlayer()
+                }
             } else {
                 playbackService?.player?.prepare()
             }
