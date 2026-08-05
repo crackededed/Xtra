@@ -248,12 +248,13 @@
             android:textStyle="bold"
             android:visibility="gone" />
 
-        <LinearLayout
+        <GridLayout
             android:id="@+id/rewardsList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:orientation="vertical" />
+            android:columnCount="3"
+            android:useDefaultMargins="false" />
 
         <TextView
             android:id="@+id/votingTitle"

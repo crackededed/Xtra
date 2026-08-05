@@ -2,21 +2,42 @@ package com.github.andreyasadchy.xtra.ui.chat
 
 import android.app.Dialog
 import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
+import android.text.InputType
+import android.view.Gravity
+import android.view.View
+import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.RecyclerView
+import coil3.imageLoader
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.request.target
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.DialogChannelPointsBinding
+import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.model.chat.Poll
 import com.github.andreyasadchy.xtra.model.chat.Prediction
 import com.github.andreyasadchy.xtra.model.ui.ChannelPoints
+import com.github.andreyasadchy.xtra.model.ui.ChannelPointReward
+import com.github.andreyasadchy.xtra.model.ui.ChannelPointRewardInput
+import com.github.andreyasadchy.xtra.model.ui.ChannelPointRedemptionResult
 import com.github.andreyasadchy.xtra.model.ui.WatchStreak
+import com.github.andreyasadchy.xtra.ui.view.GridAutofitLayoutManager
+import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
+import com.github.andreyasadchy.xtra.util.prefs
+import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -32,15 +53,25 @@ class ChannelPointsDialog : DialogFragment() {
         fun watchStreakFlow(): StateFlow<WatchStreak?>
         fun activePollFlow(): StateFlow<Poll?>
         fun activePredictionFlow(): StateFlow<Prediction?>
+        fun channelName(): String?
+        fun emotePickerItems(): List<Emote>
+        fun redeemChannelPointReward(reward: ChannelPointReward, textInput: String?)
+        fun channelPointRedemptionFlow(): kotlinx.coroutines.flow.SharedFlow<ChannelPointRedemptionResult>
     }
 
     companion object {
         const val TAG = "channelPointsDialog"
+        private const val REWARD_COLUMNS = 3
     }
 
     private var _binding: DialogChannelPointsBinding? = null
     private val binding get() = _binding!!
     private lateinit var listener: Listener
+
+    private data class RewardInputContent(
+        val input: EditText,
+        val view: View,
+    )
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -66,12 +97,20 @@ class ChannelPointsDialog : DialogFragment() {
                 }.collectLatest(::render)
             }
         }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                listener.channelPointRedemptionFlow().collectLatest(::showRedemptionResult)
+            }
+        }
         return dialog
     }
 
     private fun render(state: DialogState) {
         val numberFormat = NumberFormat.getInstance()
         val points = state.channelPoints
+        binding.headerTitle.text = listener.channelName()?.let {
+            getString(R.string.channel_points_rewards_for, it)
+        } ?: getString(R.string.channel_points_watch_streak)
         binding.balance.text = points?.let {
             getString(R.string.channel_points_current_balance, numberFormat.format(it.balance))
         } ?: getString(R.string.channel_points_unavailable)
@@ -162,17 +201,188 @@ class ChannelPointsDialog : DialogFragment() {
         binding.rewardsTitle.isVisible = rewards.isNotEmpty()
         binding.rewardsList.isVisible = rewards.isNotEmpty()
         binding.rewardsList.removeAllViews()
-        rewards.forEach { reward ->
-            addRow(
-                binding.rewardsList,
-                buildString {
-                    append(getString(R.string.channel_points_reward, reward.title, numberFormat.format(reward.cost)))
-                    if (!reward.prompt.isNullOrBlank()) {
-                        append('\n')
-                        append(getString(R.string.channel_points_reward_prompt, reward.prompt))
-                    }
-                },
+        rewards.forEachIndexed { index, reward ->
+            addRewardCard(index, reward, numberFormat)
+        }
+    }
+
+    private fun addRewardCard(index: Int, reward: ChannelPointReward, numberFormat: NumberFormat) {
+        val density = resources.displayMetrics.density
+        val card = MaterialCardView(requireContext()).apply {
+            radius = 4 * density
+            strokeWidth = 0
+            setCardBackgroundColor(parseColor(reward.backgroundColor, R.color.channel_points_reward_default))
+            isClickable = true
+            isFocusable = true
+            contentDescription = reward.title
+            setOnClickListener { showRewardRedemptionDialog(reward) }
+        }
+        val content = LinearLayout(requireContext()).apply {
+            gravity = Gravity.CENTER
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(6), dp(6), dp(6), dp(6))
+        }
+        val image = ImageView(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(42), dp(42))
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            setImageResource(R.drawable.ic_channel_points)
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.WHITE)
+        }
+        reward.imageUrl?.let { imageUrl ->
+            requireContext().imageLoader.enqueue(
+                ImageRequest.Builder(requireContext())
+                    .data(imageUrl)
+                    .crossfade(true)
+                    .target(image)
+                    .build(),
             )
+        }
+        content.addView(image)
+        content.addView(TextView(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(36),
+            ).apply {
+                topMargin = dp(2)
+            }
+            gravity = Gravity.CENTER
+            maxLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            setTextColor(Color.WHITE)
+            text = reward.title
+            textSize = 12f
+        })
+        val cost = LinearLayout(requireContext()).apply {
+            background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_channel_points_pill)
+            gravity = Gravity.CENTER
+            setPadding(dp(6), dp(2), dp(6), dp(2))
+        }
+        cost.addView(ImageView(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(14), dp(14))
+            setImageResource(R.drawable.ic_channel_points)
+            imageTintList = android.content.res.ColorStateList.valueOf(Color.WHITE)
+        })
+        cost.addView(TextView(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply {
+                marginStart = dp(3)
+            }
+            setTextColor(Color.WHITE)
+            text = numberFormat.format(reward.cost)
+            textSize = 12f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        })
+        content.addView(cost)
+        card.addView(content)
+        binding.rewardsList.addView(card, android.widget.GridLayout.LayoutParams().apply {
+            width = 0
+            height = dp(132)
+            rowSpec = android.widget.GridLayout.spec(index / REWARD_COLUMNS)
+            columnSpec = android.widget.GridLayout.spec(index % REWARD_COLUMNS, 1f)
+            setMargins(dp(2), dp(2), dp(2), dp(2))
+        })
+    }
+
+    private fun showRewardRedemptionDialog(reward: ChannelPointReward) {
+        val inputContent = createRewardInputContent(reward)
+        requireContext().getAlertDialogBuilder()
+            .setTitle(reward.title)
+            .setMessage(reward.prompt ?: getString(R.string.channel_points_reward_confirm))
+            .apply { inputContent?.let { setView(it.view) } }
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.channel_points_reward_redeem) { _, _ ->
+                listener.redeemChannelPointReward(reward, inputContent?.input?.text?.toString())
+            }
+            .show()
+    }
+
+    private fun createRewardInputContent(reward: ChannelPointReward): RewardInputContent? {
+        return when (reward.inputType) {
+            ChannelPointRewardInput.NONE -> null
+            ChannelPointRewardInput.TEXT -> {
+                val input = EditText(requireContext()).apply {
+                    hint = getString(R.string.channel_points_reward_text_hint)
+                    inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+                    minLines = 2
+                    maxLines = 4
+                    gravity = Gravity.TOP or Gravity.START
+                }
+                RewardInputContent(
+                    input = input,
+                    view = LinearLayout(requireContext()).apply {
+                        setPadding(dp(24), 0, dp(24), 0)
+                        addView(input, LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                        ))
+                    },
+                )
+            }
+            ChannelPointRewardInput.EMOTE -> {
+                val input = EditText(requireContext()).apply {
+                    hint = getString(R.string.channel_points_reward_emote_hint)
+                    inputType = InputType.TYPE_CLASS_TEXT
+                    setSingleLine(true)
+                }
+                val allEmotes = listener.emotePickerItems()
+                val adapter = EmotesAdapter(
+                    this,
+                    { emote ->
+                        input.setText(emote.name.orEmpty())
+                        input.setSelection(input.text.length)
+                    },
+                    requireContext().prefs().getString(C.CHAT_IMAGE_QUALITY, "4") ?: "4",
+                    requireContext().prefs().getString(C.CHAT_IMAGE_LIBRARY, "0"),
+                )
+                val picker = RecyclerView(requireContext()).apply {
+                    itemAnimator = null
+                    this.adapter = adapter
+                    layoutManager = GridAutofitLayoutManager(requireContext(), dp(50))
+                }
+                fun updatePicker(query: String) {
+                    adapter.submitList(
+                        allEmotes.filter { it.name.orEmpty().contains(query, ignoreCase = true) },
+                    )
+                }
+                input.addTextChangedListener { updatePicker(it?.toString().orEmpty()) }
+                updatePicker("")
+                RewardInputContent(
+                    input = input,
+                    view = LinearLayout(requireContext()).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(dp(24), 0, dp(24), 0)
+                        addView(input, LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                        ))
+                        addView(picker, LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            dp(180),
+                        ).apply {
+                            topMargin = dp(8)
+                        })
+                    },
+                )
+            }
+        }
+    }
+
+    private fun showRedemptionResult(result: ChannelPointRedemptionResult) {
+        val message = if (result.success) {
+            getString(R.string.channel_points_reward_redeemed, result.rewardTitle)
+        } else {
+            getString(R.string.channel_points_reward_failed, result.rewardTitle, result.message.orEmpty())
+        }
+        android.widget.Toast.makeText(requireContext(), message, android.widget.Toast.LENGTH_LONG).show()
+    }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).roundToInt()
+
+    private fun parseColor(value: String?, fallback: Int): Int {
+        return runCatching { Color.parseColor(value ?: "") }.getOrElse {
+            ContextCompat.getColor(requireContext(), fallback)
         }
     }
 
@@ -242,4 +452,5 @@ class ChannelPointsDialog : DialogFragment() {
         val poll: Poll?,
         val prediction: Prediction?,
     )
+
 }

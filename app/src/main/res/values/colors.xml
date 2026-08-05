@@ -32,4 +32,5 @@
     <color name="liveStreamRed">#DD0000</color>
     <color name="watchStreakOrange">#FFB31A</color>
     <color name="watchStreakProgress">#00D395</color>
+    <color name="channel_points_reward_default">#9146FF</color>
 </resources>

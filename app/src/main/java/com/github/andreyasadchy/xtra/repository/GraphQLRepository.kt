@@ -71,6 +71,7 @@ import com.github.andreyasadchy.xtra.model.gql.channel.ChannelViewerListResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.BadgesResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.ChannelCheerEmotesResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.ChannelPointContextResponse
+import com.github.andreyasadchy.xtra.model.gql.chat.ChannelPointRedemptionResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.EmoteCardResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.GlobalCheerEmotesResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.ModeratorsResponse
@@ -141,6 +142,17 @@ class GraphQLRepository(
                         watchStreakThreshold
                         watchStreakCopoBonus
                     }
+                }
+            }
+        }
+    """.trimIndent()
+
+    private val channelPointRedemptionMutation = """
+        mutation RedeemCommunityPointsCustomReward(${'$'}input: RedeemCommunityPointsCustomRewardInput!) {
+            redeemCommunityPointsCustomReward(input: ${'$'}input) {
+                error {
+                    __typename
+                    code
                 }
             }
         }
@@ -1499,6 +1511,34 @@ class GraphQLRepository(
             }
         }.toString()
         json.decodeFromString<WatchStreakResponse>(sendPersistedQuery(networkLibrary, headers, body))
+    }
+
+    suspend fun redeemChannelPointReward(
+        networkLibrary: String?,
+        headers: Map<String, String>,
+        channelId: String,
+        rewardId: String,
+        title: String,
+        cost: Int,
+        prompt: String?,
+        textInput: String?,
+    ): ChannelPointRedemptionResponse = withContext(Dispatchers.IO) {
+        val body = buildJsonObject {
+            put("operationName", "RedeemCommunityPointsCustomReward")
+            put("query", channelPointRedemptionMutation)
+            putJsonObject("variables") {
+                putJsonObject("input") {
+                    put("channelID", channelId)
+                    put("cost", cost)
+                    put("prompt", prompt)
+                    put("rewardID", rewardId)
+                    put("textInput", textInput)
+                    put("title", title)
+                    put("transactionID", Uuid.random().toString())
+                }
+            }
+        }.toString()
+        json.decodeFromString<ChannelPointRedemptionResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
     suspend fun loadClaimPoints(networkLibrary: String?, headers: Map<String, String>, channelId: String?, claimId: String?): ErrorResponse = withContext(Dispatchers.IO) {

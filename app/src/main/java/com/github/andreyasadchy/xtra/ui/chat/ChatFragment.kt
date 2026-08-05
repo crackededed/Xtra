@@ -44,6 +44,8 @@ import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.model.chat.Poll
 import com.github.andreyasadchy.xtra.model.chat.Prediction
 import com.github.andreyasadchy.xtra.model.ui.ChannelPoints
+import com.github.andreyasadchy.xtra.model.ui.ChannelPointReward
+import com.github.andreyasadchy.xtra.model.ui.ChannelPointRedemptionResult
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.model.ui.WatchStreak
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
@@ -68,6 +70,7 @@ import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -111,6 +114,19 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
     override fun activePollFlow(): StateFlow<Poll?> = viewModel.activePoll
 
     override fun activePredictionFlow(): StateFlow<Prediction?> = viewModel.activePrediction
+
+    override fun channelName(): String? {
+        return arguments?.getString(KEY_CHANNEL_NAME)?.takeIf { it.isNotBlank() }
+            ?: arguments?.getString(KEY_CHANNEL_LOGIN)
+    }
+
+    override fun emotePickerItems(): List<Emote> = viewModel.emotePickerItems()
+
+    override fun redeemChannelPointReward(reward: ChannelPointReward, textInput: String?) {
+        viewModel.redeemChannelPointReward(reward, textInput)
+    }
+
+    override fun channelPointRedemptionFlow(): SharedFlow<ChannelPointRedemptionResult> = viewModel.channelPointRedemption
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentChatBinding.inflate(inflater, container, false)

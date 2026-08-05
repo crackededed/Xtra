@@ -7,9 +7,25 @@ data class ChannelPoints(
 )
 
 data class ChannelPointReward(
+    val id: String,
     val title: String,
     val cost: Int,
     val prompt: String? = null,
+    val imageUrl: String? = null,
+    val backgroundColor: String? = null,
+    val inputType: ChannelPointRewardInput = ChannelPointRewardInput.NONE,
+)
+
+enum class ChannelPointRewardInput {
+    NONE,
+    TEXT,
+    EMOTE,
+}
+
+data class ChannelPointRedemptionResult(
+    val rewardTitle: String,
+    val success: Boolean,
+    val message: String? = null,
 )
 
 data class WatchStreakReward(

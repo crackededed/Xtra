@@ -35,6 +35,8 @@ import com.github.andreyasadchy.xtra.model.gql.chat.ChannelPointContextResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.WatchStreakResponse
 import com.github.andreyasadchy.xtra.model.ui.ChannelPoints
 import com.github.andreyasadchy.xtra.model.ui.ChannelPointReward as ChannelPointRewardInfo
+import com.github.andreyasadchy.xtra.model.ui.ChannelPointRewardInput
+import com.github.andreyasadchy.xtra.model.ui.ChannelPointRedemptionResult
 import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
 import com.github.andreyasadchy.xtra.model.ui.WatchStreak
 import com.github.andreyasadchy.xtra.model.ui.WatchStreakReward
@@ -114,6 +116,8 @@ class ChatViewModel(
     private var usedPredictionId: String? = null
     private var predictionTimeoutJob: Job? = null
     private var started = false
+    private var activeChannelId: String? = null
+    private var activeChannelLogin: String? = null
     var autoReconnect = true
 
     private var chatReplayManager: ChatReplayManager? = null
@@ -158,6 +162,7 @@ class ChatViewModel(
     val translateAllMessages = MutableStateFlow<Boolean?>(null)
     val channelPoints = MutableStateFlow<ChannelPoints?>(null)
     val watchStreak = MutableStateFlow<WatchStreak?>(null)
+    val channelPointRedemption = MutableSharedFlow<ChannelPointRedemptionResult>(extraBufferCapacity = 1)
 
     val reloadMessages = MutableStateFlow(false)
     val hideRaid = MutableStateFlow(false)
@@ -1010,28 +1015,47 @@ class ChatViewModel(
             .asSequence()
             .filter { it.isEnabled != false && it.isPaused != true && it.isInStock != false }
             .mapNotNull { reward ->
+                val id = reward.id
                 val title = reward.title
                 val cost = reward.cost
-                if (!title.isNullOrBlank() && cost != null) {
-                    ChannelPointRewardInfo(title = title, cost = cost, prompt = reward.prompt)
+                if (!id.isNullOrBlank() && !title.isNullOrBlank() && cost != null) {
+                    ChannelPointRewardInfo(
+                        id = id,
+                        title = title,
+                        cost = cost,
+                        prompt = reward.prompt,
+                        imageUrl = reward.rewardImageUrl(),
+                        backgroundColor = reward.backgroundColor ?: DEFAULT_REWARD_COLOR,
+                        inputType = if (reward.isUserInputRequired == true) {
+                            ChannelPointRewardInput.TEXT
+                        } else {
+                            ChannelPointRewardInput.NONE
+                        },
+                    )
                 } else null
             }
         val automaticRewards = settings?.automaticRewards.orEmpty()
             .asSequence()
-            .filter { it.isEnabled != false && it.isInStock != false }
+            .filter { it.pricingType.equals(POINTS_PRICING_TYPE, true) && it.isEnabled != false && it.isInStock != false }
             .mapNotNull { reward ->
+                val id = reward.id
                 val type = reward.type
-                val cost = reward.cost
-                if (!type.isNullOrBlank() && cost != null) {
+                val cost = reward.cost ?: reward.defaultCost
+                if (!id.isNullOrBlank() && !type.isNullOrBlank() && cost != null) {
                     ChannelPointRewardInfo(
-                        title = type.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() },
+                        id = id,
+                        title = automaticRewardTitle(type),
                         cost = cost,
+                        imageUrl = reward.rewardImageUrl(),
+                        backgroundColor = reward.backgroundColor
+                            ?: reward.defaultBackgroundColor
+                            ?: automaticRewardColor(type),
+                        inputType = automaticRewardInput(type),
                     )
                 } else null
             }
         val rewards = (customRewards + automaticRewards)
-            .sortedBy { it.cost }
-            .take(8)
+            .sortedWith(compareBy<ChannelPointRewardInfo> { it.cost }.thenBy { it.title })
             .toList()
         val watchStreakRewards = settings?.earning?.watchStreakPoints.orEmpty()
             .mapIndexedNotNull { index, reward ->
@@ -1044,6 +1068,42 @@ class ChatViewModel(
             rewards = rewards,
             watchStreakRewards = watchStreakRewards,
         )
+    }
+
+    private fun ChannelPointContextResponse.CustomReward.rewardImageUrl(): String? {
+        return image?.url4x ?: image?.url2x ?: image?.url1x ?: image?.url
+            ?: defaultImage?.url4x ?: defaultImage?.url2x ?: defaultImage?.url1x ?: defaultImage?.url
+    }
+
+    private fun ChannelPointContextResponse.AutomaticReward.rewardImageUrl(): String? {
+        return image?.url4x ?: image?.url2x ?: image?.url1x ?: image?.url
+            ?: defaultImage?.url4x ?: defaultImage?.url2x ?: defaultImage?.url1x ?: defaultImage?.url
+    }
+
+    private fun automaticRewardTitle(type: String): String = when (type) {
+        "RANDOM_SUB_EMOTE_UNLOCK" -> "Unlock a Random Sub Emote"
+        "SINGLE_MESSAGE_BYPASS_SUB_MODE" -> "Send a Message in Sub-Only Mode"
+        "CHOSEN_SUB_EMOTE_UNLOCK" -> "Choose an Emote to Unlock"
+        "CHOSEN_MODIFIED_SUB_EMOTE_UNLOCK" -> "Modify a Single Emote"
+        "SEND_HIGHLIGHTED_MESSAGE" -> "Highlight My Message"
+        "SEND_ANIMATED_MESSAGE" -> "Message Effects"
+        "SEND_GIGANTIFIED_EMOTE" -> "Gigantify an Emote"
+        else -> type.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() }
+    }
+
+    private fun automaticRewardColor(type: String): String = when (type) {
+        "RANDOM_SUB_EMOTE_UNLOCK" -> "#8205B4"
+        "SINGLE_MESSAGE_BYPASS_SUB_MODE" -> "#9146FF"
+        "CHOSEN_SUB_EMOTE_UNLOCK" -> "#00C8AF"
+        "CHOSEN_MODIFIED_SUB_EMOTE_UNLOCK" -> "#00FA05"
+        "SEND_HIGHLIGHTED_MESSAGE" -> "#FF6905"
+        else -> DEFAULT_REWARD_COLOR
+    }
+
+    private fun automaticRewardInput(type: String): ChannelPointRewardInput = when (type) {
+        "CHOSEN_SUB_EMOTE_UNLOCK", "CHOSEN_MODIFIED_SUB_EMOTE_UNLOCK" -> ChannelPointRewardInput.EMOTE
+        "SINGLE_MESSAGE_BYPASS_SUB_MODE", "SEND_HIGHLIGHTED_MESSAGE" -> ChannelPointRewardInput.TEXT
+        else -> ChannelPointRewardInput.NONE
     }
 
     private fun updateWatchStreak(streakCount: Int?, pointsAwarded: Int? = null) {
@@ -1110,9 +1170,75 @@ class ChatViewModel(
         }
     }
 
+    fun redeemChannelPointReward(reward: ChannelPointRewardInfo, textInput: String?) {
+        val channelId = activeChannelId
+        val channelLogin = activeChannelLogin
+        if (channelId.isNullOrBlank() || channelLogin.isNullOrBlank()) {
+            channelPointRedemption.tryEmit(
+                ChannelPointRedemptionResult(reward.title, success = false, message = "Chat is not connected"),
+            )
+            return
+        }
+        val gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext, true)
+        if (gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+            channelPointRedemption.tryEmit(
+                ChannelPointRedemptionResult(reward.title, success = false, message = "Login is required"),
+            )
+            return
+        }
+        val networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
+        val enableIntegrity = applicationContext.prefs().getBoolean(C.ENABLE_INTEGRITY, false)
+        viewModelScope.launch {
+            try {
+                val response = graphQLRepository.redeemChannelPointReward(
+                    networkLibrary = networkLibrary,
+                    headers = gqlHeaders,
+                    channelId = channelId,
+                    rewardId = reward.id,
+                    title = reward.title,
+                    cost = reward.cost,
+                    prompt = reward.prompt,
+                    textInput = textInput?.takeIf { it.isNotBlank() },
+                )
+                val error = response.errors?.firstOrNull()?.message
+                    ?: response.data?.redeemCommunityPointsCustomReward?.error?.code
+                if (error != null) {
+                    channelPointRedemption.emit(
+                        ChannelPointRedemptionResult(reward.title, success = false, message = error),
+                    )
+                } else {
+                    channelPointRedemption.emit(ChannelPointRedemptionResult(reward.title, success = true))
+                    loadChannelPoints(networkLibrary, gqlHeaders, channelLogin, enableIntegrity)
+                }
+            } catch (e: Exception) {
+                channelPointRedemption.emit(
+                    ChannelPointRedemptionResult(
+                        reward.title,
+                        success = false,
+                        message = e.message ?: "Request failed",
+                    ),
+                )
+            }
+        }
+    }
+
+    fun emotePickerItems(): List<Emote> {
+        val personalEmotes = userSTVEmoteSetId?.let { setId ->
+            synchronized(personalEmoteSets) { personalEmoteSets[setId].orEmpty() }
+        }.orEmpty()
+        return (synchronized(userEmotes) { userEmotes.toList() } +
+                personalEmotes +
+                synchronized(thirdPartyEmotes) { thirdPartyEmotes.toList() })
+            .filter { !it.name.isNullOrBlank() }
+            .distinctBy { it.name }
+            .sortedBy { it.name.orEmpty().lowercase() }
+    }
+
     fun startLiveChat(channelId: String?, channelLogin: String) {
         stopLiveChat()
         started = true
+        activeChannelId = channelId
+        activeChannelLogin = channelLogin
         val gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext, true)
         val helixHeaders = TwitchApiHelper.getHelixHeaders(applicationContext)
         val networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
@@ -1229,6 +1355,8 @@ class ChatViewModel(
     }
 
     fun stopLiveChat() {
+        activeChannelId = null
+        activeChannelLogin = null
         channelPointsJob?.cancel()
         channelPointsJob = null
         watchStreakJob?.cancel()
@@ -3310,6 +3438,8 @@ class ChatViewModel(
     }
 
     companion object {
+        private const val POINTS_PRICING_TYPE = "POINTS"
+        private const val DEFAULT_REWARD_COLOR = "#9146FF"
         private var savedEmoteSets: List<String>? = null
         private var savedUserEmotes: List<TwitchEmote>? = null
         private var savedGlobalBadges: List<TwitchBadge>? = null
