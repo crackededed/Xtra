@@ -19,8 +19,8 @@ Compared with the upstream project, this fork currently includes:
 - Fork-hosted releases and update links for existing Xtra installs.
 
 <p align="center">
-  <img src="https://github.com/thiscallnet/Xtra/releases/download/latest/channel-points-rewards.jpg" width="320" alt="Channel Points rewards and watch streaks">
-  <img src="https://github.com/thiscallnet/Xtra/releases/download/latest/channel-points-navigation.jpg" width="620" alt="Channel Points balance in the navigation bar">
+  <img src="./docs/images/channel-points-rewards.jpg" width="320" alt="Channel Points rewards and watch streaks">
+  <img src="./docs/images/channel-points-navigation.jpg" width="620" alt="Channel Points balance in the navigation bar">
 </p>
 
 ## Download
