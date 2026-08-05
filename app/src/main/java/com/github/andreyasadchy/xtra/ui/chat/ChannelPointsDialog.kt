@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.text.InputType
 import android.view.Gravity
 import android.view.View
+import android.view.WindowManager
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -115,6 +116,17 @@ class ChannelPointsDialog : DialogFragment() {
             }
         }
         return dialog
+    }
+
+    override fun onStart() {
+        super.onStart()
+        dialog?.window?.let { window ->
+            val density = resources.displayMetrics.density
+            val maxWidth = (640 * density).roundToInt()
+            val screenWidth = resources.displayMetrics.widthPixels
+            val width = (screenWidth * 0.94f).roundToInt().coerceAtMost(maxWidth)
+            window.setLayout(width, WindowManager.LayoutParams.WRAP_CONTENT)
+        }
     }
 
     private fun render(state: DialogState) {
