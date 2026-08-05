@@ -15,12 +15,22 @@ data class ChannelPointReward(
     val imageUrl: String? = null,
     val backgroundColor: String? = null,
     val inputType: ChannelPointRewardInput = ChannelPointRewardInput.NONE,
+    val redemptionType: ChannelPointRewardRedemption = ChannelPointRewardRedemption.CUSTOM,
 )
 
 enum class ChannelPointRewardInput {
     NONE,
     TEXT,
     EMOTE,
+}
+
+enum class ChannelPointRewardRedemption {
+    CUSTOM,
+    RANDOM_SUB_EMOTE,
+    CHOSEN_SUB_EMOTE,
+    CHOSEN_MODIFIED_SUB_EMOTE,
+    SUBSCRIBER_MODE_MESSAGE,
+    HIGHLIGHTED_MESSAGE,
 }
 
 data class ChannelPointRedemptionResult(

@@ -126,8 +126,8 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
 
     override fun channelEmotePickerUpdates(): Flow<Unit> = viewModel.channelEmotePickerUpdates()
 
-    override fun redeemChannelPointReward(reward: ChannelPointReward, textInput: String?) {
-        viewModel.redeemChannelPointReward(reward, textInput)
+    override fun redeemChannelPointReward(reward: ChannelPointReward, textInput: String?, emoteId: String?) {
+        viewModel.redeemChannelPointReward(reward, textInput, emoteId)
     }
 
     override fun channelPointRedemptionFlow(): Flow<ChannelPointRedemptionResult> = viewModel.channelPointRedemption

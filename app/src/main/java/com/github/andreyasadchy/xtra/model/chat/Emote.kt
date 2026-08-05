@@ -11,6 +11,7 @@ class Emote(
     val isAnimated: Boolean = true,
     val isOverlayEmote: Boolean = false,
     val source: Int? = null,
+    val id: String? = null,
 ) {
     val thirdParty = source == PERSONAL_STV || source == CHANNEL_STV || source == CHANNEL_BTTV || source == CHANNEL_FFZ || source == GLOBAL_STV || source == GLOBAL_BTTV || source == GLOBAL_FFZ
 

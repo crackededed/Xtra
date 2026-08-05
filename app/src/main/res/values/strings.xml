@@ -316,6 +316,7 @@
     <string name="channel_points_reward_confirm">Redeem this reward?</string>
     <string name="channel_points_reward_emote_hint">Choose an emote</string>
     <string name="channel_points_reward_text_hint">Enter the message</string>
+    <string name="channel_points_reward_input_required">Input is required</string>
     <string name="channel_points_reward_redeem">Redeem</string>
     <string name="channel_points_reward_redeemed">Redeemed %s</string>
     <string name="channel_points_reward_failed">Couldn’t redeem %1$s: %2$s</string>

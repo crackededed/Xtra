@@ -1873,6 +1873,7 @@ class PlayerRepository(
                                     .replaceFirst("{{format}}", format)
                                     .replaceFirst("{{theme_mode}}", theme)
                                 TwitchEmote(
+                                    id = id,
                                     name = if (emote.type == "smilies") {
                                         name.replace("\\", "").replace("?", "")
                                             .replace("&lt;", "<").replace("&gt;", ">")
@@ -1916,6 +1917,7 @@ class PlayerRepository(
                         .replaceFirst("{{format}}", format)
                         .replaceFirst("{{theme_mode}}", theme)
                     TwitchEmote(
+                        id = id,
                         name = if (emote.type == "smilies") {
                             name.replace("\\", "").replace("?", "")
                                 .replace("&lt;", "<").replace("&gt;", ">")

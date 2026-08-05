@@ -11,7 +11,32 @@ class ChannelPointRedemptionResponse(
     @Serializable
     class Data(
         val redeemCommunityPointsCustomReward: Payload? = null,
-    )
+        val unlockRandomSubscriberEmote: Payload? = null,
+        val unlockChosenSubscriberEmote: Payload? = null,
+        val unlockChosenModifiedSubscriberEmote: Payload? = null,
+        val sendChatMessageThroughSubscriberMode: Payload? = null,
+        val sendHighlightedChatMessage: Payload? = null,
+    ) {
+        fun errorCode(): String? {
+            return listOf(
+                redeemCommunityPointsCustomReward,
+                unlockRandomSubscriberEmote,
+                unlockChosenSubscriberEmote,
+                unlockChosenModifiedSubscriberEmote,
+                sendChatMessageThroughSubscriberMode,
+                sendHighlightedChatMessage,
+            ).firstNotNullOfOrNull { it?.error?.code }
+        }
+
+        fun hasPayload(): Boolean {
+            return redeemCommunityPointsCustomReward != null ||
+                    unlockRandomSubscriberEmote != null ||
+                    unlockChosenSubscriberEmote != null ||
+                    unlockChosenModifiedSubscriberEmote != null ||
+                    sendChatMessageThroughSubscriberMode != null ||
+                    sendHighlightedChatMessage != null
+        }
+    }
 
     @Serializable
     class Payload(

@@ -2,6 +2,7 @@ package com.github.andreyasadchy.xtra.ui.chat
 
 import android.app.Dialog
 import android.content.Context
+import android.content.DialogInterface
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
@@ -60,7 +61,7 @@ class ChannelPointsDialog : DialogFragment() {
         fun channelName(): String?
         fun channelEmotePickerItems(): List<Emote>
         fun channelEmotePickerUpdates(): Flow<Unit>
-        fun redeemChannelPointReward(reward: ChannelPointReward, textInput: String?)
+        fun redeemChannelPointReward(reward: ChannelPointReward, textInput: String?, emoteId: String?)
         fun channelPointRedemptionFlow(): Flow<ChannelPointRedemptionResult>
     }
 
@@ -78,6 +79,7 @@ class ChannelPointsDialog : DialogFragment() {
         val view: View,
         val pickerUpdates: Flow<Unit>? = null,
         val refreshPicker: (() -> Unit)? = null,
+        val selectedEmoteId: (() -> String?)? = null,
     )
 
     override fun onAttach(context: Context) {
@@ -310,7 +312,13 @@ class ChannelPointsDialog : DialogFragment() {
             .apply { inputContent?.let { setView(it.view) } }
             .setNegativeButton(android.R.string.cancel, null)
             .setPositiveButton(R.string.channel_points_reward_redeem) { _, _ ->
-                listener.redeemChannelPointReward(reward, inputContent?.input?.text?.toString())
+                val textInput = inputContent?.input?.text?.toString()
+                    ?.takeIf { reward.inputType == ChannelPointRewardInput.TEXT }
+                listener.redeemChannelPointReward(
+                    reward,
+                    textInput,
+                    inputContent?.selectedEmoteId?.invoke(),
+                )
             }
             .create()
         val pickerUpdatesJob: Job? = inputContent?.let { content ->
@@ -324,6 +332,18 @@ class ChannelPointsDialog : DialogFragment() {
         }
         dialog.setOnDismissListener { pickerUpdatesJob?.cancel() }
         dialog.show()
+        inputContent?.let { content ->
+            val redeemButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE)
+            fun updateRedeemButton() {
+                redeemButton.isEnabled = when (reward.inputType) {
+                    ChannelPointRewardInput.NONE -> true
+                    ChannelPointRewardInput.TEXT -> content.input.text.isNotBlank()
+                    ChannelPointRewardInput.EMOTE -> content.selectedEmoteId?.invoke()?.isNotBlank() == true
+                }
+            }
+            content.input.addTextChangedListener { updateRedeemButton() }
+            updateRedeemButton()
+        }
     }
 
     private fun createRewardInputContent(reward: ChannelPointReward): RewardInputContent? {
@@ -349,6 +369,7 @@ class ChannelPointsDialog : DialogFragment() {
                 )
             }
             ChannelPointRewardInput.EMOTE -> {
+                var selectedEmoteId: String? = null
                 val input = EditText(requireContext()).apply {
                     hint = getString(R.string.channel_points_reward_emote_hint)
                     inputType = InputType.TYPE_CLASS_TEXT
@@ -358,6 +379,7 @@ class ChannelPointsDialog : DialogFragment() {
                 val adapter = EmotesAdapter(
                     this,
                     { emote ->
+                        selectedEmoteId = emote.id
                         input.setText(emote.name.orEmpty())
                         input.setSelection(input.text.length)
                     },
@@ -379,7 +401,12 @@ class ChannelPointsDialog : DialogFragment() {
                     allEmotes = listener.channelEmotePickerItems()
                     updatePicker()
                 }
-                input.addTextChangedListener { updatePicker() }
+                input.addTextChangedListener { text ->
+                    selectedEmoteId = allEmotes.firstOrNull {
+                        it.name.equals(text?.toString(), ignoreCase = true)
+                    }?.id
+                    updatePicker()
+                }
                 updatePicker()
                 RewardInputContent(
                     input = input,
@@ -399,6 +426,7 @@ class ChannelPointsDialog : DialogFragment() {
                     },
                     pickerUpdates = listener.channelEmotePickerUpdates(),
                     refreshPicker = refreshPicker,
+                    selectedEmoteId = { selectedEmoteId },
                 )
             }
         }

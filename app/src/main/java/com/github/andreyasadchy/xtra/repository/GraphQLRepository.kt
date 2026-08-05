@@ -100,6 +100,7 @@ import com.github.andreyasadchy.xtra.model.gql.stream.ViewerCountResponse
 import com.github.andreyasadchy.xtra.model.gql.tag.TagResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoGamesResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoMessagesResponse
+import com.github.andreyasadchy.xtra.model.ui.ChannelPointRewardRedemption
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
@@ -150,10 +151,47 @@ class GraphQLRepository(
     private val channelPointRedemptionMutation = """
         mutation RedeemCommunityPointsCustomReward(${'$'}input: RedeemCommunityPointsCustomRewardInput!) {
             redeemCommunityPointsCustomReward(input: ${'$'}input) {
-                error {
-                    __typename
-                    code
-                }
+                error { code }
+            }
+        }
+    """.trimIndent()
+
+    private val randomSubscriberEmoteRedemptionMutation = """
+        mutation UnlockRandomSubscriberEmote(${'$'}input: UnlockRandomSubscriberEmoteInput!) {
+            unlockRandomSubscriberEmote(input: ${'$'}input) {
+                error { code }
+            }
+        }
+    """.trimIndent()
+
+    private val chosenSubscriberEmoteRedemptionMutation = """
+        mutation UnlockChosenSubscriberEmote(${'$'}input: UnlockChosenSubscriberEmoteInput!) {
+            unlockChosenSubscriberEmote(input: ${'$'}input) {
+                error { code }
+            }
+        }
+    """.trimIndent()
+
+    private val chosenModifiedSubscriberEmoteRedemptionMutation = """
+        mutation UnlockChosenModifiedSubscriberEmote(${'$'}input: UnlockChosenModifiedSubscriberEmoteInput!) {
+            unlockChosenModifiedSubscriberEmote(input: ${'$'}input) {
+                error { code }
+            }
+        }
+    """.trimIndent()
+
+    private val subscriberModeMessageRedemptionMutation = """
+        mutation SendChatMessageThroughSubscriberMode(${'$'}input: SendChatMessageThroughSubscriberModeInput!) {
+            sendChatMessageThroughSubscriberMode(input: ${'$'}input) {
+                error { code }
+            }
+        }
+    """.trimIndent()
+
+    private val highlightedMessageRedemptionMutation = """
+        mutation SendHighlightedChatMessage(${'$'}input: SendHighlightedChatMessageInput!) {
+            sendHighlightedChatMessage(input: ${'$'}input) {
+                error { code }
             }
         }
     """.trimIndent()
@@ -1522,19 +1560,44 @@ class GraphQLRepository(
         cost: Int,
         prompt: String?,
         textInput: String?,
+        emoteId: String?,
+        redemptionType: ChannelPointRewardRedemption,
     ): ChannelPointRedemptionResponse = withContext(Dispatchers.IO) {
+        val (operationName, mutation) = when (redemptionType) {
+            ChannelPointRewardRedemption.CUSTOM -> "RedeemCommunityPointsCustomReward" to channelPointRedemptionMutation
+            ChannelPointRewardRedemption.RANDOM_SUB_EMOTE -> "UnlockRandomSubscriberEmote" to randomSubscriberEmoteRedemptionMutation
+            ChannelPointRewardRedemption.CHOSEN_SUB_EMOTE -> "UnlockChosenSubscriberEmote" to chosenSubscriberEmoteRedemptionMutation
+            ChannelPointRewardRedemption.CHOSEN_MODIFIED_SUB_EMOTE -> "UnlockChosenModifiedSubscriberEmote" to chosenModifiedSubscriberEmoteRedemptionMutation
+            ChannelPointRewardRedemption.SUBSCRIBER_MODE_MESSAGE -> "SendChatMessageThroughSubscriberMode" to subscriberModeMessageRedemptionMutation
+            ChannelPointRewardRedemption.HIGHLIGHTED_MESSAGE -> "SendHighlightedChatMessage" to highlightedMessageRedemptionMutation
+        }
         val body = buildJsonObject {
-            put("operationName", "RedeemCommunityPointsCustomReward")
-            put("query", channelPointRedemptionMutation)
+            put("operationName", operationName)
+            put("query", mutation)
             putJsonObject("variables") {
                 putJsonObject("input") {
                     put("channelID", channelId)
                     put("cost", cost)
-                    put("prompt", prompt)
-                    put("rewardID", rewardId)
-                    put("textInput", textInput)
-                    put("title", title)
                     put("transactionID", Uuid.random().toString())
+                    when (redemptionType) {
+                        ChannelPointRewardRedemption.CUSTOM -> {
+                            put("prompt", prompt)
+                            put("rewardID", rewardId)
+                            put("textInput", textInput)
+                            put("title", title)
+                        }
+                        ChannelPointRewardRedemption.RANDOM_SUB_EMOTE -> Unit
+                        ChannelPointRewardRedemption.CHOSEN_SUB_EMOTE,
+                        ChannelPointRewardRedemption.CHOSEN_MODIFIED_SUB_EMOTE -> {
+                            require(!emoteId.isNullOrBlank()) { "Emote id is required" }
+                            put("emoteID", emoteId)
+                        }
+                        ChannelPointRewardRedemption.SUBSCRIBER_MODE_MESSAGE,
+                        ChannelPointRewardRedemption.HIGHLIGHTED_MESSAGE -> {
+                            require(!textInput.isNullOrBlank()) { "Message is required" }
+                            put("message", textInput)
+                        }
+                    }
                 }
             }
         }.toString()
