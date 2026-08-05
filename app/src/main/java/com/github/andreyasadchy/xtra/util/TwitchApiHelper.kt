@@ -259,17 +259,29 @@ object TwitchApiHelper {
                     }
                 }
             } else {
-                context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")?.let {
-                    if (it.isNotBlank()) {
-                        put(C.HEADER_CLIENT_ID, it)
-                    }
+                val gqlClientId = context.prefs().getString(C.GQL_CLIENT_ID2, "kd1unb4b3q4t58fwlpcbzcbnm76a8fp")
+                val gqlToken = if (includeToken) {
+                    context.tokenPrefs().getString(C.GQL_TOKEN2, null)?.takeIf { it.isNotBlank() }
+                } else {
+                    null
                 }
-                if (includeToken) {
-                    context.tokenPrefs().getString(C.GQL_TOKEN2, null)?.let {
+                val gqlWebToken = if (includeToken) {
+                    context.tokenPrefs().getString(C.GQL_TOKEN_WEB, null)?.takeIf { it.isNotBlank() }
+                } else {
+                    null
+                }
+                if (!gqlClientId.isNullOrBlank()) {
+                    put(C.HEADER_CLIENT_ID, gqlClientId)
+                }
+                if (!gqlToken.isNullOrBlank()) {
+                    put(C.HEADER_TOKEN, addTokenPrefixGQL(gqlToken))
+                } else if (!gqlWebToken.isNullOrBlank()) {
+                    context.prefs().getString(C.GQL_CLIENT_ID_WEB, "kimne78kx3ncx6brgo4mv6wki5h1ko")?.let {
                         if (it.isNotBlank()) {
-                            put(C.HEADER_TOKEN, addTokenPrefixGQL(it))
+                            put(C.HEADER_CLIENT_ID, it)
                         }
                     }
+                    put(C.HEADER_TOKEN, addTokenPrefixGQL(gqlWebToken))
                 }
             }
         }
