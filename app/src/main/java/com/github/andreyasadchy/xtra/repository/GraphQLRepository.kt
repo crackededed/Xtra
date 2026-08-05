@@ -71,6 +71,7 @@ import com.github.andreyasadchy.xtra.model.gql.channel.ChannelViewerListResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.BadgesResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.ChannelCheerEmotesResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.ChannelPointContextResponse
+import com.github.andreyasadchy.xtra.model.gql.chat.ChannelPointRedemptionResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.EmoteCardResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.GlobalCheerEmotesResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.ModeratorsResponse
@@ -99,6 +100,7 @@ import com.github.andreyasadchy.xtra.model.gql.stream.ViewerCountResponse
 import com.github.andreyasadchy.xtra.model.gql.tag.TagResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoGamesResponse
 import com.github.andreyasadchy.xtra.model.gql.video.VideoMessagesResponse
+import com.github.andreyasadchy.xtra.model.ui.ChannelPointRewardRedemption
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
@@ -142,6 +144,54 @@ class GraphQLRepository(
                         watchStreakCopoBonus
                     }
                 }
+            }
+        }
+    """.trimIndent()
+
+    private val channelPointRedemptionMutation = """
+        mutation RedeemCommunityPointsCustomReward(${'$'}input: RedeemCommunityPointsCustomRewardInput!) {
+            redeemCommunityPointsCustomReward(input: ${'$'}input) {
+                error { code }
+            }
+        }
+    """.trimIndent()
+
+    private val randomSubscriberEmoteRedemptionMutation = """
+        mutation UnlockRandomSubscriberEmote(${'$'}input: UnlockRandomSubscriberEmoteInput!) {
+            unlockRandomSubscriberEmote(input: ${'$'}input) {
+                error { code }
+            }
+        }
+    """.trimIndent()
+
+    private val chosenSubscriberEmoteRedemptionMutation = """
+        mutation UnlockChosenSubscriberEmote(${'$'}input: UnlockChosenSubscriberEmoteInput!) {
+            unlockChosenSubscriberEmote(input: ${'$'}input) {
+                error { code }
+            }
+        }
+    """.trimIndent()
+
+    private val chosenModifiedSubscriberEmoteRedemptionMutation = """
+        mutation UnlockChosenModifiedSubscriberEmote(${'$'}input: UnlockChosenModifiedSubscriberEmoteInput!) {
+            unlockChosenModifiedSubscriberEmote(input: ${'$'}input) {
+                error { code }
+            }
+        }
+    """.trimIndent()
+
+    private val subscriberModeMessageRedemptionMutation = """
+        mutation SendChatMessageThroughSubscriberMode(${'$'}input: SendChatMessageThroughSubscriberModeInput!) {
+            sendChatMessageThroughSubscriberMode(input: ${'$'}input) {
+                error { code }
+            }
+        }
+    """.trimIndent()
+
+    private val highlightedMessageRedemptionMutation = """
+        mutation SendHighlightedChatMessage(${'$'}input: SendHighlightedChatMessageInput!) {
+            sendHighlightedChatMessage(input: ${'$'}input) {
+                error { code }
             }
         }
     """.trimIndent()
@@ -1477,13 +1527,17 @@ class GraphQLRepository(
         val body = buildJsonObject {
             putJsonObject("extensions") {
                 putJsonObject("persistedQuery") {
-                    put("sha256Hash", "374314de591e69925fce3ddc2bcf085796f56ebb8cad67a0daa3165c03adc345")
+                    put("sha256Hash", "7fe050e3761eb2cf258d70ee1a21cbd76fa8cf3d7e7b12fc437e7029d446b5e3")
                     put("version", 1)
                 }
             }
             put("operationName", "ChannelPointsContext")
             putJsonObject("variables") {
                 put("channelLogin", channelLogin)
+                putJsonArray("includeGoalTypes") {
+                    add("CREATOR")
+                    add("BOOST")
+                }
             }
         }.toString()
         json.decodeFromString<ChannelPointContextResponse>(sendPersistedQuery(networkLibrary, headers, body))
@@ -1499,6 +1553,59 @@ class GraphQLRepository(
             }
         }.toString()
         json.decodeFromString<WatchStreakResponse>(sendPersistedQuery(networkLibrary, headers, body))
+    }
+
+    suspend fun redeemChannelPointReward(
+        networkLibrary: String?,
+        headers: Map<String, String>,
+        channelId: String,
+        rewardId: String,
+        title: String,
+        cost: Int,
+        prompt: String?,
+        textInput: String?,
+        emoteId: String?,
+        redemptionType: ChannelPointRewardRedemption,
+    ): ChannelPointRedemptionResponse = withContext(Dispatchers.IO) {
+        val (operationName, mutation) = when (redemptionType) {
+            ChannelPointRewardRedemption.CUSTOM -> "RedeemCommunityPointsCustomReward" to channelPointRedemptionMutation
+            ChannelPointRewardRedemption.RANDOM_SUB_EMOTE -> "UnlockRandomSubscriberEmote" to randomSubscriberEmoteRedemptionMutation
+            ChannelPointRewardRedemption.CHOSEN_SUB_EMOTE -> "UnlockChosenSubscriberEmote" to chosenSubscriberEmoteRedemptionMutation
+            ChannelPointRewardRedemption.CHOSEN_MODIFIED_SUB_EMOTE -> "UnlockChosenModifiedSubscriberEmote" to chosenModifiedSubscriberEmoteRedemptionMutation
+            ChannelPointRewardRedemption.SUBSCRIBER_MODE_MESSAGE -> "SendChatMessageThroughSubscriberMode" to subscriberModeMessageRedemptionMutation
+            ChannelPointRewardRedemption.HIGHLIGHTED_MESSAGE -> "SendHighlightedChatMessage" to highlightedMessageRedemptionMutation
+        }
+        val body = buildJsonObject {
+            put("operationName", operationName)
+            put("query", mutation)
+            putJsonObject("variables") {
+                putJsonObject("input") {
+                    put("channelID", channelId)
+                    put("cost", cost)
+                    put("transactionID", Uuid.random().toString())
+                    when (redemptionType) {
+                        ChannelPointRewardRedemption.CUSTOM -> {
+                            put("prompt", prompt)
+                            put("rewardID", rewardId)
+                            put("textInput", textInput)
+                            put("title", title)
+                        }
+                        ChannelPointRewardRedemption.RANDOM_SUB_EMOTE -> Unit
+                        ChannelPointRewardRedemption.CHOSEN_SUB_EMOTE,
+                        ChannelPointRewardRedemption.CHOSEN_MODIFIED_SUB_EMOTE -> {
+                            require(!emoteId.isNullOrBlank()) { "Emote id is required" }
+                            put("emoteID", emoteId)
+                        }
+                        ChannelPointRewardRedemption.SUBSCRIBER_MODE_MESSAGE,
+                        ChannelPointRewardRedemption.HIGHLIGHTED_MESSAGE -> {
+                            require(!textInput.isNullOrBlank()) { "Message is required" }
+                            put("message", textInput)
+                        }
+                    }
+                }
+            }
+        }.toString()
+        json.decodeFromString<ChannelPointRedemptionResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
     suspend fun loadClaimPoints(networkLibrary: String?, headers: Map<String, String>, channelId: String?, claimId: String?): ErrorResponse = withContext(Dispatchers.IO) {

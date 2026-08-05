@@ -111,25 +111,39 @@
                 app:tint="?attr/colorControlNormal"
                 tools:visibility="visible" />
 
-            <TextView
+            <LinearLayout
                 android:id="@+id/channelPoints"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:contentDescription="@string/channel_points"
-                android:drawableStart="@drawable/ic_channel_points"
-                android:drawablePadding="4dp"
-                android:drawableTint="?attr/colorControlNormal"
-                android:gravity="center"
                 android:background="?android:selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
+                android:gravity="center_vertical"
                 android:minWidth="50dp"
+                android:orientation="horizontal"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:visibility="gone"
-                tools:text="12,345"
-                tools:visibility="visible" />
+                tools:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/channelPointsIcon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="@string/channel_points"
+                    android:src="@drawable/ic_channel_points"
+                    app:tint="?attr/colorControlNormal"
+                    tools:ignore="ContentDescription" />
+
+                <TextView
+                    android:id="@+id/channelPointsText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    tools:text="12,345" />
+            </LinearLayout>
 
             <ImageButton
                 android:id="@+id/send"

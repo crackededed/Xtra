@@ -1,11 +1,27 @@
 # Xtra for Twitch
 
-<img src="https://github.com/AndreyAsadchy/Xtra/blob/197ba90cac879abd2a5645393ce361847f12fa0b/app/src/main/ic_launcher-web.png" align="left" width="100"/>
+<p align="center">
+  <img src="https://github.com/thiscallnet/Xtra/raw/master/app/src/main/ic_launcher-web.png" width="96" alt="Xtra logo">
+</p>
 
-Xtra is a Twitch player and browser for Android.
+<p align="center">
+  A community-maintained fork of <a href="https://github.com/crackededed/Xtra">Xtra</a>,<br>
+  focused on practical fixes and Twitch features that are useful in everyday viewing.
+</p>
 
-</br>
-</br>
+## What this fork adds
+
+Compared with the upstream project, this fork currently includes:
+
+- More reliable live notifications with persisted follow IDs and Helix fallback.
+- Channel Points in chat: balances, custom icons, watch streaks, rewards, voting, and redemption.
+- Searchable emote pickers limited to emotes belonging to the active channel.
+- Fork-hosted releases and update links for existing Xtra installs.
+
+<p align="center">
+  <img src="https://github.com/thiscallnet/Xtra/releases/download/latest/channel-points-rewards.jpg" width="320" alt="Channel Points rewards and watch streaks">
+  <img src="https://github.com/thiscallnet/Xtra/releases/download/latest/channel-points-navigation.jpg" width="620" alt="Channel Points balance in the navigation bar">
+</p>
 
 ## Download
 

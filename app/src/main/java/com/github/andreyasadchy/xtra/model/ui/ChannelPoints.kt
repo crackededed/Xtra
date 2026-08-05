@@ -2,14 +2,41 @@ package com.github.andreyasadchy.xtra.model.ui
 
 data class ChannelPoints(
     val balance: Int,
+    val iconUrl: String? = null,
     val rewards: List<ChannelPointReward> = emptyList(),
     val watchStreakRewards: List<WatchStreakReward> = emptyList(),
 )
 
 data class ChannelPointReward(
+    val id: String,
     val title: String,
     val cost: Int,
     val prompt: String? = null,
+    val imageUrl: String? = null,
+    val backgroundColor: String? = null,
+    val inputType: ChannelPointRewardInput = ChannelPointRewardInput.NONE,
+    val redemptionType: ChannelPointRewardRedemption = ChannelPointRewardRedemption.CUSTOM,
+)
+
+enum class ChannelPointRewardInput {
+    NONE,
+    TEXT,
+    EMOTE,
+}
+
+enum class ChannelPointRewardRedemption {
+    CUSTOM,
+    RANDOM_SUB_EMOTE,
+    CHOSEN_SUB_EMOTE,
+    CHOSEN_MODIFIED_SUB_EMOTE,
+    SUBSCRIBER_MODE_MESSAGE,
+    HIGHLIGHTED_MESSAGE,
+}
+
+data class ChannelPointRedemptionResult(
+    val rewardTitle: String,
+    val success: Boolean,
+    val message: String? = null,
 )
 
 data class WatchStreakReward(

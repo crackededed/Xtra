@@ -310,8 +310,16 @@
     <string name="channel_points_streak_reward">%1$s streams: +%2$s points</string>
     <string name="channel_points_streak_reward_unknown">+%1$s points</string>
     <string name="channel_points_rewards">Rewards</string>
+    <string name="channel_points_rewards_for">%s\'s rewards</string>
     <string name="channel_points_reward">%1$s — %2$s points</string>
     <string name="channel_points_reward_prompt">Requires input: %s</string>
+    <string name="channel_points_reward_confirm">Redeem this reward?</string>
+    <string name="channel_points_reward_emote_hint">Choose an emote</string>
+    <string name="channel_points_reward_text_hint">Enter the message</string>
+    <string name="channel_points_reward_input_required">Input is required</string>
+    <string name="channel_points_reward_redeem">Redeem</string>
+    <string name="channel_points_reward_redeemed">Redeemed %s</string>
+    <string name="channel_points_reward_failed">Couldn’t redeem %1$s: %2$s</string>
     <string name="channel_points_voting">Voting</string>
     <string name="channel_points_poll">Poll: %s</string>
     <string name="channel_points_prediction">Prediction: %s</string>

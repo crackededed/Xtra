@@ -1,6 +1,7 @@
 package com.github.andreyasadchy.xtra.ui.chat
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
 import android.text.format.DateUtils
@@ -44,6 +45,8 @@ import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.model.chat.Poll
 import com.github.andreyasadchy.xtra.model.chat.Prediction
 import com.github.andreyasadchy.xtra.model.ui.ChannelPoints
+import com.github.andreyasadchy.xtra.model.ui.ChannelPointReward
+import com.github.andreyasadchy.xtra.model.ui.ChannelPointRedemptionResult
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.model.ui.WatchStreak
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
@@ -68,6 +71,7 @@ import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -86,6 +90,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
     private var showChatStatus = false
     private var hasRecentEmotes = false
     private var messagingEnabled = false
+    private var channelPointsIconUrl: String? = null
 
     private var autoCompleteAdapter: AutoCompleteAdapter<Any>? = null
 
@@ -111,6 +116,25 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
     override fun activePollFlow(): StateFlow<Poll?> = viewModel.activePoll
 
     override fun activePredictionFlow(): StateFlow<Prediction?> = viewModel.activePrediction
+
+    override fun channelName(): String? {
+        return arguments?.getString(KEY_CHANNEL_NAME)?.takeIf { it.isNotBlank() }
+            ?: arguments?.getString(KEY_CHANNEL_LOGIN)
+    }
+
+    override fun channelEmotePickerItems(): List<Emote> = viewModel.channelEmotePickerItems()
+
+    override fun channelEmotePickerUpdates(): Flow<Unit> = viewModel.channelEmotePickerUpdates()
+
+    override fun channelPointModifiedEmotePickerItems(): List<Emote> = viewModel.channelPointModifiedEmotePickerItems()
+
+    override fun channelPointModifiedEmotePickerUpdates(): Flow<Unit> = viewModel.channelPointModifiedEmotePickerUpdates()
+
+    override fun redeemChannelPointReward(reward: ChannelPointReward, textInput: String?, emoteId: String?) {
+        viewModel.redeemChannelPointReward(reward, textInput, emoteId)
+    }
+
+    override fun channelPointRedemptionFlow(): Flow<ChannelPointRedemptionResult> = viewModel.channelPointRedemption
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentChatBinding.inflate(inflater, container, false)
@@ -258,10 +282,12 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                 viewModel.channelPoints.collectLatest { points ->
                                     if (points != null) {
                                         val balance = NumberFormat.getInstance().format(points.balance)
-                                        channelPoints.text = balance
+                                        channelPointsText.text = balance
                                         channelPoints.contentDescription = getString(R.string.channel_points_balance, balance)
+                                        updateChannelPointsIcon(points.iconUrl)
                                         channelPoints.visibility = View.VISIBLE
                                     } else {
+                                        updateChannelPointsIcon(null)
                                         channelPoints.visibility = View.GONE
                                     }
                                 }
@@ -1274,8 +1300,30 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
     }
 
     override fun onDestroyView() {
+        channelPointsIconUrl = null
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun updateChannelPointsIcon(url: String?) {
+        val icon = binding.channelPointsIcon
+        if (channelPointsIconUrl == url) return
+        channelPointsIconUrl = url
+        icon.setImageResource(R.drawable.ic_channel_points)
+        if (url.isNullOrBlank()) {
+            icon.imageTintList = ColorStateList.valueOf(
+                MaterialColors.getColor(icon, androidx.appcompat.R.attr.colorControlNormal),
+            )
+        } else {
+            icon.imageTintList = null
+            requireContext().imageLoader.enqueue(
+                ImageRequest.Builder(requireContext())
+                    .data(url)
+                    .crossfade(true)
+                    .target(icon)
+                    .build(),
+            )
+        }
     }
 
     override fun onDestroy() {
