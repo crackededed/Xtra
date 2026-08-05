@@ -209,6 +209,7 @@ class MediaPlayerFragment : PlayerFragment() {
                         }
                     }
                     playbackService?.setStopServiceTimer(false)
+                    playbackService?.restoreBackgroundVideoIfNeeded()
                     playbackService?.resumePlaybackIfNeeded()
                     playbackService?.player?.let { player ->
                         if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {

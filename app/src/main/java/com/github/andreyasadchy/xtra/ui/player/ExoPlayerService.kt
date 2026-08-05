@@ -129,6 +129,7 @@ class ExoPlayerService : BasePlaybackService() {
     private var updateQualities = false
     private var created = false
     private var resumeWhenForeground = false
+    private var backgroundVideoDisabled = false
     private var streamRecoveryJob: Job? = null
     private var streamRecoveryAttempt = 0
 
@@ -138,6 +139,7 @@ class ExoPlayerService : BasePlaybackService() {
         fun changePlayerMode()
         fun toast(resId: Int, duration: Int)
         fun updateVideoInfo()
+        fun changeSurfaceVisibility(visible: Boolean) {}
     }
 
     var serviceListener: Listener? = null
@@ -1590,26 +1592,31 @@ class ExoPlayerService : BasePlaybackService() {
                 || (isInPIPMode && isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, true))
                 || (isInPIPMode && !isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
                 if (player.playWhenReady && quality?.name != AUDIO_ONLY_QUALITY) {
-                    restoreQuality = true
-                    previousQuality = quality
-                    quality = qualities?.find { it.name == AUDIO_ONLY_QUALITY }
-                    quality?.let { quality ->
-                        player.currentMediaItem?.let { mediaItem ->
-                            if (prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
-                                player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
-                                    setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
-                                }.build()
+                    val useBackgroundAudioTrack = prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)
+                    if (useBackgroundAudioTrack) {
+                        restoreQuality = true
+                        previousQuality = quality
+                        quality = qualities?.find { it.name == AUDIO_ONLY_QUALITY }
+                    }
+                    player.currentMediaItem?.let { mediaItem ->
+                        if (prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
+                            player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                                setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
+                            }.build()
+                            if (!useBackgroundAudioTrack) {
+                                backgroundVideoDisabled = true
+                                serviceListener?.changeSurfaceVisibility(false)
                             }
-                            if (prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
-                                quality.url?.let { url ->
-                                    val position = player.currentPosition
-                                    if (qualities?.find { it.name == AUTO_QUALITY } != null) {
-                                        restorePlaylist = true
-                                    }
-                                    player.setMediaItem(mediaItem.buildUpon().setUri(url).build())
-                                    player.prepare()
-                                    player.seekTo(position)
+                        }
+                        if (useBackgroundAudioTrack) {
+                            quality?.url?.let { url ->
+                                val position = player.currentPosition
+                                if (qualities?.find { it.name == AUTO_QUALITY } != null) {
+                                    restorePlaylist = true
                                 }
+                                player.setMediaItem(mediaItem.buildUpon().setUri(url).build())
+                                player.prepare()
+                                player.seekTo(position)
                             }
                         }
                     }
@@ -1618,6 +1625,19 @@ class ExoPlayerService : BasePlaybackService() {
                 resumeWhenForeground = player.playWhenReady && player.playbackState != Player.STATE_ENDED
                 player.pause()
             }
+        }
+    }
+
+    fun restoreBackgroundVideoIfNeeded() {
+        if (!backgroundVideoDisabled) {
+            return
+        }
+        backgroundVideoDisabled = false
+        player?.let { player ->
+            player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
+            }.build()
+            serviceListener?.changeSurfaceVisibility(true)
         }
     }
 
@@ -2168,6 +2188,7 @@ class ExoPlayerService : BasePlaybackService() {
         super.onDestroy()
         streamRecoveryJob?.cancel()
         streamRecoveryJob = null
+        backgroundVideoDisabled = false
         player?.release()
         session?.release()
         bitmapLoadJob?.cancel()

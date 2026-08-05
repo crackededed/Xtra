@@ -93,6 +93,7 @@ class MediaPlayerService : BasePlaybackService() {
     private var backupQualities: List<String>? = null
     private var created = false
     private var resumeWhenForeground = false
+    private var backgroundVideoDisabled = false
     private var streamPlaybackRequested = false
     private var streamRecoveryJob: Job? = null
     private var streamRecoveryAttempt = 0
@@ -1416,25 +1417,29 @@ class MediaPlayerService : BasePlaybackService() {
                 || (isInPIPMode && isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, true))
                 || (isInPIPMode && !isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
                 if (runCatching { player.isPlaying }.getOrDefault(false) && quality?.name != AUDIO_ONLY_QUALITY) {
-                    restoreQuality = true
-                    previousQuality = quality
-                    quality = qualities?.find { it.name == AUDIO_ONLY_QUALITY }
-                    quality?.let { quality ->
-                        if (prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
-                            serviceListener?.changeSurfaceVisibility(false)
+                    val useBackgroundAudioTrack = prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)
+                    if (useBackgroundAudioTrack) {
+                        restoreQuality = true
+                        previousQuality = quality
+                        quality = qualities?.find { it.name == AUDIO_ONLY_QUALITY }
+                    }
+                    if (prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
+                        serviceListener?.changeSurfaceVisibility(false)
+                        if (!useBackgroundAudioTrack) {
+                            backgroundVideoDisabled = true
                         }
-                        if (prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
-                            quality.url?.let { url ->
-                                val position = player.currentPosition.toLong()
-                                player.reset()
-                                if (offlineVideoId != null) {
-                                    player.setDataSource(this, url.toUri())
-                                } else {
-                                    player.setDataSource(url)
-                                }
-                                seekPosition = position
-                                player.prepareAsync()
+                    }
+                    if (useBackgroundAudioTrack) {
+                        quality?.url?.let { url ->
+                            val position = player.currentPosition.toLong()
+                            player.reset()
+                            if (offlineVideoId != null) {
+                                player.setDataSource(this, url.toUri())
+                            } else {
+                                player.setDataSource(url)
                             }
+                            seekPosition = position
+                            player.prepareAsync()
                         }
                     }
                 }
@@ -1446,6 +1451,14 @@ class MediaPlayerService : BasePlaybackService() {
                 runCatching { player.pause() }
             }
         }
+    }
+
+    fun restoreBackgroundVideoIfNeeded() {
+        if (!backgroundVideoDisabled) {
+            return
+        }
+        backgroundVideoDisabled = false
+        serviceListener?.changeSurfaceVisibility(true)
     }
 
     fun resumePlaybackIfNeeded() {
@@ -2066,6 +2079,7 @@ class MediaPlayerService : BasePlaybackService() {
         super.onDestroy()
         streamRecoveryJob?.cancel()
         streamRecoveryJob = null
+        backgroundVideoDisabled = false
         resumeWhenForeground = false
         streamPlaybackRequested = false
         wifiLock?.release()

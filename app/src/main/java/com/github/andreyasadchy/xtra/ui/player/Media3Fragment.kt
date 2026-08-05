@@ -451,6 +451,13 @@ class Media3Fragment : Media3PlayerFragment() {
                     }
                 }
             }
+            if (viewModel.backgroundVideoDisabled) {
+                viewModel.backgroundVideoDisabled = false
+                controller.trackSelectionParameters = controller.trackSelectionParameters.buildUpon().apply {
+                    setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
+                }.build()
+                binding.playerSurface.visibility = View.VISIBLE
+            }
             controller.addListener(listener)
             playerListener = listener
             controller.sendCustomCommand(
@@ -1088,27 +1095,31 @@ class Media3Fragment : Media3PlayerFragment() {
                     || (isInPIPMode && isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, true))
                     || (isInPIPMode && !isInteractive && requireContext().prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
                     if (player.playWhenReady && viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
-                        viewModel.restoreQuality = true
-                        viewModel.previousQuality = viewModel.quality
-                        viewModel.quality = viewModel.qualities?.find { it.name == AUDIO_ONLY_QUALITY }
-                        viewModel.quality?.let { quality ->
-                            player.currentMediaItem?.let { mediaItem ->
-                                if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
-                                    player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
-                                        setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
-                                    }.build()
+                        val useBackgroundAudioTrack = requireContext().prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)
+                        if (useBackgroundAudioTrack) {
+                            viewModel.restoreQuality = true
+                            viewModel.previousQuality = viewModel.quality
+                            viewModel.quality = viewModel.qualities?.find { it.name == AUDIO_ONLY_QUALITY }
+                        }
+                        player.currentMediaItem?.let { mediaItem ->
+                            if (requireContext().prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
+                                player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                                    setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
+                                }.build()
+                                if (!useBackgroundAudioTrack) {
+                                    viewModel.backgroundVideoDisabled = true
                                     binding.playerSurface.visibility = View.GONE
                                 }
-                                if (requireContext().prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
-                                    quality.url?.let { url ->
-                                        val position = player.currentPosition
-                                        if (viewModel.qualities?.find { it.name == AUTO_QUALITY } != null) {
-                                            viewModel.playlistUrl = mediaItem.localConfiguration?.uri
-                                        }
-                                        player.setMediaItem(mediaItem.buildUpon().setUri(url).build())
-                                        player.prepare()
-                                        player.seekTo(position)
+                            }
+                            if (useBackgroundAudioTrack) {
+                                viewModel.quality?.url?.let { url ->
+                                    val position = player.currentPosition
+                                    if (viewModel.qualities?.find { it.name == AUTO_QUALITY } != null) {
+                                        viewModel.playlistUrl = mediaItem.localConfiguration?.uri
                                     }
+                                    player.setMediaItem(mediaItem.buildUpon().setUri(url).build())
+                                    player.prepare()
+                                    player.seekTo(position)
                                 }
                             }
                         }

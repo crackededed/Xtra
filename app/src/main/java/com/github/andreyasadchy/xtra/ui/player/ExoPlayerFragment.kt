@@ -202,6 +202,12 @@ class ExoPlayerFragment : PlayerFragment() {
                 }
             }
 
+            override fun changeSurfaceVisibility(visible: Boolean) {
+                if (view != null) {
+                    binding.playerSurface.visibility = if (visible) View.VISIBLE else View.GONE
+                }
+            }
+
             override fun toast(resId: Int, duration: Int) {
                 if (view != null) {
                     Toast.makeText(requireContext(), resId, duration).show()
@@ -250,6 +256,7 @@ class ExoPlayerFragment : PlayerFragment() {
                     playbackService = binder.getService()
                     playbackService?.serviceListener = serviceListener
                     playbackService?.player?.setVideoSurfaceView(binding.playerSurface)
+                    playbackService?.restoreBackgroundVideoIfNeeded()
                     playbackService?.player?.addListener(listener)
                     playerListener = listener
                     val endTime = playbackService?.setSleepTimer(-1)
