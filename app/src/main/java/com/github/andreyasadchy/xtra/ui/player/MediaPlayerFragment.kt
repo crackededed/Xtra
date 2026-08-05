@@ -69,7 +69,7 @@ class MediaPlayerFragment : PlayerFragment() {
             }
 
             override fun onError(player: MediaPlayer, what: Int, extra: Int) {
-                updatePlayingState()
+                playbackService?.updatePlayingState(updatePlaybackIntent = false)
             }
 
             override fun onIsPlayingChanged() {
@@ -209,6 +209,8 @@ class MediaPlayerFragment : PlayerFragment() {
                         }
                     }
                     playbackService?.setStopServiceTimer(false)
+                    playbackService?.restoreBackgroundVideoIfNeeded()
+                    playbackService?.resumePlaybackIfNeeded()
                     playbackService?.player?.let { player ->
                         if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
                             requireView().keepScreenOn = player.isPlaying
@@ -295,13 +297,8 @@ class MediaPlayerFragment : PlayerFragment() {
     override fun getTotalDuration() = playbackService?.player?.duration?.toLong()
 
     override fun playPause() {
-        playbackService?.player?.let { player ->
-            if (player.isPlaying) {
-                player.pause()
-            } else {
-                player.start()
-            }
-            playbackService?.updatePlayingState()
+        playbackService?.let { service ->
+            service.togglePlayback()
             updatePlayingState()
         }
     }
@@ -449,7 +446,9 @@ class MediaPlayerFragment : PlayerFragment() {
     override fun onNetworkRestored() {
         if (isResumed) {
             if (playbackService?.type == BasePlaybackService.STREAM) {
-                restartPlayer()
+                if (playbackService?.isStreamPlaybackRequested() == true) {
+                    restartPlayer()
+                }
             } else {
                 val position = playbackService?.player?.currentPosition?.toLong()
                 playbackService?.seekPosition = position

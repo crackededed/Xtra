@@ -1,9 +1,14 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:title="@string/playback_continuity"
+        app:iconSpaceReserved="false" />
+
     <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="player_disable_background_video"
+        android:summary="@string/disable_background_video_summary"
         android:title="@string/disable_background_video"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
@@ -11,13 +16,15 @@
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="player_use_background_audio_track"
+        android:summary="@string/use_background_audio_track_summary"
         android:title="@string/use_background_audio_track"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
     <SwitchPreferenceCompat
-        android:defaultValue="false"
+        android:defaultValue="true"
         android:key="player_background_audio_pip_closed"
+        android:summary="@string/use_background_audio_pip_closed_summary"
         android:title="@string/use_background_audio_pip_closed"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
@@ -25,13 +32,31 @@
     <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="player_background_audio_pip_locked"
+        android:summary="@string/use_background_audio_pip_locked_summary"
         android:title="@string/use_background_audio_pip_locked"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_keep_playing_after_task_removed"
+        android:summary="@string/keep_playing_after_task_removed_summary"
+        android:title="@string/keep_playing_after_task_removed"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_auto_recover_streams"
+        android:summary="@string/auto_recover_streams_summary"
+        android:title="@string/auto_recover_streams"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="player_keep_screen_on_when_paused"
+        android:summary="@string/keep_screen_on_when_paused_summary"
         android:title="@string/keep_screen_on_when_paused"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
@@ -39,6 +64,7 @@
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="player_audio_focus"
+        android:summary="@string/use_audio_focus_summary"
         android:title="@string/use_audio_focus"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
@@ -46,6 +72,7 @@
     <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="player_handle_audio_becoming_noisy"
+        android:summary="@string/handle_audio_becoming_noisy_summary"
         android:title="@string/handle_audio_becoming_noisy"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />

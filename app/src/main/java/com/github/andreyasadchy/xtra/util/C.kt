@@ -177,6 +177,8 @@ object C {
     const val PLAYER_BACKGROUND_AUDIO_PIP_LOCKED = "player_background_audio_pip_locked"
     const val PLAYER_DISABLE_BACKGROUND_VIDEO = "player_disable_background_video"
     const val PLAYER_USE_BACKGROUND_AUDIO_TRACK = "player_use_background_audio_track"
+    const val PLAYER_AUTO_RECOVER_STREAMS = "player_auto_recover_streams"
+    const val PLAYER_KEEP_PLAYING_AFTER_TASK_REMOVED = "player_keep_playing_after_task_removed"
     const val PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED = "player_keep_screen_on_when_paused"
     const val PLAYER_AUDIO_FOCUS = "player_audio_focus"
     const val PLAYER_HANDLE_AUDIO_BECOMING_NOISY = "player_handle_audio_becoming_noisy"

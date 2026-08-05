@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.util.Base64
 import androidx.annotation.OptIn
 import androidx.core.content.edit
@@ -71,7 +72,9 @@ class PlaybackService : MediaSessionService() {
 
     private var mediaSession: MediaSession? = null
     private var dynamicsProcessing: DynamicsProcessing? = null
-    private var background = false
+    private var backgroundPlayback = false
+    private var backgroundRecoveryTimer: Timer? = null
+    private var backgroundRecoveryAttempt = 0
     private var proxyMediaPlaylist = false
     private var videoId: Long? = null
     private var offlineVideoId: Int? = null
@@ -103,6 +106,9 @@ class PlaybackService : MediaSessionService() {
             object : Player.Listener {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     if (isPlaying) {
+                        backgroundRecoveryTimer?.cancel()
+                        backgroundRecoveryTimer = null
+                        backgroundRecoveryAttempt = 0
                         if (savePositionTimer == null && (videoId != null || offlineVideoId != null)) {
                             savePositionTimer = Timer().apply {
                                 scheduleAtFixedRate(30000, 30000) {
@@ -120,8 +126,19 @@ class PlaybackService : MediaSessionService() {
                 }
 
                 override fun onPlayerError(error: PlaybackException) {
-                    if (background) {
-                        player.prepare()
+                    if (backgroundPlayback
+                        && prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)
+                        && player.playWhenReady
+                    ) {
+                        scheduleBackgroundRecovery()
+                    }
+                }
+
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == Player.STATE_READY) {
+                        backgroundRecoveryTimer?.cancel()
+                        backgroundRecoveryTimer = null
+                        backgroundRecoveryAttempt = 0
                     }
                 }
 
@@ -189,6 +206,7 @@ class PlaybackService : MediaSessionService() {
                             add(SessionCommand(START_OFFLINE_VIDEO, Bundle.EMPTY))
                             add(SessionCommand(TOGGLE_DYNAMICS_PROCESSING, Bundle.EMPTY))
                             add(SessionCommand(TOGGLE_PROXY, Bundle.EMPTY))
+                            add(SessionCommand(SET_BACKGROUND_PLAYBACK, Bundle.EMPTY))
                             add(SessionCommand(SET_SLEEP_TIMER, Bundle.EMPTY))
                             add(SessionCommand(CHECK_ADS, Bundle.EMPTY))
                             add(SessionCommand(GET_QUALITIES, Bundle.EMPTY))
@@ -203,6 +221,7 @@ class PlaybackService : MediaSessionService() {
                     override fun onCustomCommand(session: MediaSession, controller: MediaSession.ControllerInfo, customCommand: SessionCommand, args: Bundle): ListenableFuture<SessionResult> {
                         return when (customCommand.customAction) {
                             START_STREAM -> {
+                                backgroundPlayback = false
                                 val uri = customCommand.customExtras.getString(URI)
                                 val title = customCommand.customExtras.getString(TITLE)
                                 val channelName = customCommand.customExtras.getString(CHANNEL_NAME)
@@ -488,6 +507,7 @@ class PlaybackService : MediaSessionService() {
                                 Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                             }
                             START_VIDEO -> {
+                                backgroundPlayback = false
                                 val uri = customCommand.customExtras.getString(URI)
                                 val title = customCommand.customExtras.getString(TITLE)
                                 val channelName = customCommand.customExtras.getString(CHANNEL_NAME)
@@ -540,6 +560,7 @@ class PlaybackService : MediaSessionService() {
                                 Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                             }
                             START_CLIP -> {
+                                backgroundPlayback = false
                                 val uri = customCommand.customExtras.getString(URI)
                                 val title = customCommand.customExtras.getString(TITLE)
                                 val channelName = customCommand.customExtras.getString(CHANNEL_NAME)
@@ -583,6 +604,7 @@ class PlaybackService : MediaSessionService() {
                                 Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                             }
                             START_OFFLINE_VIDEO -> {
+                                backgroundPlayback = false
                                 val uri = customCommand.customExtras.getString(URI)
                                 val title = customCommand.customExtras.getString(TITLE)
                                 val channelName = customCommand.customExtras.getString(CHANNEL_NAME)
@@ -634,9 +656,17 @@ class PlaybackService : MediaSessionService() {
                                 proxyMediaPlaylist = customCommand.customExtras.getBoolean(USING_PROXY)
                                 Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                             }
+                            SET_BACKGROUND_PLAYBACK -> {
+                                backgroundPlayback = customCommand.customExtras.getBoolean(BACKGROUND_PLAYBACK)
+                                if (!backgroundPlayback) {
+                                    backgroundRecoveryTimer?.cancel()
+                                    backgroundRecoveryTimer = null
+                                    backgroundRecoveryAttempt = 0
+                                }
+                                Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                            }
                             SET_SLEEP_TIMER -> {
                                 val duration = customCommand.customExtras.getLong(DURATION)
-                                background = duration != -1L
                                 val endTime = sleepTimerEndTime
                                 sleepTimer?.cancel()
                                 sleepTimerEndTime = 0L
@@ -784,15 +814,56 @@ class PlaybackService : MediaSessionService() {
         }
     }
 
+    private fun scheduleBackgroundRecovery() {
+        if (!prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)) {
+            return
+        }
+        backgroundRecoveryTimer?.cancel()
+        val delay = (500L shl backgroundRecoveryAttempt.coerceAtMost(4)).coerceAtMost(8000L)
+        backgroundRecoveryAttempt = (backgroundRecoveryAttempt + 1).coerceAtMost(4)
+        backgroundRecoveryTimer = Timer().apply {
+            schedule(delay) {
+                Handler(Looper.getMainLooper()).post {
+                    backgroundRecoveryTimer = null
+                    val player = mediaSession?.player
+                    if (backgroundPlayback
+                        && prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)
+                        && player?.playWhenReady == true
+                        && player.playerError != null
+                    ) {
+                        player.prepare()
+                    }
+                }
+            }
+        }
+    }
+
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         savePosition()
-        mediaSession?.player?.clearMediaItems()
+        val player = mediaSession?.player
+        val isInteractive = (getSystemService(POWER_SERVICE) as PowerManager).isInteractive
+        val keepPlayback = player?.playWhenReady == true
+                && player.playbackState != Player.STATE_ENDED
+                && prefs().getBoolean(C.PLAYER_KEEP_PLAYING_AFTER_TASK_REMOVED, true)
+                && prefs().getBoolean(
+                    if (isInteractive) C.PLAYER_BACKGROUND_AUDIO else C.PLAYER_BACKGROUND_AUDIO_LOCKED,
+                    true,
+                )
+        if (keepPlayback) {
+            backgroundPlayback = true
+            return
+        }
+        player?.clearMediaItems()
         pauseAllPlayersAndStopSelf()
     }
 
     override fun onDestroy() {
+        backgroundRecoveryTimer?.cancel()
+        backgroundRecoveryTimer = null
+        sleepTimer?.cancel()
+        savePositionTimer?.cancel()
         mediaSession?.run {
             player.release()
             release()
@@ -808,6 +879,7 @@ class PlaybackService : MediaSessionService() {
         const val START_OFFLINE_VIDEO = "startOfflineVideo"
         const val TOGGLE_DYNAMICS_PROCESSING = "toggleDynamicsProcessing"
         const val TOGGLE_PROXY = "toggleProxy"
+        const val SET_BACKGROUND_PLAYBACK = "setBackgroundPlayback"
         const val SET_SLEEP_TIMER = "setSleepTimer"
         const val CHECK_ADS = "checkAds"
         const val GET_QUALITIES = "getQualities"
@@ -824,6 +896,7 @@ class PlaybackService : MediaSessionService() {
         const val CHANNEL_NAME = "channelName"
         const val CHANNEL_LOGO = "channelLogo"
         const val USING_PROXY = "usingProxy"
+        const val BACKGROUND_PLAYBACK = "backgroundPlayback"
         const val DURATION = "duration"
         const val NAMES = "names"
         const val CODECS = "codecs"

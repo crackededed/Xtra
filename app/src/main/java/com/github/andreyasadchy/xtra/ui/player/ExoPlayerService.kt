@@ -128,6 +128,10 @@ class ExoPlayerService : BasePlaybackService() {
     private var backupQualities: List<String>? = null
     private var updateQualities = false
     private var created = false
+    private var resumeWhenForeground = false
+    private var backgroundVideoDisabled = false
+    private var streamRecoveryJob: Job? = null
+    private var streamRecoveryAttempt = 0
 
     interface Listener {
         fun started()
@@ -135,6 +139,7 @@ class ExoPlayerService : BasePlaybackService() {
         fun changePlayerMode()
         fun toast(resId: Int, duration: Int)
         fun updateVideoInfo()
+        fun changeSurfaceVisibility(visible: Boolean) {}
     }
 
     var serviceListener: Listener? = null
@@ -330,19 +335,15 @@ class ExoPlayerService : BasePlaybackService() {
                                     useCustomProxy && responseCode >= 400 -> {
                                         useCustomProxy = false
                                         serviceListener?.toast(R.string.proxy_error, Toast.LENGTH_LONG)
-                                        lifecycleScope.launch {
-                                            delay(1500.milliseconds)
-                                            restartPlayer()
-                                        }
+                                        scheduleStreamRecovery()
                                     }
                                     else -> {
                                         serviceListener?.toast(R.string.player_error, Toast.LENGTH_SHORT)
-                                        lifecycleScope.launch {
-                                            delay(1500.milliseconds)
-                                            restartPlayer()
-                                        }
+                                        scheduleStreamRecovery()
                                     }
                                 }
+                            } else {
+                                scheduleStreamRecovery()
                             }
                         }
                         VIDEO -> {
@@ -447,6 +448,11 @@ class ExoPlayerService : BasePlaybackService() {
                 }
 
                 override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == Player.STATE_READY) {
+                        streamRecoveryJob?.cancel()
+                        streamRecoveryJob = null
+                        streamRecoveryAttempt = 0
+                    }
                     updatePlaybackState()
                     updateNotification()
                 }
@@ -1524,6 +1530,27 @@ class ExoPlayerService : BasePlaybackService() {
         }
     }
 
+    private fun scheduleStreamRecovery() {
+        if (!prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)
+            || type != STREAM
+            || player?.playWhenReady != true
+        ) {
+            return
+        }
+        streamRecoveryJob?.cancel()
+        val delayMs = (1500L shl streamRecoveryAttempt.coerceAtMost(3)).coerceAtMost(12000L)
+        streamRecoveryAttempt = (streamRecoveryAttempt + 1).coerceAtMost(3)
+        streamRecoveryJob = lifecycleScope.launch {
+            delay(delayMs)
+            if (prefs().getBoolean(C.PLAYER_AUTO_RECOVER_STREAMS, true)
+                && player?.playWhenReady == true
+                && type == STREAM
+            ) {
+                loadStream(restart = true)
+            }
+        }
+    }
+
     fun startAudioOnly() {
         player?.let { player ->
             proxyMediaPlaylist = false
@@ -1558,38 +1585,70 @@ class ExoPlayerService : BasePlaybackService() {
     fun stop(isInPIPMode: Boolean) {
         player?.let { player ->
             proxyMediaPlaylist = false
+            resumeWhenForeground = false
             val isInteractive = (getSystemService(POWER_SERVICE) as PowerManager).isInteractive
             if ((!isInPIPMode && isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true))
                 || (!isInPIPMode && !isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
-                || (isInPIPMode && isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, false))
+                || (isInPIPMode && isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, true))
                 || (isInPIPMode && !isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
                 if (player.playWhenReady && quality?.name != AUDIO_ONLY_QUALITY) {
-                    restoreQuality = true
-                    previousQuality = quality
-                    quality = qualities?.find { it.name == AUDIO_ONLY_QUALITY }
-                    quality?.let { quality ->
-                        player.currentMediaItem?.let { mediaItem ->
-                            if (prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
-                                player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
-                                    setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
-                                }.build()
-                            }
-                            if (prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)) {
-                                quality.url?.let { url ->
-                                    val position = player.currentPosition
-                                    if (qualities?.find { it.name == AUTO_QUALITY } != null) {
-                                        restorePlaylist = true
-                                    }
-                                    player.setMediaItem(mediaItem.buildUpon().setUri(url).build())
-                                    player.prepare()
-                                    player.seekTo(position)
+                    val useBackgroundAudioTrack = prefs().getBoolean(C.PLAYER_USE_BACKGROUND_AUDIO_TRACK, false)
+                    if (useBackgroundAudioTrack) {
+                        restoreQuality = true
+                        previousQuality = quality
+                        quality = qualities?.find { it.name == AUDIO_ONLY_QUALITY }
+                    }
+                    player.currentMediaItem?.let { mediaItem ->
+                        if (prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true) && useBackgroundAudioTrack) {
+                            player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                                setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
+                            }.build()
+                        }
+                        if (prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true) && !useBackgroundAudioTrack) {
+                            backgroundVideoDisabled = true
+                            serviceListener?.changeSurfaceVisibility(false)
+                        }
+                        if (useBackgroundAudioTrack) {
+                            quality?.url?.let { url ->
+                                val position = player.currentPosition
+                                if (qualities?.find { it.name == AUTO_QUALITY } != null) {
+                                    restorePlaylist = true
                                 }
+                                player.setMediaItem(mediaItem.buildUpon().setUri(url).build())
+                                player.prepare()
+                                player.seekTo(position)
                             }
                         }
                     }
                 }
             } else {
+                resumeWhenForeground = player.playWhenReady && player.playbackState != Player.STATE_ENDED
                 player.pause()
+            }
+        }
+    }
+
+    fun restoreBackgroundVideoIfNeeded() {
+        if (!backgroundVideoDisabled) {
+            return
+        }
+        backgroundVideoDisabled = false
+        player?.let { player ->
+            serviceListener?.changeSurfaceVisibility(true)
+        }
+    }
+
+    fun resumePlaybackIfNeeded() {
+        if (!resumeWhenForeground) {
+            return
+        }
+        resumeWhenForeground = false
+        player?.let { player ->
+            if (player.currentMediaItem != null) {
+                if (player.playbackState == Player.STATE_IDLE) {
+                    player.prepare()
+                }
+                player.playWhenReady = true
             }
         }
     }
@@ -2107,12 +2166,26 @@ class ExoPlayerService : BasePlaybackService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         savePosition()
+        val isInteractive = (getSystemService(POWER_SERVICE) as PowerManager).isInteractive
+        val keepPlayback = player?.playWhenReady == true
+                && player?.playbackState != Player.STATE_ENDED
+                && prefs().getBoolean(C.PLAYER_KEEP_PLAYING_AFTER_TASK_REMOVED, true)
+                && prefs().getBoolean(
+                    if (isInteractive) C.PLAYER_BACKGROUND_AUDIO else C.PLAYER_BACKGROUND_AUDIO_LOCKED,
+                    true,
+                )
+        if (keepPlayback) {
+            return
+        }
         player?.playWhenReady = false
         stopSelf()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        streamRecoveryJob?.cancel()
+        streamRecoveryJob = null
+        backgroundVideoDisabled = false
         player?.release()
         session?.release()
         bitmapLoadJob?.cancel()
