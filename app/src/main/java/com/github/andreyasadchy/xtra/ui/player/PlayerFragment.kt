@@ -12,12 +12,14 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
+import android.graphics.Rect
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.text.format.DateFormat
 import android.text.format.DateUtils
+import android.util.Rational
 import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.Gravity
@@ -125,6 +127,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     private var controllerAnimation: ViewPropertyAnimator? = null
     private var backgroundColor: Int? = null
     private var backgroundVisible = false
+    private var pipPlaying = false
 
     private val backPressedCallback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
@@ -1677,7 +1680,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     requireActivity().packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) &&
                     requireContext().prefs().getBoolean(C.PLAYER_PICTURE_IN_PICTURE, true)
                 ) {
-                    requireActivity().setPictureInPictureParams(PictureInPictureParams.Builder().setAutoEnterEnabled(true).build())
+                    setPipActions(pipPlaying, autoEnterEnabled = true)
                 }
             } else {
                 controllerHideOnTouch = false
@@ -1687,7 +1690,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
                     requireActivity().packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
                 ) {
-                    requireActivity().setPictureInPictureParams(PictureInPictureParams.Builder().setAutoEnterEnabled(false).build())
+                    setPipActions(pipPlaying, autoEnterEnabled = false)
                 }
             }
         }
@@ -1856,53 +1859,66 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         return quality?.name != BasePlaybackService.AUDIO_ONLY_QUALITY &&  quality?.name != BasePlaybackService.CHAT_ONLY_QUALITY
     }
 
-    protected fun setPipActions(playing: Boolean) {
+    protected fun setPipActions(playing: Boolean, autoEnterEnabled: Boolean? = null) {
+        pipPlaying = playing
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             requireActivity().packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) &&
             requireContext().prefs().getBoolean(C.PLAYER_PICTURE_IN_PICTURE, true)
         ) {
-            requireActivity().setPictureInPictureParams(
-                PictureInPictureParams.Builder().apply {
-                    setActions(listOf(
+            val builder = PictureInPictureParams.Builder().apply {
+                setActions(listOf(
+                    RemoteAction(
+                        Icon.createWithResource(requireContext(), R.drawable.baseline_audiotrack_black_24),
+                        getString(R.string.audio_only),
+                        getString(R.string.audio_only),
+                        PendingIntent.getBroadcast(
+                            requireContext(),
+                            REQUEST_CODE_AUDIO_ONLY,
+                            Intent(MainActivity.INTENT_START_AUDIO_ONLY).setPackage(requireContext().packageName),
+                            PendingIntent.FLAG_IMMUTABLE
+                        )
+                    ),
+                    if (playing) {
                         RemoteAction(
-                            Icon.createWithResource(requireContext(), R.drawable.baseline_audiotrack_black_24),
-                            getString(R.string.audio_only),
-                            getString(R.string.audio_only),
+                            Icon.createWithResource(requireContext(), R.drawable.baseline_pause_black_48),
+                            getString(R.string.pause),
+                            getString(R.string.pause),
                             PendingIntent.getBroadcast(
                                 requireContext(),
-                                REQUEST_CODE_AUDIO_ONLY,
-                                Intent(MainActivity.INTENT_START_AUDIO_ONLY).setPackage(requireContext().packageName),
+                                REQUEST_CODE_PLAY_PAUSE,
+                                Intent(MainActivity.INTENT_PLAY_PAUSE_PLAYER).setPackage(requireContext().packageName),
                                 PendingIntent.FLAG_IMMUTABLE
                             )
-                        ),
-                        if (playing) {
-                            RemoteAction(
-                                Icon.createWithResource(requireContext(), R.drawable.baseline_pause_black_48),
-                                getString(R.string.pause),
-                                getString(R.string.pause),
-                                PendingIntent.getBroadcast(
-                                    requireContext(),
-                                    REQUEST_CODE_PLAY_PAUSE,
-                                    Intent(MainActivity.INTENT_PLAY_PAUSE_PLAYER).setPackage(requireContext().packageName),
-                                    PendingIntent.FLAG_IMMUTABLE
-                                )
+                        )
+                    } else {
+                        RemoteAction(
+                            Icon.createWithResource(requireContext(), R.drawable.baseline_play_arrow_black_48),
+                            getString(R.string.resume),
+                            getString(R.string.resume),
+                            PendingIntent.getBroadcast(
+                                requireContext(),
+                                REQUEST_CODE_PLAY_PAUSE,
+                                Intent(MainActivity.INTENT_PLAY_PAUSE_PLAYER).setPackage(requireContext().packageName),
+                                PendingIntent.FLAG_IMMUTABLE
                             )
-                        } else {
-                            RemoteAction(
-                                Icon.createWithResource(requireContext(), R.drawable.baseline_play_arrow_black_48),
-                                getString(R.string.resume),
-                                getString(R.string.resume),
-                                PendingIntent.getBroadcast(
-                                    requireContext(),
-                                    REQUEST_CODE_PLAY_PAUSE,
-                                    Intent(MainActivity.INTENT_PLAY_PAUSE_PLAYER).setPackage(requireContext().packageName),
-                                    PendingIntent.FLAG_IMMUTABLE
-                                )
-                            )
-                        }
-                    ))
-                }.build()
-            )
+                        )
+                    }
+                ))
+                if (binding.playerLayout.width > 0 && binding.playerLayout.height > 0) {
+                    val aspectRatio = binding.playerLayout.width.toFloat() / binding.playerLayout.height
+                    if (aspectRatio in 0.42f..2.39f) {
+                        setAspectRatio(Rational(binding.playerLayout.width, binding.playerLayout.height))
+                    }
+                    val sourceRect = Rect()
+                    if (binding.playerLayout.getGlobalVisibleRect(sourceRect) && sourceRect.width() > 0 && sourceRect.height() > 0) {
+                        setSourceRectHint(sourceRect)
+                    }
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    setAutoEnterEnabled(autoEnterEnabled ?: (playing && canEnterPictureInPicture()))
+                }
+            }
+            requireActivity().setPictureInPictureParams(builder.build())
         }
     }
 

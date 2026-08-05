@@ -128,6 +128,9 @@ class ExoPlayerService : BasePlaybackService() {
     private var backupQualities: List<String>? = null
     private var updateQualities = false
     private var created = false
+    private var resumeWhenForeground = false
+    private var streamRecoveryJob: Job? = null
+    private var streamRecoveryAttempt = 0
 
     interface Listener {
         fun started()
@@ -330,19 +333,15 @@ class ExoPlayerService : BasePlaybackService() {
                                     useCustomProxy && responseCode >= 400 -> {
                                         useCustomProxy = false
                                         serviceListener?.toast(R.string.proxy_error, Toast.LENGTH_LONG)
-                                        lifecycleScope.launch {
-                                            delay(1500.milliseconds)
-                                            restartPlayer()
-                                        }
+                                        scheduleStreamRecovery()
                                     }
                                     else -> {
                                         serviceListener?.toast(R.string.player_error, Toast.LENGTH_SHORT)
-                                        lifecycleScope.launch {
-                                            delay(1500.milliseconds)
-                                            restartPlayer()
-                                        }
+                                        scheduleStreamRecovery()
                                     }
                                 }
+                            } else {
+                                scheduleStreamRecovery()
                             }
                         }
                         VIDEO -> {
@@ -447,6 +446,11 @@ class ExoPlayerService : BasePlaybackService() {
                 }
 
                 override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == Player.STATE_READY) {
+                        streamRecoveryJob?.cancel()
+                        streamRecoveryJob = null
+                        streamRecoveryAttempt = 0
+                    }
                     updatePlaybackState()
                     updateNotification()
                 }
@@ -1524,6 +1528,21 @@ class ExoPlayerService : BasePlaybackService() {
         }
     }
 
+    private fun scheduleStreamRecovery() {
+        if (type != STREAM || player?.playWhenReady != true) {
+            return
+        }
+        streamRecoveryJob?.cancel()
+        val delayMs = (1500L shl streamRecoveryAttempt.coerceAtMost(3)).coerceAtMost(12000L)
+        streamRecoveryAttempt = (streamRecoveryAttempt + 1).coerceAtMost(3)
+        streamRecoveryJob = lifecycleScope.launch {
+            delay(delayMs)
+            if (player?.playWhenReady == true && type == STREAM) {
+                loadStream(restart = true)
+            }
+        }
+    }
+
     fun startAudioOnly() {
         player?.let { player ->
             proxyMediaPlaylist = false
@@ -1558,10 +1577,11 @@ class ExoPlayerService : BasePlaybackService() {
     fun stop(isInPIPMode: Boolean) {
         player?.let { player ->
             proxyMediaPlaylist = false
+            resumeWhenForeground = false
             val isInteractive = (getSystemService(POWER_SERVICE) as PowerManager).isInteractive
             if ((!isInPIPMode && isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true))
                 || (!isInPIPMode && !isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
-                || (isInPIPMode && isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, false))
+                || (isInPIPMode && isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, true))
                 || (isInPIPMode && !isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
                 if (player.playWhenReady && quality?.name != AUDIO_ONLY_QUALITY) {
                     restoreQuality = true
@@ -1589,7 +1609,23 @@ class ExoPlayerService : BasePlaybackService() {
                     }
                 }
             } else {
+                resumeWhenForeground = player.playWhenReady && player.playbackState != Player.STATE_ENDED
                 player.pause()
+            }
+        }
+    }
+
+    fun resumePlaybackIfNeeded() {
+        if (!resumeWhenForeground) {
+            return
+        }
+        resumeWhenForeground = false
+        player?.let { player ->
+            if (player.currentMediaItem != null) {
+                if (player.playbackState == Player.STATE_IDLE) {
+                    player.prepare()
+                }
+                player.playWhenReady = true
             }
         }
     }
@@ -2107,12 +2143,21 @@ class ExoPlayerService : BasePlaybackService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         savePosition()
+        val keepPlayback = player?.playWhenReady == true
+                && player?.playbackState != Player.STATE_ENDED
+                && (prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true)
+                || prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
+        if (keepPlayback) {
+            return
+        }
         player?.playWhenReady = false
         stopSelf()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        streamRecoveryJob?.cancel()
+        streamRecoveryJob = null
         player?.release()
         session?.release()
         bitmapLoadJob?.cancel()

@@ -264,6 +264,7 @@ class ExoPlayerFragment : PlayerFragment() {
                         }
                     }
                     playbackService?.setStopServiceTimer(false)
+                    playbackService?.resumePlaybackIfNeeded()
                     playbackService?.player?.let { player ->
                         if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
                             requireView().keepScreenOn = player.isPlaying
@@ -508,8 +509,6 @@ class ExoPlayerFragment : PlayerFragment() {
     }
 
     override fun onNetworkLost() {
-        if (playbackService?.type != BasePlaybackService.STREAM && isResumed) {
-            playbackService?.player?.stop()
-        }
+        // Keep the timeline alive so ExoPlayer can buffer and retry after a transient loss.
     }
 }

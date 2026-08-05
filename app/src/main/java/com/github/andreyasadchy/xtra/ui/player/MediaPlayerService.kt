@@ -92,6 +92,8 @@ class MediaPlayerService : BasePlaybackService() {
     var startPlayer = true
     private var backupQualities: List<String>? = null
     private var created = false
+    private var streamRecoveryJob: Job? = null
+    private var streamRecoveryAttempt = 0
 
     interface PlayerListener {
         fun onPrepared(player: MediaPlayer)
@@ -300,6 +302,9 @@ class MediaPlayerService : BasePlaybackService() {
                     .build()
             )
             player.setOnPreparedListener { player ->
+                streamRecoveryJob?.cancel()
+                streamRecoveryJob = null
+                streamRecoveryAttempt = 0
                 seekPosition?.let {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         player?.seekTo(it, MediaPlayer.SEEK_CLOSEST)
@@ -746,20 +751,18 @@ class MediaPlayerService : BasePlaybackService() {
                                 useCustomProxy && responseCode >= 400 -> {
                                     useCustomProxy = false
                                     serviceListener?.toast(R.string.proxy_error, Toast.LENGTH_LONG)
-                                    lifecycleScope.launch {
-                                        delay(1500.milliseconds)
-                                        restartPlayer()
-                                    }
+                                    scheduleStreamRecovery()
                                 }
                                 else -> {
                                     serviceListener?.toast(R.string.player_error, Toast.LENGTH_SHORT)
-                                    lifecycleScope.launch {
-                                        delay(1500.milliseconds)
-                                        restartPlayer()
-                                    }
+                                    scheduleStreamRecovery()
                                 }
                             }
+                        } else {
+                            scheduleStreamRecovery()
                         }
+                    } else if (playlist.isNullOrBlank()) {
+                        scheduleStreamRecovery()
                     }
                     if (!playlist.isNullOrBlank()) {
                         val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList().ifEmpty {
@@ -1317,6 +1320,21 @@ class MediaPlayerService : BasePlaybackService() {
         }
     }
 
+    private fun scheduleStreamRecovery() {
+        if (type != STREAM || player == null) {
+            return
+        }
+        streamRecoveryJob?.cancel()
+        val delayMs = (1500L shl streamRecoveryAttempt.coerceAtMost(3)).coerceAtMost(12000L)
+        streamRecoveryAttempt = (streamRecoveryAttempt + 1).coerceAtMost(3)
+        streamRecoveryJob = lifecycleScope.launch {
+            delay(delayMs)
+            if (type == STREAM && player != null) {
+                loadStream(restart = true)
+            }
+        }
+    }
+
     fun startAudioOnly() {
         player?.let { player ->
             if (quality?.name != AUDIO_ONLY_QUALITY) {
@@ -1350,7 +1368,7 @@ class MediaPlayerService : BasePlaybackService() {
             val isInteractive = (getSystemService(POWER_SERVICE) as PowerManager).isInteractive
             if ((!isInPIPMode && isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true))
                 || (!isInPIPMode && !isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
-                || (isInPIPMode && isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, false))
+                || (isInPIPMode && isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, true))
                 || (isInPIPMode && !isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
                 if (player.isPlaying && quality?.name != AUDIO_ONLY_QUALITY) {
                     restoreQuality = true
@@ -1943,6 +1961,10 @@ class MediaPlayerService : BasePlaybackService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         savePosition()
+        if (player?.isPlaying == true && (prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO, true)
+                    || prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))) {
+            return
+        }
         player?.pause()
         updatePlayingState()
         playerListener?.onIsPlayingChanged()
@@ -1951,6 +1973,8 @@ class MediaPlayerService : BasePlaybackService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        streamRecoveryJob?.cancel()
+        streamRecoveryJob = null
         wifiLock?.release()
         player?.release()
         session?.release()

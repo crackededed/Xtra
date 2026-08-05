@@ -16,7 +16,7 @@
         app:singleLineTitle="false" />
 
     <SwitchPreferenceCompat
-        android:defaultValue="false"
+        android:defaultValue="true"
         android:key="player_background_audio_pip_closed"
         android:title="@string/use_background_audio_pip_closed"
         app:iconSpaceReserved="false"
