@@ -2,6 +2,7 @@ package com.github.andreyasadchy.xtra.ui.chat
 
 import android.app.Dialog
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
@@ -38,6 +39,9 @@ import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.color.MaterialColors
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -54,9 +58,10 @@ class ChannelPointsDialog : DialogFragment() {
         fun activePollFlow(): StateFlow<Poll?>
         fun activePredictionFlow(): StateFlow<Prediction?>
         fun channelName(): String?
-        fun emotePickerItems(): List<Emote>
+        fun channelEmotePickerItems(): List<Emote>
+        fun channelEmotePickerUpdates(): Flow<Unit>
         fun redeemChannelPointReward(reward: ChannelPointReward, textInput: String?)
-        fun channelPointRedemptionFlow(): kotlinx.coroutines.flow.SharedFlow<ChannelPointRedemptionResult>
+        fun channelPointRedemptionFlow(): Flow<ChannelPointRedemptionResult>
     }
 
     companion object {
@@ -71,6 +76,8 @@ class ChannelPointsDialog : DialogFragment() {
     private data class RewardInputContent(
         val input: EditText,
         val view: View,
+        val pickerUpdates: Flow<Unit>? = null,
+        val refreshPicker: (() -> Unit)? = null,
     )
 
     override fun onAttach(context: Context) {
@@ -114,6 +121,11 @@ class ChannelPointsDialog : DialogFragment() {
         binding.balance.text = points?.let {
             getString(R.string.channel_points_current_balance, numberFormat.format(it.balance))
         } ?: getString(R.string.channel_points_unavailable)
+        setChannelPointsIcon(
+            binding.balanceIcon,
+            points?.iconUrl,
+            MaterialColors.getColor(binding.balanceIcon, androidx.appcompat.R.attr.colorControlNormal),
+        )
 
         renderWatchStreak(state.watchStreak, points, numberFormat)
         renderRewards(points, numberFormat)
@@ -202,11 +214,16 @@ class ChannelPointsDialog : DialogFragment() {
         binding.rewardsList.isVisible = rewards.isNotEmpty()
         binding.rewardsList.removeAllViews()
         rewards.forEachIndexed { index, reward ->
-            addRewardCard(index, reward, numberFormat)
+            addRewardCard(index, reward, numberFormat, points?.iconUrl)
         }
     }
 
-    private fun addRewardCard(index: Int, reward: ChannelPointReward, numberFormat: NumberFormat) {
+    private fun addRewardCard(
+        index: Int,
+        reward: ChannelPointReward,
+        numberFormat: NumberFormat,
+        pointsIconUrl: String?,
+    ) {
         val density = resources.displayMetrics.density
         val card = MaterialCardView(requireContext()).apply {
             radius = 4 * density
@@ -226,9 +243,10 @@ class ChannelPointsDialog : DialogFragment() {
             layoutParams = LinearLayout.LayoutParams(dp(42), dp(42))
             scaleType = ImageView.ScaleType.CENTER_INSIDE
             setImageResource(R.drawable.ic_channel_points)
-            imageTintList = android.content.res.ColorStateList.valueOf(Color.WHITE)
+            imageTintList = ColorStateList.valueOf(Color.WHITE)
         }
         reward.imageUrl?.let { imageUrl ->
+            image.imageTintList = null
             requireContext().imageLoader.enqueue(
                 ImageRequest.Builder(requireContext())
                     .data(imageUrl)
@@ -259,8 +277,7 @@ class ChannelPointsDialog : DialogFragment() {
         }
         cost.addView(ImageView(requireContext()).apply {
             layoutParams = LinearLayout.LayoutParams(dp(14), dp(14))
-            setImageResource(R.drawable.ic_channel_points)
-            imageTintList = android.content.res.ColorStateList.valueOf(Color.WHITE)
+            setChannelPointsIcon(this, pointsIconUrl, Color.WHITE)
         })
         cost.addView(TextView(requireContext()).apply {
             layoutParams = LinearLayout.LayoutParams(
@@ -287,7 +304,7 @@ class ChannelPointsDialog : DialogFragment() {
 
     private fun showRewardRedemptionDialog(reward: ChannelPointReward) {
         val inputContent = createRewardInputContent(reward)
-        requireContext().getAlertDialogBuilder()
+        val dialog = requireContext().getAlertDialogBuilder()
             .setTitle(reward.title)
             .setMessage(reward.prompt ?: getString(R.string.channel_points_reward_confirm))
             .apply { inputContent?.let { setView(it.view) } }
@@ -295,7 +312,18 @@ class ChannelPointsDialog : DialogFragment() {
             .setPositiveButton(R.string.channel_points_reward_redeem) { _, _ ->
                 listener.redeemChannelPointReward(reward, inputContent?.input?.text?.toString())
             }
-            .show()
+            .create()
+        val pickerUpdatesJob: Job? = inputContent?.let { content ->
+            content.pickerUpdates?.let { updates ->
+                lifecycleScope.launch {
+                    repeatOnLifecycle(Lifecycle.State.STARTED) {
+                        updates.collectLatest { content.refreshPicker?.invoke() }
+                    }
+                }
+            }
+        }
+        dialog.setOnDismissListener { pickerUpdatesJob?.cancel() }
+        dialog.show()
     }
 
     private fun createRewardInputContent(reward: ChannelPointReward): RewardInputContent? {
@@ -326,7 +354,7 @@ class ChannelPointsDialog : DialogFragment() {
                     inputType = InputType.TYPE_CLASS_TEXT
                     setSingleLine(true)
                 }
-                val allEmotes = listener.emotePickerItems()
+                var allEmotes = listener.channelEmotePickerItems()
                 val adapter = EmotesAdapter(
                     this,
                     { emote ->
@@ -341,13 +369,18 @@ class ChannelPointsDialog : DialogFragment() {
                     this.adapter = adapter
                     layoutManager = GridAutofitLayoutManager(requireContext(), dp(50))
                 }
-                fun updatePicker(query: String) {
+                fun updatePicker() {
+                    val query = input.text.toString()
                     adapter.submitList(
                         allEmotes.filter { it.name.orEmpty().contains(query, ignoreCase = true) },
                     )
                 }
-                input.addTextChangedListener { updatePicker(it?.toString().orEmpty()) }
-                updatePicker("")
+                val refreshPicker: () -> Unit = {
+                    allEmotes = listener.channelEmotePickerItems()
+                    updatePicker()
+                }
+                input.addTextChangedListener { updatePicker() }
+                updatePicker()
                 RewardInputContent(
                     input = input,
                     view = LinearLayout(requireContext()).apply {
@@ -364,8 +397,25 @@ class ChannelPointsDialog : DialogFragment() {
                             topMargin = dp(8)
                         })
                     },
+                    pickerUpdates = listener.channelEmotePickerUpdates(),
+                    refreshPicker = refreshPicker,
                 )
             }
+        }
+    }
+
+    private fun setChannelPointsIcon(image: ImageView, imageUrl: String?, fallbackTint: Int) {
+        image.setImageResource(R.drawable.ic_channel_points)
+        image.imageTintList = ColorStateList.valueOf(fallbackTint)
+        if (!imageUrl.isNullOrBlank()) {
+            image.imageTintList = null
+            requireContext().imageLoader.enqueue(
+                ImageRequest.Builder(requireContext())
+                    .data(imageUrl)
+                    .crossfade(true)
+                    .target(image)
+                    .build(),
+            )
         }
     }
 

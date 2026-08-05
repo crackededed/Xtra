@@ -53,6 +53,7 @@
             android:paddingBottom="6dp">
 
             <ImageView
+                android:id="@+id/balanceIcon"
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:contentDescription="@string/channel_points"

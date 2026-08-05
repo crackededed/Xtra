@@ -1,6 +1,7 @@
 package com.github.andreyasadchy.xtra.ui.chat
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
 import android.text.format.DateUtils
@@ -70,7 +71,7 @@ import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -89,6 +90,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
     private var showChatStatus = false
     private var hasRecentEmotes = false
     private var messagingEnabled = false
+    private var channelPointsIconUrl: String? = null
 
     private var autoCompleteAdapter: AutoCompleteAdapter<Any>? = null
 
@@ -120,13 +122,15 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
             ?: arguments?.getString(KEY_CHANNEL_LOGIN)
     }
 
-    override fun emotePickerItems(): List<Emote> = viewModel.emotePickerItems()
+    override fun channelEmotePickerItems(): List<Emote> = viewModel.channelEmotePickerItems()
+
+    override fun channelEmotePickerUpdates(): Flow<Unit> = viewModel.channelEmotePickerUpdates()
 
     override fun redeemChannelPointReward(reward: ChannelPointReward, textInput: String?) {
         viewModel.redeemChannelPointReward(reward, textInput)
     }
 
-    override fun channelPointRedemptionFlow(): SharedFlow<ChannelPointRedemptionResult> = viewModel.channelPointRedemption
+    override fun channelPointRedemptionFlow(): Flow<ChannelPointRedemptionResult> = viewModel.channelPointRedemption
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentChatBinding.inflate(inflater, container, false)
@@ -274,10 +278,12 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                 viewModel.channelPoints.collectLatest { points ->
                                     if (points != null) {
                                         val balance = NumberFormat.getInstance().format(points.balance)
-                                        channelPoints.text = balance
+                                        channelPointsText.text = balance
                                         channelPoints.contentDescription = getString(R.string.channel_points_balance, balance)
+                                        updateChannelPointsIcon(points.iconUrl)
                                         channelPoints.visibility = View.VISIBLE
                                     } else {
+                                        updateChannelPointsIcon(null)
                                         channelPoints.visibility = View.GONE
                                     }
                                 }
@@ -1290,8 +1296,30 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
     }
 
     override fun onDestroyView() {
+        channelPointsIconUrl = null
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun updateChannelPointsIcon(url: String?) {
+        val icon = binding.channelPointsIcon
+        if (channelPointsIconUrl == url) return
+        channelPointsIconUrl = url
+        icon.setImageResource(R.drawable.ic_channel_points)
+        if (url.isNullOrBlank()) {
+            icon.imageTintList = ColorStateList.valueOf(
+                MaterialColors.getColor(icon, androidx.appcompat.R.attr.colorControlNormal),
+            )
+        } else {
+            icon.imageTintList = null
+            requireContext().imageLoader.enqueue(
+                ImageRequest.Builder(requireContext())
+                    .data(url)
+                    .crossfade(true)
+                    .target(icon)
+                    .build(),
+            )
+        }
     }
 
     override fun onDestroy() {

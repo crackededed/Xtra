@@ -2,6 +2,7 @@ package com.github.andreyasadchy.xtra.model.ui
 
 data class ChannelPoints(
     val balance: Int,
+    val iconUrl: String? = null,
     val rewards: List<ChannelPointReward> = emptyList(),
     val watchStreakRewards: List<WatchStreakReward> = emptyList(),
 )

@@ -58,13 +58,17 @@ import com.github.andreyasadchy.xtra.util.chat.STVEventApiUtils
 import com.github.andreyasadchy.xtra.util.chat.STVEventApiWebSocket
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -126,6 +130,7 @@ class ChatViewModel(
     val recentEmotes by lazy { playerRepository.loadRecentEmotesFlow() }
     val hasRecentEmotes = MutableStateFlow(false)
     val userEmotes = mutableListOf<Emote>()
+    private val channelEmotes = mutableListOf<Emote>()
     private var loadedUserEmotes = false
     val localTwitchEmotes = mutableListOf<TwitchEmote>()
     val thirdPartyEmotes = mutableListOf<Emote>()
@@ -162,7 +167,8 @@ class ChatViewModel(
     val translateAllMessages = MutableStateFlow<Boolean?>(null)
     val channelPoints = MutableStateFlow<ChannelPoints?>(null)
     val watchStreak = MutableStateFlow<WatchStreak?>(null)
-    val channelPointRedemption = MutableSharedFlow<ChannelPointRedemptionResult>(extraBufferCapacity = 1)
+    private val channelPointRedemptionEvents = Channel<ChannelPointRedemptionResult>(Channel.BUFFERED)
+    val channelPointRedemption: Flow<ChannelPointRedemptionResult> = channelPointRedemptionEvents.receiveAsFlow()
 
     val reloadMessages = MutableStateFlow(false)
     val hideRaid = MutableStateFlow(false)
@@ -783,19 +789,11 @@ class ChatViewModel(
     private fun loadUserEmotes(channelId: String?) {
         val saved = savedUserEmotes
         if (!saved.isNullOrEmpty()) {
+            updateChannelEmotes(saved, channelId)
             synchronized(userEmotes) {
                 userEmotes.clear()
                 userEmotes.addAll(
-                    saved.sortedByDescending { it.ownerId == channelId }.map {
-                        Emote(
-                            name = it.name,
-                            url1x = it.url1x,
-                            url2x = it.url2x,
-                            url3x = it.url3x,
-                            url4x = it.url4x,
-                            format = it.format
-                        )
-                    }
+                    saved.sortedByDescending { it.ownerId == channelId }.map { it.toPickerEmote() },
                 )
             }
             viewModelScope.launch {
@@ -817,19 +815,11 @@ class ChatViewModel(
                         val emotes = playerRepository.loadUserEmotes(networkLibrary, helixHeaders, gqlHeaders, channelId, accountId, animateGifs, enableIntegrity)
                         if (emotes.isNotEmpty()) {
                             val sorted = emotes.sortedByDescending { it.setId }
+                            updateChannelEmotes(sorted, channelId)
                             synchronized(userEmotes) {
                                 userEmotes.clear()
                                 userEmotes.addAll(
-                                    sorted.sortedByDescending { it.ownerId == channelId }.map {
-                                        Emote(
-                                            name = it.name,
-                                            url1x = it.url1x,
-                                            url2x = it.url2x,
-                                            url3x = it.url3x,
-                                            url4x = it.url4x,
-                                            format = it.format
-                                        )
-                                    }
+                                    sorted.sortedByDescending { it.ownerId == channelId }.map { it.toPickerEmote() },
                                 )
                             }
                             userEmotesUpdated.emit(Unit)
@@ -1057,6 +1047,10 @@ class ChatViewModel(
         val rewards = (customRewards + automaticRewards)
             .sortedWith(compareBy<ChannelPointRewardInfo> { it.cost }.thenBy { it.title })
             .toList()
+        val iconUrl = settings?.image?.url4x
+            ?: settings?.image?.url2x
+            ?: settings?.image?.url1x
+            ?: settings?.image?.url
         val watchStreakRewards = settings?.earning?.watchStreakPoints.orEmpty()
             .mapIndexedNotNull { index, reward ->
                 reward.points?.takeIf { it > 0 }?.let { points ->
@@ -1065,6 +1059,7 @@ class ChatViewModel(
             }
         channelPoints.value = ChannelPoints(
             balance = balance,
+            iconUrl = iconUrl,
             rewards = rewards,
             watchStreakRewards = watchStreakRewards,
         )
@@ -1080,29 +1075,36 @@ class ChatViewModel(
             ?: defaultImage?.url4x ?: defaultImage?.url2x ?: defaultImage?.url1x ?: defaultImage?.url
     }
 
-    private fun automaticRewardTitle(type: String): String = when (type) {
+    private fun automaticRewardTitle(type: String): String = when (type.uppercase()) {
         "RANDOM_SUB_EMOTE_UNLOCK" -> "Unlock a Random Sub Emote"
         "SINGLE_MESSAGE_BYPASS_SUB_MODE" -> "Send a Message in Sub-Only Mode"
         "CHOSEN_SUB_EMOTE_UNLOCK" -> "Choose an Emote to Unlock"
         "CHOSEN_MODIFIED_SUB_EMOTE_UNLOCK" -> "Modify a Single Emote"
         "SEND_HIGHLIGHTED_MESSAGE" -> "Highlight My Message"
-        "SEND_ANIMATED_MESSAGE" -> "Message Effects"
-        "SEND_GIGANTIFIED_EMOTE" -> "Gigantify an Emote"
+        "SEND_ANIMATED_MESSAGE", "MESSAGE_EFFECT" -> "Message Effects"
+        "SEND_GIGANTIFIED_EMOTE", "GIGANTIFY_AN_EMOTE" -> "Gigantify an Emote"
+        "CELEBRATION", "ON_SCREEN_CELEBRATION" -> "On-Screen Celebration"
         else -> type.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() }
     }
 
-    private fun automaticRewardColor(type: String): String = when (type) {
+    private fun automaticRewardColor(type: String): String = when (type.uppercase()) {
         "RANDOM_SUB_EMOTE_UNLOCK" -> "#8205B4"
         "SINGLE_MESSAGE_BYPASS_SUB_MODE" -> "#9146FF"
         "CHOSEN_SUB_EMOTE_UNLOCK" -> "#00C8AF"
         "CHOSEN_MODIFIED_SUB_EMOTE_UNLOCK" -> "#00FA05"
         "SEND_HIGHLIGHTED_MESSAGE" -> "#FF6905"
+        "SEND_ANIMATED_MESSAGE", "MESSAGE_EFFECT" -> "#8205B4"
+        "SEND_GIGANTIFIED_EMOTE", "GIGANTIFY_AN_EMOTE" -> "#00C8AF"
+        "CELEBRATION", "ON_SCREEN_CELEBRATION" -> "#FFCC00"
         else -> DEFAULT_REWARD_COLOR
     }
 
-    private fun automaticRewardInput(type: String): ChannelPointRewardInput = when (type) {
-        "CHOSEN_SUB_EMOTE_UNLOCK", "CHOSEN_MODIFIED_SUB_EMOTE_UNLOCK" -> ChannelPointRewardInput.EMOTE
-        "SINGLE_MESSAGE_BYPASS_SUB_MODE", "SEND_HIGHLIGHTED_MESSAGE" -> ChannelPointRewardInput.TEXT
+    private fun automaticRewardInput(type: String): ChannelPointRewardInput = when (type.uppercase()) {
+        "CHOSEN_SUB_EMOTE_UNLOCK", "CHOSEN_MODIFIED_SUB_EMOTE_UNLOCK",
+        "SEND_GIGANTIFIED_EMOTE", "GIGANTIFY_AN_EMOTE",
+        "CELEBRATION", "ON_SCREEN_CELEBRATION" -> ChannelPointRewardInput.EMOTE
+        "SINGLE_MESSAGE_BYPASS_SUB_MODE", "SEND_HIGHLIGHTED_MESSAGE",
+        "SEND_ANIMATED_MESSAGE", "MESSAGE_EFFECT" -> ChannelPointRewardInput.TEXT
         else -> ChannelPointRewardInput.NONE
     }
 
@@ -1174,14 +1176,14 @@ class ChatViewModel(
         val channelId = activeChannelId
         val channelLogin = activeChannelLogin
         if (channelId.isNullOrBlank() || channelLogin.isNullOrBlank()) {
-            channelPointRedemption.tryEmit(
+            channelPointRedemptionEvents.trySend(
                 ChannelPointRedemptionResult(reward.title, success = false, message = "Chat is not connected"),
             )
             return
         }
         val gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext, true)
         if (gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-            channelPointRedemption.tryEmit(
+            channelPointRedemptionEvents.trySend(
                 ChannelPointRedemptionResult(reward.title, success = false, message = "Login is required"),
             )
             return
@@ -1203,20 +1205,51 @@ class ChatViewModel(
                 val error = response.errors?.firstOrNull()?.message
                     ?: response.data?.redeemCommunityPointsCustomReward?.error?.code
                 if (error != null) {
-                    channelPointRedemption.emit(
+                    channelPointRedemptionEvents.send(
                         ChannelPointRedemptionResult(reward.title, success = false, message = error),
                     )
                 } else {
-                    channelPointRedemption.emit(ChannelPointRedemptionResult(reward.title, success = true))
+                    channelPointRedemptionEvents.send(ChannelPointRedemptionResult(reward.title, success = true))
                     loadChannelPoints(networkLibrary, gqlHeaders, channelLogin, enableIntegrity)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                channelPointRedemption.emit(
+                channelPointRedemptionEvents.send(
                     ChannelPointRedemptionResult(
                         reward.title,
                         success = false,
                         message = e.message ?: "Request failed",
                     ),
+                )
+            }
+        }
+    }
+
+    fun channelEmotePickerItems(): List<Emote> = synchronized(channelEmotes) {
+        channelEmotes.toList()
+    }
+        .filter { !it.name.isNullOrBlank() }
+        .distinctBy { it.name }
+        .sortedBy { it.name.orEmpty().lowercase() }
+
+    fun channelEmotePickerUpdates(): Flow<Unit> = userEmotesUpdated
+
+    private fun TwitchEmote.toPickerEmote(): Emote = Emote(
+        name = name,
+        url1x = url1x,
+        url2x = url2x,
+        url3x = url3x,
+        url4x = url4x,
+        format = format,
+    )
+
+    private fun updateChannelEmotes(emotes: List<TwitchEmote>, channelId: String?) {
+        synchronized(channelEmotes) {
+            channelEmotes.clear()
+            if (!channelId.isNullOrBlank()) {
+                channelEmotes.addAll(
+                    emotes.filter { it.ownerId == channelId }.map { it.toPickerEmote() },
                 )
             }
         }
@@ -1357,6 +1390,9 @@ class ChatViewModel(
     fun stopLiveChat() {
         activeChannelId = null
         activeChannelLogin = null
+        synchronized(channelEmotes) {
+            channelEmotes.clear()
+        }
         channelPointsJob?.cancel()
         channelPointsJob = null
         watchStreakJob?.cancel()
@@ -2147,19 +2183,11 @@ class ChatViewModel(
                     if (emotes.isNotEmpty()) {
                         val sorted = emotes.sortedByDescending { it.setId }
                         savedUserEmotes = sorted
+                        updateChannelEmotes(sorted, channelId)
                         synchronized(userEmotes) {
                             userEmotes.clear()
                             userEmotes.addAll(
-                                sorted.sortedByDescending { it.ownerId == channelId }.map {
-                                    Emote(
-                                        name = it.name,
-                                        url1x = it.url1x,
-                                        url2x = it.url2x,
-                                        url3x = it.url3x,
-                                        url4x = it.url4x,
-                                        format = it.format
-                                    )
-                                }
+                                sorted.sortedByDescending { it.ownerId == channelId }.map { it.toPickerEmote() },
                             )
                         }
                         userEmotesUpdated.emit(Unit)

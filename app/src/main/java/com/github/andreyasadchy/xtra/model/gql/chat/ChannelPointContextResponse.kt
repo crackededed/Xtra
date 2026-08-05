@@ -42,6 +42,8 @@ class ChannelPointContextResponse(
 
     @Serializable
     class CommunityPointsSettings(
+        val name: String? = null,
+        val image: RewardImage? = null,
         val customRewards: List<CustomReward> = emptyList(),
         val automaticRewards: List<AutomaticReward> = emptyList(),
         val earning: Earning? = null,
