@@ -35,7 +35,6 @@ import com.github.andreyasadchy.xtra.model.ui.ChannelPoints
 import com.github.andreyasadchy.xtra.model.ui.ChannelPointReward
 import com.github.andreyasadchy.xtra.model.ui.ChannelPointRewardInput
 import com.github.andreyasadchy.xtra.model.ui.ChannelPointRewardRedemption
-import com.github.andreyasadchy.xtra.model.ui.ChannelPointRedemptionResult
 import com.github.andreyasadchy.xtra.model.ui.WatchStreak
 import com.github.andreyasadchy.xtra.ui.view.GridAutofitLayoutManager
 import com.github.andreyasadchy.xtra.util.C
@@ -66,7 +65,8 @@ class ChannelPointsDialog : DialogFragment() {
         fun channelPointModifiedEmotePickerItems(): List<Emote>
         fun channelPointModifiedEmotePickerUpdates(): Flow<Unit>
         fun redeemChannelPointReward(reward: ChannelPointReward, textInput: String?, emoteId: String?)
-        fun channelPointRedemptionFlow(): Flow<ChannelPointRedemptionResult>
+        fun startChannelPointReward(reward: ChannelPointReward)
+        fun startWatchStreakShare(streak: WatchStreak)
     }
 
     companion object {
@@ -108,11 +108,6 @@ class ChannelPointsDialog : DialogFragment() {
                 ) { channelPoints, watchStreak, poll, prediction ->
                     DialogState(channelPoints, watchStreak, poll, prediction)
                 }.collectLatest(::render)
-            }
-        }
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                listener.channelPointRedemptionFlow().collectLatest(::showRedemptionResult)
             }
         }
         return dialog
@@ -159,6 +154,8 @@ class ChannelPointsDialog : DialogFragment() {
         binding.streakLabel.isVisible = streak != null
         binding.streakStatusLabel.isVisible = false
         binding.streakProgressCard.isVisible = false
+        binding.streakShare.isVisible = false
+        binding.streakProgressValue.isVisible = true
         binding.streakEmpty.isVisible = streak == null
 
         if (streak != null) {
@@ -185,6 +182,17 @@ class ChannelPointsDialog : DialogFragment() {
                     R.string.channel_points_streak_milestone,
                     next,
                 )
+                val canShare = distance == 0 &&
+                        streak.shareStatus.equals(WatchStreak.SHARE_STATUS_CAN_SHARE, ignoreCase = true) &&
+                        !streak.milestoneId.isNullOrBlank()
+                binding.streakShare.isVisible = canShare
+                binding.streakProgressValue.isVisible = !canShare
+                if (canShare) {
+                    binding.streakShare.setOnClickListener {
+                        listener.startWatchStreakShare(streak)
+                        dismiss()
+                    }
+                }
                 binding.streakProgressValue.text = getString(
                     R.string.channel_points_streak_progress,
                     streak.streakCount.coerceAtMost(next),
@@ -249,7 +257,14 @@ class ChannelPointsDialog : DialogFragment() {
             isClickable = true
             isFocusable = true
             contentDescription = reward.title
-            setOnClickListener { showRewardRedemptionDialog(reward) }
+            setOnClickListener {
+                if (reward.inputType == ChannelPointRewardInput.TEXT) {
+                    listener.startChannelPointReward(reward)
+                    dismiss()
+                } else {
+                    showRewardRedemptionDialog(reward)
+                }
+            }
         }
         val content = LinearLayout(requireContext()).apply {
             gravity = Gravity.CENTER
@@ -473,15 +488,6 @@ class ChannelPointsDialog : DialogFragment() {
                     .build(),
             )
         }
-    }
-
-    private fun showRedemptionResult(result: ChannelPointRedemptionResult) {
-        val message = if (result.success) {
-            getString(R.string.channel_points_reward_redeemed, result.rewardTitle)
-        } else {
-            getString(R.string.channel_points_reward_failed, result.rewardTitle, result.message.orEmpty())
-        }
-        android.widget.Toast.makeText(requireContext(), message, android.widget.Toast.LENGTH_LONG).show()
     }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).roundToInt()

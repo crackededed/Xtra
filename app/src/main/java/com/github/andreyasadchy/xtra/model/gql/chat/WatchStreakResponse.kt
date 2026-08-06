@@ -33,6 +33,8 @@ class WatchStreakResponse(
 
     @Serializable
     class MilestoneValue(
+        val id: String? = null,
         val value: JsonElement? = null,
+        val shareStatus: String? = null,
     )
 }

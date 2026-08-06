@@ -37,6 +37,7 @@ data class ChannelPointRedemptionResult(
     val rewardTitle: String,
     val success: Boolean,
     val message: String? = null,
+    val rewardId: String? = null,
 )
 
 data class WatchStreakReward(
@@ -49,4 +50,17 @@ data class WatchStreak(
     val nextMilestone: Int? = null,
     val rewardPoints: Int? = null,
     val pointsAwarded: Int? = null,
+    val milestoneId: String? = null,
+    val shareStatus: String? = null,
+) {
+    companion object {
+        const val SHARE_STATUS_CAN_SHARE = "CAN_SHARE"
+        const val SHARE_STATUS_SHARED = "SHARED"
+    }
+}
+
+data class WatchStreakShareResult(
+    val success: Boolean,
+    val message: String? = null,
+    val milestoneId: String? = null,
 )

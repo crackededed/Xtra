@@ -49,6 +49,7 @@ import com.github.andreyasadchy.xtra.model.ui.ChannelPointReward
 import com.github.andreyasadchy.xtra.model.ui.ChannelPointRedemptionResult
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.model.ui.WatchStreak
+import com.github.andreyasadchy.xtra.model.ui.WatchStreakShareResult
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.chat.ChatViewModel.Companion.ChatViewModelFactory
 import com.github.andreyasadchy.xtra.ui.common.BaseNetworkFragment
@@ -81,6 +82,11 @@ import kotlin.math.roundToInt
 
 class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickListener, ReplyClickedDialog.OnButtonClickListener, ChannelPointsDialog.Listener {
 
+    private sealed interface ComposerOverlayState {
+        data class Reward(val reward: ChannelPointReward) : ComposerOverlayState
+        data class StreakShare(val streak: WatchStreak) : ComposerOverlayState
+    }
+
     private var _binding: FragmentChatBinding? = null
     private val binding get() = _binding!!
     private val viewModel: ChatViewModel by viewModels { ChatViewModelFactory }
@@ -91,6 +97,12 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
     private var hasRecentEmotes = false
     private var messagingEnabled = false
     private var channelPointsIconUrl: String? = null
+    private var composerOverlayState: ComposerOverlayState? = null
+    private var pendingComposerText: String? = null
+    private var composerSubmissionInProgress = false
+    private var composerTextBeforeOverlay: String? = null
+    private var composerSelectionBeforeOverlay: Int? = null
+    private var messageViewWasVisibleBeforeOverlay: Boolean? = null
 
     private var autoCompleteAdapter: AutoCompleteAdapter<Any>? = null
 
@@ -134,7 +146,13 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
         viewModel.redeemChannelPointReward(reward, textInput, emoteId)
     }
 
-    override fun channelPointRedemptionFlow(): Flow<ChannelPointRedemptionResult> = viewModel.channelPointRedemption
+    override fun startChannelPointReward(reward: ChannelPointReward) {
+        showComposerOverlay(ComposerOverlayState.Reward(reward))
+    }
+
+    override fun startWatchStreakShare(streak: WatchStreak) {
+        showComposerOverlay(ComposerOverlayState.StreakShare(streak))
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentChatBinding.inflate(inflater, container, false)
@@ -143,6 +161,16 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.channelPointRedemption.collectLatest(::handleChannelPointRedemption)
+                }
+                launch {
+                    viewModel.watchStreakShare.collectLatest(::handleWatchStreakShare)
+                }
+            }
+        }
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.integrity.collect {
@@ -312,13 +340,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                             }
                         }
                         editText.addTextChangedListener(onTextChanged = { text, _, _, _ ->
-                            if (text?.isNotBlank() == true) {
-                                send.visibility = View.VISIBLE
-                                clear.visibility = View.VISIBLE
-                            } else {
-                                send.visibility = View.GONE
-                                clear.visibility = View.GONE
-                            }
+                            updateComposerButtons()
                         })
                         editText.setTokenizer(SpaceTokenizer())
                         editText.setOnKeyListener { _, keyCode, event ->
@@ -1005,11 +1027,8 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
         binding.editText.text.append(emote.name).append(' ')
     }
 
-    private fun sendMessage(replyId: String? = null): Boolean {
+    private fun resetMessageComposerAction() {
         with(binding) {
-            (requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(editText.windowToken, 0)
-            editText.clearFocus()
-            toggleEmoteMenu(false)
             replyView.visibility = View.GONE
             send.setOnClickListener { sendMessage() }
             editText.setOnKeyListener { _, keyCode, event ->
@@ -1019,6 +1038,172 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                     false
                 }
             }
+        }
+    }
+
+    private fun updateComposerButtons() {
+        if (_binding == null) return
+        val hasText = binding.editText.text.isNotBlank()
+        val canShareWithoutMessage = composerOverlayState is ComposerOverlayState.StreakShare
+        binding.send.isVisible = !composerSubmissionInProgress && (hasText || canShareWithoutMessage)
+        binding.clear.isVisible = !composerSubmissionInProgress && hasText
+    }
+
+    private fun showComposerOverlay(state: ComposerOverlayState) {
+        if (composerOverlayState == null) {
+            composerTextBeforeOverlay = binding.editText.text.toString()
+            composerSelectionBeforeOverlay = binding.editText.selectionStart.takeIf { it >= 0 }
+            messageViewWasVisibleBeforeOverlay = binding.messageView.isVisible
+        }
+        composerOverlayState = state
+        pendingComposerText = null
+        composerSubmissionInProgress = false
+        with(binding) {
+            resetMessageComposerAction()
+            toggleEmoteMenu(false)
+            messageView.isVisible = true
+            editText.text.clear()
+            channelPointRewardOverlay.isVisible = true
+            when (state) {
+                is ComposerOverlayState.Reward -> {
+                    channelPointRewardTitle.text = state.reward.title
+                    channelPointRewardSubtitle.text = state.reward.prompt
+                        ?.takeIf { it.isNotBlank() }
+                        ?: getString(R.string.channel_points_reward_message_overlay)
+                    updateComposerOverlayIcon(state.reward.imageUrl, R.drawable.ic_channel_points)
+                }
+                is ComposerOverlayState.StreakShare -> {
+                    channelPointRewardTitle.text = getString(
+                        R.string.channel_points_streak_milestone,
+                        state.streak.nextMilestone ?: state.streak.streakCount,
+                    )
+                    channelPointRewardSubtitle.text = getString(R.string.channel_points_streak_share_prompt)
+                    updateComposerOverlayIcon(null, R.drawable.ic_watch_streak)
+                }
+            }
+            channelPointRewardCancel.setOnClickListener { cancelComposerOverlay() }
+            updateComposerButtons()
+            editText.requestFocus()
+            WindowCompat.getInsetsController(this@ChatFragment.requireActivity().window, editText)
+                .show(WindowInsetsCompat.Type.ime())
+        }
+    }
+
+    private fun updateComposerOverlayIcon(url: String?, fallback: Int) {
+        val icon = binding.channelPointRewardIcon
+        icon.setImageResource(fallback)
+        if (url.isNullOrBlank()) {
+            icon.imageTintList = if (fallback == R.drawable.ic_watch_streak) {
+                null
+            } else {
+                ColorStateList.valueOf(MaterialColors.getColor(icon, androidx.appcompat.R.attr.colorControlNormal))
+            }
+        } else {
+            icon.imageTintList = null
+            requireContext().imageLoader.enqueue(
+                ImageRequest.Builder(requireContext())
+                    .data(url)
+                    .crossfade(true)
+                    .target(icon)
+                    .build(),
+            )
+        }
+    }
+
+    private fun cancelComposerOverlay() {
+        val textBeforeOverlay = composerTextBeforeOverlay
+        val selectionBeforeOverlay = composerSelectionBeforeOverlay
+        val messageViewWasVisible = messageViewWasVisibleBeforeOverlay
+        composerOverlayState = null
+        pendingComposerText = null
+        composerSubmissionInProgress = false
+        composerTextBeforeOverlay = null
+        composerSelectionBeforeOverlay = null
+        messageViewWasVisibleBeforeOverlay = null
+        binding.channelPointRewardOverlay.isGone = true
+        textBeforeOverlay?.let { text ->
+            binding.editText.setText(text)
+            binding.editText.setSelection(
+                (selectionBeforeOverlay ?: binding.editText.length()).coerceIn(0, binding.editText.length()),
+            )
+        }
+        messageViewWasVisible?.let { binding.messageView.isVisible = it }
+        updateComposerButtons()
+    }
+
+    private fun restorePendingComposerText() {
+        pendingComposerText?.let { text ->
+            binding.editText.setText(text)
+            binding.editText.setSelection(binding.editText.length())
+        }
+        pendingComposerText = null
+        composerSubmissionInProgress = false
+        updateComposerButtons()
+    }
+
+    private fun handleChannelPointRedemption(result: ChannelPointRedemptionResult) {
+        val overlay = composerOverlayState
+        if (overlay is ComposerOverlayState.Reward && overlay.reward.id == result.rewardId) {
+            if (result.success) {
+                cancelComposerOverlay()
+            } else {
+                restorePendingComposerText()
+            }
+        }
+        val message = if (result.success) {
+            getString(R.string.channel_points_reward_redeemed, result.rewardTitle)
+        } else {
+            getString(R.string.channel_points_reward_failed, result.rewardTitle, result.message.orEmpty())
+        }
+        android.widget.Toast.makeText(requireContext(), message, android.widget.Toast.LENGTH_LONG).show()
+    }
+
+    private fun handleWatchStreakShare(result: WatchStreakShareResult) {
+        val overlay = composerOverlayState
+        if (overlay is ComposerOverlayState.StreakShare && overlay.streak.milestoneId == result.milestoneId) {
+            if (result.success) {
+                cancelComposerOverlay()
+            } else {
+                restorePendingComposerText()
+            }
+        }
+        val message = if (result.success) {
+            getString(R.string.channel_points_streak_shared)
+        } else {
+            getString(R.string.channel_points_streak_share_failed, result.message.orEmpty())
+        }
+        android.widget.Toast.makeText(requireContext(), message, android.widget.Toast.LENGTH_LONG).show()
+    }
+
+    private fun sendMessage(replyId: String? = null): Boolean {
+        with(binding) {
+            val overlay = composerOverlayState
+            if (overlay != null) {
+                if (composerSubmissionInProgress) {
+                    return false
+                }
+                val text = editText.text.trim().toString()
+                if (overlay is ComposerOverlayState.Reward && text.isBlank()) {
+                    return false
+                }
+                pendingComposerText = text
+                composerSubmissionInProgress = true
+                editText.text.clear()
+                (requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
+                    .hideSoftInputFromWindow(editText.windowToken, 0)
+                editText.clearFocus()
+                toggleEmoteMenu(false)
+                updateComposerButtons()
+                when (overlay) {
+                    is ComposerOverlayState.Reward -> viewModel.redeemChannelPointReward(overlay.reward, text, null)
+                    is ComposerOverlayState.StreakShare -> viewModel.shareWatchStreak(overlay.streak, text)
+                }
+                return true
+            }
+            (requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(editText.windowToken, 0)
+            editText.clearFocus()
+            toggleEmoteMenu(false)
+            resetMessageComposerAction()
             val text = editText.text.trim()
             editText.text.clear()
             return if (text.isNotEmpty()) {
@@ -1057,6 +1242,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
     override fun onReplyClicked(replyId: String?, userLogin: String?, userName: String?, message: String?) {
         with(binding) {
             if (!replyId.isNullOrBlank()) {
+                cancelComposerOverlay()
                 messageDialog?.dismiss()
                 replyView.visibility = View.VISIBLE
                 replyText.text = message?.let {
@@ -1072,15 +1258,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                     getString(R.string.replying_to_message, name, message)
                 }
                 replyClose.setOnClickListener {
-                    replyView.visibility = View.GONE
-                    send.setOnClickListener { sendMessage() }
-                    editText.setOnKeyListener { _, keyCode, event ->
-                        if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-                            sendMessage()
-                        } else {
-                            false
-                        }
-                    }
+                    resetMessageComposerAction()
                 }
                 send.setOnClickListener { sendMessage(replyId) }
                 editText.setOnKeyListener { _, keyCode, event ->
@@ -1301,6 +1479,12 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
 
     override fun onDestroyView() {
         channelPointsIconUrl = null
+        composerOverlayState = null
+        pendingComposerText = null
+        composerSubmissionInProgress = false
+        composerTextBeforeOverlay = null
+        composerSelectionBeforeOverlay = null
+        messageViewWasVisibleBeforeOverlay = null
         super.onDestroyView()
         _binding = null
     }

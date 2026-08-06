@@ -71,6 +71,81 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/channelPointRewardOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorSurfaceContainer"
+            android:elevation="2dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="62dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="8dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="4dp"
+                android:paddingBottom="6dp">
+
+                <ImageView
+                    android:id="@+id/channelPointRewardIcon"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:contentDescription="@string/channel_points"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_channel_points"
+                    app:tint="?attr/colorControlNormal" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="4dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/channelPointRewardTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textAppearance="?attr/textAppearanceTitleSmall"
+                        android:textStyle="bold"
+                        tools:text="Ticket to ask a stupid question" />
+
+                    <TextView
+                        android:id="@+id/channelPointRewardSubtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        tools:text="Free ticket to ask a stupid question" />
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/channelPointRewardCancel"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?android:selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/channel_points_composer_cancel"
+                    android:padding="8dp"
+                    android:src="@drawable/baseline_close_black_36"
+                    app:tint="?attr/colorControlNormal" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?attr/colorOutlineVariant" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/messageView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

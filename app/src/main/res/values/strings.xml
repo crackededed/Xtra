@@ -303,6 +303,10 @@
     <string name="channel_points_streak_notice">You’re %1$d streams away from your %2$d-stream streak reward!</string>
     <string name="channel_points_streak_reached">Streak milestone reached!</string>
     <string name="channel_points_streak_milestone">%1$d-Stream Streak</string>
+    <string name="channel_points_streak_share_prompt">Add a message to share this streak (optional)</string>
+    <string name="channel_points_streak_shared">Watch streak shared</string>
+    <string name="channel_points_streak_share_failed">Couldn’t share your watch streak: %s</string>
+    <string name="channel_points_streak_share_unavailable">Watch streak sharing is unavailable</string>
     <string name="channel_points_streak_progress">%1$d/%2$d</string>
     <string name="channel_points_streak_description">Tune into %1$d consecutive streams to earn %2$s Channel Points and recognition.</string>
     <string name="channel_points_streak_description_no_reward">Tune into %1$d consecutive streams to keep your watch streak going.</string>
@@ -316,6 +320,8 @@
     <string name="channel_points_reward_confirm">Redeem this reward?</string>
     <string name="channel_points_reward_emote_hint">Choose an emote</string>
     <string name="channel_points_reward_text_hint">Enter the message</string>
+    <string name="channel_points_reward_message_overlay">Enter a message to redeem this reward</string>
+    <string name="channel_points_composer_cancel">Cancel</string>
     <string name="channel_points_reward_input_required">Input is required</string>
     <string name="channel_points_reward_redeem">Redeem</string>
     <string name="channel_points_reward_redeemed">Redeemed %s</string>
