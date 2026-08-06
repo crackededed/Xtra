@@ -14,8 +14,10 @@
 Compared with the upstream project, this fork currently includes:
 
 - More reliable live notifications with persisted follow IDs and Helix fallback.
-- Channel Points in chat: balances, custom icons, watch streaks, rewards, voting, and redemption.
+- More reliable playback across background playback, picture-in-picture, and app task removal, with automatic recovery for interrupted live streams.
+- Channel Points in chat: balances, custom icons, watch streaks and streak sharing, text-input rewards, voting, and redemption, including web GQL login support.
 - Searchable emote pickers limited to emotes belonging to the active channel.
+- A reorganized settings experience with search, categorized pages, and clearer playback and background-playback controls.
 - Fork-hosted releases and update links for existing Xtra installs.
 
 <p align="center">
