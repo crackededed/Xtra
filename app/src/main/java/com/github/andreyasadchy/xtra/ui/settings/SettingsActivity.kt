@@ -20,6 +20,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.Toast
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -41,6 +43,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.withResumed
+import androidx.navigation.NavDirections
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -61,6 +64,9 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.SettingsNavGraphDirections
 import com.github.andreyasadchy.xtra.databinding.ActivitySettingsBinding
 import com.github.andreyasadchy.xtra.databinding.DialogUpdateDownloadBinding
+import com.github.andreyasadchy.xtra.databinding.FragmentSettingsHomeBinding
+import com.github.andreyasadchy.xtra.databinding.ItemSettingsCategoryBinding
+import com.github.andreyasadchy.xtra.databinding.ItemSettingsRowBinding
 import com.github.andreyasadchy.xtra.model.ui.SettingsDragListItem
 import com.github.andreyasadchy.xtra.model.ui.SettingsSearchItem
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
@@ -248,6 +254,196 @@ class SettingsActivity : AppCompatActivity() {
 
     companion object {
         const val KEY_CHANGED = "changed"
+    }
+
+    class SettingsHomeFragment : Fragment() {
+
+        private var _binding: FragmentSettingsHomeBinding? = null
+        private val binding get() = _binding!!
+
+        override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+            _binding = FragmentSettingsHomeBinding.inflate(inflater, container, false)
+            return binding.root
+        }
+
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            super.onViewCreated(view, savedInstanceState)
+            binding.searchCard.setOnClickListener {
+                navigate(SettingsNavGraphDirections.actionGlobalSettingsSearchFragment())
+            }
+            val sections = settingsSections()
+            sections.forEachIndexed { index, section ->
+                val categoryBinding = ItemSettingsCategoryBinding.inflate(layoutInflater, binding.sections, false)
+                categoryBinding.icon.setImageResource(section.icon)
+                categoryBinding.title.setText(section.title)
+                section.items.forEachIndexed { itemIndex, item ->
+                    val rowBinding = ItemSettingsRowBinding.inflate(layoutInflater, categoryBinding.items, false)
+                    rowBinding.title.setText(item.title)
+                    rowBinding.summary.setText(item.summary)
+                    rowBinding.root.contentDescription = getString(item.title) + ". " + getString(item.summary)
+                    rowBinding.divider.visibility = if (itemIndex == section.items.lastIndex) View.GONE else View.VISIBLE
+                    rowBinding.root.setOnClickListener { item.onClick() }
+                    categoryBinding.items.addView(rowBinding.root)
+                }
+                categoryBinding.root.layoutParams = ViewGroup.MarginLayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    if (index < sections.lastIndex) {
+                        bottomMargin = resources.getDimensionPixelSize(R.dimen.settings_section_spacing)
+                    }
+                }
+                binding.sections.addView(categoryBinding.root)
+            }
+            ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
+                val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+                view.updatePadding(bottom = resources.getDimensionPixelSize(R.dimen.settings_section_spacing) * 2 + insets.bottom)
+                WindowInsetsCompat.CONSUMED
+            }
+            requireActivity().findViewById<AppBarLayout>(R.id.appBar)?.let { appBar ->
+                if (requireContext().prefs().getBoolean(C.UI_THEME_APPBAR_LIFT, true)) {
+                    appBar.setLiftOnScrollTargetView(binding.scrollView)
+                    binding.scrollView.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+                        appBar.isLifted = scrollY > 0
+                    }
+                    binding.scrollView.post { appBar.isLifted = binding.scrollView.scrollY > 0 }
+                } else {
+                    appBar.setLiftable(false)
+                    appBar.background = null
+                }
+            }
+        }
+
+        private fun settingsSections(): List<SettingsSection> = listOf(
+            SettingsSection(
+                title = R.string.settings_section_appearance,
+                icon = R.drawable.ic_settings_appearance,
+                items = listOf(
+                    SettingsItem(R.string.theme, R.string.settings_item_theme_summary) {
+                        navigate(SettingsNavGraphDirections.actionGlobalThemeSettingsFragment())
+                    },
+                    SettingsItem(R.string.settings_item_interface, R.string.settings_item_interface_summary) {
+                        navigate(SettingsNavGraphDirections.actionGlobalUiSettingsFragment())
+                    },
+                    SettingsItem(R.string.language, R.string.settings_item_language_summary) {
+                        openGeneral(C.UI_LANGUAGE)
+                    },
+                    SettingsItem(R.string.settings_item_cutouts, R.string.settings_item_cutouts_summary) {
+                        openGeneral(C.UI_DRAW_BEHIND_CUTOUTS)
+                    }
+                )
+            ),
+            SettingsSection(
+                title = R.string.settings_section_playback,
+                icon = R.drawable.ic_settings_playback,
+                items = listOf(
+                    SettingsItem(R.string.player_settings, R.string.settings_item_player_summary) {
+                        navigate(SettingsNavGraphDirections.actionGlobalPlayerSettingsFragment())
+                    },
+                    SettingsItem(R.string.playback_settings, R.string.settings_item_playback_summary) {
+                        navigate(SettingsNavGraphDirections.actionGlobalPlaybackSettingsFragment())
+                    },
+                    SettingsItem(R.string.settings_item_player_controls, R.string.settings_item_player_controls_summary) {
+                        navigate(SettingsNavGraphDirections.actionGlobalPlayerButtonSettingsFragment())
+                    },
+                    SettingsItem(R.string.settings_item_buffering, R.string.settings_item_buffering_summary) {
+                        navigate(SettingsNavGraphDirections.actionGlobalBufferSettingsFragment())
+                    },
+                    SettingsItem(R.string.settings_item_background_playback, R.string.settings_item_background_playback_summary) {
+                        openGeneral(C.PLAYER_BACKGROUND_AUDIO)
+                    }
+                )
+            ),
+            SettingsSection(
+                title = R.string.settings_section_chat,
+                icon = R.drawable.ic_settings_chat,
+                items = listOf(
+                    SettingsItem(R.string.chat_settings, R.string.settings_item_chat_summary) {
+                        navigate(SettingsNavGraphDirections.actionGlobalChatSettingsFragment())
+                    }
+                )
+            ),
+            SettingsSection(
+                title = R.string.settings_section_downloads,
+                icon = R.drawable.ic_settings_download,
+                items = listOf(
+                    SettingsItem(R.string.download_settings, R.string.settings_item_downloads_summary) {
+                        navigate(SettingsNavGraphDirections.actionGlobalDownloadSettingsFragment())
+                    }
+                )
+            ),
+            SettingsSection(
+                title = R.string.settings_section_network,
+                icon = R.drawable.ic_settings_network,
+                items = listOf(
+                    SettingsItem(R.string.settings_item_api, R.string.settings_item_api_summary) {
+                        navigate(SettingsNavGraphDirections.actionGlobalApiTokenSettingsFragment())
+                    },
+                    SettingsItem(R.string.settings_item_proxy, R.string.settings_item_proxy_summary) {
+                        navigate(SettingsNavGraphDirections.actionGlobalProxySettingsFragment())
+                    },
+                    SettingsItem(R.string.settings_item_stream_proxy, R.string.settings_item_stream_proxy_summary) {
+                        openGeneral(C.PLAYER_STREAM_PROXY)
+                    },
+                    SettingsItem(R.string.settings_item_network_library, R.string.settings_item_network_library_summary) {
+                        openGeneral(C.NETWORK_LIBRARY)
+                    }
+                )
+            ),
+            SettingsSection(
+                title = R.string.settings_section_app,
+                icon = R.drawable.ic_settings_notifications,
+                items = listOf(
+                    SettingsItem(R.string.live_notifications, R.string.settings_item_notifications_summary) {
+                        openGeneral(C.LIVE_NOTIFICATIONS_ENABLED)
+                    },
+                    SettingsItem(R.string.settings_item_check_updates, R.string.settings_item_check_updates_summary) {
+                        openGeneral("check_updates")
+                    },
+                    SettingsItem(R.string.settings_item_updates, R.string.settings_item_updates_summary) {
+                        navigate(SettingsNavGraphDirections.actionGlobalUpdateSettingsFragment())
+                    },
+                    SettingsItem(R.string.settings_item_backup, R.string.settings_item_backup_summary) {
+                        openGeneral("backup_settings")
+                    }
+                )
+            ),
+            SettingsSection(
+                title = R.string.settings_section_advanced,
+                icon = R.drawable.ic_settings_advanced,
+                items = listOf(
+                    SettingsItem(R.string.debug_settings, R.string.settings_item_debug_summary) {
+                        navigate(SettingsNavGraphDirections.actionGlobalDebugSettingsFragment())
+                    }
+                )
+            )
+        )
+
+        private fun openGeneral(preferenceKey: String?) {
+            (activity as? SettingsActivity)?.searchItem = preferenceKey
+            navigate(SettingsNavGraphDirections.actionGlobalSettingsFragment())
+        }
+
+        private fun navigate(directions: NavDirections) {
+            findNavController().navigate(directions)
+        }
+
+        override fun onDestroyView() {
+            _binding = null
+            super.onDestroyView()
+        }
+
+        private data class SettingsSection(
+            @StringRes val title: Int,
+            @DrawableRes val icon: Int,
+            val items: List<SettingsItem>
+        )
+
+        private data class SettingsItem(
+            @StringRes val title: Int,
+            @StringRes val summary: Int,
+            val onClick: () -> Unit
+        )
     }
 
     class SettingsFragment : MaterialPreferenceFragment() {

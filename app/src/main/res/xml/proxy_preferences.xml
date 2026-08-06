@@ -1,6 +1,10 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:title="@string/settings_proxy_behavior"
+        app:iconSpaceReserved="false" />
+
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="proxy_playback_access_token"
@@ -21,6 +25,10 @@
         android:title="@string/proxy_media_playlist"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_proxy_connection"
+        app:iconSpaceReserved="false" />
 
     <EditTextPreference
         android:key="proxy_host"

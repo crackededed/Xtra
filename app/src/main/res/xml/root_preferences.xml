@@ -1,6 +1,10 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:title="@string/general_settings"
+        app:iconSpaceReserved="false" />
+
     <ListPreference
         android:defaultValue="auto"
         android:entries="@array/languageEntries"
@@ -22,24 +26,6 @@
         android:defaultValue="false"
         android:key="live_notifications_enabled"
         android:title="@string/live_notifications"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <Preference
-        android:key="theme_settings"
-        android:title="@string/theme"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <Preference
-        android:key="ui_settings"
-        android:title="@string/ui_settings"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <Preference
-        android:key="chat_settings"
-        android:title="@string/chat_settings"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
@@ -71,23 +57,9 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
-    <Preference
-        android:key="player_settings"
-        android:title="@string/player_settings"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <Preference
-        android:key="player_button_settings"
-        android:title="@string/player_buttons"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <Preference
-        android:key="buffer_settings"
-        android:title="@string/buffer_settings"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
+    <PreferenceCategory
+        android:title="@string/settings_section_network"
+        app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat
         android:defaultValue="false"
@@ -104,24 +76,6 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
-    <Preference
-        android:key="proxy_settings"
-        android:title="@string/proxy_settings"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <Preference
-        android:key="playback_settings"
-        android:title="@string/playback_settings"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <Preference
-        android:key="api_token_settings"
-        android:title="@string/api_token_settings"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
     <ListPreference
         android:defaultValue="OkHttp"
         android:entries="@array/networkLibraryEntries"
@@ -132,21 +86,13 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
-    <Preference
-        android:key="download_settings"
-        android:title="@string/download_settings"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
+    <PreferenceCategory
+        android:title="@string/settings_section_app"
+        app:iconSpaceReserved="false" />
 
     <Preference
         android:key="check_updates"
         android:title="@string/check_updates"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <Preference
-        android:key="update_settings"
-        android:title="@string/update_settings"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
@@ -161,6 +107,10 @@
         android:title="@string/restore_settings"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_section_advanced"
+        app:iconSpaceReserved="false" />
 
     <Preference
         android:key="debug_settings"

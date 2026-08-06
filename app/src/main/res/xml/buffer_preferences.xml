@@ -1,6 +1,10 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:title="@string/settings_buffer_limits"
+        app:iconSpaceReserved="false" />
+
     <EditTextPreference
         android:defaultValue="15000"
         android:key="player_buffer_min"
@@ -40,6 +44,10 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false"
         app:useSimpleSummaryProvider="true" />
+
+    <PreferenceCategory
+        android:title="@string/settings_buffer_live"
+        app:iconSpaceReserved="false" />
 
     <EditTextPreference
         android:defaultValue=""

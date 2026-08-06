@@ -1,6 +1,10 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:title="@string/settings_ui_browse"
+        app:iconSpaceReserved="false" />
+
     <ListPreference
         android:defaultValue="@string/portraitColumns"
         android:key="columnsPortrait"
@@ -47,6 +51,10 @@
         android:title="@string/startonfollowed"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_ui_tabs"
+        app:iconSpaceReserved="false" />
 
     <Preference
         android:key="ui_navigation_tab_list_dialog"
@@ -104,12 +112,20 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <PreferenceCategory
+        android:title="@string/settings_ui_content"
+        app:iconSpaceReserved="false" />
+
     <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="ui_rounduserimage"
         android:title="@string/rounduserimage"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_ui_search"
+        app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
