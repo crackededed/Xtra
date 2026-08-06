@@ -392,7 +392,7 @@ class SettingsActivity : AppCompatActivity() {
             ),
             SettingsSection(
                 title = R.string.settings_section_app,
-                icon = R.drawable.ic_settings_notifications,
+                icon = R.drawable.ic_settings_data,
                 items = listOf(
                     SettingsItem(R.string.live_notifications, R.string.settings_item_notifications_summary) {
                         openGeneral(C.LIVE_NOTIFICATIONS_ENABLED)
@@ -425,6 +425,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         private fun navigate(directions: NavDirections) {
+            requireActivity().findViewById<AppBarLayout>(R.id.appBar)?.setExpanded(true)
             findNavController().navigate(directions)
         }
 
