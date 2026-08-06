@@ -1,6 +1,10 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:title="@string/settings_player_quick_actions"
+        app:iconSpaceReserved="false" />
+
     <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="player_minimize"
@@ -48,6 +52,10 @@
         android:title="@string/admin_settings"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_player_controls"
+        app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
@@ -180,6 +188,10 @@
         android:title="@string/forward"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_player_information"
+        app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat
         android:defaultValue="true"

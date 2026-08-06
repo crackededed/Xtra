@@ -1,6 +1,10 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:title="@string/settings_download_behavior"
+        app:iconSpaceReserved="false" />
+
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="download_playlist_to_file"
@@ -35,6 +39,10 @@
         app:min="1"
         app:showSeekBarValue="true"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_download_live"
+        app:iconSpaceReserved="false" />
 
     <EditTextPreference
         android:defaultValue="2"
@@ -71,6 +79,10 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false"
         app:useSimpleSummaryProvider="true" />
+
+    <PreferenceCategory
+        android:title="@string/settings_download_data"
+        app:iconSpaceReserved="false" />
 
     <Preference
         android:key="import_app_downloads"

@@ -1,6 +1,10 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:title="@string/settings_playback_stream"
+        app:iconSpaceReserved="false" />
+
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="player_hide_ads"
@@ -55,6 +59,10 @@
         android:title="@string/stream_headers"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_playback_video"
+        app:iconSpaceReserved="false" />
 
     <EditTextPreference
         android:defaultValue="channel_home_live"

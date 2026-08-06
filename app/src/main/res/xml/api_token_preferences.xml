@@ -1,6 +1,10 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:title="@string/settings_api_client"
+        app:iconSpaceReserved="false" />
+
     <ListPreference
         android:defaultValue="0"
         android:entries="@array/loginApiEntries"
@@ -36,7 +40,7 @@
         app:singleLineTitle="false" />
 
     <PreferenceCategory
-        android:title="@string/api_current_login"
+        android:title="@string/settings_api_account"
         app:iconSpaceReserved="false" />
 
     <EditTextPreference

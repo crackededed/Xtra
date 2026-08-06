@@ -1,6 +1,10 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:title="@string/settings_player_menu_playback"
+        app:iconSpaceReserved="false" />
+
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="player_menu_quality"
@@ -28,6 +32,10 @@
         android:title="@string/chapters"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_player_menu_actions"
+        app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
@@ -91,6 +99,10 @@
         android:title="@string/restart_player"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_player_menu_chat"
+        app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat
         android:defaultValue="true"

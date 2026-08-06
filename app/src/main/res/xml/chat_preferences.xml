@@ -1,6 +1,10 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:title="@string/settings_chat_messages"
+        app:iconSpaceReserved="false" />
+
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="chat_boldnames"
@@ -38,6 +42,10 @@
         android:title="@string/timestamp_format"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_chat_media"
+        app:iconSpaceReserved="false" />
 
     <ListPreference
         android:defaultValue="0"
@@ -100,6 +108,10 @@
         app:singleLineTitle="false"
         app:useSimpleSummaryProvider="true" />
 
+    <PreferenceCategory
+        android:title="@string/settings_chat_history"
+        app:iconSpaceReserved="false" />
+
     <SeekBarPreference
         android:defaultValue="30"
         android:key="chatWidth"
@@ -144,6 +156,10 @@
         app:showSeekBarValue="true"
         app:singleLineTitle="false" />
 
+    <PreferenceCategory
+        android:title="@string/settings_chat_translation"
+        app:iconSpaceReserved="false" />
+
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="chat_translate"
@@ -164,6 +180,10 @@
         android:title="@string/translate_target_language"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_chat_connection"
+        app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat
         android:defaultValue="false"
@@ -192,6 +212,10 @@
         android:title="@string/enable_pubsub"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_chat_events"
+        app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
@@ -234,6 +258,10 @@
         android:title="@string/show_predictions"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_chat_emotes"
+        app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
@@ -283,6 +311,10 @@
         android:title="@string/enable_ffz"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_chat_system"
+        app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat
         android:defaultValue="true"

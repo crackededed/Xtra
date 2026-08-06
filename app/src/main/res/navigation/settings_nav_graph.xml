@@ -2,12 +2,17 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/settings_nav_graph"
-    app:startDestination="@id/settingsFragment">
+    app:startDestination="@id/settingsHomeFragment">
+
+    <fragment
+        android:id="@+id/settingsHomeFragment"
+        android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$SettingsHomeFragment"
+        android:label="@string/settings" />
 
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$SettingsFragment"
-        android:label="@string/settings" />
+        android:label="@string/general_settings" />
     <action
         android:id="@+id/action_global_settingsFragment"
         app:destination="@id/settingsFragment" />

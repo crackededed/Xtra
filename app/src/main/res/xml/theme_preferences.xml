@@ -1,6 +1,10 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:title="@string/settings_theme_colors"
+        app:iconSpaceReserved="false" />
+
     <ListPreference
         android:defaultValue="0"
         android:entries="@array/themeEntries"
@@ -48,6 +52,10 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <PreferenceCategory
+        android:title="@string/settings_theme_layout"
+        app:iconSpaceReserved="false" />
+
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="ui_theme_reduced_padding"
@@ -61,6 +69,10 @@
         android:title="@string/compact_text"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_theme_behavior"
+        app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat
         android:defaultValue="true"

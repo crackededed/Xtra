@@ -77,6 +77,10 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <PreferenceCategory
+        android:title="@string/settings_player_quality"
+        app:iconSpaceReserved="false" />
+
     <ListPreference
         android:defaultValue="saved"
         android:entries="@array/playerQualityEntries"
@@ -96,6 +100,10 @@
         android:title="@string/default_cellular_quality"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_player_behavior"
+        app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat
         android:defaultValue="false"
