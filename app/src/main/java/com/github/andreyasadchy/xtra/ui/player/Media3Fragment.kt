@@ -49,6 +49,7 @@ import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -71,6 +72,7 @@ class Media3Fragment : Media3PlayerFragment() {
     private var playerListener: Player.Listener? = null
     private var streamRecoveryJob: Job? = null
     private var streamRecoveryAttempt = 0
+    private var adAvoidanceJob: Job? = null
     private val updateProgressAction = Runnable { if (view != null) updateProgress() }
 
     override fun onStart() {
@@ -270,11 +272,13 @@ class Media3Fragment : Media3PlayerFragment() {
                         }
                     }
                     if (videoType == STREAM) {
-                        val hideAds = requireContext().prefs().getBoolean(C.PLAYER_HIDE_ADS, false)
+                        val avoidAds = requireContext().prefs().getBoolean(C.PLAYER_AVOID_ADS, false)
+                                || requireContext().prefs().getBoolean(C.PLAYER_HIDE_ADS, false)
+                        val suppressAds = avoidAds
                         val useProxy = requireContext().prefs().getBoolean(C.PROXY_MEDIA_PLAYLIST, true)
                                 && !requireContext().prefs().getString(C.PROXY_HOST, null).isNullOrBlank()
                                 && requireContext().prefs().getString(C.PROXY_PORT, null)?.toIntOrNull() != null
-                        if (hideAds || useProxy) {
+                        if (suppressAds || useProxy) {
                             player?.sendCustomCommand(
                                 SessionCommand(PlaybackService.CHECK_ADS, Bundle.EMPTY),
                                 Bundle.EMPTY
@@ -288,76 +292,24 @@ class Media3Fragment : Media3PlayerFragment() {
                                         val oldValue = viewModel.playingAds
                                         viewModel.playingAds = playingAds
                                         if (playingAds) {
-                                            if (viewModel.usingProxy) {
-                                                if (!viewModel.stopProxy) {
-                                                    player?.sendCustomCommand(
-                                                        SessionCommand(
-                                                            PlaybackService.TOGGLE_PROXY, Bundle().apply {
-                                                                putBoolean(PlaybackService.USING_PROXY, false)
-                                                            }
-                                                        ), Bundle.EMPTY
+                                            if (avoidAds) {
+                                                if (adAvoidanceJob?.isActive != true) {
+                                                    val playerTypes = viewModel.playerTypesForAd(
+                                                        requireContext().prefs().getString(C.TOKEN_PLAYER_TYPE, "site")
                                                     )
-                                                    viewModel.usingProxy = false
-                                                    viewModel.stopProxy = true
-                                                }
-                                            } else {
-                                                if (!oldValue) {
-                                                    val playlist = viewModel.quality?.url
-                                                    if (!viewModel.stopProxy && !playlist.isNullOrBlank() && useProxy) {
-                                                        player?.sendCustomCommand(
-                                                            SessionCommand(
-                                                                PlaybackService.TOGGLE_PROXY, Bundle().apply {
-                                                                    putBoolean(PlaybackService.USING_PROXY, true)
-                                                                }
-                                                            ), Bundle.EMPTY
-                                                        )
-                                                        viewModel.usingProxy = true
-                                                        viewLifecycleOwner.lifecycleScope.launch {
-                                                            for (i in 0 until 10) {
-                                                                delay(10.seconds)
-                                                                if (!viewModel.checkPlaylist(requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), playlist)) {
-                                                                    break
-                                                                }
-                                                            }
-                                                            player?.sendCustomCommand(
-                                                                SessionCommand(
-                                                                    PlaybackService.TOGGLE_PROXY, Bundle().apply {
-                                                                        putBoolean(PlaybackService.USING_PROXY, false)
-                                                                    }
-                                                                ), Bundle.EMPTY
-                                                            )
-                                                            viewModel.usingProxy = false
-                                                        }
+                                                    if (playerTypes.isNotEmpty()) {
+                                                        suppressAdPlayback()
+                                                        tryAlternateStream(playerTypes, useProxy)
                                                     } else {
-                                                        if (hideAds) {
-                                                            viewModel.hidden = true
-                                                            player?.let { player ->
-                                                                if (viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
-                                                                    player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
-                                                                        setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
-                                                                    }.build()
-                                                                    binding.playerSurface.visibility = View.GONE
-                                                                }
-                                                                player.volume = 0f
-                                                            }
-                                                            Toast.makeText(requireContext(), R.string.waiting_ads, Toast.LENGTH_LONG).show()
-                                                        }
+                                                        fallbackFromAd(useProxy, suppressAds)
                                                     }
                                                 }
+                                            } else if (!oldValue) {
+                                                fallbackFromAd(useProxy, suppressAds)
                                             }
                                         } else {
-                                            if (hideAds && viewModel.hidden) {
-                                                viewModel.hidden = false
-                                                player?.let { player ->
-                                                    if (viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
-                                                        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
-                                                            setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
-                                                        }.build()
-                                                        binding.playerSurface.visibility = View.VISIBLE
-                                                    }
-                                                    player.volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
-                                                }
-                                            }
+                                            viewModel.onCleanAdPlaylist()
+                                            restoreAdPlayback()
                                         }
                                     }
                                 }, ContextCompat.getMainExecutor(requireContext()))
@@ -566,11 +518,125 @@ class Media3Fragment : Media3PlayerFragment() {
         super.initialize()
     }
 
+    private fun suppressAdPlayback() {
+        if (!viewModel.hidden) {
+            viewModel.hidden = true
+            player?.let { player ->
+                if (viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
+                    player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                        setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
+                    }.build()
+                    binding.playerSurface.visibility = View.GONE
+                }
+                player.volume = 0f
+            }
+            Toast.makeText(requireContext(), R.string.waiting_ads, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun restoreAdPlayback() {
+        if (viewModel.hidden) {
+            viewModel.hidden = false
+            player?.let { player ->
+                if (viewModel.quality?.name != AUDIO_ONLY_QUALITY) {
+                    player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                        setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
+                    }.build()
+                    binding.playerSurface.visibility = View.VISIBLE
+                }
+                player.volume = requireContext().prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
+            }
+        }
+    }
+
+    private fun fallbackFromAd(useProxy: Boolean, suppressAds: Boolean) {
+        if (viewModel.usingProxy) {
+            player?.sendCustomCommand(
+                SessionCommand(
+                    PlaybackService.TOGGLE_PROXY, Bundle().apply {
+                        putBoolean(PlaybackService.USING_PROXY, false)
+                    }
+                ), Bundle.EMPTY
+            )
+            viewModel.usingProxy = false
+            viewModel.stopProxy = true
+            return
+        }
+        val playlist = viewModel.quality?.url
+        if (!viewModel.stopProxy && !playlist.isNullOrBlank() && useProxy) {
+            player?.sendCustomCommand(
+                SessionCommand(
+                    PlaybackService.TOGGLE_PROXY, Bundle().apply {
+                        putBoolean(PlaybackService.USING_PROXY, true)
+                    }
+                ), Bundle.EMPTY
+            )
+            viewModel.usingProxy = true
+            viewLifecycleOwner.lifecycleScope.launch {
+                for (i in 0 until 10) {
+                    delay(10.seconds)
+                    if (!viewModel.checkPlaylist(requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), playlist)) {
+                        break
+                    }
+                }
+                player?.sendCustomCommand(
+                    SessionCommand(
+                        PlaybackService.TOGGLE_PROXY, Bundle().apply {
+                            putBoolean(PlaybackService.USING_PROXY, false)
+                        }
+                    ), Bundle.EMPTY
+                )
+                viewModel.usingProxy = false
+            }
+        } else if (suppressAds) {
+            suppressAdPlayback()
+        }
+    }
+
+    private fun tryAlternateStream(playerTypes: List<String>, useProxy: Boolean) {
+        val channelLogin = requireArguments().getString(KEY_CHANNEL_LOGIN) ?: run {
+            fallbackFromAd(useProxy, suppressAds = true)
+            return
+        }
+        adAvoidanceJob = viewLifecycleOwner.lifecycleScope.launch {
+            val candidate = try {
+                viewModel.loadCleanStreamPlaylistUrl(channelLogin, playerTypes)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+            if (candidate != null && isAdded && view != null) {
+                viewModel.qualities = null
+                viewModel.updateQualities = true
+                viewModel.usingProxy = false
+                try {
+                    sendStreamToService(candidate.url, player?.playWhenReady)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    fallbackFromAd(useProxy, suppressAds = true)
+                }
+            } else {
+                fallbackFromAd(useProxy, suppressAds = true)
+            }
+        }
+    }
+
     override fun startStream(url: String?) {
+        adAvoidanceJob?.cancel()
+        adAvoidanceJob = null
+        viewModel.resetAdController()
+        viewModel.playingAds = false
+        sendStreamToService(url)
+    }
+
+    private fun sendStreamToService(url: String?, playWhenReady: Boolean? = null) {
         player?.sendCustomCommand(
             SessionCommand(
                 PlaybackService.START_STREAM, Bundle().apply {
                     putString(PlaybackService.URI, url)
+                    playWhenReady?.let { putBoolean(PlaybackService.PLAY_WHEN_READY, it) }
                     putString(PlaybackService.TITLE, requireArguments().getString(KEY_TITLE))
                     putString(PlaybackService.CHANNEL_NAME, requireArguments().getString(KEY_CHANNEL_NAME))
                     putString(PlaybackService.CHANNEL_LOGO, requireArguments().getString(KEY_CHANNEL_IMAGE))
@@ -1056,6 +1122,8 @@ class Media3Fragment : Media3PlayerFragment() {
         streamRecoveryJob?.cancel()
         streamRecoveryJob = null
         streamRecoveryAttempt = 0
+        adAvoidanceJob?.cancel()
+        adAvoidanceJob = null
         if (view != null) {
             controller?.clearVideoSurfaceView(binding.playerSurface)
         }

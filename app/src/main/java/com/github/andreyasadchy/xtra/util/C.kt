@@ -185,6 +185,7 @@ object C {
     const val PLAYER_ROUNDED_CORNER_PADDING = "player_rounded_corner_padding"
     const val PLAYER_MOVE_FREELY = "player_move_freely"
     const val PLAYER_KEEP_CHAT_OPEN = "player_keep_chat_open"
+    const val PLAYER_AVOID_ADS = "player_avoid_ads"
     const val PLAYER_HIDE_ADS = "player_hide_ads"
     const val PLAYER_PROXY = "player_proxy"
     const val PLAYER_STREAM_PROXY = "player_stream_proxy"

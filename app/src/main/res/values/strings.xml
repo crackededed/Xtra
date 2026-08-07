@@ -437,6 +437,8 @@
     <string name="enable_ffz">Enable FFZ emotes</string>
     <string name="user_id">User ID</string>
     <string name="user_login">User login</string>
+    <string name="avoid_twitch_ads">Try to avoid Twitch ads</string>
+    <string name="avoid_twitch_ads_summary">Tries clean playback sources and hides playback if Twitch still serves an ad</string>
     <string name="waiting_ads">Waiting for ads to finish</string>
     <string name="show_playlist_tags">Show playlist tags</string>
     <string name="show_media_playlist_tags">Show media playlist tags</string>

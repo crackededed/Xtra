@@ -29,7 +29,10 @@ import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
+import com.github.andreyasadchy.xtra.util.m3u8.TwitchAdDetector
+import com.github.andreyasadchy.xtra.util.prefs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -73,6 +76,7 @@ class Media3PlayerViewModel(
     var playingAds = false
     var usingProxy = false
     var stopProxy = false
+    private val adController = TwitchAdController()
 
     val videoResult = MutableStateFlow<String?>(null)
     var backupQualities: List<String>? = null
@@ -150,25 +154,48 @@ class Media3PlayerViewModel(
                     }
                 }
             }
-            playlist.segments.lastOrNull()?.let { segment ->
-                segment.title?.let { it.contains("Amazon") || it.contains("Adform") || it.contains("DCM") } == true ||
-                        segment.programDateTime?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }?.let { segmentStartTime ->
-                            playlist.dateRanges.find { dateRange ->
-                                (dateRange.id.startsWith("stitched-ad-") || dateRange.rangeClass == "twitch-stitched-ad" || dateRange.ad) &&
-                                        dateRange.endDate?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }?.let { endTime ->
-                                            segmentStartTime < endTime
-                                        } == true ||
-                                        dateRange.startDate.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }?.let { startTime ->
-                                            (dateRange.duration ?: dateRange.plannedDuration)?.let { (it * 1000f).toLong() }?.let { duration ->
-                                                segmentStartTime < (startTime + duration)
-                                            } == true
-                                        } == true
-                            } != null
-                        } == true
-            } == true
+            TwitchAdDetector.isAd(playlist)
         } catch (e: Exception) {
             false
         }
+    }
+
+    fun playerTypesForAd(currentPlayerType: String?): List<String> {
+        return adController.playerTypesForAd(currentPlayerType)
+    }
+
+    fun onCleanAdPlaylist() {
+        adController.onCleanPlaylist()
+    }
+
+    fun resetAdController() {
+        adController.reset()
+    }
+
+    suspend fun loadCleanStreamPlaylistUrl(
+        channelLogin: String,
+        playerTypes: List<String>,
+    ): PlayerRepository.StreamPlaylistCandidate? {
+        val preferences = applicationContext.prefs()
+        return playerRepository.loadCleanStreamPlaylistUrl(
+            context = applicationContext,
+            networkLibrary = preferences.getString(C.NETWORK_LIBRARY, C.OKHTTP),
+            gqlHeaders = TwitchApiHelper.getGQLHeaders(
+                applicationContext,
+                preferences.getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, true),
+            ),
+            channelLogin = channelLogin,
+            randomDeviceId = preferences.getBoolean(C.TOKEN_RANDOM_DEVICE_ID, true),
+            xDeviceId = preferences.getString(C.TOKEN_X_DEVICE_ID, "twitch-web-wall-mason"),
+            playerTypes = playerTypes,
+            supportedCodecs = preferences.getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
+            proxyPlaybackAccessToken = preferences.getBoolean(C.PROXY_PLAYBACK_ACCESS_TOKEN, false),
+            proxyHost = preferences.getString(C.PROXY_HOST, null),
+            proxyPort = preferences.getString(C.PROXY_PORT, null)?.toIntOrNull(),
+            proxyUser = preferences.getString(C.PROXY_USER, null),
+            proxyPassword = preferences.getString(C.PROXY_PASSWORD, null),
+            enableIntegrity = preferences.getBoolean(C.ENABLE_INTEGRITY, false),
+        )
     }
 
     fun loadStreamResult(networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, supportedCodecs: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean) {

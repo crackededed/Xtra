@@ -46,6 +46,7 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.player.ExoPlayerService.Companion.MEDIA_PLAYLIST_REGEX
 import com.github.andreyasadchy.xtra.ui.player.ExoPlayerService.Companion.MULTIVARIANT_PLAYLIST_REGEX
 import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.m3u8.TwitchAdDetector
 import com.github.andreyasadchy.xtra.util.prefs
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
@@ -503,7 +504,7 @@ class PlaybackService : MediaSessionService() {
                                 session.player.volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
                                 session.player.setPlaybackSpeed(1f)
                                 session.player.prepare()
-                                session.player.playWhenReady = true
+                                session.player.playWhenReady = customCommand.customExtras.getBoolean(PLAY_WHEN_READY, true)
                                 Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                             }
                             START_VIDEO -> {
@@ -688,20 +689,7 @@ class PlaybackService : MediaSessionService() {
                             }
                             CHECK_ADS -> {
                                 val playlist = (session.player.currentManifest as? HlsManifest)?.mediaPlaylist
-                                val adSegment = playlist?.segments?.lastOrNull()?.let { segment ->
-                                    val segmentStartTime = playlist.startTimeUs + segment.relativeStartTimeUs
-                                    listOf("Amazon", "Adform", "DCM").any { segment.title.contains(it) } ||
-                                            playlist.interstitials.find {
-                                                val startTime = it.startDateUnixUs
-                                                val endTime = it.endDateUnixUs.takeIf { it != androidx.media3.common.C.TIME_UNSET }
-                                                    ?: it.durationUs.takeIf { it != androidx.media3.common.C.TIME_UNSET }?.let { startTime + it }
-                                                    ?: it.plannedDurationUs.takeIf { it != androidx.media3.common.C.TIME_UNSET }?.let { startTime + it }
-                                                endTime != null && (it.id.startsWith("stitched-ad-") ||
-                                                        it.clientDefinedAttributes.find { it.name == "CLASS" }?.textValue == "twitch-stitched-ad" ||
-                                                        it.clientDefinedAttributes.find { it.name.startsWith("X-TV-TWITCH-AD-") } != null)
-                                                        && segmentStartTime in startTime..endTime
-                                            } != null
-                                } == true
+                                val adSegment = playlist?.let { TwitchAdDetector.isAd(it) } == true
                                 Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, Bundle().apply {
                                     putBoolean(RESULT, adSegment)
                                 }))
@@ -896,6 +884,7 @@ class PlaybackService : MediaSessionService() {
         const val CHANNEL_NAME = "channelName"
         const val CHANNEL_LOGO = "channelLogo"
         const val USING_PROXY = "usingProxy"
+        const val PLAY_WHEN_READY = "playWhenReady"
         const val BACKGROUND_PLAYBACK = "backgroundPlayback"
         const val DURATION = "duration"
         const val NAMES = "names"
