@@ -501,7 +501,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                 if (raid != null) {
                                     if (!viewModel.raidClosed) {
                                         if (raid.openStream) {
-                                            if (requireContext().prefs().getBoolean(C.CHAT_RAIDS_AUTO_SWITCH, true) && (parentFragment is Media3PlayerFragment || parentFragment is PlayerFragment)) {
+                                            if (requireContext().prefs().getBoolean(C.CHAT_RAIDS_AUTO_SWITCH, false) && (parentFragment is Media3PlayerFragment || parentFragment is PlayerFragment)) {
                                                 (requireActivity() as? MainActivity)?.startStream(
                                                     Stream(
                                                         channelId = raid.targetId,

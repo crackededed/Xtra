@@ -77,6 +77,7 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import com.github.andreyasadchy.xtra.util.m3u8.TwitchAdDetector
 import com.github.andreyasadchy.xtra.util.prefs
+import com.github.andreyasadchy.xtra.util.shouldAvoidTwitchAds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -240,8 +241,7 @@ class ExoPlayerService : BasePlaybackService() {
                         }
                     }
                     if (type == STREAM) {
-                        val avoidAds = prefs().getBoolean(C.PLAYER_AVOID_ADS, false)
-                                || prefs().getBoolean(C.PLAYER_HIDE_ADS, false)
+                        val avoidAds = prefs().shouldAvoidTwitchAds()
                         val suppressAds = avoidAds
                         val useProxy = prefs().getBoolean(C.PROXY_MEDIA_PLAYLIST, true)
                                 && !prefs().getString(C.PROXY_HOST, null).isNullOrBlank()

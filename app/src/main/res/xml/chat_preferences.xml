@@ -239,7 +239,7 @@
         app:singleLineTitle="false" />
 
     <SwitchPreferenceCompat
-        android:defaultValue="true"
+        android:defaultValue="false"
         android:key="chat_raids_auto_switch"
         android:title="@string/auto_switch_raids"
         app:iconSpaceReserved="false"

@@ -1273,8 +1273,8 @@ class MainActivity : AppCompatActivity() {
                     putString(C.PORTRAIT_COLUMN_COUNT, "2")
                     putString(C.LANDSCAPE_COLUMN_COUNT, "3")
                 }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    putString(C.THEME, "4")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !prefs.contains(C.THEME)) {
+                    putString(C.THEME, C.THEME_MODERN)
                 }
             }
         }
@@ -1410,6 +1410,19 @@ class MainActivity : AppCompatActivity() {
                     putString(C.PLAYER_FORWARD, (it / 1000).toString())
                 }
                 putInt(C.SETTINGS_VERSION, 13)
+            }
+        }
+        if (version < 14) {
+            prefs.edit {
+                when {
+                    prefs.contains(C.PLAYER_AVOID_ADS) && !prefs.contains(C.PLAYER_HIDE_ADS) -> {
+                        putBoolean(C.PLAYER_HIDE_ADS, prefs.getBoolean(C.PLAYER_AVOID_ADS, false))
+                    }
+                    !prefs.contains(C.PLAYER_AVOID_ADS) && prefs.contains(C.PLAYER_HIDE_ADS) -> {
+                        putBoolean(C.PLAYER_AVOID_ADS, prefs.getBoolean(C.PLAYER_HIDE_ADS, false))
+                    }
+                }
+                putInt(C.SETTINGS_VERSION, 14)
             }
         }
     }

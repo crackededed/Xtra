@@ -208,7 +208,7 @@
         app:iconSpaceReserved="false" />
 
     <SwitchPreferenceCompat
-        android:defaultValue="false"
+        android:defaultValue="true"
         android:key="player_avoid_ads"
         android:summary="@string/avoid_twitch_ads_summary"
         android:title="@string/avoid_twitch_ads"
@@ -216,7 +216,7 @@
         app:singleLineTitle="false" />
 
     <SwitchPreferenceCompat
-        android:defaultValue="false"
+        android:defaultValue="true"
         android:key="player_hide_ads"
         android:title="@string/hide_during_ads"
         app:iconSpaceReserved="false"

@@ -47,6 +47,7 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
+import com.github.andreyasadchy.xtra.util.shouldAvoidTwitchAds
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.CancellationException
@@ -272,8 +273,7 @@ class Media3Fragment : Media3PlayerFragment() {
                         }
                     }
                     if (videoType == STREAM) {
-                        val avoidAds = requireContext().prefs().getBoolean(C.PLAYER_AVOID_ADS, false)
-                                || requireContext().prefs().getBoolean(C.PLAYER_HIDE_ADS, false)
+                        val avoidAds = requireContext().prefs().shouldAvoidTwitchAds()
                         val suppressAds = avoidAds
                         val useProxy = requireContext().prefs().getBoolean(C.PROXY_MEDIA_PLAYLIST, true)
                                 && !requireContext().prefs().getString(C.PROXY_HOST, null).isNullOrBlank()
