@@ -594,7 +594,10 @@ class Media3Fragment : Media3PlayerFragment() {
     }
 
     private fun tryAlternateStream(playerTypes: List<String>, useProxy: Boolean) {
-        val channelLogin = requireArguments().getString(KEY_CHANNEL_LOGIN) ?: return
+        val channelLogin = requireArguments().getString(KEY_CHANNEL_LOGIN) ?: run {
+            fallbackFromAd(useProxy, suppressAds = true)
+            return
+        }
         adAvoidanceJob = viewLifecycleOwner.lifecycleScope.launch {
             val candidate = try {
                 viewModel.loadCleanStreamPlaylistUrl(channelLogin, playerTypes)
@@ -608,7 +611,7 @@ class Media3Fragment : Media3PlayerFragment() {
                 viewModel.updateQualities = true
                 viewModel.usingProxy = false
                 try {
-                    sendStreamToService(candidate.url)
+                    sendStreamToService(candidate.url, player?.playWhenReady)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Exception) {
@@ -628,11 +631,12 @@ class Media3Fragment : Media3PlayerFragment() {
         sendStreamToService(url)
     }
 
-    private fun sendStreamToService(url: String?) {
+    private fun sendStreamToService(url: String?, playWhenReady: Boolean? = null) {
         player?.sendCustomCommand(
             SessionCommand(
                 PlaybackService.START_STREAM, Bundle().apply {
                     putString(PlaybackService.URI, url)
+                    playWhenReady?.let { putBoolean(PlaybackService.PLAY_WHEN_READY, it) }
                     putString(PlaybackService.TITLE, requireArguments().getString(KEY_TITLE))
                     putString(PlaybackService.CHANNEL_NAME, requireArguments().getString(KEY_CHANNEL_NAME))
                     putString(PlaybackService.CHANNEL_LOGO, requireArguments().getString(KEY_CHANNEL_IMAGE))

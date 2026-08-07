@@ -779,7 +779,10 @@ class ExoPlayerService : BasePlaybackService() {
     }
 
     private fun tryAlternateStream(playerTypes: List<String>, useProxy: Boolean) {
-        val channelLogin = channelLogin ?: return
+        val channelLogin = channelLogin ?: run {
+            fallbackFromAd(useProxy, suppressAds = true)
+            return
+        }
         adAvoidanceJob = lifecycleScope.launch {
             val candidate = try {
                 xtraModule.playerRepository.loadCleanStreamPlaylistUrl(

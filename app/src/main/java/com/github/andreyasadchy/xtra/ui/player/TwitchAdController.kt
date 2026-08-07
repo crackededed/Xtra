@@ -16,7 +16,7 @@ class TwitchAdController {
             adWindowActive = true
             attemptedPlayerTypes.clear()
         }
-        return ALTERNATE_PLAYER_TYPES.filter { playerType ->
+        return PLAYER_TYPES.filter { playerType ->
             playerType != currentPlayerType && attemptedPlayerTypes.add(playerType)
         }
     }
@@ -34,6 +34,6 @@ class TwitchAdController {
     }
 
     companion object {
-        val ALTERNATE_PLAYER_TYPES = listOf("popout", "embed", "autoplay")
+        val PLAYER_TYPES = listOf("site", "popout", "embed", "autoplay")
     }
 }

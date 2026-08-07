@@ -504,7 +504,7 @@ class PlaybackService : MediaSessionService() {
                                 session.player.volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
                                 session.player.setPlaybackSpeed(1f)
                                 session.player.prepare()
-                                session.player.playWhenReady = true
+                                session.player.playWhenReady = customCommand.customExtras.getBoolean(PLAY_WHEN_READY, true)
                                 Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                             }
                             START_VIDEO -> {
@@ -884,6 +884,7 @@ class PlaybackService : MediaSessionService() {
         const val CHANNEL_NAME = "channelName"
         const val CHANNEL_LOGO = "channelLogo"
         const val USING_PROXY = "usingProxy"
+        const val PLAY_WHEN_READY = "playWhenReady"
         const val BACKGROUND_PLAYBACK = "backgroundPlayback"
         const val DURATION = "duration"
         const val NAMES = "names"
