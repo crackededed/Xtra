@@ -2,6 +2,208 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory
+        android:title="@string/settings_playback_background"
+        app:iconSpaceReserved="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_picture_in_picture"
+        android:summary="@string/picture_in_picture_summary"
+        android:title="@string/picture_in_picture"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_background_audio"
+        android:summary="@string/use_background_audio_summary"
+        android:title="@string/use_background_audio"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_background_audio_locked"
+        android:summary="@string/use_background_audio_locked_summary"
+        android:title="@string/use_background_audio_locked"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_playback_behavior"
+        app:iconSpaceReserved="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_disable_background_video"
+        android:summary="@string/disable_background_video_summary"
+        android:title="@string/disable_background_video"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="player_use_background_audio_track"
+        android:summary="@string/use_background_audio_track_summary"
+        android:title="@string/use_background_audio_track"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_background_audio_pip_closed"
+        android:summary="@string/use_background_audio_pip_closed_summary"
+        android:title="@string/use_background_audio_pip_closed"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_background_audio_pip_locked"
+        android:summary="@string/use_background_audio_pip_locked_summary"
+        android:title="@string/use_background_audio_pip_locked"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_keep_playing_after_task_removed"
+        android:summary="@string/keep_playing_after_task_removed_summary"
+        android:title="@string/keep_playing_after_task_removed"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_auto_recover_streams"
+        android:summary="@string/auto_recover_streams_summary"
+        android:title="@string/auto_recover_streams"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="player_keep_screen_on_when_paused"
+        android:summary="@string/keep_screen_on_when_paused_summary"
+        android:title="@string/keep_screen_on_when_paused"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="player_audio_focus"
+        android:summary="@string/use_audio_focus_summary"
+        android:title="@string/use_audio_focus"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_handle_audio_becoming_noisy"
+        android:summary="@string/handle_audio_becoming_noisy_summary"
+        android:title="@string/handle_audio_becoming_noisy"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_player_quality"
+        app:iconSpaceReserved="false" />
+
+    <ListPreference
+        android:defaultValue="saved"
+        android:entries="@array/playerQualityEntries"
+        android:entryValues="@array/playerQualityValues"
+        android:key="player_defaultquality"
+        android:summary="%s"
+        android:title="@string/player_defaultquality"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <ListPreference
+        android:defaultValue="saved"
+        android:entries="@array/playerQualityEntries"
+        android:entryValues="@array/playerQualityValues"
+        android:key="player_default_cellular_quality"
+        android:summary="%s"
+        android:title="@string/default_cellular_quality"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_playback_buffering"
+        app:iconSpaceReserved="false" />
+
+    <EditTextPreference
+        android:defaultValue="15000"
+        android:key="player_buffer_min"
+        android:singleLine="true"
+        android:title="@string/min_buffer"
+        app:dialogMessage="@string/min_buffer_summary"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false"
+        app:useSimpleSummaryProvider="true" />
+
+    <EditTextPreference
+        android:defaultValue="50000"
+        android:key="player_buffer_max"
+        android:singleLine="true"
+        android:title="@string/max_buffer"
+        app:dialogMessage="@string/max_buffer_summary"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false"
+        app:useSimpleSummaryProvider="true" />
+
+    <EditTextPreference
+        android:defaultValue="2000"
+        android:key="player_buffer_playback"
+        android:singleLine="true"
+        android:title="@string/buffer_for_playback"
+        app:dialogMessage="@string/buffer_for_playback_summary"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false"
+        app:useSimpleSummaryProvider="true" />
+
+    <EditTextPreference
+        android:defaultValue="2000"
+        android:key="player_buffer_rebuffer"
+        android:singleLine="true"
+        android:title="@string/rebuffer"
+        app:dialogMessage="@string/rebuffer_summary"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false"
+        app:useSimpleSummaryProvider="true" />
+
+    <EditTextPreference
+        android:defaultValue=""
+        android:key="player_live_min_speed"
+        android:singleLine="true"
+        android:title="@string/live_min_speed"
+        app:dialogMessage="@string/live_min_speed_summary"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false"
+        app:useSimpleSummaryProvider="true" />
+
+    <EditTextPreference
+        android:defaultValue=""
+        android:key="player_live_max_speed"
+        android:singleLine="true"
+        android:title="@string/live_max_speed"
+        app:dialogMessage="@string/live_max_speed_summary"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false"
+        app:useSimpleSummaryProvider="true" />
+
+    <EditTextPreference
+        android:defaultValue="2000"
+        android:key="player_live_target_offset"
+        android:singleLine="true"
+        android:title="@string/live_target_offset"
+        app:dialogMessage="@string/live_target_offset_summary"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false"
+        app:useSimpleSummaryProvider="true" />
+
+    <PreferenceCategory
         android:title="@string/settings_playback_stream"
         app:iconSpaceReserved="false" />
 
@@ -85,6 +287,37 @@
         android:key="token_include_token_video"
         android:summary="@string/sub_only_summary"
         android:title="@string/include_gql_token_video"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_player_behavior"
+        app:iconSpaceReserved="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="player_rounded_corner_padding"
+        android:title="@string/avoid_rounded_corners"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="player_move_freely"
+        android:title="@string/move_player_freely"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_use_videopositions"
+        android:title="@string/save_video_positions"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <Preference
+        android:key="delete_video_positions"
+        android:title="@string/delete_video_positions"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 

@@ -19,14 +19,14 @@
     <fragment
         android:id="@+id/themeSettingsFragment"
         android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$ThemeSettingsFragment"
-        android:label="@string/theme" />
+        android:label="@string/settings_section_appearance" />
     <action
         android:id="@+id/action_global_themeSettingsFragment"
         app:destination="@id/themeSettingsFragment" />
     <fragment
         android:id="@+id/uiSettingsFragment"
         android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$UiSettingsFragment"
-        android:label="@string/ui_settings" />
+        android:label="@string/settings_home_browsing" />
     <action
         android:id="@+id/action_global_uiSettingsFragment"
         app:destination="@id/uiSettingsFragment" />
@@ -40,49 +40,21 @@
     <fragment
         android:id="@+id/playerSettingsFragment"
         android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$PlayerSettingsFragment"
-        android:label="@string/player_settings" />
+        android:label="@string/settings_section_playback" />
     <action
         android:id="@+id/action_global_playerSettingsFragment"
         app:destination="@id/playerSettingsFragment" />
     <fragment
         android:id="@+id/playerButtonSettingsFragment"
         android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$PlayerButtonSettingsFragment"
-        android:label="@string/player_buttons" />
+        android:label="@string/settings_home_controls" />
     <action
         android:id="@+id/action_global_playerButtonSettingsFragment"
         app:destination="@id/playerButtonSettingsFragment" />
     <fragment
-        android:id="@+id/playerMenuSettingsFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$PlayerMenuSettingsFragment"
-        android:label="@string/player_menu_settings" />
-    <action
-        android:id="@+id/action_global_playerMenuSettingsFragment"
-        app:destination="@id/playerMenuSettingsFragment" />
-    <fragment
-        android:id="@+id/bufferSettingsFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$BufferSettingsFragment"
-        android:label="@string/buffer_settings" />
-    <action
-        android:id="@+id/action_global_bufferSettingsFragment"
-        app:destination="@id/bufferSettingsFragment" />
-    <fragment
-        android:id="@+id/proxySettingsFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$ProxySettingsFragment"
-        android:label="@string/proxy_settings" />
-    <action
-        android:id="@+id/action_global_proxySettingsFragment"
-        app:destination="@id/proxySettingsFragment" />
-    <fragment
-        android:id="@+id/playbackSettingsFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$PlaybackSettingsFragment"
-        android:label="@string/playback_settings" />
-    <action
-        android:id="@+id/action_global_playbackSettingsFragment"
-        app:destination="@id/playbackSettingsFragment" />
-    <fragment
         android:id="@+id/apiTokenSettingsFragment"
         android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$ApiTokenSettingsFragment"
-        android:label="@string/api_token_settings" />
+        android:label="@string/settings_home_account_network" />
     <action
         android:id="@+id/action_global_apiTokenSettingsFragment"
         app:destination="@id/apiTokenSettingsFragment" />
@@ -93,13 +65,6 @@
     <action
         android:id="@+id/action_global_downloadSettingsFragment"
         app:destination="@id/downloadSettingsFragment" />
-    <fragment
-        android:id="@+id/updateSettingsFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$UpdateSettingsFragment"
-        android:label="@string/update_settings" />
-    <action
-        android:id="@+id/action_global_updateSettingsFragment"
-        app:destination="@id/updateSettingsFragment" />
     <fragment
         android:id="@+id/debugSettingsFragment"
         android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$DebugSettingsFragment"

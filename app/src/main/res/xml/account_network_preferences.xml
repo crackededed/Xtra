@@ -1,0 +1,171 @@
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        android:title="@string/settings_account_login"
+        app:iconSpaceReserved="false" />
+
+    <ListPreference
+        android:defaultValue="0"
+        android:entries="@array/loginApiEntries"
+        android:entryValues="@array/miscValues"
+        android:key="api_login"
+        android:summary="%s"
+        android:title="@string/api_login"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <EditTextPreference
+        android:defaultValue="ilfexgv3nnljz3isbm257gzwrzr7bi"
+        android:key="helix_client_id"
+        android:title="@string/api_helix_client_id"
+        app:useSimpleSummaryProvider="true"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <EditTextPreference
+        android:defaultValue="https://localhost"
+        android:key="helix_redirect"
+        android:title="@string/api_helix_redirect"
+        app:useSimpleSummaryProvider="true"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <EditTextPreference
+        android:defaultValue="kd1unb4b3q4t58fwlpcbzcbnm76a8fp"
+        android:key="gql_client_id2"
+        android:title="@string/api_gql_client_id"
+        app:useSimpleSummaryProvider="true"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_account_tokens"
+        app:iconSpaceReserved="false" />
+
+    <EditTextPreference
+        android:key="user_id"
+        android:title="@string/api_user_id"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <EditTextPreference
+        android:key="username"
+        android:title="@string/api_user_login"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <EditTextPreference
+        android:key="token"
+        android:title="@string/api_helix_token"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <EditTextPreference
+        android:key="gql_token2"
+        android:title="@string/api_gql_token"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <EditTextPreference
+        android:key="gql_token_web"
+        android:title="@string/api_web_gql_token"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="validate_tokens"
+        android:title="@string/api_validate_tokens"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_account_network"
+        app:iconSpaceReserved="false" />
+
+    <ListPreference
+        android:defaultValue="OkHttp"
+        android:entries="@array/networkLibraryEntries"
+        android:entryValues="@array/networkLibraryEntries"
+        android:key="network_library"
+        android:summary="%s"
+        android:title="@string/network_library"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="player_stream_proxy"
+        android:summary="@string/use_custom_proxy_desc"
+        android:title="@string/use_custom_proxy"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <EditTextPreference
+        android:key="player_proxy_url"
+        android:summary="@string/stream_proxy_url_desc"
+        android:title="@string/stream_proxy_url"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <PreferenceCategory
+        android:title="@string/settings_account_http_proxy"
+        app:iconSpaceReserved="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="proxy_playback_access_token"
+        android:title="@string/proxy_playback_access_token"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="proxy_multivariant_playlist"
+        android:title="@string/proxy_multivariant_playlist"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="proxy_media_playlist"
+        android:title="@string/proxy_media_playlist"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <EditTextPreference
+        android:key="proxy_host"
+        android:title="@string/proxy_host"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false"
+        app:useSimpleSummaryProvider="true" />
+
+    <EditTextPreference
+        android:key="proxy_port"
+        android:title="@string/proxy_port"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false"
+        app:useSimpleSummaryProvider="true" />
+
+    <EditTextPreference
+        android:key="proxy_user"
+        android:title="@string/proxy_user"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <EditTextPreference
+        android:key="proxy_password"
+        android:title="@string/proxy_password"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <Preference
+        android:key="request_local_network_permission"
+        android:summary="@string/access_local_network_desc"
+        android:title="@string/access_local_network_title"
+        app:iconSpaceReserved="false"
+        app:isPreferenceVisible="false"
+        app:singleLineTitle="false" />
+
+</androidx.preference.PreferenceScreen>

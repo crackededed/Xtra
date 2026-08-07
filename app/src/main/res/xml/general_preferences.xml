@@ -30,64 +30,7 @@
         app:singleLineTitle="false" />
 
     <PreferenceCategory
-        android:title="@string/background_playback_settings"
-        app:iconSpaceReserved="false" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="true"
-        android:key="player_picture_in_picture"
-        android:summary="@string/picture_in_picture_summary"
-        android:title="@string/picture_in_picture"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="true"
-        android:key="player_background_audio"
-        android:summary="@string/use_background_audio_summary"
-        android:title="@string/use_background_audio"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="true"
-        android:key="player_background_audio_locked"
-        android:summary="@string/use_background_audio_locked_summary"
-        android:title="@string/use_background_audio_locked"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <PreferenceCategory
-        android:title="@string/settings_section_network"
-        app:iconSpaceReserved="false" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="player_stream_proxy"
-        android:summary="@string/use_custom_proxy_desc"
-        android:title="@string/use_custom_proxy"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <EditTextPreference
-        android:key="player_proxy_url"
-        android:summary="@string/stream_proxy_url_desc"
-        android:title="@string/stream_proxy_url"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <ListPreference
-        android:defaultValue="OkHttp"
-        android:entries="@array/networkLibraryEntries"
-        android:entryValues="@array/networkLibraryEntries"
-        android:key="network_library"
-        android:summary="%s"
-        android:title="@string/network_library"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <PreferenceCategory
-        android:title="@string/settings_section_app"
+        android:title="@string/settings_general_updates"
         app:iconSpaceReserved="false" />
 
     <Preference
@@ -95,6 +38,39 @@
         android:title="@string/check_updates"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="update_check_enabled"
+        android:title="@string/auto_check_updates"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <EditTextPreference
+        android:defaultValue="7"
+        android:key="update_check_frequency"
+        android:title="@string/update_check_frequency"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="update_use_browser"
+        android:title="@string/update_using_browser"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <EditTextPreference
+        android:defaultValue="https://api.github.com/repos/thiscallnet/xtra/releases/tags/latest"
+        android:key="update_url"
+        android:title="@string/update_url"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false"
+        app:useSimpleSummaryProvider="true" />
+
+    <PreferenceCategory
+        android:title="@string/settings_general_data"
+        app:iconSpaceReserved="false" />
 
     <Preference
         android:key="backup_settings"
@@ -109,12 +85,34 @@
         app:singleLineTitle="false" />
 
     <PreferenceCategory
-        android:title="@string/settings_section_advanced"
+        android:title="@string/settings_general_about"
         app:iconSpaceReserved="false" />
 
     <Preference
-        android:key="debug_settings"
-        android:title="@string/debug_settings"
+        android:key="app_version"
+        android:selectable="false"
+        android:title="@string/app_version"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <Preference
+        android:key="app_build"
+        android:selectable="false"
+        android:title="@string/app_build"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <Preference
+        android:key="app_package"
+        android:selectable="false"
+        android:title="@string/app_package"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <Preference
+        android:key="last_update_check"
+        android:selectable="false"
+        android:title="@string/last_update_check"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 

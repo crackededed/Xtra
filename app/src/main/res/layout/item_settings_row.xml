@@ -20,6 +20,14 @@
         android:paddingEnd="12dp"
         android:paddingBottom="6dp">
 
+        <ImageView
+            android:id="@+id/icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="12dp"
+            android:importantForAccessibility="no"
+            app:tint="?android:textColorSecondary" />
+
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
