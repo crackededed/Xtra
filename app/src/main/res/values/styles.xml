@@ -109,6 +109,102 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
+    <style name="ModernTheme" parent="BaseDarkTheme">
+        <item name="colorPrimary">@color/modernPrimary</item>
+        <item name="colorOnPrimary">@color/modernOnPrimary</item>
+        <item name="colorPrimaryContainer">@color/modernPrimaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/modernOnPrimaryContainer</item>
+        <item name="colorSecondary">@color/modernSecondary</item>
+        <item name="colorSecondaryContainer">@color/modernSecondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/modernOnSecondaryContainer</item>
+        <item name="colorSurface">@color/modernSurface</item>
+        <item name="android:colorBackground">@color/modernSurface</item>
+        <item name="colorSurfaceContainerLowest">@color/modernSurfaceContainerLowest</item>
+        <item name="colorSurfaceContainerLow">@color/modernSurfaceContainerLow</item>
+        <item name="colorSurfaceContainer">@color/modernSurfaceContainer</item>
+        <item name="colorSurfaceContainerHigh">@color/modernSurfaceContainerHigh</item>
+        <item name="colorSurfaceContainerHighest">@color/modernSurfaceContainerHighest</item>
+        <item name="colorOnSurface">@color/modernOnSurface</item>
+        <item name="colorOnSurfaceVariant">@color/modernOnSurfaceVariant</item>
+        <item name="colorOutline">@color/modernOutline</item>
+        <item name="actionBarSize">56dp</item>
+        <item name="toolbarStyle">@style/ModernToolbar</item>
+        <item name="tabLayoutHeight">44dp</item>
+        <item name="bottomNavigationHeight">64dp</item>
+        <item name="bottomNavigationStyle">@style/ModernBottomNavigation</item>
+        <item name="cardStyle">@style/ModernCard</item>
+        <item name="materialSwitchStyle">@style/SwitchModern</item>
+        <item name="sliderStyle">@style/SliderModern</item>
+        <item name="preferenceTheme">@style/ModernPreferenceTheme</item>
+        <item name="android:navigationBarColor">@color/modernSurface</item>
+    </style>
+
+    <style name="ModernAmoledTheme" parent="ModernTheme">
+        <item name="colorSurface">@color/modernAmoledSurface</item>
+        <item name="android:colorBackground">@color/modernAmoledSurface</item>
+        <item name="colorSurfaceContainerLowest">@color/modernAmoledSurfaceContainerLowest</item>
+        <item name="colorSurfaceContainerLow">@color/modernAmoledSurfaceContainerLow</item>
+        <item name="colorSurfaceContainer">@color/modernAmoledSurfaceContainer</item>
+        <item name="colorSurfaceContainerHigh">@color/modernAmoledSurfaceContainerHigh</item>
+        <item name="colorSurfaceContainerHighest">@color/modernAmoledSurfaceContainerHighest</item>
+        <item name="android:navigationBarColor">@color/modernAmoledSurface</item>
+    </style>
+
+    <style name="ModernToolbar" parent="Widget.Material3.Toolbar">
+        <item name="maxButtonHeight">48dp</item>
+    </style>
+
+    <style name="ModernBottomNavigation" parent="Widget.Material3.BottomNavigationView">
+        <item name="materialThemeOverlay">@style/ModernBottomNavigationOverlay</item>
+        <item name="itemPaddingTop">2dp</item>
+        <item name="itemPaddingBottom">2dp</item>
+        <item name="activeIndicatorLabelPadding">0dp</item>
+        <item name="itemActiveIndicatorStyle">@style/ModernActiveIndicator</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <style name="ModernBottomNavigationOverlay">
+        <item name="colorSurfaceContainer">?attr/colorSurface</item>
+        <item name="colorSecondaryContainer">@color/modernPrimaryContainer</item>
+    </style>
+
+    <style name="ModernActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:height">30dp</item>
+    </style>
+
+    <style name="ModernCard" parent="Widget.Material3.CardView.Elevated">
+        <item name="android:layout_margin">4dp</item>
+        <item name="android:elevation">0dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainerLow</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="shapeAppearanceOverlay">@style/ModernCardShape</item>
+    </style>
+
+    <style name="ModernCardShape" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="SwitchModern" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="materialThemeOverlay">@style/SwitchOverlayModern</item>
+    </style>
+
+    <style name="SwitchOverlayModern">
+        <item name="colorPrimary">@color/modernPrimary</item>
+        <item name="colorOnPrimary">@color/modernOnPrimary</item>
+        <item name="colorPrimaryContainer">@color/modernPrimaryContainer</item>
+    </style>
+
+    <style name="SliderModern" parent="Widget.Material3.Slider">
+        <item name="trackColorInactive">@color/modernSurfaceContainerHighest</item>
+    </style>
+
+    <style name="ModernPreferenceTheme" parent="@style/PreferenceTheme">
+        <item name="android:listPreferredItemHeightSmall">56dp</item>
+        <item name="android:listPreferredItemHeight">64dp</item>
+        <item name="preferenceCategoryTitleTextColor">@color/modernPrimary</item>
+    </style>
+
     <style name="BaseDarkThemeReducedPadding" parent="BaseDarkTheme">
         <item name="actionBarSize">42dp</item>
         <item name="toolbarStyle">@style/CompactToolbar</item>

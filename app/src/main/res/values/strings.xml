@@ -76,6 +76,8 @@
     <string name="dark">Dark</string>
     <string name="amoled">Black</string>
     <string name="light">Light</string>
+    <string name="modern">Modern</string>
+    <string name="modern_amoled">Modern AMOLED</string>
     <string name="settings">Settings</string>
     <string name="general_settings">General</string>
     <string name="settings_search_prompt">Search settings</string>

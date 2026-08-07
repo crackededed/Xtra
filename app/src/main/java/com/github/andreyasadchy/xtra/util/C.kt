@@ -69,6 +69,8 @@ object C {
     const val SORT_DEFAULT_FOLLOWED_VIDEOS = "sort_default_followed_videos"
     const val SORT_DEFAULT_FOLLOWED_CHANNELS = "sort_default_followed_channels"
     const val THEME = "theme"
+    const val THEME_MODERN = "7"
+    const val THEME_MODERN_AMOLED = "8"
     const val PORTRAIT_COLUMN_COUNT = "columnsPortrait"
     const val LANDSCAPE_COLUMN_COUNT = "columnsLandscape"
     const val COMPACT_STREAMS = "compactStreamsV2"

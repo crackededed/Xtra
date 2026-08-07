@@ -33,4 +33,26 @@
     <color name="watchStreakOrange">#FFB31A</color>
     <color name="watchStreakProgress">#00D395</color>
     <color name="channel_points_reward_default">#9146FF</color>
+    <color name="modernPrimary">#D0BCFF</color>
+    <color name="modernOnPrimary">#381E72</color>
+    <color name="modernPrimaryContainer">#4F378B</color>
+    <color name="modernOnPrimaryContainer">#EADDFF</color>
+    <color name="modernSecondary">#C4C6D0</color>
+    <color name="modernSecondaryContainer">#42454F</color>
+    <color name="modernOnSecondaryContainer">#E1E2EC</color>
+    <color name="modernSurface">#111318</color>
+    <color name="modernSurfaceContainerLowest">#0C0E13</color>
+    <color name="modernSurfaceContainerLow">#191B22</color>
+    <color name="modernSurfaceContainer">#1D2028</color>
+    <color name="modernSurfaceContainerHigh">#272A33</color>
+    <color name="modernSurfaceContainerHighest">#32353E</color>
+    <color name="modernOnSurface">#E3E2E9</color>
+    <color name="modernOnSurfaceVariant">#C5C6D0</color>
+    <color name="modernOutline">#8F9099</color>
+    <color name="modernAmoledSurface">#000000</color>
+    <color name="modernAmoledSurfaceContainerLowest">#000000</color>
+    <color name="modernAmoledSurfaceContainerLow">#08090C</color>
+    <color name="modernAmoledSurfaceContainer">#0E0F13</color>
+    <color name="modernAmoledSurfaceContainerHigh">#16171C</color>
+    <color name="modernAmoledSurfaceContainerHighest">#202126</color>
 </resources>
