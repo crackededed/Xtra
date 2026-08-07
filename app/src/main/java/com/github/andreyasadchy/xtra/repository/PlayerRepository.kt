@@ -39,6 +39,9 @@ import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
+import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
+import com.github.andreyasadchy.xtra.util.m3u8.TwitchAdDetector
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -63,6 +66,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.net.InetSocketAddress
 import java.net.Proxy
+import java.net.URI
 import java.util.concurrent.ExecutorService
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -81,6 +85,11 @@ class PlayerRepository(
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
 ) {
+
+    data class StreamPlaylistCandidate(
+        val playerType: String,
+        val url: String,
+    )
 
     suspend fun loadStreamPlaylistUrl(context: Context, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, supportedCodecs: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): String = withContext(Dispatchers.IO) {
         val accessToken = loadStreamPlaybackAccessToken(context, networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity).let { token ->
@@ -102,6 +111,96 @@ class PlayerRepository(
             supportedCodecs?.let { appendQueryParameter("supported_codecs", it) }
             token?.let { appendQueryParameter("token", it) }
         }.build().toString()
+    }
+
+    /**
+     * Gets a stream using each alternate Twitch player type and rejects a
+     * candidate when its first media playlist already contains ad markers.
+     * A failed inspection is treated as unknown rather than blocking playback;
+     * the player will run the normal HLS detector once the source is attached.
+     */
+    suspend fun loadCleanStreamPlaylistUrl(
+        context: Context,
+        networkLibrary: String?,
+        gqlHeaders: Map<String, String>,
+        channelLogin: String,
+        randomDeviceId: Boolean?,
+        xDeviceId: String?,
+        playerTypes: List<String>,
+        supportedCodecs: String?,
+        proxyPlaybackAccessToken: Boolean,
+        proxyHost: String?,
+        proxyPort: Int?,
+        proxyUser: String?,
+        proxyPassword: String?,
+        enableIntegrity: Boolean,
+    ): StreamPlaylistCandidate? = withContext(Dispatchers.IO) {
+        playerTypes.forEach { playerType ->
+            val url = try {
+                loadStreamPlaylistUrl(
+                    context = context,
+                    networkLibrary = networkLibrary,
+                    gqlHeaders = gqlHeaders,
+                    channelLogin = channelLogin,
+                    randomDeviceId = randomDeviceId,
+                    xDeviceId = xDeviceId,
+                    playerType = playerType,
+                    supportedCodecs = supportedCodecs,
+                    proxyPlaybackAccessToken = proxyPlaybackAccessToken,
+                    proxyHost = proxyHost,
+                    proxyPort = proxyPort,
+                    proxyUser = proxyUser,
+                    proxyPassword = proxyPassword,
+                    enableIntegrity = enableIntegrity,
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            } ?: return@forEach
+
+            if (containsAdMarkers(url) != true) {
+                return@withContext StreamPlaylistCandidate(playerType, url)
+            }
+        }
+        null
+    }
+
+    private suspend fun containsAdMarkers(masterUrl: String): Boolean? = withContext(Dispatchers.IO) {
+        try {
+            val master = okHttpClient.value.newCall(Request.Builder().url(masterUrl).build())
+                .executeAsync().use { response -> response.body.string() }
+            var mediaPath: String? = null
+            var expectMediaPlaylist = false
+            for (line in master.lineSequence()) {
+                val value = line.trim()
+                when {
+                    value.startsWith("#EXT-X-STREAM-INF") -> expectMediaPlaylist = true
+                    expectMediaPlaylist && value.isNotEmpty() && !value.startsWith("#") -> {
+                        mediaPath = value
+                        break
+                    }
+                }
+            }
+            val mediaUrl = mediaPath?.let {
+                runCatching { URI(masterUrl).resolve(it).toString() }.getOrNull() ?: it
+            }
+            if (mediaUrl == null) {
+                return@withContext TwitchAdDetector.isAd(
+                    PlaylistUtils.parseMediaPlaylist(master.byteInputStream())
+                )
+            }
+            okHttpClient.value.newCall(Request.Builder().url(mediaUrl).build())
+                .executeAsync().use { response ->
+                    response.body.byteStream().use { input ->
+                        TwitchAdDetector.isAd(PlaylistUtils.parseMediaPlaylist(input))
+                    }
+                }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        }
     }
 
     private suspend fun loadStreamPlaybackAccessToken(context: Context, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): Pair<String?, String?> = withContext(Dispatchers.IO) {

@@ -75,7 +75,9 @@ import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
+import com.github.andreyasadchy.xtra.util.m3u8.TwitchAdDetector
 import com.github.andreyasadchy.xtra.util.prefs
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -102,7 +104,6 @@ import kotlin.concurrent.scheduleAtFixedRate
 import kotlin.math.floor
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Instant
 
 @OptIn(UnstableApi::class)
 class ExoPlayerService : BasePlaybackService() {
@@ -125,6 +126,8 @@ class ExoPlayerService : BasePlaybackService() {
     private var proxyMediaPlaylist = false
     private var stopProxy = false
     private var hidden = false
+    private val adController = TwitchAdController()
+    private var adAvoidanceJob: Job? = null
     private var backupQualities: List<String>? = null
     private var updateQualities = false
     private var created = false
@@ -237,77 +240,36 @@ class ExoPlayerService : BasePlaybackService() {
                         }
                     }
                     if (type == STREAM) {
-                        val hideAds = prefs().getBoolean(C.PLAYER_HIDE_ADS, false)
+                        val avoidAds = prefs().getBoolean(C.PLAYER_AVOID_ADS, false)
+                                || prefs().getBoolean(C.PLAYER_HIDE_ADS, false)
+                        val suppressAds = avoidAds
                         val useProxy = prefs().getBoolean(C.PROXY_MEDIA_PLAYLIST, true)
                                 && !prefs().getString(C.PROXY_HOST, null).isNullOrBlank()
                                 && prefs().getString(C.PROXY_PORT, null)?.toIntOrNull() != null
-                        if (hideAds || useProxy) {
+                        if (suppressAds || useProxy) {
                             val playlist = (player?.currentManifest as? HlsManifest)?.mediaPlaylist
-                            val ads = playlist?.segments?.lastOrNull()?.let { segment ->
-                                val segmentStartTime = playlist.startTimeUs + segment.relativeStartTimeUs
-                                listOf("Amazon", "Adform", "DCM").any { segment.title.contains(it) } ||
-                                        playlist.interstitials.find {
-                                            val startTime = it.startDateUnixUs
-                                            val endTime = it.endDateUnixUs.takeIf { it != androidx.media3.common.C.TIME_UNSET }
-                                                ?: it.durationUs.takeIf { it != androidx.media3.common.C.TIME_UNSET }?.let { startTime + it }
-                                                ?: it.plannedDurationUs.takeIf { it != androidx.media3.common.C.TIME_UNSET }?.let { startTime + it }
-                                            endTime != null
-                                                    && (it.id.startsWith("stitched-ad-")
-                                                    || it.clientDefinedAttributes.find { it.name == "CLASS" }?.textValue == "twitch-stitched-ad"
-                                                    || it.clientDefinedAttributes.find { it.name.startsWith("X-TV-TWITCH-AD-") } != null)
-                                                    && segmentStartTime in startTime..endTime
-                                        } != null
-                            } == true
+                            val ads = playlist?.let { TwitchAdDetector.isAd(it) } == true
                             val oldValue = playingAds
                             playingAds = ads
                             if (ads) {
-                                if (proxyMediaPlaylist) {
-                                    if (!stopProxy) {
-                                        proxyMediaPlaylist = false
-                                        stopProxy = true
-                                    }
-                                } else {
-                                    if (!oldValue) {
-                                        val playlist = quality?.url
-                                        if (!stopProxy && !playlist.isNullOrBlank() && useProxy) {
-                                            proxyMediaPlaylist = true
-                                            lifecycleScope.launch {
-                                                for (i in 0 until 10) {
-                                                    delay(10.seconds)
-                                                    if (!checkPlaylist(prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), playlist)) {
-                                                        break
-                                                    }
-                                                }
-                                                proxyMediaPlaylist = false
-                                            }
+                                if (avoidAds) {
+                                    if (adAvoidanceJob?.isActive != true) {
+                                        val playerTypes = adController.playerTypesForAd(
+                                            prefs().getString(C.TOKEN_PLAYER_TYPE, "site")
+                                        )
+                                        if (playerTypes.isNotEmpty()) {
+                                            suppressAdPlayback()
+                                            tryAlternateStream(playerTypes, useProxy)
                                         } else {
-                                            if (hideAds) {
-                                                hidden = true
-                                                player?.let { player ->
-                                                    if (quality?.name != AUDIO_ONLY_QUALITY) {
-                                                        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
-                                                            setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
-                                                        }.build()
-                                                    }
-                                                    player.volume = 0f
-                                                }
-                                                serviceListener?.toast(R.string.waiting_ads, Toast.LENGTH_LONG)
-                                            }
+                                            fallbackFromAd(useProxy, suppressAds)
                                         }
                                     }
+                                } else if (!oldValue) {
+                                    fallbackFromAd(useProxy, suppressAds)
                                 }
                             } else {
-                                if (hideAds && hidden) {
-                                    hidden = false
-                                    player?.let { player ->
-                                        if (quality?.name != AUDIO_ONLY_QUALITY) {
-                                            player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
-                                                setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
-                                            }.build()
-                                        }
-                                        player.volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
-                                    }
-                                }
+                                adController.onCleanPlaylist()
+                                restoreAdPlayback()
                             }
                         }
                     }
@@ -762,9 +724,113 @@ class ExoPlayerService : BasePlaybackService() {
         }
     }
 
-    private suspend fun loadStream(restorePauseState: Boolean = false, restart: Boolean = false) {
+    private fun suppressAdPlayback() {
+        if (!hidden) {
+            hidden = true
+            player?.let { player ->
+                if (quality?.name != AUDIO_ONLY_QUALITY) {
+                    player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                        setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
+                    }.build()
+                }
+                player.volume = 0f
+            }
+            serviceListener?.toast(R.string.waiting_ads, Toast.LENGTH_LONG)
+        }
+    }
+
+    private fun restoreAdPlayback() {
+        if (hidden) {
+            hidden = false
+            player?.let { player ->
+                if (quality?.name != AUDIO_ONLY_QUALITY) {
+                    player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                        setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
+                    }.build()
+                }
+                player.volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
+            }
+        }
+    }
+
+    private fun fallbackFromAd(useProxy: Boolean, suppressAds: Boolean) {
+        if (proxyMediaPlaylist) {
+            if (!stopProxy) {
+                proxyMediaPlaylist = false
+                stopProxy = true
+            }
+            return
+        }
+        val playlist = quality?.url
+        if (!stopProxy && !playlist.isNullOrBlank() && useProxy) {
+            proxyMediaPlaylist = true
+            lifecycleScope.launch {
+                for (i in 0 until 10) {
+                    delay(10.seconds)
+                    if (!checkPlaylist(prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), playlist)) {
+                        break
+                    }
+                }
+                proxyMediaPlaylist = false
+            }
+        } else if (suppressAds) {
+            suppressAdPlayback()
+        }
+    }
+
+    private fun tryAlternateStream(playerTypes: List<String>, useProxy: Boolean) {
+        val channelLogin = channelLogin ?: return
+        adAvoidanceJob = lifecycleScope.launch {
+            val candidate = try {
+                xtraModule.playerRepository.loadCleanStreamPlaylistUrl(
+                    context = this@ExoPlayerService,
+                    networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
+                    gqlHeaders = TwitchApiHelper.getGQLHeaders(this@ExoPlayerService, prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, true)),
+                    channelLogin = channelLogin,
+                    randomDeviceId = prefs().getBoolean(C.TOKEN_RANDOM_DEVICE_ID, true),
+                    xDeviceId = prefs().getString(C.TOKEN_X_DEVICE_ID, "twitch-web-wall-mason"),
+                    playerTypes = playerTypes,
+                    supportedCodecs = prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
+                    proxyPlaybackAccessToken = prefs().getBoolean(C.PROXY_PLAYBACK_ACCESS_TOKEN, false),
+                    proxyHost = prefs().getString(C.PROXY_HOST, null),
+                    proxyPort = prefs().getString(C.PROXY_PORT, null)?.toIntOrNull(),
+                    proxyUser = prefs().getString(C.PROXY_USER, null),
+                    proxyPassword = prefs().getString(C.PROXY_PASSWORD, null),
+                    enableIntegrity = prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+            if (candidate != null && type == STREAM) {
+                try {
+                    loadStream(restorePauseState = true, playlistUrlOverride = candidate.url)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    fallbackFromAd(useProxy, suppressAds = true)
+                }
+            } else {
+                fallbackFromAd(useProxy, suppressAds = true)
+            }
+        }
+    }
+
+    private suspend fun loadStream(
+        restorePauseState: Boolean = false,
+        restart: Boolean = false,
+        playlistUrlOverride: String? = null,
+    ) {
         channelLogin?.let { channelLogin ->
-            if (restart || qualities.isNullOrEmpty()) {
+            if (!playlistUrlOverride.isNullOrBlank()) {
+                playlistUrl = playlistUrlOverride
+                qualities = null
+                updateQualities = true
+            } else if (restart || qualities.isNullOrEmpty()) {
+                adAvoidanceJob?.cancel()
+                adController.reset()
+                stopProxy = false
                 val proxyUrl = prefs().getString(C.PLAYER_PROXY_URL, "")
                 if (useCustomProxy && !proxyUrl.isNullOrBlank()) {
                     playlistUrl = proxyUrl.replace("\$channel", channelLogin)
@@ -1501,22 +1567,7 @@ class ExoPlayerService : BasePlaybackService() {
                     }
                 }
             }
-            playlist.segments.lastOrNull()?.let { segment ->
-                segment.title?.let { it.contains("Amazon") || it.contains("Adform") || it.contains("DCM") } == true ||
-                        segment.programDateTime?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }?.let { segmentStartTime ->
-                            playlist.dateRanges.find { dateRange ->
-                                (dateRange.id.startsWith("stitched-ad-") || dateRange.rangeClass == "twitch-stitched-ad" || dateRange.ad) &&
-                                        dateRange.endDate?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }?.let { endTime ->
-                                            segmentStartTime < endTime
-                                        } == true ||
-                                        dateRange.startDate.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }?.let { startTime ->
-                                            (dateRange.duration ?: dateRange.plannedDuration)?.let { (it * 1000f).toLong() }?.let { duration ->
-                                                segmentStartTime < (startTime + duration)
-                                            } == true
-                                        } == true
-                            } != null
-                        } == true
-            } == true
+            TwitchAdDetector.isAd(playlist)
         } catch (e: Exception) {
             false
         }
@@ -2185,6 +2236,9 @@ class ExoPlayerService : BasePlaybackService() {
         super.onDestroy()
         streamRecoveryJob?.cancel()
         streamRecoveryJob = null
+        adAvoidanceJob?.cancel()
+        adAvoidanceJob = null
+        adController.reset()
         backgroundVideoDisabled = false
         player?.release()
         session?.release()
