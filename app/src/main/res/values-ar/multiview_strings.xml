@@ -3,9 +3,7 @@
     <string name="watch_in_multiview">مشاهدة في العرض المتعدد</string>
     <string name="multiview">عرض متعدد</string>
     <string name="multiview_add_stream">إضافة بث</string>
-    <string name="multiview_add_stream_title">إضافة بث ثانٍ</string>
     <string name="multiview_channel_hint">اسم القناة</string>
-    <string name="multiview_add_stream_description">أدخل اسم قناة مباشرة لإضافتها بجانب البث الحالي.</string>
     <string name="multiview_add_stream_empty">أدخل اسم قناة.</string>
     <string name="multiview_stream_not_found">القناة غير متصلة أو تعذر العثور عليها.</string>
     <string name="multiview_loading">جارٍ تحميل البث…</string>
@@ -13,9 +11,15 @@
     <string name="multiview_audio">الصوت: %s</string>
     <string name="multiview_chat">الدردشة</string>
     <string name="multiview_hide_chat">إخفاء الدردشة</string>
-    <string name="multiview_empty_slot">أضف بثًا ثانيًا للمقارنة.</string>
     <string name="multiview_close">تم</string>
     <string name="multiview_remove_stream">إزالة البث</string>
     <string name="multiview_audio_active">الصوت نشط لـ %s</string>
     <string name="multiview_audio_muted">الصوت مكتوم لـ %s</string>
+    <string name="multiview_add_stream_count">إضافة بث (%1$d/%2$d)</string>
+    <string name="multiview_picker_title">اختر قناة مباشرة</string>
+    <string name="multiview_picker_description">اختر إحدى قنواتك المباشرة أو أدخل اسم قناة أدناه.</string>
+    <string name="multiview_no_live_channels">لم يتم العثور على قنوات مباشرة.</string>
+    <string name="multiview_use_channel">استخدام القناة</string>
+    <string name="multiview_duplicate_stream">هذه القناة موجودة بالفعل في العرض المتعدد.</string>
+    <string name="multiview_max_streams">يمكنك مشاهدة 4 بثوث كحد أقصى.</string>
 </resources>

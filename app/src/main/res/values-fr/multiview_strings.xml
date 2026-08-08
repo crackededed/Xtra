@@ -3,9 +3,7 @@
     <string name="watch_in_multiview">Regarder en multivue</string>
     <string name="multiview">Multivue</string>
     <string name="multiview_add_stream">Ajouter un stream</string>
-    <string name="multiview_add_stream_title">Ajouter un deuxième stream</string>
     <string name="multiview_channel_hint">Nom de la chaîne</string>
-    <string name="multiview_add_stream_description">Saisissez le nom d’une chaîne en direct pour l’ajouter à côté du stream actuel.</string>
     <string name="multiview_add_stream_empty">Saisissez un nom de chaîne.</string>
     <string name="multiview_stream_not_found">Cette chaîne est hors ligne ou introuvable.</string>
     <string name="multiview_loading">Chargement du stream…</string>
@@ -13,9 +11,15 @@
     <string name="multiview_audio">Audio : %s</string>
     <string name="multiview_chat">Chat</string>
     <string name="multiview_hide_chat">Masquer le chat</string>
-    <string name="multiview_empty_slot">Ajoutez un deuxième stream pour les comparer.</string>
     <string name="multiview_close">Terminé</string>
     <string name="multiview_remove_stream">Supprimer le stream</string>
     <string name="multiview_audio_active">Audio actif pour %s</string>
     <string name="multiview_audio_muted">Audio désactivé pour %s</string>
+    <string name="multiview_add_stream_count">Ajouter un stream (%1$d/%2$d)</string>
+    <string name="multiview_picker_title">Choisir une chaîne en direct</string>
+    <string name="multiview_picker_description">Sélectionnez l’une de vos chaînes en direct ou saisissez un nom de chaîne ci-dessous.</string>
+    <string name="multiview_no_live_channels">Aucune chaîne en direct trouvée.</string>
+    <string name="multiview_use_channel">Utiliser la chaîne</string>
+    <string name="multiview_duplicate_stream">Cette chaîne est déjà dans la multivue.</string>
+    <string name="multiview_max_streams">Vous pouvez regarder jusqu’à 4 streams.</string>
 </resources>

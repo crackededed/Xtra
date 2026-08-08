@@ -12,17 +12,18 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.OptIn
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
-import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -37,36 +38,48 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import androidx.paging.LoadState
+import androidx.paging.PagingDataAdapter
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.databinding.FragmentMultiviewBinding
 import com.github.andreyasadchy.xtra.model.ui.Stream
-import com.github.andreyasadchy.xtra.ui.chat.ChatFragment
-import com.github.andreyasadchy.xtra.ui.main.MainActivity
-import com.github.andreyasadchy.xtra.ui.player.ExoPlayerService
 import com.github.andreyasadchy.xtra.player.lowlatency.CronetDataSource
 import com.github.andreyasadchy.xtra.player.lowlatency.HttpEngineDataSource
 import com.github.andreyasadchy.xtra.player.lowlatency.OkHttpDataSource
+import com.github.andreyasadchy.xtra.ui.chat.ChatFragment
+import com.github.andreyasadchy.xtra.ui.common.StreamsAdapter
+import com.github.andreyasadchy.xtra.ui.common.StreamsCompactAdapter
+import com.github.andreyasadchy.xtra.ui.following.streams.FollowedStreamsViewModel
+import com.github.andreyasadchy.xtra.ui.main.MainActivity
+import com.github.andreyasadchy.xtra.ui.player.ExoPlayerService
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+
 @OptIn(UnstableApi::class)
 class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
 
     private var _binding: FragmentMultiviewBinding? = null
     private val binding get() = _binding!!
     private val viewModel: MultiviewViewModel by viewModels { MultiviewViewModel.MultiviewViewModelFactory }
+    private val followedStreamsViewModel: FollowedStreamsViewModel by viewModels {
+        FollowedStreamsViewModel.FollowedStreamsViewModelFactory
+    }
 
-    private lateinit var firstSlot: Slot
-    private lateinit var secondSlot: Slot
-    private var activeSlot = 0
-    private var chatSlot: Int? = null
+    private val slots = mutableListOf<Slot>()
+    private var activeSlotIndex = 0
+    private var chatSlot: Slot? = null
     private var previousNavBarVisibility = View.VISIBLE
-    private var wasPlaying = booleanArrayOf(false, false)
+    private var wasPlaying = BooleanArray(MAX_STREAMS)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -79,64 +92,68 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         }
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.multiviewRoot) { root, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            root.updatePadding(top = systemBars.top, bottom = systemBars.bottom)
+            val systemBars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            root.updatePadding(
+                left = systemBars.left,
+                top = systemBars.top,
+                right = systemBars.right,
+                bottom = systemBars.bottom,
+            )
             insets
         }
 
-        firstSlot = createSlot(binding.streamOneContainer, 0)
-        secondSlot = createSlot(binding.streamTwoContainer, 1)
-        configureGrid()
-
-        binding.addStreamButton.setOnClickListener { showAddStreamDialog() }
+        binding.addStreamButton.setOnClickListener { showAddStreamPicker() }
         binding.chatButton.setOnClickListener { toggleChat() }
-        binding.closeButton.setOnClickListener { findNavController().navigateUp() }
+        binding.closeButton.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
 
-        val firstStream = savedInstanceState?.parcelable<Stream>(KEY_FIRST_STREAM)
-            ?: requireArguments().parcelable<Stream>(ARG_STREAM)
-        val secondStream = savedInstanceState?.parcelable<Stream>(KEY_SECOND_STREAM)
-        if (firstStream != null) {
-            startSlot(firstSlot, firstStream)
+        val restoredStreams = savedInstanceState?.parcelableArrayList<Stream>(KEY_STREAMS)
+        val initialStreams = restoredStreams
+            ?: listOfNotNull(requireArguments().parcelable<Stream>(ARG_STREAM))
+        initialStreams
+            .distinctBy { it.channelLogin?.lowercase() }
+            .take(MAX_STREAMS)
+            .forEach { restoreStream(it) }
+
+        activeSlotIndex = (savedInstanceState?.getInt(KEY_ACTIVE_SLOT, 0) ?: 0)
+            .coerceIn(0, (slots.lastIndex).coerceAtLeast(0))
+        if (slots.isNotEmpty()) {
+            setActiveSlot(activeSlotIndex, refreshChat = false)
         } else {
-            showSlotMessage(firstSlot, getString(R.string.multiview_stream_not_found), error = true)
+            updateToolbar()
         }
-        if (secondStream != null) {
-            startSlot(secondSlot, secondStream)
-        } else {
-            resetSlot(secondSlot)
-        }
-        setActiveSlot(savedInstanceState?.getInt(KEY_ACTIVE_SLOT, 0) ?: 0)
-        updateToolbar()
+        rebuildGrid()
     }
 
     override fun onStart() {
         super.onStart()
-        firstSlotOrNull()?.player?.let { player ->
-            if (wasPlaying[0]) player.playWhenReady = true
-        }
-        secondSlotOrNull()?.player?.let { player ->
-            if (wasPlaying[1]) player.playWhenReady = true
+        slots.forEachIndexed { index, slot ->
+            if (wasPlaying.getOrNull(index) == true) {
+                slot.player?.playWhenReady = true
+            }
         }
     }
 
     override fun onStop() {
-        wasPlaying[0] = firstSlotOrNull()?.player?.playWhenReady == true
-        wasPlaying[1] = secondSlotOrNull()?.player?.playWhenReady == true
-        firstSlotOrNull()?.player?.playWhenReady = false
-        secondSlotOrNull()?.player?.playWhenReady = false
+        slots.forEachIndexed { index, slot ->
+            if (index < wasPlaying.size) {
+                wasPlaying[index] = slot.player?.playWhenReady == true
+            }
+            slot.player?.playWhenReady = false
+        }
         super.onStop()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        firstSlotOrNull()?.stream?.let { outState.putParcelable(KEY_FIRST_STREAM, it) }
-        secondSlotOrNull()?.stream?.let { outState.putParcelable(KEY_SECOND_STREAM, it) }
-        outState.putInt(KEY_ACTIVE_SLOT, activeSlot)
+        outState.putParcelableArrayList(KEY_STREAMS, ArrayList(slots.mapNotNull { it.stream }))
+        outState.putInt(KEY_ACTIVE_SLOT, activeSlotIndex)
         super.onSaveInstanceState(outState)
     }
 
     override fun onDestroyView() {
-        firstSlotOrNull()?.release()
-        secondSlotOrNull()?.release()
+        slots.forEach { it.release() }
+        slots.clear()
         childFragmentManager.findFragmentByTag(CHAT_TAG)?.let {
             childFragmentManager.beginTransaction().remove(it).commitAllowingStateLoss()
         }
@@ -145,34 +162,96 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         super.onDestroyView()
     }
 
-    private fun configureGrid() {
+    private fun restoreStream(stream: Stream) {
+        if (stream.channelLogin.isNullOrBlank()) return
+        val slot = createSlot(slots.size)
+        slots += slot
+        rebuildGrid()
+        startSlot(slot, stream)
+    }
+
+    private fun addStream(stream: Stream): Boolean {
+        val login = stream.channelLogin?.trim()?.lowercase()
+        if (login.isNullOrBlank() || slots.size >= MAX_STREAMS || isDuplicate(login)) return false
+
+        val slot = createSlot(slots.size)
+        slots += slot
+        rebuildGrid()
+        startSlot(slot, stream)
+        setActiveSlot(slots.lastIndex)
+        return true
+    }
+
+    private fun isDuplicate(channelLogin: String): Boolean {
+        return slots.any { it.stream?.channelLogin?.equals(channelLogin, ignoreCase = true) == true }
+    }
+
+    private fun rebuildGrid() {
+        if (_binding == null) return
+        slots.forEach { slot ->
+            (slot.container.parent as? ViewGroup)?.removeView(slot.container)
+        }
+        binding.videoGrid.removeAllViews()
+        if (slots.isEmpty()) return
+
         val landscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-        binding.videoGrid.orientation = if (landscape) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL
-        firstSlotOrNull()?.container?.updateLayoutParams<LinearLayout.LayoutParams> {
-            width = if (landscape) 0 else ViewGroup.LayoutParams.MATCH_PARENT
-            height = if (landscape) ViewGroup.LayoutParams.MATCH_PARENT else 0
-            weight = 1f
+        val columns = when (slots.size) {
+            1 -> 1
+            2 -> if (landscape) 2 else 1
+            3 -> if (landscape) 3 else 1
+            else -> 2
         }
-        secondSlotOrNull()?.container?.updateLayoutParams<LinearLayout.LayoutParams> {
-            width = if (landscape) 0 else ViewGroup.LayoutParams.MATCH_PARENT
-            height = if (landscape) ViewGroup.LayoutParams.MATCH_PARENT else 0
-            weight = 1f
+        val rows = (slots.size + columns - 1) / columns
+        val gap = dp(3)
+
+        repeat(rows) { row ->
+            val rowLayout = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setBackgroundColor(Color.BLACK)
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    0,
+                    1f,
+                )
+            }
+            repeat(columns) { column ->
+                val index = row * columns + column
+                if (index < slots.size) {
+                    val slot = slots[index]
+                    slot.index = index
+                    val params = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+                    params.setMargins(
+                        if (column > 0) gap else 0,
+                        if (row > 0) gap else 0,
+                        if (column < columns - 1) gap else 0,
+                        if (row < rows - 1) gap else 0,
+                    )
+                    rowLayout.addView(slot.container, params)
+                }
+            }
+            binding.videoGrid.addView(rowLayout)
         }
-        binding.streamDivider.updateLayoutParams<LinearLayout.LayoutParams> {
-            width = if (landscape) 2 else ViewGroup.LayoutParams.MATCH_PARENT
-            height = if (landscape) ViewGroup.LayoutParams.MATCH_PARENT else 2
-            weight = 0f
+        slots.forEach { slot ->
+            slot.removeButton.isVisible = slots.size > 1
+            updateAudioButton(slot)
         }
     }
 
-    private fun createSlot(container: FrameLayout, index: Int): Slot {
+    private fun createSlot(index: Int): Slot {
+        val container = FrameLayout(requireContext()).apply {
+            setBackgroundColor(Color.BLACK)
+            isClickable = true
+        }
         val playerView = PlayerView(requireContext()).apply {
             useController = false
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             setShutterBackgroundColor(Color.BLACK)
             setKeepContentOnPlayerReset(true)
         }
-        container.addView(playerView, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        container.addView(
+            playerView,
+            FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
+        )
 
         val topBar = LinearLayout(requireContext()).apply {
             gravity = Gravity.CENTER_VERTICAL
@@ -193,7 +272,10 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         topBar.addView(audioButton)
         topBar.addView(chatButton)
         topBar.addView(removeButton)
-        container.addView(topBar, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP))
+        container.addView(
+            topBar,
+            FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP),
+        )
 
         lateinit var slot: Slot
         val status = TextView(requireContext()).apply {
@@ -203,20 +285,25 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
             setBackgroundColor(Color.argb(180, 0, 0, 0))
             setOnClickListener { slot.stream?.let { startSlot(slot, it) } }
         }
-        container.addView(status, FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER))
+        container.addView(
+            status,
+            FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER),
+        )
 
         slot = Slot(index, container, playerView, channel, status, audioButton, chatButton, removeButton)
-        container.setOnClickListener { setActiveSlot(index) }
-        playerView.setOnClickListener { setActiveSlot(index) }
-        audioButton.setOnClickListener { setActiveSlot(index) }
+        container.setOnClickListener { slots.indexOf(slot).takeIf { it >= 0 }?.let(::setActiveSlot) }
+        playerView.setOnClickListener { slots.indexOf(slot).takeIf { it >= 0 }?.let(::setActiveSlot) }
+        audioButton.setOnClickListener { slots.indexOf(slot).takeIf { it >= 0 }?.let(::setActiveSlot) }
         chatButton.setOnClickListener {
-            setActiveSlot(index)
-            showChatForSlot(index)
+            slots.indexOf(slot).takeIf { it >= 0 }?.let {
+                setActiveSlot(it)
+                showChatForSlot(it)
+            }
         }
-        removeButton.setOnClickListener { removeSecondStream() }
-        removeButton.isVisible = index == 1
-        audioButton.isVisible = index == 0
+        removeButton.setOnClickListener { removeSlot(slot) }
+        audioButton.isVisible = false
         chatButton.isVisible = false
+        removeButton.isVisible = false
         return slot
     }
 
@@ -237,12 +324,13 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
             return
         }
         slot.loadJob?.cancel()
+        slot.playerView.player = null
         slot.player?.release()
         slot.stream = stream
         slot.channel.text = displayName(stream)
         slot.audioButton.isVisible = true
         slot.chatButton.isVisible = !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)
-        slot.removeButton.isVisible = slot.index == 1
+        slot.removeButton.isVisible = slots.size > 1
         showSlotMessage(slot, getString(R.string.multiview_loading), error = false)
 
         val player = ExoPlayer.Builder(requireContext()).apply {
@@ -278,13 +366,15 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         slot.loadJob = viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val playlistUrl = viewModel.loadStreamPlaylist(channelLogin)
-                if (slot.stream?.channelLogin?.lowercase() != channelLogin) return@launch
+                if (!slots.contains(slot) || slot.stream?.channelLogin?.lowercase() != channelLogin) return@launch
                 val mediaItem = MediaItem.Builder()
                     .setUri(playlistUrl)
                     .setMimeType(MimeTypes.APPLICATION_M3U8)
                     .setLiveConfiguration(
                         MediaItem.LiveConfiguration.Builder()
-                            .setTargetOffsetMs(requireContext().prefs().getString(C.PLAYER_LIVE_TARGET_OFFSET, "2000")?.toLongOrNull() ?: 2000L)
+                            .setTargetOffsetMs(
+                                requireContext().prefs().getString(C.PLAYER_LIVE_TARGET_OFFSET, "2000")?.toLongOrNull() ?: 2000L
+                            )
                             .build()
                     )
                     .setMediaMetadata(
@@ -299,11 +389,11 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
                     .createMediaSource(mediaItem)
                 player.setMediaSource(source)
                 player.prepare()
-                player.volume = if (slot.index == activeSlot) activeVolume() else 0f
+                player.volume = if (slots.indexOf(slot) == activeSlotIndex) activeVolume() else 0f
                 player.playWhenReady = true
                 updateToolbar()
             } catch (_: Exception) {
-                if (slot.stream?.channelLogin?.lowercase() == channelLogin) {
+                if (slots.contains(slot) && slot.stream?.channelLogin?.lowercase() == channelLogin) {
                     showSlotMessage(slot, getString(R.string.multiview_playback_error), error = true)
                 }
             }
@@ -317,47 +407,38 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         slot.status.isClickable = error
     }
 
-    private fun resetSlot(slot: Slot) {
-        slot.loadJob?.cancel()
-        slot.loadJob = null
-        slot.playerView.player = null
-        slot.player?.release()
-        slot.player = null
+    private fun removeSlot(slot: Slot) {
+        if (slots.size <= 1 || !slots.contains(slot)) return
+        val removedIndex = slots.indexOf(slot)
+        val keepChat = binding.chatContainer.isVisible && chatSlot !== slot
+        if (chatSlot === slot) hideChat()
+        slot.release()
         slot.stream = null
-        slot.channel.text = null
-        slot.audioButton.isVisible = false
-        slot.chatButton.isVisible = false
-        slot.removeButton.isVisible = false
-        showSlotMessage(slot, getString(R.string.multiview_empty_slot), error = false)
+        slots.remove(slot)
+        slots.forEachIndexed { index, remaining -> remaining.index = index }
+        if (removedIndex < activeSlotIndex) activeSlotIndex--
+        activeSlotIndex = activeSlotIndex.coerceAtMost(slots.lastIndex)
+        rebuildGrid()
+        setActiveSlot(activeSlotIndex, refreshChat = keepChat)
     }
 
-    private fun removeSecondStream() {
-        if (secondSlot.stream == null) return
-        if (chatSlot == 1) hideChat()
-        resetSlot(secondSlot)
-        setActiveSlot(0)
-        updateToolbar()
-    }
-
-    private fun setActiveSlot(index: Int) {
-        if (index !in 0..1 || (index == 1 && secondSlotOrNull()?.stream == null)) return
-        activeSlot = index
+    private fun setActiveSlot(index: Int, refreshChat: Boolean = true) {
+        val activeIndex = index.takeIf { it in slots.indices } ?: return
+        activeSlotIndex = activeIndex
         val volume = activeVolume()
-        firstSlotOrNull()?.let { slot ->
-            slot.player?.volume = if (slot.index == index) volume else 0f
+        slots.forEach { slot ->
+            slot.player?.volume = if (slots.indexOf(slot) == activeIndex) volume else 0f
             updateAudioButton(slot)
         }
-        secondSlotOrNull()?.let { slot ->
-            slot.player?.volume = if (slot.index == index) volume else 0f
-            updateAudioButton(slot)
-        }
-        if (binding.chatContainer.isVisible) showChatForSlot(index)
+        if (refreshChat && binding.chatContainer.isVisible) showChatForSlot(activeIndex)
         updateToolbar()
     }
 
     private fun updateAudioButton(slot: Slot) {
-        val isActive = slot.index == activeSlot
-        slot.audioButton.setImageResource(if (isActive) R.drawable.baseline_volume_up_black_24 else R.drawable.baseline_volume_off_black_24)
+        val isActive = slots.indexOf(slot) == activeSlotIndex
+        slot.audioButton.setImageResource(
+            if (isActive) R.drawable.baseline_volume_up_black_24 else R.drawable.baseline_volume_off_black_24
+        )
         slot.audioButton.contentDescription = getString(
             if (isActive) R.string.multiview_audio_active else R.string.multiview_audio_muted,
             displayName(slot.stream),
@@ -365,23 +446,29 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
     }
 
     private fun updateToolbar() {
-        val active = if (activeSlot == 0) firstSlotOrNull()?.stream else secondSlotOrNull()?.stream
+        val active = slots.getOrNull(activeSlotIndex)?.stream
         binding.activeAudio.text = active?.let { getString(R.string.multiview_audio, displayName(it)) }
-        binding.addStreamButton.isVisible = secondSlotOrNull()?.stream == null
+        binding.addStreamButton.isVisible = slots.size < MAX_STREAMS
+        binding.addStreamButton.text = getString(R.string.multiview_add_stream_count, slots.size, MAX_STREAMS)
         binding.chatButton.isVisible = active != null && !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)
-        binding.chatButton.text = getString(if (binding.chatContainer.isVisible) R.string.multiview_hide_chat else R.string.multiview_chat)
-        firstSlotOrNull()?.let(::updateAudioButton)
-        secondSlotOrNull()?.let(::updateAudioButton)
+        binding.chatButton.text = getString(
+            if (binding.chatContainer.isVisible) R.string.multiview_hide_chat else R.string.multiview_chat
+        )
+        slots.forEach { slot ->
+            slot.removeButton.isVisible = slots.size > 1
+            updateAudioButton(slot)
+        }
     }
 
     private fun toggleChat() {
-        if (binding.chatContainer.isVisible) hideChat() else showChatForSlot(activeSlot)
+        if (binding.chatContainer.isVisible) hideChat() else showChatForSlot(activeSlotIndex)
     }
 
     private fun showChatForSlot(index: Int) {
-        val stream = if (index == 0) firstSlotOrNull()?.stream else secondSlotOrNull()?.stream
-        if (stream?.channelLogin.isNullOrBlank()) return
-        chatSlot = index
+        val slot = slots.getOrNull(index) ?: return
+        val stream = slot.stream ?: return
+        if (stream.channelLogin.isNullOrBlank()) return
+        chatSlot = slot
         binding.chatContainer.isVisible = true
         childFragmentManager.beginTransaction()
             .replace(
@@ -402,55 +489,137 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         updateToolbar()
     }
 
-    private fun showAddStreamDialog() {
+    private fun showAddStreamPicker() {
+        if (slots.size >= MAX_STREAMS) {
+            Toast.makeText(requireContext(), R.string.multiview_max_streams, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val root = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(4), 0, dp(4), 0)
+        }
+        val description = TextView(requireContext()).apply {
+            text = getString(R.string.multiview_picker_description)
+            setPadding(dp(4), dp(2), dp(4), dp(8))
+        }
+        val content = FrameLayout(requireContext()).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 220 else 320),
+            )
+        }
+        val recycler = RecyclerView(requireContext()).apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            clipToPadding = false
+            setPadding(0, dp(2), 0, dp(4))
+        }
+        val progress = ProgressBar(requireContext())
+        val empty = TextView(requireContext()).apply {
+            gravity = Gravity.CENTER
+            text = getString(R.string.multiview_no_live_channels)
+            setPadding(dp(16), dp(16), dp(16), dp(16))
+            isVisible = false
+        }
+        content.addView(recycler, FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+        content.addView(progress, FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER))
+        content.addView(empty, FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+
         val input = TextInputEditText(requireContext()).apply {
-            hint = getString(R.string.multiview_channel_hint)
             setSingleLine(true)
+            hint = getString(R.string.multiview_channel_hint)
         }
         val inputLayout = TextInputLayout(requireContext()).apply {
             hint = getString(R.string.multiview_channel_hint)
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             addView(input)
         }
+        val useButton = MaterialButton(requireContext()).apply {
+            text = getString(R.string.multiview_use_channel)
+            minWidth = 0
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                marginStart = dp(8)
+            }
+        }
+        val manualRow = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = dp(8)
+            }
+            addView(inputLayout)
+            addView(useButton)
+        }
+        root.addView(description)
+        root.addView(content)
+        root.addView(manualRow)
+
+        var pickerDialog: AlertDialog? = null
+        val selectStream: (Stream) -> Unit = { stream ->
+            val login = stream.channelLogin?.trim()?.lowercase()
+            when {
+                login.isNullOrBlank() -> Unit
+                isDuplicate(login) -> Toast.makeText(requireContext(), R.string.multiview_duplicate_stream, Toast.LENGTH_SHORT).show()
+                addStream(stream) -> pickerDialog?.dismiss()
+            }
+        }
+        val pagingAdapter: PagingDataAdapter<Stream, out RecyclerView.ViewHolder> =
+            if (requireContext().prefs().getString(C.COMPACT_STREAMS, "disabled") != "disabled") {
+                StreamsCompactAdapter(this, {}, showGame = false, onStreamClick = selectStream)
+            } else {
+                StreamsAdapter(this, {}, showGame = false, onStreamClick = selectStream)
+            }
+        recycler.adapter = pagingAdapter
+
         val dialog = MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.multiview_add_stream_title)
-            .setMessage(R.string.multiview_add_stream_description)
-            .setView(inputLayout)
+            .setTitle(R.string.multiview_picker_title)
+            .setView(root)
             .setNegativeButton(android.R.string.cancel, null)
-            .setPositiveButton(R.string.multiview_add_stream, null)
             .create()
-        dialog.setOnShowListener {
-            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val login = input.text?.toString()?.trim()?.removePrefix("@")?.lowercase().orEmpty()
-                if (login.isBlank()) {
-                    inputLayout.error = getString(R.string.multiview_add_stream_empty)
-                    return@setOnClickListener
-                }
-                if (login == firstSlotOrNull()?.stream?.channelLogin?.lowercase()) {
+        pickerDialog = dialog
+        var pagingJob: Job? = null
+        var loadStateJob: Job? = null
+        dialog.setOnDismissListener {
+            pagingJob?.cancel()
+            loadStateJob?.cancel()
+        }
+        useButton.setOnClickListener {
+            val login = input.text?.toString()?.trim()?.removePrefix("@")?.lowercase().orEmpty()
+            if (login.isBlank()) {
+                inputLayout.error = getString(R.string.multiview_add_stream_empty)
+                return@setOnClickListener
+            }
+            if (isDuplicate(login)) {
+                inputLayout.error = getString(R.string.multiview_duplicate_stream)
+                return@setOnClickListener
+            }
+            inputLayout.error = null
+            useButton.isEnabled = false
+            lifecycleScope.launch {
+                val stream = runCatching { viewModel.resolveLiveStream(login) }.getOrNull()
+                if (stream == null) {
                     inputLayout.error = getString(R.string.multiview_stream_not_found)
-                    return@setOnClickListener
-                }
-                inputLayout.error = null
-                dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).isEnabled = false
-                lifecycleScope.launch {
-                    val stream = viewModel.resolveLiveStream(login)
-                    if (stream == null) {
-                        inputLayout.error = getString(R.string.multiview_stream_not_found)
-                        dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).isEnabled = true
-                    } else {
-                        dialog.dismiss()
-                        startSlot(secondSlot, stream)
-                        setActiveSlot(activeSlot)
-                        updateToolbar()
-                    }
+                    useButton.isEnabled = true
+                } else if (addStream(stream)) {
+                    dialog.dismiss()
+                } else {
+                    inputLayout.error = getString(R.string.multiview_duplicate_stream)
+                    useButton.isEnabled = true
                 }
             }
         }
+
         dialog.show()
-        input.requestFocus()
-        dialog.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-        input.post {
-            (requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager)
-                ?.showSoftInput(input, 0)
+        pagingJob = viewLifecycleOwner.lifecycleScope.launch {
+            followedStreamsViewModel.flow.collectLatest { pagingData ->
+                pagingAdapter.submitData(pagingData)
+            }
+        }
+        loadStateJob = viewLifecycleOwner.lifecycleScope.launch {
+            pagingAdapter.loadStateFlow.collectLatest { loadStates ->
+                progress.isVisible = loadStates.refresh is LoadState.Loading
+                empty.isVisible = loadStates.refresh is LoadState.NotLoading && pagingAdapter.itemCount == 0
+            }
         }
     }
 
@@ -500,12 +669,8 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
-    private fun firstSlotOrNull(): Slot? = if (::firstSlot.isInitialized) firstSlot else null
-
-    private fun secondSlotOrNull(): Slot? = if (::secondSlot.isInitialized) secondSlot else null
-
     private class Slot(
-        val index: Int,
+        var index: Int,
         val container: FrameLayout,
         val playerView: PlayerView,
         val channel: TextView,
@@ -529,10 +694,10 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
 
     companion object {
         const val ARG_STREAM = "multiview_stream"
-        private const val KEY_FIRST_STREAM = "multiview_first_stream"
-        private const val KEY_SECOND_STREAM = "multiview_second_stream"
+        private const val KEY_STREAMS = "multiview_streams"
         private const val KEY_ACTIVE_SLOT = "multiview_active_slot"
         private const val CHAT_TAG = "multiview_chat"
+        private const val MAX_STREAMS = 4
 
         fun arguments(stream: Stream): Bundle = Bundle().apply {
             putParcelable(ARG_STREAM, stream)
@@ -546,5 +711,14 @@ private inline fun <reified T : Parcelable> Bundle.parcelable(key: String): T? {
     } else {
         @Suppress("DEPRECATION")
         getParcelable(key)
+    }
+}
+
+private inline fun <reified T : Parcelable> Bundle.parcelableArrayList(key: String): ArrayList<T>? {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getParcelableArrayList(key, T::class.java)
+    } else {
+        @Suppress("DEPRECATION")
+        getParcelableArrayList(key)
     }
 }

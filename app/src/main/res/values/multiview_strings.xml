@@ -3,9 +3,7 @@
     <string name="watch_in_multiview">Watch in multiview</string>
     <string name="multiview">Multiview</string>
     <string name="multiview_add_stream">Add stream</string>
-    <string name="multiview_add_stream_title">Add a second stream</string>
     <string name="multiview_channel_hint">Channel name</string>
-    <string name="multiview_add_stream_description">Enter a live channel name to add it beside the current stream.</string>
     <string name="multiview_add_stream_empty">Enter a channel name.</string>
     <string name="multiview_stream_not_found">That channel is offline or could not be found.</string>
     <string name="multiview_loading">Loading stream…</string>
@@ -13,9 +11,15 @@
     <string name="multiview_audio">Audio: %s</string>
     <string name="multiview_chat">Chat</string>
     <string name="multiview_hide_chat">Hide chat</string>
-    <string name="multiview_empty_slot">Add a second stream to compare them.</string>
     <string name="multiview_close">Done</string>
     <string name="multiview_remove_stream">Remove stream</string>
     <string name="multiview_audio_active">Audio active for %s</string>
     <string name="multiview_audio_muted">Audio muted for %s</string>
+    <string name="multiview_add_stream_count">Add stream (%1$d/%2$d)</string>
+    <string name="multiview_picker_title">Choose a live channel</string>
+    <string name="multiview_picker_description">Select one of your live channels, or enter a channel name below.</string>
+    <string name="multiview_no_live_channels">No live channels found.</string>
+    <string name="multiview_use_channel">Use channel</string>
+    <string name="multiview_duplicate_stream">That channel is already in multiview.</string>
+    <string name="multiview_max_streams">You can watch up to 4 streams.</string>
 </resources>

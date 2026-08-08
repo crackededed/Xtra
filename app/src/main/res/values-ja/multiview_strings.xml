@@ -3,9 +3,7 @@
     <string name="watch_in_multiview">マルチビューで見る</string>
     <string name="multiview">マルチビュー</string>
     <string name="multiview_add_stream">配信を追加</string>
-    <string name="multiview_add_stream_title">2つ目の配信を追加</string>
     <string name="multiview_channel_hint">チャンネル名</string>
-    <string name="multiview_add_stream_description">現在の配信の横に追加するライブチャンネル名を入力してください。</string>
     <string name="multiview_add_stream_empty">チャンネル名を入力してください。</string>
     <string name="multiview_stream_not_found">そのチャンネルはオフラインか、見つかりませんでした。</string>
     <string name="multiview_loading">配信を読み込み中…</string>
@@ -13,9 +11,15 @@
     <string name="multiview_audio">音声: %s</string>
     <string name="multiview_chat">チャット</string>
     <string name="multiview_hide_chat">チャットを隠す</string>
-    <string name="multiview_empty_slot">比較するために2つ目の配信を追加してください。</string>
     <string name="multiview_close">完了</string>
     <string name="multiview_remove_stream">配信を削除</string>
     <string name="multiview_audio_active">%s の音声を有効化</string>
     <string name="multiview_audio_muted">%s の音声をミュート</string>
+    <string name="multiview_add_stream_count">配信を追加（%1$d/%2$d）</string>
+    <string name="multiview_picker_title">ライブチャンネルを選択</string>
+    <string name="multiview_picker_description">ライブチャンネルを選択するか、下にチャンネル名を入力してください。</string>
+    <string name="multiview_no_live_channels">ライブチャンネルが見つかりません。</string>
+    <string name="multiview_use_channel">チャンネルを使用</string>
+    <string name="multiview_duplicate_stream">そのチャンネルはすでにマルチビューにあります。</string>
+    <string name="multiview_max_streams">最大4つの配信を視聴できます。</string>
 </resources>

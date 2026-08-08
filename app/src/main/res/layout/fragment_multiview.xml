@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/black"
+    android:clipToPadding="false"
     android:orientation="vertical">
 
     <LinearLayout
@@ -12,34 +13,16 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:clipToPadding="false"
         android:orientation="vertical">
-
-        <FrameLayout
-            android:id="@+id/streamOneContainer"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:background="@android:color/black" />
-
-        <View
-            android:id="@+id/streamDivider"
-            android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:background="?attr/colorOutline" />
-
-        <FrameLayout
-            android:id="@+id/streamTwoContainer"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:background="@android:color/black" />
 
     </LinearLayout>
 
     <FrameLayout
         android:id="@+id/chatContainer"
         android:layout_width="match_parent"
-        android:layout_height="260dp"
+        android:layout_height="0dp"
+        android:layout_weight="0.42"
         android:background="?android:colorBackground"
         android:visibility="gone" />
 
@@ -49,12 +32,12 @@
         android:layout_height="wrap_content"
         android:background="?android:colorBackground"
         android:gravity="center_vertical"
-        android:minHeight="56dp"
+        android:minHeight="64dp"
         android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="4dp">
+        android:paddingStart="12dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="6dp">
 
         <TextView
             android:id="@+id/activeAudio"
@@ -63,6 +46,9 @@
             android:layout_weight="1"
             android:ellipsize="end"
             android:maxLines="1"
+            android:minWidth="0dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?android:attr/textColorSecondary"
             tools:text="Audio: channel" />
@@ -72,6 +58,7 @@
             style="?attr/elevatedButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
             android:text="@string/multiview_chat" />
 
         <com.google.android.material.button.MaterialButton
@@ -87,6 +74,7 @@
             style="?attr/elevatedButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
             android:text="@string/multiview_close" />
 
     </LinearLayout>
