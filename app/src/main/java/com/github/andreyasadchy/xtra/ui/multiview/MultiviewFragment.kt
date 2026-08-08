@@ -104,6 +104,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
             )
             insets
         }
+        updateOrientationLayout()
 
         binding.addStreamButton.setOnClickListener { showAddStreamPicker() }
         binding.chatButton.setOnClickListener { toggleChat() }
@@ -133,6 +134,17 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         slots.forEachIndexed { index, slot ->
             if (wasPlaying.getOrNull(index) == true) {
                 slot.player?.playWhenReady = true
+            }
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (_binding != null) {
+            updateOrientationLayout()
+            binding.multiviewRoot.post {
+                rebuildGrid()
+                updateToolbar()
             }
         }
     }
@@ -240,6 +252,18 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         slots.forEach { slot ->
             slot.removeButton.isVisible = slots.size > 1
             updateAudioButton(slot)
+        }
+    }
+
+    private fun updateOrientationLayout() {
+        if (_binding == null) return
+        (binding.chatContainer.layoutParams as? LinearLayout.LayoutParams)?.let { params ->
+            params.weight = if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                if (combinedChat) LANDSCAPE_COMBINED_CHAT_WEIGHT else LANDSCAPE_CHAT_WEIGHT
+            } else {
+                PORTRAIT_CHAT_WEIGHT
+            }
+            binding.chatContainer.layoutParams = params
         }
     }
 
@@ -458,6 +482,8 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
 
     private fun updateToolbar() {
         val active = slots.getOrNull(activeSlotIndex)?.stream
+        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        binding.activeAudio.isVisible = active != null && isLandscape
         binding.activeAudio.text = active?.let { getString(R.string.multiview_audio, displayName(it)) }
         binding.addStreamButton.isVisible = slots.size < MAX_STREAMS
         binding.addStreamButton.text = getString(R.string.multiview_add_stream_count, slots.size, MAX_STREAMS)
@@ -494,6 +520,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         if (streams.size < 2) return
         combinedChat = true
         chatSlot = null
+        updateOrientationLayout()
         binding.chatContainer.isVisible = true
         childFragmentManager.beginTransaction()
             .replace(
@@ -511,6 +538,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         if (stream.channelLogin.isNullOrBlank()) return
         combinedChat = false
         chatSlot = slot
+        updateOrientationLayout()
         binding.chatContainer.isVisible = true
         childFragmentManager.beginTransaction()
             .replace(
@@ -549,7 +577,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         val content = FrameLayout(requireContext()).apply {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 220 else 320),
+                dp(if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 110 else 320),
             )
         }
         val recycler = RecyclerView(requireContext()).apply {
@@ -741,6 +769,9 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         private const val KEY_ACTIVE_SLOT = "multiview_active_slot"
         private const val CHAT_TAG = "multiview_chat"
         private const val MAX_STREAMS = 4
+        private const val LANDSCAPE_CHAT_WEIGHT = 0.7f
+        private const val LANDSCAPE_COMBINED_CHAT_WEIGHT = 1f
+        private const val PORTRAIT_CHAT_WEIGHT = 0.42f
 
         fun arguments(stream: Stream): Bundle = Bundle().apply {
             putParcelable(ARG_STREAM, stream)
