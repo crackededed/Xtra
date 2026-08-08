@@ -3,9 +3,7 @@
     <string name="watch_in_multiview">Çoklu görünümde izle</string>
     <string name="multiview">Çoklu görünüm</string>
     <string name="multiview_add_stream">Yayın ekle</string>
-    <string name="multiview_add_stream_title">İkinci yayın ekle</string>
     <string name="multiview_channel_hint">Kanal adı</string>
-    <string name="multiview_add_stream_description">Mevcut yayının yanına eklemek için canlı kanal adını girin.</string>
     <string name="multiview_add_stream_empty">Kanal adı girin.</string>
     <string name="multiview_stream_not_found">Bu kanal çevrimdışı veya bulunamadı.</string>
     <string name="multiview_loading">Yayın yükleniyor…</string>
@@ -13,9 +11,15 @@
     <string name="multiview_audio">Ses: %s</string>
     <string name="multiview_chat">Sohbet</string>
     <string name="multiview_hide_chat">Sohbeti gizle</string>
-    <string name="multiview_empty_slot">Karşılaştırmak için ikinci bir yayın ekleyin.</string>
     <string name="multiview_close">Bitti</string>
     <string name="multiview_remove_stream">Yayını kaldır</string>
     <string name="multiview_audio_active">%s için ses etkin</string>
     <string name="multiview_audio_muted">%s için ses kapalı</string>
+    <string name="multiview_add_stream_count">Yayın ekle (%1$d/%2$d)</string>
+    <string name="multiview_picker_title">Canlı kanal seçin</string>
+    <string name="multiview_picker_description">Canlı kanallarınızdan birini seçin veya aşağıya kanal adı girin.</string>
+    <string name="multiview_no_live_channels">Canlı kanal bulunamadı.</string>
+    <string name="multiview_use_channel">Kanalı kullan</string>
+    <string name="multiview_duplicate_stream">Bu kanal zaten çoklu görünümde.</string>
+    <string name="multiview_max_streams">En fazla 4 yayın izleyebilirsiniz.</string>
 </resources>

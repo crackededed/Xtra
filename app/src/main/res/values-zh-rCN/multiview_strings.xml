@@ -3,9 +3,7 @@
     <string name="watch_in_multiview">在多视图中观看</string>
     <string name="multiview">多视图</string>
     <string name="multiview_add_stream">添加直播</string>
-    <string name="multiview_add_stream_title">添加第二个直播</string>
     <string name="multiview_channel_hint">频道名称</string>
-    <string name="multiview_add_stream_description">输入直播频道名称，将其添加到当前直播旁边。</string>
     <string name="multiview_add_stream_empty">请输入频道名称。</string>
     <string name="multiview_stream_not_found">该频道已离线或找不到。</string>
     <string name="multiview_loading">正在加载直播…</string>
@@ -13,9 +11,15 @@
     <string name="multiview_audio">音频：%s</string>
     <string name="multiview_chat">聊天</string>
     <string name="multiview_hide_chat">隐藏聊天</string>
-    <string name="multiview_empty_slot">添加第二个直播以进行比较。</string>
     <string name="multiview_close">完成</string>
     <string name="multiview_remove_stream">移除直播</string>
     <string name="multiview_audio_active">%s 的音频已开启</string>
     <string name="multiview_audio_muted">%s 的音频已静音</string>
+    <string name="multiview_add_stream_count">添加直播（%1$d/%2$d）</string>
+    <string name="multiview_picker_title">选择直播频道</string>
+    <string name="multiview_picker_description">选择你的一个直播频道，或在下方输入频道名称。</string>
+    <string name="multiview_no_live_channels">未找到直播频道。</string>
+    <string name="multiview_use_channel">使用频道</string>
+    <string name="multiview_duplicate_stream">该频道已在多视图中。</string>
+    <string name="multiview_max_streams">最多可以观看 4 个直播。</string>
 </resources>

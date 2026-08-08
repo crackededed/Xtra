@@ -3,9 +3,7 @@
     <string name="watch_in_multiview">Tonton dalam multiview</string>
     <string name="multiview">Multiview</string>
     <string name="multiview_add_stream">Tambah streaming</string>
-    <string name="multiview_add_stream_title">Tambahkan streaming kedua</string>
     <string name="multiview_channel_hint">Nama kanal</string>
-    <string name="multiview_add_stream_description">Masukkan nama kanal live untuk menambahkannya di samping streaming saat ini.</string>
     <string name="multiview_add_stream_empty">Masukkan nama kanal.</string>
     <string name="multiview_stream_not_found">Kanal tersebut offline atau tidak ditemukan.</string>
     <string name="multiview_loading">Memuat streaming…</string>
@@ -13,9 +11,15 @@
     <string name="multiview_audio">Audio: %s</string>
     <string name="multiview_chat">Chat</string>
     <string name="multiview_hide_chat">Sembunyikan chat</string>
-    <string name="multiview_empty_slot">Tambahkan streaming kedua untuk membandingkannya.</string>
     <string name="multiview_close">Selesai</string>
     <string name="multiview_remove_stream">Hapus streaming</string>
     <string name="multiview_audio_active">Audio aktif untuk %s</string>
     <string name="multiview_audio_muted">Audio dibisukan untuk %s</string>
+    <string name="multiview_add_stream_count">Tambah streaming (%1$d/%2$d)</string>
+    <string name="multiview_picker_title">Pilih kanal live</string>
+    <string name="multiview_picker_description">Pilih salah satu kanal live Anda atau masukkan nama kanal di bawah.</string>
+    <string name="multiview_no_live_channels">Tidak ada kanal live yang ditemukan.</string>
+    <string name="multiview_use_channel">Gunakan kanal</string>
+    <string name="multiview_duplicate_stream">Kanal tersebut sudah ada di multiview.</string>
+    <string name="multiview_max_streams">Anda dapat menonton hingga 4 streaming.</string>
 </resources>

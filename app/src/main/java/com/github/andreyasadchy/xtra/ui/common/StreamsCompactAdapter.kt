@@ -21,6 +21,7 @@ import coil3.request.crossfade
 import coil3.request.target
 import coil3.request.transformations
 import coil3.transform.CircleCropTransformation
+import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentStreamsListItemCompactBinding
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
@@ -28,7 +29,6 @@ import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.multiview.MultiviewFragment
-import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
@@ -39,6 +39,7 @@ class StreamsCompactAdapter(
     private val fragment: Fragment,
     private val selectTag: (String) -> Unit,
     private val showGame: Boolean = true,
+    private val onStreamClick: ((Stream) -> Unit)? = null,
 ) : PagingDataAdapter<Stream, StreamsCompactAdapter.PagingViewHolder>(
     object : DiffUtil.ItemCallback<Stream>() {
         override fun areItemsTheSame(oldItem: Stream, newItem: Stream): Boolean =
@@ -68,21 +69,30 @@ class StreamsCompactAdapter(
             with(binding) {
                 if (item != null) {
                     val context = fragment.requireContext()
+                    val selectionMode = onStreamClick != null
                     val channelListener: (View) -> Unit = {
-                        fragment.findNavController().navigate(
-                            ChannelPagerFragmentDirections.actionGlobalChannelPagerFragment(
-                                channelId = item.channelId,
-                                channelLogin = item.channelLogin,
-                                channelName = item.channelName,
-                                channelImage = item.channelImage,
-                                streamId = item.id
+                        if (selectionMode) {
+                            onStreamClick.invoke(item)
+                        } else {
+                            fragment.findNavController().navigate(
+                                ChannelPagerFragmentDirections.actionGlobalChannelPagerFragment(
+                                    channelId = item.channelId,
+                                    channelLogin = item.channelLogin,
+                                    channelName = item.channelName,
+                                    channelImage = item.channelImage,
+                                    streamId = item.id
+                                )
                             )
-                        )
+                        }
                     }
                     root.setOnClickListener {
-                        (fragment.activity as MainActivity).startStream(item)
+                        if (selectionMode) {
+                            onStreamClick.invoke(item)
+                        } else {
+                            (fragment.activity as MainActivity).startStream(item)
+                        }
                     }
-                    multiview.visibility = if (item.channelLogin.isNullOrBlank()) View.GONE else View.VISIBLE
+                    multiview.visibility = if (selectionMode || item.channelLogin.isNullOrBlank()) View.GONE else View.VISIBLE
                     multiview.setOnClickListener {
                         (fragment.activity as? MainActivity)?.let { activity ->
                             if (activity.playerFragment != null) activity.closePlayer()
@@ -129,21 +139,25 @@ class StreamsCompactAdapter(
                     }
                     if (showGame && item.gameName != null) {
                         val gameListener: (View) -> Unit = {
-                            fragment.findNavController().navigate(
-                                if (context.prefs().getBoolean(C.UI_GAME_PAGER, true)) {
-                                    GamePagerFragmentDirections.actionGlobalGamePagerFragment(
-                                        gameId = item.gameId,
-                                        gameSlug = item.gameSlug,
-                                        gameName = item.gameName
-                                    )
-                                } else {
-                                    GameMediaFragmentDirections.actionGlobalGameMediaFragment(
-                                        gameId = item.gameId,
-                                        gameSlug = item.gameSlug,
-                                        gameName = item.gameName
-                                    )
-                                }
-                            )
+                            if (selectionMode) {
+                                onStreamClick.invoke(item)
+                            } else {
+                                fragment.findNavController().navigate(
+                                    if (context.prefs().getBoolean(C.UI_GAME_PAGER, true)) {
+                                        GamePagerFragmentDirections.actionGlobalGamePagerFragment(
+                                            gameId = item.gameId,
+                                            gameSlug = item.gameSlug,
+                                            gameName = item.gameName
+                                        )
+                                    } else {
+                                        GameMediaFragmentDirections.actionGlobalGameMediaFragment(
+                                            gameId = item.gameId,
+                                            gameSlug = item.gameSlug,
+                                            gameName = item.gameName
+                                        )
+                                    }
+                                )
+                            }
                         }
                         gameName.visibility = View.VISIBLE
                         gameName.text = item.gameName
@@ -202,7 +216,11 @@ class StreamsCompactAdapter(
                                 TextViewCompat.setTextAppearance(text, it.getResourceId(0, 0))
                             }
                             text.setOnClickListener {
-                                selectTag(tag)
+                                if (selectionMode) {
+                                    onStreamClick.invoke(item)
+                                } else {
+                                    selectTag(tag)
+                                }
                             }
                             val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, context.resources.displayMetrics).toInt()
                             text.setPadding(padding, 0, padding, 0)

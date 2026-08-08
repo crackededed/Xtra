@@ -40,6 +40,7 @@ class StreamsAdapter(
     private val fragment: Fragment,
     private val selectTag: (String) -> Unit,
     private val showGame: Boolean = true,
+    private val onStreamClick: ((Stream) -> Unit)? = null,
 ) : PagingDataAdapter<Stream, StreamsAdapter.PagingViewHolder>(
     object : DiffUtil.ItemCallback<Stream>() {
         override fun areItemsTheSame(oldItem: Stream, newItem: Stream): Boolean =
@@ -69,21 +70,30 @@ class StreamsAdapter(
             with(binding) {
                 if (item != null) {
                     val context = fragment.requireContext()
+                    val selectionMode = onStreamClick != null
                     val channelListener: (View) -> Unit = {
-                        fragment.findNavController().navigate(
-                            ChannelPagerFragmentDirections.actionGlobalChannelPagerFragment(
-                                channelId = item.channelId,
-                                channelLogin = item.channelLogin,
-                                channelName = item.channelName,
-                                channelImage = item.channelImage,
-                                streamId = item.id
+                        if (selectionMode) {
+                            onStreamClick.invoke(item)
+                        } else {
+                            fragment.findNavController().navigate(
+                                ChannelPagerFragmentDirections.actionGlobalChannelPagerFragment(
+                                    channelId = item.channelId,
+                                    channelLogin = item.channelLogin,
+                                    channelName = item.channelName,
+                                    channelImage = item.channelImage,
+                                    streamId = item.id
+                                )
                             )
-                        )
+                        }
                     }
                     root.setOnClickListener {
-                        (fragment.activity as MainActivity).startStream(item)
+                        if (selectionMode) {
+                            onStreamClick.invoke(item)
+                        } else {
+                            (fragment.activity as MainActivity).startStream(item)
+                        }
                     }
-                    multiview.visibility = if (item.channelLogin.isNullOrBlank()) View.GONE else View.VISIBLE
+                    multiview.visibility = if (selectionMode || item.channelLogin.isNullOrBlank()) View.GONE else View.VISIBLE
                     multiview.setOnClickListener {
                         (fragment.activity as? MainActivity)?.let { activity ->
                             if (activity.playerFragment != null) activity.closePlayer()
@@ -130,21 +140,25 @@ class StreamsAdapter(
                     }
                     if (showGame && item.gameName != null) {
                         val gameListener: (View) -> Unit = {
-                            fragment.findNavController().navigate(
-                                if (context.prefs().getBoolean(C.UI_GAME_PAGER, true)) {
-                                    GamePagerFragmentDirections.actionGlobalGamePagerFragment(
-                                        gameId = item.gameId,
-                                        gameSlug = item.gameSlug,
-                                        gameName = item.gameName
-                                    )
-                                } else {
-                                    GameMediaFragmentDirections.actionGlobalGameMediaFragment(
-                                        gameId = item.gameId,
-                                        gameSlug = item.gameSlug,
-                                        gameName = item.gameName
-                                    )
-                                }
-                            )
+                            if (selectionMode) {
+                                onStreamClick.invoke(item)
+                            } else {
+                                fragment.findNavController().navigate(
+                                    if (context.prefs().getBoolean(C.UI_GAME_PAGER, true)) {
+                                        GamePagerFragmentDirections.actionGlobalGamePagerFragment(
+                                            gameId = item.gameId,
+                                            gameSlug = item.gameSlug,
+                                            gameName = item.gameName
+                                        )
+                                    } else {
+                                        GameMediaFragmentDirections.actionGlobalGameMediaFragment(
+                                            gameId = item.gameId,
+                                            gameSlug = item.gameSlug,
+                                            gameName = item.gameName
+                                        )
+                                    }
+                                )
+                            }
                         }
                         gameName.visibility = View.VISIBLE
                         gameName.text = item.gameName
@@ -226,7 +240,11 @@ class StreamsAdapter(
                                 TextViewCompat.setTextAppearance(text, it.getResourceId(0, 0))
                             }
                             text.setOnClickListener {
-                                selectTag(tag)
+                                if (selectionMode) {
+                                    onStreamClick.invoke(item)
+                                } else {
+                                    selectTag(tag)
+                                }
                             }
                             val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, context.resources.displayMetrics).toInt()
                             text.setPadding(padding, 0, padding, 0)
