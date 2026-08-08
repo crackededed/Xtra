@@ -22,4 +22,8 @@
     <string name="multiview_use_channel">استخدام القناة</string>
     <string name="multiview_duplicate_stream">هذه القناة موجودة بالفعل في العرض المتعدد.</string>
     <string name="multiview_max_streams">يمكنك مشاهدة 4 بثوث كحد أقصى.</string>
+    <string name="multiview_all_chats">كل الدردشات</string>
+    <string name="multiview_channel_chat">دردشة القناة</string>
+    <string name="multiview_combined_chat_description">الدردشة المجمعة للقراءة فقط. اختر قناة لإرسال الرسائل.</string>
+    <string name="multiview_combined_chat_empty">لا توجد رسائل دردشة بعد.</string>
 </resources>

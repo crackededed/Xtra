@@ -22,4 +22,8 @@
     <string name="multiview_use_channel">チャンネルを使用</string>
     <string name="multiview_duplicate_stream">そのチャンネルはすでにマルチビューにあります。</string>
     <string name="multiview_max_streams">最大4つの配信を視聴できます。</string>
+    <string name="multiview_all_chats">すべてのチャット</string>
+    <string name="multiview_channel_chat">チャンネルチャット</string>
+    <string name="multiview_combined_chat_description">統合チャットは読み取り専用です。送信するチャンネルを選択してください。</string>
+    <string name="multiview_combined_chat_empty">まだチャットメッセージはありません。</string>
 </resources>

@@ -22,4 +22,8 @@
     <string name="multiview_use_channel">Kanal verwenden</string>
     <string name="multiview_duplicate_stream">Dieser Kanal ist bereits in Multiview.</string>
     <string name="multiview_max_streams">Du kannst bis zu 4 Streams ansehen.</string>
+    <string name="multiview_all_chats">Alle Chats</string>
+    <string name="multiview_channel_chat">Kanalchat</string>
+    <string name="multiview_combined_chat_description">Der kombinierte Chat ist schreibgeschützt. Wähle einen Kanal zum Senden.</string>
+    <string name="multiview_combined_chat_empty">Noch keine Chatnachrichten.</string>
 </resources>
