@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="watch_in_multiview">Guarda in multiview</string>
+    <string name="multiview">Multiview</string>
+    <string name="multiview_add_stream">Aggiungi stream</string>
+    <string name="multiview_add_stream_title">Aggiungi un secondo stream</string>
+    <string name="multiview_channel_hint">Nome del canale</string>
+    <string name="multiview_add_stream_description">Inserisci il nome di un canale live per aggiungerlo accanto allo stream corrente.</string>
+    <string name="multiview_add_stream_empty">Inserisci un nome del canale.</string>
+    <string name="multiview_stream_not_found">Il canale è offline o non è stato trovato.</string>
+    <string name="multiview_loading">Caricamento stream…</string>
+    <string name="multiview_playback_error">Riproduzione non riuscita. Tocca per riprovare.</string>
+    <string name="multiview_audio">Audio: %s</string>
+    <string name="multiview_chat">Chat</string>
+    <string name="multiview_hide_chat">Nascondi chat</string>
+    <string name="multiview_empty_slot">Aggiungi un secondo stream per confrontarli.</string>
+    <string name="multiview_close">Fine</string>
+    <string name="multiview_remove_stream">Rimuovi stream</string>
+    <string name="multiview_audio_active">Audio attivo per %s</string>
+    <string name="multiview_audio_muted">Audio disattivato per %s</string>
+</resources>

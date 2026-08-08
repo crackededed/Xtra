@@ -204,4 +204,8 @@
     <action
         android:id="@+id/action_global_teamFragment"
         app:destination="@id/teamFragment" />
+
+    <fragment
+        android:id="@+id/multiviewFragment"
+        android:name="com.github.andreyasadchy.xtra.ui.multiview.MultiviewFragment" />
 </navigation>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="watch_in_multiview">在多視圖中觀看</string>
+    <string name="multiview">多視圖</string>
+    <string name="multiview_add_stream">新增直播</string>
+    <string name="multiview_add_stream_title">新增第二個直播</string>
+    <string name="multiview_channel_hint">頻道名稱</string>
+    <string name="multiview_add_stream_description">輸入直播頻道名稱，將其新增到目前直播旁邊。</string>
+    <string name="multiview_add_stream_empty">請輸入頻道名稱。</string>
+    <string name="multiview_stream_not_found">此頻道已離線或找不到。</string>
+    <string name="multiview_loading">正在載入直播…</string>
+    <string name="multiview_playback_error">播放失敗。點擊重試。</string>
+    <string name="multiview_audio">音訊：%s</string>
+    <string name="multiview_chat">聊天</string>
+    <string name="multiview_hide_chat">隱藏聊天</string>
+    <string name="multiview_empty_slot">新增第二個直播以進行比較。</string>
+    <string name="multiview_close">完成</string>
+    <string name="multiview_remove_stream">移除直播</string>
+    <string name="multiview_audio_active">%s 的音訊已開啟</string>
+    <string name="multiview_audio_muted">%s 的音訊已靜音</string>
+</resources>

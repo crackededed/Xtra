@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="watch_in_multiview">Смотреть в режиме мультипросмотра</string>
+    <string name="multiview">Мультипросмотр</string>
+    <string name="multiview_add_stream">Добавить трансляцию</string>
+    <string name="multiview_add_stream_title">Добавить вторую трансляцию</string>
+    <string name="multiview_channel_hint">Название канала</string>
+    <string name="multiview_add_stream_description">Введите название канала в эфире, чтобы добавить его рядом с текущей трансляцией.</string>
+    <string name="multiview_add_stream_empty">Введите название канала.</string>
+    <string name="multiview_stream_not_found">Канал не в эфире или не найден.</string>
+    <string name="multiview_loading">Загрузка трансляции…</string>
+    <string name="multiview_playback_error">Не удалось воспроизвести. Нажмите, чтобы повторить.</string>
+    <string name="multiview_audio">Аудио: %s</string>
+    <string name="multiview_chat">Чат</string>
+    <string name="multiview_hide_chat">Скрыть чат</string>
+    <string name="multiview_empty_slot">Добавьте вторую трансляцию для сравнения.</string>
+    <string name="multiview_close">Готово</string>
+    <string name="multiview_remove_stream">Удалить трансляцию</string>
+    <string name="multiview_audio_active">Аудио включено для %s</string>
+    <string name="multiview_audio_muted">Аудио отключено для %s</string>
+</resources>

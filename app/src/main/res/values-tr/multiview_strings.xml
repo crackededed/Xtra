@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="watch_in_multiview">Çoklu görünümde izle</string>
+    <string name="multiview">Çoklu görünüm</string>
+    <string name="multiview_add_stream">Yayın ekle</string>
+    <string name="multiview_add_stream_title">İkinci yayın ekle</string>
+    <string name="multiview_channel_hint">Kanal adı</string>
+    <string name="multiview_add_stream_description">Mevcut yayının yanına eklemek için canlı kanal adını girin.</string>
+    <string name="multiview_add_stream_empty">Kanal adı girin.</string>
+    <string name="multiview_stream_not_found">Bu kanal çevrimdışı veya bulunamadı.</string>
+    <string name="multiview_loading">Yayın yükleniyor…</string>
+    <string name="multiview_playback_error">Oynatma başarısız. Yeniden denemek için dokunun.</string>
+    <string name="multiview_audio">Ses: %s</string>
+    <string name="multiview_chat">Sohbet</string>
+    <string name="multiview_hide_chat">Sohbeti gizle</string>
+    <string name="multiview_empty_slot">Karşılaştırmak için ikinci bir yayın ekleyin.</string>
+    <string name="multiview_close">Bitti</string>
+    <string name="multiview_remove_stream">Yayını kaldır</string>
+    <string name="multiview_audio_active">%s için ses etkin</string>
+    <string name="multiview_audio_muted">%s için ses kapalı</string>
+</resources>

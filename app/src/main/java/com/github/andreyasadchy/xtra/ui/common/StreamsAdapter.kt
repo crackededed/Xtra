@@ -29,6 +29,7 @@ import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
+import com.github.andreyasadchy.xtra.ui.multiview.MultiviewFragment
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
@@ -81,6 +82,13 @@ class StreamsAdapter(
                     }
                     root.setOnClickListener {
                         (fragment.activity as MainActivity).startStream(item)
+                    }
+                    multiview.visibility = if (item.channelLogin.isNullOrBlank()) View.GONE else View.VISIBLE
+                    multiview.setOnClickListener {
+                        (fragment.activity as? MainActivity)?.let { activity ->
+                            if (activity.playerFragment != null) activity.closePlayer()
+                        }
+                        fragment.findNavController().navigate(R.id.multiviewFragment, MultiviewFragment.arguments(item))
                     }
                     if (item.channelImage != null) {
                         userImage.visibility = View.VISIBLE

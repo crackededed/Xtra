@@ -111,6 +111,17 @@
                     android:visibility="gone"
                     tools:text="8:21:33"
                     tools:visibility="visible" />
+
+                <ImageButton
+                    android:id="@+id/multiview"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?android:selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/watch_in_multiview"
+                    android:src="@drawable/baseline_aspect_ratio_black_24"
+                    android:visibility="gone"
+                    app:tint="?attr/colorControlNormal"
+                    tools:visibility="visible" />
             </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>

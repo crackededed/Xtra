@@ -47,6 +47,21 @@
                 tools:text="8:21:33 uptime"
                 tools:visibility="visible" />
 
+            <ImageButton
+                android:id="@+id/multiview"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginEnd="5dp"
+                android:background="?android:selectableItemBackgroundBorderless"
+                android:contentDescription="@string/watch_in_multiview"
+                android:src="@drawable/baseline_aspect_ratio_black_24"
+                android:visibility="gone"
+                app:tint="@android:color/white"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:visibility="visible" />
+
             <ImageView
                 android:id="@+id/userImage"
                 style="@style/UserPicture"

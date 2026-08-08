@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="watch_in_multiview">Ver en multivista</string>
+    <string name="multiview">Multivista</string>
+    <string name="multiview_add_stream">Engadir emisión</string>
+    <string name="multiview_add_stream_title">Engadir unha segunda emisión</string>
+    <string name="multiview_channel_hint">Nome da canle</string>
+    <string name="multiview_add_stream_description">Introduce o nome dunha canle en directo para engadila xunto á emisión actual.</string>
+    <string name="multiview_add_stream_empty">Introduce un nome de canle.</string>
+    <string name="multiview_stream_not_found">Esta canle está fóra de liña ou non se atopou.</string>
+    <string name="multiview_loading">Cargando emisión…</string>
+    <string name="multiview_playback_error">Produciuse un erro na reprodución. Toca para volver tentalo.</string>
+    <string name="multiview_audio">Audio: %s</string>
+    <string name="multiview_chat">Chat</string>
+    <string name="multiview_hide_chat">Ocultar chat</string>
+    <string name="multiview_empty_slot">Engade unha segunda emisión para comparalas.</string>
+    <string name="multiview_close">Feito</string>
+    <string name="multiview_remove_stream">Eliminar emisión</string>
+    <string name="multiview_audio_active">Audio activo para %s</string>
+    <string name="multiview_audio_muted">Audio silenciado para %s</string>
+</resources>
