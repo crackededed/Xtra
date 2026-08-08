@@ -22,4 +22,8 @@
     <string name="multiview_use_channel">Gunakan kanal</string>
     <string name="multiview_duplicate_stream">Kanal tersebut sudah ada di multiview.</string>
     <string name="multiview_max_streams">Anda dapat menonton hingga 4 streaming.</string>
+    <string name="multiview_all_chats">Semua chat</string>
+    <string name="multiview_channel_chat">Chat kanal</string>
+    <string name="multiview_combined_chat_description">Chat gabungan hanya dapat dibaca. Pilih kanal untuk mengirim pesan.</string>
+    <string name="multiview_combined_chat_empty">Belum ada pesan chat.</string>
 </resources>

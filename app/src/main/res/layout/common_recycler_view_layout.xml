@@ -31,6 +31,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clipToPadding="false"
+            android:paddingStart="4dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="4dp"
+            android:paddingBottom="4dp"
             tools:listitem="@layout/fragment_downloads_list_item" />
 
     </com.github.andreyasadchy.xtra.ui.view.CustomSwipeRefreshLayout>

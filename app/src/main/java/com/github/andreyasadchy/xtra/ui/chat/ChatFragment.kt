@@ -92,6 +92,9 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
     private val viewModel: ChatViewModel by viewModels { ChatViewModelFactory }
     private var adapter: ChatAdapter? = null
 
+    var chatMessageListener: ((ChatMessage) -> Unit)? = null
+    var chatHistoryListener: ((List<ChatMessage>) -> Unit)? = null
+
     private var isChatTouched = false
     private var showChatStatus = false
     private var hasRecentEmotes = false
@@ -804,6 +807,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                         binding.recyclerView.scrollToPosition(lastIndex - removeCount)
                                     }
                                 }
+                                chatMessageListener?.invoke(message)
                                 messageDialog?.newMessage(message)
                                 replyDialog?.newMessage(message)
                             }
@@ -820,6 +824,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                         binding.recyclerView.scrollToPosition(lastIndex)
                                     }
                                 }
+                                chatHistoryListener?.invoke(messages)
                                 messageDialog?.addMessages(messages)
                                 replyDialog?.addMessages(messages)
                             }

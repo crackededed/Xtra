@@ -22,4 +22,8 @@
     <string name="multiview_use_channel">Utiliser la chaîne</string>
     <string name="multiview_duplicate_stream">Cette chaîne est déjà dans la multivue.</string>
     <string name="multiview_max_streams">Vous pouvez regarder jusqu’à 4 streams.</string>
+    <string name="multiview_all_chats">Tous les chats</string>
+    <string name="multiview_channel_chat">Chat de la chaîne</string>
+    <string name="multiview_combined_chat_description">Le chat combiné est en lecture seule. Choisissez une chaîne pour envoyer un message.</string>
+    <string name="multiview_combined_chat_empty">Aucun message pour le moment.</string>
 </resources>

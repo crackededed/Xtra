@@ -78,6 +78,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
     private val slots = mutableListOf<Slot>()
     private var activeSlotIndex = 0
     private var chatSlot: Slot? = null
+    private var combinedChat = false
     private var previousNavBarVisibility = View.VISIBLE
     private var wasPlaying = BooleanArray(MAX_STREAMS)
 
@@ -106,6 +107,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
 
         binding.addStreamButton.setOnClickListener { showAddStreamPicker() }
         binding.chatButton.setOnClickListener { toggleChat() }
+        binding.combinedChatButton.setOnClickListener { toggleCombinedChat() }
         binding.closeButton.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
 
         val restoredStreams = savedInstanceState?.parcelableArrayList<Stream>(KEY_STREAMS)
@@ -157,6 +159,8 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         childFragmentManager.findFragmentByTag(CHAT_TAG)?.let {
             childFragmentManager.beginTransaction().remove(it).commitAllowingStateLoss()
         }
+        combinedChat = false
+        chatSlot = null
         requireActivity().findViewById<View>(R.id.navBarContainer)?.visibility = previousNavBarVisibility
         _binding = null
         super.onDestroyView()
@@ -176,9 +180,11 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
 
         val slot = createSlot(slots.size)
         slots += slot
+        val wasCombinedChat = combinedChat && binding.chatContainer.isVisible
         rebuildGrid()
         startSlot(slot, stream)
         setActiveSlot(slots.lastIndex)
+        if (wasCombinedChat) showCombinedChat()
         return true
     }
 
@@ -410,8 +416,10 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
     private fun removeSlot(slot: Slot) {
         if (slots.size <= 1 || !slots.contains(slot)) return
         val removedIndex = slots.indexOf(slot)
-        val keepChat = binding.chatContainer.isVisible && chatSlot !== slot
-        if (chatSlot === slot) hideChat()
+        val chatVisible = binding.chatContainer.isVisible
+        val wasCombinedChat = combinedChat
+        val keepChat = chatVisible && (wasCombinedChat || chatSlot !== slot)
+        if (!wasCombinedChat && chatSlot === slot) hideChat()
         slot.release()
         slot.stream = null
         slots.remove(slot)
@@ -419,7 +427,10 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         if (removedIndex < activeSlotIndex) activeSlotIndex--
         activeSlotIndex = activeSlotIndex.coerceAtMost(slots.lastIndex)
         rebuildGrid()
-        setActiveSlot(activeSlotIndex, refreshChat = keepChat)
+        setActiveSlot(activeSlotIndex, refreshChat = keepChat && !wasCombinedChat)
+        if (wasCombinedChat && chatVisible) {
+            if (slots.size > 1) showCombinedChat() else showChatForSlot(activeSlotIndex)
+        }
     }
 
     private fun setActiveSlot(index: Int, refreshChat: Boolean = true) {
@@ -430,7 +441,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
             slot.player?.volume = if (slots.indexOf(slot) == activeIndex) volume else 0f
             updateAudioButton(slot)
         }
-        if (refreshChat && binding.chatContainer.isVisible) showChatForSlot(activeIndex)
+        if (refreshChat && binding.chatContainer.isVisible && !combinedChat) showChatForSlot(activeIndex)
         updateToolbar()
     }
 
@@ -450,9 +461,19 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         binding.activeAudio.text = active?.let { getString(R.string.multiview_audio, displayName(it)) }
         binding.addStreamButton.isVisible = slots.size < MAX_STREAMS
         binding.addStreamButton.text = getString(R.string.multiview_add_stream_count, slots.size, MAX_STREAMS)
-        binding.chatButton.isVisible = active != null && !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)
+        val chatEnabled = active != null && !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)
+        binding.chatButton.isVisible = chatEnabled
+        binding.combinedChatButton.isVisible = chatEnabled && binding.chatContainer.isVisible && slots.size > 1
+        binding.chatTitle.text = if (combinedChat) {
+            getString(R.string.multiview_all_chats)
+        } else {
+            chatSlot?.stream?.let(::displayName) ?: active?.let(::displayName) ?: getString(R.string.multiview_chat)
+        }
         binding.chatButton.text = getString(
             if (binding.chatContainer.isVisible) R.string.multiview_hide_chat else R.string.multiview_chat
+        )
+        binding.combinedChatButton.text = getString(
+            if (combinedChat) R.string.multiview_channel_chat else R.string.multiview_all_chats
         )
         slots.forEach { slot ->
             slot.removeButton.isVisible = slots.size > 1
@@ -464,15 +485,36 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         if (binding.chatContainer.isVisible) hideChat() else showChatForSlot(activeSlotIndex)
     }
 
+    private fun toggleCombinedChat() {
+        if (combinedChat) showChatForSlot(activeSlotIndex) else showCombinedChat()
+    }
+
+    private fun showCombinedChat() {
+        val streams = slots.mapNotNull { it.stream }
+        if (streams.size < 2) return
+        combinedChat = true
+        chatSlot = null
+        binding.chatContainer.isVisible = true
+        childFragmentManager.beginTransaction()
+            .replace(
+                R.id.chatContent,
+                CombinedChatFragment.newInstance(streams),
+                CHAT_TAG,
+            )
+            .commit()
+        updateToolbar()
+    }
+
     private fun showChatForSlot(index: Int) {
         val slot = slots.getOrNull(index) ?: return
         val stream = slot.stream ?: return
         if (stream.channelLogin.isNullOrBlank()) return
+        combinedChat = false
         chatSlot = slot
         binding.chatContainer.isVisible = true
         childFragmentManager.beginTransaction()
             .replace(
-                R.id.chatContainer,
+                R.id.chatContent,
                 ChatFragment.newInstance(stream.channelId, stream.channelLogin, displayName(stream), stream.id),
                 CHAT_TAG,
             )
@@ -482,6 +524,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
 
     private fun hideChat() {
         binding.chatContainer.isVisible = false
+        combinedChat = false
         chatSlot = null
         childFragmentManager.findFragmentByTag(CHAT_TAG)?.let {
             childFragmentManager.beginTransaction().remove(it).commit()

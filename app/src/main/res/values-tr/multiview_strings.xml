@@ -22,4 +22,8 @@
     <string name="multiview_use_channel">Kanalı kullan</string>
     <string name="multiview_duplicate_stream">Bu kanal zaten çoklu görünümde.</string>
     <string name="multiview_max_streams">En fazla 4 yayın izleyebilirsiniz.</string>
+    <string name="multiview_all_chats">Tüm sohbetler</string>
+    <string name="multiview_channel_chat">Kanal sohbeti</string>
+    <string name="multiview_combined_chat_description">Birleşik sohbet salt okunurdur. Mesaj göndermek için kanal seçin.</string>
+    <string name="multiview_combined_chat_empty">Henüz sohbet mesajı yok.</string>
 </resources>

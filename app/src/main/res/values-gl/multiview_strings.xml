@@ -22,4 +22,8 @@
     <string name="multiview_use_channel">Usar canle</string>
     <string name="multiview_duplicate_stream">Esta canle xa está na multivista.</string>
     <string name="multiview_max_streams">Podes ver ata 4 emisións.</string>
+    <string name="multiview_all_chats">Todas as conversas</string>
+    <string name="multiview_channel_chat">Chat da canle</string>
+    <string name="multiview_combined_chat_description">O chat combinado é só de lectura. Escolle unha canle para enviar mensaxes.</string>
+    <string name="multiview_combined_chat_empty">Aínda non hai mensaxes.</string>
 </resources>
