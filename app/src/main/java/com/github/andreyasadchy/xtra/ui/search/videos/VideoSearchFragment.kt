@@ -13,7 +13,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.paging.LoadState
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
@@ -22,7 +21,6 @@ import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.common.VideosAdapter
 import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
-import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.search.RecentSearchAdapter
 import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragment
 import com.github.andreyasadchy.xtra.ui.search.Searchable
@@ -86,6 +84,7 @@ class VideoSearchFragment : PagedListFragment(), Searchable {
 
     override fun initialize() {
         with(binding) {
+            setupPagingControls(binding, pagingAdapter)
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.flow.collectLatest { pagingData ->
@@ -96,20 +95,13 @@ class VideoSearchFragment : PagedListFragment(), Searchable {
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     pagingAdapter.loadStateFlow.collectLatest { loadState ->
-                        progressBar.isVisible = loadState.refresh is LoadState.Loading && pagingAdapter.itemCount == 0
-                        nothingHere.isVisible = loadState.refresh !is LoadState.Loading && pagingAdapter.itemCount == 0 && viewModel.query.value.isNotBlank()
+                        updatePagingState(binding, pagingAdapter, loadState, showEmpty = viewModel.query.value.isNotBlank())
                         if (viewModel.query.value.isBlank() && requireContext().prefs().getBoolean(C.UI_STORE_RECENT_SEARCHES, true)) {
                             recyclerView.adapter = recentSearchAdapter
                         } else {
                             if (recyclerView.adapter is RecentSearchAdapter) {
                                 recyclerView.adapter = pagingAdapter
                             }
-                        }
-                        if ((loadState.refresh as? LoadState.Error ?:
-                            loadState.append as? LoadState.Error ?:
-                            loadState.prepend as? LoadState.Error)?.error?.message == C.FAILED_INTEGRITY_CHECK
-                        ) {
-                            (requireActivity() as? MainActivity)?.getNewIntegrityToken("refresh", childFragmentManager)
                         }
                     }
                 }

@@ -70,6 +70,9 @@
     <string name="storage_permission_message">Storage permission is required to download videos.</string>
     <string name="permission_denied">Required permissions were denied.</string>
     <string name="nothing_here">Nothing here</string>
+    <string name="list_load_error">Couldn’t load this content.</string>
+    <string name="list_load_more_error">Couldn’t load more content.</string>
+    <string name="retry">Retry</string>
     <string name="watch_live">Watch live</string>
     <string name="open_player">Open player</string>
     <string name="error_stream">Error when loading stream</string>

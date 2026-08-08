@@ -23,23 +23,27 @@ class FollowedChannelsDataSource(
     private val helixRepository: HelixRepository,
     private val enableIntegrity: Boolean,
     private val networkLibrary: String?,
+    internal val pageLoaderForTest: (suspend (LoadParams<Int>) -> LoadResult<Int, User>)? = null,
+    internal val initialOffsetForTest: String? = null,
 ) : PagingSource<Int, User>() {
     private var api: String? = null
-    private var offset: String? = null
+    private var offset: String? = initialOffsetForTest
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, User> {
         return if (!offset.isNullOrBlank()) {
-            val list = mutableListOf<User>()
             val result = try {
                 loadFromApi(params)
             } catch (e: Exception) {
-                null
-            }?.let {
-                if (it is LoadResult.Error && it.throwable.message == C.FAILED_INTEGRITY_CHECK) {
-                    return it
-                }
-                it as? LoadResult.Page
+                return LoadResult.Error(e)
             }
+            if (result !is LoadResult.Page) {
+                return result
+            }
+            // Keep the data returned by the API for every page. Previously this
+            // branch created an empty list and only used the result for nextKey,
+            // which made followed channels after the first 100 disappear.
+            val page = followedChannelsPage(result) ?: return result
+            val list = page.data
             list.filter { it.lastBroadcast == null || it.profileImageURL == null }.mapNotNull { it.id }.chunked(100).forEach { ids ->
                 val response = graphQLRepository.loadQueryUsersLastBroadcast(networkLibrary, gqlHeaders, ids)
                 if (enableIntegrity) {
@@ -57,7 +61,7 @@ class FollowedChannelsDataSource(
             LoadResult.Page(
                 data = list,
                 prevKey = null,
-                nextKey = result?.nextKey
+                nextKey = page.nextKey
             )
         } else {
             val list = mutableListOf<User>()
@@ -69,30 +73,35 @@ class FollowedChannelsDataSource(
                     localFollow = true,
                 ))
             }
-            val result = if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank() || !helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-                try {
-                    api = C.GQL
-                    loadFromApi(params)
-                } catch (e: Exception) {
+            var remoteError: Throwable? = null
+            val page = if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank() || !helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                var loadedPage: LoadResult.Page<Int, User>? = null
+                for (candidate in listOf(C.GQL, C.GQL_PERSISTED_QUERY, C.HELIX)) {
+                    api = candidate
                     try {
-                        api = C.GQL_PERSISTED_QUERY
-                        loadFromApi(params)
-                    } catch (e: Exception) {
-                        try {
-                            api = C.HELIX
-                            loadFromApi(params)
-                        } catch (e: Exception) {
-                            null
+                        val response = loadFromApi(params)
+                        if (response is LoadResult.Page) {
+                            loadedPage = response
+                            break
                         }
+                        if (response is LoadResult.Error) {
+                            if (response.throwable.message == C.FAILED_INTEGRITY_CHECK) {
+                                return response
+                            }
+                            remoteError = response.throwable
+                        } else {
+                            return response
+                        }
+                    } catch (e: Exception) {
+                        remoteError = e
                     }
-                }?.let {
-                    if (it is LoadResult.Error && it.throwable.message == C.FAILED_INTEGRITY_CHECK) {
-                        return it
-                    }
-                    it as? LoadResult.Page
                 }
+                loadedPage
             } else null
-            result?.data?.forEach { user ->
+            if (page == null && list.isEmpty() && remoteError != null) {
+                return LoadResult.Error(remoteError)
+            }
+            page?.data?.forEach { user ->
                 val item = list.find { it.id == user.id }
                 if (item == null) {
                     user.accountFollow = true
@@ -196,13 +205,13 @@ class FollowedChannelsDataSource(
             LoadResult.Page(
                 data = sorted,
                 prevKey = null,
-                nextKey = result?.nextKey
+                nextKey = page?.nextKey
             )
         }
     }
 
     private suspend fun loadFromApi(params: LoadParams<Int>): LoadResult<Int, User> {
-        return when (api) {
+        return pageLoaderForTest?.invoke(params) ?: when (api) {
             C.GQL -> if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) gqlQueryLoad(params) else throw Exception()
             C.GQL_PERSISTED_QUERY -> if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) gqlLoad(params) else throw Exception()
             C.HELIX -> if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) helixLoad(params) else throw Exception()
@@ -300,5 +309,21 @@ class FollowedChannelsDataSource(
             val anchorPage = state.closestPageToPosition(anchorPosition)
             anchorPage?.prevKey?.plus(1) ?: anchorPage?.nextKey?.minus(1)
         }
+    }
+}
+
+internal data class FollowedChannelsPage<T : Any>(
+    val data: MutableList<T>,
+    val nextKey: Int?,
+)
+
+internal fun <T : Any> followedChannelsPage(
+    result: PagingSource.LoadResult<Int, T>,
+): FollowedChannelsPage<T>? {
+    return (result as? PagingSource.LoadResult.Page)?.let {
+        FollowedChannelsPage(
+            data = it.data.toMutableList(),
+            nextKey = it.nextKey,
+        )
     }
 }

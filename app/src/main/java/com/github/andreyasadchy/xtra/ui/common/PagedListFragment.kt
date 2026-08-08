@@ -5,17 +5,23 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
+import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.Listener {
+
+    private var pageErrorSnackbar: Snackbar? = null
+    private var pageError: LoadState.Error? = null
 
     fun <T : Any, VH : RecyclerView.ViewHolder> setAdapter(recyclerView: RecyclerView, adapter: PagingDataAdapter<T, VH>) {
         adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
@@ -51,26 +57,13 @@ abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.Listen
 
     fun <T : Any, VH : RecyclerView.ViewHolder> initializeAdapter(binding: CommonRecyclerViewLayoutBinding, pagingAdapter: PagingDataAdapter<T, VH>, enableSwipeRefresh: Boolean = true, enableScrollTopButton: Boolean = true) {
         with(binding) {
+            setupPagingControls(binding, pagingAdapter, enableSwipeRefresh)
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     pagingAdapter.loadStateFlow.collectLatest { loadState ->
-                        progressBar.isVisible = loadState.refresh is LoadState.Loading && pagingAdapter.itemCount == 0
-                        if (enableSwipeRefresh) {
-                            swipeRefresh.isRefreshing = loadState.refresh is LoadState.Loading && pagingAdapter.itemCount != 0
-                        }
-                        nothingHere.isVisible = loadState.refresh !is LoadState.Loading && pagingAdapter.itemCount == 0
-                        if ((loadState.refresh as? LoadState.Error ?:
-                            loadState.append as? LoadState.Error ?:
-                            loadState.prepend as? LoadState.Error)?.error?.message == C.FAILED_INTEGRITY_CHECK
-                        ) {
-                            (requireActivity() as? MainActivity)?.getNewIntegrityToken("refresh", childFragmentManager)
-                        }
+                        updatePagingState(binding, pagingAdapter, loadState, enableSwipeRefresh = enableSwipeRefresh)
                     }
                 }
-            }
-            if (enableSwipeRefresh) {
-                swipeRefresh.isEnabled = true
-                swipeRefresh.setOnRefreshListener { pagingAdapter.refresh() }
             }
             if (enableScrollTopButton && requireContext().prefs().getBoolean(C.UI_SCROLL_TOP, true)) {
                 recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -85,5 +78,71 @@ abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.Listen
                 }
             }
         }
+    }
+
+    protected fun <T : Any, VH : RecyclerView.ViewHolder> setupPagingControls(
+        binding: CommonRecyclerViewLayoutBinding,
+        pagingAdapter: PagingDataAdapter<T, VH>,
+        enableSwipeRefresh: Boolean = true,
+    ) {
+        binding.retryButton.setOnClickListener { pagingAdapter.retry() }
+        binding.swipeRefresh.isEnabled = enableSwipeRefresh
+        if (enableSwipeRefresh) {
+            binding.swipeRefresh.setOnRefreshListener { pagingAdapter.refresh() }
+        }
+    }
+
+    protected fun <T : Any, VH : RecyclerView.ViewHolder> updatePagingState(
+        binding: CommonRecyclerViewLayoutBinding,
+        pagingAdapter: PagingDataAdapter<T, VH>,
+        loadState: CombinedLoadStates,
+        showEmpty: Boolean = true,
+        enableSwipeRefresh: Boolean = true,
+    ) {
+        val contentState = pagedListContentState(loadState.refresh, pagingAdapter.itemCount)
+        val refreshError = loadState.refresh as? LoadState.Error
+        val appendError = loadState.append as? LoadState.Error
+        val prependError = loadState.prepend as? LoadState.Error
+        val pageError = appendError ?: prependError
+
+        binding.progressBar.isVisible = contentState == PagedListContentState.Loading
+        binding.nothingHere.isVisible = showEmpty && contentState == PagedListContentState.Empty
+        binding.errorContainer.isVisible = showEmpty && contentState == PagedListContentState.Error
+        binding.retryButton.isVisible = refreshError != null
+        if (showEmpty && refreshError != null) {
+            binding.errorMessage.setText(R.string.list_load_error)
+        }
+
+        if (enableSwipeRefresh) {
+            binding.swipeRefresh.isRefreshing = contentState == PagedListContentState.Content && loadState.refresh is LoadState.Loading
+        }
+
+        if (pageError != null && pagingAdapter.itemCount > 0 && showEmpty) {
+            if (this.pageError !== pageError) {
+                pageErrorSnackbar?.dismiss()
+                this.pageError = pageError
+                pageErrorSnackbar = Snackbar.make(
+                    binding.recyclerView,
+                    R.string.list_load_more_error,
+                    Snackbar.LENGTH_INDEFINITE,
+                ).setAction(R.string.retry) { pagingAdapter.retry() }
+                pageErrorSnackbar?.show()
+            }
+        } else {
+            pageErrorSnackbar?.dismiss()
+            pageErrorSnackbar = null
+            this.pageError = null
+        }
+
+        if ((refreshError ?: appendError ?: prependError)?.error?.message == C.FAILED_INTEGRITY_CHECK) {
+            (requireActivity() as? MainActivity)?.getNewIntegrityToken("refresh", childFragmentManager)
+        }
+    }
+
+    override fun onDestroyView() {
+        pageErrorSnackbar?.dismiss()
+        pageErrorSnackbar = null
+        pageError = null
+        super.onDestroyView()
     }
 }
