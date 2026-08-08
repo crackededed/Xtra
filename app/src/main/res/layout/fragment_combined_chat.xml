@@ -26,9 +26,9 @@
             android:id="@+id/combinedChatRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:clipToPadding="false"
+            android:clipToPadding="true"
             android:paddingStart="8dp"
-            android:paddingTop="4dp"
+            android:paddingTop="8dp"
             android:paddingEnd="8dp"
             android:paddingBottom="8dp" />
 
@@ -41,6 +41,12 @@
             android:text="@string/multiview_combined_chat_empty"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?android:attr/textColorSecondary" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:background="?android:colorBackground"
+            android:elevation="1dp" />
     </FrameLayout>
 
     <FrameLayout
