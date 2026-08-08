@@ -143,8 +143,10 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         if (_binding != null) {
             updateOrientationLayout()
             binding.multiviewRoot.post {
-                rebuildGrid()
-                updateToolbar()
+                if (_binding != null) {
+                    rebuildGrid()
+                    updateToolbar()
+                }
             }
         }
     }
@@ -770,7 +772,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         private const val CHAT_TAG = "multiview_chat"
         private const val MAX_STREAMS = 4
         private const val LANDSCAPE_CHAT_WEIGHT = 0.7f
-        private const val LANDSCAPE_COMBINED_CHAT_WEIGHT = 1f
+        private const val LANDSCAPE_COMBINED_CHAT_WEIGHT = 1.2f
         private const val PORTRAIT_CHAT_WEIGHT = 0.42f
 
         fun arguments(stream: Stream): Bundle = Bundle().apply {
