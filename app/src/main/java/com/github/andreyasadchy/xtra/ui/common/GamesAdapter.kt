@@ -139,6 +139,8 @@ class GamesAdapter(
                             text.id = id
                             ids.add(id)
                             text.text = tag.name
+                            text.setMinHeight(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 48f, context.resources.displayMetrics).toInt())
+                            text.isFocusable = tag.id != null
                             context.obtainStyledAttributes(intArrayOf(com.google.android.material.R.attr.textAppearanceBodyMedium)).use {
                                 TextViewCompat.setTextAppearance(text, it.getResourceId(0, 0))
                             }

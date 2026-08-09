@@ -59,6 +59,9 @@
             style="?android:attr/actionOverflowButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:contentDescription="@string/more_options"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 

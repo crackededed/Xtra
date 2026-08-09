@@ -24,6 +24,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import coil3.imageLoader
 import coil3.request.ImageRequest
+import coil3.request.CachePolicy
 import coil3.request.crossfade
 import coil3.request.target
 import com.github.andreyasadchy.xtra.R
@@ -282,6 +283,7 @@ class ChannelPointsDialog : DialogFragment() {
             requireContext().imageLoader.enqueue(
                 ImageRequest.Builder(requireContext())
                     .data(imageUrl)
+                    .diskCachePolicy(CachePolicy.ENABLED)
                     .crossfade(true)
                     .target(image)
                     .build(),
@@ -483,6 +485,7 @@ class ChannelPointsDialog : DialogFragment() {
             requireContext().imageLoader.enqueue(
                 ImageRequest.Builder(requireContext())
                     .data(imageUrl)
+                    .diskCachePolicy(CachePolicy.ENABLED)
                     .crossfade(true)
                     .target(image)
                     .build(),

@@ -54,6 +54,9 @@ class ExoPlayerFragment : PlayerFragment() {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 binding.bufferingIndicator.isVisible = playbackState == Player.STATE_BUFFERING
                 val showPlayButton = Util.shouldShowPlayButton(playbackService?.player)
+                binding.playerControls.playPause.contentDescription = getString(
+                    if (showPlayButton) R.string.player_play else R.string.player_pause_action,
+                )
                 if (showPlayButton) {
                     binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
                     binding.playerControls.playPause.visibility = View.VISIBLE
@@ -74,6 +77,9 @@ class ExoPlayerFragment : PlayerFragment() {
             override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
                 binding.bufferingIndicator.isVisible = playbackService?.player?.playbackState == Player.STATE_BUFFERING
                 val showPlayButton = Util.shouldShowPlayButton(playbackService?.player)
+                binding.playerControls.playPause.contentDescription = getString(
+                    if (showPlayButton) R.string.player_play else R.string.player_pause_action,
+                )
                 if (showPlayButton) {
                     binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
                     binding.playerControls.playPause.visibility = View.VISIBLE
@@ -92,7 +98,11 @@ class ExoPlayerFragment : PlayerFragment() {
             }
 
             override fun onAvailableCommandsChanged(availableCommands: Player.Commands) {
-                if (Util.shouldShowPlayButton(playbackService?.player)) {
+                val showPlayButton = Util.shouldShowPlayButton(playbackService?.player)
+                binding.playerControls.playPause.contentDescription = getString(
+                    if (showPlayButton) R.string.player_play else R.string.player_pause_action,
+                )
+                if (showPlayButton) {
                     binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
                     binding.playerControls.playPause.visibility = View.VISIBLE
                 } else {
@@ -104,6 +114,10 @@ class ExoPlayerFragment : PlayerFragment() {
                 val duration = playbackService?.player?.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0
                 binding.playerControls.progressBar.setDuration(duration)
                 binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
+                binding.playerControls.duration.contentDescription = getString(
+                    R.string.player_duration,
+                    binding.playerControls.duration.text,
+                )
                 updateProgress()
             }
 
@@ -122,6 +136,10 @@ class ExoPlayerFragment : PlayerFragment() {
                 val duration = playbackService?.player?.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0
                 binding.playerControls.progressBar.setDuration(duration)
                 binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
+                binding.playerControls.duration.contentDescription = getString(
+                    R.string.player_duration,
+                    binding.playerControls.duration.text,
+                )
                 updateProgress()
                 if (reason == Player.DISCONTINUITY_REASON_SEEK) {
                     if (chatFragment?.context != null) { // TODO
@@ -154,6 +172,10 @@ class ExoPlayerFragment : PlayerFragment() {
                 val duration = playbackService?.player?.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0
                 binding.playerControls.progressBar.setDuration(duration)
                 binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
+                binding.playerControls.duration.contentDescription = getString(
+                    R.string.player_duration,
+                    binding.playerControls.duration.text,
+                )
                 updateProgress()
             }
 
@@ -231,6 +253,7 @@ class ExoPlayerFragment : PlayerFragment() {
                         if (!gameName.isNullOrBlank() && requireContext().prefs().getBoolean(C.PLAYER_CATEGORY, true)) {
                             category.visibility = View.VISIBLE
                             category.text = gameName
+                            category.contentDescription = getString(R.string.player_open_category, gameName)
                             category.setOnClickListener {
                                 findNavController().navigate(
                                     if (requireContext().prefs().getBoolean(C.UI_GAME_PAGER, true)) {
@@ -282,7 +305,11 @@ class ExoPlayerFragment : PlayerFragment() {
                             requireView().keepScreenOn = player.isPlaying
                         }
                         updateProgress()
-                        if (Util.shouldShowPlayButton(player)) {
+                        val showPlayButton = Util.shouldShowPlayButton(player)
+                        binding.playerControls.playPause.contentDescription = getString(
+                            if (showPlayButton) R.string.player_play else R.string.player_pause_action,
+                        )
+                        if (showPlayButton) {
                             binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
                             binding.playerControls.playPause.visibility = View.VISIBLE
                         } else {
@@ -365,6 +392,7 @@ class ExoPlayerFragment : PlayerFragment() {
             if (root.isVisible && !progressBar.isPressed) {
                 val currentPosition = playbackService?.player?.currentPosition ?: 0
                 position.text = DateUtils.formatElapsedTime(currentPosition / 1000)
+                position.contentDescription = getString(R.string.player_position, position.text)
                 progressBar.setPosition(currentPosition)
                 progressBar.setBufferedPosition(playbackService?.player?.bufferedPosition ?: 0)
                 root.removeCallbacks(updateProgressAction)

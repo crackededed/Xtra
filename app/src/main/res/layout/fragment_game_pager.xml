@@ -38,6 +38,7 @@
                         android:id="@+id/gameImage"
                         android:layout_width="76dp"
                         android:layout_height="97dp"
+                        android:importantForAccessibility="no"
                         android:layout_marginStart="10dp"
                         android:layout_marginTop="10dp"
                         android:layout_marginBottom="10dp"

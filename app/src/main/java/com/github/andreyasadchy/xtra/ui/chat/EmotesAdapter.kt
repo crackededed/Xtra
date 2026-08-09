@@ -17,6 +17,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.github.andreyasadchy.xtra.BuildConfig
+import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentEmotesListItemBinding
 import com.github.andreyasadchy.xtra.model.chat.Emote
 
@@ -52,6 +53,8 @@ class EmotesAdapter(
         fun bind(item: Emote?) {
             with(binding) {
                 if (item != null) {
+                    root.contentDescription = fragment.getString(R.string.use_emote, item.name)
+                    root.isFocusable = true
                     if (imageLibrary == "0" || (imageLibrary == "1" && !item.format.equals("webp", true))) {
                         fragment.requireContext().imageLoader.enqueue(
                             ImageRequest.Builder(fragment.requireContext()).apply {

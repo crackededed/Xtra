@@ -127,6 +127,7 @@ class ImageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listener
             args.getString(IMAGE_NAME)?.let {
                 imageName.visibility = View.VISIBLE
                 imageName.text = it
+                image.contentDescription = it
             }
             args.getInt(IMAGE_SOURCE, -1).takeIf { it != -1 }?.let {
                 imageSource.visibility = View.VISIBLE

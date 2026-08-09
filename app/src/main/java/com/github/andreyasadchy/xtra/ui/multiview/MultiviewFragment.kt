@@ -267,8 +267,33 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
 
     private fun updateOrientationLayout() {
         if (_binding == null) return
+        val landscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        binding.multiviewRoot.orientation = if (landscape) {
+            LinearLayout.HORIZONTAL
+        } else {
+            LinearLayout.VERTICAL
+        }
+        (binding.multiviewContent.layoutParams as? LinearLayout.LayoutParams)?.let { params ->
+            if (landscape) {
+                params.width = 0
+                params.height = ViewGroup.LayoutParams.MATCH_PARENT
+                params.weight = 1f
+            } else {
+                params.width = ViewGroup.LayoutParams.MATCH_PARENT
+                params.height = 0
+                params.weight = 1f
+            }
+            binding.multiviewContent.layoutParams = params
+        }
         (binding.chatContainer.layoutParams as? LinearLayout.LayoutParams)?.let { params ->
-            params.weight = if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            if (landscape) {
+                params.width = 0
+                params.height = ViewGroup.LayoutParams.MATCH_PARENT
+            } else {
+                params.width = ViewGroup.LayoutParams.MATCH_PARENT
+                params.height = 0
+            }
+            params.weight = if (landscape) {
                 if (combinedChat) LANDSCAPE_COMBINED_CHAT_WEIGHT else LANDSCAPE_CHAT_WEIGHT
             } else {
                 PORTRAIT_CHAT_WEIGHT
@@ -281,12 +306,16 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         val container = FrameLayout(requireContext()).apply {
             setBackgroundColor(Color.BLACK)
             isClickable = true
+            isFocusable = true
         }
         val playerView = PlayerView(requireContext()).apply {
             useController = false
-            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+            // Multiview slots are intentionally filled so landscape does not
+            // leave large letterbox bands around every stream.
+            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
             setShutterBackgroundColor(Color.BLACK)
             setKeepContentOnPlayerReset(true)
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }
         container.addView(
             playerView,
@@ -349,7 +378,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
 
     private fun createOverlayButton(icon: Int, description: Int): ImageButton {
         return ImageButton(requireContext()).apply {
-            layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
+            layoutParams = LinearLayout.LayoutParams(dp(48), dp(48))
             setImageResource(icon)
             imageTintList = ColorStateList.valueOf(Color.WHITE)
             background = null
@@ -368,6 +397,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         slot.player?.release()
         slot.stream = stream
         slot.channel.text = displayName(stream)
+        slot.container.contentDescription = displayName(stream)
         slot.audioButton.isVisible = true
         slot.chatButton.isVisible = !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)
         slot.removeButton.isVisible = slots.size > 1
@@ -443,8 +473,10 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
 
     private fun showSlotMessage(slot: Slot, message: String?, error: Boolean) {
         slot.status.text = message
+        slot.status.contentDescription = message
         slot.status.isVisible = message != null
         slot.status.isClickable = error
+        slot.status.isFocusable = error
     }
 
     private fun removeSlot(slot: Slot) {

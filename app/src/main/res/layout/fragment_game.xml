@@ -38,6 +38,7 @@
                         android:id="@+id/gameImage"
                         android:layout_width="76dp"
                         android:layout_height="97dp"
+                        android:importantForAccessibility="no"
                         android:layout_marginStart="10dp"
                         android:layout_marginTop="10dp"
                         android:layout_marginBottom="10dp"
@@ -148,6 +149,7 @@
                     <AutoCompleteTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:hint="@string/select_media_tab"
                         android:inputType="none" />
                 </com.google.android.material.textfield.TextInputLayout>
 

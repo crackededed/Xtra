@@ -43,6 +43,9 @@ class SearchTagsAdapter(
                     root.setOnClickListener {
                         selectTag(item)
                     }
+                    root.contentDescription = item.name?.let {
+                        root.context.getString(com.github.andreyasadchy.xtra.R.string.open_tag, it)
+                    }
                 }
             }
         }

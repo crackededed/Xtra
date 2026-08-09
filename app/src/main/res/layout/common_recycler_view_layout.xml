@@ -96,6 +96,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="7dp"
         android:clickable="true"
+        android:contentDescription="@string/scroll_to_top"
         android:focusable="true"
         android:src="@drawable/baseline_arrow_upward_black_24"
         android:visibility="gone"

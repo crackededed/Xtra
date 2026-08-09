@@ -255,6 +255,12 @@ class MessageClickedChatAdapter(
         fun bind(chatMessage: ChatMessage, formattedMessage: SpannableStringBuilder) {
             textView.apply {
                 text = formattedMessage
+                contentDescription = ChatAdapterUtils.accessibilityDescription(
+                    textView.context,
+                    chatMessage,
+                    nameDisplay,
+                    formattedMessage,
+                )
                 textSize = messageTextSize
                 if (chatMessage.type == ChatMessage.REPLY_MESSAGE) {
                     movementMethod = null

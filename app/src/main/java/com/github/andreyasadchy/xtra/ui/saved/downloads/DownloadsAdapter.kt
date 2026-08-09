@@ -250,10 +250,13 @@ class DownloadsAdapter(
                     }
                     if (item.channelLogo != null) {
                         userImage.visibility = View.VISIBLE
+                        userImage.contentDescription = item.channelName?.let {
+                            context.getString(R.string.player_open_channel, it)
+                        }
                         fragment.requireContext().imageLoader.enqueue(
                             ImageRequest.Builder(fragment.requireContext()).apply {
                                 data(item.channelLogo)
-                                diskCachePolicy(CachePolicy.DISABLED)
+                                diskCachePolicy(CachePolicy.ENABLED)
                                 if (context.prefs().getBoolean(C.UI_ROUND_USER_IMAGE, true)) {
                                     transformations(CircleCropTransformation())
                                 }
@@ -264,6 +267,7 @@ class DownloadsAdapter(
                         userImage.setOnClickListener(channelListener)
                     } else {
                         userImage.visibility = View.GONE
+                        userImage.contentDescription = null
                     }
                     if (item.channelName != null) {
                         username.visibility = View.VISIBLE

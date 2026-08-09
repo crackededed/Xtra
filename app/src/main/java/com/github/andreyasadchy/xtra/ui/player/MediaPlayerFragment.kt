@@ -42,6 +42,10 @@ class MediaPlayerFragment : PlayerFragment() {
                 val duration = player.duration.takeIf { it != -1 }?.toLong() ?: 0
                 binding.playerControls.progressBar.setDuration(duration)
                 binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
+                binding.playerControls.duration.contentDescription = getString(
+                    R.string.player_duration,
+                    binding.playerControls.duration.text,
+                )
                 updatePlayingState()
                 chatFragment?.startReplayChatLoad()
             }
@@ -141,6 +145,7 @@ class MediaPlayerFragment : PlayerFragment() {
                         if (!gameName.isNullOrBlank() && requireContext().prefs().getBoolean(C.PLAYER_CATEGORY, true)) {
                             category.visibility = View.VISIBLE
                             category.text = gameName
+                            category.contentDescription = getString(R.string.player_open_category, gameName)
                             category.setOnClickListener {
                                 findNavController().navigate(
                                     if (requireContext().prefs().getBoolean(C.UI_GAME_PAGER, true)) {
@@ -223,9 +228,11 @@ class MediaPlayerFragment : PlayerFragment() {
                         updateProgress()
                         if (!player.isPlaying) {
                             binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
+                            binding.playerControls.playPause.contentDescription = getString(R.string.player_play)
                             binding.playerControls.playPause.visibility = View.VISIBLE
                         } else {
                             binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
+                            binding.playerControls.playPause.contentDescription = getString(R.string.player_pause_action)
                             if (playbackService?.type == BasePlaybackService.STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
                                 binding.playerControls.playPause.visibility = View.GONE
                             }
@@ -268,9 +275,11 @@ class MediaPlayerFragment : PlayerFragment() {
             val isPlaying = player.isPlaying
             if (!isPlaying) {
                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
+                binding.playerControls.playPause.contentDescription = getString(R.string.player_play)
                 binding.playerControls.playPause.visibility = View.VISIBLE
             } else {
                 binding.playerControls.playPause.setImageResource(R.drawable.baseline_pause_black_48)
+                binding.playerControls.playPause.contentDescription = getString(R.string.player_pause_action)
                 if (playbackService?.type == BasePlaybackService.STREAM && !requireContext().prefs().getBoolean(C.PLAYER_PAUSE, false)) {
                     binding.playerControls.playPause.visibility = View.GONE
                 }
@@ -356,6 +365,7 @@ class MediaPlayerFragment : PlayerFragment() {
             if (root.isVisible && !progressBar.isPressed) {
                 val currentPosition = playbackService?.player?.currentPosition?.toLong() ?: 0
                 position.text = DateUtils.formatElapsedTime(currentPosition / 1000)
+                position.contentDescription = getString(R.string.player_position, position.text)
                 progressBar.setPosition(currentPosition)
                 root.removeCallbacks(updateProgressAction)
                 playbackService?.player?.let { player ->

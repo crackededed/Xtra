@@ -14,6 +14,7 @@
         <ImageView
             android:id="@+id/thumbnail"
             style="@style/Thumbnail"
+            android:importantForAccessibility="no"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:src="@tools:sample/backgrounds/scenic" />
@@ -67,6 +68,7 @@
         <ImageView
             android:id="@+id/userImage"
             style="@style/UserPicture"
+            android:contentDescription="@string/open_channel"
             android:layout_marginStart="10dp"
             android:layout_marginTop="12dp"
             android:layout_marginBottom="12dp"
@@ -127,6 +129,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
+            android:contentDescription="@string/more_options"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/thumbnail" />
 

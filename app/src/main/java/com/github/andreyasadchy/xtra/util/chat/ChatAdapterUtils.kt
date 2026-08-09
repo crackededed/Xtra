@@ -22,6 +22,7 @@ import coil3.asDrawable
 import coil3.imageLoader
 import coil3.network.NetworkHeaders
 import coil3.network.httpHeaders
+import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -56,6 +57,54 @@ object ChatAdapterUtils {
     private const val BLUE_HUE_DEGREES = 240f
     private const val PI_DEGREES = 180f
     private const val TWO_PI_DEGREES = 360f
+
+    fun accessibilityDescription(
+        context: Context,
+        chatMessage: ChatMessage,
+        nameDisplay: String?,
+        formattedFallback: CharSequence,
+    ): String {
+        fun userLabel(name: String?, login: String?): String? {
+            return if (!name.isNullOrBlank() && !login.isNullOrBlank() && !login.equals(name, true)) {
+                when (nameDisplay) {
+                    "0" -> "$name($login)"
+                    "1" -> name
+                    else -> login
+                }
+            } else {
+                name ?: login
+            }
+        }
+
+        fun userLabel(message: ChatMessage): String? = userLabel(message.userName, message.userLogin)
+
+        fun messageText(message: ChatMessage, fallback: CharSequence? = null): String {
+            return message.message ?: message.systemMsg ?: fallback?.toString().orEmpty()
+        }
+
+        val sender = userLabel(chatMessage)
+            ?: chatMessage.reply?.let { userLabel(it.userName, it.userLogin) }
+        val body = messageText(chatMessage).takeIf { it.isNotBlank() }
+            ?: chatMessage.reply?.message
+            ?: formattedFallback.toString()
+        val description = if (!sender.isNullOrBlank() && body.isNotBlank()) {
+            context.getString(R.string.chat_accessibility_message, sender, body)
+        } else {
+            sender ?: body
+        }
+        val parent = chatMessage.replyParent
+        if (chatMessage.type == ChatMessage.REPLY_MESSAGE && parent != null) {
+            val parentSender = userLabel(parent)
+            val parentBody = messageText(parent)
+            val parentDescription = if (!parentSender.isNullOrBlank() && parentBody.isNotBlank()) {
+                context.getString(R.string.chat_accessibility_message, parentSender, parentBody)
+            } else {
+                parentSender ?: parentBody
+            }
+            return context.getString(R.string.chat_accessibility_reply, description, parentDescription)
+        }
+        return description
+    }
 
     fun prepareChatMessage(chatMessage: ChatMessage, context: Context, itemView: View, enableTimestamps: Boolean, timestampFormat: String?, firstMsgVisibility: Int, firstChatMsg: String, redeemedChatMsg: String, redeemedNoMsg: String, rewardChatMsg: String, replyMessage: String, imageClick: ((String?, String?, String?, Boolean?, Int?, Boolean?, String?) -> Unit)?, useRandomColors: Boolean, random: Random, useReadableColors: Boolean, isLightTheme: Boolean, nameDisplay: String?, useBoldNames: Boolean, showNamePaints: Boolean, namePaints: List<NamePaint>, showSTVBadges: Boolean, stvBadges: List<STVBadge>, showPersonalEmotes: Boolean, personalEmoteSets: Map<String, List<Emote>>, stvUsers: List<STVUser>, enableOverlayEmotes: Boolean, showSystemMessageEmotes: Boolean, loggedInUser: String?, chatUrl: String?, getEmoteBytes: ((String, Pair<Long, Int>) -> ByteArray?)?, userColors: HashMap<String, Int>, savedColors: HashMap<String, Int>, translateAllMessages: Boolean, translateMessage: (ChatMessage, String?) -> Unit, showLanguageDownloadDialog: (ChatMessage, String) -> Unit, hideErrors: Boolean, localTwitchEmotes: List<TwitchEmote>, thirdPartyEmotes: List<Emote>, globalBadges: List<TwitchBadge>, channelBadges: List<TwitchBadge>, cheerEmotes: List<CheerEmote>, savedLocalTwitchEmotes: MutableMap<String, ByteArray>, savedLocalBadges: MutableMap<String, ByteArray>, savedLocalCheerEmotes: MutableMap<String, ByteArray>, savedLocalEmotes: MutableMap<String, ByteArray>): MessageResult {
         val builder = SpannableStringBuilder()
@@ -890,6 +939,7 @@ object ChatAdapterUtils {
                     "2" -> image.url2x ?: image.url1x
                     else -> image.url1x
                 })
+                diskCachePolicy(CachePolicy.ENABLED)
                 if (image.thirdParty) {
                     httpHeaders(NetworkHeaders.Builder().apply {
                         add("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)

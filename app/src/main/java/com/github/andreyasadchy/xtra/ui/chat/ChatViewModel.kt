@@ -2,6 +2,7 @@ package com.github.andreyasadchy.xtra.ui.chat
 
 import android.content.ContentResolver
 import android.content.Context
+import android.net.ConnectivityManager
 import android.util.Base64
 import android.util.JsonReader
 import android.util.JsonToken
@@ -72,9 +73,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonPrimitive
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -267,9 +270,14 @@ class ChatViewModel(
         } else {
             viewModelScope.launch {
                 try {
-                    val badges = playerRepository.loadGlobalBadges(networkLibrary, helixHeaders, gqlHeaders, emoteQuality, enableIntegrity)
+                    val (badges, online) = loadCachedOrFetchBadges("global", emoteQuality) {
+                        playerRepository.loadGlobalBadges(networkLibrary, helixHeaders, gqlHeaders, emoteQuality, enableIntegrity)
+                    }
                     if (badges.isNotEmpty()) {
                         savedGlobalBadges = badges
+                        if (online) {
+                            writeBadgeCache("global", emoteQuality, badges)
+                        }
                         synchronized(globalBadges) {
                             globalBadges.clear()
                             globalBadges.addAll(badges)
@@ -306,21 +314,10 @@ class ChatViewModel(
                 }
             } else {
                 viewModelScope.launch {
-                    val pair = try {
-                        playerRepository.loadGlobalSTVEmoteSetResponse(networkLibrary) to true
-                    } catch (e: Exception) {
-                        try {
-                            val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/global.stv").use {
-                                it.readBytes()
-                            }
-                            val decompressedStream = ByteArrayOutputStream()
-                            InflaterOutputStream(decompressedStream).use {
-                                it.write(compressedBytes)
-                            }
-                            decompressedStream.toByteArray().decodeToString() to false
-                        } catch (e: Exception) {
-                            null to false
-                        }
+                    val pair = loadCachedOrFetchEmoteResponse("global.stv", {
+                        playerRepository.loadGlobalSTVEmoteSetResponse(networkLibrary)
+                    }) { response ->
+                        playerRepository.loadSTVEmoteSet(response, useWebp, true)
                     }
                     val response = pair.first
                     val online = pair.second
@@ -368,50 +365,61 @@ class ChatViewModel(
                     var setId: String? = null
                     var emotes: List<Emote>? = null
                     var online = false
-                    try {
-                        val userResponse = playerRepository.loadSTVUserResponse(networkLibrary, channelId)
-                        val user = playerRepository.loadSTVUser(userResponse, useWebp)
-                        val userSetId = user.first
+                    suspend fun applyCachedResponse(savedResponse: String) {
+                        val user = playerRepository.loadSTVUser(savedResponse, useWebp)
                         val userEmotes = user.second
                         if (!userEmotes.isNullOrEmpty()) {
-                            response = userResponse
-                            setId = userSetId
+                            setId = user.first
                             emotes = userEmotes
-                            online = true
                         } else {
-                            if (!userSetId.isNullOrBlank()) {
-                                val emoteSetResponse = playerRepository.loadSTVEmoteSetResponse(networkLibrary, userSetId)
-                                val emoteSet = playerRepository.loadSTVEmoteSet(emoteSetResponse, useWebp, false)
-                                response = emoteSetResponse
-                                setId = userSetId
-                                emotes = emoteSet.second
-                                online = true
-                            }
+                            val emoteSet = playerRepository.loadSTVEmoteSet(savedResponse, useWebp, false)
+                            setId = emoteSet.first
+                            emotes = emoteSet.second
                         }
-                    } catch (e: Exception) {
+                    }
+                    var cachedResponse = readCachedEmoteResponse("${channelId}.stv")
+                    if (cachedResponse != null && isActiveNetworkMetered() && isFreshCache(emoteResponseFile("${channelId}.stv"))) {
                         try {
-                            val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/${channelId}.stv").use {
-                                it.readBytes()
-                            }
-                            val decompressedStream = ByteArrayOutputStream()
-                            InflaterOutputStream(decompressedStream).use {
-                                it.write(compressedBytes)
-                            }
-                            val savedResponse = decompressedStream.toByteArray().decodeToString()
-                            val user = playerRepository.loadSTVUser(savedResponse, useWebp)
+                            applyCachedResponse(cachedResponse)
+                            response = cachedResponse
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (_: Exception) {
+                            invalidateEmoteResponseCache("${channelId}.stv")
+                            cachedResponse = null
+                        }
+                    }
+                    if (response == null) {
+                        try {
+                            val userResponse = playerRepository.loadSTVUserResponse(networkLibrary, channelId)
+                            val user = playerRepository.loadSTVUser(userResponse, useWebp)
+                            val userSetId = user.first
                             val userEmotes = user.second
                             if (!userEmotes.isNullOrEmpty()) {
-                                setId = user.first
+                                response = userResponse
+                                setId = userSetId
                                 emotes = userEmotes
+                                online = true
                             } else {
-                                val emoteSet = playerRepository.loadSTVEmoteSet(savedResponse, useWebp, false)
-                                setId = emoteSet.first
-                                emotes = emoteSet.second
+                                if (!userSetId.isNullOrBlank()) {
+                                    val emoteSetResponse = playerRepository.loadSTVEmoteSetResponse(networkLibrary, userSetId)
+                                    val emoteSet = playerRepository.loadSTVEmoteSet(emoteSetResponse, useWebp, false)
+                                    response = emoteSetResponse
+                                    setId = userSetId
+                                    emotes = emoteSet.second
+                                    online = true
+                                }
                             }
-                            response = savedResponse
-                            online = false
                         } catch (e: Exception) {
-
+                            try {
+                                val savedResponse = cachedResponse ?: throw e
+                                applyCachedResponse(savedResponse)
+                                response = savedResponse
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (_: Exception) {
+                                invalidateEmoteResponseCache("${channelId}.stv")
+                            }
                         }
                     }
                     if (response != null) {
@@ -483,21 +491,10 @@ class ChatViewModel(
                 }
             } else {
                 viewModelScope.launch {
-                    val pair = try {
-                        playerRepository.loadGlobalBTTVEmotesResponse(networkLibrary) to true
-                    } catch (e: Exception) {
-                        try {
-                            val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/global.bttv").use {
-                                it.readBytes()
-                            }
-                            val decompressedStream = ByteArrayOutputStream()
-                            InflaterOutputStream(decompressedStream).use {
-                                it.write(compressedBytes)
-                            }
-                            decompressedStream.toByteArray().decodeToString() to false
-                        } catch (e: Exception) {
-                            null to false
-                        }
+                    val pair = loadCachedOrFetchEmoteResponse("global.bttv", {
+                        playerRepository.loadGlobalBTTVEmotesResponse(networkLibrary)
+                    }) { response ->
+                        playerRepository.loadGlobalBTTVEmotes(response, useWebp)
                     }
                     val response = pair.first
                     val online = pair.second
@@ -543,21 +540,10 @@ class ChatViewModel(
             }
             if (!channelId.isNullOrBlank()) {
                 viewModelScope.launch {
-                    val pair = try {
-                        playerRepository.loadBTTVEmotesResponse(networkLibrary, channelId) to true
-                    } catch (e: Exception) {
-                        try {
-                            val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/${channelId}.bttv").use {
-                                it.readBytes()
-                            }
-                            val decompressedStream = ByteArrayOutputStream()
-                            InflaterOutputStream(decompressedStream).use {
-                                it.write(compressedBytes)
-                            }
-                            decompressedStream.toByteArray().decodeToString() to false
-                        } catch (e: Exception) {
-                            null to false
-                        }
+                    val pair = loadCachedOrFetchEmoteResponse("${channelId}.bttv", {
+                        playerRepository.loadBTTVEmotesResponse(networkLibrary, channelId)
+                    }) { response ->
+                        playerRepository.loadBTTVEmotes(response, useWebp)
                     }
                     val response = pair.first
                     val online = pair.second
@@ -630,21 +616,10 @@ class ChatViewModel(
                 }
             } else {
                 viewModelScope.launch {
-                    val pair = try {
-                        playerRepository.loadGlobalFFZEmotesResponse(networkLibrary) to true
-                    } catch (e: Exception) {
-                        try {
-                            val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/global.ffz").use {
-                                it.readBytes()
-                            }
-                            val decompressedStream = ByteArrayOutputStream()
-                            InflaterOutputStream(decompressedStream).use {
-                                it.write(compressedBytes)
-                            }
-                            decompressedStream.toByteArray().decodeToString() to false
-                        } catch (e: Exception) {
-                            null to false
-                        }
+                    val pair = loadCachedOrFetchEmoteResponse("global.ffz", {
+                        playerRepository.loadGlobalFFZEmotesResponse(networkLibrary)
+                    }) { response ->
+                        playerRepository.loadGlobalFFZEmotes(response, useWebp)
                     }
                     val response = pair.first
                     val online = pair.second
@@ -688,21 +663,10 @@ class ChatViewModel(
             }
             if (!channelId.isNullOrBlank()) {
                 viewModelScope.launch {
-                    val pair = try {
-                        playerRepository.loadFFZEmotesResponse(networkLibrary, channelId) to true
-                    } catch (e: Exception) {
-                        try {
-                            val compressedBytes = FileInputStream("${applicationContext.cacheDir}/emote_responses/${channelId}.ffz").use {
-                                it.readBytes()
-                            }
-                            val decompressedStream = ByteArrayOutputStream()
-                            InflaterOutputStream(decompressedStream).use {
-                                it.write(compressedBytes)
-                            }
-                            decompressedStream.toByteArray().decodeToString() to false
-                        } catch (e: Exception) {
-                            null to false
-                        }
+                    val pair = loadCachedOrFetchEmoteResponse("${channelId}.ffz", {
+                        playerRepository.loadFFZEmotesResponse(networkLibrary, channelId)
+                    }) { response ->
+                        playerRepository.loadFFZEmotes(response, useWebp)
                     }
                     val response = pair.first
                     val online = pair.second
@@ -755,8 +719,14 @@ class ChatViewModel(
         if (!channelId.isNullOrBlank() || !channelLogin.isNullOrBlank()) {
             viewModelScope.launch {
                 try {
-                    val badges = playerRepository.loadChannelBadges(networkLibrary, helixHeaders, gqlHeaders, channelId, channelLogin, emoteQuality, enableIntegrity)
+                    val cacheScope = "channel_${channelId ?: channelLogin}"
+                    val (badges, online) = loadCachedOrFetchBadges(cacheScope, emoteQuality) {
+                        playerRepository.loadChannelBadges(networkLibrary, helixHeaders, gqlHeaders, channelId, channelLogin, emoteQuality, enableIntegrity)
+                    }
                     if (badges.isNotEmpty()) {
+                        if (online) {
+                            writeBadgeCache(cacheScope, emoteQuality, badges)
+                        }
                         synchronized(channelBadges) {
                             channelBadges.clear()
                             channelBadges.addAll(badges)
@@ -3700,7 +3670,182 @@ class ChatViewModel(
         return length
     }
 
+    private fun isActiveNetworkMetered(): Boolean {
+        return (applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager)
+            ?.isActiveNetworkMetered == true
+    }
+
+    private suspend fun readCachedEmoteResponse(fileName: String): String? = withContext(Dispatchers.IO) {
+        try {
+            val file = emoteResponseFile(fileName)
+            val compressedBytes = FileInputStream(file).use { it.readBytes() }
+            val decompressedStream = ByteArrayOutputStream()
+            InflaterOutputStream(decompressedStream).use {
+                it.write(compressedBytes)
+            }
+            decompressedStream.toByteArray().decodeToString()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private suspend fun invalidateEmoteResponseCache(fileName: String) = withContext(Dispatchers.IO) {
+        try {
+            emoteResponseFile(fileName).delete()
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun emoteResponseFile(fileName: String): File {
+        return File(
+            File(applicationContext.cacheDir, "emote_responses"),
+            File(fileName).name,
+        )
+    }
+
+    private fun isFreshCache(file: File): Boolean {
+        val lastModified = file.lastModified()
+        return lastModified > 0L &&
+            (System.currentTimeMillis() - lastModified).coerceAtLeast(0L) <= METERED_CACHE_MAX_AGE_MS
+    }
+
+    private suspend fun loadCachedOrFetchEmoteResponse(
+        fileName: String,
+        request: suspend () -> String,
+        validate: suspend (String) -> Unit,
+    ): Pair<String?, Boolean> {
+        var cachedResponse = readCachedEmoteResponse(fileName)
+        if (cachedResponse != null && isActiveNetworkMetered() && isFreshCache(emoteResponseFile(fileName))) {
+            if (isValidEmoteResponse(cachedResponse, validate)) {
+                return cachedResponse to false
+            }
+            invalidateEmoteResponseCache(fileName)
+            cachedResponse = null
+        }
+        return try {
+            request().also { response ->
+                if (!isValidEmoteResponse(response, validate)) {
+                    throw IllegalStateException("Invalid emote response")
+                }
+            } to true
+        } catch (e: Exception) {
+            if (e is CancellationException) {
+                throw e
+            }
+            if (cachedResponse != null && isValidEmoteResponse(cachedResponse, validate)) {
+                cachedResponse to false
+            } else {
+                cachedResponse?.let { invalidateEmoteResponseCache(fileName) }
+                null to false
+            }
+        }
+    }
+
+    private suspend fun isValidEmoteResponse(
+        response: String,
+        validate: suspend (String) -> Unit,
+    ): Boolean {
+        return try {
+            validate(response)
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun badgeCacheFile(scope: String, quality: String): File {
+        val safeScope = scope.replace(Regex("[^A-Za-z0-9._-]"), "_")
+        val safeQuality = quality.replace(Regex("[^A-Za-z0-9._-]"), "_")
+        return File(
+            File(applicationContext.cacheDir, "chat_badges"),
+            "$safeScope-$safeQuality.json",
+        )
+    }
+
+    private suspend fun readBadgeCache(scope: String, quality: String): List<TwitchBadge>? = withContext(Dispatchers.IO) {
+        try {
+            val file = badgeCacheFile(scope, quality)
+            val array = JSONArray(file.readText())
+            buildList {
+                for (index in 0 until array.length()) {
+                    val item = array.optJSONObject(index) ?: continue
+                    val setId = item.optString("setId").takeIf { it.isNotBlank() } ?: continue
+                    val version = item.optString("version").takeIf { it.isNotBlank() } ?: continue
+                    add(
+                        TwitchBadge(
+                            setId = setId,
+                            version = version,
+                            url1x = item.optString("url1x").takeIf { it.isNotBlank() },
+                            url2x = item.optString("url2x").takeIf { it.isNotBlank() },
+                            url3x = item.optString("url3x").takeIf { it.isNotBlank() },
+                            url4x = item.optString("url4x").takeIf { it.isNotBlank() },
+                            title = item.optString("title").takeIf { it.isNotBlank() },
+                        ),
+                    )
+                }
+            }.takeIf { it.isNotEmpty() }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private suspend fun writeBadgeCache(scope: String, quality: String, badges: List<TwitchBadge>) = withContext(Dispatchers.IO) {
+        try {
+            val file = badgeCacheFile(scope, quality)
+            file.parentFile?.mkdirs()
+            val array = JSONArray()
+            badges.forEach { badge ->
+                array.put(JSONObject().apply {
+                    put("setId", badge.setId)
+                    put("version", badge.version)
+                    badge.url1x?.let { put("url1x", it) }
+                    badge.url2x?.let { put("url2x", it) }
+                    badge.url3x?.let { put("url3x", it) }
+                    badge.url4x?.let { put("url4x", it) }
+                    badge.title?.let { put("title", it) }
+                })
+            }
+            file.writeText(array.toString())
+            val files = file.parentFile?.listFiles().orEmpty()
+            val excess = (files.size - MAX_BADGE_CACHE_FILES).coerceAtLeast(0)
+            if (excess > 0) {
+                files.filter { it != file }
+                    .sortedBy { it.lastModified() }
+                    .take(excess)
+                    .forEach(File::delete)
+            }
+        } catch (_: Exception) {
+        }
+    }
+
+    private suspend fun loadCachedOrFetchBadges(
+        scope: String,
+        quality: String,
+        request: suspend () -> List<TwitchBadge>,
+    ): Pair<List<TwitchBadge>, Boolean> {
+        val cachedBadges = readBadgeCache(scope, quality)
+        if (cachedBadges != null && isActiveNetworkMetered() && isFreshCache(badgeCacheFile(scope, quality))) {
+            return cachedBadges to false
+        }
+        return try {
+            request() to true
+        } catch (e: Exception) {
+            if (e is CancellationException || e.message == C.FAILED_INTEGRITY_CHECK) {
+                throw e
+            }
+            if (cachedBadges != null) {
+                cachedBadges to false
+            } else {
+                throw e
+            }
+        }
+    }
+
     companion object {
+        private const val METERED_CACHE_MAX_AGE_MS = 604_800_000L
+        private const val MAX_BADGE_CACHE_FILES = 100
         private const val DEFAULT_REWARD_COLOR = "#9146FF"
         private var savedEmoteSets: List<String>? = null
         private val savedUserEmotes = mutableMapOf<String, List<TwitchEmote>>()

@@ -9,13 +9,74 @@
     android:orientation="vertical">
 
     <LinearLayout
-        android:id="@+id/videoGrid"
+        android:id="@+id/multiviewContent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:clipToPadding="false"
         android:orientation="vertical">
 
+        <LinearLayout
+            android:id="@+id/videoGrid"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:orientation="vertical">
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/multiviewToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:colorBackground"
+            android:gravity="center_vertical"
+            android:minHeight="64dp"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="6dp">
+
+            <TextView
+                android:id="@+id/activeAudio"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:minWidth="0dp"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?android:attr/textColorSecondary"
+                tools:text="Audio: channel" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chatButton"
+                style="?attr/elevatedButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="@string/multiview_chat" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/addStreamButton"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="@string/multiview_add_stream" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/closeButton"
+                style="?attr/elevatedButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="@string/multiview_close" />
+
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
@@ -68,56 +129,4 @@
             android:background="?android:colorBackground" />
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/multiviewToolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?android:colorBackground"
-        android:gravity="center_vertical"
-        android:minHeight="64dp"
-        android:orientation="horizontal"
-        android:paddingStart="12dp"
-        android:paddingTop="6dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="6dp">
-
-        <TextView
-            android:id="@+id/activeAudio"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:minWidth="0dp"
-            android:paddingStart="4dp"
-            android:paddingEnd="4dp"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?android:attr/textColorSecondary"
-            tools:text="Audio: channel" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/chatButton"
-            style="?attr/elevatedButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:text="@string/multiview_chat" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/addStreamButton"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:text="@string/multiview_add_stream" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/closeButton"
-            style="?attr/elevatedButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:text="@string/multiview_close" />
-
-    </LinearLayout>
 </LinearLayout>

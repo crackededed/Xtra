@@ -101,6 +101,9 @@ class StreamsCompactAdapter(
                     }
                     if (item.channelImage != null) {
                         userImage.visibility = View.VISIBLE
+                        userImage.contentDescription = item.channelName?.let {
+                            context.getString(R.string.player_open_channel, it)
+                        }
                         fragment.requireContext().imageLoader.enqueue(
                             ImageRequest.Builder(fragment.requireContext()).apply {
                                 data(item.channelImage)
@@ -114,6 +117,7 @@ class StreamsCompactAdapter(
                         userImage.setOnClickListener(channelListener)
                     } else {
                         userImage.visibility = View.GONE
+                        userImage.contentDescription = null
                     }
                     if (item.channelName != null) {
                         username.visibility = View.VISIBLE
@@ -212,6 +216,8 @@ class StreamsCompactAdapter(
                             text.id = id
                             ids.add(id)
                             text.text = tag
+                            text.setMinHeight(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 48f, context.resources.displayMetrics).toInt())
+                            text.isFocusable = true
                             context.obtainStyledAttributes(intArrayOf(com.google.android.material.R.attr.textAppearanceBodyMedium)).use {
                                 TextViewCompat.setTextAppearance(text, it.getResourceId(0, 0))
                             }

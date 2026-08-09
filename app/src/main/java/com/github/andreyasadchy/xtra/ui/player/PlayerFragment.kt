@@ -592,11 +592,19 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     playPause()
                 }
                 rewind.text = (requireContext().prefs().getString(C.PLAYER_REWIND, "10")?.toLongOrNull() ?: 10).toString()
+                rewind.contentDescription = getString(
+                    R.string.player_rewind_seconds,
+                    rewind.text.toString().toLongOrNull() ?: 10,
+                )
                 rewind.setOnClickListener {
                     showController(force = true)
                     rewind()
                 }
                 fastForward.text = (requireContext().prefs().getString(C.PLAYER_FORWARD, "10")?.toLongOrNull() ?: 10).toString()
+                fastForward.contentDescription = getString(
+                    R.string.player_fast_forward_seconds,
+                    fastForward.text.toString().toLongOrNull() ?: 10,
+                )
                 fastForward.setOnClickListener {
                     showController(force = true)
                     fastForward()
@@ -605,11 +613,19 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     object : TimeBar.OnScrubListener {
                         override fun onScrubStart(timeBar: TimeBar, position: Long) {
                             binding.playerControls.position.text = DateUtils.formatElapsedTime(position / 1000)
+                            binding.playerControls.position.contentDescription = getString(
+                                R.string.player_position,
+                                binding.playerControls.position.text,
+                            )
                             binding.playerControls.root.removeCallbacks(controllerHideAction)
                         }
 
                         override fun onScrubMove(timeBar: TimeBar, position: Long) {
                             binding.playerControls.position.text = DateUtils.formatElapsedTime(position / 1000)
+                            binding.playerControls.position.contentDescription = getString(
+                                R.string.player_position,
+                                binding.playerControls.position.text,
+                            )
                         }
 
                         override fun onScrubStop(timeBar: TimeBar, position: Long, canceled: Boolean) {
@@ -625,6 +641,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 )
                 position.text = DateUtils.formatElapsedTime(0)
                 duration.text = DateUtils.formatElapsedTime(0)
+                position.contentDescription = getString(R.string.player_position, position.text)
+                duration.contentDescription = getString(R.string.player_duration, duration.text)
                 subtitleView.setUserDefaultStyle()
                 subtitleView.setUserDefaultTextSize()
             }
@@ -697,6 +715,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 if (requireContext().prefs().getBoolean(C.PLAYER_CHANNEL, true)) {
                     channel.visibility = View.VISIBLE
                     channel.text = displayName
+                    channel.isFocusable = true
+                    channel.contentDescription = getString(R.string.player_open_channel, displayName.orEmpty())
                     channel.setOnClickListener {
                         findNavController().navigate(
                             ChannelPagerFragmentDirections.actionGlobalChannelPagerFragment(
@@ -717,6 +737,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 if (!gameName.isNullOrBlank() && requireContext().prefs().getBoolean(C.PLAYER_CATEGORY, true)) {
                     category.visibility = View.VISIBLE
                     category.text = gameName
+                    category.isFocusable = true
+                    category.contentDescription = getString(R.string.player_open_category, gameName)
                     category.setOnClickListener {
                         findNavController().navigate(
                             if (requireContext().prefs().getBoolean(C.UI_GAME_PAGER, true)) {
@@ -876,6 +898,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         }
                     }
                     if (requireContext().prefs().getBoolean(C.PLAYER_VIEWER_LIST, false)) {
+                        viewersLayout.isFocusable = true
                         viewersLayout.setOnClickListener {
                             showController(force = true)
                             openViewerList()
@@ -1043,8 +1066,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                     if (it != null) {
                                         if (it) {
                                             follow.setImageResource(R.drawable.baseline_favorite_black_24)
+                                            follow.contentDescription = getString(R.string.player_unfollow)
                                         } else {
                                             follow.setImageResource(R.drawable.baseline_favorite_border_black_24)
+                                            follow.contentDescription = getString(R.string.player_follow)
                                         }
                                     }
                                 }
@@ -1158,6 +1183,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     if (requireContext().prefs().getBoolean(C.PLAYER_FULLSCREEN, true)) {
                         fullscreen.visibility = View.VISIBLE
                         fullscreen.setImageResource(R.drawable.baseline_fullscreen_black_24)
+                        fullscreen.contentDescription = getString(R.string.player_enter_fullscreen)
                         fullscreen.setOnClickListener {
                             showController(force = true)
                             requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
@@ -1233,6 +1259,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     if (requireContext().prefs().getBoolean(C.PLAYER_FULLSCREEN, true)) {
                         fullscreen.visibility = View.VISIBLE
                         fullscreen.setImageResource(R.drawable.baseline_fullscreen_exit_black_24)
+                        fullscreen.contentDescription = getString(R.string.player_exit_fullscreen)
                         fullscreen.setOnClickListener {
                             showController(force = true)
                             requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -1250,12 +1277,14 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         toggleChat.visibility = View.VISIBLE
                         if (isChatOpen) {
                             toggleChat.setImageResource(R.drawable.baseline_speaker_notes_off_black_24)
+                            toggleChat.contentDescription = getString(R.string.player_hide_chat)
                             toggleChat.setOnClickListener {
                                 showController(force = true)
                                 hideChat()
                             }
                         } else {
                             toggleChat.setImageResource(R.drawable.baseline_speaker_notes_black_24)
+                            toggleChat.contentDescription = getString(R.string.player_show_chat)
                             toggleChat.setOnClickListener {
                                 showController(force = true)
                                 showChat()
@@ -1412,6 +1441,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             binding.playerControls.toggleChat.apply {
                 visibility = View.VISIBLE
                 setImageResource(R.drawable.baseline_speaker_notes_black_24)
+                contentDescription = getString(R.string.player_show_chat)
                 setOnClickListener {
                     showController(force = true)
                     showChat()
@@ -1428,6 +1458,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             binding.playerControls.toggleChat.apply {
                 visibility = View.VISIBLE
                 setImageResource(R.drawable.baseline_speaker_notes_off_black_24)
+                contentDescription = getString(R.string.player_hide_chat)
                 setOnClickListener {
                     showController(force = true)
                     hideChat()
@@ -1482,11 +1513,13 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         with(binding.playerControls) {
             if (viewerCount != null) {
                 viewersText.text = TwitchApiHelper.formatCount(viewerCount, requireContext().prefs().getBoolean(C.UI_TRUNCATE_VIEW_COUNT, true))
+                viewersLayout.contentDescription = getString(R.string.player_viewers, viewersText.text)
                 if (requireContext().prefs().getBoolean(C.PLAYER_VIEWER_ICON, true)) {
                     viewersIcon.visibility = View.VISIBLE
                 }
             } else {
                 viewersText.text = null
+                viewersLayout.contentDescription = null
                 viewersIcon.visibility = View.GONE
             }
         }
