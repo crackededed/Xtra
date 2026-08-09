@@ -39,10 +39,12 @@ import com.github.andreyasadchy.xtra.util.applyTheme
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
+import com.github.andreyasadchy.xtra.ui.main.LiveNotificationScheduler
 import com.google.android.material.slider.Slider
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import org.json.JSONObject
 import java.util.regex.Pattern
 import kotlin.math.roundToInt
@@ -91,7 +93,12 @@ class LoginActivity : AppCompatActivity() {
             val oldGQLToken = gqlHeaders[C.HEADER_TOKEN]?.removePrefix("OAuth ")
             val oldGQLWebToken = tokenPrefs().getString(C.GQL_TOKEN_WEB, null)
             if (!oldGQLToken.isNullOrBlank() || !oldHelixToken.isNullOrBlank()) {
+                LiveNotificationScheduler.disable(this@LoginActivity)
+                lifecycleScope.launch(Dispatchers.IO) {
+                    xtraModule.notificationsRepository.clearNotificationState()
+                }
                 TwitchApiHelper.checkedValidation = false
+                prefs().edit { putBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false) }
                 tokenPrefs().edit {
                     putString(C.TOKEN, null)
                     putString(C.GQL_HEADERS, null)

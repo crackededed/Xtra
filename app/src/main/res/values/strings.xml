@@ -573,6 +573,9 @@
     <string name="notification_live_channel_title">Live notifications</string>
     <string name="live_notification">%s is live</string>
     <string name="live_notifications">Live notifications</string>
+    <string name="live_notifications_permission_required">Allow notifications in Android settings to receive live alerts.</string>
+    <string name="live_notifications_blocked">Live notifications are blocked in Android settings. Enable them to receive live alerts.</string>
+    <string name="live_notifications_enable_failed">Live notifications could not be enabled. Please try again.</string>
     <string name="sleep_timer_lock_screen">Lock screen after sleep timer is done</string>
     <string name="sleep_timer_time_picker">Use Material time picker for sleep timer</string>
     <string name="stop_sleep_timer_message">Stop sleep timer?</string>

@@ -10,6 +10,7 @@ import android.net.http.HttpEngine
 import android.provider.DocumentsContract
 import android.util.JsonReader
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
@@ -18,11 +19,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.sqlite.db.SimpleSQLiteQuery
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.db.AppDatabase
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
@@ -30,7 +26,7 @@ import com.github.andreyasadchy.xtra.repository.NotificationsRepository
 import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.repository.RecentSearchesRepository
-import com.github.andreyasadchy.xtra.ui.main.LiveNotificationWorker
+import com.github.andreyasadchy.xtra.ui.main.LiveNotificationScheduler
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
@@ -59,7 +55,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import kotlin.system.exitProcess
 import kotlin.time.Instant
@@ -83,6 +78,7 @@ class SettingsViewModel(
     var updateJob: Job? = null
     val updateProgress = MutableSharedFlow<Int>()
     val closeUpdateDialog = MutableSharedFlow<Boolean>()
+    val liveNotificationResult = MutableSharedFlow<LiveNotificationResult>()
 
     fun deletePositions() {
         viewModelScope.launch {
@@ -490,40 +486,54 @@ class SettingsViewModel(
 
     fun toggleNotifications(enabled: Boolean, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>) {
         viewModelScope.launch(Dispatchers.IO) {
-            if (enabled) {
-                WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
-                    "live_notifications",
-                    ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
-                    PeriodicWorkRequestBuilder<LiveNotificationWorker>(15, TimeUnit.MINUTES)
-                        .setInitialDelay(1, TimeUnit.MINUTES)
-                        .setConstraints(
-                            Constraints.Builder()
-                                .setRequiredNetworkType(NetworkType.CONNECTED)
-                                .build()
-                        )
-                        .build()
-                )
-                try {
-                    val useLocalFollows = (applicationContext.prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0) != 0
-                    if (!useLocalFollows) {
-                        notificationsRepository.syncNotificationUsers(networkLibrary, gqlHeaders)
-                    }
-                    notificationsRepository.getNewStreams(
-                        networkLibrary = networkLibrary,
-                        gqlHeaders = gqlHeaders,
-                        helixHeaders = helixHeaders,
-                        includeFollowedStreams = !useLocalFollows,
-                    )
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    // The worker will retry after a transient API failure.
+            if (!enabled) {
+                applicationContext.prefs().edit { putBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false) }
+                notificationsRepository.clearPendingNotificationEvents()
+                LiveNotificationScheduler.disable(applicationContext)
+                liveNotificationResult.emit(LiveNotificationResult(enabled = false, failed = false))
+                return@launch
+            }
+
+            if (!LiveNotificationScheduler.canPostNotifications(applicationContext)) {
+                applicationContext.prefs().edit { putBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false) }
+                LiveNotificationScheduler.disable(applicationContext)
+                liveNotificationResult.emit(LiveNotificationResult(enabled = false, failed = true))
+                return@launch
+            }
+
+            val prepared = try {
+                notificationsRepository.clearPendingNotificationEvents()
+                val useLocalFollows = (applicationContext.prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0) != 0
+                if (!useLocalFollows) {
+                    notificationsRepository.syncNotificationUsers(networkLibrary, gqlHeaders)
                 }
+                notificationsRepository.getNewStreams(
+                    networkLibrary = networkLibrary,
+                    gqlHeaders = gqlHeaders,
+                    helixHeaders = helixHeaders,
+                    includeFollowedStreams = !useLocalFollows,
+                    preferHelix = true,
+                )
+                true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                false
+            }
+
+            if (prepared) {
+                applicationContext.prefs().edit { putBoolean(C.LIVE_NOTIFICATIONS_ENABLED, true) }
+                LiveNotificationScheduler.enable(applicationContext, baselineOnly = true)
+                liveNotificationResult.emit(LiveNotificationResult(enabled = true, failed = false))
             } else {
-                WorkManager.getInstance(applicationContext).cancelUniqueWork("live_notifications")
+                applicationContext.prefs().edit { putBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false) }
+                LiveNotificationScheduler.disable(applicationContext)
+                liveNotificationResult.emit(LiveNotificationResult(enabled = false, failed = true))
             }
         }
     }
+
+    data class LiveNotificationResult(val enabled: Boolean, val failed: Boolean)
 
     companion object {
         val SettingsViewModelFactory = viewModelFactory {

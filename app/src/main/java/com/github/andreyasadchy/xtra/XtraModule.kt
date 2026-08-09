@@ -296,9 +296,16 @@ class XtraModule(application: Application) {
                     db.execSQL("DROP TABLE playback_states")
                     db.execSQL("ALTER TABLE playback_states1 RENAME TO playback_states")
                 },
+                Migration(37, 38) { db ->
+                    db.execSQL("CREATE TABLE IF NOT EXISTS notification_events (eventId TEXT NOT NULL, channelId TEXT NOT NULL, streamId TEXT, channelLogin TEXT, channelName TEXT, channelImageURL TEXT, gameName TEXT, title TEXT, thumbnailURL TEXT, createdAt TEXT, viewerCount INTEGER, startedAt INTEGER NOT NULL, queuedAt INTEGER NOT NULL, PRIMARY KEY (eventId))")
+                },
                 // Version 39 only contained the removed notification log table.
                 Migration(39, 37) { db ->
                     db.execSQL("DROP TABLE IF EXISTS live_notification_logs")
+                },
+                Migration(39, 38) { db ->
+                    db.execSQL("DROP TABLE IF EXISTS live_notification_logs")
+                    db.execSQL("CREATE TABLE IF NOT EXISTS notification_events (eventId TEXT NOT NULL, channelId TEXT NOT NULL, streamId TEXT, channelLogin TEXT, channelName TEXT, channelImageURL TEXT, gameName TEXT, title TEXT, thumbnailURL TEXT, createdAt TEXT, viewerCount INTEGER, startedAt INTEGER NOT NULL, queuedAt INTEGER NOT NULL, PRIMARY KEY (eventId))")
                 },
             )
         }.build()
@@ -337,7 +344,7 @@ class XtraModule(application: Application) {
     }
 
     val notificationsRepository by lazy {
-        NotificationsRepository(database.shownNotifications(), database.notificationUsers(), graphQLRepository, helixRepository)
+        NotificationsRepository(database.shownNotifications(), database.notificationUsers(), database.notificationEvents(), graphQLRepository, helixRepository)
     }
 
     val offlineVideosRepository by lazy {

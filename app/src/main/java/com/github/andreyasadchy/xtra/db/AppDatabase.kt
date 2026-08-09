@@ -3,6 +3,7 @@ package com.github.andreyasadchy.xtra.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.github.andreyasadchy.xtra.model.NotificationUser
+import com.github.andreyasadchy.xtra.model.NotificationEvent
 import com.github.andreyasadchy.xtra.model.PlaybackState
 import com.github.andreyasadchy.xtra.model.ShownNotification
 import com.github.andreyasadchy.xtra.model.VideoPosition
@@ -31,12 +32,13 @@ import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
         GameSort::class,
         ShownNotification::class,
         NotificationUser::class,
+        NotificationEvent::class,
         TranslatedChannel::class,
         SavedFilter::class,
         RecentSearch::class,
         PlaybackState::class
     ],
-    version = 37,
+    version = 38,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -52,6 +54,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun gameSort(): GameSortDao
     abstract fun shownNotifications(): ShownNotificationsDao
     abstract fun notificationUsers(): NotificationUsersDao
+    abstract fun notificationEvents(): NotificationEventsDao
     abstract fun translatedChannels(): TranslatedChannelsDao
     abstract fun savedFilters(): SavedFiltersDao
     abstract fun recentSearches(): RecentSearchesDao

@@ -50,18 +50,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.withStarted
-import androidx.media3.common.MimeTypes
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.setupWithNavController
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
+import androidx.media3.common.MimeTypes
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.ActivityMainBinding
 import com.github.andreyasadchy.xtra.databinding.DialogUpdateDownloadBinding
@@ -101,7 +96,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.chromium.net.CronetProvider
 import java.util.Timer
-import java.util.concurrent.TimeUnit
 import kotlin.concurrent.schedule
 
 class MainActivity : AppCompatActivity() {
@@ -597,18 +591,13 @@ class MainActivity : AppCompatActivity() {
         if (prefs.getBoolean(C.ENABLE_INTEGRITY, false) && TwitchApiHelper.isIntegrityTokenExpired(this)) {
             getNewIntegrityToken(null, supportFragmentManager)
         }
-        if (prefs.getBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false)) {
-            WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-                "live_notifications",
-                ExistingPeriodicWorkPolicy.KEEP,
-                PeriodicWorkRequestBuilder<LiveNotificationWorker>(15, TimeUnit.MINUTES)
-                    .setConstraints(
-                        Constraints.Builder()
-                            .setRequiredNetworkType(NetworkType.CONNECTED)
-                            .build()
-                    )
-                    .build()
-            )
+        if (prefs.getBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false) && LiveNotificationScheduler.canPostNotifications(this)) {
+            LiveNotificationScheduler.enable(this, baselineOnly = false)
+        } else {
+            if (prefs.getBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false)) {
+                prefs.edit { putBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false) }
+            }
+            LiveNotificationScheduler.disable(this)
         }
     }
 
@@ -651,6 +640,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (prefs.getBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false) && !LiveNotificationScheduler.canPostNotifications(this)) {
+            prefs.edit { putBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false) }
+            LiveNotificationScheduler.disable(this)
+        }
         restorePlayerFragment()
     }
 

@@ -69,6 +69,7 @@ import com.github.andreyasadchy.xtra.databinding.ItemSettingsRowBinding
 import com.github.andreyasadchy.xtra.model.ui.SettingsDragListItem
 import com.github.andreyasadchy.xtra.model.ui.SettingsSearchItem
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
+import com.github.andreyasadchy.xtra.ui.main.LiveNotificationScheduler
 import com.github.andreyasadchy.xtra.ui.settings.SettingsViewModel.Companion.SettingsViewModelFactory
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
@@ -393,6 +394,9 @@ class SettingsActivity : AppCompatActivity() {
                         it.isChecked = true
                         toggleLiveNotifications(true)
                     }
+                } else {
+                    findPreference<SwitchPreferenceCompat>("live_notifications_enabled")?.isChecked = false
+                    Toast.makeText(requireContext(), R.string.live_notifications_permission_required, Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -458,11 +462,19 @@ class SettingsActivity : AppCompatActivity() {
             }
             findPreference<SwitchPreferenceCompat>("live_notifications_enabled")?.setOnPreferenceChangeListener { _, newValue ->
                 val enabled = newValue as Boolean
-                if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                    ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    false
+                if (enabled) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        false
+                    } else if (!LiveNotificationScheduler.canPostNotifications(requireContext())) {
+                        Toast.makeText(requireContext(), R.string.live_notifications_blocked, Toast.LENGTH_LONG).show()
+                        false
+                    } else {
+                        toggleLiveNotifications(true)
+                        true
+                    }
                 } else {
                     toggleLiveNotifications(enabled)
                     true
@@ -552,6 +564,16 @@ class SettingsActivity : AppCompatActivity() {
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
+            viewLifecycleOwner.lifecycleScope.launch {
+                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.liveNotificationResult.collectLatest { result ->
+                        findPreference<SwitchPreferenceCompat>("live_notifications_enabled")?.isChecked = result.enabled
+                        if (result.failed) {
+                            Toast.makeText(requireContext(), R.string.live_notifications_enable_failed, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.updateUrl.collectLatest {
@@ -644,6 +666,15 @@ class SettingsActivity : AppCompatActivity() {
                         updateDownloadDialog?.dismiss()
                     }
                 }
+            }
+        }
+
+        override fun onResume() {
+            super.onResume()
+            val preference = findPreference<SwitchPreferenceCompat>("live_notifications_enabled") ?: return
+            if (preference.isChecked && !LiveNotificationScheduler.canPostNotifications(requireContext())) {
+                preference.isChecked = false
+                toggleLiveNotifications(false)
             }
         }
     }

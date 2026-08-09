@@ -21,11 +21,6 @@
                 android:id="@+id/recyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:paddingStart="8dp"
-                android:paddingTop="4dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="4dp"
                 tools:listitem="@layout/chat_list_item" />
 
             <Button
@@ -155,10 +150,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:animateLayoutChanges="true"
-            android:minHeight="52dp"
             android:orientation="horizontal"
-            android:paddingStart="4dp"
-            android:paddingEnd="4dp"
             android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@id/emoteMenu"
             tools:visibility="visible">
@@ -283,10 +275,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/chatStatus"
-        android:paddingStart="8dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="4dp"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

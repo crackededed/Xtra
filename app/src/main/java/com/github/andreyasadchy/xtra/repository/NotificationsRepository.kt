@@ -1,7 +1,9 @@
 package com.github.andreyasadchy.xtra.repository
 
+import com.github.andreyasadchy.xtra.db.NotificationEventsDao
 import com.github.andreyasadchy.xtra.db.NotificationUsersDao
 import com.github.andreyasadchy.xtra.db.ShownNotificationsDao
+import com.github.andreyasadchy.xtra.model.NotificationEvent
 import com.github.andreyasadchy.xtra.model.NotificationUser
 import com.github.andreyasadchy.xtra.model.ShownNotification
 import com.github.andreyasadchy.xtra.model.ui.Stream
@@ -14,6 +16,7 @@ import kotlin.time.Instant
 class NotificationsRepository(
     private val shownNotificationsDao: ShownNotificationsDao,
     private val notificationUsersDao: NotificationUsersDao,
+    private val notificationEventsDao: NotificationEventsDao,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
 ) {
@@ -23,6 +26,8 @@ class NotificationsRepository(
         gqlHeaders: Map<String, String>,
         helixHeaders: Map<String, String>,
         includeFollowedStreams: Boolean = true,
+        preferHelix: Boolean = false,
+        enqueueNotificationEvents: Boolean = false,
     ): List<Stream> = withContext(Dispatchers.IO) {
         val list = mutableListOf<Stream>()
         val notificationIds = notificationUsersDao.getAll().map { it.channelId }
@@ -33,7 +38,18 @@ class NotificationsRepository(
             return@withContext emptyList()
         }
         if (notificationIds.isNotEmpty()) {
-            val localStreams = if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+            val localStreams = if (preferHelix && !helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                try {
+                    helixLocal(networkLibrary, helixHeaders, notificationIds)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (helixException: Exception) {
+                    if (gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                        throw helixException
+                    }
+                    gqlQueryLocal(networkLibrary, gqlHeaders, notificationIds)
+                }
+            } else if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
                 try {
                     gqlQueryLocal(networkLibrary, gqlHeaders, notificationIds)
                 } catch (e: CancellationException) {
@@ -62,10 +78,11 @@ class NotificationsRepository(
                 }
             }
         }
-        val liveList = list.mapNotNull { stream ->
+        val liveStreams = list.distinctBy { it.channelId ?: it.id }
+        val liveList = liveStreams.mapNotNull { stream ->
             stream.channelId.takeUnless { it.isNullOrBlank() }?.let { channelId ->
-                stream.createdAt.takeUnless { it.isNullOrBlank() }?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }?.let { createdAt ->
-                    ShownNotification(channelId, createdAt)
+                stream.startedAtMillis()?.let { startedAt ->
+                    ShownNotification(channelId, startedAt)
                 }
             }
         }
@@ -73,11 +90,19 @@ class NotificationsRepository(
         oldList.filter { item -> liveList.find { it.channelId == item.channelId } == null }.let {
             shownNotificationsDao.deleteList(it)
         }
-        shownNotificationsDao.insertList(liveList)
-        val newStreams = liveList.mapNotNull { item ->
-            item.takeIf { oldList.find { it.channelId == item.channelId }.let { it == null || it.startedAt < item.startedAt } }?.channelId
+        val oldByChannel = oldList.associateBy { it.channelId }
+        val newStreams = liveStreams.filter { stream ->
+            val channelId = stream.channelId ?: return@filter false
+            val startedAt = stream.startedAtMillis() ?: return@filter false
+            oldByChannel[channelId]?.startedAt?.let { it >= startedAt } != true
         }
-        list.filter { it.channelId in newStreams }
+        if (enqueueNotificationEvents) {
+            newStreams.mapNotNull { stream ->
+                stream.startedAtMillis()?.let { NotificationEvent.fromStream(stream, it) }
+            }.let(notificationEventsDao::insertList)
+        }
+        shownNotificationsDao.insertList(liveList)
+        newStreams
     }
 
     suspend fun syncNotificationUsers(networkLibrary: String?, gqlHeaders: Map<String, String>) = withContext(Dispatchers.IO) {
@@ -99,7 +124,38 @@ class NotificationsRepository(
             offset = items.lastOrNull()?.cursor?.toString()
         } while (!offset.isNullOrBlank() && data.pageInfo?.hasNextPage == true)
         notificationUsersDao.replaceAll(users)
+        val enabledIds = users.mapTo(hashSetOf()) { it.channelId }
+        notificationEventsDao.getAll()
+            .filterNot { it.channelId in enabledIds }
+            .forEach { notificationEventsDao.delete(it.eventId) }
         true
+    }
+
+    suspend fun getNotificationUserIds(): List<String> = withContext(Dispatchers.IO) {
+        notificationUsersDao.getAll().map { it.channelId }
+    }
+
+    suspend fun enqueueNotification(stream: Stream, startedAt: Long? = null): String? = withContext(Dispatchers.IO) {
+        val start = startedAt ?: stream.startedAtMillis() ?: return@withContext null
+        NotificationEvent.fromStream(stream, start)?.also { notificationEventsDao.insert(it) }?.eventId
+    }
+
+    suspend fun getPendingNotificationEvents(): List<NotificationEvent> = withContext(Dispatchers.IO) {
+        notificationEventsDao.getAll()
+    }
+
+    suspend fun markNotificationDelivered(eventId: String) = withContext(Dispatchers.IO) {
+        notificationEventsDao.delete(eventId)
+    }
+
+    suspend fun clearPendingNotificationEvents() = withContext(Dispatchers.IO) {
+        notificationEventsDao.deleteAll()
+    }
+
+    suspend fun clearNotificationState() = withContext(Dispatchers.IO) {
+        notificationUsersDao.deleteAll()
+        shownNotificationsDao.deleteList(shownNotificationsDao.getAll())
+        notificationEventsDao.deleteAll()
     }
 
     private suspend fun gqlQueryLoad(networkLibrary: String?, gqlHeaders: Map<String, String>): List<Stream> {
@@ -139,7 +195,7 @@ class NotificationsRepository(
         val items = ids.chunked(100).map { list ->
             graphQLRepository.loadQueryUsersStream(networkLibrary, gqlHeaders, list)
         }.flatMap { it.data!!.users!! }
-        val list = items.mapNotNull { item ->
+        return items.mapNotNull { item ->
             item?.let {
                 if (it.stream?.viewersCount != null) {
                     Stream(
@@ -160,7 +216,6 @@ class NotificationsRepository(
                 } else null
             }
         }
-        return list
     }
 
     private suspend fun helixLocal(networkLibrary: String?, helixHeaders: Map<String, String>, ids: List<String>): List<Stream> {
@@ -168,26 +223,16 @@ class NotificationsRepository(
             helixRepository.getStreams(
                 networkLibrary = networkLibrary,
                 headers = helixHeaders,
-                ids = it
+                ids = it,
             )
         }.flatMap { it.data }
-        val users = items.mapNotNull { it.channelId }.chunked(100).map {
-            helixRepository.getUsers(
-                networkLibrary = networkLibrary,
-                headers = helixHeaders,
-                ids = it
-            )
-        }.flatMap { it.data }
-        val list = items.mapNotNull {
+        return items.mapNotNull {
             if (it.viewerCount != null) {
                 Stream(
                     id = it.id,
                     channelId = it.channelId,
                     channelLogin = it.channelLogin,
                     channelName = it.channelName,
-                    channelImageURL = it.channelId?.let { id ->
-                        users.find { user -> user.id == id }?.profileImageURL
-                    },
                     gameId = it.gameId,
                     gameName = it.gameName,
                     title = it.title,
@@ -198,7 +243,6 @@ class NotificationsRepository(
                 )
             } else null
         }
-        return list
     }
 
     suspend fun saveList(list: List<ShownNotification>) = withContext(Dispatchers.IO) {
@@ -215,5 +259,11 @@ class NotificationsRepository(
 
     suspend fun deleteUser(item: NotificationUser) = withContext(Dispatchers.IO) {
         notificationUsersDao.delete(item)
+        notificationEventsDao.deleteForChannel(item.channelId)
     }
+
+    private fun Stream.startedAtMillis(): Long? = createdAt
+        ?.takeIf { it.isNotBlank() }
+        ?.let { Instant.parseOrNull(it)?.toEpochMilliseconds() }
+        ?.takeIf { it > 0 }
 }

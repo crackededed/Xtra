@@ -36,7 +36,14 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.chromium.net.CronetEngine
 import org.chromium.net.apihelpers.UploadDataProviders
+import java.io.IOException
 import java.util.concurrent.ExecutorService
+
+class TwitchApiException(
+    val statusCode: Int,
+    val rateLimitResetEpochSeconds: Long?,
+    message: String,
+) : IOException(message)
 
 class HelixRepository(
     private val httpEngine: Lazy<HttpEngine?>,
@@ -183,7 +190,9 @@ class HelixRepository(
                         timeout.stop()
                     }
                 }
-                json.decodeFromString<StreamsResponse>(response.body.decodeToString())
+                val body = response.body.decodeToString()
+                ensureHelixSuccess(response.info.httpStatusCode, rateLimitReset(response.info.headers.asMap), body)
+                json.decodeFromString<StreamsResponse>(body)
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
@@ -202,16 +211,37 @@ class HelixRepository(
                         timeout.stop()
                     }
                 }
-                json.decodeFromString<StreamsResponse>(response.body.decodeToString())
+                val body = response.body.decodeToString()
+                ensureHelixSuccess(response.info.httpStatusCode, rateLimitReset(response.info.allHeaders), body)
+                json.decodeFromString<StreamsResponse>(body)
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
                 }.build()).executeAsync().use { response ->
-                    json.decodeFromString<StreamsResponse>(response.body.string())
+                    val body = response.body.string()
+                    ensureHelixSuccess(response.code, response.header("Ratelimit-Reset")?.toLongOrNull(), body)
+                    json.decodeFromString<StreamsResponse>(body)
                 }
             }
+        }
+    }
+
+    private fun rateLimitReset(headers: Map<String, List<String>>): Long? =
+        headers.entries
+            .firstOrNull { it.key.equals("Ratelimit-Reset", ignoreCase = true) }
+            ?.value
+            ?.firstOrNull()
+            ?.toLongOrNull()
+
+    private fun ensureHelixSuccess(statusCode: Int, rateLimitResetEpochSeconds: Long?, body: String) {
+        if (statusCode !in 200..299) {
+            throw TwitchApiException(
+                statusCode = statusCode,
+                rateLimitResetEpochSeconds = rateLimitResetEpochSeconds,
+                message = "Twitch Helix request failed with HTTP $statusCode: ${body.take(240)}",
+            )
         }
     }
 
@@ -1009,7 +1039,9 @@ class HelixRepository(
             put("version", "1")
             putJsonObject("condition") {
                 put("broadcaster_user_id", channelId)
-                put("user_id", userId)
+                if (type != "stream.online") {
+                    put("user_id", userId)
+                }
             }
             putJsonObject("transport") {
                 put("method", "websocket")

@@ -25,12 +25,7 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/combinedChatRecyclerView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="true"
-            android:paddingStart="8dp"
-            android:paddingTop="8dp"
-            android:paddingEnd="8dp"
-            android:paddingBottom="8dp" />
+            android:layout_height="match_parent" />
 
         <TextView
             android:id="@+id/combinedChatEmpty"
@@ -42,11 +37,6 @@
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?android:attr/textColorSecondary" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="24dp"
-            android:background="?android:colorBackground"
-            android:elevation="1dp" />
     </FrameLayout>
 
     <FrameLayout

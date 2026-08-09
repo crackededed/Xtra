@@ -1,8 +1,6 @@
 package com.github.andreyasadchy.xtra.ui.channel
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
@@ -12,7 +10,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.view.ViewCompat
@@ -32,11 +31,6 @@ import androidx.navigation.fragment.navArgs
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import androidx.viewpager2.widget.ViewPager2
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import coil3.imageLoader
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -57,7 +51,7 @@ import com.github.andreyasadchy.xtra.ui.download.DownloadDialog
 import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.login.LoginActivity
-import com.github.andreyasadchy.xtra.ui.main.LiveNotificationWorker
+import com.github.andreyasadchy.xtra.ui.main.LiveNotificationScheduler
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.settings.SettingsActivity
@@ -85,6 +79,9 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
     private val args: ChannelPagerFragmentArgs by navArgs()
     private val viewModel: ChannelPagerViewModel by viewModels { ChannelPagerViewModelFactory }
     private var firstLaunch = true
+    private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
+    private var pendingNotificationEnable: (() -> Unit)? = null
+    private var enableLiveNotificationsAfterChannel = false
 
     override val currentFragment: Fragment?
         get() = childFragmentManager.findFragmentByTag("f${binding.viewPager.currentItem}")
@@ -92,6 +89,15 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         firstLaunch = savedInstanceState == null
+        notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            val action = pendingNotificationEnable
+            pendingNotificationEnable = null
+            if (granted) {
+                action?.invoke()
+            } else {
+                Toast.makeText(requireContext(), R.string.live_notifications_permission_required, Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -183,40 +189,24 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                                 )
                             } else {
                                 val notificationsEnabled = requireContext().prefs().getBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false)
-                                viewModel.enableNotifications(
-                                    requireContext().tokenPrefs().getString(C.USER_ID, null),
-                                    args.channelId,
-                                    setting,
-                                    notificationsEnabled,
-                                    requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
-                                    TwitchApiHelper.getGQLHeaders(requireContext(), true),
-                                    requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false)
-                                )
-                                if (!args.channelId.isNullOrBlank() && !notificationsEnabled) {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                                        ActivityCompat.checkSelfPermission(activity, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-                                    ) {
-                                        ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
+                                val enableChannelNotifications = {
+                                    if (!notificationsEnabled) {
+                                        enableLiveNotificationsAfterChannel = true
                                     }
-                                    viewModel.updateNotifications(
+                                    viewModel.enableNotifications(
+                                        requireContext().tokenPrefs().getString(C.USER_ID, null),
+                                        args.channelId,
+                                        setting,
+                                        notificationsEnabled,
                                         requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                                         TwitchApiHelper.getGQLHeaders(requireContext(), true),
-                                        TwitchApiHelper.getHelixHeaders(requireContext()),
-                                        setting == 0,
+                                        requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false)
                                     )
-                                    WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(
-                                        "live_notifications",
-                                        ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
-                                        PeriodicWorkRequestBuilder<LiveNotificationWorker>(15, TimeUnit.MINUTES)
-                                            .setInitialDelay(1, TimeUnit.MINUTES)
-                                            .setConstraints(
-                                                Constraints.Builder()
-                                                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                                                    .build()
-                                            )
-                                            .build()
-                                    )
-                                    requireContext().prefs().edit { putBoolean(C.LIVE_NOTIFICATIONS_ENABLED, true) }
+                                }
+                                if (!args.channelId.isNullOrBlank() && !notificationsEnabled) {
+                                    withLiveNotificationPermission(enableChannelNotifications)
+                                } else {
+                                    enableChannelNotifications()
                                 }
                             }
                         }
@@ -343,12 +333,20 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
                             val enabled = pair.first
                             val errorMessage = pair.second
                             if (!errorMessage.isNullOrBlank()) {
+                                enableLiveNotificationsAfterChannel = false
                                 Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
                             } else {
                                 if (enabled) {
                                     Toast.makeText(requireContext(), R.string.enabled_notifications, Toast.LENGTH_SHORT).show()
                                 } else {
                                     Toast.makeText(requireContext(), R.string.disabled_notifications, Toast.LENGTH_SHORT).show()
+                                }
+                                if (enabled && enableLiveNotificationsAfterChannel) {
+                                    enableLiveNotificationsAfterChannel = false
+                                    requireContext().prefs().edit { putBoolean(C.LIVE_NOTIFICATIONS_ENABLED, true) }
+                                    LiveNotificationScheduler.enable(requireContext(), baselineOnly = true)
+                                } else {
+                                    LiveNotificationScheduler.refresh(requireContext())
                                 }
                             }
                             viewModel.notifications.value = null
@@ -836,15 +834,26 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
             }
             "enableNotifications" -> {
                 args.channelId?.let {
-                    viewModel.enableNotifications(
-                        requireContext().tokenPrefs().getString(C.USER_ID, null),
-                        it,
-                        requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
-                        requireContext().prefs().getBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false),
-                        requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
-                        TwitchApiHelper.getGQLHeaders(requireContext(), true),
-                        requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
-                    )
+                    val notificationsEnabled = requireContext().prefs().getBoolean(C.LIVE_NOTIFICATIONS_ENABLED, false)
+                    val enableChannelNotifications = {
+                        if (!notificationsEnabled) {
+                            enableLiveNotificationsAfterChannel = true
+                        }
+                        viewModel.enableNotifications(
+                            requireContext().tokenPrefs().getString(C.USER_ID, null),
+                            it,
+                            requireContext().prefs().getString(C.UI_FOLLOW_BUTTON, "0")?.toIntOrNull() ?: 0,
+                            notificationsEnabled,
+                            requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
+                            TwitchApiHelper.getGQLHeaders(requireContext(), true),
+                            requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                        )
+                    }
+                    if (!notificationsEnabled) {
+                        withLiveNotificationPermission(enableChannelNotifications)
+                    } else {
+                        enableChannelNotifications()
+                    }
                 }
             }
             "disableNotifications" -> {
@@ -875,7 +884,23 @@ class ChannelPagerFragment : BaseNetworkFragment(), Scrollable, FragmentHost, In
     }
 
     override fun onDestroyView() {
+        pendingNotificationEnable = null
+        enableLiveNotificationsAfterChannel = false
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun withLiveNotificationPermission(action: () -> Unit) {
+        val context = requireContext()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            pendingNotificationEnable = action
+            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        } else if (LiveNotificationScheduler.canPostNotifications(context)) {
+            action()
+        } else {
+            Toast.makeText(context, R.string.live_notifications_blocked, Toast.LENGTH_LONG).show()
+        }
     }
 }
