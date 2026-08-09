@@ -213,10 +213,6 @@ class TeamMembersAdapter(
                         uptime.visibility = View.GONE
                         tagsLayout.visibility = View.GONE
                     }
-                    root.contentDescription = buildList {
-                        item.channelName?.let(::add)
-                        add(context.getString(if (item.viewerCount != null) R.string.watch_stream else R.string.open_channel))
-                    }.joinToString(". ")
                 }
             }
         }

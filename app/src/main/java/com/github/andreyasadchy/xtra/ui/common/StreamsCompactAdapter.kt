@@ -236,11 +236,6 @@ class StreamsCompactAdapter(
                     } else {
                         tagsLayout.visibility = View.GONE
                     }
-                    root.contentDescription = buildList {
-                        item.channelName?.let(::add)
-                            ?: item.title?.trim()?.takeIf { it.isNotBlank() }?.let(::add)
-                        add(context.getString(if (selectionMode) R.string.select_stream else R.string.watch_stream))
-                    }.joinToString(". ")
                 }
             }
         }

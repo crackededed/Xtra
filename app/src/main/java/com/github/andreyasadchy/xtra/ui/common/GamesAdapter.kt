@@ -157,10 +157,6 @@ class GamesAdapter(
                     } else {
                         tagsLayout.visibility = View.GONE
                     }
-                    root.contentDescription = buildList {
-                        item.name?.let(::add)
-                        add(context.getString(R.string.open_game_generic))
-                    }.joinToString(". ")
                 }
             }
         }
