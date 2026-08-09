@@ -13,6 +13,7 @@
         <ImageView
             android:id="@+id/userImage"
             style="@style/UserPicture"
+            android:importantForAccessibility="no"
             android:layout_marginStart="10dp"
             android:layout_marginTop="12dp"
             android:layout_marginBottom="12dp"

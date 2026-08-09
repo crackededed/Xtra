@@ -20,6 +20,7 @@
                 android:id="@+id/gameImage"
                 android:layout_width="49dp"
                 android:layout_height="65dp"
+                android:importantForAccessibility="no"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"

@@ -51,6 +51,7 @@ class EventSubWebSocket(
         suspend fun onUserNotice(event: JSONObject, timestamp: String?) {}
         suspend fun onClearChat(event: JSONObject, timestamp: String?) {}
         suspend fun onRoomState(event: JSONObject, timestamp: String?) {}
+        suspend fun onStreamOnline(event: JSONObject, timestamp: String?) {}
         suspend fun onDisconnect(message: String, fullMsg: String?) {}
     }
 
@@ -88,6 +89,7 @@ class EventSubWebSocket(
                                     "channel.chat.notification" -> listener.onUserNotice(event, timestamp)
                                     "channel.chat.clear" -> listener.onClearChat(event, timestamp)
                                     "channel.chat_settings.update" -> listener.onRoomState(event, timestamp)
+                                    "stream.online" -> listener.onStreamOnline(event, timestamp)
                                 }
                             }
                         }
@@ -96,9 +98,12 @@ class EventSubWebSocket(
                             startPongTimer()
                         }
                         "session_reconnect" -> {
-                            //val payload = json.optJSONObject("payload")
-                            //val session = payload?.optJSONObject("session")
-                            //val reconnectUrl = if (session?.isNull("reconnect_url") == false) session.optString("reconnect_url").takeIf { it.isNotBlank() } else null
+                            val payload = json.optJSONObject("payload")
+                            val session = payload?.optJSONObject("session")
+                            val reconnectUrl = if (session?.isNull("reconnect_url") == false) {
+                                session.optString("reconnect_url").takeIf { it.isNotBlank() }
+                            } else null
+                            reconnectUrl?.let(webSocket::updateUrl)
                             pongTimer?.cancel()
                             webSocket.disconnect()
                         }

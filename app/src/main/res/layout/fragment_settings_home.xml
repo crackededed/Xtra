@@ -32,7 +32,7 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:contentDescription="@string/search"
+                android:importantForAccessibility="no"
                 android:src="@drawable/baseline_search_black_24"
                 app:tint="?android:textColorSecondary" />
 
@@ -47,7 +47,7 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:contentDescription="@string/settings_search_prompt"
+                android:importantForAccessibility="no"
                 android:src="@drawable/ic_settings_arrow_forward"
                 app:tint="?android:textColorSecondary" />
         </LinearLayout>

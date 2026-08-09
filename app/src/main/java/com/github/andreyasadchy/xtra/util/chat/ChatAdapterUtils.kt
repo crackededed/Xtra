@@ -22,6 +22,7 @@ import coil3.asDrawable
 import coil3.imageLoader
 import coil3.network.NetworkHeaders
 import coil3.network.httpHeaders
+import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -890,6 +891,7 @@ object ChatAdapterUtils {
                     "2" -> image.url2x ?: image.url1x
                     else -> image.url1x
                 })
+                diskCachePolicy(CachePolicy.ENABLED)
                 if (image.thirdParty) {
                     httpHeaders(NetworkHeaders.Builder().apply {
                         add("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)

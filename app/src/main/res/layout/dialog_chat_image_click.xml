@@ -15,6 +15,7 @@
             android:id="@+id/image"
             android:layout_width="match_parent"
             android:layout_height="70dp"
+            android:contentDescription="@string/chat_image"
             tools:src="@tools:sample/backgrounds/scenic" />
 
         <TextView

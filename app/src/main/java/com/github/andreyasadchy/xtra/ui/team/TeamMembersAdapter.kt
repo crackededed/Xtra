@@ -21,6 +21,7 @@ import coil3.request.crossfade
 import coil3.request.target
 import coil3.request.transformations
 import coil3.transform.CircleCropTransformation
+import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentStreamsListItemCompactBinding
 import com.github.andreyasadchy.xtra.model.ui.Stream
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
@@ -30,7 +31,6 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.prefs
-import com.google.android.material.R
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -78,6 +78,9 @@ class TeamMembersAdapter(
                     }
                     if (item.channelImage != null) {
                         userImage.visibility = View.VISIBLE
+                        userImage.contentDescription = item.channelName?.let {
+                            context.getString(R.string.player_open_channel, it)
+                        }
                         fragment.requireContext().imageLoader.enqueue(
                             ImageRequest.Builder(fragment.requireContext()).apply {
                                 data(item.channelImage)
@@ -91,6 +94,7 @@ class TeamMembersAdapter(
                         userImage.setOnClickListener(channelListener)
                     } else {
                         userImage.visibility = View.GONE
+                        userImage.contentDescription = null
                     }
                     if (item.channelName != null) {
                         username.visibility = View.VISIBLE
@@ -185,7 +189,9 @@ class TeamMembersAdapter(
                                 text.id = id
                                 ids.add(id)
                                 text.text = tag
-                                context.obtainStyledAttributes(intArrayOf(R.attr.textAppearanceBodyMedium)).use {
+                                text.setMinHeight(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 48f, context.resources.displayMetrics).toInt())
+                                text.isFocusable = true
+                                context.obtainStyledAttributes(intArrayOf(com.google.android.material.R.attr.textAppearanceBodyMedium)).use {
                                     TextViewCompat.setTextAppearance(text, it.getResourceId(0, 0))
                                 }
                                 text.setOnClickListener {
@@ -207,6 +213,12 @@ class TeamMembersAdapter(
                         uptime.visibility = View.GONE
                         tagsLayout.visibility = View.GONE
                     }
+                    root.contentDescription = buildList {
+                        item.channelName?.let { add(it) }
+                        item.title?.trim()?.takeIf { it.isNotBlank() }?.let { add(it) }
+                        item.gameName?.let { add(it) }
+                        add(if (item.viewerCount != null) context.getString(R.string.watch_stream) else context.getString(R.string.player_open_channel, item.channelName.orEmpty()))
+                    }.joinToString(". ")
                 }
             }
         }

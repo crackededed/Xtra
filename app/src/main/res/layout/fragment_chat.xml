@@ -60,12 +60,14 @@
                 android:text="@string/replying_to_message"
                 android:textAppearance="?attr/textAppearanceBodyMedium" />
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/replyClose"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_gravity="center_vertical"
                 android:background="?android:selectableItemBackground"
+                android:contentDescription="@string/chat_close_reply"
+                android:padding="12dp"
                 android:src="@drawable/baseline_close_black_36"
                 app:tint="?attr/colorControlNormal" />
         </LinearLayout>
@@ -95,7 +97,7 @@
                     android:id="@+id/channelPointRewardIcon"
                     android:layout_width="34dp"
                     android:layout_height="34dp"
-                    android:contentDescription="@string/channel_points"
+                    android:importantForAccessibility="no"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_channel_points"
                     app:tint="?attr/colorControlNormal" />
@@ -134,6 +136,8 @@
                     android:layout_height="40dp"
                     android:background="?android:selectableItemBackgroundBorderless"
                     android:contentDescription="@string/channel_points_composer_cancel"
+                    android:minWidth="48dp"
+                    android:minHeight="48dp"
                     android:padding="8dp"
                     android:src="@drawable/baseline_close_black_36"
                     app:tint="?attr/colorControlNormal" />
@@ -164,7 +168,7 @@
                 android:imeOptions="actionSend|flagNoFullscreen"
                 android:importantForAutofill="no"
                 android:inputType="textCapSentences|textAutoCorrect"
-                tools:ignore="LabelFor"
+                android:hint="@string/chat_message_hint"
                 tools:visibility="visible" />
 
             <ImageButton
@@ -172,6 +176,7 @@
                 android:layout_width="50dp"
                 android:layout_height="match_parent"
                 android:background="?android:selectableItemBackground"
+                android:contentDescription="@string/chat_clear_input"
                 android:src="@drawable/baseline_backspace_black_24"
                 android:visibility="gone"
                 app:tint="?attr/colorControlNormal"
@@ -182,6 +187,7 @@
                 android:layout_width="50dp"
                 android:layout_height="match_parent"
                 android:background="?android:selectableItemBackground"
+                android:contentDescription="@string/chat_open_emotes"
                 android:src="@drawable/ic_tag_faces_black_24dp"
                 app:tint="?attr/colorControlNormal"
                 tools:visibility="visible" />
@@ -206,10 +212,9 @@
                     android:id="@+id/channelPointsIcon"
                     android:layout_width="18dp"
                     android:layout_height="18dp"
-                    android:contentDescription="@string/channel_points"
+                    android:importantForAccessibility="no"
                     android:src="@drawable/ic_channel_points"
-                    app:tint="?attr/colorControlNormal"
-                    tools:ignore="ContentDescription" />
+                    app:tint="?attr/colorControlNormal" />
 
                 <TextView
                     android:id="@+id/channelPointsText"
@@ -225,6 +230,7 @@
                 android:layout_width="50dp"
                 android:layout_height="match_parent"
                 android:background="?android:selectableItemBackground"
+                android:contentDescription="@string/chat_send"
                 android:src="@drawable/ic_send_black_24dp"
                 android:visibility="gone"
                 app:tint="?attr/colorControlNormal"
@@ -360,6 +366,7 @@
             android:id="@+id/raidImage"
             android:layout_width="40dp"
             android:layout_height="40dp"
+            android:importantForAccessibility="no"
             android:layout_marginStart="8dp"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
@@ -385,11 +392,14 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="@string/raid_text" />
 
-        <ImageView
+        <ImageButton
             android:id="@+id/raidClose"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_margin="4dp"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:contentDescription="@string/chat_close_raid"
+            android:padding="12dp"
             android:src="@drawable/baseline_close_black_36"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -456,11 +466,14 @@
             app:layout_constraintTop_toBottomOf="@id/pollChoices"
             tools:text="@string/remaining_time" />
 
-        <ImageView
+        <ImageButton
             android:id="@+id/pollClose"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_margin="4dp"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:contentDescription="@string/chat_close_poll"
+            android:padding="12dp"
             android:src="@drawable/baseline_close_black_36"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -527,11 +540,14 @@
             app:layout_constraintTop_toBottomOf="@id/predictionOutcomes"
             tools:text="@string/remaining_time" />
 
-        <ImageView
+        <ImageButton
             android:id="@+id/predictionClose"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_margin="4dp"
+            android:background="?android:selectableItemBackgroundBorderless"
+            android:contentDescription="@string/chat_close_prediction"
+            android:padding="12dp"
             android:src="@drawable/baseline_close_black_36"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"

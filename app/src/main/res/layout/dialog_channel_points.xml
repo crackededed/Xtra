@@ -56,7 +56,7 @@
                 android:id="@+id/balanceIcon"
                 android:layout_width="18dp"
                 android:layout_height="18dp"
-                android:contentDescription="@string/channel_points"
+                android:importantForAccessibility="no"
                 android:src="@drawable/ic_channel_points"
                 app:tint="?attr/colorControlNormal" />
 
@@ -130,7 +130,7 @@
                 android:layout_width="34dp"
                 android:layout_height="34dp"
                 android:layout_marginStart="4dp"
-                android:contentDescription="@string/channel_points_watch_streak"
+                android:importantForAccessibility="no"
                 android:src="@drawable/ic_watch_streak" />
         </LinearLayout>
 

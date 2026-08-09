@@ -51,9 +51,6 @@ android {
     androidResources {
         generateLocaleConfig = true
     }
-    lint {
-        disable += "ContentDescription"
-    }
     packaging.jniLibs.excludes.addAll(listOf(
         "lib/x86/libtranslate_jni.so",
         "lib/x86/liblanguage_id_l2c_jni.so",

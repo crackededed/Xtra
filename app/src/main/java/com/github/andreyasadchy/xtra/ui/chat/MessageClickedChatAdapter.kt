@@ -255,6 +255,7 @@ class MessageClickedChatAdapter(
         fun bind(chatMessage: ChatMessage, formattedMessage: SpannableStringBuilder) {
             textView.apply {
                 text = formattedMessage
+                contentDescription = chatMessage.message ?: chatMessage.systemMsg ?: formattedMessage.toString()
                 textSize = messageTextSize
                 if (chatMessage.type == ChatMessage.REPLY_MESSAGE) {
                     movementMethod = null

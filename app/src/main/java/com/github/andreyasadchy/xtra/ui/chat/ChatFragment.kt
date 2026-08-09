@@ -33,6 +33,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import coil3.imageLoader
+import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.request.target
@@ -521,8 +522,9 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                             raidLayout.visibility = View.VISIBLE
                                             raidLayout.setOnClickListener { viewModel.raidClicked.value = raid }
                                             requireContext().imageLoader.enqueue(
-                                                ImageRequest.Builder(requireContext()).apply {
-                                                    data(raid.targetImage)
+                ImageRequest.Builder(requireContext()).apply {
+                    data(raid.targetImage)
+                    diskCachePolicy(CachePolicy.ENABLED)
                                                     if (requireContext().prefs().getBoolean(C.UI_ROUND_USER_IMAGE, true)) {
                                                         transformations(CircleCropTransformation())
                                                     }
@@ -1120,6 +1122,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
             requireContext().imageLoader.enqueue(
                 ImageRequest.Builder(requireContext())
                     .data(url)
+                    .diskCachePolicy(CachePolicy.ENABLED)
                     .crossfade(true)
                     .target(icon)
                     .build(),
@@ -1520,6 +1523,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
             requireContext().imageLoader.enqueue(
                 ImageRequest.Builder(requireContext())
                     .data(url)
+                    .diskCachePolicy(CachePolicy.ENABLED)
                     .crossfade(true)
                     .target(icon)
                     .build(),

@@ -35,7 +35,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class WebSocket(
-    private val url: String,
+    @Volatile private var url: String,
     private val trustManager: Lazy<X509TrustManager>,
     private val listener: Listener,
     private val headers: Map<String, String>? = null,
@@ -400,6 +400,10 @@ class WebSocket(
 
             }
         }
+    }
+
+    fun updateUrl(url: String) {
+        this.url = url
     }
 
     private suspend fun close() = withContext(Dispatchers.IO) {

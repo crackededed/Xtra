@@ -308,6 +308,9 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listen
             if (user.profileImage != null) {
                 userLayout.visibility = View.VISIBLE
                 userImage.visibility = View.VISIBLE
+                userImage.contentDescription = user.name?.let {
+                    requireContext().getString(R.string.player_open_channel, it)
+                }
                 requireContext().imageLoader.enqueue(
                     ImageRequest.Builder(requireContext()).apply {
                         data(user.profileImage)
@@ -324,6 +327,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listen
                 }
             } else {
                 userImage.visibility = View.GONE
+                userImage.contentDescription = null
             }
             if (user.name != null) {
                 userLayout.visibility = View.VISIBLE

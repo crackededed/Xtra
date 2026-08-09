@@ -61,6 +61,9 @@ class ChannelSearchAdapter(
                     }
                     if (item.profileImage != null) {
                         userImage.visibility = View.VISIBLE
+                        userImage.contentDescription = item.name?.let {
+                            context.getString(R.string.player_open_channel, it)
+                        }
                         fragment.requireContext().imageLoader.enqueue(
                             ImageRequest.Builder(fragment.requireContext()).apply {
                                 data(item.profileImage)
@@ -73,6 +76,7 @@ class ChannelSearchAdapter(
                         )
                     } else {
                         userImage.visibility = View.GONE
+                        userImage.contentDescription = null
                     }
                     if (item.name != null) {
                         userName.visibility = View.VISIBLE
@@ -104,6 +108,9 @@ class ChannelSearchAdapter(
                         typeText.text = context.getString(R.string.live)
                     } else {
                         typeText.visibility = View.GONE
+                    }
+                    root.contentDescription = item.name?.let {
+                        context.getString(R.string.player_open_channel, it)
                     }
                 }
             }

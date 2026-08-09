@@ -108,6 +108,9 @@ class Media3Fragment : Media3PlayerFragment() {
                     }
                     binding.bufferingIndicator.isVisible = playbackState == Player.STATE_BUFFERING
                     val showPlayButton = Util.shouldShowPlayButton(player)
+                    binding.playerControls.playPause.contentDescription = getString(
+                        if (showPlayButton) R.string.player_play else R.string.player_pause_action,
+                    )
                     if (showPlayButton) {
                         binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
                         binding.playerControls.playPause.visibility = View.VISIBLE
@@ -128,6 +131,9 @@ class Media3Fragment : Media3PlayerFragment() {
                 override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
                     binding.bufferingIndicator.isVisible = player?.playbackState == Player.STATE_BUFFERING
                     val showPlayButton = Util.shouldShowPlayButton(player)
+                    binding.playerControls.playPause.contentDescription = getString(
+                        if (showPlayButton) R.string.player_play else R.string.player_pause_action,
+                    )
                     if (showPlayButton) {
                         binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
                         binding.playerControls.playPause.visibility = View.VISIBLE
@@ -146,7 +152,11 @@ class Media3Fragment : Media3PlayerFragment() {
                 }
 
                 override fun onAvailableCommandsChanged(availableCommands: Player.Commands) {
-                    if (Util.shouldShowPlayButton(player)) {
+                    val showPlayButton = Util.shouldShowPlayButton(player)
+                    binding.playerControls.playPause.contentDescription = getString(
+                        if (showPlayButton) R.string.player_play else R.string.player_pause_action,
+                    )
+                    if (showPlayButton) {
                         binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
                         binding.playerControls.playPause.visibility = View.VISIBLE
                     } else {
@@ -158,6 +168,10 @@ class Media3Fragment : Media3PlayerFragment() {
                     val duration = player?.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0
                     binding.playerControls.progressBar.setDuration(duration)
                     binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
+                    binding.playerControls.duration.contentDescription = getString(
+                        R.string.player_duration,
+                        binding.playerControls.duration.text,
+                    )
                     updateProgress()
                 }
 
@@ -176,6 +190,10 @@ class Media3Fragment : Media3PlayerFragment() {
                     val duration = player?.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0
                     binding.playerControls.progressBar.setDuration(duration)
                     binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
+                    binding.playerControls.duration.contentDescription = getString(
+                        R.string.player_duration,
+                        binding.playerControls.duration.text,
+                    )
                     updateProgress()
                     if (reason == Player.DISCONTINUITY_REASON_SEEK) {
                         chatFragment?.updatePosition(newPosition.positionMs)
@@ -213,6 +231,10 @@ class Media3Fragment : Media3PlayerFragment() {
                     val duration = player?.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0
                     binding.playerControls.progressBar.setDuration(duration)
                     binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
+                    binding.playerControls.duration.contentDescription = getString(
+                        R.string.player_duration,
+                        binding.playerControls.duration.text,
+                    )
                     updateProgress()
                     if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED && !timeline.isEmpty && viewModel.qualities?.find { it.name == AUTO_QUALITY } != null) {
                         viewModel.updateQualities = viewModel.quality?.name != AUDIO_ONLY_QUALITY
@@ -471,7 +493,11 @@ class Media3Fragment : Media3PlayerFragment() {
                     requireView().keepScreenOn = player.isPlaying
                 }
                 updateProgress()
-                if (Util.shouldShowPlayButton(player)) {
+                val showPlayButton = Util.shouldShowPlayButton(player)
+                binding.playerControls.playPause.contentDescription = getString(
+                    if (showPlayButton) R.string.player_play else R.string.player_pause_action,
+                )
+                if (showPlayButton) {
                     binding.playerControls.playPause.setImageResource(R.drawable.baseline_play_arrow_black_48)
                     binding.playerControls.playPause.visibility = View.VISIBLE
                 } else {
@@ -765,6 +791,7 @@ class Media3Fragment : Media3PlayerFragment() {
             if (root.isVisible && !progressBar.isPressed) {
                 val currentPosition = player?.currentPosition ?: 0
                 position.text = DateUtils.formatElapsedTime(currentPosition / 1000)
+                position.contentDescription = getString(R.string.player_position, position.text)
                 progressBar.setPosition(currentPosition)
                 progressBar.setBufferedPosition(player?.bufferedPosition ?: 0)
                 root.removeCallbacks(updateProgressAction)

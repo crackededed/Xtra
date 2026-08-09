@@ -122,6 +122,9 @@ class ClipsAdapter(
                         }
                         if (item.channelImage != null) {
                             userImage.visibility = View.VISIBLE
+                            userImage.contentDescription = item.channelName?.let {
+                                context.getString(R.string.player_open_channel, it)
+                            }
                             fragment.requireContext().imageLoader.enqueue(
                                 ImageRequest.Builder(fragment.requireContext()).apply {
                                     data(item.channelImage)
@@ -133,9 +136,10 @@ class ClipsAdapter(
                                 }.build()
                             )
                             userImage.setOnClickListener(channelListener)
-                        } else {
-                            userImage.visibility = View.GONE
-                        }
+                    } else {
+                        userImage.visibility = View.GONE
+                        userImage.contentDescription = null
+                    }
                         if (item.channelName != null) {
                             username.visibility = View.VISIBLE
                             username.text = if (item.channelLogin != null && !item.channelLogin.equals(item.channelName, true)) {
@@ -185,6 +189,12 @@ class ClipsAdapter(
                     } else {
                         gameName.visibility = View.GONE
                     }
+                    root.contentDescription = buildList {
+                        item.title?.trim()?.takeIf { it.isNotBlank() }?.let { add(it) }
+                        item.channelName?.takeIf { showChannel }?.let { add(it) }
+                        item.gameName?.takeIf { showGame }?.let { add(it) }
+                        add(context.getString(R.string.watch_clip))
+                    }.joinToString(". ")
                     options.setOnClickListener { it ->
                         PopupMenu(context, it).apply {
                             inflate(R.menu.media_item)

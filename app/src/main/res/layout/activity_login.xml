@@ -41,9 +41,10 @@
 
     <ImageButton
         android:id="@+id/textZoom"
-        android:layout_width="43dp"
-        android:layout_height="43dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:background="?android:selectableItemBackground"
+        android:contentDescription="@string/text_size"
         android:src="@drawable/baseline_settings_black_24"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"

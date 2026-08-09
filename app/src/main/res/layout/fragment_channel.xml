@@ -38,6 +38,7 @@
                         android:id="@+id/bannerImage"
                         android:layout_width="0dp"
                         android:layout_height="0dp"
+                        android:importantForAccessibility="no"
                         android:scaleType="centerCrop"
                         android:visibility="gone"
                         app:layout_constraintBottom_toBottomOf="parent"
@@ -52,6 +53,7 @@
                     <ImageView
                         android:id="@+id/userImage"
                         style="@style/UserPicture"
+                        android:importantForAccessibility="no"
                         android:layout_width="100dp"
                         android:layout_height="100dp"
                         android:layout_marginStart="10dp"

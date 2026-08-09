@@ -244,6 +244,7 @@ class ReplyClickedChatAdapter(
         fun bind(chatMessage: ChatMessage, formattedMessage: SpannableStringBuilder) {
             textView.apply {
                 text = formattedMessage
+                contentDescription = chatMessage.message ?: chatMessage.systemMsg ?: formattedMessage.toString()
                 textSize = messageTextSize
                 movementMethod = LinkMovementMethod.getInstance()
                 TooltipCompat.setTooltipText(this, chatMessage.message ?: chatMessage.systemMsg)

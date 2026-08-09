@@ -208,6 +208,12 @@ class DownloadsAdapter(
                         deleteVideo(item)
                         true
                     }
+                    root.contentDescription = buildList {
+                        item.name?.trim()?.takeIf { it.isNotEmpty() }?.let(::add)
+                        item.channelName?.let(::add)
+                        item.gameName?.let(::add)
+                        add(context.getString(R.string.watch_video))
+                    }.joinToString(". ")
                     if (item.thumbnail?.toUri()?.scheme == ContentResolver.SCHEME_CONTENT) {
                         Glide.with(fragment)
                             .load(item.thumbnail)
@@ -250,10 +256,13 @@ class DownloadsAdapter(
                     }
                     if (item.channelLogo != null) {
                         userImage.visibility = View.VISIBLE
+                        userImage.contentDescription = item.channelName?.let {
+                            context.getString(R.string.player_open_channel, it)
+                        }
                         fragment.requireContext().imageLoader.enqueue(
                             ImageRequest.Builder(fragment.requireContext()).apply {
                                 data(item.channelLogo)
-                                diskCachePolicy(CachePolicy.DISABLED)
+                                diskCachePolicy(CachePolicy.ENABLED)
                                 if (context.prefs().getBoolean(C.UI_ROUND_USER_IMAGE, true)) {
                                     transformations(CircleCropTransformation())
                                 }
@@ -264,6 +273,7 @@ class DownloadsAdapter(
                         userImage.setOnClickListener(channelListener)
                     } else {
                         userImage.visibility = View.GONE
+                        userImage.contentDescription = null
                     }
                     if (item.channelName != null) {
                         username.visibility = View.VISIBLE
