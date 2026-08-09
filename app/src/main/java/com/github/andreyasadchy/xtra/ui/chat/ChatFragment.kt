@@ -882,7 +882,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                     chatReplayUnavailable.visibility = View.VISIBLE
                 }
             }
-            if ((view.parent?.parent?.parent?.parent as? View)?.id != R.id.slidingLayout) {
+            if (!isInsideInsetAwareContainer(view)) {
                 ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
                     if (activity?.findViewById<LinearLayout>(R.id.navBarContainer)?.isVisible == false) {
                         val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -894,6 +894,17 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                 }
             }
         }
+    }
+
+    private fun isInsideInsetAwareContainer(view: View): Boolean {
+        var parent = view.parent
+        while (parent != null) {
+            if (parent is View && (parent.id == R.id.slidingLayout || parent.id == R.id.multiviewRoot)) {
+                return true
+            }
+            parent = parent.parent
+        }
+        return false
     }
 
     override fun initialize() {

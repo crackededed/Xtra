@@ -94,13 +94,18 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.multiviewRoot) { root, insets ->
             val systemBars = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+                WindowInsetsCompat.Type.systemBars() or
+                    WindowInsetsCompat.Type.displayCutout() or
+                    WindowInsetsCompat.Type.ime()
             )
             root.updatePadding(
-                left = systemBars.left,
                 top = systemBars.top,
-                right = systemBars.right,
                 bottom = systemBars.bottom,
+                // MainActivity already applies the horizontal safe-area margins to
+                // navHostFragment. Applying them again here leaves visible gutters
+                // around the landscape grid and chat.
+                left = 0,
+                right = 0,
             )
             insets
         }
