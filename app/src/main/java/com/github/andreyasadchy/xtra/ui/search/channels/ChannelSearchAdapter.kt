@@ -109,7 +109,10 @@ class ChannelSearchAdapter(
                     } else {
                         typeText.visibility = View.GONE
                     }
-                    root.contentDescription = context.getString(R.string.open_channel)
+                    root.contentDescription = buildList {
+                        item.name?.let(::add)
+                        add(context.getString(R.string.open_channel))
+                    }.joinToString(". ")
                 }
             }
         }

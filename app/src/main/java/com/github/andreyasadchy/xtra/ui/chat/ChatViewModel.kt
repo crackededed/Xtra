@@ -3725,7 +3725,7 @@ class ChatViewModel(
         return try {
             request().also { response ->
                 if (!isValidEmoteResponse(response, validate)) {
-                    throw IllegalStateException("Invalid cached emote response")
+                    throw IllegalStateException("Invalid emote response")
                 }
             } to true
         } catch (e: Exception) {

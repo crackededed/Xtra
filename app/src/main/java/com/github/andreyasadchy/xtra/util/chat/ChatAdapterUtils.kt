@@ -64,9 +64,7 @@ object ChatAdapterUtils {
         nameDisplay: String?,
         formattedFallback: CharSequence,
     ): String {
-        fun userLabel(message: ChatMessage): String? {
-            val name = message.userName
-            val login = message.userLogin
+        fun userLabel(name: String?, login: String?): String? {
             return if (!name.isNullOrBlank() && !login.isNullOrBlank() && !login.equals(name, true)) {
                 when (nameDisplay) {
                     "0" -> "$name($login)"
@@ -78,12 +76,17 @@ object ChatAdapterUtils {
             }
         }
 
+        fun userLabel(message: ChatMessage): String? = userLabel(message.userName, message.userLogin)
+
         fun messageText(message: ChatMessage, fallback: CharSequence? = null): String {
             return message.message ?: message.systemMsg ?: fallback?.toString().orEmpty()
         }
 
         val sender = userLabel(chatMessage)
-        val body = messageText(chatMessage, formattedFallback)
+            ?: chatMessage.reply?.let { userLabel(it.userName, it.userLogin) }
+        val body = messageText(chatMessage).takeIf { it.isNotBlank() }
+            ?: chatMessage.reply?.message
+            ?: formattedFallback.toString()
         val description = if (!sender.isNullOrBlank() && body.isNotBlank()) {
             context.getString(R.string.chat_accessibility_message, sender, body)
         } else {

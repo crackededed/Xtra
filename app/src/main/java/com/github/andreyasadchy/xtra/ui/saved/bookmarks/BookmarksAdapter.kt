@@ -148,7 +148,11 @@ class BookmarksAdapter(
                         deleteVideo(item)
                         true
                     }
-                    root.contentDescription = context.getString(R.string.watch_video)
+                    root.contentDescription = buildList {
+                        item.title?.trim()?.takeIf { it.isNotBlank() }?.let(::add)
+                            ?: item.userName?.let(::add)
+                        add(context.getString(R.string.watch_video))
+                    }.joinToString(". ")
                     fragment.requireContext().imageLoader.enqueue(
                         ImageRequest.Builder(fragment.requireContext()).apply {
                             data(item.thumbnail)
