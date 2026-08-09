@@ -37,4 +37,40 @@ class PagedListStateTest {
             pagedListContentState(LoadState.Error(IllegalStateException("offline")), itemCount = 4),
         )
     }
+
+    @Test
+    fun refreshErrorTakesPriorityOverPageError() {
+        assertEquals(
+            PagedListErrorState.Refresh,
+            pagedListErrorState(
+                refresh = LoadState.Error(IllegalStateException("refresh")),
+                append = LoadState.Error(IllegalStateException("append")),
+                prepend = LoadState.NotLoading(endOfPaginationReached = false),
+            ),
+        )
+    }
+
+    @Test
+    fun pageErrorsAreReportedWhenRefreshSucceeds() {
+        assertEquals(
+            PagedListErrorState.Page,
+            pagedListErrorState(
+                refresh = LoadState.NotLoading(endOfPaginationReached = false),
+                append = LoadState.Error(IllegalStateException("append")),
+                prepend = LoadState.NotLoading(endOfPaginationReached = false),
+            ),
+        )
+    }
+
+    @Test
+    fun noLoadErrorIsReportedWhenAllPagesAreHealthy() {
+        assertEquals(
+            null,
+            pagedListErrorState(
+                refresh = LoadState.NotLoading(endOfPaginationReached = false),
+                append = LoadState.NotLoading(endOfPaginationReached = false),
+                prepend = LoadState.NotLoading(endOfPaginationReached = false),
+            ),
+        )
+    }
 }

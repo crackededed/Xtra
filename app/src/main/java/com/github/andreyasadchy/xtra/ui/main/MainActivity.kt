@@ -92,6 +92,7 @@ import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.chromium.net.CronetProvider
@@ -125,6 +126,7 @@ class MainActivity : AppCompatActivity() {
     var logoutResultLauncher: ActivityResultLauncher<Intent>? = null
     private var updateDownloadDialogBinding: DialogUpdateDownloadBinding? = null
     private var updateDownloadDialog: AlertDialog? = null
+    private var networkSnackbar: Snackbar? = null
 
     //Lifecycle methods
 
@@ -191,7 +193,7 @@ class MainActivity : AppCompatActivity() {
                     && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
             if (!isNetworkAvailable) {
                 initialized = true
-                Toast.makeText(this, R.string.no_connection, Toast.LENGTH_SHORT).show()
+                showNetworkFeedback(isNetworkAvailable = false)
             }
         }
         lifecycleScope.launch {
@@ -206,9 +208,12 @@ class MainActivity : AppCompatActivity() {
                         if (viewModel.isNetworkAvailable.value != isNetworkAvailable) {
                             viewModel.isNetworkAvailable.value = isNetworkAvailable
                             if (initialized) {
-                                Toast.makeText(this@MainActivity, if (isNetworkAvailable) R.string.connection_restored else R.string.no_connection, Toast.LENGTH_SHORT).show()
+                                showNetworkFeedback(isNetworkAvailable, showRestored = true)
                             } else {
                                 initialized = true
+                                if (!isNetworkAvailable) {
+                                    showNetworkFeedback(isNetworkAvailable = false)
+                                }
                             }
                             if (isNetworkAvailable) {
                                 if (!TwitchApiHelper.checkedValidation && prefs.getBoolean(C.VALIDATE_TOKENS, true)) {
@@ -648,6 +653,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        networkSnackbar?.dismiss()
+        networkSnackbar = null
         networkCallback?.let {
             val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
             connectivityManager.unregisterNetworkCallback(it)
@@ -657,6 +664,27 @@ class MainActivity : AppCompatActivity() {
             (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? PlayerFragment)?.close()
         }
         super.onDestroy()
+    }
+
+    private fun showNetworkFeedback(isNetworkAvailable: Boolean, showRestored: Boolean = false) {
+        if (!isNetworkAvailable) {
+            if (networkSnackbar == null) {
+                networkSnackbar = Snackbar.make(
+                    binding.root,
+                    R.string.no_connection,
+                    Snackbar.LENGTH_INDEFINITE,
+                ).setAction(R.string.retry) {
+                    viewModel.checkNetworkStatus.value = true
+                }
+            }
+            networkSnackbar?.show()
+        } else {
+            networkSnackbar?.dismiss()
+            networkSnackbar = null
+            if (showRestored) {
+                Snackbar.make(binding.root, R.string.connection_restored, Snackbar.LENGTH_SHORT).show()
+            }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

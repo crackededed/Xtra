@@ -14,7 +14,6 @@ import android.util.Log
 import android.view.View
 import android.widget.HorizontalScrollView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
@@ -48,6 +47,7 @@ import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.shouldAvoidTwitchAds
+import com.google.android.material.snackbar.Snackbar
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.CancellationException
@@ -340,15 +340,19 @@ class Media3Fragment : Media3PlayerFragment() {
                                         if (isNetworkAvailable) {
                                             when {
                                                 responseCode == 404 -> {
-                                                    Toast.makeText(requireContext(), R.string.stream_ended, Toast.LENGTH_LONG).show()
+                                                    Snackbar.make(binding.playerBackground, R.string.stream_ended, Snackbar.LENGTH_LONG).show()
                                                 }
                                                 viewModel.useCustomProxy && responseCode >= 400 -> {
-                                                    Toast.makeText(requireContext(), R.string.proxy_error, Toast.LENGTH_LONG).show()
+                                                    Snackbar.make(binding.playerBackground, R.string.proxy_error, Snackbar.LENGTH_LONG)
+                                                        .setAction(R.string.retry) { restartPlayer() }
+                                                        .show()
                                                     viewModel.useCustomProxy = false
                                                     scheduleStreamRecovery()
                                                 }
                                                 else -> {
-                                                    Toast.makeText(requireContext(), R.string.player_error, Toast.LENGTH_SHORT).show()
+                                                    Snackbar.make(binding.playerBackground, R.string.player_error, Snackbar.LENGTH_LONG)
+                                                        .setAction(R.string.retry) { restartPlayer() }
+                                                        .show()
                                                     scheduleStreamRecovery()
                                                 }
                                             }
@@ -382,10 +386,12 @@ class Media3Fragment : Media3PlayerFragment() {
                                                     playVideo(true, player?.currentPosition)
                                                 }
                                                 responseCode == 403 -> {
-                                                    Toast.makeText(requireContext(), R.string.video_subscribers_only, Toast.LENGTH_LONG).show()
+                                                    Snackbar.make(binding.playerBackground, R.string.video_subscribers_only, Snackbar.LENGTH_LONG).show()
                                                 }
                                                 else -> {
-                                                    Toast.makeText(requireContext(), R.string.player_error, Toast.LENGTH_SHORT).show()
+                                                    Snackbar.make(binding.playerBackground, R.string.player_error, Snackbar.LENGTH_LONG)
+                                                        .setAction(R.string.retry) { restartPlayer() }
+                                                        .show()
                                                     viewLifecycleOwner.lifecycleScope.launch {
                                                         delay(1500.milliseconds)
                                                         try {
@@ -530,7 +536,7 @@ class Media3Fragment : Media3PlayerFragment() {
                 }
                 player.volume = 0f
             }
-            Toast.makeText(requireContext(), R.string.waiting_ads, Toast.LENGTH_LONG).show()
+            Snackbar.make(binding.playerBackground, R.string.waiting_ads, Snackbar.LENGTH_LONG).show()
         }
     }
 

@@ -38,6 +38,7 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
+import com.google.android.material.snackbar.Snackbar
 
 @OptIn(UnstableApi::class)
 class ExoPlayerFragment : PlayerFragment() {
@@ -210,7 +211,11 @@ class ExoPlayerFragment : PlayerFragment() {
 
             override fun toast(resId: Int, duration: Int) {
                 if (view != null) {
-                    Toast.makeText(requireContext(), resId, duration).show()
+                    Snackbar.make(
+                        binding.playerBackground,
+                        resId,
+                        if (duration == Toast.LENGTH_LONG) Snackbar.LENGTH_LONG else Snackbar.LENGTH_SHORT,
+                    ).show()
                 }
             }
 

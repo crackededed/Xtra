@@ -22,6 +22,7 @@ abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.Listen
 
     private var pageErrorSnackbar: Snackbar? = null
     private var pageError: LoadState.Error? = null
+    private var pageErrorState: PagedListErrorState? = null
 
     fun <T : Any, VH : RecyclerView.ViewHolder> setAdapter(recyclerView: RecyclerView, adapter: PagingDataAdapter<T, VH>) {
         adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
@@ -103,7 +104,12 @@ abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.Listen
         val refreshError = loadState.refresh as? LoadState.Error
         val appendError = loadState.append as? LoadState.Error
         val prependError = loadState.prepend as? LoadState.Error
-        val pageError = appendError ?: prependError
+        val errorState = pagedListErrorState(loadState.refresh, loadState.append, loadState.prepend)
+        val pageError = when (errorState) {
+            PagedListErrorState.Refresh -> refreshError
+            PagedListErrorState.Page -> appendError ?: prependError
+            null -> null
+        }
 
         binding.progressBar.isVisible = contentState == PagedListContentState.Loading
         binding.nothingHere.isVisible = showEmpty && contentState == PagedListContentState.Empty
@@ -117,13 +123,18 @@ abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.Listen
             binding.swipeRefresh.isRefreshing = contentState == PagedListContentState.Content && loadState.refresh is LoadState.Loading
         }
 
-        if (pageError != null && pagingAdapter.itemCount > 0 && showEmpty) {
-            if (this.pageError !== pageError) {
+        if (pageError != null && pagingAdapter.itemCount > 0) {
+            if (this.pageError !== pageError || this.pageErrorState != errorState) {
                 pageErrorSnackbar?.dismiss()
                 this.pageError = pageError
+                this.pageErrorState = errorState
                 pageErrorSnackbar = Snackbar.make(
                     binding.recyclerView,
-                    R.string.list_load_more_error,
+                    if (errorState == PagedListErrorState.Refresh) {
+                        R.string.list_refresh_error
+                    } else {
+                        R.string.list_load_more_error
+                    },
                     Snackbar.LENGTH_INDEFINITE,
                 ).setAction(R.string.retry) { pagingAdapter.retry() }
                 pageErrorSnackbar?.show()
@@ -132,6 +143,7 @@ abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.Listen
             pageErrorSnackbar?.dismiss()
             pageErrorSnackbar = null
             this.pageError = null
+            this.pageErrorState = null
         }
 
         if ((refreshError ?: appendError ?: prependError)?.error?.message == C.FAILED_INTEGRITY_CHECK) {
@@ -143,6 +155,7 @@ abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.Listen
         pageErrorSnackbar?.dismiss()
         pageErrorSnackbar = null
         pageError = null
+        pageErrorState = null
         super.onDestroyView()
     }
 }

@@ -50,8 +50,10 @@ import com.github.andreyasadchy.xtra.player.lowlatency.CronetDataSource
 import com.github.andreyasadchy.xtra.player.lowlatency.HttpEngineDataSource
 import com.github.andreyasadchy.xtra.player.lowlatency.OkHttpDataSource
 import com.github.andreyasadchy.xtra.ui.chat.ChatFragment
+import com.github.andreyasadchy.xtra.ui.common.PagedListErrorState
 import com.github.andreyasadchy.xtra.ui.common.StreamsAdapter
 import com.github.andreyasadchy.xtra.ui.common.StreamsCompactAdapter
+import com.github.andreyasadchy.xtra.ui.common.pagedListErrorState
 import com.github.andreyasadchy.xtra.ui.following.streams.FollowedStreamsViewModel
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.player.ExoPlayerService
@@ -59,6 +61,7 @@ import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.Job
@@ -599,9 +602,30 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
             setPadding(dp(16), dp(16), dp(16), dp(16))
             isVisible = false
         }
+        val pickerError = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(16), dp(16), dp(16), dp(16))
+            isVisible = false
+        }
+        val pickerErrorMessage = TextView(requireContext()).apply {
+            gravity = Gravity.CENTER
+            text = getString(R.string.list_load_error)
+            setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
+        }
+        val pickerRetry = MaterialButton(requireContext()).apply {
+            text = getString(R.string.retry)
+            minWidth = 0
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = dp(8)
+            }
+        }
+        pickerError.addView(pickerErrorMessage)
+        pickerError.addView(pickerRetry)
         content.addView(recycler, FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
         content.addView(progress, FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER))
         content.addView(empty, FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+        content.addView(pickerError, FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
 
         val input = TextInputEditText(requireContext()).apply {
             setSingleLine(true)
@@ -648,6 +672,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
                 StreamsAdapter(this, {}, showGame = false, onStreamClick = selectStream)
             }
         recycler.adapter = pagingAdapter
+        pickerRetry.setOnClickListener { pagingAdapter.retry() }
 
         val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.multiview_picker_title)
@@ -657,9 +682,14 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         pickerDialog = dialog
         var pagingJob: Job? = null
         var loadStateJob: Job? = null
+        var pickerErrorSnackbar: Snackbar? = null
+        var pickerErrorState: PagedListErrorState? = null
         dialog.setOnDismissListener {
             pagingJob?.cancel()
             loadStateJob?.cancel()
+            pickerErrorSnackbar?.dismiss()
+            pickerErrorSnackbar = null
+            pickerErrorState = null
         }
         useButton.setOnClickListener {
             val login = input.text?.toString()?.trim()?.removePrefix("@")?.lowercase().orEmpty()
@@ -695,8 +725,32 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         }
         loadStateJob = viewLifecycleOwner.lifecycleScope.launch {
             pagingAdapter.loadStateFlow.collectLatest { loadStates ->
+                val refreshError = loadStates.refresh is LoadState.Error
+                val hasItems = pagingAdapter.itemCount > 0
+                val errorState = pagedListErrorState(loadStates.refresh, loadStates.append, loadStates.prepend)
                 progress.isVisible = loadStates.refresh is LoadState.Loading
-                empty.isVisible = loadStates.refresh is LoadState.NotLoading && pagingAdapter.itemCount == 0
+                empty.isVisible = !refreshError && loadStates.refresh is LoadState.NotLoading && !hasItems
+                pickerError.isVisible = errorState == PagedListErrorState.Refresh && !hasItems
+                if (errorState != null && hasItems) {
+                    if (pickerErrorSnackbar == null || pickerErrorState != errorState) {
+                        pickerErrorSnackbar?.dismiss()
+                        pickerErrorState = errorState
+                        pickerErrorSnackbar = Snackbar.make(
+                            recycler,
+                            if (errorState == PagedListErrorState.Refresh) {
+                                R.string.list_refresh_error
+                            } else {
+                                R.string.list_load_more_error
+                            },
+                            Snackbar.LENGTH_INDEFINITE,
+                        ).setAction(R.string.retry) { pagingAdapter.retry() }
+                        pickerErrorSnackbar?.show()
+                    }
+                } else {
+                    pickerErrorSnackbar?.dismiss()
+                    pickerErrorSnackbar = null
+                    pickerErrorState = null
+                }
             }
         }
     }
