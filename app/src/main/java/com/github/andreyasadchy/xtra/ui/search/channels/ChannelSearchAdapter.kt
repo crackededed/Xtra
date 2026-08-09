@@ -109,9 +109,7 @@ class ChannelSearchAdapter(
                     } else {
                         typeText.visibility = View.GONE
                     }
-                    root.contentDescription = item.name?.let {
-                        context.getString(R.string.player_open_channel, it)
-                    }
+                    root.contentDescription = context.getString(R.string.open_channel)
                 }
             }
         }

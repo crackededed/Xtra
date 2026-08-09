@@ -189,12 +189,7 @@ class ClipsAdapter(
                     } else {
                         gameName.visibility = View.GONE
                     }
-                    root.contentDescription = buildList {
-                        item.title?.trim()?.takeIf { it.isNotBlank() }?.let { add(it) }
-                        item.channelName?.takeIf { showChannel }?.let { add(it) }
-                        item.gameName?.takeIf { showGame }?.let { add(it) }
-                        add(context.getString(R.string.watch_clip))
-                    }.joinToString(". ")
+                    root.contentDescription = context.getString(R.string.watch_clip)
                     options.setOnClickListener { it ->
                         PopupMenu(context, it).apply {
                             inflate(R.menu.media_item)

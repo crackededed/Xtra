@@ -157,9 +157,7 @@ class GamesAdapter(
                     } else {
                         tagsLayout.visibility = View.GONE
                     }
-                    root.contentDescription = item.name?.let {
-                        context.getString(R.string.open_game, it)
-                    } ?: context.getString(R.string.open_game_generic)
+                    root.contentDescription = context.getString(R.string.open_game_generic)
                 }
             }
         }

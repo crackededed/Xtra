@@ -208,12 +208,7 @@ class DownloadsAdapter(
                         deleteVideo(item)
                         true
                     }
-                    root.contentDescription = buildList {
-                        item.name?.trim()?.takeIf { it.isNotEmpty() }?.let(::add)
-                        item.channelName?.let(::add)
-                        item.gameName?.let(::add)
-                        add(context.getString(R.string.watch_video))
-                    }.joinToString(". ")
+                    root.contentDescription = context.getString(R.string.watch_video)
                     if (item.thumbnail?.toUri()?.scheme == ContentResolver.SCHEME_CONTENT) {
                         Glide.with(fragment)
                             .load(item.thumbnail)

@@ -314,8 +314,10 @@ class ChatViewModel(
                 }
             } else {
                 viewModelScope.launch {
-                    val pair = loadCachedOrFetchEmoteResponse("global.stv") {
+                    val pair = loadCachedOrFetchEmoteResponse("global.stv", {
                         playerRepository.loadGlobalSTVEmoteSetResponse(networkLibrary)
+                    }) { response ->
+                        playerRepository.loadSTVEmoteSet(response, useWebp, true)
                     }
                     val response = pair.first
                     val online = pair.second
@@ -375,14 +377,19 @@ class ChatViewModel(
                             emotes = emoteSet.second
                         }
                     }
-                    val cachedResponse = readCachedEmoteResponse("${channelId}.stv")
+                    var cachedResponse = readCachedEmoteResponse("${channelId}.stv")
                     if (cachedResponse != null && isActiveNetworkMetered() && isFreshCache(emoteResponseFile("${channelId}.stv"))) {
                         try {
                             applyCachedResponse(cachedResponse)
                             response = cachedResponse
+                        } catch (e: CancellationException) {
+                            throw e
                         } catch (_: Exception) {
+                            invalidateEmoteResponseCache("${channelId}.stv")
+                            cachedResponse = null
                         }
-                    } else {
+                    }
+                    if (response == null) {
                         try {
                             val userResponse = playerRepository.loadSTVUserResponse(networkLibrary, channelId)
                             val user = playerRepository.loadSTVUser(userResponse, useWebp)
@@ -408,7 +415,10 @@ class ChatViewModel(
                                 val savedResponse = cachedResponse ?: throw e
                                 applyCachedResponse(savedResponse)
                                 response = savedResponse
+                            } catch (e: CancellationException) {
+                                throw e
                             } catch (_: Exception) {
+                                invalidateEmoteResponseCache("${channelId}.stv")
                             }
                         }
                     }
@@ -481,8 +491,10 @@ class ChatViewModel(
                 }
             } else {
                 viewModelScope.launch {
-                    val pair = loadCachedOrFetchEmoteResponse("global.bttv") {
+                    val pair = loadCachedOrFetchEmoteResponse("global.bttv", {
                         playerRepository.loadGlobalBTTVEmotesResponse(networkLibrary)
+                    }) { response ->
+                        playerRepository.loadGlobalBTTVEmotes(response, useWebp)
                     }
                     val response = pair.first
                     val online = pair.second
@@ -528,8 +540,10 @@ class ChatViewModel(
             }
             if (!channelId.isNullOrBlank()) {
                 viewModelScope.launch {
-                    val pair = loadCachedOrFetchEmoteResponse("${channelId}.bttv") {
+                    val pair = loadCachedOrFetchEmoteResponse("${channelId}.bttv", {
                         playerRepository.loadBTTVEmotesResponse(networkLibrary, channelId)
+                    }) { response ->
+                        playerRepository.loadBTTVEmotes(response, useWebp)
                     }
                     val response = pair.first
                     val online = pair.second
@@ -602,8 +616,10 @@ class ChatViewModel(
                 }
             } else {
                 viewModelScope.launch {
-                    val pair = loadCachedOrFetchEmoteResponse("global.ffz") {
+                    val pair = loadCachedOrFetchEmoteResponse("global.ffz", {
                         playerRepository.loadGlobalFFZEmotesResponse(networkLibrary)
+                    }) { response ->
+                        playerRepository.loadGlobalFFZEmotes(response, useWebp)
                     }
                     val response = pair.first
                     val online = pair.second
@@ -647,8 +663,10 @@ class ChatViewModel(
             }
             if (!channelId.isNullOrBlank()) {
                 viewModelScope.launch {
-                    val pair = loadCachedOrFetchEmoteResponse("${channelId}.ffz") {
+                    val pair = loadCachedOrFetchEmoteResponse("${channelId}.ffz", {
                         playerRepository.loadFFZEmotesResponse(networkLibrary, channelId)
+                    }) { response ->
+                        playerRepository.loadFFZEmotes(response, useWebp)
                     }
                     val response = pair.first
                     val online = pair.second
@@ -3671,6 +3689,13 @@ class ChatViewModel(
         }
     }
 
+    private suspend fun invalidateEmoteResponseCache(fileName: String) = withContext(Dispatchers.IO) {
+        try {
+            emoteResponseFile(fileName).delete()
+        } catch (_: Exception) {
+        }
+    }
+
     private fun emoteResponseFile(fileName: String): File {
         return File(
             File(applicationContext.cacheDir, "emote_responses"),
@@ -3687,18 +3712,46 @@ class ChatViewModel(
     private suspend fun loadCachedOrFetchEmoteResponse(
         fileName: String,
         request: suspend () -> String,
+        validate: suspend (String) -> Unit,
     ): Pair<String?, Boolean> {
-        val cachedResponse = readCachedEmoteResponse(fileName)
+        var cachedResponse = readCachedEmoteResponse(fileName)
         if (cachedResponse != null && isActiveNetworkMetered() && isFreshCache(emoteResponseFile(fileName))) {
-            return cachedResponse to false
+            if (isValidEmoteResponse(cachedResponse, validate)) {
+                return cachedResponse to false
+            }
+            invalidateEmoteResponseCache(fileName)
+            cachedResponse = null
         }
         return try {
-            request() to true
+            request().also { response ->
+                if (!isValidEmoteResponse(response, validate)) {
+                    throw IllegalStateException("Invalid cached emote response")
+                }
+            } to true
         } catch (e: Exception) {
             if (e is CancellationException) {
                 throw e
             }
-            cachedResponse to false
+            if (cachedResponse != null && isValidEmoteResponse(cachedResponse, validate)) {
+                cachedResponse to false
+            } else {
+                cachedResponse?.let { invalidateEmoteResponseCache(fileName) }
+                null to false
+            }
+        }
+    }
+
+    private suspend fun isValidEmoteResponse(
+        response: String,
+        validate: suspend (String) -> Unit,
+    ): Boolean {
+        return try {
+            validate(response)
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            false
         }
     }
 

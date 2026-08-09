@@ -310,7 +310,9 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         }
         val playerView = PlayerView(requireContext()).apply {
             useController = false
-            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+            // Multiview slots are intentionally filled so landscape does not
+            // leave large letterbox bands around every stream.
+            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
             setShutterBackgroundColor(Color.BLACK)
             setKeepContentOnPlayerReset(true)
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
