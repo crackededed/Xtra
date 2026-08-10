@@ -24,6 +24,7 @@ import com.github.andreyasadchy.xtra.model.ui.Bookmark
 import com.github.andreyasadchy.xtra.model.ui.BookmarkIgnoredUser
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
+import com.github.andreyasadchy.xtra.ui.common.thumbnailState
 import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
@@ -154,6 +155,7 @@ class BookmarksAdapter(
                             diskCachePolicy(CachePolicy.DISABLED)
                             crossfade(true)
                             target(thumbnail)
+                            thumbnailState()
                         }.build()
                     )
                     if (item.createdAt != null) {

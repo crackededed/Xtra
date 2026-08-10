@@ -39,6 +39,7 @@ class MediaPlayerFragment : PlayerFragment() {
         super.onStart()
         val listener = object : MediaPlayerService.PlayerListener {
             override fun onPrepared(player: MediaPlayer) {
+                clearPlayerError()
                 val duration = player.duration.takeIf { it != -1 }?.toLong() ?: 0
                 binding.playerControls.progressBar.setDuration(duration)
                 binding.playerControls.duration.text = DateUtils.formatElapsedTime(duration / 1000)
@@ -125,11 +126,15 @@ class MediaPlayerFragment : PlayerFragment() {
 
             override fun toast(resId: Int, duration: Int) {
                 if (view != null) {
-                    Snackbar.make(
-                        binding.playerBackground,
-                        resId,
-                        if (duration == Toast.LENGTH_LONG) Snackbar.LENGTH_LONG else Snackbar.LENGTH_SHORT,
-                    ).show()
+                    when (resId) {
+                        R.string.player_error, R.string.proxy_error -> showPlayerError(resId) { restartPlayer() }
+                        R.string.stream_ended, R.string.video_subscribers_only -> showPlayerError(resId)
+                        else -> Snackbar.make(
+                            binding.playerBackground,
+                            resId,
+                            if (duration == Toast.LENGTH_LONG) Snackbar.LENGTH_LONG else Snackbar.LENGTH_SHORT,
+                        ).show()
+                    }
                 }
             }
 

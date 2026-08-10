@@ -172,6 +172,7 @@ class StreamsAdapter(
                     }
                     if (item.thumbnailURL != null) {
                         thumbnail.visibility = View.VISIBLE
+                        liveBadge.visibility = View.VISIBLE
                         //update every 5 minutes
                         val minutes = System.currentTimeMillis() / 60000L
                         val lastMinute = minutes % 10
@@ -183,10 +184,12 @@ class StreamsAdapter(
                                 diskCachePolicy(CachePolicy.DISABLED)
                                 crossfade(true)
                                 target(thumbnail)
+                                thumbnailState()
                             }.build()
                         )
                     } else {
                         thumbnail.visibility = View.GONE
+                        liveBadge.visibility = View.GONE
                     }
                     if (item.viewerCount != null) {
                         viewers.visibility = View.VISIBLE

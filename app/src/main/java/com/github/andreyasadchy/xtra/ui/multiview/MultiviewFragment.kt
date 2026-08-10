@@ -84,6 +84,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
     private var combinedChat = false
     private var previousNavBarVisibility = View.VISIBLE
     private var wasPlaying = BooleanArray(MAX_STREAMS)
+    private var multiviewFill = true
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -118,7 +119,12 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         binding.chatButton.setOnClickListener { toggleChat() }
         binding.combinedChatButton.setOnClickListener { toggleCombinedChat() }
         binding.closeButton.setOnClickListener { requireActivity().onBackPressedDispatcher.onBackPressed() }
+        binding.aspectButton.setOnClickListener {
+            multiviewFill = !multiviewFill
+            updateAspectMode()
+        }
 
+        multiviewFill = savedInstanceState?.getBoolean(KEY_FILL_VIDEO, true) ?: true
         val restoredStreams = savedInstanceState?.parcelableArrayList<Stream>(KEY_STREAMS)
         val initialStreams = restoredStreams
             ?: listOfNotNull(requireArguments().parcelable<Stream>(ARG_STREAM))
@@ -172,6 +178,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putParcelableArrayList(KEY_STREAMS, ArrayList(slots.mapNotNull { it.stream }))
         outState.putInt(KEY_ACTIVE_SLOT, activeSlotIndex)
+        outState.putBoolean(KEY_FILL_VIDEO, multiviewFill)
         super.onSaveInstanceState(outState)
     }
 
@@ -263,6 +270,18 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
             slot.removeButton.isVisible = slots.size > 1
             updateAudioButton(slot)
         }
+        updateAspectMode()
+    }
+
+    private fun updateAspectMode() {
+        if (_binding == null) return
+        val resizeMode = if (multiviewFill) {
+            AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+        } else {
+            AspectRatioFrameLayout.RESIZE_MODE_FIT
+        }
+        slots.forEach { it.playerView.resizeMode = resizeMode }
+        binding.aspectButton.isVisible = slots.isNotEmpty()
     }
 
     private fun updateOrientationLayout() {
@@ -310,9 +329,11 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         }
         val playerView = PlayerView(requireContext()).apply {
             useController = false
-            // Multiview slots are intentionally filled so landscape does not
-            // leave large letterbox bands around every stream.
-            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+            resizeMode = if (multiviewFill) {
+                AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+            } else {
+                AspectRatioFrameLayout.RESIZE_MODE_FIT
+            }
             setShutterBackgroundColor(Color.BLACK)
             setKeepContentOnPlayerReset(true)
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
@@ -528,6 +549,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         binding.activeAudio.isVisible = active != null && isLandscape
         binding.activeAudio.text = active?.let { getString(R.string.multiview_audio, displayName(it)) }
         binding.addStreamButton.isVisible = slots.size < MAX_STREAMS
+        binding.aspectButton.isVisible = slots.isNotEmpty()
         binding.addStreamButton.text = getString(R.string.multiview_add_stream_count, slots.size, MAX_STREAMS)
         val chatEnabled = active != null && !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false)
         binding.chatButton.isVisible = chatEnabled
@@ -860,6 +882,7 @@ class MultiviewFragment : Fragment(R.layout.fragment_multiview) {
         const val ARG_STREAM = "multiview_stream"
         private const val KEY_STREAMS = "multiview_streams"
         private const val KEY_ACTIVE_SLOT = "multiview_active_slot"
+        private const val KEY_FILL_VIDEO = "multiview_fill_video"
         private const val CHAT_TAG = "multiview_chat"
         private const val MAX_STREAMS = 4
         private const val LANDSCAPE_CHAT_WEIGHT = 0.7f

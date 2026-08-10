@@ -28,6 +28,7 @@ import com.github.andreyasadchy.xtra.databinding.FragmentDownloadsListItemBindin
 import com.github.andreyasadchy.xtra.model.ui.DownloadProgress
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
+import com.github.andreyasadchy.xtra.ui.common.thumbnailState
 import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
@@ -212,6 +213,8 @@ class DownloadsAdapter(
                         Glide.with(fragment)
                             .load(item.thumbnail)
                             .diskCacheStrategy(DiskCacheStrategy.NONE)
+                            .placeholder(R.drawable.bg_thumbnail_placeholder)
+                            .error(R.drawable.ic_thumbnail_error)
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .into(thumbnail)
                     } else {
@@ -221,6 +224,7 @@ class DownloadsAdapter(
                                 diskCachePolicy(CachePolicy.DISABLED)
                                 crossfade(true)
                                 target(thumbnail)
+                                thumbnailState()
                             }.build()
                         )
                     }

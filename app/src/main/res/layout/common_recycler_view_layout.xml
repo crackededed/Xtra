@@ -35,6 +35,18 @@
 
     </com.github.andreyasadchy.xtra.ui.view.CustomSwipeRefreshLayout>
 
+    <View
+        android:id="@+id/topInsetGuard"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="?android:colorBackground"
+        android:elevation="4dp"
+        android:importantForAccessibility="no"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <TextView
         android:id="@+id/nothingHere"
         android:layout_width="wrap_content"
@@ -102,7 +114,7 @@
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/topInsetGuard"
         tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

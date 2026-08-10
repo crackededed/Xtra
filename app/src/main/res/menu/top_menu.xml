@@ -15,13 +15,17 @@
         android:icon="@drawable/baseline_search_black_24"
         android:title="@string/search"
         app:iconTint="?attr/colorControlNormal"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
     <item
         android:id="@+id/settings"
-        android:title="@string/settings" />
+        android:icon="@drawable/baseline_settings_black_24"
+        android:title="@string/settings"
+        app:iconTint="?attr/colorControlNormal"
+        app:showAsAction="always" />
     <item
         android:id="@+id/login"
-        android:title="@string/log_in" />
+        android:title="@string/log_in"
+        android:visible="false" />
     <item
         android:id="@+id/importFolders"
         android:title="@string/import_folders"

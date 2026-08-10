@@ -107,6 +107,7 @@ class VideosAdapter(
                             diskCachePolicy(CachePolicy.DISABLED)
                             crossfade(true)
                             target(thumbnail)
+                            thumbnailState()
                         }.build()
                     )
                     if (item.createdAt != null) {

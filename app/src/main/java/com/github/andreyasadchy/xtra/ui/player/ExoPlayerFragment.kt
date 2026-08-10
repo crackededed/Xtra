@@ -52,6 +52,9 @@ class ExoPlayerFragment : PlayerFragment() {
         super.onStart()
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playbackState == Player.STATE_READY) {
+                    clearPlayerError()
+                }
                 binding.bufferingIndicator.isVisible = playbackState == Player.STATE_BUFFERING
                 val showPlayButton = Util.shouldShowPlayButton(playbackService?.player)
                 binding.playerControls.playPause.contentDescription = getString(
@@ -233,11 +236,15 @@ class ExoPlayerFragment : PlayerFragment() {
 
             override fun toast(resId: Int, duration: Int) {
                 if (view != null) {
-                    Snackbar.make(
-                        binding.playerBackground,
-                        resId,
-                        if (duration == Toast.LENGTH_LONG) Snackbar.LENGTH_LONG else Snackbar.LENGTH_SHORT,
-                    ).show()
+                    when (resId) {
+                        R.string.player_error, R.string.proxy_error -> showPlayerError(resId) { restartPlayer() }
+                        R.string.stream_ended, R.string.video_subscribers_only -> showPlayerError(resId)
+                        else -> Snackbar.make(
+                            binding.playerBackground,
+                            resId,
+                            if (duration == Toast.LENGTH_LONG) Snackbar.LENGTH_LONG else Snackbar.LENGTH_SHORT,
+                        ).show()
+                    }
                 }
             }
 

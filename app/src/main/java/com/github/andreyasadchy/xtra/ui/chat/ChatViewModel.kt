@@ -101,6 +101,13 @@ class ChatViewModel(
     private val json: Json,
 ) : ViewModel() {
 
+    enum class ConnectionState {
+        IDLE,
+        CONNECTING,
+        CONNECTED,
+        RECONNECTING,
+    }
+
     val integrity = MutableSharedFlow<String?>()
 
     private var chatReadIRCSocket: ChatReadIRCSocket? = null
@@ -128,6 +135,9 @@ class ChatViewModel(
     private var activeChannelId: String? = null
     private var activeChannelLogin: String? = null
     var autoReconnect = true
+
+    private val _connectionState = MutableStateFlow(ConnectionState.IDLE)
+    val connectionState: StateFlow<ConnectionState> = _connectionState
 
     private var chatReplayManager: ChatReplayManager? = null
     private var chatReplayManagerLocal: ChatReplayManagerLocal? = null
@@ -227,6 +237,15 @@ class ChatViewModel(
 
     fun resumeLive(channelId: String?, channelLogin: String?) {
         if ((chatReadJob?.isActive == false) && channelLogin != null && autoReconnect) {
+            startLiveChat(channelId, channelLogin)
+        }
+    }
+
+    fun retryLiveChat() {
+        val channelId = activeChannelId
+        val channelLogin = activeChannelLogin
+        if (!channelLogin.isNullOrBlank()) {
+            autoReconnect = true
             startLiveChat(channelId, channelLogin)
         }
     }
@@ -1469,6 +1488,7 @@ class ChatViewModel(
     fun startLiveChat(channelId: String?, channelLogin: String) {
         stopLiveChat()
         started = true
+        _connectionState.value = ConnectionState.CONNECTING
         activeChannelId = channelId
         activeChannelLogin = channelLogin
         val gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext, true)
@@ -1587,6 +1607,7 @@ class ChatViewModel(
     }
 
     fun stopLiveChat() {
+        _connectionState.value = ConnectionState.IDLE
         activeChannelId = null
         activeChannelLogin = null
         synchronized(channelEmotes) {
@@ -1699,6 +1720,9 @@ class ChatViewModel(
         private val channelId: String?,
     ) : ChatReadWebSocket.Listener {
         override suspend fun onConnect() {
+            if (started) {
+                _connectionState.value = ConnectionState.CONNECTED
+            }
             onMessage(ChatMessage(systemMsg = ContextCompat.getString(applicationContext, R.string.chat_join).format(channelLogin)))
         }
 
@@ -1771,6 +1795,11 @@ class ChatViewModel(
         }
 
         override suspend fun onDisconnect(message: String, fullMsg: String?) {
+            _connectionState.value = if (started && autoReconnect) {
+                ConnectionState.RECONNECTING
+            } else {
+                ConnectionState.IDLE
+            }
             onMessage(ChatMessage(
                 systemMsg = ContextCompat.getString(applicationContext, R.string.chat_disconnect).format(channelLogin, message),
                 fullMsg = fullMsg
@@ -1825,6 +1854,9 @@ class ChatViewModel(
         private val channelId: String?,
     ) : EventSubWebSocket.Listener {
         override suspend fun onConnect() {
+            if (started) {
+                _connectionState.value = ConnectionState.CONNECTED
+            }
             onMessage(ChatMessage(systemMsg = ContextCompat.getString(applicationContext, R.string.chat_join).format(channelLogin)))
         }
 
@@ -2102,6 +2134,11 @@ class ChatViewModel(
         }
 
         override suspend fun onDisconnect(message: String, fullMsg: String?) {
+            _connectionState.value = if (started && autoReconnect) {
+                ConnectionState.RECONNECTING
+            } else {
+                ConnectionState.IDLE
+            }
             if (showWebSocketDebugInfo) {
                 onMessage(ChatMessage(
                     systemMsg = ContextCompat.getString(applicationContext, R.string.websocket_disconnected).format("PubSub", message),

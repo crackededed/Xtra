@@ -1192,6 +1192,7 @@
     <style name="Thumbnail">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">0dp</item>
+        <item name="android:background">@drawable/bg_thumbnail_placeholder</item>
         <item name="layout_constraintDimensionRatio">H,16:9</item>
     </style>
 

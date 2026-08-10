@@ -6,7 +6,8 @@
 
     <fragment
         android:id="@+id/rootGamesFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.games.GamesFragment">
+        android:name="com.github.andreyasadchy.xtra.ui.games.GamesFragment"
+        android:label="@string/games">
         <argument
             android:name="tags"
             app:argType="com.github.andreyasadchy.xtra.model.ui.Tag[]"
@@ -15,7 +16,8 @@
     </fragment>
     <fragment
         android:id="@+id/rootTopFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.top.TopStreamsFragment">
+        android:name="com.github.andreyasadchy.xtra.ui.top.TopStreamsFragment"
+        android:label="@string/popular">
         <argument
             android:name="tags"
             app:argType="string[]"
@@ -29,7 +31,8 @@
     </fragment>
     <fragment
         android:id="@+id/gamesFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.games.GamesFragment">
+        android:name="com.github.andreyasadchy.xtra.ui.games.GamesFragment"
+        android:label="@string/games">
         <argument
             android:name="tags"
             app:argType="com.github.andreyasadchy.xtra.model.ui.Tag[]"
@@ -41,7 +44,8 @@
         app:destination="@id/gamesFragment" />
     <fragment
         android:id="@+id/topFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.top.TopStreamsFragment">
+        android:name="com.github.andreyasadchy.xtra.ui.top.TopStreamsFragment"
+        android:label="@string/popular">
         <argument
             android:name="tags"
             app:argType="string[]"
@@ -58,16 +62,20 @@
         app:destination="@id/topFragment" />
     <fragment
         android:id="@+id/followPagerFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.following.FollowPagerFragment" />
+        android:name="com.github.andreyasadchy.xtra.ui.following.FollowPagerFragment"
+        android:label="@string/following" />
     <fragment
         android:id="@+id/followMediaFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.following.FollowMediaFragment" />
+        android:name="com.github.andreyasadchy.xtra.ui.following.FollowMediaFragment"
+        android:label="@string/following" />
     <fragment
         android:id="@+id/savedPagerFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.saved.SavedPagerFragment" />
+        android:name="com.github.andreyasadchy.xtra.ui.saved.SavedPagerFragment"
+        android:label="@string/saved" />
     <fragment
         android:id="@+id/savedMediaFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.saved.SavedMediaFragment" />
+        android:name="com.github.andreyasadchy.xtra.ui.saved.SavedMediaFragment"
+        android:label="@string/saved" />
     <fragment
         android:id="@+id/searchPagerFragment"
         android:name="com.github.andreyasadchy.xtra.ui.search.SearchPagerFragment" />

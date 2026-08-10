@@ -69,6 +69,7 @@ import com.github.andreyasadchy.xtra.databinding.ItemSettingsRowBinding
 import com.github.andreyasadchy.xtra.model.ui.SettingsDragListItem
 import com.github.andreyasadchy.xtra.model.ui.SettingsSearchItem
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
+import com.github.andreyasadchy.xtra.ui.login.LoginActivity
 import com.github.andreyasadchy.xtra.ui.main.LiveNotificationScheduler
 import com.github.andreyasadchy.xtra.ui.settings.SettingsViewModel.Companion.SettingsViewModelFactory
 import com.github.andreyasadchy.xtra.util.C
@@ -97,6 +98,8 @@ class SettingsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
     private var changed = false
+    private var accountActionIsLogout = false
+    private var loginResultLauncher: ActivityResultLauncher<Intent>? = null
     var searchItem: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -107,6 +110,14 @@ class SettingsActivity : AppCompatActivity() {
         applyTheme()
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        loginResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val wasLogout = accountActionIsLogout
+            accountActionIsLogout = false
+            if (wasLogout || result.resultCode == RESULT_OK) {
+                setResult(RESULT_OK)
+                finish()
+            }
+        }
         val ignoreCutouts = prefs().getBoolean(C.UI_DRAW_BEHIND_CUTOUTS, false)
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
@@ -166,6 +177,16 @@ class SettingsActivity : AppCompatActivity() {
                 return false
             }
         })
+    }
+
+    fun isAccountConnected(): Boolean {
+        return !TwitchApiHelper.getGQLHeaders(this, true)[C.HEADER_TOKEN].isNullOrBlank() ||
+                !TwitchApiHelper.getHelixHeaders(this)[C.HEADER_TOKEN].isNullOrBlank()
+    }
+
+    fun openAccountAction() {
+        accountActionIsLogout = isAccountConnected()
+        loginResultLauncher?.launch(Intent(this, LoginActivity::class.java))
     }
 
     fun showDragListDialog(list: List<SettingsDragListItem>, prefKey: String, title: CharSequence?) {
@@ -282,6 +303,24 @@ class SettingsActivity : AppCompatActivity() {
                 rowBinding.root.setOnClickListener { item.onClick() }
                 binding.sections.addView(rowBinding.root)
             }
+            val settingsActivity = requireActivity() as SettingsActivity
+            val isLoggedIn = settingsActivity.isAccountConnected()
+            val accountRow = ItemSettingsRowBinding.inflate(layoutInflater, binding.accountActions, false)
+            val accountSummary = if (isLoggedIn) {
+                requireContext().tokenPrefs().getString(C.USERNAME, null)?.takeIf { it.isNotBlank() }?.let {
+                    getString(R.string.logout_msg, it)
+                } ?: getString(R.string.settings_home_account_network_summary)
+            } else {
+                getString(R.string.settings_home_account_network_summary)
+            }
+            accountRow.icon.setImageResource(R.drawable.ic_settings_network)
+            accountRow.title.setText(if (isLoggedIn) R.string.log_out else R.string.log_in)
+            accountRow.summary.text = accountSummary
+            accountRow.arrow.visibility = View.GONE
+            accountRow.divider.visibility = View.GONE
+            accountRow.root.contentDescription = getString(if (isLoggedIn) R.string.log_out else R.string.log_in) + ". " + accountSummary
+            accountRow.root.setOnClickListener { settingsActivity.openAccountAction() }
+            binding.accountActions.addView(accountRow.root)
             ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
                 val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
                 view.updatePadding(bottom = resources.getDimensionPixelSize(R.dimen.settings_section_spacing) * 2 + insets.bottom)
@@ -322,9 +361,6 @@ class SettingsActivity : AppCompatActivity() {
             },
             SettingsItem(R.string.settings_section_downloads, R.drawable.ic_settings_download, R.string.settings_home_downloads_summary) {
                 navigate(SettingsNavGraphDirections.actionGlobalDownloadSettingsFragment())
-            },
-            SettingsItem(R.string.settings_home_account_network, R.drawable.ic_settings_network, R.string.settings_home_account_network_summary) {
-                navigate(SettingsNavGraphDirections.actionGlobalApiTokenSettingsFragment())
             },
             SettingsItem(R.string.settings_section_advanced, R.drawable.ic_settings_advanced, R.string.settings_home_advanced_summary) {
                 navigate(SettingsNavGraphDirections.actionGlobalDebugSettingsFragment())
@@ -396,8 +432,8 @@ class SettingsActivity : AppCompatActivity() {
                     }
                 } else {
                     findPreference<SwitchPreferenceCompat>("live_notifications_enabled")?.isChecked = false
-                    Toast.makeText(requireContext(), R.string.live_notifications_permission_required, Toast.LENGTH_LONG).show()
                 }
+                updateLiveNotificationsSummary()
             }
         }
 
@@ -408,6 +444,27 @@ class SettingsActivity : AppCompatActivity() {
                 gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), true),
                 helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext())
             )
+        }
+
+        private fun updateLiveNotificationsSummary() {
+            val preference = findPreference<SwitchPreferenceCompat>("live_notifications_enabled") ?: return
+            val permissionGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                    ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+            preference.summary = when {
+                !permissionGranted -> getString(R.string.live_notifications_permission_required)
+                !LiveNotificationScheduler.canPostNotifications(requireContext()) -> getString(R.string.live_notifications_blocked)
+                else -> getString(R.string.settings_item_notifications_summary)
+            }
+        }
+
+        private fun openNotificationSettings() {
+            try {
+                startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                    putExtra("android.provider.extra.APP_PACKAGE", requireContext().packageName)
+                })
+            } catch (_: ActivityNotFoundException) {
+                // The summary still explains the blocked state when no system screen is available.
+            }
         }
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -469,7 +526,8 @@ class SettingsActivity : AppCompatActivity() {
                         notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                         false
                     } else if (!LiveNotificationScheduler.canPostNotifications(requireContext())) {
-                        Toast.makeText(requireContext(), R.string.live_notifications_blocked, Toast.LENGTH_LONG).show()
+                        openNotificationSettings()
+                        updateLiveNotificationsSummary()
                         false
                     } else {
                         toggleLiveNotifications(true)
@@ -480,6 +538,7 @@ class SettingsActivity : AppCompatActivity() {
                     true
                 }
             }
+            updateLiveNotificationsSummary()
             findPreference<Preference>("check_updates")?.setOnPreferenceClickListener {
                 viewModel.checkUpdates(
                     requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
@@ -568,6 +627,7 @@ class SettingsActivity : AppCompatActivity() {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.liveNotificationResult.collectLatest { result ->
                         findPreference<SwitchPreferenceCompat>("live_notifications_enabled")?.isChecked = result.enabled
+                        updateLiveNotificationsSummary()
                         if (result.failed) {
                             Toast.makeText(requireContext(), R.string.live_notifications_enable_failed, Toast.LENGTH_LONG).show()
                         }
@@ -671,11 +731,12 @@ class SettingsActivity : AppCompatActivity() {
 
         override fun onResume() {
             super.onResume()
-            val preference = findPreference<SwitchPreferenceCompat>("live_notifications_enabled") ?: return
-            if (preference.isChecked && !LiveNotificationScheduler.canPostNotifications(requireContext())) {
+            val preference = findPreference<SwitchPreferenceCompat>("live_notifications_enabled")
+            if (preference?.isChecked == true && !LiveNotificationScheduler.canPostNotifications(requireContext())) {
                 preference.isChecked = false
                 toggleLiveNotifications(false)
             }
+            updateLiveNotificationsSummary()
         }
     }
 
@@ -1196,6 +1257,14 @@ class SettingsActivity : AppCompatActivity() {
     class DebugSettingsFragment : MaterialPreferenceFragment() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.debug_preferences, rootKey)
+            preferenceScreen.addPreference(Preference(requireContext()).apply {
+                title = getString(R.string.settings_home_account_network)
+                summary = getString(R.string.settings_home_account_network_summary)
+                setOnPreferenceClickListener {
+                    findNavController().navigate(SettingsNavGraphDirections.actionGlobalApiTokenSettingsFragment())
+                    true
+                }
+            })
             findPreference<EditTextPreference>("gql_headers")?.apply {
                 isPersistent = false
                 text = requireContext().tokenPrefs().getString(C.GQL_HEADERS, null)

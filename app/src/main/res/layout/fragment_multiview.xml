@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/multiviewRoot"
     android:layout_width="match_parent"
@@ -51,6 +52,16 @@
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="?android:attr/textColorSecondary"
                 tools:text="Audio: channel" />
+
+            <ImageButton
+                android:id="@+id/aspectButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?android:selectableItemBackgroundBorderless"
+                android:contentDescription="@string/player_aspect_ratio"
+                android:padding="12dp"
+                android:src="@drawable/baseline_aspect_ratio_black_24"
+                app:tint="?attr/colorControlNormal" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/chatButton"

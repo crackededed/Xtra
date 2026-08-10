@@ -39,6 +39,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.trackPipAnimationHintView
 import androidx.annotation.OptIn
+import androidx.annotation.StringRes
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
@@ -346,6 +347,9 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                 playerControls.root.dispatchTouchEvent(event)
                             } else {
                                 controllerTapDetector.onTouchEvent(event)
+                                if (isTap) {
+                                    showController()
+                                }
                             }
                         }
                         val minimizeThreshold = slidingLayout.height / 5
@@ -651,6 +655,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     fun start() {
         with(binding) {
+            clearPlayerError()
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     playbackService?.integrity?.collect {
@@ -1727,6 +1732,27 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 }
             }
         }
+    }
+
+    protected fun showPlayerError(@StringRes message: Int, retry: (() -> Unit)? = null) {
+        binding.playerErrorText.setText(message)
+        binding.playerErrorRetry.isVisible = retry != null
+        binding.playerErrorRetry.setOnClickListener {
+            clearPlayerError()
+            retry?.invoke()
+        }
+        binding.playerErrorContainer.isVisible = true
+        binding.playerErrorContainer.isFocusable = retry == null
+        if (retry != null) {
+            binding.playerErrorRetry.requestFocus()
+        } else {
+            binding.playerErrorContainer.requestFocus()
+        }
+    }
+
+    protected fun clearPlayerError() {
+        binding.playerErrorContainer.isVisible = false
+        binding.playerErrorRetry.setOnClickListener(null)
     }
 
     protected fun showController(show: Boolean = true, force: Boolean = false) {

@@ -1,7 +1,11 @@
 package com.github.andreyasadchy.xtra.ui.common
 
 import android.view.View
+import android.view.ViewGroup
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -59,6 +63,17 @@ abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.Listen
     fun <T : Any, VH : RecyclerView.ViewHolder> initializeAdapter(binding: CommonRecyclerViewLayoutBinding, pagingAdapter: PagingDataAdapter<T, VH>, enableSwipeRefresh: Boolean = true, enableScrollTopButton: Boolean = true) {
         with(binding) {
             setupPagingControls(binding, pagingAdapter, enableSwipeRefresh)
+            root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+                updateTopInsetGuard(binding)
+            }
+            recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    updateTopInsetGuard(binding)
+                }
+            })
+            root.post { updateTopInsetGuard(binding) }
+            ViewCompat.requestApplyInsets(root)
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     pagingAdapter.loadStateFlow.collectLatest { loadState ->
@@ -78,6 +93,25 @@ abstract class PagedListFragment : BaseNetworkFragment(), IntegrityDialog.Listen
                     it.visibility = View.GONE
                 }
             }
+        }
+    }
+
+    private fun updateTopInsetGuard(binding: CommonRecyclerViewLayoutBinding) {
+        if (!binding.root.isAttachedToWindow) return
+        val topInset = ViewCompat.getRootWindowInsets(binding.root)
+            ?.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            ?.top ?: 0
+        val location = IntArray(2)
+        binding.root.getLocationInWindow(location)
+        val guardHeight = (topInset - location[1]).coerceAtLeast(0)
+        if (binding.topInsetGuard.layoutParams.height != guardHeight) {
+            binding.topInsetGuard.updateLayoutParams<ViewGroup.LayoutParams> {
+                height = guardHeight
+            }
+        }
+        val shouldShowGuard = guardHeight > 0
+        if (binding.topInsetGuard.isVisible != shouldShowGuard) {
+            binding.topInsetGuard.isVisible = shouldShowGuard
         }
     }
 

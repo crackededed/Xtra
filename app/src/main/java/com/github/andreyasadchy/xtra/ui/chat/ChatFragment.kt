@@ -168,6 +168,21 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
         super.onViewCreated(view, savedInstanceState)
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.connectionState.collectLatest { state ->
+                    val showConnectionStatus = state == ChatViewModel.ConnectionState.CONNECTING ||
+                            state == ChatViewModel.ConnectionState.RECONNECTING
+                    binding.connectionStatus.isVisible = showConnectionStatus
+                    if (showConnectionStatus) {
+                        binding.connectionStatusText.text = getString(R.string.connection_error)
+                        binding.connectionStatus.contentDescription =
+                            "${binding.connectionStatusText.text}. ${getString(R.string.retry)}"
+                    }
+                }
+            }
+        }
+        binding.connectionStatus.setOnClickListener { viewModel.retryLiveChat() }
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.channelPointRedemption.collectLatest(::handleChannelPointRedemption)
                 }
@@ -319,9 +334,11 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                         channelPoints.contentDescription = getString(R.string.channel_points_balance, balance)
                                         updateChannelPointsIcon(points.iconUrl)
                                         channelPoints.visibility = View.VISIBLE
+                                        updateComposerDensity()
                                     } else {
                                         updateChannelPointsIcon(null)
                                         channelPoints.visibility = View.GONE
+                                        updateComposerDensity()
                                     }
                                 }
                             }
@@ -371,6 +388,10 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         } else {
                             messageView.visibility = View.VISIBLE
                         }
+                        messageView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+                            updateComposerDensity()
+                        }
+                        updateComposerDensity()
                         viewPager.adapter = object : FragmentStateAdapter(this@ChatFragment) {
                             override fun getItemCount(): Int = 3
 
@@ -897,6 +918,11 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                 }
             }
         }
+        savedInstanceState?.getString(KEY_COMPOSER_DRAFT)?.takeIf { it.isNotEmpty() }?.let { draft ->
+            binding.editText.setText(draft)
+            binding.editText.setSelection(binding.editText.length())
+            updateComposerButtons()
+        }
     }
 
     private fun isInsideInsetAwareContainer(view: View): Boolean {
@@ -1066,6 +1092,12 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
         val canShareWithoutMessage = composerOverlayState is ComposerOverlayState.StreakShare
         binding.send.isVisible = !composerSubmissionInProgress && (hasText || canShareWithoutMessage)
         binding.clear.isVisible = !composerSubmissionInProgress && hasText
+    }
+
+    private fun updateComposerDensity() {
+        if (_binding == null || binding.messageView.width <= 0) return
+        val compactWidth = (320 * resources.displayMetrics.density).toInt()
+        binding.channelPointsText.isVisible = binding.channelPoints.isVisible && binding.messageView.width >= compactWidth
     }
 
     private fun showComposerOverlay(state: ComposerOverlayState) {
@@ -1497,6 +1529,11 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString(KEY_COMPOSER_DRAFT, _binding?.editText?.text?.toString())
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onDestroyView() {
         channelPointsIconUrl = null
         composerOverlayState = null
@@ -1584,6 +1621,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
         private const val KEY_CREATED_AT = "createdAt"
         private const val KEY_CHAT_URL = "chatUrl"
         private const val KEY_START_TIME = "startTime"
+        private const val KEY_COMPOSER_DRAFT = "composerDraft"
 
         fun newInstance(channelId: String?, channelLogin: String?, channelName: String?, streamId: String?): ChatFragment {
             return ChatFragment().apply {

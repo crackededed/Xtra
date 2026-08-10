@@ -105,6 +105,7 @@ class Media3Fragment : Media3PlayerFragment() {
                         streamRecoveryJob?.cancel()
                         streamRecoveryJob = null
                         streamRecoveryAttempt = 0
+                        clearPlayerError()
                     }
                     binding.bufferingIndicator.isVisible = playbackState == Player.STATE_BUFFERING
                     val showPlayButton = Util.shouldShowPlayButton(player)
@@ -362,23 +363,20 @@ class Media3Fragment : Media3PlayerFragment() {
                                         if (isNetworkAvailable) {
                                             when {
                                                 responseCode == 404 -> {
-                                                    Snackbar.make(binding.playerBackground, R.string.stream_ended, Snackbar.LENGTH_LONG).show()
+                                                    showPlayerError(R.string.stream_ended)
                                                 }
                                                 viewModel.useCustomProxy && responseCode >= 400 -> {
-                                                    Snackbar.make(binding.playerBackground, R.string.proxy_error, Snackbar.LENGTH_LONG)
-                                                        .setAction(R.string.retry) { restartPlayer() }
-                                                        .show()
+                                                    showPlayerError(R.string.proxy_error) { restartPlayer() }
                                                     viewModel.useCustomProxy = false
                                                     scheduleStreamRecovery()
                                                 }
                                                 else -> {
-                                                    Snackbar.make(binding.playerBackground, R.string.player_error, Snackbar.LENGTH_LONG)
-                                                        .setAction(R.string.retry) { restartPlayer() }
-                                                        .show()
+                                                    showPlayerError(R.string.player_error) { restartPlayer() }
                                                     scheduleStreamRecovery()
                                                 }
                                             }
                                         } else {
+                                            showPlayerError(R.string.connection_error) { restartPlayer() }
                                             scheduleStreamRecovery()
                                         }
                                     }
@@ -405,15 +403,14 @@ class Media3Fragment : Media3PlayerFragment() {
                                             when {
                                                 viewModel.shouldRetry && responseCode != 0 -> {
                                                     viewModel.shouldRetry = false
+                                                    clearPlayerError()
                                                     playVideo(true, player?.currentPosition)
                                                 }
                                                 responseCode == 403 -> {
-                                                    Snackbar.make(binding.playerBackground, R.string.video_subscribers_only, Snackbar.LENGTH_LONG).show()
+                                                    showPlayerError(R.string.video_subscribers_only)
                                                 }
                                                 else -> {
-                                                    Snackbar.make(binding.playerBackground, R.string.player_error, Snackbar.LENGTH_LONG)
-                                                        .setAction(R.string.retry) { restartPlayer() }
-                                                        .show()
+                                                    showPlayerError(R.string.player_error) { restartPlayer() }
                                                     viewLifecycleOwner.lifecycleScope.launch {
                                                         delay(1500.milliseconds)
                                                         try {
@@ -423,9 +420,22 @@ class Media3Fragment : Media3PlayerFragment() {
                                                     }
                                                 }
                                             }
+                                        } else {
+                                            showPlayerError(R.string.connection_error) { restartPlayer() }
                                         }
                                     }
                                 }, ContextCompat.getMainExecutor(requireContext()))
+                            }
+                        }
+                        else -> {
+                            showPlayerError(R.string.player_error) {
+                                player?.let {
+                                    try {
+                                        it.prepare()
+                                        it.playWhenReady = true
+                                    } catch (_: Exception) {
+                                    }
+                                }
                             }
                         }
                     }
@@ -656,6 +666,7 @@ class Media3Fragment : Media3PlayerFragment() {
     }
 
     override fun startStream(url: String?) {
+        clearPlayerError()
         adAvoidanceJob?.cancel()
         adAvoidanceJob = null
         viewModel.resetAdController()
@@ -678,6 +689,7 @@ class Media3Fragment : Media3PlayerFragment() {
     }
 
     override fun startVideo(url: String?, playbackPosition: Long?, multivariantPlaylist: Boolean) {
+        clearPlayerError()
         player?.let { player ->
             player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
                 setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
@@ -699,6 +711,7 @@ class Media3Fragment : Media3PlayerFragment() {
     }
 
     override fun startClip(url: String?) {
+        clearPlayerError()
         player?.let { player ->
             if (viewModel.quality?.name == AUDIO_ONLY_QUALITY) {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
@@ -725,6 +738,7 @@ class Media3Fragment : Media3PlayerFragment() {
     }
 
     override fun startOfflineVideo(url: String?, position: Long) {
+        clearPlayerError()
         player?.let { player ->
             if (viewModel.quality?.name == AUDIO_ONLY_QUALITY) {
                 player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
