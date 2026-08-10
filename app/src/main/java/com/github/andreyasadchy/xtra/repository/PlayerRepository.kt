@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.http.HttpEngine
 import android.net.http.ProxyOptions
 import android.util.Base64
+import android.util.Log
 import androidx.core.net.toUri
 import com.apollographql.apollo.api.CustomScalarAdapters
 import com.apollographql.apollo.api.json.buildJsonString
@@ -72,6 +73,8 @@ import kotlin.math.roundToInt
 import kotlin.random.Random
 import kotlin.uuid.Uuid
 
+private const val AD_TAG = "XtraAd"
+
 class PlayerRepository(
     private val httpEngine: Lazy<HttpEngine?>,
     private val cronetEngine: Lazy<CronetEngine?>,
@@ -135,6 +138,10 @@ class PlayerRepository(
         proxyPassword: String?,
         enableIntegrity: Boolean,
     ): StreamPlaylistCandidate? = withContext(Dispatchers.IO) {
+        // VAFT keeps one device ID while it probes alternate player types. Reusing
+        // one valid ID prevents Twitch from treating each probe as a new client.
+        val deviceId = resolvePlaybackDeviceId(gqlHeaders, randomDeviceId, xDeviceId)
+        logAd("clean probe channel=$channelLogin types=${playerTypes.joinToString()} deviceIdLength=${deviceId.length} integrity=$enableIntegrity")
         playerTypes.forEach { playerType ->
             val url = try {
                 loadStreamPlaylistUrl(
@@ -142,8 +149,8 @@ class PlayerRepository(
                     networkLibrary = networkLibrary,
                     gqlHeaders = gqlHeaders,
                     channelLogin = channelLogin,
-                    randomDeviceId = randomDeviceId,
-                    xDeviceId = xDeviceId,
+                    randomDeviceId = false,
+                    xDeviceId = deviceId,
                     playerType = playerType,
                     supportedCodecs = supportedCodecs,
                     proxyPlaybackAccessToken = proxyPlaybackAccessToken,
@@ -155,14 +162,19 @@ class PlayerRepository(
                 )
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                logAd("token probe failed channel=$channelLogin playerType=$playerType error=${e.javaClass.simpleName}")
                 null
             } ?: return@forEach
 
-            if (containsAdMarkers(url) != true) {
+            val adMarkers = containsAdMarkers(url)
+            logAd("playlist probe channel=$channelLogin playerType=$playerType adMarkers=$adMarkers")
+            if (adMarkers != true) {
+                logAd("clean candidate selected channel=$channelLogin playerType=$playerType verified=${adMarkers == false}")
                 return@withContext StreamPlaylistCandidate(playerType, url)
             }
         }
+        logAd("no clean candidate channel=$channelLogin")
         null
     }
 
@@ -198,17 +210,20 @@ class PlayerRepository(
                 }
         } catch (e: CancellationException) {
             throw e
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logAd("playlist inspection failed error=${e.javaClass.simpleName}")
             null
         }
     }
 
     private suspend fun loadStreamPlaybackAccessToken(context: Context, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): Pair<String?, String?> = withContext(Dispatchers.IO) {
         val accessTokenHeaders = getPlaybackAccessTokenHeaders(gqlHeaders, randomDeviceId, xDeviceId, enableIntegrity)
+        val platform = if (playerType.equals("autoplay", ignoreCase = true)) "android" else "web"
+        logAd("token request channel=$channelLogin playerType=${playerType ?: "null"} platform=$platform integrity=$enableIntegrity deviceIdLength=${accessTokenHeaders["X-Device-Id"]?.length ?: 0} proxy=$proxyPlaybackAccessToken")
         val url = "https://gql.twitch.tv/gql"
         val headers = accessTokenHeaders.filterKeys { it == C.HEADER_CLIENT_ID || it == "X-Device-Id" }
         try {
-            val body = graphQLRepository.getPlaybackAccessTokenRequestBody(channelLogin, "", playerType)
+            val body = graphQLRepository.getPlaybackAccessTokenRequestBody(channelLogin, "", playerType, platform)
             val response = if (proxyPlaybackAccessToken && !proxyHost.isNullOrBlank() && proxyPort != null) {
                 when {
                     networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
@@ -387,7 +402,8 @@ class PlayerRepository(
                     networkLibrary = networkLibrary,
                     headers = accessTokenHeaders,
                     login = channelLogin,
-                    playerType = playerType
+                    playerType = playerType,
+                    platform = platform,
                 )
             }
             if (enableIntegrity) {
@@ -399,7 +415,7 @@ class PlayerRepository(
         } catch (e: Exception) {
             if (e.message == C.FAILED_INTEGRITY_CHECK) throw e
             val response = if (proxyPlaybackAccessToken && !proxyHost.isNullOrBlank() && proxyPort != null) {
-                val query = StreamPlaybackAccessTokenQuery(channelLogin, "web", playerType ?: "")
+                val query = StreamPlaybackAccessTokenQuery(channelLogin, platform, playerType ?: "")
                 val body = buildJsonString {
                     query.apply {
                         writeObject {
@@ -599,7 +615,7 @@ class PlayerRepository(
                     networkLibrary = networkLibrary,
                     headers = accessTokenHeaders,
                     login = channelLogin,
-                    platform = "web",
+                    platform = platform,
                     playerType = playerType ?: ""
                 )
             }
@@ -678,17 +694,40 @@ class PlayerRepository(
     }
 
     private fun getPlaybackAccessTokenHeaders(gqlHeaders: Map<String, String>, randomDeviceId: Boolean?, xDeviceId: String? = null, enableIntegrity: Boolean): Map<String, String> {
-        return if (enableIntegrity) {
-            gqlHeaders
-        } else {
-            gqlHeaders.toMutableMap().apply {
-                // X-Device-Id or Device-ID removes "commercial break in progress" (length 16 or 32)
-                if (randomDeviceId != false) {
-                    put("X-Device-Id", Uuid.random().toHexString())
-                } else {
-                    xDeviceId?.let { put("X-Device-Id", it) }
-                }
-            }
+        val headers = gqlHeaders.toMutableMap()
+        headers.keys
+            .filter { it.equals("X-Device-Id", ignoreCase = true) && it != "X-Device-Id" }
+            .forEach { headers.remove(it) }
+        val deviceId = resolvePlaybackDeviceId(gqlHeaders, randomDeviceId, xDeviceId)
+        // VAFT sends X-Device-Id alongside Client-Integrity. Integrity mode must
+        // not silently disable the ad-avoidance header.
+        headers["X-Device-Id"] = deviceId
+        logAd("headers prepared integrity=$enableIntegrity randomDeviceId=${randomDeviceId != false} deviceIdLength=${deviceId.length}")
+        return headers
+    }
+
+    private fun resolvePlaybackDeviceId(gqlHeaders: Map<String, String>, randomDeviceId: Boolean?, xDeviceId: String?): String {
+        val existingDeviceId = gqlHeaders.entries
+            .firstOrNull { it.key.equals("X-Device-Id", ignoreCase = true) }
+            ?.value
+            ?.trim()
+            ?.takeIf(::isValidPlaybackDeviceId)
+        val configuredDeviceId = xDeviceId?.trim()?.takeIf(::isValidPlaybackDeviceId)
+        return when {
+            randomDeviceId != false -> Uuid.random().toHexString()
+            configuredDeviceId != null -> configuredDeviceId
+            existingDeviceId != null -> existingDeviceId
+            else -> Uuid.random().toHexString()
+        }
+    }
+
+    private fun isValidPlaybackDeviceId(deviceId: String): Boolean {
+        return deviceId.length == 16 || deviceId.length == 32
+    }
+
+    private fun logAd(message: String) {
+        if (BuildConfig.DEBUG) {
+            Log.d(AD_TAG, message)
         }
     }
 

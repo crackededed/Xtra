@@ -252,6 +252,7 @@ object ChatAdapterUtils {
                         builderIndex += timestamp.length + 1
                     }
                 }
+                var hasBadge = false
                 chatMessage.badges?.forEach { chatBadge ->
                     val badge = synchronized(channelBadges) {
                         channelBadges.find { it.setId == chatBadge.setId && it.version == chatBadge.version }
@@ -260,6 +261,7 @@ object ChatAdapterUtils {
                         globalBadges.find { it.setId == chatBadge.setId && it.version == chatBadge.version }
                     }
                     if (badge != null) {
+                        hasBadge = true
                         builder.append(". ")
                         builder.setSpan(ForegroundColorSpan(Color.TRANSPARENT), builderIndex, builderIndex + 1, SPAN_EXCLUSIVE_EXCLUSIVE)
                         if (imageClick != null) {
@@ -294,6 +296,7 @@ object ChatAdapterUtils {
                         }
                     }
                     if (badge != null) {
+                        hasBadge = true
                         builder.append(". ")
                         builder.setSpan(ForegroundColorSpan(Color.TRANSPARENT), builderIndex, builderIndex + 1, SPAN_EXCLUSIVE_EXCLUSIVE)
                         if (imageClick != null) {
@@ -317,6 +320,10 @@ object ChatAdapterUtils {
                             end = builderIndex++
                         ))
                     }
+                }
+                if (hasBadge && builder.lastOrNull() == ' ') {
+                    builder.delete(builder.length - 1, builder.length)
+                    builderIndex--
                 }
                 val color = if (chatMessage.color != null) {
                     getSavedColor(chatMessage.color, savedColors, useReadableColors, isLightTheme)

@@ -23,6 +23,7 @@
     <string name="following">Following</string>
     <string name="downloads">Downloads</string>
     <string name="connection_error">Error connecting to the server. Please try again.</string>
+    <string name="chat_reconnecting">Reconnecting to chat…</string>
     <string name="sort">Sort</string>
     <string name="upload_date">Upload date</string>
     <string name="today">Today</string>

@@ -796,7 +796,7 @@ class GraphQLRepository(
         sendQuery(networkLibrary, headers, query)
     }
 
-    fun getPlaybackAccessTokenRequestBody(login: String?, vodId: String?, playerType: String?): String {
+    fun getPlaybackAccessTokenRequestBody(login: String?, vodId: String?, playerType: String?, platform: String = "web"): String {
         return buildJsonObject {
             putJsonObject("extensions") {
                 putJsonObject("persistedQuery") {
@@ -810,14 +810,14 @@ class GraphQLRepository(
                 put("login", login ?: "")
                 put("isVod", !vodId.isNullOrBlank())
                 put("vodID", vodId ?: "")
-                put("platform", "web")
+                put("platform", platform)
                 put("playerType", playerType)
             }
         }.toString()
     }
 
-    suspend fun loadPlaybackAccessToken(networkLibrary: String?, headers: Map<String, String>, login: String? = null, vodId: String? = null, playerType: String?): PlaybackAccessTokenResponse = withContext(Dispatchers.IO) {
-        val body = getPlaybackAccessTokenRequestBody(login, vodId, playerType)
+    suspend fun loadPlaybackAccessToken(networkLibrary: String?, headers: Map<String, String>, login: String? = null, vodId: String? = null, playerType: String?, platform: String = "web"): PlaybackAccessTokenResponse = withContext(Dispatchers.IO) {
+        val body = getPlaybackAccessTokenRequestBody(login, vodId, playerType, platform)
         json.decodeFromString<PlaybackAccessTokenResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 

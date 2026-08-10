@@ -169,11 +169,10 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.connectionState.collectLatest { state ->
-                    val showConnectionStatus = state == ChatViewModel.ConnectionState.CONNECTING ||
-                            state == ChatViewModel.ConnectionState.RECONNECTING
+                    val showConnectionStatus = state == ChatViewModel.ConnectionState.RECONNECTING
                     binding.connectionStatus.isVisible = showConnectionStatus
                     if (showConnectionStatus) {
-                        binding.connectionStatusText.text = getString(R.string.connection_error)
+                        binding.connectionStatusText.setText(R.string.chat_reconnecting)
                         binding.connectionStatus.contentDescription =
                             "${binding.connectionStatusText.text}. ${getString(R.string.retry)}"
                     }

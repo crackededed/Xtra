@@ -5,6 +5,7 @@
     <string name="following">المُتابَعين</string>
     <string name="downloads">التنزيلات</string>
     <string name="connection_error">خطأ في الاتصال بالخادم. الرجاء إعادة المحاولة</string>
+    <string name="chat_reconnecting">جارٍ إعادة الاتصال بالدردشة…</string>
     <string name="sort">فرز حسب</string>
     <string name="upload_date">تاريخ التحميل</string>
     <string name="today">اليوم</string>

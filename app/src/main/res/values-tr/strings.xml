@@ -6,6 +6,7 @@
     <string name="following">Takip Edilenler</string>
     <string name="downloads">İndirilenler</string>
     <string name="connection_error">Sunucuya bağlanırken hata oluştu. Lütfen tekrar deneyin</string>
+    <string name="chat_reconnecting">Sohbete yeniden bağlanılıyor…</string>
     <string name="sort">Sırala</string>
     <string name="upload_date">Yüklenme tarihi</string>
     <string name="today">Bugün</string>

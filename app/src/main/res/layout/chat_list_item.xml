@@ -6,9 +6,6 @@
     android:clickable="true"
     android:focusable="true"
     android:linksClickable="true"
-    android:paddingLeft="5dp"
-    android:paddingTop="1dp"
-    android:paddingRight="5dp"
-    android:paddingBottom="1dp"
+    android:padding="0dp"
     android:textAppearance="?attr/textAppearanceBodyMedium"
     android:textDirection="ltr" />

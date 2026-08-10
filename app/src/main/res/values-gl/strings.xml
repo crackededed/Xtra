@@ -5,6 +5,7 @@
     <string name="following">Seguindo</string>
     <string name="downloads">Descargas</string>
     <string name="connection_error">Erro ao conectar co servidor. Téntao de novo.</string>
+    <string name="chat_reconnecting">Volvendo conectar ao chat…</string>
     <string name="sort">Ordenar</string>
     <string name="upload_date">Data de subida</string>
     <string name="today">Hoxe</string>
@@ -561,4 +562,4 @@
     <string name="recent_messages_api_url">Recent messages API URL</string>
     <string name="access_local_network_title">Grant local network permission</string>
     <string name="access_local_network_desc">Required for connecting to local proxies</string>
-</resources>	
+</resources>

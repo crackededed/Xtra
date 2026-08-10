@@ -5,6 +5,7 @@
     <string name="following">Suivi</string>
     <string name="downloads">Téléchargements</string>
     <string name="connection_error">Erreur de connexion au serveur. Veuillez réessayer.</string>
+    <string name="chat_reconnecting">Reconnexion au chat…</string>
     <string name="sort">Trier</string>
     <string name="upload_date">Date de mise en ligne</string>
     <string name="today">Aujourd\'hui</string>

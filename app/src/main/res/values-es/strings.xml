@@ -10,6 +10,7 @@
     <string name="following">Siguiendo</string>
     <string name="downloads">Descargas</string>
     <string name="connection_error">Error al conectarse al servidor. Inténtalo de nuevo</string>
+    <string name="chat_reconnecting">Reconectando al chat…</string>
     <string name="sort">Ordenar por</string>
     <string name="upload_date">Fecha de subida</string>
     <string name="today">Hoy</string>

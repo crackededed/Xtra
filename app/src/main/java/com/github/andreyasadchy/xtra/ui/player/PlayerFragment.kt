@@ -347,7 +347,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                 playerControls.root.dispatchTouchEvent(event)
                             } else {
                                 controllerTapDetector.onTouchEvent(event)
-                                if (isTap) {
+                                if (isTap && (!doubleTap || isPortrait)) {
                                     showController()
                                 }
                             }
@@ -845,7 +845,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                     isKeyboardShown = false
                                     chatLayout.clearFocus()
                                     if (!isPortrait) {
-                                        chatLayout.updateLayoutParams { width = chatWidthLandscape }
+                                        chatLayout.updateLayoutParams { width = effectiveLandscapeChatWidth() }
                                         if (isMaximized) {
                                             hideStatusBar()
                                         }
@@ -1205,16 +1205,27 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 }
                 if (isMaximized) {
                     hideStatusBar()
-                    val chatWidth = if (isChatOpen) chatWidthLandscape else 0
+                    val chatWidth = if (isChatOpen) effectiveLandscapeChatWidth() else 0
                     playerLayout.updateLayoutParams<FrameLayout.LayoutParams> {
                         width = ViewGroup.LayoutParams.MATCH_PARENT
                         height = ViewGroup.LayoutParams.MATCH_PARENT
                         marginEnd = chatWidth
                     }
                     chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
-                        width = chatWidthLandscape
+                        width = chatWidth
                         height = ViewGroup.LayoutParams.MATCH_PARENT
                         gravity = Gravity.END
+                    }
+                    slidingLayout.doOnLayout {
+                        if (!isPortrait && isMaximized && isChatOpen) {
+                            val effectiveChatWidth = effectiveLandscapeChatWidth()
+                            playerLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                                marginEnd = effectiveChatWidth
+                            }
+                            chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                                width = effectiveChatWidth
+                            }
+                        }
                     }
                     if (isChatOpen) {
                         chatLayout.visibility = View.VISIBLE
@@ -1304,6 +1315,15 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     fun setResizeMode() {
         resizeMode = (resizeMode + 1).let { if (it < 5) it else 0 }
         binding.aspectRatioFrameLayout.resizeMode = resizeMode
+        if (!isPortrait && isMaximized && isChatOpen) {
+            val chatWidth = effectiveLandscapeChatWidth()
+            binding.playerLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                marginEnd = chatWidth
+            }
+            binding.chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
+                width = chatWidth
+            }
+        }
         requireContext().prefs().edit { putInt(C.ASPECT_RATIO_LANDSCAPE, resizeMode) }
     }
 
@@ -1493,18 +1513,31 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     private fun showChatLayout() {
         with(binding) {
+            val chatWidth = effectiveLandscapeChatWidth()
             playerLayout.updateLayoutParams<FrameLayout.LayoutParams> {
                 width = ViewGroup.LayoutParams.MATCH_PARENT
                 height = ViewGroup.LayoutParams.MATCH_PARENT
-                marginEnd = chatWidthLandscape
+                marginEnd = chatWidth
             }
             chatLayout.updateLayoutParams<FrameLayout.LayoutParams> {
-                width = chatWidthLandscape
+                width = chatWidth
                 height = ViewGroup.LayoutParams.MATCH_PARENT
                 gravity = Gravity.END
             }
             chatLayout.visibility = View.VISIBLE
         }
+    }
+
+    private fun effectiveLandscapeChatWidth(): Int {
+        if (chatWidthLandscape <= 0) return 0
+        if (!isMaximized || resizeMode != AspectRatioFrameLayout.RESIZE_MODE_FIT) return chatWidthLandscape
+
+        val availableWidth = binding.slidingLayout.width - binding.slidingLayout.paddingLeft - binding.slidingLayout.paddingRight
+        val availableHeight = binding.slidingLayout.height - binding.slidingLayout.paddingTop - binding.slidingLayout.paddingBottom
+        if (availableWidth <= 0 || availableHeight <= 0) return chatWidthLandscape
+
+        val widthNeededForVideo = (availableHeight * (16f / 9f)).toInt()
+        return max(chatWidthLandscape, (availableWidth - widthNeededForVideo).coerceAtLeast(0))
     }
 
     fun setQualityText() {

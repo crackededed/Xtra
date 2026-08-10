@@ -27,6 +27,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
 import android.util.Base64
+import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.annotation.OptIn
@@ -59,6 +60,7 @@ import androidx.media3.exoplayer.hls.playlist.HlsPlaylistParserFactory
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import androidx.media3.exoplayer.upstream.ParsingLoadable
+import com.github.andreyasadchy.xtra.BuildConfig
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.VideoPosition
@@ -251,12 +253,16 @@ class ExoPlayerService : BasePlaybackService() {
                             val ads = playlist?.let { TwitchAdDetector.isAd(it) } == true
                             val oldValue = playingAds
                             playingAds = ads
+                            if (ads != oldValue) {
+                                logAd("state channel=${channelLogin ?: "null"} ads=$ads avoid=$avoidAds proxy=$useProxy hidden=$hidden playerType=${prefs().getString(C.TOKEN_PLAYER_TYPE, "site")}")
+                            }
                             if (ads) {
                                 if (avoidAds) {
                                     if (adAvoidanceJob?.isActive != true) {
                                         val playerTypes = adController.playerTypesForAd(
                                             prefs().getString(C.TOKEN_PLAYER_TYPE, "site")
                                         )
+                                        logAd("ad detected channel=${channelLogin ?: "null"} candidates=${playerTypes.joinToString()} jobActive=${adAvoidanceJob?.isActive == true}")
                                         if (playerTypes.isNotEmpty()) {
                                             suppressAdPlayback()
                                             tryAlternateStream(playerTypes, useProxy)
@@ -727,6 +733,7 @@ class ExoPlayerService : BasePlaybackService() {
     private fun suppressAdPlayback() {
         if (!hidden) {
             hidden = true
+            logAd("suppress playback channel=${channelLogin ?: "null"}")
             player?.let { player ->
                 if (quality?.name != AUDIO_ONLY_QUALITY) {
                     player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
@@ -742,6 +749,7 @@ class ExoPlayerService : BasePlaybackService() {
     private fun restoreAdPlayback() {
         if (hidden) {
             hidden = false
+            logAd("restore playback channel=${channelLogin ?: "null"}")
             player?.let { player ->
                 if (quality?.name != AUDIO_ONLY_QUALITY) {
                     player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
@@ -754,6 +762,7 @@ class ExoPlayerService : BasePlaybackService() {
     }
 
     private fun fallbackFromAd(useProxy: Boolean, suppressAds: Boolean) {
+        logAd("fallback channel=${channelLogin ?: "null"} usingProxy=$proxyMediaPlaylist useProxy=$useProxy suppress=$suppressAds")
         if (proxyMediaPlaylist) {
             if (!stopProxy) {
                 proxyMediaPlaylist = false
@@ -783,6 +792,7 @@ class ExoPlayerService : BasePlaybackService() {
             fallbackFromAd(useProxy, suppressAds = true)
             return
         }
+        logAd("alternate probe started channel=$channelLogin candidates=${playerTypes.joinToString()}")
         adAvoidanceJob = lifecycleScope.launch {
             val candidate = try {
                 xtraModule.playerRepository.loadCleanStreamPlaylistUrl(
@@ -803,15 +813,18 @@ class ExoPlayerService : BasePlaybackService() {
                 )
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                logAd("alternate probe exception channel=$channelLogin error=${e.javaClass.simpleName}")
                 null
             }
+            logAd("alternate probe result channel=$channelLogin candidate=${candidate?.playerType ?: "none"}")
             if (candidate != null && type == STREAM) {
                 try {
                     loadStream(restorePauseState = true, playlistUrlOverride = candidate.url)
                 } catch (e: CancellationException) {
                     throw e
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    logAd("alternate stream load failed channel=$channelLogin playerType=${candidate.playerType} error=${e.javaClass.simpleName}")
                     fallbackFromAd(useProxy, suppressAds = true)
                 }
             } else {
@@ -826,6 +839,7 @@ class ExoPlayerService : BasePlaybackService() {
         playlistUrlOverride: String? = null,
     ) {
         channelLogin?.let { channelLogin ->
+            logAd("load stream channel=$channelLogin override=${!playlistUrlOverride.isNullOrBlank()} restart=$restart")
             if (!playlistUrlOverride.isNullOrBlank()) {
                 playlistUrl = playlistUrlOverride
                 qualities = null
@@ -2260,6 +2274,8 @@ class ExoPlayerService : BasePlaybackService() {
     }
 
     companion object {
+        private const val AD_TAG = "XtraAd"
+
         const val MULTIVARIANT_PLAYLIST_REGEX = "^usher\\.ttvnw\\.net$"
         const val MEDIA_PLAYLIST_REGEX = "^(?:[a-z0-9-]+\\.playlist\\.(?:live-video|ttvnw)\\.net|video-weaver\\.[a-z0-9-]+\\.hls\\.ttvnw\\.net)$"
 
@@ -2275,5 +2291,11 @@ class ExoPlayerService : BasePlaybackService() {
         private const val INTENT_PLAY_PAUSE = "com.github.andreyasadchy.xtra.PLAY_PAUSE"
         private const val INTENT_FAST_FORWARD = "com.github.andreyasadchy.xtra.FAST_FORWARD"
         const val INTENT_START = "com.github.andreyasadchy.xtra.START_PLAYBACK_SERVICE"
+    }
+
+    private fun logAd(message: String) {
+        if (BuildConfig.DEBUG) {
+            Log.d(AD_TAG, message)
+        }
     }
 }

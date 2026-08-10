@@ -5,6 +5,7 @@
     <string name="following">Mengikuti</string>
     <string name="downloads">Unduhan</string>
     <string name="connection_error">Terjadi kesalahan saat menyambung ke server. Mohon coba kembali</string>
+    <string name="chat_reconnecting">Menghubungkan kembali ke chat…</string>
     <string name="sort">Urutkan</string>
     <string name="upload_date">Tanggal upload</string>
     <string name="today">Hari Ini</string>

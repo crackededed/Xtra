@@ -34,6 +34,8 @@ class TwitchAdController {
     }
 
     companion object {
-        val PLAYER_TYPES = listOf("site", "popout", "embed", "autoplay")
+        // Keep the same backup order used by VAFT. Embed is the most reliable
+        // alternate when the current site player is in a commercial break.
+        val PLAYER_TYPES = listOf("site", "embed", "popout", "autoplay")
     }
 }

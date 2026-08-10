@@ -5,6 +5,7 @@
     <string name="following">Отслеживания</string>
     <string name="downloads">Загрузки</string>
     <string name="connection_error">Ошибка подключения. Пожалуйста, попробуйте ещё раз</string>
+    <string name="chat_reconnecting">Повторное подключение к чату…</string>
     <string name="sort">Сортировка</string>
     <string name="upload_date">По дате загрузки</string>
     <string name="today">Сегодня</string>
