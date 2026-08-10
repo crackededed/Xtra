@@ -212,7 +212,7 @@ class ExoPlayerFragment : PlayerFragment() {
                 if (view != null) {
                     with(binding.playerControls) {
                         quality.isEnabled = true
-                        quality.setColorFilter(Color.WHITE)
+                        setQualityButtonColor(Color.WHITE)
                         download.isEnabled = true
                         download.setColorFilter(Color.WHITE)
                         audioOnly.isEnabled = true
@@ -225,6 +225,12 @@ class ExoPlayerFragment : PlayerFragment() {
             override fun changePlayerMode() {
                 if (view != null) {
                     this@ExoPlayerFragment.changePlayerMode()
+                }
+            }
+
+            override fun updateQualityStatus() {
+                if (view != null) {
+                    setQualityText()
                 }
             }
 

@@ -76,6 +76,7 @@ class Media3PlayerViewModel(
     var playingAds = false
     var usingProxy = false
     var stopProxy = false
+    var usingAlternateStream = false
     private val adController = TwitchAdController()
 
     val videoResult = MutableStateFlow<String?>(null)
@@ -175,6 +176,7 @@ class Media3PlayerViewModel(
     suspend fun loadCleanStreamPlaylistUrl(
         channelLogin: String,
         playerTypes: List<String>,
+        requireVerifiedClean: Boolean = false,
     ): PlayerRepository.StreamPlaylistCandidate? {
         val preferences = applicationContext.prefs()
         return playerRepository.loadCleanStreamPlaylistUrl(
@@ -195,6 +197,7 @@ class Media3PlayerViewModel(
             proxyUser = preferences.getString(C.PROXY_USER, null),
             proxyPassword = preferences.getString(C.PROXY_PASSWORD, null),
             enableIntegrity = preferences.getBoolean(C.ENABLE_INTEGRITY, false),
+            requireVerifiedClean = requireVerifiedClean,
         )
     }
 

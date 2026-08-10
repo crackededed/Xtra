@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Rect
@@ -1006,7 +1007,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 if (playbackService?.type != BasePlaybackService.OFFLINE_VIDEO) {
                     if (playbackService?.loaded == true) {
                         quality.isEnabled = true
-                        quality.setColorFilter(Color.WHITE)
+                        setQualityButtonColor(Color.WHITE)
                         download.isEnabled = true
                         download.setColorFilter(Color.WHITE)
                         audioOnly.isEnabled = true
@@ -1014,7 +1015,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         setQualityText()
                     } else {
                         quality.isEnabled = false
-                        quality.setColorFilter(Color.GRAY)
+                        setQualityButtonColor(Color.GRAY)
                         download.isEnabled = false
                         download.setColorFilter(Color.GRAY)
                         audioOnly.isEnabled = false
@@ -1540,9 +1541,44 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         return max(chatWidthLandscape, (availableWidth - widthNeededForVideo).coerceAtLeast(0))
     }
 
+    protected fun setQualityButtonColor(color: Int) {
+        binding.playerControls.quality.apply {
+            setTextColor(color)
+            iconTint = ColorStateList.valueOf(color)
+        }
+    }
+
+    private fun compactQualityLabel(label: String?): String {
+        return label
+            ?.removeSuffix(" H.264")
+            ?.removeSuffix(" H.265")
+            ?.removeSuffix(" AV1")
+            ?.takeIf { it.isNotBlank() }
+            ?: getString(R.string.auto)
+    }
+
+    private fun isVaftActive(): Boolean {
+        return (playbackService as? ExoPlayerService)?.vaftActive == true
+    }
+
     fun setQualityText() {
+        val label = getQualities()?.find { it.second == playbackService?.quality }?.first
+        if (view != null) {
+            val vaftActive = isVaftActive()
+            binding.playerControls.quality.apply {
+                text = if (vaftActive) {
+                    getString(R.string.avoid_twitch_ads).substringBefore(' ')
+                } else {
+                    compactQualityLabel(label)
+                }
+                contentDescription = if (vaftActive) {
+                    getString(R.string.waiting_ads)
+                } else {
+                    label ?: getString(R.string.player_quality)
+                }
+            }
+        }
         (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.let { dialog ->
-            val label = getQualities()?.find { it.second == playbackService?.quality }?.first
             dialog.setQuality(label)
         }
     }

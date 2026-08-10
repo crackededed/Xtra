@@ -92,6 +92,7 @@ class PlayerRepository(
     data class StreamPlaylistCandidate(
         val playerType: String,
         val url: String,
+        val verifiedClean: Boolean = false,
     )
 
     suspend fun loadStreamPlaylistUrl(context: Context, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, supportedCodecs: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): String = withContext(Dispatchers.IO) {
@@ -137,6 +138,7 @@ class PlayerRepository(
         proxyUser: String?,
         proxyPassword: String?,
         enableIntegrity: Boolean,
+        requireVerifiedClean: Boolean = false,
     ): StreamPlaylistCandidate? = withContext(Dispatchers.IO) {
         // VAFT keeps one device ID while it probes alternate player types. Reusing
         // one valid ID prevents Twitch from treating each probe as a new client.
@@ -169,9 +171,9 @@ class PlayerRepository(
 
             val adMarkers = containsAdMarkers(url)
             logAd("playlist probe channel=$channelLogin playerType=$playerType adMarkers=$adMarkers")
-            if (adMarkers != true) {
+            if (adMarkers != true && (!requireVerifiedClean || adMarkers == false)) {
                 logAd("clean candidate selected channel=$channelLogin playerType=$playerType verified=${adMarkers == false}")
-                return@withContext StreamPlaylistCandidate(playerType, url)
+                return@withContext StreamPlaylistCandidate(playerType, url, adMarkers == false)
             }
         }
         logAd("no clean candidate channel=$channelLogin")

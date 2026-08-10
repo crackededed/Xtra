@@ -108,7 +108,7 @@ class MediaPlayerFragment : PlayerFragment() {
                 if (view != null) {
                     with(binding.playerControls) {
                         quality.isEnabled = true
-                        quality.setColorFilter(Color.WHITE)
+                        setQualityButtonColor(Color.WHITE)
                         download.isEnabled = true
                         download.setColorFilter(Color.WHITE)
                         audioOnly.isEnabled = true

@@ -230,17 +230,33 @@
             app:tint="@android:color/white"
             tools:visibility="visible" />
 
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/quality"
-            android:layout_width="40dp"
+            android:layout_width="wrap_content"
             android:layout_height="40dp"
-            android:background="@android:color/transparent"
+            android:ellipsize="end"
             android:contentDescription="@string/player_quality"
+            android:gravity="center"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:maxLines="1"
+            android:maxWidth="120dp"
             android:minWidth="48dp"
             android:minHeight="48dp"
-            android:src="@drawable/baseline_settings_black_24"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:textAllCaps="false"
+            android:text="@string/auto"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            android:textStyle="bold"
             android:visibility="gone"
-            app:tint="@android:color/white"
+            app:backgroundTint="@color/chatStatusDark"
+            app:cornerRadius="8dp"
+            app:icon="@drawable/baseline_settings_black_24"
+            app:iconGravity="textStart"
+            app:iconPadding="4dp"
+            app:iconTint="@android:color/white"
             tools:visibility="visible" />
 
         <ImageButton

@@ -20,6 +20,18 @@ Compared with the upstream project, this fork currently includes:
 - A reorganized settings experience with search, categorized pages, and clearer playback and background-playback controls.
 - Fork-hosted releases and update links for existing Xtra installs.
 
+### Recent UX and playback improvements
+
+- A clearer main screen with compact live cards, live badges, viewer counts, uptime, language and tag details, thumbnail fallbacks, and accessible actions.
+- More useful list states: loading, successful empty results, refresh errors, and page errors now have distinct feedback and retry paths while preserving content that is already loaded.
+- A more efficient live-player layout with edge-to-edge landscape chat, denser chat messages, combined multiview chat spacing, and fullscreen horizontal controls that stay visible after a tap.
+- Account login/logout is grouped at the bottom of Settings, with a gear entry point, searchable categories, and clearer notification permission and blocked-state guidance.
+- Accessibility improvements across cards, menus, chat actions, and dynamic player controls, including clearer labels for screen readers.
+
+### VAFT ad avoidance
+
+The optional **VAFT ad avoidance** setting uses alternate Twitch playback sources when a live ad is detected, keeps playback hidden or muted while no clean source is available, and returns to the configured source once it is verified clean again. It is best-effort: Twitch controls ad delivery, so results may change when Twitch changes its playback system.
+
 <p align="center">
   <img src="./docs/images/channel-points-rewards.jpg" width="320" alt="Channel Points rewards and watch streaks">
   <img src="./docs/images/channel-points-navigation.jpg" width="620" alt="Channel Points balance in the navigation bar">

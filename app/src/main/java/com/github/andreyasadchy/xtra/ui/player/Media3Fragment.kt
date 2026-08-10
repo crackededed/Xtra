@@ -74,6 +74,7 @@ class Media3Fragment : Media3PlayerFragment() {
     private var streamRecoveryJob: Job? = null
     private var streamRecoveryAttempt = 0
     private var adAvoidanceJob: Job? = null
+    private var primaryStreamRestoreJob: Job? = null
     private val updateProgressAction = Runnable { if (view != null) updateProgress() }
 
     override fun onStart() {
@@ -314,6 +315,7 @@ class Media3Fragment : Media3PlayerFragment() {
                                         val playingAds = result.get().extras.getBoolean(PlaybackService.RESULT)
                                         val oldValue = viewModel.playingAds
                                         viewModel.playingAds = playingAds
+                                        setQualityText()
                                         if (playingAds) {
                                             if (avoidAds) {
                                                 if (adAvoidanceJob?.isActive != true) {
@@ -333,6 +335,7 @@ class Media3Fragment : Media3PlayerFragment() {
                                         } else {
                                             viewModel.onCleanAdPlaylist()
                                             restoreAdPlayback()
+                                            schedulePrimaryStreamRestore()
                                         }
                                     }
                                 }, ContextCompat.getMainExecutor(requireContext()))
@@ -649,6 +652,10 @@ class Media3Fragment : Media3PlayerFragment() {
                 null
             }
             if (candidate != null && isAdded && view != null) {
+                primaryStreamRestoreJob?.cancel()
+                primaryStreamRestoreJob = null
+                viewModel.usingAlternateStream = true
+                setQualityText()
                 viewModel.qualities = null
                 viewModel.updateQualities = true
                 viewModel.usingProxy = false
@@ -657,6 +664,8 @@ class Media3Fragment : Media3PlayerFragment() {
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Exception) {
+                    viewModel.usingAlternateStream = false
+                    setQualityText()
                     fallbackFromAd(useProxy, suppressAds = true)
                 }
             } else {
@@ -665,12 +674,58 @@ class Media3Fragment : Media3PlayerFragment() {
         }
     }
 
+    private fun schedulePrimaryStreamRestore() {
+        if (!viewModel.usingAlternateStream || primaryStreamRestoreJob?.isActive == true) {
+            return
+        }
+        val channelLogin = requireArguments().getString(KEY_CHANNEL_LOGIN) ?: return
+        val primaryPlayerType = requireContext().prefs().getString(C.TOKEN_PLAYER_TYPE, "site") ?: "site"
+        primaryStreamRestoreJob = viewLifecycleOwner.lifecycleScope.launch {
+            while (viewModel.usingAlternateStream && isAdded && view != null) {
+                val candidate = try {
+                    viewModel.loadCleanStreamPlaylistUrl(
+                        channelLogin = channelLogin,
+                        playerTypes = listOf(primaryPlayerType),
+                        requireVerifiedClean = true,
+                    )
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    null
+                }
+                if (candidate?.verifiedClean == true && isAdded && view != null) {
+                    try {
+                        viewModel.qualities = null
+                        viewModel.updateQualities = true
+                        viewModel.usingProxy = false
+                        sendStreamToService(candidate.url, player?.playWhenReady)
+                        viewModel.usingAlternateStream = false
+                        setQualityText()
+                        viewModel.resetAdController()
+                        viewModel.playingAds = false
+                        restoreAdPlayback()
+                        break
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        // Keep the alternate source active and retry on the next pass.
+                    }
+                }
+                delay(10.seconds)
+            }
+        }
+    }
+
     override fun startStream(url: String?) {
         clearPlayerError()
         adAvoidanceJob?.cancel()
         adAvoidanceJob = null
+        primaryStreamRestoreJob?.cancel()
+        primaryStreamRestoreJob = null
+        viewModel.usingAlternateStream = false
         viewModel.resetAdController()
         viewModel.playingAds = false
+        setQualityText()
         sendStreamToService(url)
     }
 

@@ -131,6 +131,8 @@ class ExoPlayerService : BasePlaybackService() {
     private var hidden = false
     private val adController = TwitchAdController()
     private var adAvoidanceJob: Job? = null
+    private var primaryStreamRestoreJob: Job? = null
+    private var usingAlternateStream = false
     private var backupQualities: List<String>? = null
     private var updateQualities = false
     private var created = false
@@ -139,10 +141,14 @@ class ExoPlayerService : BasePlaybackService() {
     private var streamRecoveryJob: Job? = null
     private var streamRecoveryAttempt = 0
 
+    val vaftActive: Boolean
+        get() = type == STREAM && prefs().shouldAvoidTwitchAds() && (playingAds || usingAlternateStream || hidden)
+
     interface Listener {
         fun started()
         fun loaded()
         fun changePlayerMode()
+        fun updateQualityStatus() {}
         fun toast(resId: Int, duration: Int)
         fun updateVideoInfo()
         fun changeSurfaceVisibility(visible: Boolean) {}
@@ -255,6 +261,7 @@ class ExoPlayerService : BasePlaybackService() {
                             playingAds = ads
                             if (ads != oldValue) {
                                 logAd("state channel=${channelLogin ?: "null"} ads=$ads avoid=$avoidAds proxy=$useProxy hidden=$hidden playerType=${prefs().getString(C.TOKEN_PLAYER_TYPE, "site")}")
+                                serviceListener?.updateQualityStatus()
                             }
                             if (ads) {
                                 if (avoidAds) {
@@ -276,6 +283,7 @@ class ExoPlayerService : BasePlaybackService() {
                             } else {
                                 adController.onCleanPlaylist()
                                 restoreAdPlayback()
+                                schedulePrimaryStreamRestore()
                             }
                         }
                     }
@@ -820,16 +828,76 @@ class ExoPlayerService : BasePlaybackService() {
             logAd("alternate probe result channel=$channelLogin candidate=${candidate?.playerType ?: "none"}")
             if (candidate != null && type == STREAM) {
                 try {
+                    primaryStreamRestoreJob?.cancel()
+                    primaryStreamRestoreJob = null
+                    usingAlternateStream = true
+                    serviceListener?.updateQualityStatus()
                     loadStream(restorePauseState = true, playlistUrlOverride = candidate.url)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
                     logAd("alternate stream load failed channel=$channelLogin playerType=${candidate.playerType} error=${e.javaClass.simpleName}")
+                    usingAlternateStream = false
+                    serviceListener?.updateQualityStatus()
                     fallbackFromAd(useProxy, suppressAds = true)
                 }
             } else {
                 fallbackFromAd(useProxy, suppressAds = true)
             }
+        }
+    }
+
+    private fun schedulePrimaryStreamRestore() {
+        if (!usingAlternateStream || primaryStreamRestoreJob?.isActive == true || type != STREAM) {
+            return
+        }
+        val channelLogin = channelLogin ?: return
+        val primaryPlayerType = prefs().getString(C.TOKEN_PLAYER_TYPE, "site") ?: "site"
+        logAd("primary restore probe started channel=$channelLogin playerType=$primaryPlayerType")
+        primaryStreamRestoreJob = lifecycleScope.launch {
+            while (usingAlternateStream && type == STREAM) {
+                val candidate = try {
+                    xtraModule.playerRepository.loadCleanStreamPlaylistUrl(
+                        context = this@ExoPlayerService,
+                        networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
+                        gqlHeaders = TwitchApiHelper.getGQLHeaders(this@ExoPlayerService, prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, true)),
+                        channelLogin = channelLogin,
+                        randomDeviceId = prefs().getBoolean(C.TOKEN_RANDOM_DEVICE_ID, true),
+                        xDeviceId = prefs().getString(C.TOKEN_X_DEVICE_ID, "twitch-web-wall-mason"),
+                        playerTypes = listOf(primaryPlayerType),
+                        supportedCodecs = prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
+                        proxyPlaybackAccessToken = prefs().getBoolean(C.PROXY_PLAYBACK_ACCESS_TOKEN, false),
+                        proxyHost = prefs().getString(C.PROXY_HOST, null),
+                        proxyPort = prefs().getString(C.PROXY_PORT, null)?.toIntOrNull(),
+                        proxyUser = prefs().getString(C.PROXY_USER, null),
+                        proxyPassword = prefs().getString(C.PROXY_PASSWORD, null),
+                        enableIntegrity = prefs().getBoolean(C.ENABLE_INTEGRITY, false),
+                        requireVerifiedClean = true,
+                    )
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    logAd("primary restore probe failed channel=$channelLogin error=${e.javaClass.simpleName}")
+                    null
+                }
+                if (candidate?.verifiedClean == true && type == STREAM) {
+                    try {
+                        loadStream(restorePauseState = true, playlistUrlOverride = candidate.url)
+                        usingAlternateStream = false
+                        serviceListener?.updateQualityStatus()
+                        adController.reset()
+                        restoreAdPlayback()
+                        logAd("primary stream restored channel=$channelLogin playerType=${candidate.playerType}")
+                        break
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        logAd("primary stream restore failed channel=$channelLogin error=${e.javaClass.simpleName}")
+                    }
+                }
+                delay(10.seconds)
+            }
+            logAd("primary restore probe stopped channel=$channelLogin")
         }
     }
 
@@ -846,6 +914,10 @@ class ExoPlayerService : BasePlaybackService() {
                 updateQualities = true
             } else if (restart || qualities.isNullOrEmpty()) {
                 adAvoidanceJob?.cancel()
+                primaryStreamRestoreJob?.cancel()
+                primaryStreamRestoreJob = null
+                usingAlternateStream = false
+                serviceListener?.updateQualityStatus()
                 adController.reset()
                 stopProxy = false
                 val proxyUrl = prefs().getString(C.PLAYER_PROXY_URL, "")
@@ -2255,6 +2327,8 @@ class ExoPlayerService : BasePlaybackService() {
         streamRecoveryJob = null
         adAvoidanceJob?.cancel()
         adAvoidanceJob = null
+        primaryStreamRestoreJob?.cancel()
+        primaryStreamRestoreJob = null
         adController.reset()
         backgroundVideoDisabled = false
         player?.release()

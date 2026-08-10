@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Rect
@@ -84,6 +85,7 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.isKeyboardShown
 import com.github.andreyasadchy.xtra.util.prefs
+import com.github.andreyasadchy.xtra.util.shouldAvoidTwitchAds
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.color.MaterialColors
@@ -1031,7 +1033,7 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                     }
                 } else {
                     quality.isEnabled = false
-                    quality.setColorFilter(Color.GRAY)
+                    setQualityButtonColor(Color.GRAY)
                     download.isEnabled = false
                     download.setColorFilter(Color.GRAY)
                     audioOnly.isEnabled = false
@@ -1041,7 +1043,7 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                             viewModel.loaded.collectLatest {
                                 if (it) {
                                     quality.isEnabled = true
-                                    quality.setColorFilter(Color.WHITE)
+                                    setQualityButtonColor(Color.WHITE)
                                     download.isEnabled = true
                                     download.setColorFilter(Color.WHITE)
                                     audioOnly.isEnabled = true
@@ -1571,10 +1573,45 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
         return max(chatWidthLandscape, (availableWidth - widthNeededForVideo).coerceAtLeast(0))
     }
 
+    protected fun setQualityButtonColor(color: Int) {
+        binding.playerControls.quality.apply {
+            setTextColor(color)
+            iconTint = ColorStateList.valueOf(color)
+        }
+    }
+
+    private fun compactQualityLabel(label: String?): String {
+        return label
+            ?.removeSuffix(" H.264")
+            ?.removeSuffix(" H.265")
+            ?.removeSuffix(" AV1")
+            ?.takeIf { it.isNotBlank() }
+            ?: getString(R.string.auto)
+    }
+
+    private fun isVaftActive(): Boolean {
+        return videoType == STREAM && requireContext().prefs().shouldAvoidTwitchAds() &&
+                (viewModel.playingAds || viewModel.usingAlternateStream || viewModel.hidden)
+    }
+
     fun setQualityText() {
-        (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setQuality(
-            getQualities()?.find { it.second == viewModel.quality }?.first
-        )
+        val label = getQualities()?.find { it.second == viewModel.quality }?.first
+        if (view != null) {
+            val vaftActive = isVaftActive()
+            binding.playerControls.quality.apply {
+                text = if (vaftActive) {
+                    getString(R.string.avoid_twitch_ads).substringBefore(' ')
+                } else {
+                    compactQualityLabel(label)
+                }
+                contentDescription = if (vaftActive) {
+                    getString(R.string.waiting_ads)
+                } else {
+                    label ?: getString(R.string.player_quality)
+                }
+            }
+        }
+        (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setQuality(label)
     }
 
     fun updateViewerCount(viewerCount: Int?) {
