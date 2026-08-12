@@ -682,13 +682,15 @@ class PlaybackService : MediaSessionService() {
                                     val name = variant.format.label?.takeIf { it.isNotBlank() }
                                         ?: playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.takeIf { it.isNotBlank() }
                                     if (name != null) {
-                                        VideoQuality(name, variant.format.codecs, variant.format.bitrate, variant.url.toString())
+                                        VideoQuality(name, variant.format.height, variant.format.frameRate, variant.format.bitrate, variant.format.codecs, variant.url.toString())
                                     } else null
                                 }
                                 Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, Bundle().apply {
                                     putStringArray(NAMES, list?.map { it.name.toString() }?.toTypedArray())
-                                    putStringArray(CODECS, list?.map { it.codecs.toString() }?.toTypedArray())
+                                    putStringArray(RESOLUTIONS, list?.map { it.resolution.toString() }?.toTypedArray())
+                                    putStringArray(FRAME_RATES, list?.map { it.frameRate.toString() }?.toTypedArray())
                                     putStringArray(BITRATES, list?.map { it.bitrate.toString() }?.toTypedArray())
+                                    putStringArray(CODECS, list?.map { it.codecs.toString() }?.toTypedArray())
                                     putStringArray(URLS, list?.map { it.url.toString() }?.toTypedArray())
                                 }))
                             }
@@ -826,8 +828,10 @@ class PlaybackService : MediaSessionService() {
         const val USING_PROXY = "usingProxy"
         const val DURATION = "duration"
         const val NAMES = "names"
-        const val CODECS = "codecs"
+        const val RESOLUTIONS = "resolutions"
+        const val FRAME_RATES = "frameRates"
         const val BITRATES = "bitrates"
+        const val CODECS = "codecs"
         const val URLS = "urls"
 
         const val REQUEST_CODE_RESUME = 2
