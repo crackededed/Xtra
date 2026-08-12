@@ -434,30 +434,26 @@ class MediaPlayerService : BasePlaybackService() {
                                 VideoQuality(name, url = url)
                             }
                             qualities = list
-                                .sortedByDescending {
-                                    it.bitrate
-                                }
-                                .sortedByDescending {
-                                    it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                }
-                                .sortedByDescending {
-                                    it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                }
+                                .sortedWith(
+                                    compareByDescending<VideoQuality> { it.bitrate }
+                                        .thenByDescending { it.frameRate }
+                                        .thenByDescending { it.resolution }
+                                )
                                 .toMutableList().apply {
                                     find { it.name.equals("source", true) }?.let { source ->
                                         remove(source)
-                                        add(0, VideoQuality(SOURCE_QUALITY, source.codecs, source.bitrate, source.url))
+                                        add(0, VideoQuality(VideoQuality.SOURCE_QUALITY, source.resolution, source.frameRate, source.bitrate, source.codecs, source.url))
                                     }
                                     val audio = find { it.name?.startsWith("audio", true) == true }
                                     audio?.let { remove(it) }
-                                    add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.bitrate, audio?.url))
+                                    add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY, audio?.resolution, audio?.frameRate, audio?.bitrate, audio?.codecs, audio?.url))
                                 }
                             quality = qualities?.firstOrNull()
                             serviceListener?.changePlayerMode()
                             val url = quality?.url
                             if (url != null) {
                                 player?.let { player ->
-                                    serviceListener?.changeSurfaceVisibility(quality?.name != AUDIO_ONLY_QUALITY)
+                                    serviceListener?.changeSurfaceVisibility(quality?.name != VideoQuality.AUDIO_ONLY_QUALITY)
                                     player.reset()
                                     player.setDataSource(url)
                                     val volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
@@ -494,8 +490,8 @@ class MediaPlayerService : BasePlaybackService() {
                             serviceListener?.started()
                             if (qualities.isNullOrEmpty()) {
                                 qualities = listOf(
-                                    VideoQuality(SOURCE_QUALITY, url = video.url),
-                                    VideoQuality(AUDIO_ONLY_QUALITY),
+                                    VideoQuality(VideoQuality.SOURCE_QUALITY, url = video.url),
+                                    VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY),
                                 )
                                 setDefaultQuality()
                             }
@@ -503,7 +499,7 @@ class MediaPlayerService : BasePlaybackService() {
                             val url = quality?.url ?: qualities?.firstOrNull()?.url
                             if (url != null) {
                                 player?.let { player ->
-                                    serviceListener?.changeSurfaceVisibility(quality?.name != AUDIO_ONLY_QUALITY)
+                                    serviceListener?.changeSurfaceVisibility(quality?.name != VideoQuality.AUDIO_ONLY_QUALITY)
                                     player.reset()
                                     player.setDataSource(this@MediaPlayerService, url.toUri())
                                     val volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
@@ -750,38 +746,36 @@ class MediaPlayerService : BasePlaybackService() {
                         val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList().ifEmpty {
                             Regex("NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                         }
-                        val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                        val resolutions = Regex("RESOLUTION=(\\d+x\\d+)").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                        val frameRates = Regex("FRAME-RATE=([\\d.]+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toFloatOrNull() }.toMutableList()
                         val bitrates = Regex("BANDWIDTH=(\\d+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toIntOrNull() }.toMutableList()
+                        val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                         val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
                         val list = names.mapIndexedNotNull { index, name ->
                             urls.getOrNull(index)?.let { url ->
-                                VideoQuality(name, codecs.getOrNull(index), bitrates.getOrNull(index), url)
+                                VideoQuality(name, resolutions.getOrNull(index)?.substringBefore('x')?.toIntOrNull(), frameRates.getOrNull(index), bitrates.getOrNull(index), codecs.getOrNull(index), url)
                             }
                         }
-                        qualities = list.asSequence()
-                            .sortedByDescending {
-                                it.bitrate
-                            }
-                            .sortedByDescending {
-                                it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                            }
-                            .sortedByDescending {
-                                it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                            }
+                        qualities = list
+                            .sortedWith(
+                                compareByDescending<VideoQuality> { it.bitrate }
+                                    .thenByDescending { it.frameRate }
+                                    .thenByDescending { it.resolution }
+                            )
                             .toMutableList().apply {
                                 find { it.name.equals("source", true) }?.let { source ->
                                     remove(source)
-                                    add(0, VideoQuality(SOURCE_QUALITY, source.codecs, source.bitrate, source.url))
+                                    add(0, VideoQuality(VideoQuality.SOURCE_QUALITY, source.resolution, source.frameRate, source.bitrate, source.codecs, source.url))
                                 }
                                 val audio = find { it.name?.startsWith("audio", true) == true }
                                 audio?.let { remove(it) }
-                                add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.bitrate, audio?.url))
-                                add(VideoQuality(CHAT_ONLY_QUALITY))
+                                add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY, audio?.resolution, audio?.frameRate, audio?.bitrate, audio?.codecs, audio?.url))
+                                add(VideoQuality(VideoQuality.CHAT_ONLY_QUALITY))
                             }
                         setDefaultQuality()
                         serviceListener?.changePlayerMode()
                         quality?.url?.let { url ->
-                            serviceListener?.changeSurfaceVisibility(quality?.name != AUDIO_ONLY_QUALITY)
+                            serviceListener?.changeSurfaceVisibility(quality?.name != VideoQuality.AUDIO_ONLY_QUALITY)
                             player.reset()
                             player.setDataSource(url)
                             val volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
@@ -914,31 +908,27 @@ class MediaPlayerService : BasePlaybackService() {
                                         val list = urls.map {
                                             VideoQuality(it.key, url = it.value)
                                         }
-                                        qualities = list.asSequence()
-                                            .sortedByDescending {
-                                                it.bitrate
-                                            }
-                                            .sortedByDescending {
-                                                it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                            }
-                                            .sortedByDescending {
-                                                it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                            }
+                                        qualities = list
+                                            .sortedWith(
+                                                compareByDescending<VideoQuality> { it.bitrate }
+                                                    .thenByDescending { it.frameRate }
+                                                    .thenByDescending { it.resolution }
+                                            )
                                             .toMutableList().apply {
                                                 find { it.name.equals("source", true) }?.let { source ->
                                                     remove(source)
-                                                    add(0, VideoQuality(SOURCE_QUALITY, source.codecs, source.bitrate, source.url))
+                                                    add(0, VideoQuality(VideoQuality.SOURCE_QUALITY, source.resolution, source.frameRate, source.bitrate, source.codecs, source.url))
                                                 }
                                                 val audio = find { it.name?.startsWith("audio", true) == true }
                                                 audio?.let { remove(it) }
-                                                add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.bitrate, audio?.url))
+                                                add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY, audio?.resolution, audio?.frameRate, audio?.bitrate, audio?.codecs, audio?.url))
                                             }
                                         quality = qualities?.firstOrNull()
                                         serviceListener?.changePlayerMode()
                                         val url = quality?.url
                                         if (url != null) {
                                             val playbackPosition = player.currentPosition.toLong()
-                                            serviceListener?.changeSurfaceVisibility(quality?.name != AUDIO_ONLY_QUALITY)
+                                            serviceListener?.changeSurfaceVisibility(quality?.name != VideoQuality.AUDIO_ONLY_QUALITY)
                                             player.reset()
                                             player.setDataSource(url)
                                             val volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
@@ -972,8 +962,10 @@ class MediaPlayerService : BasePlaybackService() {
                         val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList().ifEmpty {
                             Regex("NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                         }
-                        val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                        val resolutions = Regex("RESOLUTION=(\\d+x\\d+)").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                        val frameRates = Regex("FRAME-RATE=([\\d.]+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toFloatOrNull() }.toMutableList()
                         val bitrates = Regex("BANDWIDTH=(\\d+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toIntOrNull() }.toMutableList()
+                        val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                         val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
                         playlist.lines().filter { it.startsWith("#EXT-X-SESSION-DATA") }.let { list ->
                             if (list.isNotEmpty()) {
@@ -1014,16 +1006,24 @@ class MediaPlayerService : BasePlaybackService() {
                                                                 }
                                                                 if (!skip) {
                                                                     val name = obj.optString("IVS_NAME")
-                                                                    val codec = obj.optString("CODECS")
+                                                                    val resolution = obj.optString("RESOLUTION")
+                                                                    val frameRate = obj.optString("FRAME-RATE").toFloatOrNull()
                                                                     val bitrate = obj.optInt("BANDWIDTH")
+                                                                    val codec = obj.optString("CODECS")
                                                                     val newVariantId = obj.optString("STABLE-VARIANT-ID")
                                                                     if (!name.isNullOrBlank() && !newVariantId.isNullOrBlank()) {
                                                                         names.add(name)
-                                                                        if (!codec.isNullOrBlank()) {
-                                                                            codecs.add(codec)
+                                                                        if (!resolution.isNullOrBlank()) {
+                                                                            resolutions.add(resolution)
+                                                                        }
+                                                                        if (frameRate != null && frameRate > 0) {
+                                                                            frameRates.add(frameRate)
                                                                         }
                                                                         if (bitrate > 0) {
                                                                             bitrates.add(bitrate)
+                                                                        }
+                                                                        if (!codec.isNullOrBlank()) {
+                                                                            codecs.add(codec)
                                                                         }
                                                                         urls.add(url.replace(
                                                                             "$variantId/index-",
@@ -1047,32 +1047,28 @@ class MediaPlayerService : BasePlaybackService() {
                         }
                         val list = names.mapIndexedNotNull { index, name ->
                             urls.getOrNull(index)?.let { url ->
-                                VideoQuality(name, codecs.getOrNull(index), bitrates.getOrNull(index), url)
+                                VideoQuality(name, resolutions.getOrNull(index)?.substringBefore('x')?.toIntOrNull(), frameRates.getOrNull(index), bitrates.getOrNull(index), codecs.getOrNull(index), url)
                             }
                         }
-                        qualities = list.asSequence()
-                            .sortedByDescending {
-                                it.bitrate
-                            }
-                            .sortedByDescending {
-                                it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                            }
-                            .sortedByDescending {
-                                it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                            }
+                        qualities = list
+                            .sortedWith(
+                                compareByDescending<VideoQuality> { it.bitrate }
+                                    .thenByDescending { it.frameRate }
+                                    .thenByDescending { it.resolution }
+                            )
                             .toMutableList().apply {
                                 find { it.name.equals("source", true) }?.let { source ->
                                     remove(source)
-                                    add(0, VideoQuality(SOURCE_QUALITY, source.codecs, source.bitrate, source.url))
+                                    add(0, VideoQuality(VideoQuality.SOURCE_QUALITY, source.resolution, source.frameRate, source.bitrate, source.codecs, source.url))
                                 }
                                 val audio = find { it.name?.startsWith("audio", true) == true }
                                 audio?.let { remove(it) }
-                                add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.bitrate, audio?.url))
+                                add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY, audio?.resolution, audio?.frameRate, audio?.bitrate, audio?.codecs, audio?.url))
                             }
                         setDefaultQuality()
                         serviceListener?.changePlayerMode()
                         quality?.url?.let { url ->
-                            serviceListener?.changeSurfaceVisibility(quality?.name != AUDIO_ONLY_QUALITY)
+                            serviceListener?.changeSurfaceVisibility(quality?.name != VideoQuality.AUDIO_ONLY_QUALITY)
                             player.reset()
                             player.setDataSource(url)
                             val volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
@@ -1198,17 +1194,13 @@ class MediaPlayerService : BasePlaybackService() {
                         }
                     }
                     qualities = filtered
-                        .sortedByDescending {
-                            it.bitrate
-                        }
-                        .sortedByDescending {
-                            it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                        }
-                        .sortedByDescending {
-                            it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                        }
+                        .sortedWith(
+                            compareByDescending<VideoQuality> { it.bitrate }
+                                .thenByDescending { it.frameRate }
+                                .thenByDescending { it.resolution }
+                        )
                         .toMutableList().apply {
-                            add(VideoQuality(AUDIO_ONLY_QUALITY))
+                            add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY))
                         }
                     setDefaultQuality()
                 }
@@ -1217,7 +1209,7 @@ class MediaPlayerService : BasePlaybackService() {
             val url = quality?.url ?: qualities?.firstOrNull()?.url
             if (url != null) {
                 player?.let { player ->
-                    serviceListener?.changeSurfaceVisibility(quality?.name != AUDIO_ONLY_QUALITY)
+                    serviceListener?.changeSurfaceVisibility(quality?.name != VideoQuality.AUDIO_ONLY_QUALITY)
                     player.reset()
                     player.setDataSource(url)
                     val volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
@@ -1263,7 +1255,7 @@ class MediaPlayerService : BasePlaybackService() {
         quality?.let { quality ->
             player?.let { player ->
                 when (quality.name) {
-                    AUDIO_ONLY_QUALITY -> {
+                    VideoQuality.AUDIO_ONLY_QUALITY -> {
                         serviceListener?.changeSurfaceVisibility(false)
                         quality.url?.let {
                             val position = player.currentPosition.toLong()
@@ -1277,7 +1269,7 @@ class MediaPlayerService : BasePlaybackService() {
                             player.prepareAsync()
                         }
                     }
-                    CHAT_ONLY_QUALITY -> {
+                    VideoQuality.CHAT_ONLY_QUALITY -> {
                         player.stop()
                         updatePlayingState()
                         playerListener?.onIsPlayingChanged()
@@ -1312,7 +1304,7 @@ class MediaPlayerService : BasePlaybackService() {
     }
 
     fun restartPlayer() {
-        if (quality?.name != CHAT_ONLY_QUALITY) {
+        if (quality?.name != VideoQuality.CHAT_ONLY_QUALITY) {
             lifecycleScope.launch {
                 loadStream(restart = true)
             }
@@ -1321,10 +1313,10 @@ class MediaPlayerService : BasePlaybackService() {
 
     fun startAudioOnly() {
         player?.let { player ->
-            if (quality?.name != AUDIO_ONLY_QUALITY) {
+            if (quality?.name != VideoQuality.AUDIO_ONLY_QUALITY) {
                 restoreQuality = true
                 previousQuality = quality
-                quality = qualities?.find { it.name == AUDIO_ONLY_QUALITY }
+                quality = qualities?.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY }
                 quality?.let { quality ->
                     if (prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
                         serviceListener?.changeSurfaceVisibility(false)
@@ -1361,10 +1353,10 @@ class MediaPlayerService : BasePlaybackService() {
                 || (!isInPIPMode && !isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
                 || (isInPIPMode && isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, false))
                 || (isInPIPMode && !isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
-                if (player.isPlaying && quality?.name != AUDIO_ONLY_QUALITY) {
+                if (player.isPlaying && quality?.name != VideoQuality.AUDIO_ONLY_QUALITY) {
                     restoreQuality = true
                     previousQuality = quality
-                    quality = qualities?.find { it.name == AUDIO_ONLY_QUALITY }
+                    quality = qualities?.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY }
                     quality?.let { quality ->
                         if (prefs().getBoolean(C.PLAYER_DISABLE_BACKGROUND_VIDEO, true)) {
                             serviceListener?.changeSurfaceVisibility(false)

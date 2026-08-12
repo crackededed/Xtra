@@ -501,7 +501,7 @@ class PlayerRepository(
                             appendQueryParameter("sig", accessToken?.signature)
                             appendQueryParameter("token", accessToken?.value)
                         }.build().toString()
-                        VideoQuality(name, quality.codecs, quality.bitrate, url)
+                        VideoQuality(name, quality.quality?.toIntOrNull(), quality.frameRate, quality.bitrate, quality.codecs, url)
                     } else null
                 }
             }
@@ -529,7 +529,7 @@ class PlayerRepository(
                             appendQueryParameter("sig", accessToken?.signature)
                             appendQueryParameter("token", accessToken?.value)
                         }.build().toString()
-                        VideoQuality(name, quality.codecs, quality.bitrate, url)
+                        VideoQuality(name, quality.quality?.toIntOrNull(), quality.frameRate?.toFloat(), quality.bitrate, quality.codecs, url)
                     } else null
                 }
             }
