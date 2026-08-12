@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.Math.min;
 
 import android.net.Uri;
-
 import androidx.annotation.Nullable;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaLibraryInfo;
@@ -41,7 +40,6 @@ import com.google.common.base.Predicate;
 import com.google.common.io.ByteStreams;
 import com.google.common.net.HttpHeaders;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -50,7 +48,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-
 import kotlin.jvm.functions.Function0;
 import okhttp3.CacheControl;
 import okhttp3.Call;
@@ -345,7 +342,10 @@ public class OkHttpDataSource extends BaseDataSource implements HttpDataSource {
     if (dataSpec.length != C.LENGTH_UNSET) {
       bytesToRead = dataSpec.length;
     } else {
-      long contentLength = responseBody.contentLength();
+      long contentLength =
+          HttpUtil.getContentLength(
+              response.header(HttpHeaders.CONTENT_LENGTH),
+              response.header(HttpHeaders.CONTENT_RANGE));
       bytesToRead = contentLength != -1 ? (contentLength - bytesToSkip) : C.LENGTH_UNSET;
     }
 
