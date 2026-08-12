@@ -27,7 +27,6 @@ import static com.google.common.base.Preconditions.checkState;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Base64;
-
 import androidx.annotation.Nullable;
 import androidx.media3.common.C;
 import androidx.media3.common.ColorInfo;
@@ -49,12 +48,12 @@ import androidx.media3.exoplayer.hls.playlist.HlsMediaPlaylist.Part;
 import androidx.media3.exoplayer.hls.playlist.HlsMediaPlaylist.RenditionReport;
 import androidx.media3.exoplayer.hls.playlist.HlsMediaPlaylist.Segment;
 import androidx.media3.exoplayer.hls.playlist.HlsMultivariantPlaylist;
+import androidx.media3.exoplayer.hls.playlist.HlsMultivariantPlaylist.ContentSteeringInfo;
 import androidx.media3.exoplayer.hls.playlist.HlsMultivariantPlaylist.Rendition;
 import androidx.media3.exoplayer.hls.playlist.HlsMultivariantPlaylist.Variant;
 import androidx.media3.exoplayer.hls.playlist.HlsPlaylist;
 import androidx.media3.exoplayer.upstream.ParsingLoadable;
 import androidx.media3.extractor.mp4.PsshAtomUtil;
-
 import com.google.common.collect.Iterables;
 
 import org.json.JSONArray;
@@ -122,6 +121,7 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
   private static final String TAG_PRELOAD_HINT = "#EXT-X-PRELOAD-HINT";
   private static final String TAG_RENDITION_REPORT = "#EXT-X-RENDITION-REPORT";
   private static final String TAG_DATERANGE = "#EXT-X-DATERANGE";
+  private static final String TAG_CONTENT_STEERING = "#EXT-X-CONTENT-STEERING";
 
   private static final String TYPE_AUDIO = "AUDIO";
   private static final String TYPE_VIDEO = "VIDEO";
@@ -164,6 +164,7 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
   private static final Pattern REGEX_BANDWIDTH = Pattern.compile("[^-]BANDWIDTH=(\\d+)\\b");
   private static final Pattern REGEX_CHANNELS =
       Pattern.compile("CHANNELS=" + ATTR_QUOTED_STRING_VALUE_PATTERN);
+  private static final Pattern REGEX_SAMPLE_RATE = Pattern.compile("SAMPLE-RATE=(\\d+)\\b");
   private static final Pattern REGEX_VIDEO_RANGE = Pattern.compile("VIDEO-RANGE=(SDR|PQ|HLG)");
   private static final Pattern REGEX_CODECS =
       Pattern.compile("CODECS=" + ATTR_QUOTED_STRING_VALUE_PATTERN);
@@ -171,6 +172,9 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
       Pattern.compile("SUPPLEMENTAL-CODECS=" + ATTR_QUOTED_STRING_VALUE_PATTERN);
   private static final Pattern REGEX_RESOLUTION = Pattern.compile("RESOLUTION=(\\d+x\\d+)");
   private static final Pattern REGEX_FRAME_RATE = Pattern.compile("FRAME-RATE=([\\d\\.]+)\\b");
+  private static final Pattern REGEX_SCORE = Pattern.compile("SCORE=([\\d\\.]+)\\b");
+  private static final Pattern REGEX_SERVER_URI =
+      Pattern.compile("SERVER-URI=" + ATTR_QUOTED_STRING_VALUE_PATTERN);
   private static final Pattern REGEX_PATHWAY_ID =
       Pattern.compile("PATHWAY-ID=" + ATTR_QUOTED_STRING_VALUE_PATTERN);
   private static final Pattern REGEX_STABLE_VARIANT_ID =
@@ -458,6 +462,7 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
     List<Format> muxedCaptionFormats = null;
     boolean noClosedCaptions = false;
     boolean hasIndependentSegmentsTag = false;
+    ContentSteeringInfo contentSteeringInfo = null;
 
     String line;
     while (iterator.hasNext()) {
@@ -506,6 +511,20 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
           String scheme = parseEncryptionScheme(method);
           sessionKeyDrmInitData.add(new DrmInitData(scheme, schemeData));
         }
+      } else if (line.startsWith(TAG_CONTENT_STEERING)) {
+        if (contentSteeringInfo != null) {
+          throw ParserException.createForMalformedManifest(
+              "The #EXT-X-CONTENT-STEERING tag must not appear more than once in a multivariant"
+                  + " playlist",
+              /* cause= */ null);
+        }
+        String serverUriString =
+            parseStringAttr(line, REGEX_SERVER_URI, variableDefinitions, matcherCache);
+        Uri serverUri = UriUtil.resolveToUri(baseUri, serverUriString);
+        @Nullable
+        String pathwayId =
+            parseOptionalStringAttr(line, REGEX_PATHWAY_ID, variableDefinitions, matcherCache);
+        contentSteeringInfo = new ContentSteeringInfo(serverUri, pathwayId);
       } else if (line.startsWith(TAG_STREAM_INF) || isIFrameOnlyVariant) {
         noClosedCaptions |= line.contains(ATTR_CLOSED_CAPTIONS_NONE);
         int roleFlags = isIFrameOnlyVariant ? C.ROLE_FLAG_TRICK_PLAY : 0;
@@ -563,6 +582,12 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
             parseOptionalStringAttr(line, REGEX_FRAME_RATE, variableDefinitions, matcherCache);
         if (frameRateString != null) {
           frameRate = Float.parseFloat(frameRateString);
+        }
+        float selectionPriority = Format.NO_VALUE;
+        String selectionPriorityString =
+            parseOptionalStringAttr(line, REGEX_SCORE, variableDefinitions, matcherCache);
+        if (selectionPriorityString != null) {
+          selectionPriority = Float.parseFloat(selectionPriorityString);
         }
         @Nullable
         String pathwayId =
@@ -699,6 +724,7 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
                 .setWidth(width)
                 .setHeight(height)
                 .setFrameRate(frameRate)
+                .setSelectionPriority(selectionPriority)
                 .setRoleFlags(roleFlags)
                 .setColorInfo(colorInfo)
                 .build();
@@ -830,6 +856,11 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
               formatBuilder.setCodecs(MimeTypes.CODEC_E_AC3_JOC);
             }
           }
+          int sampleRate =
+              parseOptionalIntAttr(line, REGEX_SAMPLE_RATE, Format.NO_VALUE, matcherCache);
+          if (sampleRate != Format.NO_VALUE) {
+            formatBuilder.setSampleRate(sampleRate);
+          }
           formatBuilder.setSampleMimeType(sampleMimeType);
           if (uri != null) {
             formatBuilder.setMetadata(metadata);
@@ -908,7 +939,8 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
         muxedCaptionFormats,
         hasIndependentSegmentsTag,
         variableDefinitions,
-        sessionKeyDrmInitData);
+        sessionKeyDrmInitData,
+        contentSteeringInfo);
   }
 
   @Nullable
