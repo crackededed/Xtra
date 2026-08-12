@@ -40,6 +40,10 @@ class FollowedChannelsDataSource(
                 }
                 it as? LoadResult.Page
             }
+            result?.data?.forEach { user ->
+                user.accountFollow = true
+                list.add(user)
+            }
             list.filter { it.lastBroadcast == null || it.profileImageURL == null }.mapNotNull { it.id }.chunked(100).forEach { ids ->
                 val response = graphQLRepository.loadQueryUsersLastBroadcast(networkLibrary, gqlHeaders, ids)
                 if (enableIntegrity) {
