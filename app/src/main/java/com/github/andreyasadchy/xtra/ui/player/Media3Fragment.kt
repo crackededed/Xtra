@@ -198,36 +198,36 @@ class Media3Fragment : Media3PlayerFragment() {
                             result.addListener({
                                 if (result.get().resultCode == SessionResult.RESULT_SUCCESS) {
                                     val list = result.get().extras.getStringArray(PlaybackService.NAMES)?.let { names ->
-                                        result.get().extras.getStringArray(PlaybackService.CODECS)?.let { codecs ->
-                                            result.get().extras.getStringArray(PlaybackService.BITRATES)?.let { bitrates ->
-                                                result.get().extras.getStringArray(PlaybackService.URLS)?.let { urls ->
-                                                    names.mapIndexed { index, name ->
-                                                        VideoQuality(name, codecs.getOrNull(index).takeIf { it != "null" }, bitrates.getOrNull(index).takeIf { it != "null" }?.toIntOrNull(), urls.getOrNull(index))
+                                        result.get().extras.getStringArray(PlaybackService.RESOLUTIONS)?.let { resolutions ->
+                                            result.get().extras.getStringArray(PlaybackService.FRAME_RATES)?.let { frameRates ->
+                                                result.get().extras.getStringArray(PlaybackService.BITRATES)?.let { bitrates ->
+                                                    result.get().extras.getStringArray(PlaybackService.CODECS)?.let { codecs ->
+                                                        result.get().extras.getStringArray(PlaybackService.URLS)?.let { urls ->
+                                                            names.mapIndexed { index, name ->
+                                                                VideoQuality(name, resolutions.getOrNull(index).takeIf { it != "null" }?.toIntOrNull(), frameRates.getOrNull(index).takeIf { it != "null" }?.toFloatOrNull(), bitrates.getOrNull(index).takeIf { it != "null" }?.toIntOrNull(), codecs.getOrNull(index).takeIf { it != "null" }, urls.getOrNull(index))
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
                                     }
                                     if (!list.isNullOrEmpty()) {
-                                        viewModel.qualities = list.asSequence()
-                                            .sortedByDescending {
-                                                it.bitrate
-                                            }
-                                            .sortedByDescending {
-                                                it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                            }
-                                            .sortedByDescending {
-                                                it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                            }
+                                        viewModel.qualities = list
+                                            .sortedWith(
+                                                compareByDescending<VideoQuality> { it.bitrate }
+                                                    .thenByDescending { it.frameRate }
+                                                    .thenByDescending { it.resolution }
+                                            )
                                             .toMutableList().apply {
                                                 add(0, VideoQuality(AUTO_QUALITY))
                                                 find { it.name.equals("source", true) }?.let { source ->
                                                     remove(source)
-                                                    add(1, VideoQuality(SOURCE_QUALITY, source.codecs, source.bitrate, source.url))
+                                                    add(1, VideoQuality(SOURCE_QUALITY, source.resolution, source.frameRate, source.bitrate, source.codecs, source.url))
                                                 }
                                                 val audio = find { it.name?.startsWith("audio", true) == true }
                                                 audio?.let { remove(it) }
-                                                add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.bitrate, audio?.url))
+                                                add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.resolution, audio?.frameRate, audio?.bitrate, audio?.codecs, audio?.url))
                                                 if (videoType == STREAM) {
                                                     add(VideoQuality(CHAT_ONLY_QUALITY))
                                                 }
@@ -833,25 +833,23 @@ class Media3Fragment : Media3PlayerFragment() {
                                     binding.playerSurface.visibility = View.VISIBLE
                                     if (!player.currentTracks.isEmpty) {
                                         player.currentTracks.groups.find { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO }?.let { trackGroup ->
-                                            val selectedQuality = quality.name?.split("p")
-                                            val targetResolution = selectedQuality?.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                            val targetFps = selectedQuality?.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
-                                            val targetBitrate = quality.bitrate
                                             if (trackGroup.mediaTrackGroup.length > 0) {
-                                                if (targetResolution != null) {
+                                                if (quality.resolution != null) {
                                                     val formats = mutableListOf<Pair<Int, Format>>()
                                                     for (i in 0 until trackGroup.mediaTrackGroup.length) {
                                                         formats.add(i to trackGroup.mediaTrackGroup.getFormat(i))
                                                     }
                                                     val list = formats
-                                                        .sortedByDescending { it.second.bitrate }
-                                                        .sortedByDescending { it.second.frameRate }
-                                                        .sortedByDescending { it.second.height }
+                                                        .sortedWith(
+                                                            compareByDescending<Pair<Int, Format>> { it.second.bitrate }
+                                                                .thenByDescending { it.second.frameRate }
+                                                                .thenByDescending { it.second.height }
+                                                        )
                                                     list.find {
-                                                        (targetResolution == it.second.height
-                                                                && targetFps >= floor(it.second.frameRate)
-                                                                && (targetBitrate == null || targetBitrate >= it.second.bitrate))
-                                                                || targetResolution > it.second.height
+                                                        (quality.resolution == it.second.height
+                                                                && (quality.frameRate?.let { fps -> floor(fps) } ?: 30f) >= floor(it.second.frameRate)
+                                                                && (quality.bitrate == null || quality.bitrate >= it.second.bitrate))
+                                                                || quality.resolution > it.second.height
                                                                 || it == list.last()
                                                     }?.first?.let { index ->
                                                         setOverrideForType(TrackSelectionOverride(trackGroup.mediaTrackGroup, index))
@@ -975,8 +973,10 @@ class Media3Fragment : Media3PlayerFragment() {
                         totalDuration = totalDuration,
                         currentPosition = getCurrentPosition(),
                         qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
-                        qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+                        qualityResolutions = qualities?.map { it.resolution.toString() }?.toTypedArray(),
+                        qualityFrameRates = qualities?.map { it.frameRate.toString() }?.toTypedArray(),
                         qualityBitrates = qualities?.map { it.bitrate.toString() }?.toTypedArray(),
+                        qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
                         qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
                     ).show(childFragmentManager, null)
                 }

@@ -571,7 +571,13 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
                     String newCodecsString = obj.optString("CODECS");
                     String newResolutionString = obj.optString("RESOLUTION");
                     String id = obj.optString("STABLE-VARIANT-ID");
-                    float newFrameRate = obj.optInt("FRAME-RATE");
+                    String newFrameRateString = obj.optString("FRAME-RATE");
+                    float newFrameRate;
+                    if (!newFrameRateString.isBlank()) {
+                      newFrameRate = Float.parseFloat(newFrameRateString);
+                    } else {
+                      newFrameRate = 0;
+                    }
                     int newWidth;
                     int newHeight;
                     if (!newResolutionString.isBlank()) {

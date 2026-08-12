@@ -92,6 +92,7 @@ import com.google.android.material.timepicker.TimeFormat
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlin.math.floor
 import kotlin.math.max
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
@@ -932,15 +933,11 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                                         }
                                     }
                                     viewModel.qualities = filtered
-                                        .sortedByDescending {
-                                            it.bitrate
-                                        }
-                                        .sortedByDescending {
-                                            it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                        }
-                                        .sortedByDescending {
-                                            it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                        }
+                                        .sortedWith(
+                                            compareByDescending<VideoQuality> { it.bitrate }
+                                                .thenByDescending { it.frameRate }
+                                                .thenByDescending { it.resolution }
+                                        )
                                         .toMutableList().apply {
                                             add(VideoQuality(AUDIO_ONLY_QUALITY))
                                         }
@@ -1355,10 +1352,10 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
             }
             qualities.map { quality ->
                 when (quality.name) {
-                    "auto" -> getString(R.string.auto)
-                    "source" -> getString(R.string.source)
-                    "audio_only" -> getString(R.string.audio_only)
-                    "chat_only" -> getString(R.string.chat_only)
+                    AUTO_QUALITY -> getString(R.string.auto)
+                    SOURCE_QUALITY -> getString(R.string.source)
+                    AUDIO_ONLY_QUALITY -> getString(R.string.audio_only)
+                    CHAT_ONLY_QUALITY -> getString(R.string.chat_only)
                     else -> {
                         if (hideCodecs) {
                             quality.name.toString()
@@ -1747,11 +1744,12 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
         return targetQuality?.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()?.let { targetResolution ->
             val targetFps = targetQuality.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
             val last = viewModel.qualities?.last { it.name != AUDIO_ONLY_QUALITY && it.name != CHAT_ONLY_QUALITY }
-            viewModel.qualities?.find { qualityString ->
-                val quality = qualityString.name?.split("p")
-                val resolution = quality?.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
-                val fps = quality?.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
-                resolution != null && ((targetResolution == resolution && targetFps >= fps) || targetResolution > resolution || qualityString == last)
+            viewModel.qualities?.find { quality ->
+                quality.resolution != null
+                        && ((targetResolution == quality.resolution
+                        && targetFps >= (quality.frameRate?.let { fps -> floor(fps) } ?: 30f))
+                        || targetResolution > quality.resolution
+                        || quality == last)
             }
         }
     }
@@ -2146,23 +2144,19 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                     VideoQuality(it.key, url = it.value)
                 }
                 viewModel.qualities = list
-                    .sortedByDescending {
-                        it.bitrate
-                    }
-                    .sortedByDescending {
-                        it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                    }
-                    .sortedByDescending {
-                        it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                    }
+                    .sortedWith(
+                        compareByDescending<VideoQuality> { it.bitrate }
+                            .thenByDescending { it.frameRate }
+                            .thenByDescending { it.resolution }
+                    )
                     .toMutableList().apply {
                         find { it.name.equals("source", true) }?.let { source ->
                             remove(source)
-                            add(0, VideoQuality(SOURCE_QUALITY, source.codecs, source.bitrate, source.url))
+                            add(0, VideoQuality(SOURCE_QUALITY, source.resolution, source.frameRate, source.bitrate, source.codecs, source.url))
                         }
                         val audio = find { it.name?.startsWith("audio", true) == true }
                         audio?.let { remove(it) }
-                        add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.codecs, audio?.bitrate, audio?.url))
+                        add(VideoQuality(AUDIO_ONLY_QUALITY, audio?.resolution, audio?.frameRate, audio?.bitrate, audio?.codecs, audio?.url))
                     }
                 viewModel.quality = viewModel.qualities?.firstOrNull()
                 viewModel.quality?.url
@@ -2400,8 +2394,10 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                         thumbnail = requireArguments().getString(KEY_THUMBNAIL),
                         createdAt = requireArguments().getString(KEY_STARTED_AT),
                         qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
-                        qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+                        qualityResolutions = qualities?.map { it.resolution.toString() }?.toTypedArray(),
+                        qualityFrameRates = qualities?.map { it.frameRate.toString() }?.toTypedArray(),
                         qualityBitrates = qualities?.map { it.bitrate.toString() }?.toTypedArray(),
+                        qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
                         qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
                     ).show(childFragmentManager, null)
                 }
@@ -2427,8 +2423,10 @@ abstract class Media3PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFr
                         videoOffsetSeconds = requireArguments().getInt(KEY_VIDEO_OFFSET_SECONDS),
                         videoCreatedAt = requireArguments().getString(KEY_VIDEO_CREATED_AT),
                         qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
-                        qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+                        qualityResolutions = qualities?.map { it.resolution.toString() }?.toTypedArray(),
+                        qualityFrameRates = qualities?.map { it.frameRate.toString() }?.toTypedArray(),
                         qualityBitrates = qualities?.map { it.bitrate.toString() }?.toTypedArray(),
+                        qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
                         qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
                     ).show(childFragmentManager, null)
                 }

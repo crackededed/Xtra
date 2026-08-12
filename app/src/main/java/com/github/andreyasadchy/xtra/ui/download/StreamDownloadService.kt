@@ -71,6 +71,7 @@ import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.math.floor
 import kotlin.math.max
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -278,7 +279,7 @@ class StreamDownloadService : LifecycleService() {
                 if (qualities.isNotEmpty()) {
                     val selectedQuality = if (!quality.isNullOrBlank()) {
                         val audio = if (quality.startsWith("audio", true)) {
-                            qualities.find { it.name == "audio_only" }
+                            qualities.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY }
                         } else null
                         if (audio != null) {
                             audio
@@ -286,12 +287,13 @@ class StreamDownloadService : LifecycleService() {
                             val targetQuality = quality.split("p")
                             targetQuality.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()?.let { targetResolution ->
                                 val targetFps = targetQuality.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
-                                val last = qualities.last { it.name != "audio_only" }
-                                qualities.find { qualityString ->
-                                    val quality = qualityString.name?.split("p")
-                                    val resolution = quality?.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                    val fps = quality?.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
-                                    resolution != null && ((targetResolution == resolution && targetFps >= fps) || targetResolution > resolution || qualityString == last)
+                                val last = qualities.last { it.name != VideoQuality.AUDIO_ONLY_QUALITY }
+                                qualities.find { quality ->
+                                    quality.resolution != null
+                                            && ((targetResolution == quality.resolution
+                                            && targetFps >= (quality.frameRate?.let { fps -> floor(fps) } ?: 30f))
+                                            || targetResolution > quality.resolution
+                                            || quality == last)
                                 }
                             } ?: qualities.first()
                         }
@@ -551,32 +553,30 @@ class StreamDownloadService : LifecycleService() {
 
     private suspend fun getQualities(playlist: String): List<VideoQuality> = withContext(Dispatchers.IO) {
         val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
-        val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+        val resolutions = Regex("RESOLUTION=(\\d+x\\d+)").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+        val frameRates = Regex("FRAME-RATE=([\\d.]+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toFloatOrNull() }.toMutableList()
         val bitrates = Regex("BANDWIDTH=(\\d+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toIntOrNull() }.toMutableList()
+        val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
         val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
         val list = names.mapIndexedNotNull { index, name ->
             urls.getOrNull(index)?.let { url ->
-                VideoQuality(name, codecs.getOrNull(index), bitrates.getOrNull(index), url)
+                VideoQuality(name, resolutions.getOrNull(index)?.substringBefore('x')?.toIntOrNull(), frameRates.getOrNull(index), bitrates.getOrNull(index), codecs.getOrNull(index), url)
             }
         }
         list
-            .sortedByDescending {
-                it.bitrate
-            }
-            .sortedByDescending {
-                it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-            }
-            .sortedByDescending {
-                it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-            }
+            .sortedWith(
+                compareByDescending<VideoQuality> { it.bitrate }
+                    .thenByDescending { it.frameRate }
+                    .thenByDescending { it.resolution }
+            )
             .toMutableList().apply {
                 find { it.name.equals("source", true) }?.let { source ->
                     remove(source)
-                    add(0, VideoQuality("source", source.codecs, source.bitrate, source.url))
+                    add(0, VideoQuality(VideoQuality.SOURCE_QUALITY, source.resolution, source.frameRate, source.bitrate, source.codecs, source.url))
                 }
                 find { it.name?.startsWith("audio", true) == true }?.let { audio ->
                     remove(audio)
-                    add(VideoQuality("audio_only", audio.codecs, audio.bitrate, audio.url))
+                    add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY, audio.resolution, audio.frameRate, audio.bitrate, audio.codecs, audio.url))
                 }
             }
     }
