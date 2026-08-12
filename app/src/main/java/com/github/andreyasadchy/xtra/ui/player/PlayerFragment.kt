@@ -755,10 +755,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     audioOnly.visibility = View.VISIBLE
                     audioOnly.setOnClickListener {
                         showController(force = true)
-                        if (playbackService?.quality?.name == BasePlaybackService.AUDIO_ONLY_QUALITY) {
+                        if (playbackService?.quality?.name == VideoQuality.AUDIO_ONLY_QUALITY) {
                             changeQuality(playbackService?.previousQuality)
                         } else {
-                            changeQuality(playbackService?.qualities?.find { it.name == BasePlaybackService.AUDIO_ONLY_QUALITY })
+                            changeQuality(playbackService?.qualities?.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY })
                         }
                         changePlayerMode()
                     }
@@ -1311,10 +1311,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             }
             qualities.map { quality ->
                 when (quality.name) {
-                    BasePlaybackService.AUTO_QUALITY -> getString(R.string.auto)
-                    BasePlaybackService.SOURCE_QUALITY -> getString(R.string.source)
-                    BasePlaybackService.AUDIO_ONLY_QUALITY -> getString(R.string.audio_only)
-                    BasePlaybackService.CHAT_ONLY_QUALITY -> getString(R.string.chat_only)
+                    VideoQuality.AUTO_QUALITY -> getString(R.string.auto)
+                    VideoQuality.SOURCE_QUALITY -> getString(R.string.source)
+                    VideoQuality.AUDIO_ONLY_QUALITY -> getString(R.string.audio_only)
+                    VideoQuality.CHAT_ONLY_QUALITY -> getString(R.string.chat_only)
                     else -> {
                         if (hideCodecs) {
                             quality.name.toString()
@@ -1853,7 +1853,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     fun canEnterPictureInPicture(): Boolean {
         val quality = playbackService?.quality
-        return quality?.name != BasePlaybackService.AUDIO_ONLY_QUALITY &&  quality?.name != BasePlaybackService.CHAT_ONLY_QUALITY
+        return quality?.name != VideoQuality.AUDIO_ONLY_QUALITY &&  quality?.name != VideoQuality.CHAT_ONLY_QUALITY
     }
 
     protected fun setPipActions(playing: Boolean) {
@@ -2131,8 +2131,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         thumbnail = playbackService?.thumbnail,
                         createdAt = playbackService?.createdAt,
                         qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
-                        qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+                        qualityResolutions = qualities?.map { it.resolution.toString() }?.toTypedArray(),
+                        qualityFrameRates = qualities?.map { it.frameRate.toString() }?.toTypedArray(),
                         qualityBitrates = qualities?.map { it.bitrate.toString() }?.toTypedArray(),
+                        qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
                         qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
                     ).show(childFragmentManager, null)
                 }
@@ -2156,8 +2158,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         totalDuration = getTotalDuration(),
                         currentPosition = getCurrentPosition(),
                         qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
-                        qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+                        qualityResolutions = qualities?.map { it.resolution.toString() }?.toTypedArray(),
+                        qualityFrameRates = qualities?.map { it.frameRate.toString() }?.toTypedArray(),
                         qualityBitrates = qualities?.map { it.bitrate.toString() }?.toTypedArray(),
+                        qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
                         qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
                     ).show(childFragmentManager, null)
                 }
@@ -2180,8 +2184,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         videoOffsetSeconds = playbackService?.videoOffsetSeconds,
                         videoCreatedAt = playbackService?.videoCreatedAt,
                         qualityNames = qualities?.map { it.name.toString() }?.toTypedArray(),
-                        qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
+                        qualityResolutions = qualities?.map { it.resolution.toString() }?.toTypedArray(),
+                        qualityFrameRates = qualities?.map { it.frameRate.toString() }?.toTypedArray(),
                         qualityBitrates = qualities?.map { it.bitrate.toString() }?.toTypedArray(),
+                        qualityCodecs = qualities?.map { it.codecs.toString() }?.toTypedArray(),
                         qualityUrls = qualities?.map { it.url.toString() }?.toTypedArray(),
                     ).show(childFragmentManager, null)
                 }

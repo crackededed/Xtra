@@ -13,6 +13,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+import kotlin.math.floor
 
 abstract class BasePlaybackService : LifecycleService() {
 
@@ -157,16 +158,16 @@ abstract class BasePlaybackService : LifecycleService() {
             "saved" -> {
                 val savedQuality = prefs().getString(C.PLAYER_QUALITY, "720p60")?.substringBefore(" ")
                 when (savedQuality) {
-                    AUTO_QUALITY -> qualities?.find { it.name == AUTO_QUALITY }
-                    AUDIO_ONLY_QUALITY -> qualities?.find { it.name == AUDIO_ONLY_QUALITY }
-                    CHAT_ONLY_QUALITY -> qualities?.find { it.name == CHAT_ONLY_QUALITY }
+                    VideoQuality.AUTO_QUALITY -> qualities?.find { it.name == VideoQuality.AUTO_QUALITY }
+                    VideoQuality.AUDIO_ONLY_QUALITY -> qualities?.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY }
+                    VideoQuality.CHAT_ONLY_QUALITY -> qualities?.find { it.name == VideoQuality.CHAT_ONLY_QUALITY }
                     else -> findQuality(savedQuality)
                 }
             }
-            AUTO_QUALITY -> qualities?.find { it.name == AUTO_QUALITY }
-            "Source" -> qualities?.find { it.name != AUTO_QUALITY }
-            AUDIO_ONLY_QUALITY -> qualities?.find { it.name == AUDIO_ONLY_QUALITY }
-            CHAT_ONLY_QUALITY -> qualities?.find { it.name == CHAT_ONLY_QUALITY }
+            VideoQuality.AUTO_QUALITY -> qualities?.find { it.name == VideoQuality.AUTO_QUALITY }
+            "Source" -> qualities?.find { it.name != VideoQuality.AUTO_QUALITY }
+            VideoQuality.AUDIO_ONLY_QUALITY -> qualities?.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY }
+            VideoQuality.CHAT_ONLY_QUALITY -> qualities?.find { it.name == VideoQuality.CHAT_ONLY_QUALITY }
             else -> findQuality(defaultQuality)
         } ?: qualities?.firstOrNull()
     }
@@ -175,22 +176,18 @@ abstract class BasePlaybackService : LifecycleService() {
         val targetQuality = targetQualityString?.split("p")
         return targetQuality?.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()?.let { targetResolution ->
             val targetFps = targetQuality.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
-            val last = qualities?.last { it.name != AUDIO_ONLY_QUALITY && it.name != CHAT_ONLY_QUALITY }
-            qualities?.find { qualityString ->
-                val quality = qualityString.name?.split("p")
-                val resolution = quality?.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
-                val fps = quality?.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
-                resolution != null && ((targetResolution == resolution && targetFps >= fps) || targetResolution > resolution || qualityString == last)
+            val last = qualities?.last { it.name != VideoQuality.AUDIO_ONLY_QUALITY && it.name != VideoQuality.CHAT_ONLY_QUALITY }
+            qualities?.find { quality ->
+                quality.resolution != null
+                        && ((targetResolution == quality.resolution
+                        && targetFps >= (quality.frameRate?.let { fps -> floor(fps) } ?: 30f))
+                        || targetResolution > quality.resolution
+                        || quality == last)
             }
         }
     }
 
     companion object {
-        const val AUTO_QUALITY = "auto"
-        const val SOURCE_QUALITY = "source"
-        const val AUDIO_ONLY_QUALITY = "audio_only"
-        const val CHAT_ONLY_QUALITY = "chat_only"
-
         const val STREAM = "stream"
         const val VIDEO = "video"
         const val CLIP = "clip"

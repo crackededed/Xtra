@@ -108,12 +108,14 @@ class DownloadViewModel(
                             }
                             if (!playlist.isNullOrBlank()) {
                                 val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
-                                val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                                val resolutions = Regex("RESOLUTION=(\\d+x\\d+)").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                                val frameRates = Regex("FRAME-RATE=([\\d.]+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toFloatOrNull() }.toMutableList()
                                 val bitrates = Regex("BANDWIDTH=(\\d+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toIntOrNull() }.toMutableList()
+                                val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                                 val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
                                 names.mapIndexedNotNull { index, name ->
                                     urls.getOrNull(index)?.let { url ->
-                                        VideoQuality(name, codecs.getOrNull(index), bitrates.getOrNull(index), url)
+                                        VideoQuality(name, resolutions.getOrNull(index)?.substringBefore('x')?.toIntOrNull(), frameRates.getOrNull(index), bitrates.getOrNull(index), codecs.getOrNull(index), url)
                                     }
                                 }
                             } else {
@@ -127,23 +129,19 @@ class DownloadViewModel(
                             }
                         }
                         _qualities.value = list
-                            .sortedByDescending {
-                                it.bitrate
-                            }
-                            .sortedByDescending {
-                                it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                            }
-                            .sortedByDescending {
-                                it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                            }
+                            .sortedWith(
+                                compareByDescending<VideoQuality> { it.bitrate }
+                                    .thenByDescending { it.frameRate }
+                                    .thenByDescending { it.resolution }
+                            )
                             .toMutableList().apply {
                                 find { it.name.equals("source", true) }?.let { source ->
                                     remove(source)
-                                    add(0, VideoQuality("source", source.codecs, source.bitrate, source.url))
+                                    add(0, VideoQuality(VideoQuality.SOURCE_QUALITY, source.resolution, source.frameRate, source.bitrate, source.codecs, source.url))
                                 }
                                 find { it.name?.startsWith("audio", true) == true }?.let { audio ->
                                     remove(audio)
-                                    add(VideoQuality("audio_only", audio.codecs, audio.bitrate, audio.url))
+                                    add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY, audio.resolution, audio.frameRate, audio.bitrate, audio.codecs, audio.url))
                                 }
                             }
                     } catch (e: Exception) {
@@ -221,8 +219,10 @@ class DownloadViewModel(
                         }
                         if (!playlist.isNullOrBlank()) {
                             val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
-                            val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                            val resolutions = Regex("RESOLUTION=(\\d+x\\d+)").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+                            val frameRates = Regex("FRAME-RATE=([\\d.]+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toFloatOrNull() }.toMutableList()
                             val bitrates = Regex("BANDWIDTH=(\\d+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toIntOrNull() }.toMutableList()
+                            val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                             val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
                             playlist.lines().filter { it.startsWith("#EXT-X-SESSION-DATA") }.let { list ->
                                 if (list.isNotEmpty()) {
@@ -263,16 +263,24 @@ class DownloadViewModel(
                                                                     }
                                                                     if (!skip) {
                                                                         val name = obj.optString("IVS_NAME")
-                                                                        val codec = obj.optString("CODECS")
+                                                                        val resolution = obj.optString("RESOLUTION")
+                                                                        val frameRate = obj.optString("FRAME-RATE").toFloatOrNull()
                                                                         val bitrate = obj.optInt("BANDWIDTH")
+                                                                        val codec = obj.optString("CODECS")
                                                                         val newVariantId = obj.optString("STABLE-VARIANT-ID")
                                                                         if (!name.isNullOrBlank() && !newVariantId.isNullOrBlank()) {
                                                                             names.add(name)
-                                                                            if (!codec.isNullOrBlank()) {
-                                                                                codecs.add(codec)
+                                                                            if (!resolution.isNullOrBlank()) {
+                                                                                resolutions.add(resolution)
+                                                                            }
+                                                                            if (frameRate != null && frameRate > 0) {
+                                                                                frameRates.add(frameRate)
                                                                             }
                                                                             if (bitrate > 0) {
                                                                                 bitrates.add(bitrate)
+                                                                            }
+                                                                            if (!codec.isNullOrBlank()) {
+                                                                                codecs.add(codec)
                                                                             }
                                                                             urls.add(url.replace(
                                                                                 "$variantId/index-",
@@ -296,27 +304,23 @@ class DownloadViewModel(
                             }
                             val list = names.mapIndexedNotNull { index, name ->
                                 urls.getOrNull(index)?.let { url ->
-                                    VideoQuality(name, codecs.getOrNull(index), bitrates.getOrNull(index), url)
+                                    VideoQuality(name, resolutions.getOrNull(index)?.substringBefore('x')?.toIntOrNull(), frameRates.getOrNull(index), bitrates.getOrNull(index), codecs.getOrNull(index), url)
                                 }
                             }
                             _qualities.value = list
-                                .sortedByDescending {
-                                    it.bitrate
-                                }
-                                .sortedByDescending {
-                                    it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                }
-                                .sortedByDescending {
-                                    it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                }
+                                .sortedWith(
+                                    compareByDescending<VideoQuality> { it.bitrate }
+                                        .thenByDescending { it.frameRate }
+                                        .thenByDescending { it.resolution }
+                                )
                                 .toMutableList().apply {
                                     find { it.name.equals("source", true) }?.let { source ->
                                         remove(source)
-                                        add(0, VideoQuality("source", source.codecs, source.bitrate, source.url))
+                                        add(0, VideoQuality(VideoQuality.SOURCE_QUALITY, source.resolution, source.frameRate, source.bitrate, source.codecs, source.url))
                                     }
                                     find { it.name?.startsWith("audio", true) == true }?.let { audio ->
                                         remove(audio)
-                                        add(VideoQuality("audio_only", audio.codecs, audio.bitrate, audio.url))
+                                        add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY, audio.resolution, audio.frameRate, audio.bitrate, audio.codecs, audio.url))
                                     }
                                 }
                         } else {
@@ -326,23 +330,19 @@ class DownloadViewModel(
                                     VideoQuality(it.key, url = it.value)
                                 }
                                 _qualities.value = list
-                                    .sortedByDescending {
-                                        it.bitrate
-                                    }
-                                    .sortedByDescending {
-                                        it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                    }
-                                    .sortedByDescending {
-                                        it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                    }
+                                    .sortedWith(
+                                        compareByDescending<VideoQuality> { it.bitrate }
+                                            .thenByDescending { it.frameRate }
+                                            .thenByDescending { it.resolution }
+                                    )
                                     .toMutableList().apply {
                                         find { it.name.equals("source", true) }?.let { source ->
                                             remove(source)
-                                            add(0, VideoQuality("source", source.codecs, source.bitrate, source.url))
+                                            add(0, VideoQuality(VideoQuality.SOURCE_QUALITY, source.resolution, source.frameRate, source.bitrate, source.codecs, source.url))
                                         }
                                         find { it.name?.startsWith("audio", true) == true }?.let { audio ->
                                             remove(audio)
-                                            add(VideoQuality("audio_only", audio.codecs, audio.bitrate, audio.url))
+                                            add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY, audio.resolution, audio.frameRate, audio.bitrate, audio.codecs, audio.url))
                                         }
                                     }
                             } else {
@@ -372,15 +372,11 @@ class DownloadViewModel(
                         val list = playerRepository.loadClipQualities(networkLibrary, gqlHeaders, clipId, enableIntegrity)
                         if (list != null) {
                             _qualities.value = list
-                                .sortedByDescending {
-                                    it.bitrate
-                                }
-                                .sortedByDescending {
-                                    it.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                }
-                                .sortedByDescending {
-                                    it.name?.substringBefore("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
-                                }
+                                .sortedWith(
+                                    compareByDescending<VideoQuality> { it.bitrate }
+                                        .thenByDescending { it.frameRate }
+                                        .thenByDescending { it.resolution }
+                                )
                         }
                     } catch (e: Exception) {
                         if (e.message == C.FAILED_INTEGRITY_CHECK) {
