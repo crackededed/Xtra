@@ -309,23 +309,27 @@ class BookmarksViewModel(
             viewModelScope.launch {
                 val bookmarks = bookmarksRepository.getAll()
                 bookmarks.mapNotNull { it.videoId }.chunked(100).forEach { ids ->
-                    helixRepository.getVideos(
-                        networkLibrary = networkLibrary,
-                        headers = helixHeaders,
-                        ids = ids,
-                    ).data.map {
-                        Video(
-                            id = it.id,
-                            channelId = it.channelId,
-                            channelLogin = it.channelLogin,
-                            channelName = it.channelName,
-                            title = it.title,
-                            thumbnailURL = it.thumbnailURL,
-                            createdAt = it.createdAt,
-                            viewCount = it.viewCount,
-                            durationSeconds = it.duration?.let { duration -> TwitchApiHelper.getDuration(duration) },
-                        )
-                    }.forEach { video ->
+                    try {
+                        helixRepository.getVideos(
+                            networkLibrary = networkLibrary,
+                            headers = helixHeaders,
+                            ids = ids,
+                        ).data.map {
+                            Video(
+                                id = it.id,
+                                channelId = it.channelId,
+                                channelLogin = it.channelLogin,
+                                channelName = it.channelName,
+                                title = it.title,
+                                thumbnailURL = it.thumbnailURL,
+                                createdAt = it.createdAt,
+                                viewCount = it.viewCount,
+                                durationSeconds = it.duration?.let { duration -> TwitchApiHelper.getDuration(duration) },
+                            )
+                        }
+                    } catch (e: Exception) {
+                        null
+                    }?.forEach { video ->
                         video.id.takeIf { !it.isNullOrBlank() }?.let { id ->
                             bookmarks.find { it.videoId == id }
                         }?.let { bookmark ->
