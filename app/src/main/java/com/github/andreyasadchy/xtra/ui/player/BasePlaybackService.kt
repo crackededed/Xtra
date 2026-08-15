@@ -173,15 +173,15 @@ abstract class BasePlaybackService : LifecycleService() {
     }
 
     private fun findQuality(targetQualityString: String?): VideoQuality? {
-        val targetQuality = targetQualityString?.split("p")
-        return targetQuality?.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()?.let { targetResolution ->
-            val targetFps = targetQuality.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
-            val last = qualities?.last { it.name != VideoQuality.AUDIO_ONLY_QUALITY && it.name != VideoQuality.CHAT_ONLY_QUALITY }
+        val targetResolution = VideoQuality.parseResolution(targetQualityString)
+        val targetFps = VideoQuality.parseFrameRate(targetQualityString)?.toInt() ?: 30
+        val last = qualities?.last { it.name != VideoQuality.AUDIO_ONLY_QUALITY && it.name != VideoQuality.CHAT_ONLY_QUALITY }
+        return targetResolution?.let {
             qualities?.find { quality ->
                 quality.resolution != null
-                        && ((targetResolution == quality.resolution
+                        && ((it == quality.resolution
                         && targetFps >= (quality.frameRate?.let { fps -> floor(fps) } ?: 30f))
-                        || targetResolution > quality.resolution
+                        || it > quality.resolution
                         || quality == last)
             }
         }

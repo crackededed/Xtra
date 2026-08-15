@@ -419,7 +419,12 @@ class MediaPlayerService : BasePlaybackService() {
                                     quality
                                 }
                                 val url = "${template}/${quality}/index-dvr.m3u8"
-                                VideoQuality(name, url = url)
+                                VideoQuality(
+                                    name,
+                                    VideoQuality.parseResolution(quality),
+                                    VideoQuality.parseFrameRate(quality),
+                                    url = url,
+                                )
                             }
                             qualities = list
                                 .sortedWith(
@@ -436,7 +441,7 @@ class MediaPlayerService : BasePlaybackService() {
                                     audio?.let { remove(it) }
                                     add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY, audio?.resolution, audio?.frameRate, audio?.bitrate, audio?.codecs, audio?.url))
                                 }
-                            quality = qualities?.firstOrNull()
+                            setDefaultQuality()
                             serviceListener?.changePlayerMode()
                             val url = quality?.url
                             if (url != null) {
