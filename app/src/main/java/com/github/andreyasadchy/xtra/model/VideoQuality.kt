@@ -16,5 +16,11 @@ class VideoQuality(
         const val SOURCE_QUALITY = "source"
         const val AUDIO_ONLY_QUALITY = "audio_only"
         const val CHAT_ONLY_QUALITY = "chat_only"
+
+        fun parseResolution(name: String?): Int? =
+            name?.split("p")?.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
+
+        fun parseFrameRate(name: String?): Float? =
+            name?.split("p")?.getOrNull(1)?.takeWhile { it.isDigit() }?.toFloatOrNull()
     }
 }

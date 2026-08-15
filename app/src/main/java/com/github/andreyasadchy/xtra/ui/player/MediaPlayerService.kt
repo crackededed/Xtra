@@ -419,7 +419,12 @@ class MediaPlayerService : BasePlaybackService() {
                                     quality
                                 }
                                 val url = "${template}/${quality}/index-dvr.m3u8"
-                                VideoQuality(name, url = url)
+                                VideoQuality(
+                                    name,
+                                    VideoQuality.parseResolution(quality),
+                                    VideoQuality.parseFrameRate(quality),
+                                    url = url,
+                                )
                             }
                             qualities = list
                                 .sortedWith(
@@ -436,7 +441,7 @@ class MediaPlayerService : BasePlaybackService() {
                                     audio?.let { remove(it) }
                                     add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY, audio?.resolution, audio?.frameRate, audio?.bitrate, audio?.codecs, audio?.url))
                                 }
-                            quality = qualities?.firstOrNull()
+                            setDefaultQuality()
                             serviceListener?.changePlayerMode()
                             val url = quality?.url
                             if (url != null) {
@@ -761,14 +766,12 @@ class MediaPlayerService : BasePlaybackService() {
                         val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList().ifEmpty {
                             Regex("NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                         }
-                        val resolutions = Regex("RESOLUTION=(\\d+x\\d+)").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
-                        val frameRates = Regex("FRAME-RATE=([\\d.]+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toFloatOrNull() }.toMutableList()
                         val bitrates = Regex("BANDWIDTH=(\\d+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toIntOrNull() }.toMutableList()
                         val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                         val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
                         val list = names.mapIndexedNotNull { index, name ->
                             urls.getOrNull(index)?.let { url ->
-                                VideoQuality(name, resolutions.getOrNull(index)?.substringBefore('x')?.toIntOrNull(), frameRates.getOrNull(index), bitrates.getOrNull(index), codecs.getOrNull(index), url)
+                                VideoQuality(name, VideoQuality.parseResolution(name), VideoQuality.parseFrameRate(name), bitrates.getOrNull(index), codecs.getOrNull(index), url)
                             }
                         }
                         qualities = list
@@ -968,8 +971,6 @@ class MediaPlayerService : BasePlaybackService() {
                         val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList().ifEmpty {
                             Regex("NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                         }
-                        val resolutions = Regex("RESOLUTION=(\\d+x\\d+)").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
-                        val frameRates = Regex("FRAME-RATE=([\\d.]+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toFloatOrNull() }.toMutableList()
                         val bitrates = Regex("BANDWIDTH=(\\d+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toIntOrNull() }.toMutableList()
                         val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
                         val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
@@ -1012,19 +1013,11 @@ class MediaPlayerService : BasePlaybackService() {
                                                                 }
                                                                 if (!skip) {
                                                                     val name = obj.optString("IVS_NAME")
-                                                                    val resolution = obj.optString("RESOLUTION")
-                                                                    val frameRate = obj.optString("FRAME-RATE").toFloatOrNull()
                                                                     val bitrate = obj.optInt("BANDWIDTH")
                                                                     val codec = obj.optString("CODECS")
                                                                     val newVariantId = obj.optString("STABLE-VARIANT-ID")
                                                                     if (!name.isNullOrBlank() && !newVariantId.isNullOrBlank()) {
                                                                         names.add(name)
-                                                                        if (!resolution.isNullOrBlank()) {
-                                                                            resolutions.add(resolution)
-                                                                        }
-                                                                        if (frameRate != null && frameRate > 0) {
-                                                                            frameRates.add(frameRate)
-                                                                        }
                                                                         if (bitrate > 0) {
                                                                             bitrates.add(bitrate)
                                                                         }
@@ -1053,7 +1046,7 @@ class MediaPlayerService : BasePlaybackService() {
                         }
                         val list = names.mapIndexedNotNull { index, name ->
                             urls.getOrNull(index)?.let { url ->
-                                VideoQuality(name, resolutions.getOrNull(index)?.substringBefore('x')?.toIntOrNull(), frameRates.getOrNull(index), bitrates.getOrNull(index), codecs.getOrNull(index), url)
+                                VideoQuality(name, VideoQuality.parseResolution(name), VideoQuality.parseFrameRate(name), bitrates.getOrNull(index), codecs.getOrNull(index), url)
                             }
                         }
                         qualities = list

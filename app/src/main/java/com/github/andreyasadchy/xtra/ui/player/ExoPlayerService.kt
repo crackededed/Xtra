@@ -194,7 +194,7 @@ class ExoPlayerService : BasePlaybackService() {
                             val name = variant.format.label?.takeIf { it.isNotBlank() }
                                 ?: playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.takeIf { it.isNotBlank() }
                             if (name != null) {
-                                VideoQuality(name, variant.format.height, variant.format.frameRate, variant.format.bitrate, variant.format.codecs, variant.url.toString())
+                                VideoQuality(name, VideoQuality.parseResolution(name), VideoQuality.parseFrameRate(name), variant.format.bitrate, variant.format.codecs, variant.url.toString())
                             } else null
                         }
                         if (!list.isNullOrEmpty()) {
@@ -641,7 +641,12 @@ class ExoPlayerService : BasePlaybackService() {
                                     quality
                                 }
                                 val url = "${template}/${quality}/index-dvr.m3u8"
-                                VideoQuality(name, url = url)
+                                VideoQuality(
+                                    name,
+                                    VideoQuality.parseResolution(quality),
+                                    VideoQuality.parseFrameRate(quality),
+                                    url = url,
+                                )
                             }
                             qualities = list
                                 .sortedWith(
@@ -658,7 +663,7 @@ class ExoPlayerService : BasePlaybackService() {
                                     audio?.let { remove(it) }
                                     add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY, audio?.resolution, audio?.frameRate, audio?.bitrate, audio?.codecs, audio?.url))
                                 }
-                            quality = qualities?.firstOrNull()
+                            setDefaultQuality()
                             serviceListener?.changePlayerMode()
                             val url = quality?.url
                             if (url != null) {

@@ -682,7 +682,7 @@ class PlaybackService : MediaSessionService() {
                                     val name = variant.format.label?.takeIf { it.isNotBlank() }
                                         ?: playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.takeIf { it.isNotBlank() }
                                     if (name != null) {
-                                        VideoQuality(name, variant.format.height, variant.format.frameRate, variant.format.bitrate, variant.format.codecs, variant.url.toString())
+                                        VideoQuality(name, VideoQuality.parseResolution(name), VideoQuality.parseFrameRate(name), variant.format.bitrate, variant.format.codecs, variant.url.toString())
                                     } else null
                                 }
                                 Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, Bundle().apply {
