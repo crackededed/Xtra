@@ -294,9 +294,7 @@
     <string name="stream_offline">%s no está en vivo</string>
     <string name="keep_screen_on_when_paused">Mantener la pantalla encendida cuando el vídeo está en pausa</string>
     <string name="stream_proxy">Proxy de Stream</string>
-    <string name="stream_proxy_url">URL de proxy personalizada</string>
     <string name="stream_proxy_url_desc">\"$channel\" se sustituirá por el canal de inicio de sesión</string>
-    <string name="proxy_error">Error de Proxy</string>
     <string name="show_subtitles">Mostrar subtítulos</string>
     <string name="hide_subtitles">Ocultar subtítulos</string>
     <string name="toggle_subtitles">Alternar subtítulos</string>
@@ -335,7 +333,6 @@
     <string name="show_view_count_icon">Mostrar el contador de visitas y los iconos de tiempo de actividad</string>
     <string name="playback_speeds">Velocidades de reproducción</string>
     <string name="use_custom_proxy">Utilizar proxy personalizado</string>
-    <string name="use_custom_proxy_desc">Requiere una url que devuelva una lista de reproducción</string>
     <string name="stream_headers">Solicitar headers del stream</string>
     <string name="stream_headers_desc">Usa formato JSON</string>
     <string name="follow">Seguir</string>
@@ -565,4 +562,12 @@
     <string name="recent_messages_api_url">Recent messages API URL</string>
     <string name="access_local_network_title">Grant local network permission</string>
     <string name="access_local_network_desc">Required for connecting to local proxies</string>
+    <string name="custom_proxy_settings">Custom proxy settings</string>
+    <string name="add_proxy">Add proxy</string>
+    <string name="delete_proxy_message">Are you sure you want to delete this proxy?</string>
+    <string name="add_proxy_query_params">Add URL query parameters (allow_source, allow_audio_only, fast_bread)</string>
+    <string name="proxy_url">Proxy URL</string>
+    <string name="online">Online</string>
+    <string name="offline">Offline</string>
+    <string name="proxy_error">Proxy error. %s is offline</string>
 </resources>

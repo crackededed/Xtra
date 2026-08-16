@@ -289,9 +289,7 @@
     <string name="stream_offline">%s is now offline</string>
     <string name="keep_screen_on_when_paused">Keep screen on when video is paused</string>
     <string name="stream_proxy">Stream proxy</string>
-    <string name="stream_proxy_url">Custom proxy url</string>
     <string name="stream_proxy_url_desc">\"$channel\" will be replaced with channel login</string>
-    <string name="proxy_error">Proxy error</string>
     <string name="show_subtitles">Show subtitles</string>
     <string name="hide_subtitles">Hide subtitles</string>
     <string name="toggle_subtitles">Toggle subtitles</string>
@@ -330,7 +328,6 @@
     <string name="show_view_count_icon">Show view count and uptime icons</string>
     <string name="playback_speeds">Playback speeds</string>
     <string name="use_custom_proxy">Use custom proxy</string>
-    <string name="use_custom_proxy_desc">Requires an url that returns a playlist</string>
     <string name="stream_headers">Stream request headers</string>
     <string name="stream_headers_desc">Uses JSON format</string>
     <string name="follow">Follow</string>
@@ -560,4 +557,12 @@
     <string name="recent_messages_api_url">Recent messages API URL</string>
     <string name="access_local_network_title">Grant local network permission</string>
     <string name="access_local_network_desc">Required for connecting to local proxies</string>
+    <string name="custom_proxy_settings">Custom proxy settings</string>
+    <string name="add_proxy">Add proxy</string>
+    <string name="delete_proxy_message">Are you sure you want to delete this proxy?</string>
+    <string name="add_proxy_query_params">Add URL query parameters (allow_source, allow_audio_only, fast_bread)</string>
+    <string name="proxy_url">Proxy URL</string>
+    <string name="online">Online</string>
+    <string name="offline">Offline</string>
+    <string name="proxy_error">Proxy error. %s is offline</string>
 </resources>

@@ -83,17 +83,15 @@
         app:singleLineTitle="false" />
 
     <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="player_stream_proxy"
-        android:summary="@string/use_custom_proxy_desc"
+        android:defaultValue="true"
+        android:key="player_use_custom_proxy"
         android:title="@string/use_custom_proxy"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
-    <EditTextPreference
-        android:key="player_proxy_url"
-        android:summary="@string/stream_proxy_url_desc"
-        android:title="@string/stream_proxy_url"
+    <Preference
+        android:key="custom_proxy_settings"
+        android:title="@string/custom_proxy_settings"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 

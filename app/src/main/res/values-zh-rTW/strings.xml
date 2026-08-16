@@ -289,9 +289,7 @@
     <string name="stream_offline">%s 目前離線</string>
     <string name="keep_screen_on_when_paused">當影片已暫停時維持畫面開啟</string>
     <string name="stream_proxy">串流 Proxy</string>
-    <string name="stream_proxy_url">自訂 Proxy URL</string>
     <string name="stream_proxy_url_desc">\"$channel\" 將被取代為頻道登入</string>
-    <string name="proxy_error">Proxy 錯誤</string>
     <string name="show_subtitles">顯示字幕</string>
     <string name="hide_subtitles">隱藏字幕</string>
     <string name="toggle_subtitles">開關字幕</string>
@@ -330,7 +328,6 @@
     <string name="show_view_count_icon">顯示觀看數量與上線時間圖示</string>
     <string name="playback_speeds">播放速度</string>
     <string name="use_custom_proxy">使用自訂 Proxy</string>
-    <string name="use_custom_proxy_desc">需要回傳播放清單的 URL</string>
     <string name="stream_headers">串流請求標頭</string>
     <string name="stream_headers_desc">使用 JSON 格式</string>
     <string name="follow">追隨</string>
@@ -560,4 +557,12 @@
     <string name="recent_messages_api_url">Recent messages API URL</string>
     <string name="access_local_network_title">Grant local network permission</string>
     <string name="access_local_network_desc">Required for connecting to local proxies</string>
+    <string name="custom_proxy_settings">Custom proxy settings</string>
+    <string name="add_proxy">Add proxy</string>
+    <string name="delete_proxy_message">Are you sure you want to delete this proxy?</string>
+    <string name="add_proxy_query_params">Add URL query parameters (allow_source, allow_audio_only, fast_bread)</string>
+    <string name="proxy_url">Proxy URL</string>
+    <string name="online">Online</string>
+    <string name="offline">Offline</string>
+    <string name="proxy_error">Proxy error. %s is offline</string>
 </resources>
