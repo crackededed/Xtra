@@ -525,7 +525,6 @@
     <string name="add_tag">Agregar etiqueta</string>
     <string name="save_filters">Guardar filtros</string>
     <string name="delete_filter_message">¿Estás seguro de que deseas eliminar este filtro?</string>
-    <string name="use_custom_playback_service">Usar servicio de reproducción personalizado</string>
     <string name="move_player_freely">Move minimized player freely</string>
     <string name="store_recent_searches">Almacenar búsquedas recientes</string>
     <string name="delete_recent_searches">Eliminar búsquedas recientes</string>

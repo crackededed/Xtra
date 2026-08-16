@@ -520,7 +520,6 @@
     <string name="add_tag">Добавить тег</string>
     <string name="save_filters">Сохранить фильтры</string>
     <string name="delete_filter_message">Вы уверены, что хотите удалить этот фильтр?</string>
-    <string name="use_custom_playback_service">Использовать настраиваемую службу воспроизведения</string>
     <string name="move_player_freely">Свободное перемещение свернутого проигрывателя</string>
     <string name="store_recent_searches">Сохранять последние поисковые запросы</string>
     <string name="delete_recent_searches">Удалить недавние поисковые запросы</string>
