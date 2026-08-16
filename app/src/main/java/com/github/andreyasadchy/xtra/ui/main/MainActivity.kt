@@ -1244,6 +1244,7 @@ class MainActivity : AppCompatActivity() {
                     putString(C.GQL_CLIENT_ID2, "ue6666qo983tsx6so1t0vnawi233wa")
                     putString(C.GQL_REDIRECT2, "https://www.twitch.tv/settings/connections")
                 }
+                putInt(C.SETTINGS_VERSION, 4)
             }
         }
         if (version < 5) {
@@ -1251,6 +1252,7 @@ class MainActivity : AppCompatActivity() {
                 if (prefs.getString(C.PLAYER_PROXY, "1")?.toIntOrNull() == 0) {
                     putBoolean(C.PLAYER_STREAM_PROXY, true)
                 }
+                putInt(C.SETTINGS_VERSION, 5)
             }
         }
         if (version < 6) {
@@ -1263,6 +1265,7 @@ class MainActivity : AppCompatActivity() {
                         putString(C.TOKEN_SUPPORTED_CODECS, "h265,h264")
                     }
                 }
+                putInt(C.SETTINGS_VERSION, 6)
             }
         }
         if (version < 7) {
@@ -1270,6 +1273,7 @@ class MainActivity : AppCompatActivity() {
                 if (prefs.getString(C.UI_CUTOUT_MODE, "0") == "1") {
                     putBoolean(C.UI_DRAW_BEHIND_CUTOUTS, true)
                 }
+                putInt(C.SETTINGS_VERSION, 7)
             }
         }
         if (version < 8) {
@@ -1289,6 +1293,7 @@ class MainActivity : AppCompatActivity() {
                 remove(C.GQL_TOKEN2)
                 remove(C.GQL_HEADERS)
                 remove(C.INTEGRITY_EXPIRATION)
+                putInt(C.SETTINGS_VERSION, 8)
             }
         }
         if (version < 9) {
@@ -1297,6 +1302,7 @@ class MainActivity : AppCompatActivity() {
                     putBoolean(C.CHAT_USE_WEBP, false)
                     putString(C.CHAT_IMAGE_LIBRARY, "1")
                 }
+                putInt(C.SETTINGS_VERSION, 9)
             }
         }
         if (version < 10) {
@@ -1310,6 +1316,7 @@ class MainActivity : AppCompatActivity() {
                         putBoolean(C.PLAYER_BACKGROUND_AUDIO, false)
                     }
                 }
+                putInt(C.SETTINGS_VERSION, 10)
             }
         }
         if (version < 11) {
@@ -1339,6 +1346,7 @@ class MainActivity : AppCompatActivity() {
                             "1:${if (defaultSavedPage == "1") "1" else "0"}:1"
                     putString(C.UI_SAVED_TABS, list)
                 }
+                putInt(C.SETTINGS_VERSION, 11)
             }
         }
         if (version < 12) {
@@ -1346,6 +1354,7 @@ class MainActivity : AppCompatActivity() {
                 if (!prefs.getBoolean("ui_theme_rounded_corners", true)) {
                     putString(C.UI_THEME_ROUNDED_CORNERS, "2")
                 }
+                putInt(C.SETTINGS_VERSION, 12)
             }
         }
         if (version < 13) {
@@ -1364,6 +1373,12 @@ class MainActivity : AppCompatActivity() {
                     putString(C.PLAYER_FORWARD, (it / 1000).toString())
                 }
                 putInt(C.SETTINGS_VERSION, 13)
+            }
+        }
+        if (version < 14) {
+            viewModel.updateProxies(prefs.getString(C.PLAYER_PROXY_URL, null))
+            prefs.edit {
+                putInt(C.SETTINGS_VERSION, 14)
             }
         }
     }

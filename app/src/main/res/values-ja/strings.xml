@@ -289,9 +289,7 @@
     <string name="stream_offline">%s は現在オフラインです</string>
     <string name="keep_screen_on_when_paused">動画一時停止時に画面をオンのままにする</string>
     <string name="stream_proxy">配信プロキシ</string>
-    <string name="stream_proxy_url">カスタムプロキシ URL</string>
     <string name="stream_proxy_url_desc">\"$channel\" はチャンネルのユーザー名で置き換えられます</string>
-    <string name="proxy_error">プロキシエラー</string>
     <string name="show_subtitles">字幕を表示</string>
     <string name="hide_subtitles">字幕を非表示</string>
     <string name="toggle_subtitles">字幕の表示の切り替え</string>
@@ -330,7 +328,6 @@
     <string name="show_view_count_icon">視聴者数と経過時間にアイコンを表示</string>
     <string name="playback_speeds">再生速度</string>
     <string name="use_custom_proxy">カスタムプロキシを使用</string>
-    <string name="use_custom_proxy_desc">プレイリストを返す URL が必要です</string>
     <string name="stream_headers">ストリームリクエストヘッダー</string>
     <string name="stream_headers_desc">JSON 形式を使用してください</string>
     <string name="follow">フォロー</string>
@@ -560,4 +557,12 @@
     <string name="recent_messages_api_url">Recent messages API URL</string>
     <string name="access_local_network_title">Grant local network permission</string>
     <string name="access_local_network_desc">Required for connecting to local proxies</string>
+    <string name="custom_proxy_settings">Custom proxy settings</string>
+    <string name="add_proxy">Add proxy</string>
+    <string name="delete_proxy_message">Are you sure you want to delete this proxy?</string>
+    <string name="add_proxy_query_params">Add URL query parameters (allow_source, allow_audio_only, fast_bread)</string>
+    <string name="proxy_url">Proxy URL</string>
+    <string name="online">Online</string>
+    <string name="offline">Offline</string>
+    <string name="proxy_error">Proxy error. %s is offline</string>
 </resources>
