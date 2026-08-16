@@ -45,7 +45,6 @@ class PlayerVolumeDialog : BottomSheetDialogFragment() {
             setVolume(volume)
             volumeBar.value = volume
             volumeBar.addOnChangeListener { _, value, _ ->
-                (parentFragment as? Media3PlayerFragment)?.changeVolume((value / 100f)) ?:
                 (parentFragment as? PlayerFragment)?.changeVolume((value / 100f))
                 setVolume(value)
             }

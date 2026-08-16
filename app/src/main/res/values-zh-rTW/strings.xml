@@ -520,7 +520,6 @@
     <string name="add_tag">新增標籤</string>
     <string name="save_filters">儲存篩選</string>
     <string name="delete_filter_message">您確認要想要刪除此篩選嗎？</string>
-    <string name="use_custom_playback_service">使用自訂播放服務</string>
     <string name="move_player_freely">自由地移動最小化的播放器</string>
     <string name="store_recent_searches">儲存最近的搜尋記錄</string>
     <string name="delete_recent_searches">刪除最近的搜尋記錄</string>
