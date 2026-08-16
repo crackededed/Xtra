@@ -124,6 +124,12 @@ class MediaPlayerFragment : PlayerFragment() {
                 }
             }
 
+            override fun toast(text: CharSequence, duration: Int) {
+                if (view != null) {
+                    Toast.makeText(requireContext(), text, duration).show()
+                }
+            }
+
             override fun updateVideoInfo() {
                 if (view != null) {
                     with(binding.playerControls) {

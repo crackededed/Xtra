@@ -290,9 +290,7 @@
     <string name="stream_offline">%s şimdi çevrimdışı</string>
     <string name="keep_screen_on_when_paused">Video duraklatıldığında ekranı açık tut</string>
     <string name="stream_proxy">Yayın proxy\'si</string>
-    <string name="stream_proxy_url">Özel proxy URL\'si</string>
     <string name="stream_proxy_url_desc">\"$channel\" kanal giriş adıyla değiştirilecektir</string>
-    <string name="proxy_error">Proxy hatası</string>
     <string name="show_subtitles">Altyazıları göster</string>
     <string name="hide_subtitles">Altyazıları gizle</string>
     <string name="toggle_subtitles">Altyazıları aç/kapat</string>
@@ -331,7 +329,6 @@
     <string name="show_view_count_icon">İzleyici sayısı ve yayın süresi simgelerini göster</string>
     <string name="playback_speeds">Oynatma hızları</string>
     <string name="use_custom_proxy">Özel proxy kullan</string>
-    <string name="use_custom_proxy_desc">Bir oynatma listesi döndüren bir URL gerektirir</string>
     <string name="stream_headers">Yayın isteği başlıkları</string>
     <string name="stream_headers_desc">JSON formatını kullanır</string>
     <string name="follow">Takip Et</string>
@@ -561,4 +558,12 @@
     <string name="recent_messages_api_url">Recent messages API URL</string>
     <string name="access_local_network_title">Grant local network permission</string>
     <string name="access_local_network_desc">Required for connecting to local proxies</string>
+    <string name="custom_proxy_settings">Custom proxy settings</string>
+    <string name="add_proxy">Add proxy</string>
+    <string name="delete_proxy_message">Are you sure you want to delete this proxy?</string>
+    <string name="add_proxy_query_params">Add URL query parameters (allow_source, allow_audio_only, fast_bread)</string>
+    <string name="proxy_url">Proxy URL</string>
+    <string name="online">Online</string>
+    <string name="offline">Offline</string>
+    <string name="proxy_error">Proxy error. %s is offline</string>
 </resources>

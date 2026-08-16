@@ -12,6 +12,7 @@ import com.apollographql.apollo.api.json.jsonReader
 import com.apollographql.apollo.api.json.writeObject
 import com.apollographql.apollo.api.parseResponse
 import com.github.andreyasadchy.xtra.BuildConfig
+import com.github.andreyasadchy.xtra.db.CustomProxiesDao
 import com.github.andreyasadchy.xtra.db.PlaybackStatesDao
 import com.github.andreyasadchy.xtra.db.RecentEmotesDao
 import com.github.andreyasadchy.xtra.db.TranslatedChannelsDao
@@ -35,6 +36,7 @@ import com.github.andreyasadchy.xtra.model.misc.FFZResponse
 import com.github.andreyasadchy.xtra.model.misc.RecentMessagesResponse
 import com.github.andreyasadchy.xtra.model.misc.STVChannelResponse
 import com.github.andreyasadchy.xtra.model.misc.STVEmoteSetResponse
+import com.github.andreyasadchy.xtra.model.ui.CustomProxy
 import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
@@ -76,6 +78,7 @@ class PlayerRepository(
     private val json: Json,
     private val recentEmotes: RecentEmotesDao,
     private val translatedChannelsDao: TranslatedChannelsDao,
+    private val customProxies: CustomProxiesDao,
     private val videoPositions: VideoPositionsDao,
     private val playbackStatesDao: PlaybackStatesDao,
     private val graphQLRepository: GraphQLRepository,
@@ -1961,6 +1964,30 @@ class PlayerRepository(
 
     suspend fun deleteTranslatedChannel(item: TranslatedChannel) = withContext(Dispatchers.IO) {
         translatedChannelsDao.delete(item)
+    }
+
+    suspend fun getCustomProxies() = withContext(Dispatchers.IO) {
+        customProxies.getAll()
+    }
+
+    suspend fun saveCustomProxies(items: List<CustomProxy>) = withContext(Dispatchers.IO) {
+        customProxies.insertList(items)
+    }
+
+    suspend fun updateCustomProxies(items: List<CustomProxy>) = withContext(Dispatchers.IO) {
+        customProxies.updateList(items)
+    }
+
+    suspend fun saveCustomProxy(item: CustomProxy): Long = withContext(Dispatchers.IO) {
+        customProxies.insert(item)
+    }
+
+    suspend fun deleteCustomProxy(item: CustomProxy) = withContext(Dispatchers.IO) {
+        customProxies.delete(item)
+    }
+
+    suspend fun updateCustomProxy(item: CustomProxy) = withContext(Dispatchers.IO) {
+        customProxies.update(item)
     }
 
     fun loadVideoPositions() = videoPositions.getAll()

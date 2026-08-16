@@ -289,9 +289,7 @@
     <string name="stream_offline">%s è ora offline</string>
     <string name="keep_screen_on_when_paused">Mantieni lo schermo acceso quando il video è in pausa</string>
     <string name="stream_proxy">Proxy streaming</string>
-    <string name="stream_proxy_url">URL proxy personalizzato</string>
     <string name="stream_proxy_url_desc">\"$channel\" verrà sostituito con il login del canale</string>
-    <string name="proxy_error">Errore proxy</string>
     <string name="show_subtitles">Mostra sottotitoli</string>
     <string name="hide_subtitles">Nascondi sottotitoli</string>
     <string name="toggle_subtitles">Attiva/disattiva sottotitoli</string>
@@ -330,7 +328,6 @@
     <string name="show_view_count_icon">Mostra icona conteggio visualizzazioni e uptime</string>
     <string name="playback_speeds">Velocità di riproduzione</string>
     <string name="use_custom_proxy">Usa proxy personalizzato</string>
-    <string name="use_custom_proxy_desc">Richiede un URL che restituisca una playlist</string>
     <string name="stream_headers">Intestazioni richiesta stream</string>
     <string name="stream_headers_desc">Utilizza il formato JSON</string>
     <string name="follow">Segui</string>
@@ -560,4 +557,12 @@
     <string name="recent_messages_api_url">Recent messages API URL</string>
     <string name="access_local_network_title">Grant local network permission</string>
     <string name="access_local_network_desc">Required for connecting to local proxies</string>
+    <string name="custom_proxy_settings">Custom proxy settings</string>
+    <string name="add_proxy">Add proxy</string>
+    <string name="delete_proxy_message">Are you sure you want to delete this proxy?</string>
+    <string name="add_proxy_query_params">Add URL query parameters (allow_source, allow_audio_only, fast_bread)</string>
+    <string name="proxy_url">Proxy URL</string>
+    <string name="online">Online</string>
+    <string name="offline">Offline</string>
+    <string name="proxy_error">Proxy error. %s is offline</string>
 </resources>
