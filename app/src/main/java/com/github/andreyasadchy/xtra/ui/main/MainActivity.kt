@@ -82,8 +82,6 @@ import com.github.andreyasadchy.xtra.ui.games.GamesFragmentDirections
 import com.github.andreyasadchy.xtra.ui.main.MainViewModel.Companion.MainViewModelFactory
 import com.github.andreyasadchy.xtra.ui.player.BasePlaybackService
 import com.github.andreyasadchy.xtra.ui.player.ExoPlayerFragment
-import com.github.andreyasadchy.xtra.ui.player.Media3Fragment
-import com.github.andreyasadchy.xtra.ui.player.Media3PlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.MediaPlayerFragment
 import com.github.andreyasadchy.xtra.ui.player.PlayerFragment
 import com.github.andreyasadchy.xtra.ui.saved.SavedMediaFragment
@@ -449,11 +447,11 @@ class MainActivity : AppCompatActivity() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 when (intent?.action) {
                     INTENT_START_AUDIO_ONLY -> {
-                        (playerFragment as? Media3PlayerFragment)?.startAudioOnly() ?: (playerFragment as? PlayerFragment)?.startAudioOnly()
+                        (playerFragment as? PlayerFragment)?.startAudioOnly()
                         moveTaskToBack(false)
                     }
                     INTENT_PLAY_PAUSE_PLAYER -> {
-                        (playerFragment as? Media3PlayerFragment)?.playPause() ?: (playerFragment as? PlayerFragment)?.playPause()
+                        (playerFragment as? PlayerFragment)?.playPause()
                     }
                 }
             }
@@ -468,25 +466,23 @@ class MainActivity : AppCompatActivity() {
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
         pipActionReceiver = pipReceiver
-        if (prefs.getString(C.PLAYER, C.EXOPLAYER) == C.MEDIA_PLAYER || prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
-            lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.playbackStates.collectLatest { states ->
-                        val savedState = states.firstOrNull()
-                        if (savedState != null) {
-                            (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? PlayerFragment)?.close()
-                            val fragment = when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
-                                C.MEDIA_PLAYER -> MediaPlayerFragment()
-                                else -> ExoPlayerFragment()
-                            }.apply {
-                                if (savedState.type == BasePlaybackService.OFFLINE_VIDEO) {
-                                    arguments = Bundle().apply {
-                                        putBoolean(PlayerFragment.KEY_OFFLINE, true)
-                                    }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.playbackStates.collectLatest { states ->
+                    val savedState = states.firstOrNull()
+                    if (savedState != null) {
+                        (playerFragment as? PlayerFragment)?.close()
+                        val fragment = when (prefs.getString(C.PLAYER, C.EXOPLAYER)) {
+                            C.MEDIA_PLAYER -> MediaPlayerFragment()
+                            else -> ExoPlayerFragment()
+                        }.apply {
+                            if (savedState.type == BasePlaybackService.OFFLINE_VIDEO) {
+                                arguments = Bundle().apply {
+                                    putBoolean(PlayerFragment.KEY_OFFLINE, true)
                                 }
                             }
-                            startPlayer(fragment)
                         }
+                        startPlayer(fragment)
                     }
                 }
             }
@@ -514,11 +510,6 @@ class MainActivity : AppCompatActivity() {
                     val offset = pair?.second
                     if (video != null) {
                         if (!video.id.isNullOrBlank()) {
-                            (playerFragment as? Media3PlayerFragment)?.also {
-                                it.minimize()
-                                it.close()
-                                closePlayer()
-                            } ?:
                             (playerFragment as? PlayerFragment)?.also {
                                 it.minimize()
                                 it.close()
@@ -548,7 +539,7 @@ class MainActivity : AppCompatActivity() {
                 viewModel.user.collectLatest { user ->
                     if (user != null) {
                         if (!user.id.isNullOrBlank() || !user.login.isNullOrBlank()) {
-                            (playerFragment as? Media3PlayerFragment)?.minimize() ?: (playerFragment as? PlayerFragment)?.minimize()
+                            (playerFragment as? PlayerFragment)?.minimize()
                             navController.navigate(
                                 ChannelPagerFragmentDirections.actionGlobalChannelPagerFragment(
                                     channelId = user.id,
@@ -570,7 +561,7 @@ class MainActivity : AppCompatActivity() {
                         val game = pair.first
                         val tag = pair.second
                         if (game != null) {
-                            (playerFragment as? Media3PlayerFragment)?.minimize() ?: (playerFragment as? PlayerFragment)?.minimize()
+                            (playerFragment as? PlayerFragment)?.minimize()
                             navController.navigate(
                                 if (prefs.getBoolean(C.UI_GAME_PAGER, true)) {
                                     GamePagerFragmentDirections.actionGlobalGamePagerFragment(
@@ -600,7 +591,7 @@ class MainActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.tag.collectLatest { tag ->
                     if (tag != null) {
-                        (playerFragment as? Media3PlayerFragment)?.minimize() ?: (playerFragment as? PlayerFragment)?.minimize()
+                        (playerFragment as? PlayerFragment)?.minimize()
                         navController.navigate(
                             GamesFragmentDirections.actionGlobalGamesFragment(
                                 tags = arrayOf(tag)
@@ -693,7 +684,7 @@ class MainActivity : AppCompatActivity() {
         }
         pipActionReceiver?.let { unregisterReceiver(it) }
         if (isFinishing) {
-            (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? PlayerFragment)?.close()
+            (playerFragment as? PlayerFragment)?.close()
         }
         super.onDestroy()
     }
@@ -719,7 +710,7 @@ class MainActivity : AppCompatActivity() {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) &&
             prefs.getBoolean(C.PLAYER_PICTURE_IN_PICTURE, true) &&
-            ((playerFragment as? Media3PlayerFragment)?.canEnterPictureInPicture() ?: (playerFragment as? PlayerFragment)?.canEnterPictureInPicture()) == true
+            (playerFragment as? PlayerFragment)?.canEnterPictureInPicture() == true
         ) {
             try {
                 enterPictureInPictureMode(PictureInPictureParams.Builder().build())
@@ -804,7 +795,7 @@ class MainActivity : AppCompatActivity() {
                         url.contains("twitch.tv/directory/all/tags/") -> {
                             val tag = url.substringAfter("twitch.tv/directory/all/tags/").takeIf { it.isNotBlank() }?.let { it.substringBefore("?", it.substringBefore("/")) }
                             if (!tag.isNullOrBlank()) {
-                                (playerFragment as? Media3PlayerFragment)?.minimize() ?: (playerFragment as? PlayerFragment)?.minimize()
+                                (playerFragment as? PlayerFragment)?.minimize()
                                 navController.navigate(
                                     TopStreamsFragmentDirections.actionGlobalTopFragment(
                                         tags = arrayOf(Uri.decode(tag))
@@ -813,7 +804,7 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                         url.contains("twitch.tv/directory/all") -> {
-                            (playerFragment as? Media3PlayerFragment)?.minimize() ?: (playerFragment as? PlayerFragment)?.minimize()
+                            (playerFragment as? PlayerFragment)?.minimize()
                             navController.navigate(
                                 TopStreamsFragmentDirections.actionGlobalTopFragment()
                             )
@@ -830,7 +821,7 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                         url.contains("twitch.tv/directory") -> {
-                            (playerFragment as? Media3PlayerFragment)?.minimize() ?: (playerFragment as? PlayerFragment)?.minimize()
+                            (playerFragment as? PlayerFragment)?.minimize()
                             navController.navigate(
                                 GamesFragmentDirections.actionGlobalGamesFragment()
                             )
@@ -838,7 +829,7 @@ class MainActivity : AppCompatActivity() {
                         url.contains("twitch.tv/team/") -> {
                             val teamName = url.substringAfter("twitch.tv/team/").takeIf { it.isNotBlank() }?.let { it.substringBefore("?", it.substringBefore("/")) }
                             if (!teamName.isNullOrBlank()) {
-                                (playerFragment as? Media3PlayerFragment)?.minimize() ?: (playerFragment as? PlayerFragment)?.minimize()
+                                (playerFragment as? PlayerFragment)?.minimize()
                                 navController.navigate(
                                     TeamFragmentDirections.actionGlobalTeamFragment(
                                         teamName = Uri.decode(teamName)
@@ -906,9 +897,9 @@ class MainActivity : AppCompatActivity() {
             }
             INTENT_OPEN_PLAYER -> {
                 if (playerFragment != null) {
-                    (playerFragment as? Media3PlayerFragment)?.maximize() ?: (playerFragment as? PlayerFragment)?.maximize()
+                    (playerFragment as? PlayerFragment)?.maximize()
                 } else {
-                    if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
+                    if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER) {
                         viewModel.getPlaybackStates()
                     }
                 }
@@ -932,13 +923,7 @@ class MainActivity : AppCompatActivity() {
 //Navigation listeners
 
     fun startStream(stream: Stream) {
-        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
-            (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close()
-            val fragment = Media3Fragment.newInstance(stream)
-            startPlayer(fragment)
-            return
-        }
-        (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close(deleteStates = false)
+        (playerFragment as? ExoPlayerFragment)?.close(deleteStates = false)
         viewModel.savePlaybackState(PlaybackState(
             type = BasePlaybackService.STREAM,
             streamId = stream.id,
@@ -962,13 +947,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun startVideo(video: Video, offset: Long?, ignoreSavedPosition: Boolean = false, videoUrl: String? = null) {
-        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
-            (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close()
-            val fragment = Media3Fragment.newInstance(video, offset, ignoreSavedPosition)
-            startPlayer(fragment)
-            return
-        }
-        (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close(deleteStates = false)
+        (playerFragment as? ExoPlayerFragment)?.close(deleteStates = false)
         viewModel.savePlaybackState(PlaybackState(
             type = BasePlaybackService.VIDEO,
             videoId = video.id,
@@ -1001,13 +980,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun startClip(clip: Clip) {
-        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
-            (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close()
-            val fragment = Media3Fragment.newInstance(clip)
-            startPlayer(fragment)
-            return
-        }
-        (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close(deleteStates = false)
+        (playerFragment as? ExoPlayerFragment)?.close(deleteStates = false)
         viewModel.savePlaybackState(PlaybackState(
             type = BasePlaybackService.CLIP,
             videoId = clip.videoId,
@@ -1035,13 +1008,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun startOfflineVideo(video: OfflineVideo, offset: Long? = null) {
-        if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && !prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
-            (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close()
-            val fragment = Media3Fragment.newInstance(video)
-            startPlayer(fragment)
-            return
-        }
-        (playerFragment as? Media3PlayerFragment)?.close() ?: (playerFragment as? ExoPlayerFragment)?.close(deleteStates = false)
+        (playerFragment as? ExoPlayerFragment)?.close(deleteStates = false)
         viewModel.savePlaybackState(PlaybackState(
             type = BasePlaybackService.OFFLINE_VIDEO,
             offlineVideoId = video.id,
@@ -1101,15 +1068,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun restorePlayerFragment() {
         if (playerFragment == null) {
-            playerFragment = supportFragmentManager.findFragmentById(R.id.playerContainer) as? Media3PlayerFragment ?: supportFragmentManager.findFragmentById(R.id.playerContainer) as? PlayerFragment
+            playerFragment = supportFragmentManager.findFragmentById(R.id.playerContainer) as? PlayerFragment
             if (playerFragment == null) {
-                if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER && prefs.getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
+                if (prefs.getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER) {
                     viewModel.getPlaybackStates()
                 }
             }
         } else {
-            if (viewModel.isPlayerOpened && ((playerFragment as? Media3PlayerFragment)?.secondViewIsHidden() ?: (playerFragment as? PlayerFragment)?.secondViewIsHidden()) == true && prefs.getBoolean(C.PLAYER_PICTURE_IN_PICTURE, true)) {
-                (playerFragment as? Media3PlayerFragment)?.maximize() ?: (playerFragment as? PlayerFragment)?.maximize()
+            if (viewModel.isPlayerOpened && (playerFragment as? PlayerFragment)?.secondViewIsHidden() == true && prefs.getBoolean(C.PLAYER_PICTURE_IN_PICTURE, true)) {
+                (playerFragment as? PlayerFragment)?.maximize()
             }
         }
     }
@@ -1122,11 +1089,6 @@ class MainActivity : AppCompatActivity() {
                 schedule(duration) {
                     lifecycleScope.launch {
                         if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
-                            (playerFragment as? Media3PlayerFragment)?.also {
-                                it.minimize()
-                                it.close()
-                                closePlayer()
-                            } ?:
                             (playerFragment as? PlayerFragment)?.also {
                                 it.minimize()
                                 it.close()
@@ -1143,11 +1105,6 @@ class MainActivity : AppCompatActivity() {
                             }
                         } else {
                             withStarted {
-                                (playerFragment as? Media3PlayerFragment)?.also {
-                                    it.minimize()
-                                    it.close()
-                                    closePlayer()
-                                } ?:
                                 (playerFragment as? PlayerFragment)?.also {
                                     it.minimize()
                                     it.close()

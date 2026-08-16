@@ -520,7 +520,6 @@
     <string name="add_tag">Tag hinzufügen</string>
     <string name="save_filters">Filter speichern</string>
     <string name="delete_filter_message">Möchtest du diesen Filter wirklich löschen?</string>
-    <string name="use_custom_playback_service">Eigenen Wiedergabedienst verwenden</string>
     <string name="move_player_freely">Minimierten Player frei bewegen</string>
     <string name="store_recent_searches">Letzte Suchanfragen speichern</string>
     <string name="delete_recent_searches">Letzte Suchanfragen löschen</string>
