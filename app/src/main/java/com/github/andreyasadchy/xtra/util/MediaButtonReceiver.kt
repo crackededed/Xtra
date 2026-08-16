@@ -36,11 +36,9 @@ class MediaButtonReceiver: BroadcastReceiver() {
                                     })
                                 }
                                 else -> {
-                                    if (context.prefs().getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
-                                        context.startForegroundService(Intent(context, ExoPlayerService::class.java).apply {
-                                            fillIn(intent, 0)
-                                        })
-                                    }
+                                    context.startForegroundService(Intent(context, ExoPlayerService::class.java).apply {
+                                        fillIn(intent, 0)
+                                    })
                                 }
                             }
                         }
@@ -57,11 +55,9 @@ class MediaButtonReceiver: BroadcastReceiver() {
                                 })
                             }
                             else -> {
-                                if (context.prefs().getBoolean(C.DEBUG_USE_CUSTOM_PLAYBACK_SERVICE, true)) {
-                                    context.startService(Intent(context, ExoPlayerService::class.java).apply {
-                                        fillIn(intent, 0)
-                                    })
-                                }
+                                context.startService(Intent(context, ExoPlayerService::class.java).apply {
+                                    fillIn(intent, 0)
+                                })
                             }
                         }
                     }

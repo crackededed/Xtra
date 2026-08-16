@@ -66,16 +66,6 @@
             android:foregroundServiceType="mediaPlayback" />
 
         <service
-            android:name=".ui.player.PlaybackService"
-            android:foregroundServiceType="mediaPlayback"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="androidx.media3.session.MediaSessionService" />
-                <action android:name="android.media.browse.MediaBrowserService" />
-            </intent-filter>
-        </service>
-
-        <service
             android:name=".ui.download.VideoDownloadService"
             android:foregroundServiceType="specialUse" />
 

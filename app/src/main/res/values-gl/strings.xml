@@ -520,7 +520,6 @@
     <string name="add_tag">Engadir etiqueta</string>
     <string name="save_filters">Gardar filtros</string>
     <string name="delete_filter_message">Estás seguro de que queres eliminar este filtro?</string>
-    <string name="use_custom_playback_service">Usar servizo de reprodución personalizado</string>
     <string name="move_player_freely">Mover libremente o reprodutor minimizado</string>
     <string name="store_recent_searches">Gardar buscas recentes</string>
     <string name="delete_recent_searches">Eliminar buscas recentes</string>

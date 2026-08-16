@@ -520,7 +520,6 @@
     <string name="add_tag">タグを追加</string>
     <string name="save_filters">フィルターの保存</string>
     <string name="delete_filter_message">このフィルタを削除してもよろしいですか？</string>
-    <string name="use_custom_playback_service">カスタム再生サービスを使用</string>
     <string name="move_player_freely">最小化したプレイヤーを自由に移動</string>
     <string name="store_recent_searches">最近の検索を保存</string>
     <string name="delete_recent_searches">最近の検索を削除</string>
