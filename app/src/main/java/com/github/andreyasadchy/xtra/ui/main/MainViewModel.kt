@@ -23,6 +23,7 @@ import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.PlaybackState
 import com.github.andreyasadchy.xtra.model.VideoPosition
 import com.github.andreyasadchy.xtra.model.ui.Clip
+import com.github.andreyasadchy.xtra.model.ui.CustomProxy
 import com.github.andreyasadchy.xtra.model.ui.Game
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.model.ui.Tag
@@ -1297,6 +1298,39 @@ class MainViewModel(
     fun deleteOldImages() {
         viewModelScope.launch(Dispatchers.IO) {
             localChannelFollowsRepository.deleteOldImages()
+        }
+    }
+
+    fun updateProxies(oldProxy: String?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            playerRepository.saveCustomProxies(
+                listOf(
+                    Pair("eu.luminous.dev/live/\$channel", true),
+                    Pair("eu2.luminous.dev/live/\$channel", true),
+                    Pair("eu3.luminous.dev/live/\$channel", true),
+                    Pair("as.luminous.dev/live/\$channel", true),
+                    Pair("lb-eu.cdn-perfprod.com/live/\$channel", true),
+                    Pair("lb-eu2.cdn-perfprod.com/live/\$channel", true),
+                    Pair("lb-eu3.cdn-perfprod.com/live/\$channel", true),
+                    Pair("lb-eu4.cdn-perfprod.com/live/\$channel", true),
+                    Pair("lb-eu5.cdn-perfprod.com/live/\$channel", true),
+                    Pair("lb-na.cdn-perfprod.com/live/\$channel", false),
+                    Pair("lb-sa.cdn-perfprod.com/live/\$channel", false),
+                    Pair("lb-as.cdn-perfprod.com/live/\$channel", false),
+                ).let { list ->
+                    if (!oldProxy.isNullOrBlank() &&
+                        oldProxy.substringAfter("://").substringBefore('?').let { url ->
+                            list.find { it.first == url } == null
+                        }
+                    ) {
+                        listOf(Pair(oldProxy, true)) + list
+                    } else {
+                        list
+                    }
+                }.mapIndexed { index, pair ->
+                    CustomProxy(pair.first, true, index, pair.second)
+                }
+            )
         }
     }
 

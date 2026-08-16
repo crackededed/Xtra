@@ -43,6 +43,7 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.VideoPosition
 import com.github.andreyasadchy.xtra.model.VideoQuality
+import com.github.andreyasadchy.xtra.model.ui.CustomProxy
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
@@ -92,6 +93,8 @@ class MediaPlayerService : BasePlaybackService() {
 
     var seekPosition: Long? = null
     var startPlayer = true
+    private var customProxyList: List<CustomProxy>? = null
+    private var currentCustomProxy = 0
     private var backupQualities: List<String>? = null
     private var created = false
 
@@ -113,6 +116,7 @@ class MediaPlayerService : BasePlaybackService() {
         fun loaded()
         fun changePlayerMode()
         fun toast(resId: Int, duration: Int)
+        fun toast(text: CharSequence, duration: Int)
         fun updateVideoInfo()
         fun changeSurfaceVisibility(visible: Boolean) {}
     }
@@ -409,7 +413,10 @@ class MediaPlayerService : BasePlaybackService() {
                     started = true
                     serviceListener?.started()
                     if (qualities.isNullOrEmpty()) {
-                        useCustomProxy = prefs().getBoolean(C.PLAYER_STREAM_PROXY, false)
+                        useCustomProxy = prefs().getBoolean(C.PLAYER_USE_CUSTOM_PROXY, true)
+                        if (useCustomProxy) {
+                            customProxyList = xtraModule.playerRepository.getCustomProxies().filter { it.enabled }.sortedBy { it.position }
+                        }
                     }
                     loadStream(restorePauseState)
                 }
@@ -525,9 +532,34 @@ class MediaPlayerService : BasePlaybackService() {
     private suspend fun loadStream(restorePauseState: Boolean = false, restart: Boolean = false) {
         channelLogin?.let { channelLogin ->
             if (restart || qualities.isNullOrEmpty()) {
-                val proxyUrl = prefs().getString(C.PLAYER_PROXY_URL, "")
-                if (useCustomProxy && !proxyUrl.isNullOrBlank()) {
-                    playlistUrl = proxyUrl.replace("\$channel", channelLogin)
+                val proxyUrl = if (useCustomProxy) {
+                    customProxyList?.getOrNull(currentCustomProxy)?.let { proxy ->
+                        proxy.url?.takeIf { it.isNotBlank() }?.let { proxyUrl ->
+                            (proxyUrl.toUri().takeIf { it.host != null } ?: "https://$proxyUrl".toUri()).let { uri ->
+                                if (proxy.addQueryParams) {
+                                    val source = uri.getQueryParameter("allow_source") == null
+                                    val audio = uri.getQueryParameter("allow_audio_only") == null
+                                    val lowLatency = uri.getQueryParameter("fast_bread") == null
+                                    if (source || audio || lowLatency) {
+                                        uri.buildUpon().apply {
+                                            if (source) {
+                                                appendQueryParameter("allow_source", "true")
+                                            }
+                                            if (audio) {
+                                                appendQueryParameter("allow_audio_only", "true")
+                                            }
+                                            if (lowLatency) {
+                                                appendQueryParameter("fast_bread", "true")
+                                            }
+                                        }.build()
+                                    } else uri
+                                } else uri
+                            }.toString().replace("\$channel", channelLogin)
+                        }
+                    }
+                } else null
+                if (proxyUrl != null) {
+                    playlistUrl = proxyUrl
                 } else {
                     useCustomProxy = false
                     val url = try {
@@ -725,8 +757,13 @@ class MediaPlayerService : BasePlaybackService() {
                                     serviceListener?.toast(R.string.stream_ended, Toast.LENGTH_LONG)
                                 }
                                 useCustomProxy && responseCode >= 400 -> {
-                                    useCustomProxy = false
-                                    serviceListener?.toast(R.string.proxy_error, Toast.LENGTH_LONG)
+                                    val host = customProxyList?.getOrNull(currentCustomProxy)?.url?.takeIf { it.isNotBlank() }?.let {
+                                        it.toUri().host ?: "https://$it".toUri().host
+                                    }
+                                    currentCustomProxy += 1
+                                    if (host != null) {
+                                        serviceListener?.toast(getString(R.string.proxy_error, host), Toast.LENGTH_LONG)
+                                    }
                                     lifecycleScope.launch {
                                         delay(1500.milliseconds)
                                         restartPlayer()

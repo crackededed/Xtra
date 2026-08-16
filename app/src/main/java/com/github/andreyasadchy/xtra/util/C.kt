@@ -187,6 +187,7 @@ object C {
     const val PLAYER_PROXY = "player_proxy"
     const val PLAYER_STREAM_PROXY = "player_stream_proxy"
     const val PLAYER_PROXY_URL = "player_proxy_url"
+    const val PLAYER_USE_CUSTOM_PROXY = "player_use_custom_proxy"
     const val PLAYER_STREAM_HEADERS = "player_stream_headers"
     const val PLAYER_SHOW_UPTIME = "player_show_uptime"
     const val PROXY_PLAYBACK_ACCESS_TOKEN = "proxy_playback_access_token"

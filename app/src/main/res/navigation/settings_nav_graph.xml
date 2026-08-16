@@ -109,4 +109,11 @@
     <action
         android:id="@+id/action_global_settingsSearchFragment"
         app:destination="@id/settingsSearchFragment" />
+    <fragment
+        android:id="@+id/customProxySettingsFragment"
+        android:name="com.github.andreyasadchy.xtra.ui.settings.CustomProxySettingsFragment"
+        android:label="@string/custom_proxy_settings" />
+    <action
+        android:id="@+id/action_global_customProxySettingsFragment"
+        app:destination="@id/customProxySettingsFragment" />
 </navigation>

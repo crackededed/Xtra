@@ -10,6 +10,7 @@ import com.github.andreyasadchy.xtra.model.chat.RecentEmote
 import com.github.andreyasadchy.xtra.model.ui.Bookmark
 import com.github.andreyasadchy.xtra.model.ui.BookmarkIgnoredUser
 import com.github.andreyasadchy.xtra.model.ui.ChannelSort
+import com.github.andreyasadchy.xtra.model.ui.CustomProxy
 import com.github.andreyasadchy.xtra.model.ui.GameSort
 import com.github.andreyasadchy.xtra.model.ui.LocalChannelFollow
 import com.github.andreyasadchy.xtra.model.ui.LocalGameFollow
@@ -34,9 +35,10 @@ import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
         TranslatedChannel::class,
         SavedFilter::class,
         RecentSearch::class,
-        PlaybackState::class
+        PlaybackState::class,
+        CustomProxy::class,
     ],
-    version = 37,
+    version = 38,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -56,4 +58,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun savedFilters(): SavedFiltersDao
     abstract fun recentSearches(): RecentSearchesDao
     abstract fun playbackStates(): PlaybackStatesDao
+    abstract fun customProxies(): CustomProxiesDao
 }
