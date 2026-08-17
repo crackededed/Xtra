@@ -13,6 +13,7 @@ import android.net.http.HttpEngine
 import android.os.Build
 import android.widget.Toast
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
@@ -1318,6 +1319,7 @@ class MainViewModel(
                     Pair("lb-as.cdn-perfprod.com/live/\$channel", false),
                 ).let { list ->
                     if (!oldProxy.isNullOrBlank() &&
+                        oldProxy.toUri().host != "api.ttv.lol" &&
                         oldProxy.substringAfter("://").substringBefore('?').let { url ->
                             list.find { it.first == url } == null
                         }
@@ -1330,6 +1332,21 @@ class MainViewModel(
                     CustomProxy(pair.first, true, index, pair.second)
                 }
             )
+        }
+    }
+
+    fun deleteOldProxy() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val list = playerRepository.getCustomProxies().sortedBy { it.position }.toMutableList()
+            val item = list.find { it.url?.toUri()?.host == "api.ttv.lol" }
+            if (item != null) {
+                list.remove(item)
+                val items = list.onEachIndexed { index, proxy ->
+                    proxy.position = index
+                }
+                playerRepository.deleteCustomProxy(item)
+                playerRepository.updateCustomProxies(items)
+            }
         }
     }
 
