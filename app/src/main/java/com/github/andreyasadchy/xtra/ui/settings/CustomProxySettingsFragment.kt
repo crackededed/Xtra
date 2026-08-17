@@ -1,9 +1,16 @@
 package com.github.andreyasadchy.xtra.ui.settings
 
+import android.content.Context
+import android.os.Build
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsets
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -34,6 +41,8 @@ class CustomProxySettingsFragment : Fragment() {
     private var _binding: FragmentCustomProxySettingsBinding? = null
     private val binding get() = _binding!!
     private val viewModel: CustomProxySettingsViewModel by viewModels { CustomProxySettingsViewModelFactory }
+    private var mEditText: EditText? = null
+    private val mShowSoftInputRunnable = Runnable { scheduleShowSoftInputInner() }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentCustomProxySettingsBinding.inflate(inflater, container, false)
@@ -84,9 +93,9 @@ class CustomProxySettingsFragment : Fragment() {
                     .setPositiveButton(delete) { _, _ ->
                         val list = viewModel.list.value
                         val index = list.indexOf(item).takeIf { it != -1 }
-                        viewModel.deleteProxy(item)
                         list.remove(item)
                         index?.let { adapter.notifyItemRemoved(it) }
+                        viewModel.deleteProxy(item)
                     }
                     .setNegativeButton(getString(android.R.string.cancel), null)
                     .show()
@@ -122,9 +131,9 @@ class CustomProxySettingsFragment : Fragment() {
                 showEditDialog(item) { url, addQueryParams ->
                     item.url = url
                     item.addQueryParams = addQueryParams
-                    viewModel.saveProxy(item)
                     list.add(item)
                     adapter.notifyItemInserted(index)
+                    viewModel.saveProxy(item)
                     viewModel.updateProxyStatus(requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), url)
                 }
             }
@@ -157,12 +166,7 @@ class CustomProxySettingsFragment : Fragment() {
 
     private fun showEditDialog(item: CustomProxy, positiveButtonListener: (String?, Boolean) -> Unit) {
         val binding = DialogCustomProxyEditBinding.inflate(layoutInflater)
-        binding.editText.editText?.let {
-            val url = item.url ?: ""
-            it.text.replace(0, it.length(), url, 0, url.length)
-        }
-        binding.checkBox.isChecked = item.addQueryParams
-        requireContext().getAlertDialogBuilder()
+        val dialog = requireContext().getAlertDialogBuilder()
             .setView(binding.root)
             .setPositiveButton(getString(android.R.string.ok)) { _, _ ->
                 positiveButtonListener(
@@ -171,7 +175,48 @@ class CustomProxySettingsFragment : Fragment() {
                 )
             }
             .setNegativeButton(getString(android.R.string.cancel), null)
-            .show()
+            .create()
+        binding.editText.editText?.apply {
+            val url = item.url ?: ""
+            text.replace(0, length(), url, 0, url.length)
+            inputType = InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            isSingleLine = false
+            maxLines = 3
+            setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    positiveButtonListener(
+                        binding.editText.editText?.text?.toString(),
+                        binding.checkBox.isChecked
+                    )
+                    dialog.dismiss()
+                    true
+                } else {
+                    false
+                }
+            }
+            if (requestFocus()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    dialog.window?.decorView?.windowInsetsController?.show(WindowInsets.Type.ime())
+                } else {
+                    mEditText = this
+                    scheduleShowSoftInputInner()
+                }
+            }
+        }
+        binding.checkBox.isChecked = item.addQueryParams
+        dialog.show()
+    }
+
+    private fun scheduleShowSoftInputInner() {
+        mEditText?.let { mEditText ->
+            if (mEditText.isFocused) {
+                val imm = mEditText.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                if (!imm.showSoftInput(mEditText, 0)) {
+                    mEditText.removeCallbacks(mShowSoftInputRunnable)
+                    mEditText.postDelayed(mShowSoftInputRunnable, 50)
+                }
+            }
+        }
     }
 
     override fun onDestroyView() {

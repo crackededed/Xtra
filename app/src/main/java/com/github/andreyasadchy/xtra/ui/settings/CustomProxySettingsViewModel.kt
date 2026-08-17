@@ -84,6 +84,7 @@ class CustomProxySettingsViewModel(
     fun deleteProxy(item: CustomProxy) {
         viewModelScope.launch {
             playerRepository.deleteCustomProxy(item)
+            updateProxies()
         }
     }
 
