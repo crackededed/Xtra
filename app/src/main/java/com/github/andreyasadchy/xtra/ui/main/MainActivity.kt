@@ -1381,5 +1381,14 @@ class MainActivity : AppCompatActivity() {
                 putInt(C.SETTINGS_VERSION, 14)
             }
         }
+        if (version < 15) {
+            val oldProxy = prefs.getString(C.PLAYER_PROXY_URL, null)
+            if (!oldProxy.isNullOrBlank() && oldProxy.toUri().host == "api.ttv.lol") {
+                viewModel.deleteOldProxy()
+            }
+            prefs.edit {
+                putInt(C.SETTINGS_VERSION, 15)
+            }
+        }
     }
 }
