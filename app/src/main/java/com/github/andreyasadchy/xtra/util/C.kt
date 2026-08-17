@@ -180,6 +180,7 @@ object C {
     const val PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED = "player_keep_screen_on_when_paused"
     const val PLAYER_AUDIO_FOCUS = "player_audio_focus"
     const val PLAYER_HANDLE_AUDIO_BECOMING_NOISY = "player_handle_audio_becoming_noisy"
+    const val PLAYER_SHOW_STREAM_NOTIFICATION_SEEKBAR = "player_show_stream_notification_seekbar"
     const val PLAYER_ROUNDED_CORNER_PADDING = "player_rounded_corner_padding"
     const val PLAYER_MOVE_FREELY = "player_move_freely"
     const val PLAYER_KEEP_CHAT_OPEN = "player_keep_chat_open"
