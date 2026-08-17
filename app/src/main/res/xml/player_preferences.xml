@@ -50,6 +50,13 @@
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_show_stream_notification_seekbar"
+        android:title="@string/show_stream_notification_seekbar"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
     <ListPreference
         android:defaultValue="saved"
         android:entries="@array/playerQualityEntries"
