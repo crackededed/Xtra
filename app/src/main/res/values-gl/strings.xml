@@ -565,4 +565,5 @@
     <string name="online">Online</string>
     <string name="offline">Offline</string>
     <string name="proxy_error">Proxy error. %s is offline</string>
+    <string name="show_stream_notification_seekbar">Show seekbar on media notification when watching streams</string>
 </resources>	

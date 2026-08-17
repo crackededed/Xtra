@@ -111,6 +111,7 @@ class ExoPlayerService : BasePlaybackService() {
     private var artworkUri: String? = null
     private var cachedBitmap: Bitmap? = null
     private var bitmapLoadJob: Job? = null
+    private var showStreamNotificationSeekbar = true
 
     private var dynamicsProcessing: DynamicsProcessing? = null
     private var sleepTimer: Timer? = null
@@ -148,6 +149,7 @@ class ExoPlayerService : BasePlaybackService() {
     private fun create(restorePauseState: Boolean) {
         if (!created) {
             created = true
+            showStreamNotificationSeekbar = prefs().getBoolean(C.PLAYER_SHOW_STREAM_NOTIFICATION_SEEKBAR, true)
             val playerListener = object : Player.Listener {
                 override fun onAudioSessionIdChanged(audioSessionId: Int) {
                     dynamicsProcessing?.let {
@@ -1591,6 +1593,7 @@ class ExoPlayerService : BasePlaybackService() {
 
     private fun updatePlaybackState() {
         player?.let { player ->
+            val showSeekbar = showStreamNotificationSeekbar || !player.isCurrentMediaItemLive
             session?.setPlaybackState(
                 PlaybackState.Builder().apply {
                     setState(
@@ -1613,14 +1616,24 @@ class ExoPlayerService : BasePlaybackService() {
                             Player.STATE_ENDED -> PlaybackState.STATE_STOPPED
                             else -> PlaybackState.STATE_NONE
                         },
-                        player.currentPosition,
-                        if (player.isPlaying) {
+                        if (showSeekbar) {
+                            player.currentPosition
+                        } else {
+                            -1
+                        },
+                        if (player.isPlaying && showSeekbar) {
                             player.playbackParameters.speed
                         } else {
                             0f
                         }
                     )
-                    setBufferedPosition(player.bufferedPosition)
+                    setBufferedPosition(
+                        if (showSeekbar) {
+                            player.bufferedPosition
+                        } else {
+                            -1
+                        }
+                    )
                     setActions(
                         (PlaybackState.ACTION_STOP
                                 or PlaybackState.ACTION_PAUSE
@@ -1628,18 +1641,23 @@ class ExoPlayerService : BasePlaybackService() {
                                 or PlaybackState.ACTION_REWIND
                                 or PlaybackState.ACTION_FAST_FORWARD
                                 or PlaybackState.ACTION_SET_RATING
-                                or PlaybackState.ACTION_PLAY_PAUSE
-                                or PlaybackState.ACTION_SEEK_TO).let {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                (it or PlaybackState.ACTION_PREPARE).let {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                        it or PlaybackState.ACTION_SET_PLAYBACK_SPEED
-                                    } else {
-                                        it
-                                    }
-                                }
+                                or PlaybackState.ACTION_PLAY_PAUSE).let {
+                            if (showSeekbar) {
+                                it or PlaybackState.ACTION_SEEK_TO
                             } else {
                                 it
+                            }.let {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    (it or PlaybackState.ACTION_PREPARE).let {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                            it or PlaybackState.ACTION_SET_PLAYBACK_SPEED
+                                        } else {
+                                            it
+                                        }
+                                    }
+                                } else {
+                                    it
+                                }
                             }
                         }
                     )
@@ -1744,7 +1762,14 @@ class ExoPlayerService : BasePlaybackService() {
                         putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, bitmap)
                         putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, bitmap)
                     }
-                    putLong(MediaMetadata.METADATA_KEY_DURATION, player.duration)
+                    putLong(
+                        MediaMetadata.METADATA_KEY_DURATION,
+                        if (showStreamNotificationSeekbar || !player.isCurrentMediaItemLive) {
+                            player.duration
+                        } else {
+                            -1
+                        }
+                    )
                 }.build()
             )
         }

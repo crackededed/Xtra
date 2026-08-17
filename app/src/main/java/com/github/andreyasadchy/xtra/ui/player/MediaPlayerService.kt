@@ -78,6 +78,7 @@ class MediaPlayerService : BasePlaybackService() {
     private var artworkUri: String? = null
     private var cachedBitmap: Bitmap? = null
     private var bitmapLoadJob: Job? = null
+    private var showStreamNotificationSeekbar = true
 
     private var dynamicsProcessing: DynamicsProcessing? = null
     private var sleepTimer: Timer? = null
@@ -126,6 +127,7 @@ class MediaPlayerService : BasePlaybackService() {
     private fun create(restorePauseState: Boolean) {
         if (!created) {
             created = true
+            showStreamNotificationSeekbar = prefs().getBoolean(C.PLAYER_SHOW_STREAM_NOTIFICATION_SEEKBAR, true)
             val rewindMs = (prefs().getString(C.PLAYER_REWIND, "10")?.toLongOrNull() ?: 10) * 1000
             val fastForwardMs = (prefs().getString(C.PLAYER_FORWARD, "10")?.toLongOrNull() ?: 10) * 1000
             val sessionCallback = object : MediaSession.Callback() {
@@ -344,7 +346,7 @@ class MediaPlayerService : BasePlaybackService() {
                 playerListener?.onError(player, width, height)
             }
             player.setOnErrorListener { player, what, extra ->
-                updatePlaybackState()
+                updatePlaybackState(true)
                 updateNotification()
                 playerListener?.onError(player, what, extra)
                 return@setOnErrorListener true
@@ -1399,8 +1401,9 @@ class MediaPlayerService : BasePlaybackService() {
         }
     }
 
-    private fun updatePlaybackState() {
+    private fun updatePlaybackState(error: Boolean = false) {
         player?.let { player ->
+            val showSeekbar = showStreamNotificationSeekbar || error || player.duration != -1
             session?.setPlaybackState(
                 PlaybackState.Builder().apply {
                     setState(
@@ -1409,8 +1412,12 @@ class MediaPlayerService : BasePlaybackService() {
                         } else {
                             PlaybackState.STATE_PLAYING
                         },
-                        player.currentPosition.toLong(),
-                        if (player.isPlaying) {
+                        if (showSeekbar) {
+                            player.currentPosition.toLong()
+                        } else {
+                            -1
+                        },
+                        if (player.isPlaying && showSeekbar) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                                 player.playbackParams.speed
                             } else {
@@ -1427,18 +1434,23 @@ class MediaPlayerService : BasePlaybackService() {
                                 or PlaybackState.ACTION_REWIND
                                 or PlaybackState.ACTION_FAST_FORWARD
                                 or PlaybackState.ACTION_SET_RATING
-                                or PlaybackState.ACTION_PLAY_PAUSE
-                                or PlaybackState.ACTION_SEEK_TO).let {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                (it or PlaybackState.ACTION_PREPARE).let {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                        it or PlaybackState.ACTION_SET_PLAYBACK_SPEED
-                                    } else {
-                                        it
-                                    }
-                                }
+                                or PlaybackState.ACTION_PLAY_PAUSE).let {
+                            if (showSeekbar) {
+                                it or PlaybackState.ACTION_SEEK_TO
                             } else {
                                 it
+                            }.let {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    (it or PlaybackState.ACTION_PREPARE).let {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                            it or PlaybackState.ACTION_SET_PLAYBACK_SPEED
+                                        } else {
+                                            it
+                                        }
+                                    }
+                                } else {
+                                    it
+                                }
                             }
                         }
                     )
