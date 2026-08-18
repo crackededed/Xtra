@@ -18,6 +18,7 @@ import coil3.request.target
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentChannelPanelListItemBinding
 import com.github.andreyasadchy.xtra.model.ui.ChannelPanel
+import com.github.andreyasadchy.xtra.ui.common.MarkdownHeadingSpacePlugin
 import io.noties.markwon.Markwon
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import io.noties.markwon.linkify.LinkifyPlugin
@@ -49,6 +50,7 @@ class ChannelPanelAdapter(
     private val markwon = Markwon.builder(fragment.requireContext())
         .usePlugin(SoftBreakAddsNewLinePlugin.create())
         .usePlugin(LinkifyPlugin.create())
+        .usePlugin(MarkdownHeadingSpacePlugin)
         .build()
 
     inner class ViewHolder(
