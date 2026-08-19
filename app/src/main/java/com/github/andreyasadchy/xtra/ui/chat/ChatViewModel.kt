@@ -782,6 +782,18 @@ class ChatViewModel(
             viewModelScope.launch {
                 userEmotesUpdated.emit(Unit)
             }
+            synchronized(autoCompleteList) {
+                autoCompleteList.addAll(saved.map {
+                    Emote(
+                        name = it.name,
+                        url1x = it.url1x,
+                        url2x = it.url2x,
+                        url3x = it.url3x,
+                        url4x = it.url4x,
+                        format = it.format
+                    )
+                }.filter { it !in autoCompleteList })
+            }
             synchronized(allEmotes) {
                 allEmotes.addAll(saved.filter { it.name !in allEmotes }.mapNotNull { it.name })
             }
@@ -814,6 +826,18 @@ class ChatViewModel(
                                 )
                             }
                             userEmotesUpdated.emit(Unit)
+                            synchronized(autoCompleteList) {
+                                autoCompleteList.addAll(sorted.map {
+                                    Emote(
+                                        name = it.name,
+                                        url1x = it.url1x,
+                                        url2x = it.url2x,
+                                        url3x = it.url3x,
+                                        url4x = it.url4x,
+                                        format = it.format
+                                    )
+                                }.filter { it !in autoCompleteList })
+                            }
                             synchronized(allEmotes) {
                                 allEmotes.addAll(sorted.filter { it.name !in allEmotes }.mapNotNull { it.name })
                             }
@@ -1873,6 +1897,18 @@ class ChatViewModel(
                             )
                         }
                         userEmotesUpdated.emit(Unit)
+                        synchronized(autoCompleteList) {
+                            autoCompleteList.addAll(sorted.map {
+                                Emote(
+                                    name = it.name,
+                                    url1x = it.url1x,
+                                    url2x = it.url2x,
+                                    url3x = it.url3x,
+                                    url4x = it.url4x,
+                                    format = it.format
+                                )
+                            }.filter { it !in autoCompleteList })
+                        }
                         synchronized(allEmotes) {
                             allEmotes.addAll(sorted.filter { it.name !in allEmotes }.mapNotNull { it.name })
                         }
