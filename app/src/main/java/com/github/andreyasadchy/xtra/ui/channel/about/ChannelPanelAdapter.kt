@@ -17,6 +17,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.FragmentChannelPanelListItemBinding
 import com.github.andreyasadchy.xtra.model.ui.ChannelPanel
+import com.github.andreyasadchy.xtra.util.HeadingFixPlugin
 import io.noties.markwon.Markwon
 import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import io.noties.markwon.linkify.LinkifyPlugin
@@ -48,6 +49,7 @@ class ChannelPanelAdapter(
     private val markwon = Markwon.builder(fragment.requireContext())
         .usePlugin(SoftBreakAddsNewLinePlugin.create())
         .usePlugin(LinkifyPlugin.create())
+        .usePlugin(HeadingFixPlugin())
         .build()
 
     inner class ViewHolder(
