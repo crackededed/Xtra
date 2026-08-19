@@ -43,6 +43,7 @@ import com.github.andreyasadchy.xtra.ui.settings.SettingsActivity
 import com.github.andreyasadchy.xtra.ui.team.TeamViewModel.Companion.TeamViewModelFactory
 import com.github.andreyasadchy.xtra.ui.top.TopStreamsFragmentDirections
 import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.HeadingFixPlugin
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
@@ -267,6 +268,7 @@ class TeamFragment : PagedListFragment(), Scrollable, IntegrityDialog.Listener {
                 val markwon = Markwon.builder(requireContext())
                     .usePlugin(SoftBreakAddsNewLinePlugin.create())
                     .usePlugin(LinkifyPlugin.create())
+                    .usePlugin(HeadingFixPlugin())
                     .build()
                 markwon.setMarkdown(teamDescription, team.description)
                 teamDescription.setOnClickListener {
