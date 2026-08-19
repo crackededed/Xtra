@@ -100,7 +100,13 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.Listener {
                                 if (!title.isNullOrBlank()) {
                                     socialMediaList.addView(
                                         TextView(requireContext()).apply {
-                                            val spannableString = SpannableString(title)
+                                            val host = url?.toUri()?.host?.removePrefix("www.")
+                                            val string = if (host != null) {
+                                                "$title ($host)"
+                                            } else {
+                                                title
+                                            }
+                                            val spannableString = SpannableString(string)
                                             spannableString.setSpan(StyleSpan(Typeface.BOLD), 0, title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                                             if (url != null) {
                                                 spannableString.setSpan(object : ClickableSpan() {
@@ -114,7 +120,7 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.Listener {
                                                             Toast.makeText(requireContext(), R.string.no_browser_found, Toast.LENGTH_LONG).show()
                                                         }
                                                     }
-                                                }, 0, title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                                                }, 0, string.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                                                 movementMethod = LinkMovementMethod.getInstance()
                                             }
                                             text = spannableString
