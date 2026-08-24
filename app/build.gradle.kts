@@ -28,7 +28,7 @@ android {
         minSdk = 23
         targetSdk = 37
         versionCode = 121
-        versionName = "2.59.2"
+        versionName = "2.59.3"
     }
 
     buildTypes {
@@ -79,7 +79,7 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.coordinatorlayout)
     implementation(libs.core)
-    implementation(libs.fragment.ktx)
+    implementation(libs.fragment)
     implementation(libs.lifecycle.service)
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.navigation.fragment)

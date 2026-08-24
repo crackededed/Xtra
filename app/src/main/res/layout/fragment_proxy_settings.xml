@@ -22,6 +22,6 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:listitem="@layout/fragment_custom_proxy_settings_list_item" />
+        tools:listitem="@layout/fragment_proxy_settings_list_item" />
 
 </LinearLayout>

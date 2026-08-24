@@ -1,9 +1,10 @@
 package com.github.andreyasadchy.xtra.ui.settings
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +12,7 @@ import android.view.WindowInsets
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
-import android.widget.LinearLayout
+import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -23,11 +24,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
-import com.github.andreyasadchy.xtra.databinding.DialogCustomProxyEditBinding
+import com.github.andreyasadchy.xtra.databinding.DialogStreamProxyEditBinding
 import com.github.andreyasadchy.xtra.databinding.FragmentProxySettingsBinding
-import com.github.andreyasadchy.xtra.databinding.FragmentProxySettingsListItemBinding
-import com.github.andreyasadchy.xtra.model.ui.CustomProxy
-import com.github.andreyasadchy.xtra.ui.settings.CustomProxySettingsViewModel.Companion.CustomProxySettingsViewModelFactory
+import com.github.andreyasadchy.xtra.model.ui.StreamProxy
+import com.github.andreyasadchy.xtra.ui.settings.StreamProxySettingsViewModel.Companion.StreamProxySettingsViewModelFactory
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
@@ -36,11 +36,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Collections
 
-class CustomProxySettingsFragment : Fragment() {
+class StreamProxySettingsFragment : Fragment() {
 
     private var _binding: FragmentProxySettingsBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: CustomProxySettingsViewModel by viewModels { CustomProxySettingsViewModelFactory }
+    private val viewModel: StreamProxySettingsViewModel by viewModels { StreamProxySettingsViewModelFactory }
     private var mEditText: EditText? = null
     private val mShowSoftInputRunnable = Runnable { scheduleShowSoftInputInner() }
 
@@ -51,7 +51,7 @@ class CustomProxySettingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         with(binding) {
-            val adapter = CustomProxySettingsAdapter(this@CustomProxySettingsFragment)
+            val adapter = StreamProxySettingsAdapter()
             val itemTouchHelper = ItemTouchHelper(
                 object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
                     override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
@@ -75,14 +75,18 @@ class CustomProxySettingsFragment : Fragment() {
                 viewModel.updateProxy(item)
             }
             adapter.editListener = { item ->
-                showEditDialog(item) { url, addQueryParams ->
-                    item.url = url
-                    item.addQueryParams = addQueryParams
+                showEditDialog(item) { host, port, user, password, proxyPlaybackAccessToken, proxyMultivariantPlaylist, proxyMediaPlaylist ->
+                    item.host = host
+                    item.port = port?.toIntOrNull()
+                    item.username = user
+                    item.password = password
+                    item.proxyPlaybackAccessToken = proxyPlaybackAccessToken
+                    item.proxyMultivariantPlaylist = proxyMultivariantPlaylist
+                    item.proxyMediaPlaylist = proxyMediaPlaylist
                     viewModel.updateProxy(item)
                     viewModel.list.value.indexOf(item).takeIf { it != -1 }?.let {
                         adapter.notifyItemChanged(it)
                     }
-                    viewModel.updateProxyStatus(requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), url)
                 }
             }
             adapter.deleteListener = { item ->
@@ -100,9 +104,8 @@ class CustomProxySettingsFragment : Fragment() {
                     .setNegativeButton(getString(android.R.string.cancel), null)
                     .show()
             }
-            adapter.statusMap = viewModel.statusMap
             itemTouchHelper.attachToRecyclerView(recyclerView)
-            viewModel.getProxies(requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP))
+            viewModel.getProxies()
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.list.collectLatest { list ->
@@ -110,31 +113,21 @@ class CustomProxySettingsFragment : Fragment() {
                     }
                 }
             }
-            viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.statusChanged.collect { url ->
-                        viewModel.list.value.forEachIndexed { index, proxy ->
-                            if (proxy.url == url) {
-                                (recyclerView.layoutManager?.findViewByPosition(index) as? LinearLayout)?.let {
-                                    val binding = FragmentProxySettingsListItemBinding.bind(it)
-                                    adapter.updateStatus(binding, requireContext(), proxy)
-                                } ?: adapter.notifyItemChanged(index)
-                            }
-                        }
-                    }
-                }
-            }
             addItem.setOnClickListener {
                 val list = viewModel.list.value
                 val index = list.lastIndex + 1
-                val item = CustomProxy(position = index)
-                showEditDialog(item) { url, addQueryParams ->
-                    item.url = url
-                    item.addQueryParams = addQueryParams
+                val item = StreamProxy(position = index)
+                showEditDialog(item) { host, port, user, password, proxyPlaybackAccessToken, proxyMultivariantPlaylist, proxyMediaPlaylist ->
+                    item.host = host
+                    item.port = port?.toIntOrNull()
+                    item.username = user
+                    item.password = password
+                    item.proxyPlaybackAccessToken = proxyPlaybackAccessToken
+                    item.proxyMultivariantPlaylist = proxyMultivariantPlaylist
+                    item.proxyMediaPlaylist = proxyMediaPlaylist
                     list.add(item)
                     adapter.notifyItemInserted(index)
                     viewModel.saveProxy(item)
-                    viewModel.updateProxyStatus(requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), url)
                 }
             }
             requireActivity().findViewById<AppBarLayout>(R.id.appBar)?.let { appBar ->
@@ -164,36 +157,26 @@ class CustomProxySettingsFragment : Fragment() {
         }
     }
 
-    private fun showEditDialog(item: CustomProxy, positiveButtonListener: (String?, Boolean) -> Unit) {
-        val binding = DialogCustomProxyEditBinding.inflate(layoutInflater)
+    private fun showEditDialog(item: StreamProxy, positiveButtonListener: (String?, String?, String?, String?, Boolean, Boolean, Boolean) -> Unit) {
+        val binding = DialogStreamProxyEditBinding.inflate(layoutInflater)
         val dialog = requireContext().getAlertDialogBuilder()
             .setView(binding.root)
             .setPositiveButton(getString(android.R.string.ok)) { _, _ ->
                 positiveButtonListener(
-                    binding.editText.editText?.text?.toString(),
-                    binding.checkBox.isChecked
+                    binding.hostInput.editText?.text?.toString(),
+                    binding.portInput.editText?.text?.toString(),
+                    binding.userInput.editText?.text?.toString(),
+                    binding.passwordInput.editText?.text?.toString(),
+                    binding.proxyPlaybackAccessTokenCheckBox.isChecked,
+                    binding.proxyMultivariantPlaylistCheckBox.isChecked,
+                    binding.proxyMediaPlaylistCheckBox.isChecked,
                 )
             }
             .setNegativeButton(getString(android.R.string.cancel), null)
             .create()
-        binding.editText.editText?.apply {
-            val url = item.url ?: ""
-            text.replace(0, length(), url, 0, url.length)
-            inputType = InputType.TYPE_TEXT_FLAG_MULTI_LINE
-            isSingleLine = false
-            maxLines = 3
-            setOnEditorActionListener { _, actionId, _ ->
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    positiveButtonListener(
-                        binding.editText.editText?.text?.toString(),
-                        binding.checkBox.isChecked
-                    )
-                    dialog.dismiss()
-                    true
-                } else {
-                    false
-                }
-            }
+        binding.hostInput.editText?.apply {
+            val string = item.host ?: ""
+            text.replace(0, length(), string, 0, string.length)
             if (requestFocus()) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     dialog.window?.decorView?.windowInsetsController?.show(WindowInsets.Type.ime())
@@ -203,7 +186,49 @@ class CustomProxySettingsFragment : Fragment() {
                 }
             }
         }
-        binding.checkBox.isChecked = item.addQueryParams
+        binding.portInput.editText?.apply {
+            val string = item.port?.toString() ?: ""
+            text.replace(0, length(), string, 0, string.length)
+        }
+        binding.userInput.editText?.apply {
+            val string = item.username ?: ""
+            text.replace(0, length(), string, 0, string.length)
+        }
+        binding.passwordInput.editText?.apply {
+            val string = item.password ?: ""
+            text.replace(0, length(), string, 0, string.length)
+            setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    positiveButtonListener(
+                        binding.hostInput.editText?.text?.toString(),
+                        binding.portInput.editText?.text?.toString(),
+                        binding.userInput.editText?.text?.toString(),
+                        binding.passwordInput.editText?.text?.toString(),
+                        binding.proxyPlaybackAccessTokenCheckBox.isChecked,
+                        binding.proxyMultivariantPlaylistCheckBox.isChecked,
+                        binding.proxyMediaPlaylistCheckBox.isChecked,
+                    )
+                    dialog.dismiss()
+                    true
+                } else {
+                    false
+                }
+            }
+        }
+        binding.proxyPlaybackAccessTokenCheckBox.isChecked = item.proxyPlaybackAccessToken
+        binding.proxyMultivariantPlaylistCheckBox.isChecked = item.proxyMultivariantPlaylist
+        binding.proxyMediaPlaylistCheckBox.isChecked = item.proxyMediaPlaylist
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN &&
+            ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_LOCAL_NETWORK) != PackageManager.PERMISSION_GRANTED
+        ) {
+            binding.permissionButton.apply {
+                visibility = View.VISIBLE
+                setOnClickListener {
+                    ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_LOCAL_NETWORK), 1)
+                }
+            }
+            binding.permissionText.visibility = View.VISIBLE
+        }
         dialog.show()
     }
 

@@ -35,6 +35,9 @@ class PlaybackState(
     val playlistUrl: String? = null,
     val restorePlaylist: Boolean = false,
     val useCustomProxy: Boolean = false,
+    val currentCustomProxy: Int = 0,
+    val useStreamProxy: Boolean = false,
+    val currentStreamProxy: Int = 0,
     val skipAccessToken: Boolean = false,
 ) {
     @PrimaryKey(autoGenerate = true)

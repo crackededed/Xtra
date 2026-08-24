@@ -15,6 +15,7 @@ import com.github.andreyasadchy.xtra.BuildConfig
 import com.github.andreyasadchy.xtra.db.CustomProxiesDao
 import com.github.andreyasadchy.xtra.db.PlaybackStatesDao
 import com.github.andreyasadchy.xtra.db.RecentEmotesDao
+import com.github.andreyasadchy.xtra.db.StreamProxiesDao
 import com.github.andreyasadchy.xtra.db.TranslatedChannelsDao
 import com.github.andreyasadchy.xtra.db.VideoPositionsDao
 import com.github.andreyasadchy.xtra.graphql.StreamPlaybackAccessTokenQuery
@@ -37,6 +38,7 @@ import com.github.andreyasadchy.xtra.model.misc.RecentMessagesResponse
 import com.github.andreyasadchy.xtra.model.misc.STVChannelResponse
 import com.github.andreyasadchy.xtra.model.misc.STVEmoteSetResponse
 import com.github.andreyasadchy.xtra.model.ui.CustomProxy
+import com.github.andreyasadchy.xtra.model.ui.StreamProxy
 import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
@@ -78,7 +80,8 @@ class PlayerRepository(
     private val json: Json,
     private val recentEmotes: RecentEmotesDao,
     private val translatedChannelsDao: TranslatedChannelsDao,
-    private val customProxies: CustomProxiesDao,
+    private val customProxiesDao: CustomProxiesDao,
+    private val streamProxiesDao: StreamProxiesDao,
     private val videoPositions: VideoPositionsDao,
     private val playbackStatesDao: PlaybackStatesDao,
     private val graphQLRepository: GraphQLRepository,
@@ -1960,27 +1963,51 @@ class PlayerRepository(
     }
 
     suspend fun getCustomProxies() = withContext(Dispatchers.IO) {
-        customProxies.getAll()
+        customProxiesDao.getAll()
     }
 
     suspend fun saveCustomProxies(items: List<CustomProxy>) = withContext(Dispatchers.IO) {
-        customProxies.insertList(items)
+        customProxiesDao.insertList(items)
     }
 
     suspend fun updateCustomProxies(items: List<CustomProxy>) = withContext(Dispatchers.IO) {
-        customProxies.updateList(items)
+        customProxiesDao.updateList(items)
     }
 
     suspend fun saveCustomProxy(item: CustomProxy): Long = withContext(Dispatchers.IO) {
-        customProxies.insert(item)
+        customProxiesDao.insert(item)
     }
 
     suspend fun deleteCustomProxy(item: CustomProxy) = withContext(Dispatchers.IO) {
-        customProxies.delete(item)
+        customProxiesDao.delete(item)
     }
 
     suspend fun updateCustomProxy(item: CustomProxy) = withContext(Dispatchers.IO) {
-        customProxies.update(item)
+        customProxiesDao.update(item)
+    }
+
+    suspend fun getStreamProxies() = withContext(Dispatchers.IO) {
+        streamProxiesDao.getAll()
+    }
+
+    suspend fun saveStreamProxies(items: List<StreamProxy>) = withContext(Dispatchers.IO) {
+        streamProxiesDao.insertList(items)
+    }
+
+    suspend fun updateStreamProxies(items: List<StreamProxy>) = withContext(Dispatchers.IO) {
+        streamProxiesDao.updateList(items)
+    }
+
+    suspend fun saveStreamProxy(item: StreamProxy): Long = withContext(Dispatchers.IO) {
+        streamProxiesDao.insert(item)
+    }
+
+    suspend fun deleteStreamProxy(item: StreamProxy) = withContext(Dispatchers.IO) {
+        streamProxiesDao.delete(item)
+    }
+
+    suspend fun updateStreamProxy(item: StreamProxy) = withContext(Dispatchers.IO) {
+        streamProxiesDao.update(item)
     }
 
     fun loadVideoPositions() = videoPositions.getAll()

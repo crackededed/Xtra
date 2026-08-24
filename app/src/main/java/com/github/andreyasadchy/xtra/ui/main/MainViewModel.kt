@@ -26,6 +26,7 @@ import com.github.andreyasadchy.xtra.model.ui.Clip
 import com.github.andreyasadchy.xtra.model.ui.CustomProxy
 import com.github.andreyasadchy.xtra.model.ui.Game
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
+import com.github.andreyasadchy.xtra.model.ui.StreamProxy
 import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.model.ui.User
 import com.github.andreyasadchy.xtra.model.ui.Video
@@ -1230,6 +1231,23 @@ class MainViewModel(
                 playerRepository.deleteCustomProxy(item)
                 playerRepository.updateCustomProxies(items)
             }
+        }
+    }
+
+    fun updateStreamProxies(host: String?, port: Int?, username: String?, password: String?, proxyPlaybackAccessToken: Boolean, proxyMultivariantPlaylist: Boolean, proxyMediaPlaylist: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            playerRepository.saveStreamProxies(
+                mutableListOf<StreamProxy>().apply {
+                    if (!host.isNullOrBlank() && port != null) {
+                        add(StreamProxy(host, port, username, password, proxyPlaybackAccessToken, proxyMultivariantPlaylist, proxyMediaPlaylist, 0))
+                        if (host != "firefox.api.cdn-perfprod.com" || port != 2023) {
+                            add(StreamProxy("firefox.api.cdn-perfprod.com", 2023, position = 1))
+                        }
+                    } else {
+                        add(StreamProxy("firefox.api.cdn-perfprod.com", 2023, position = 0))
+                    }
+                }
+            )
         }
     }
 

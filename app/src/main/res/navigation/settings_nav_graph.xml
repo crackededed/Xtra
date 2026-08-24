@@ -61,13 +61,6 @@
         android:id="@+id/action_global_bufferSettingsFragment"
         app:destination="@id/bufferSettingsFragment" />
     <fragment
-        android:id="@+id/proxySettingsFragment"
-        android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$ProxySettingsFragment"
-        android:label="@string/proxy_settings" />
-    <action
-        android:id="@+id/action_global_proxySettingsFragment"
-        app:destination="@id/proxySettingsFragment" />
-    <fragment
         android:id="@+id/playbackSettingsFragment"
         android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$PlaybackSettingsFragment"
         android:label="@string/playback_settings" />
@@ -116,4 +109,11 @@
     <action
         android:id="@+id/action_global_customProxySettingsFragment"
         app:destination="@id/customProxySettingsFragment" />
+    <fragment
+        android:id="@+id/streamProxySettingsFragment"
+        android:name="com.github.andreyasadchy.xtra.ui.settings.StreamProxySettingsFragment"
+        android:label="@string/proxy_settings" />
+    <action
+        android:id="@+id/action_global_streamProxySettingsFragment"
+        app:destination="@id/streamProxySettingsFragment" />
 </navigation>

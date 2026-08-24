@@ -327,7 +327,6 @@
     <string name="resume_download">Retomar descarga</string>
     <string name="show_view_count_icon">Amosar iconas de número de visualizacións e tempo en directo</string>
     <string name="playback_speeds">Velocidades de reprodución</string>
-    <string name="use_custom_proxy">Usar proxy personalizado</string>
     <string name="stream_headers">Cabeceiras da solicitude da transmisión</string>
     <string name="stream_headers_desc">Usa formato JSON</string>
     <string name="follow">Seguir</string>
@@ -566,4 +565,6 @@
     <string name="offline">Offline</string>
     <string name="proxy_error">Proxy error. %s is offline</string>
     <string name="show_stream_notification_seekbar">Show seekbar on media notification when watching streams</string>
+    <string name="use_custom_proxies">Use custom proxies</string>
+    <string name="use_stream_proxies">Use HTTP proxies</string>
 </resources>	

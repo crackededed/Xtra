@@ -327,7 +327,6 @@
     <string name="resume_download">繼續下載</string>
     <string name="show_view_count_icon">顯示觀看數量與上線時間圖示</string>
     <string name="playback_speeds">播放速度</string>
-    <string name="use_custom_proxy">使用自訂 Proxy</string>
     <string name="stream_headers">串流請求標頭</string>
     <string name="stream_headers_desc">使用 JSON 格式</string>
     <string name="follow">追隨</string>
@@ -566,4 +565,6 @@
     <string name="offline">Offline</string>
     <string name="proxy_error">Proxy error. %s is offline</string>
     <string name="show_stream_notification_seekbar">Show seekbar on media notification when watching streams</string>
+    <string name="use_custom_proxies">Use custom proxies</string>
+    <string name="use_stream_proxies">Use HTTP proxies</string>
 </resources>
