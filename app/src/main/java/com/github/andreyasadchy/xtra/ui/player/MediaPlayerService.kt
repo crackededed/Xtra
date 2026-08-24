@@ -42,6 +42,7 @@ import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.VideoPosition
 import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.model.ui.CustomProxy
+import com.github.andreyasadchy.xtra.model.ui.StreamProxy
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
@@ -93,7 +94,7 @@ class MediaPlayerService : BasePlaybackService() {
     var seekPosition: Long? = null
     var startPlayer = true
     private var customProxyList: List<CustomProxy>? = null
-    private var currentCustomProxy = 0
+    private var streamProxyList: List<StreamProxy>? = null
     private var backupQualities: List<String>? = null
     private var created = false
 
@@ -404,9 +405,20 @@ class MediaPlayerService : BasePlaybackService() {
                     serviceListener?.started()
                     if (qualities.isNullOrEmpty()) {
                         useCustomProxy = prefs().getBoolean(C.PLAYER_USE_CUSTOM_PROXY, true)
-                        if (useCustomProxy) {
-                            customProxyList = xtraModule.playerRepository.getCustomProxies().filter { it.enabled }.sortedBy { it.position }
+                        if (!useCustomProxy) {
+                            useStreamProxy = prefs().getBoolean(C.PLAYER_USE_STREAM_PROXY, false)
                         }
+                    }
+                    if (useCustomProxy) {
+                        customProxyList = xtraModule.playerRepository.getCustomProxies().filter {
+                            it.enabled && !it.url.isNullOrBlank()
+                        }.sortedBy { it.position }
+                    }
+                    if (useStreamProxy) {
+                        streamProxyList = xtraModule.playerRepository.getStreamProxies().filter {
+                            it.enabled && !it.host.isNullOrBlank() && it.port != null
+                                    && (it.proxyPlaybackAccessToken || it.proxyMultivariantPlaylist || it.proxyMediaPlaylist)
+                        }.sortedBy { it.position }
                     }
                     loadStream(restorePauseState)
                 }
@@ -509,10 +521,17 @@ class MediaPlayerService : BasePlaybackService() {
 
     private suspend fun loadStream(restorePauseState: Boolean = false, restart: Boolean = false) {
         channelLogin?.let { channelLogin ->
+            var streamProxy = if (useStreamProxy) {
+                streamProxyList?.getOrNull(currentStreamProxy).also {
+                    if (it == null) {
+                        useStreamProxy = false
+                    }
+                }
+            } else null
             if (restart || qualities.isNullOrEmpty()) {
                 val proxyUrl = if (useCustomProxy) {
                     customProxyList?.getOrNull(currentCustomProxy)?.let { proxy ->
-                        proxy.url?.takeIf { it.isNotBlank() }?.let { proxyUrl ->
+                        proxy.url?.let { proxyUrl ->
                             (proxyUrl.toUri().takeIf { it.host != null } ?: "https://$proxyUrl".toUri()).let { uri ->
                                 if (proxy.addQueryParams) {
                                     val source = uri.getQueryParameter("allow_source") == null
@@ -540,28 +559,31 @@ class MediaPlayerService : BasePlaybackService() {
                     playlistUrl = proxyUrl
                 } else {
                     useCustomProxy = false
-                    val url = try {
-                        xtraModule.playerRepository.loadStreamPlaylistUrl(
-                            context = this,
-                            networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
-                            gqlHeaders = TwitchApiHelper.getGQLHeaders(this@MediaPlayerService, prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, true)),
-                            channelLogin = channelLogin,
-                            randomDeviceId = prefs().getBoolean(C.TOKEN_RANDOM_DEVICE_ID, true),
-                            xDeviceId = prefs().getString(C.TOKEN_X_DEVICE_ID, "twitch-web-wall-mason"),
-                            playerType = prefs().getString(C.TOKEN_PLAYER_TYPE, "site"),
-                            supportedCodecs = prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
-                            proxyPlaybackAccessToken = prefs().getBoolean(C.PROXY_PLAYBACK_ACCESS_TOKEN, false),
-                            proxyHost = prefs().getString(C.PROXY_HOST, null),
-                            proxyPort = prefs().getString(C.PROXY_PORT, null)?.toIntOrNull(),
-                            proxyUser = prefs().getString(C.PROXY_USER, null),
-                            proxyPassword = prefs().getString(C.PROXY_PASSWORD, null),
-                            enableIntegrity = prefs().getBoolean(C.ENABLE_INTEGRITY, false)
-                        )
-                    } catch (e: Exception) {
-                        if (e.message == C.FAILED_INTEGRITY_CHECK) {
-                            integrity.emit("refreshStream")
+                    val url = if (streamProxy?.proxyPlaybackAccessToken == true) {
+                        var url: String?
+                        while (true) {
+                            val result = getStreamPlaylistUrl(channelLogin, streamProxy)
+                            if (result != null) {
+                                url = result
+                                break
+                            } else {
+                                currentStreamProxy += 1
+                                streamProxy = streamProxyList?.getOrNull(currentStreamProxy)
+                                if (streamProxy == null) {
+                                    useStreamProxy = false
+                                    url = getStreamPlaylistUrl(channelLogin, null)
+                                    break
+                                } else {
+                                    if (!streamProxy.proxyPlaybackAccessToken) {
+                                        url = getStreamPlaylistUrl(channelLogin, null)
+                                        break
+                                    }
+                                }
+                            }
                         }
-                        null
+                        url
+                    } else {
+                        getStreamPlaylistUrl(channelLogin, null)
                     }
                     playlistUrl = url
                 }
@@ -570,16 +592,15 @@ class MediaPlayerService : BasePlaybackService() {
             if (url != null) {
                 player?.let { player ->
                     val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp")
-                    val proxyMultivariantPlaylist = prefs().getBoolean(C.PROXY_MULTIVARIANT_PLAYLIST, false)
-                    val proxyHost = prefs().getString(C.PROXY_HOST, null)
-                    val proxyPort = prefs().getString(C.PROXY_PORT, null)?.toIntOrNull()
-                    val proxyUser = prefs().getString(C.PROXY_USER, null)
-                    val proxyPassword = prefs().getString(C.PROXY_PASSWORD, null)
-                    val useProxy = !useCustomProxy && proxyMultivariantPlaylist && !proxyHost.isNullOrBlank() && proxyPort != null
+                    val proxyHost = streamProxy?.host
+                    val proxyPort = streamProxy?.port
+                    val proxyUser = streamProxy?.username
+                    val proxyPassword = streamProxy?.password
+                    val proxyMultivariantPlaylist = streamProxy?.proxyMultivariantPlaylist == true && !proxyHost.isNullOrBlank() && proxyPort != null
                     val response = try {
                         when {
                             networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
-                                val httpEngine = if (useProxy) {
+                                val httpEngine = if (proxyMultivariantPlaylist) {
                                     val proxyHeaders = if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
                                         listOf(android.util.Pair("Proxy-Authorization", Base64.encodeToString("$proxyUser:$proxyPassword".toByteArray(), Base64.NO_WRAP)))
                                     } else emptyList()
@@ -649,7 +670,7 @@ class MediaPlayerService : BasePlaybackService() {
                                 }
                             }
                             networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
-                                val cronetEngine = if (useProxy) {
+                                val cronetEngine = if (proxyMultivariantPlaylist) {
                                     if (CronetProvider.getAllProviders(application).any { it.isEnabled }) {
                                         val proxyHeaders = if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
                                             mapOf("Proxy-Authorization" to Base64.encodeToString("$proxyUser:$proxyPassword".toByteArray(), Base64.NO_WRAP)).entries.toList()
@@ -726,7 +747,7 @@ class MediaPlayerService : BasePlaybackService() {
                                 }
                             }
                             else -> {
-                                val okHttpClient = if (useProxy) {
+                                val okHttpClient = if (proxyMultivariantPlaylist) {
                                     xtraModule.okHttpClient.value.newBuilder().apply {
                                         proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
                                         if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
@@ -764,10 +785,21 @@ class MediaPlayerService : BasePlaybackService() {
                                     serviceListener?.toast(R.string.stream_ended, Toast.LENGTH_LONG)
                                 }
                                 useCustomProxy && responseCode >= 400 -> {
-                                    val host = customProxyList?.getOrNull(currentCustomProxy)?.url?.takeIf { it.isNotBlank() }?.let {
+                                    val host = customProxyList?.getOrNull(currentCustomProxy)?.url?.let {
                                         it.toUri().host ?: "https://$it".toUri().host
                                     }
                                     currentCustomProxy += 1
+                                    if (host != null) {
+                                        serviceListener?.toast(getString(R.string.proxy_error, host), Toast.LENGTH_LONG)
+                                    }
+                                    lifecycleScope.launch {
+                                        delay(1500.milliseconds)
+                                        restartPlayer()
+                                    }
+                                }
+                                useStreamProxy && responseCode >= 400 -> {
+                                    val host = streamProxyList?.getOrNull(currentStreamProxy)?.host
+                                    currentStreamProxy += 1
                                     if (host != null) {
                                         serviceListener?.toast(getString(R.string.proxy_error, host), Toast.LENGTH_LONG)
                                     }
@@ -836,6 +868,32 @@ class MediaPlayerService : BasePlaybackService() {
                     }
                 }
             }
+        }
+    }
+
+    private suspend fun getStreamPlaylistUrl(channelLogin: String, streamProxy: StreamProxy?): String? {
+        return try {
+            xtraModule.playerRepository.loadStreamPlaylistUrl(
+                context = this,
+                networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
+                gqlHeaders = TwitchApiHelper.getGQLHeaders(this, prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, true)),
+                channelLogin = channelLogin,
+                randomDeviceId = prefs().getBoolean(C.TOKEN_RANDOM_DEVICE_ID, true),
+                xDeviceId = prefs().getString(C.TOKEN_X_DEVICE_ID, "twitch-web-wall-mason"),
+                playerType = prefs().getString(C.TOKEN_PLAYER_TYPE, "site"),
+                supportedCodecs = prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
+                proxyPlaybackAccessToken = streamProxy != null,
+                proxyHost = streamProxy?.host,
+                proxyPort = streamProxy?.port,
+                proxyUser = streamProxy?.username,
+                proxyPassword = streamProxy?.password,
+                enableIntegrity = prefs().getBoolean(C.ENABLE_INTEGRITY, false) && streamProxy == null
+            )
+        } catch (e: Exception) {
+            if (e.message == C.FAILED_INTEGRITY_CHECK) {
+                integrity.emit("refreshStream")
+            }
+            null
         }
     }
 

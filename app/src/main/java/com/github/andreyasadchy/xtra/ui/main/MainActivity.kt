@@ -1251,5 +1251,19 @@ class MainActivity : AppCompatActivity() {
                 putInt(C.SETTINGS_VERSION, 15)
             }
         }
+        if (version < 16) {
+            viewModel.updateStreamProxies(
+                prefs.getString(C.PROXY_HOST, null),
+                prefs.getString(C.PROXY_PORT, null)?.toIntOrNull(),
+                prefs.getString(C.PROXY_USER, null),
+                prefs.getString(C.PROXY_PASSWORD, null),
+                prefs.getBoolean(C.PROXY_PLAYBACK_ACCESS_TOKEN, false),
+                prefs.getBoolean(C.PROXY_MULTIVARIANT_PLAYLIST, false),
+                prefs.getBoolean(C.PROXY_MEDIA_PLAYLIST, true),
+            )
+            prefs.edit {
+                putInt(C.SETTINGS_VERSION, 16)
+            }
+        }
     }
 }

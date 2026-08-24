@@ -17,6 +17,7 @@ import com.github.andreyasadchy.xtra.model.ui.LocalGameFollow
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.model.ui.RecentSearch
 import com.github.andreyasadchy.xtra.model.ui.SavedFilter
+import com.github.andreyasadchy.xtra.model.ui.StreamProxy
 import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
 
 @Database(
@@ -37,6 +38,7 @@ import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
         RecentSearch::class,
         PlaybackState::class,
         CustomProxy::class,
+        StreamProxy::class,
     ],
     version = 39,
     exportSchema = false
@@ -59,4 +61,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun recentSearches(): RecentSearchesDao
     abstract fun playbackStates(): PlaybackStatesDao
     abstract fun customProxies(): CustomProxiesDao
+    abstract fun streamProxies(): StreamProxiesDao
 }
