@@ -474,20 +474,6 @@ class MainActivity : AppCompatActivity() {
         handleIntent(intent)
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.videoUrl.collectLatest { videoUrl ->
-                    if (videoUrl != null) {
-                        if (videoUrl == "") {
-                            Toast.makeText(this@MainActivity, R.string.video_not_found, Toast.LENGTH_SHORT).show()
-                        } else {
-                            startVideo(Video(), 0, videoUrl = videoUrl)
-                        }
-                        viewModel.videoUrl.value = null
-                    }
-                }
-            }
-        }
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.video.collectLatest { pair ->
                     val video = pair?.first
                     val offset = pair?.second
@@ -914,7 +900,7 @@ class MainActivity : AppCompatActivity() {
         startPlayer(fragment)
     }
 
-    fun startVideo(video: Video, offset: Long?, ignoreSavedPosition: Boolean = false, videoUrl: String? = null) {
+    fun startVideo(video: Video, offset: Long?, ignoreSavedPosition: Boolean = false, qualities: String? = null) {
         (playerFragment as? ExoPlayerFragment)?.close(deleteStates = false)
         viewModel.savePlaybackState(PlaybackState(
             type = BasePlaybackService.VIDEO,
@@ -932,8 +918,8 @@ class MainActivity : AppCompatActivity() {
             durationSeconds = video.durationSeconds,
             videoType = video.type,
             videoAnimatedPreviewURL = video.animatedPreviewURL,
-            videoUrl = videoUrl,
             position = offset,
+            qualities = qualities,
         ))
         if (ignoreSavedPosition && prefs.getBoolean(C.PLAYER_USE_VIDEO_POSITIONS, true)) {
             video.id?.toLongOrNull()?.let { id ->
@@ -1089,10 +1075,6 @@ class MainActivity : AppCompatActivity() {
 
     fun getSleepTimerTimeLeft(): Long {
         return viewModel.sleepTimerEndTime - System.currentTimeMillis()
-    }
-
-    fun findVideoUrl(streamId: String?, channelLogin: String?, streamCreatedAt: String?) {
-        viewModel.findVideoUrl(prefs.getString(C.NETWORK_LIBRARY, C.OKHTTP), streamId, channelLogin, streamCreatedAt)
     }
 
     fun downloadStream(filesDir: String, id: String?, title: String?, createdAt: String?, channelId: String?, channelLogin: String?, channelName: String?, channelImage: String?, thumbnail: String?, gameId: String?, gameSlug: String?, gameName: String?, downloadPath: String, quality: String, downloadChat: Boolean, downloadChatEmotes: Boolean, wifiOnly: Boolean) {

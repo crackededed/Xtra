@@ -197,7 +197,7 @@ class ExoPlayerService : BasePlaybackService() {
                     if (qualities.isNullOrEmpty() || updateQualities) {
                         val playlist = (player?.currentManifest as? HlsManifest)?.multivariantPlaylist
                         val list = playlist?.variants?.mapNotNull { variant ->
-                            val name = variant.format.label?.takeIf { it.isNotBlank() }
+                            val name = variant.stableVariantId?.takeIf { it.isNotBlank() }
                                 ?: playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.takeIf { it.isNotBlank() }
                             if (name != null) {
                                 VideoQuality(name, variant.format.height, variant.format.frameRate, variant.format.bitrate, variant.format.codecs, variant.url.toString())
@@ -361,12 +361,30 @@ class ExoPlayerService : BasePlaybackService() {
                                     && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                             if (isNetworkAvailable) {
                                 when {
-                                    !skipAccessToken && responseCode != 0 -> {
+                                    !skipAccessToken && responseCode != 0 && videoAnimatedPreviewURL != null -> {
                                         skipAccessToken = true
                                         videoAnimatedPreviewURL?.let { preview ->
-                                            val urls = TwitchApiHelper.getVideoUrlsFromPreview(preview, videoType, backupQualities)
-                                            val list = urls.map {
-                                                VideoQuality(it.key, url = it.value)
+                                            val backupQualities = backupQualities
+                                            val list = (backupQualities ?: TwitchApiHelper.defaultQualityList).map { quality ->
+                                                val split = quality.split("p")
+                                                val resolution = split.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()
+                                                val frameRate = split.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
+                                                val url = preview
+                                                    .replace("storyboards", quality)
+                                                    .replaceAfterLast(
+                                                        "/",
+                                                        if (videoType?.lowercase() == "highlight") {
+                                                            "highlight-${preview.substringAfterLast("/").substringBefore("-")}.m3u8"
+                                                        } else {
+                                                            "index-dvr.m3u8"
+                                                        }
+                                                    )
+                                                val name = if (quality == "chunked") {
+                                                    "source"
+                                                } else {
+                                                    quality
+                                                }
+                                                VideoQuality(name, resolution, frameRate.toFloat(), url = url)
                                             }
                                             qualities = list
                                                 .sortedWith(
@@ -383,7 +401,11 @@ class ExoPlayerService : BasePlaybackService() {
                                                     audio?.let { remove(it) }
                                                     add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY, audio?.resolution, audio?.frameRate, audio?.bitrate, audio?.codecs, audio?.url))
                                                 }
-                                            quality = qualities?.firstOrNull()
+                                            if (backupQualities != null) {
+                                                setDefaultQuality()
+                                            } else {
+                                                quality = qualities?.firstOrNull()
+                                            }
                                             serviceListener?.changePlayerMode()
                                             val url = quality?.url
                                             if (url != null) {
@@ -646,17 +668,7 @@ class ExoPlayerService : BasePlaybackService() {
                             updateVideoInfo()
                         }
                     } else {
-                        videoUrl?.let { videoUrl ->
-                            val template = videoUrl.removeSuffix("/chunked/index-dvr.m3u8")
-                            val list = TwitchApiHelper.defaultQualityList.map { quality ->
-                                val name = if (quality == "chunked") {
-                                    "source"
-                                } else {
-                                    quality
-                                }
-                                val url = "${template}/${quality}/index-dvr.m3u8"
-                                VideoQuality(name, url = url)
-                            }
+                        qualities?.let { list ->
                             qualities = list
                                 .sortedWith(
                                     compareByDescending<VideoQuality> { it.bitrate }
@@ -672,7 +684,7 @@ class ExoPlayerService : BasePlaybackService() {
                                     audio?.let { remove(it) }
                                     add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY, audio?.resolution, audio?.frameRate, audio?.bitrate, audio?.codecs, audio?.url))
                                 }
-                            quality = qualities?.firstOrNull()
+                            setDefaultQuality()
                             serviceListener?.changePlayerMode()
                             val url = quality?.url
                             if (url != null) {
@@ -1123,7 +1135,11 @@ class ExoPlayerService : BasePlaybackService() {
                     backupQualities = result.second
                 }
             }
-            val url = playlistUrl
+            val url = if (skipAccessToken) {
+                quality?.url
+            } else {
+                playlistUrl
+            }
             if (url != null) {
                 player?.let { player ->
                     val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)

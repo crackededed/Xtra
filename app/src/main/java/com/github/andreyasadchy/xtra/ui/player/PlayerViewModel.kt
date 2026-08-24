@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.NotificationUser
 import com.github.andreyasadchy.xtra.model.ShownNotification
+import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.model.ui.Bookmark
 import com.github.andreyasadchy.xtra.model.ui.Game
 import com.github.andreyasadchy.xtra.model.ui.LocalChannelFollow
@@ -24,20 +25,29 @@ import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
+import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.encodeToJsonElement
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.chromium.net.CronetEngine
 import java.io.File
 import java.io.FileOutputStream
+import java.security.MessageDigest
+import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutorService
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
@@ -47,6 +57,7 @@ class PlayerViewModel(
     private val cronetEngine: Lazy<CronetEngine?>,
     private val cronetExecutor: Lazy<ExecutorService>,
     private val okHttpClient: Lazy<OkHttpClient>,
+    private val json: Json,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
     private val playerRepository: PlayerRepository,
@@ -59,6 +70,7 @@ class PlayerViewModel(
 
     val stream = MutableStateFlow<Stream?>(null)
     private var streamUpdateJob: Job? = null
+    val unlistedVideoQualities = MutableStateFlow<String?>(null)
     val isBookmarked = MutableStateFlow<Boolean?>(null)
     val gamesList = MutableStateFlow<List<Game>?>(null)
     private val _isFollowing = MutableStateFlow<Boolean?>(null)
@@ -166,6 +178,123 @@ class PlayerViewModel(
                         id = it.id,
                         viewerCount = it.viewersCount,
                     )
+                }
+            }
+        }
+    }
+
+    fun findUnlistedVideo(networkLibrary: String?, qualities: List<VideoQuality>?, streamId: String?, channelLogin: String?, streamCreatedAt: String?) {
+        val createdAtSeconds = streamCreatedAt?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { time -> time > 0 }?.div(1000) }
+        if (!qualities.isNullOrEmpty() && streamId != null && channelLogin != null && createdAtSeconds != null) {
+            viewModelScope.launch(Dispatchers.IO) {
+                val semaphore = Semaphore(10)
+                val jobs = mutableListOf<Job>()
+                val result = MutableStateFlow<String?>(null)
+                val offsetList = listOf(0, -1)
+                for (offset in offsetList) {
+                    if (result.value != null) {
+                        break
+                    }
+                    val data = "${channelLogin}_${streamId}_${createdAtSeconds + offset}"
+                    val messageDigest = MessageDigest.getInstance("SHA-1")
+                    messageDigest.update(data.toByteArray())
+                    val hash = messageDigest.digest().toHexString().take(20)
+                    for (domain in TwitchApiHelper.vodDomains.reversed()) {
+                        semaphore.acquire()
+                        if (result.value != null) {
+                            break
+                        }
+                        val url = "${domain}/${hash}_${data}/chunked/index-dvr.m3u8"
+                        jobs.add(
+                            viewModelScope.launch(Dispatchers.IO) {
+                                try {
+                                    when {
+                                        networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
+                                            val response = suspendCancellableCoroutine { continuation ->
+                                                val timeout = NetworkUtils.HttpEngineTimeout()
+                                                val request = httpEngine.value!!.newUrlRequestBuilder(
+                                                    url,
+                                                    cronetExecutor.value,
+                                                    NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
+                                                ).build()
+                                                timeout.start(request, continuation)
+                                                request.start()
+                                                continuation.invokeOnCancellation {
+                                                    request.cancel()
+                                                    timeout.stop()
+                                                }
+                                            }
+                                            if (response.info.httpStatusCode in 200..299) {
+                                                result.value = url
+                                                jobs.forEach {
+                                                    it.cancel()
+                                                }
+                                            }
+                                        }
+                                        networkLibrary == C.CRONET && cronetEngine.value != null -> {
+                                            val response = suspendCancellableCoroutine { continuation ->
+                                                val timeout = NetworkUtils.CronetTimeout()
+                                                val request = cronetEngine.value!!.newUrlRequestBuilder(
+                                                    url,
+                                                    NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
+                                                    cronetExecutor.value
+                                                ).build()
+                                                timeout.start(request, continuation)
+                                                request.start()
+                                                continuation.invokeOnCancellation {
+                                                    request.cancel()
+                                                    timeout.stop()
+                                                }
+                                            }
+                                            if (response.info.httpStatusCode in 200..299) {
+                                                result.value = url
+                                                jobs.forEach {
+                                                    it.cancel()
+                                                }
+                                            }
+                                        }
+                                        else -> {
+                                            okHttpClient.value.newCall(Request.Builder().url(url).build()).executeAsync().use { response ->
+                                                if (response.isSuccessful) {
+                                                    result.value = url
+                                                    jobs.forEach {
+                                                        it.cancel()
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                } catch (e: CancellationException) {
+                                    ensureActive()
+                                } catch (e: Exception) {
+
+                                }
+                            }.also {
+                                it.invokeOnCompletion {
+                                    semaphore.release()
+                                }
+                            }
+                        )
+                    }
+                }
+                jobs.joinAll()
+                val resultUrl = result.value
+                unlistedVideoQualities.value = if (resultUrl != null) {
+                    val videoQualities = qualities.mapIndexed { index, quality ->
+                        val url = if (index == 0) {
+                            resultUrl
+                        } else {
+                            resultUrl.replace("chunked", quality.name.toString())
+                        }
+                        VideoQuality(quality.name, quality.resolution, quality.frameRate, quality.bitrate, quality.codecs, url)
+                    }
+                    buildJsonArray {
+                        videoQualities.forEach {
+                            add(json.encodeToJsonElement(it))
+                        }
+                    }.toString()
+                } else {
+                    ""
                 }
             }
         }
@@ -542,7 +671,7 @@ class PlayerViewModel(
             initializer {
                 val application = (this[APPLICATION_KEY] as XtraApp)
                 val xtraModule = application.xtraModule
-                PlayerViewModel(xtraModule.httpEngine, xtraModule.cronetEngine, xtraModule.cronetExecutor, xtraModule.okHttpClient, xtraModule.graphQLRepository, xtraModule.helixRepository, xtraModule.playerRepository, xtraModule.bookmarksRepository, xtraModule.localChannelFollowsRepository, xtraModule.notificationsRepository)
+                PlayerViewModel(xtraModule.httpEngine, xtraModule.cronetEngine, xtraModule.cronetExecutor, xtraModule.okHttpClient, xtraModule.json, xtraModule.graphQLRepository, xtraModule.helixRepository, xtraModule.playerRepository, xtraModule.bookmarksRepository, xtraModule.localChannelFollowsRepository, xtraModule.notificationsRepository)
             }
         }
     }
