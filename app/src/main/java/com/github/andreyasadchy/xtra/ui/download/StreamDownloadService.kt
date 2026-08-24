@@ -290,7 +290,7 @@ class StreamDownloadService : LifecycleService() {
                             val targetQuality = quality.split("p")
                             targetQuality.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()?.let { targetResolution ->
                                 val targetFps = targetQuality.getOrNull(1)?.takeWhile { it.isDigit() }?.toIntOrNull() ?: 30
-                                val last = qualities.last { it.name != VideoQuality.AUDIO_ONLY_QUALITY }
+                                val last = qualities.lastOrNull { it.name != VideoQuality.AUDIO_ONLY_QUALITY }
                                 qualities.find { quality ->
                                     quality.resolution != null
                                             && ((targetResolution == quality.resolution
@@ -555,15 +555,15 @@ class StreamDownloadService : LifecycleService() {
     }
 
     private suspend fun getQualities(playlist: String): List<VideoQuality> = withContext(Dispatchers.IO) {
-        val names = Regex("IVS-NAME=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
+        val stableVariantIds = Regex("STABLE-VARIANT-ID=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
         val resolutions = Regex("RESOLUTION=(\\d+x\\d+)").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
         val frameRates = Regex("FRAME-RATE=([\\d.]+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toFloatOrNull() }.toMutableList()
         val bitrates = Regex("BANDWIDTH=(\\d+)\\b").findAll(playlist).mapNotNull { it.groups[1]?.value?.toIntOrNull() }.toMutableList()
         val codecs = Regex("CODECS=\"(.+?)\"").findAll(playlist).mapNotNull { it.groups[1]?.value }.toMutableList()
         val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toMutableList()
-        val list = names.mapIndexedNotNull { index, name ->
+        val list = stableVariantIds.mapIndexedNotNull { index, variantId ->
             urls.getOrNull(index)?.let { url ->
-                VideoQuality(name, resolutions.getOrNull(index)?.substringBefore('x')?.toIntOrNull(), frameRates.getOrNull(index), bitrates.getOrNull(index), codecs.getOrNull(index), url)
+                VideoQuality(variantId, resolutions.getOrNull(index)?.substringAfter('x')?.toIntOrNull(), frameRates.getOrNull(index), bitrates.getOrNull(index), codecs.getOrNull(index), url)
             }
         }
         list

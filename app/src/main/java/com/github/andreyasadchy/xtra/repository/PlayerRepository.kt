@@ -97,6 +97,7 @@ class PlayerRepository(
             appendQueryParameter("allow_source", "true")
             appendQueryParameter("allow_audio_only", "true")
             appendQueryParameter("fast_bread", "true") // low latency
+            appendQueryParameter("include_unavailable", "true")
             appendQueryParameter("p", Random.nextInt(9999999).toString())
             if (supportedCodecs?.contains("av1", true) == true) {
                 appendQueryParameter("platform", "web")
@@ -491,12 +492,8 @@ class PlayerRepository(
                 (assets.find { it.portraitMetadata?.portraitClipLayout.isNullOrBlank() } ?: assets.firstOrNull())?.videoQualities?.mapIndexedNotNull { index, quality ->
                     if (quality.sourceURL.isNotBlank()) {
                         val name = if (!quality.quality.isNullOrBlank()) {
-                            val frameRate = quality.frameRate?.roundToInt() ?: 0
-                            if (frameRate < 60) {
-                                "${quality.quality}p"
-                            } else {
-                                "${quality.quality}p${frameRate}"
-                            }
+                            val frameRate = quality.frameRate?.roundToInt() ?: ""
+                            "${quality.quality}p${frameRate}"
                         } else {
                             index.toString()
                         }
@@ -519,12 +516,8 @@ class PlayerRepository(
                 (assets.find { it?.portraitMetadata?.portraitClipLayout.isNullOrBlank() } ?: assets.firstOrNull())?.videoQualities?.mapIndexedNotNull { index, quality ->
                     if (!quality?.sourceURL.isNullOrBlank()) {
                         val name = if (!quality.quality.isNullOrBlank()) {
-                            val frameRate = quality.frameRate?.roundToInt() ?: 0
-                            if (frameRate < 60) {
-                                "${quality.quality}p"
-                            } else {
-                                "${quality.quality}p${frameRate}"
-                            }
+                            val frameRate = quality.frameRate?.roundToInt() ?: ""
+                            "${quality.quality}p${frameRate}"
                         } else {
                             index.toString()
                         }

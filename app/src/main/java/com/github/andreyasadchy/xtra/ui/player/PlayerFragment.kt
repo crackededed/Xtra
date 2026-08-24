@@ -159,6 +159,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     open fun toggleAudioCompressor() {}
     open fun setSubtitlesButton() {}
     open fun toggleSubtitles(enabled: Boolean) {}
+    open fun getUnavailableQualities(): List<VideoQuality> = emptyList()
     open fun showPlaylistTags(mediaPlaylist: Boolean) {}
     open fun changeQuality(selectedQuality: VideoQuality?) {}
     open fun startAudioOnly() {}
@@ -877,6 +878,20 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                             }
                         }
                     }
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        repeatOnLifecycle(Lifecycle.State.STARTED) {
+                            viewModel.unlistedVideoQualities.collectLatest { qualities ->
+                                if (qualities != null) {
+                                    if (qualities.isNotBlank()) {
+                                        (requireActivity() as MainActivity).startVideo(Video(), 0, qualities = qualities)
+                                    } else {
+                                        Toast.makeText(requireContext(), R.string.video_not_found, Toast.LENGTH_SHORT).show()
+                                    }
+                                    viewModel.unlistedVideoQualities.value = null
+                                }
+                            }
+                        }
+                    }
                     if (requireContext().prefs().getBoolean(C.PLAYER_RESTART, true)) {
                         restart.visibility = View.VISIBLE
                         restart.setOnClickListener {
@@ -1347,8 +1362,14 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     VideoQuality.AUDIO_ONLY_QUALITY -> getString(R.string.audio_only)
                     VideoQuality.CHAT_ONLY_QUALITY -> getString(R.string.chat_only)
                     else -> {
-                        if (hideCodecs) {
+                        val frameRate = quality.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
+                        val qualityName = if (frameRate != null && frameRate <= 30) {
+                            quality.name.substring(0, quality.name.indexOf('p') + 1)
+                        } else {
                             quality.name.toString()
+                        }
+                        if (hideCodecs) {
+                            qualityName
                         } else {
                             val codec = quality.codecs?.substringBefore('.')
                             val codecName = when {
@@ -1357,7 +1378,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                 codec == "avc1" || codec.isNullOrBlank() -> "H.264"
                                 else -> codec
                             }
-                            "${quality.name} $codecName"
+                            "$qualityName $codecName"
                         }
                     }
                 } to quality
@@ -2181,8 +2202,33 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         }
     }
 
-    fun findVideoUrl() {
-        (activity as? MainActivity)?.findVideoUrl(playbackService?.streamId, playbackService?.channelLogin, playbackService?.createdAt)
+    fun findUnlistedVideo() {
+        val unavailableQualities = getUnavailableQualities()
+        val qualities = if (unavailableQualities.isNotEmpty()) {
+            mutableListOf<VideoQuality>().apply {
+                playbackService?.qualities?.filter { !it.url.isNullOrBlank() }?.let { addAll(it) }
+                addAll(unavailableQualities)
+                sortWith(
+                    compareByDescending<VideoQuality> { it.bitrate }
+                        .thenByDescending { it.frameRate }
+                        .thenByDescending { it.resolution }
+                )
+                val audio = find { it.name?.startsWith("audio", true) == true }
+                audio?.let {
+                    remove(it)
+                    add(it)
+                }
+            }
+        } else {
+            playbackService?.qualities?.filter { !it.url.isNullOrBlank() }
+        }
+        viewModel.findUnlistedVideo(
+            requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
+            qualities,
+            playbackService?.streamId,
+            playbackService?.channelLogin,
+            playbackService?.createdAt,
+        )
     }
 
     fun showDownloadDialog() {
