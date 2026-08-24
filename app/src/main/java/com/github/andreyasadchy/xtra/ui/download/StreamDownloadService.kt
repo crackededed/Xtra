@@ -211,12 +211,21 @@ class StreamDownloadService : LifecycleService() {
         val xDeviceId = prefs().getString(C.TOKEN_X_DEVICE_ID, "twitch-web-wall-mason")
         val playerType = prefs().getString(C.TOKEN_PLAYER_TYPE, "site")
         val supportedCodecs = prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264")
-        val proxyPlaybackAccessToken = prefs().getBoolean(C.PROXY_PLAYBACK_ACCESS_TOKEN, false)
-        val proxyMultivariantPlaylist = prefs().getBoolean(C.PROXY_MULTIVARIANT_PLAYLIST, false)
-        val proxyHost = prefs().getString(C.PROXY_HOST, null)
-        val proxyPort = prefs().getString(C.PROXY_PORT, null)?.toIntOrNull()
-        val proxyUser = prefs().getString(C.PROXY_USER, null)
-        val proxyPassword = prefs().getString(C.PROXY_PASSWORD, null)
+        val useCustomProxy = prefs().getBoolean(C.PLAYER_USE_CUSTOM_PROXY, true)
+        val customProxyList = if (useCustomProxy) {
+            xtraModule.playerRepository.getCustomProxies().filter {
+                it.enabled && !it.url.isNullOrBlank()
+            }.sortedBy { it.position }
+        } else null
+        var currentCustomProxy = 0
+        val useStreamProxy = prefs().getBoolean(C.PLAYER_USE_STREAM_PROXY, false)
+        val streamProxyList = if (useStreamProxy) {
+            xtraModule.playerRepository.getStreamProxies().filter {
+                it.enabled && !it.host.isNullOrBlank() && it.port != null
+                        && (it.proxyPlaybackAccessToken || it.proxyMultivariantPlaylist)
+            }.sortedBy { it.position }
+        } else null
+        var currentStreamProxy = 0
         var offlineVideo = currentOfflineVideo
         var downloadProgress = currentDownloadProgress
         val path = offlineVideo.downloadPath!!
@@ -273,11 +282,137 @@ class StreamDownloadService : LifecycleService() {
                 }
             }
             if (!playlist.isNullOrBlank()) {
-                val qualities = if ((proxyPlaybackAccessToken || proxyMultivariantPlaylist) && !proxyHost.isNullOrBlank() && proxyPort != null) {
-                    val newPlaylist = proxyPlaylist(playlistUrl, networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, proxyPlaybackAccessToken, proxyMultivariantPlaylist, proxyHost, proxyPort, proxyUser, proxyPassword)
-                    newPlaylist.takeIf { !it.isNullOrBlank() }?.let { getQualities(it).takeIf { it.isNotEmpty() } } ?: getQualities(playlist)
+                var proxyUrl = if (useCustomProxy) {
+                    customProxyList?.getOrNull(currentCustomProxy)?.let { proxy ->
+                        proxy.url?.let { proxyUrl ->
+                            (proxyUrl.toUri().takeIf { it.host != null } ?: "https://$proxyUrl".toUri()).let { uri ->
+                                if (proxy.addQueryParams) {
+                                    val source = uri.getQueryParameter("allow_source") == null
+                                    val audio = uri.getQueryParameter("allow_audio_only") == null
+                                    val lowLatency = uri.getQueryParameter("fast_bread") == null
+                                    if (source || audio || lowLatency) {
+                                        uri.buildUpon().apply {
+                                            if (source) {
+                                                appendQueryParameter("allow_source", "true")
+                                            }
+                                            if (audio) {
+                                                appendQueryParameter("allow_audio_only", "true")
+                                            }
+                                            if (lowLatency) {
+                                                appendQueryParameter("fast_bread", "true")
+                                            }
+                                        }.build()
+                                    } else uri
+                                } else uri
+                            }.toString().replace("\$channel", channelLogin)
+                        }
+                    }
+                } else null
+                val qualities = if (proxyUrl != null) {
+                    var result: List<VideoQuality>
+                    while (true) {
+                        val newPlaylist = loadPlaylist(proxyUrl!!, networkLibrary, false, null, null, null, null)
+                        if (!newPlaylist.isNullOrBlank()) {
+                            result = getQualities(newPlaylist).ifEmpty { getQualities(playlist) }
+                            break
+                        } else {
+                            currentCustomProxy += 1
+                            proxyUrl = customProxyList?.getOrNull(currentCustomProxy)?.let { proxy ->
+                                proxy.url?.let { proxyUrl ->
+                                    (proxyUrl.toUri().takeIf { it.host != null } ?: "https://$proxyUrl".toUri()).let { uri ->
+                                        if (proxy.addQueryParams) {
+                                            val source = uri.getQueryParameter("allow_source") == null
+                                            val audio = uri.getQueryParameter("allow_audio_only") == null
+                                            val lowLatency = uri.getQueryParameter("fast_bread") == null
+                                            if (source || audio || lowLatency) {
+                                                uri.buildUpon().apply {
+                                                    if (source) {
+                                                        appendQueryParameter("allow_source", "true")
+                                                    }
+                                                    if (audio) {
+                                                        appendQueryParameter("allow_audio_only", "true")
+                                                    }
+                                                    if (lowLatency) {
+                                                        appendQueryParameter("fast_bread", "true")
+                                                    }
+                                                }.build()
+                                            } else uri
+                                        } else uri
+                                    }.toString().replace("\$channel", channelLogin)
+                                }
+                            }
+                            if (proxyUrl == null) {
+                                result = getQualities(playlist)
+                                break
+                            }
+                        }
+                    }
+                    result
                 } else {
-                    getQualities(playlist)
+                    var streamProxy = if (useStreamProxy) {
+                        streamProxyList?.getOrNull(currentStreamProxy)
+                    } else null
+                    if (streamProxy != null) {
+                        val proxyHost = streamProxy.host
+                        val proxyPort = streamProxy.port
+                        val proxyUser = streamProxy.username
+                        val proxyPassword = streamProxy.password
+                        val playlistUrl = if (streamProxy.proxyPlaybackAccessToken) {
+                            var result: String
+                            while (true) {
+                                val newPlaylistUrl = try {
+                                    xtraModule.playerRepository.loadStreamPlaylistUrl(this@StreamDownloadService, networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, true, proxyHost, proxyPort, proxyUser, proxyPassword, false)
+                                } catch (e: Exception) {
+                                    null
+                                }
+                                if (!newPlaylistUrl.isNullOrBlank()) {
+                                    result = newPlaylistUrl
+                                    break
+                                } else {
+                                    currentStreamProxy += 1
+                                    streamProxy = streamProxyList?.getOrNull(currentStreamProxy)
+                                    if (streamProxy == null || !streamProxy.proxyPlaybackAccessToken) {
+                                        result = playlistUrl
+                                        break
+                                    }
+                                }
+                            }
+                            result
+                        } else {
+                            playlistUrl
+                        }
+                        if (streamProxy != null) {
+                            if (streamProxy.proxyMultivariantPlaylist) {
+                                var result: List<VideoQuality>
+                                while (true) {
+                                    val newPlaylist = loadPlaylist(playlistUrl, networkLibrary, true, proxyHost, proxyPort, proxyUser, proxyPassword)
+                                    if (!newPlaylist.isNullOrBlank()) {
+                                        result = getQualities(newPlaylist).ifEmpty { getQualities(playlist) }
+                                        break
+                                    } else {
+                                        currentStreamProxy += 1
+                                        streamProxy = streamProxyList?.getOrNull(currentStreamProxy)
+                                        if (streamProxy == null || !streamProxy.proxyMultivariantPlaylist) {
+                                            result = getQualities(playlist)
+                                            break
+                                        }
+                                    }
+                                }
+                                result
+                            } else {
+                                val newPlaylist = loadPlaylist(playlistUrl, networkLibrary, false, null, null, null, null)
+                                if (!newPlaylist.isNullOrBlank()) {
+                                    getQualities(newPlaylist).ifEmpty { getQualities(playlist) }
+                                } else {
+                                    getQualities(playlist)
+                                }
+                            }
+                        } else {
+                            getQualities(playlist)
+                        }
+                    } else {
+                        getQualities(playlist)
+                    }
                 }
                 if (qualities.isNotEmpty()) {
                     val selectedQuality = if (!quality.isNullOrBlank()) {
@@ -420,137 +555,137 @@ class StreamDownloadService : LifecycleService() {
         }
     }
 
-    private suspend fun proxyPlaylist(playlistUrl: String, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, supportedCodecs: String?, proxyPlaybackAccessToken: Boolean, proxyMultivariantPlaylist: Boolean, proxyHost: String, proxyPort: Int, proxyUser: String?, proxyPassword: String?): String? = withContext(Dispatchers.IO) {
-        val playlistUrl = if (proxyPlaybackAccessToken) {
-            xtraModule.playerRepository.loadStreamPlaylistUrl(this@StreamDownloadService, networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, true, proxyHost, proxyPort, proxyUser, proxyPassword, false)
-        } else {
-            playlistUrl
-        }
-        when {
-            networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
-                val httpEngine = if (proxyMultivariantPlaylist) {
-                    val proxyHeaders = if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
-                        listOf(android.util.Pair("Proxy-Authorization", Base64.encodeToString("$proxyUser:$proxyPassword".toByteArray(), Base64.NO_WRAP)))
-                    } else emptyList()
-                    val builder = HttpEngine.Builder(application)
-                    try {
-                        builder.setProxyOptions(ProxyOptions.fromProxyList(
-                            listOf(
-                                android.net.http.Proxy.createHttpProxy(
-                                    android.net.http.Proxy.SCHEME_HTTP,
-                                    proxyHost,
-                                    proxyPort,
-                                    xtraModule.cronetExecutor.value,
-                                    object : android.net.http.Proxy.HttpConnectCallback {
-                                        override fun onBeforeRequest(request: android.net.http.Proxy.HttpConnectCallback.Request) {
-                                            request.proceed(proxyHeaders)
-                                        }
+    private suspend fun loadPlaylist(playlistUrl: String, networkLibrary: String?, useProxy: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?): String? = withContext(Dispatchers.IO) {
+        val useProxy = useProxy && !proxyHost.isNullOrBlank() && proxyPort != null
+        try {
+            when {
+                networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
+                    val httpEngine = if (useProxy) {
+                        val proxyHeaders = if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                            listOf(android.util.Pair("Proxy-Authorization", Base64.encodeToString("$proxyUser:$proxyPassword".toByteArray(), Base64.NO_WRAP)))
+                        } else emptyList()
+                        val builder = HttpEngine.Builder(application)
+                        try {
+                            builder.setProxyOptions(ProxyOptions.fromProxyList(
+                                listOf(
+                                    android.net.http.Proxy.createHttpProxy(
+                                        android.net.http.Proxy.SCHEME_HTTP,
+                                        proxyHost,
+                                        proxyPort,
+                                        xtraModule.cronetExecutor.value,
+                                        object : android.net.http.Proxy.HttpConnectCallback {
+                                            override fun onBeforeRequest(request: android.net.http.Proxy.HttpConnectCallback.Request) {
+                                                request.proceed(proxyHeaders)
+                                            }
 
-                                        override fun onResponseReceived(responseHeaders: List<android.util.Pair<String?, String?>?>, statusCode: Int): Int {
-                                            return android.net.http.Proxy.HttpConnectCallback.RESPONSE_ACTION_PROCEED
+                                            override fun onResponseReceived(responseHeaders: List<android.util.Pair<String?, String?>?>, statusCode: Int): Int {
+                                                return android.net.http.Proxy.HttpConnectCallback.RESPONSE_ACTION_PROCEED
+                                            }
                                         }
-                                    }
-                                )
-                            ),
-                            ProxyOptions.ALL_PROXIES_FAILED_BEHAVIOR_DISALLOW_DIRECT
-                        ))
-                    } catch (e: NoClassDefFoundError) {
+                                    )
+                                ),
+                                ProxyOptions.ALL_PROXIES_FAILED_BEHAVIOR_DISALLOW_DIRECT
+                            ))
+                        } catch (e: NoClassDefFoundError) {
+                            null
+                        }?.build()
+                    } else {
+                        xtraModule.httpEngine.value!!
+                    }
+                    if (httpEngine != null) {
+                        val response = suspendCancellableCoroutine { continuation ->
+                            val timeout = NetworkUtils.HttpEngineTimeout(CRONET_TIMEOUT)
+                            val request = httpEngine.newUrlRequestBuilder(
+                                playlistUrl,
+                                xtraModule.cronetExecutor.value,
+                                NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
+                            ).build()
+                            timeout.start(request, continuation)
+                            request.start()
+                            continuation.invokeOnCancellation {
+                                request.cancel()
+                                timeout.stop()
+                            }
+                        }
+                        if (response.info.httpStatusCode in 200..299) {
+                            response.body.decodeToString()
+                        } else null
+                    } else {
+                        okHttpClient.value.newBuilder().apply {
+                            proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort!!)))
+                            if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                                proxyAuthenticator { _, response ->
+                                    response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
+                                }
+                            }
+                        }.build().newCall(Request.Builder().url(playlistUrl).build()).executeAsync().use { response ->
+                            if (response.isSuccessful) {
+                                response.body.string()
+                            } else null
+                        }
+                    }
+                }
+                networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
+                    val cronetEngine = if (useProxy) {
                         null
-                    }?.build()
-                } else {
-                    xtraModule.httpEngine.value!!
-                }
-                if (httpEngine != null) {
-                    val response = suspendCancellableCoroutine { continuation ->
-                        val timeout = NetworkUtils.HttpEngineTimeout(CRONET_TIMEOUT)
-                        val request = httpEngine.newUrlRequestBuilder(
-                            playlistUrl,
-                            xtraModule.cronetExecutor.value,
-                            NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
-                        ).build()
-                        timeout.start(request, continuation)
-                        request.start()
-                        continuation.invokeOnCancellation {
-                            request.cancel()
-                            timeout.stop()
-                        }
+                    } else {
+                        xtraModule.cronetEngine.value!!
                     }
-                    if (response.info.httpStatusCode in 200..299) {
-                        response.body.decodeToString()
-                    } else null
-                } else {
-                    okHttpClient.value.newBuilder().apply {
-                        proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
-                        if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
-                            proxyAuthenticator { _, response ->
-                                response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
+                    if (cronetEngine != null) {
+                        val response = suspendCancellableCoroutine { continuation ->
+                            val timeout = NetworkUtils.CronetTimeout(CRONET_TIMEOUT)
+                            val request = cronetEngine.newUrlRequestBuilder(
+                                playlistUrl,
+                                NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
+                                xtraModule.cronetExecutor.value
+                            ).build()
+                            timeout.start(request, continuation)
+                            request.start()
+                            continuation.invokeOnCancellation {
+                                request.cancel()
+                                timeout.stop()
                             }
                         }
-                    }.build().newCall(Request.Builder().url(playlistUrl).build()).executeAsync().use { response ->
+                        if (response.info.httpStatusCode in 200..299) {
+                            response.body.decodeToString()
+                        } else null
+                    } else {
+                        okHttpClient.value.newBuilder().apply {
+                            proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort!!)))
+                            if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                                proxyAuthenticator { _, response ->
+                                    response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
+                                }
+                            }
+                        }.build().newCall(Request.Builder().url(playlistUrl).build()).executeAsync().use { response ->
+                            if (response.isSuccessful) {
+                                response.body.string()
+                            } else null
+                        }
+                    }
+                }
+                else -> {
+                    val okHttpClient = if (useProxy) {
+                        okHttpClient.value.newBuilder().apply {
+                            proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
+                            if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
+                                proxyAuthenticator { _, response ->
+                                    response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
+                                }
+                            }
+                        }.build()
+                    } else {
+                        okHttpClient.value
+                    }
+                    okHttpClient.newCall(Request.Builder().url(playlistUrl).build()).executeAsync().use { response ->
                         if (response.isSuccessful) {
                             response.body.string()
                         } else null
                     }
                 }
             }
-            networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
-                val cronetEngine = if (proxyMultivariantPlaylist) {
-                    null
-                } else {
-                    xtraModule.cronetEngine.value!!
-                }
-                if (cronetEngine != null) {
-                    val response = suspendCancellableCoroutine { continuation ->
-                        val timeout = NetworkUtils.CronetTimeout(CRONET_TIMEOUT)
-                        val request = cronetEngine.newUrlRequestBuilder(
-                            playlistUrl,
-                            NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
-                            xtraModule.cronetExecutor.value
-                        ).build()
-                        timeout.start(request, continuation)
-                        request.start()
-                        continuation.invokeOnCancellation {
-                            request.cancel()
-                            timeout.stop()
-                        }
-                    }
-                    if (response.info.httpStatusCode in 200..299) {
-                        response.body.decodeToString()
-                    } else null
-                } else {
-                    okHttpClient.value.newBuilder().apply {
-                        proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
-                        if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
-                            proxyAuthenticator { _, response ->
-                                response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
-                            }
-                        }
-                    }.build().newCall(Request.Builder().url(playlistUrl).build()).executeAsync().use { response ->
-                        if (response.isSuccessful) {
-                            response.body.string()
-                        } else null
-                    }
-                }
-            }
-            else -> {
-                val okHttpClient = if (proxyMultivariantPlaylist) {
-                    okHttpClient.value.newBuilder().apply {
-                        proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
-                        if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
-                            proxyAuthenticator { _, response ->
-                                response.request.newBuilder().header("Proxy-Authorization", Credentials.basic(proxyUser, proxyPassword)).build()
-                            }
-                        }
-                    }.build()
-                } else {
-                    okHttpClient.value
-                }
-                okHttpClient.newCall(Request.Builder().url(playlistUrl).build()).executeAsync().use { response ->
-                    if (response.isSuccessful) {
-                        response.body.string()
-                    } else null
-                }
-            }
+        } catch (e: Exception) {
+            null
         }
     }
 

@@ -28,7 +28,7 @@ android {
         minSdk = 16
         targetSdk = 37
         versionCode = 121
-        versionName = "2.59.2"
+        versionName = "2.59.3"
     }
 
     buildTypes {
@@ -69,8 +69,8 @@ android {
             "androidx.appcompat:appcompat:1.7.0-alpha03",
             "androidx.constraintlayout:constraintlayout:2.1.4",
             "androidx.coordinatorlayout:coordinatorlayout:1.3.0-alpha02",
-            "androidx.core:core-ktx:1.13.0-alpha01",
-            "androidx.fragment:fragment-ktx:1.7.0-alpha06",
+            "androidx.core:core:1.13.0-alpha01",
+            "androidx.fragment:fragment:1.7.0-alpha06",
             "androidx.lifecycle:lifecycle-service:2.7.0-alpha03",
             "androidx.lifecycle:lifecycle-viewmodel:2.7.0-alpha03",
             "androidx.media3:media3-exoplayer:1.2.1",
@@ -81,7 +81,6 @@ android {
             "androidx.navigation:navigation-ui:2.7.7",
             "androidx.paging:paging-runtime:3.3.0-alpha02",
             "androidx.recyclerview:recyclerview:1.4.0-alpha01",
-            "androidx.room:room-ktx:2.6.1",
             "androidx.room:room-compiler:2.6.1",
             "androidx.room:room-paging:2.6.1",
             "androidx.room:room-runtime:2.6.1",
@@ -101,6 +100,7 @@ android {
 dependencies {
     implementation("androidx.multidex:multidex:2.0.1")
     implementation("androidx.core:core-ktx:1.13.0-alpha01")
+    implementation("androidx.fragment:fragment-ktx:1.7.0-alpha06")
     implementation("androidx.room:room-ktx:2.6.1")
     implementation("androidx.media:media:1.6.0")
     compileOnly("com.google.j2objc:j2objc-annotations:3.0.0") // OkHttpDataSource SettableFuture
@@ -116,7 +116,8 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
     implementation(libs.coordinatorlayout)
-    implementation(libs.fragment.ktx)
+    implementation(libs.core)
+    implementation(libs.fragment)
     implementation(libs.lifecycle.service)
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.navigation.fragment)

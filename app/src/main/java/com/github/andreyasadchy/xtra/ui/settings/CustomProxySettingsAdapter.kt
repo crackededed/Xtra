@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
-import com.github.andreyasadchy.xtra.databinding.FragmentCustomProxySettingsListItemBinding
+import com.github.andreyasadchy.xtra.databinding.FragmentProxySettingsListItemBinding
 import com.github.andreyasadchy.xtra.model.ui.CustomProxy
 
 class CustomProxySettingsAdapter(
@@ -40,7 +40,7 @@ class CustomProxySettingsAdapter(
     var statusMap: Map<String, Boolean>? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = FragmentCustomProxySettingsListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = FragmentProxySettingsListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding, fragment)
     }
 
@@ -48,7 +48,7 @@ class CustomProxySettingsAdapter(
         holder.bind(getItem(position))
     }
 
-    fun updateStatus(binding: FragmentCustomProxySettingsListItemBinding, context: Context, item: CustomProxy) {
+    fun updateStatus(binding: FragmentProxySettingsListItemBinding, context: Context, item: CustomProxy) {
         with(binding) {
             if (!item.url.isNullOrBlank()) {
                 status.visibility = View.VISIBLE
@@ -90,7 +90,7 @@ class CustomProxySettingsAdapter(
     }
 
     inner class ViewHolder(
-        private val binding: FragmentCustomProxySettingsListItemBinding,
+        private val binding: FragmentProxySettingsListItemBinding,
         private val fragment: Fragment,
     ) : RecyclerView.ViewHolder(binding.root) {
         @SuppressLint("ClickableViewAccessibility")
