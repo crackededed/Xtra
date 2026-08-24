@@ -171,6 +171,8 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
       Pattern.compile("SUPPLEMENTAL-CODECS=" + ATTR_QUOTED_STRING_VALUE_PATTERN);
   private static final Pattern REGEX_RESOLUTION = Pattern.compile("RESOLUTION=(\\d+x\\d+)");
   private static final Pattern REGEX_FRAME_RATE = Pattern.compile("FRAME-RATE=([\\d\\.]+)\\b");
+  private static final Pattern REGEX_STABLE_VARIANT_ID =
+      Pattern.compile("STABLE-VARIANT-ID=" + ATTR_QUOTED_STRING_VALUE_PATTERN); // xtra: quality names
   private static final Pattern REGEX_TARGET_DURATION =
       Pattern.compile(TAG_TARGET_DURATION + ":(\\d+)\\b");
   private static final Pattern REGEX_ATTR_DURATION = Pattern.compile("DURATION=([\\d\\.]+)\\b");
@@ -246,8 +248,6 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
       Pattern.compile("LANGUAGE=" + ATTR_QUOTED_STRING_VALUE_PATTERN);
   private static final Pattern REGEX_NAME =
       Pattern.compile("NAME=" + ATTR_QUOTED_STRING_VALUE_PATTERN);
-  private static final Pattern REGEX_IVS_NAME =
-      Pattern.compile("IVS-NAME=" + ATTR_QUOTED_STRING_VALUE_PATTERN); // xtra: quality names
   private static final Pattern REGEX_GROUP_ID =
       Pattern.compile("GROUP-ID=" + ATTR_QUOTED_STRING_VALUE_PATTERN);
   private static final Pattern REGEX_CHARACTERISTICS =
@@ -528,7 +528,10 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
             parseOptionalStringAttr(line, REGEX_SUBTITLES, variableDefinitions);
         String closedCaptionsGroupId =
             parseOptionalStringAttr(line, REGEX_CLOSED_CAPTIONS, variableDefinitions);
-        String label = parseOptionalStringAttr(line, REGEX_IVS_NAME, variableDefinitions); // xtra: quality names
+        @Nullable
+        String stableVariantId =
+            parseOptionalStringAttr(
+                line, REGEX_STABLE_VARIANT_ID, variableDefinitions); // xtra: quality names
         Uri uri;
         if (isIFrameOnlyVariant) {
           uri =
@@ -566,11 +569,10 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
                     }
                   }
                   if (!skip) {
-                    String name = obj.optString("IVS_NAME");
+                    String newStableVariantId = obj.optString("STABLE-VARIANT-ID");
                     int newPeakBitrate = obj.optInt("BANDWIDTH");
                     String newCodecsString = obj.optString("CODECS");
                     String newResolutionString = obj.optString("RESOLUTION");
-                    String id = obj.optString("STABLE-VARIANT-ID");
                     String newFrameRateString = obj.optString("FRAME-RATE");
                     float newFrameRate;
                     if (!newFrameRateString.isBlank()) {
@@ -594,13 +596,13 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
                       newHeight = Format.NO_VALUE;
                     }
                     Uri newUri = Uri.parse(uri.toString().replace(
-                            label + "/index-",
-                            ((variants.isEmpty() && !id.equals("audio_only")) ? "chunked" : id) + "/index-"
+                            stableVariantId + "/index-",
+                            ((variants.isEmpty() && !newStableVariantId.equals("audio_only")) ? "chunked" : newStableVariantId) + "/index-"
                     ));
                     Format format =
                             new Format.Builder()
                                     .setId(variants.size())
-                                    .setLabel(name)
+                                    .setLabel(newStableVariantId)
                                     .setContainerMimeType(MimeTypes.APPLICATION_M3U8)
                                     .setCodecs(newCodecsString)
                                     .setAverageBitrate(-1)
@@ -638,7 +640,7 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
         Format format =
             new Format.Builder()
                 .setId(variants.size())
-                .setLabel(label) // xtra: quality names
+                .setLabel(stableVariantId) // xtra: quality names
                 .setContainerMimeType(MimeTypes.APPLICATION_M3U8)
                 .setCodecs(codecs)
                 .setAverageBitrate(averageBitrate)

@@ -27,7 +27,7 @@ object TwitchApiHelper {
     private val imageSizeRegex = Regex("-\\d+x\\d+.")
     var checkedValidation = false
     var checkedUpdates = false
-    val defaultQualityList = listOf("chunked", "1080p60", "1080p30", "720p60", "720p30", "480p30", "360p30", "160p30", "audio_only")
+    val defaultQualityList = listOf("chunked", "1080p60", "1080p30", "720p60", "720p30", "480p30", "360p30", "160p30", "144p30", "high", "medium", "low", "mobile", "audio_only")
     val vodDomains = listOf(
         "https://vod-secure.twitch.tv",
         "https://vod-metro.twitch.tv",
@@ -292,27 +292,6 @@ object TwitchApiHelper {
 
     fun isIntegrityTokenExpired(context: Context): Boolean {
         return System.currentTimeMillis() >= context.tokenPrefs().getLong(C.INTEGRITY_EXPIRATION, 0)
-    }
-
-    fun getVideoUrlsFromPreview(url: String, type: String?, list: List<String>?): Map<String, String> {
-        val qualityList = list ?: listOf("chunked", "1080p60", "1080p30", "720p60", "720p30", "480p30", "360p30", "160p30", "144p30", "high", "medium", "low", "mobile", "audio_only")
-        return qualityList.associate { quality ->
-            val name = if (quality == "chunked") {
-                "source"
-            } else {
-                quality
-            }
-            val url = url
-                .replace("storyboards", quality)
-                .replaceAfterLast("/",
-                    if (type?.lowercase() == "highlight") {
-                        "highlight-${url.substringAfterLast("/").substringBefore("-")}.m3u8"
-                    } else {
-                        "index-dvr.m3u8"
-                    }
-                )
-            name to url
-        }
     }
 
     fun getMessageIdString(context: Context, msgId: String?): String? {

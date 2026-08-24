@@ -38,7 +38,7 @@ import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
         PlaybackState::class,
         CustomProxy::class,
     ],
-    version = 38,
+    version = 39,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

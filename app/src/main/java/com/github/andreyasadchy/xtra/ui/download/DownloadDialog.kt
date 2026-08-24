@@ -350,8 +350,14 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                     VideoQuality.SOURCE_QUALITY -> getString(R.string.source)
                     VideoQuality.AUDIO_ONLY_QUALITY -> getString(R.string.audio_only)
                     else -> {
+                        val frameRate = quality.name?.substringAfter("p", "")?.takeWhile { it.isDigit() }?.toIntOrNull()
+                        val qualityName = if (frameRate != null && frameRate <= 30) {
+                            quality.name.substring(0, quality.name.indexOf('p') + 1)
+                        } else {
+                            quality.name.toString()
+                        }
                         if (hideCodecs) {
-                            quality.name
+                            qualityName
                         } else {
                             val codec = quality.codecs?.substringBefore('.')
                             val codecName = when {
@@ -360,7 +366,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                                 codec == "avc1" || codec.isNullOrBlank() -> "H.264"
                                 else -> codec
                             }
-                            "${quality.name} $codecName"
+                            "$qualityName $codecName"
                         }
                     }
                 }

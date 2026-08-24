@@ -76,7 +76,7 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                 if (requireContext().prefs().getBoolean(C.PLAYER_MENU_FIND_VOD, true)) {
                     menuFindVod.visibility = View.VISIBLE
                     menuFindVod.setOnClickListener {
-                        (parentFragment as? PlayerFragment)?.findVideoUrl()
+                        (parentFragment as? PlayerFragment)?.findUnlistedVideo()
                         dismiss()
                     }
                 }
