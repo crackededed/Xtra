@@ -10,6 +10,7 @@ import android.graphics.Color
 import android.os.Build
 import android.os.IBinder
 import android.text.format.DateUtils
+import android.util.Base64
 import android.view.View
 import android.widget.HorizontalScrollView
 import android.widget.TextView
@@ -38,6 +39,8 @@ import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
+import org.json.JSONArray
+import org.json.JSONException
 
 @OptIn(UnstableApi::class)
 class ExoPlayerFragment : PlayerFragment() {
@@ -418,6 +421,62 @@ class ExoPlayerFragment : PlayerFragment() {
 
     override fun toggleSubtitles(enabled: Boolean) {
         playbackService?.toggleSubtitles(enabled)
+    }
+
+    override fun getUnavailableQualities(): List<VideoQuality> {
+        val stableVariantIds = mutableListOf<VideoQuality>()
+        (playbackService?.player?.currentManifest as? HlsManifest)?.multivariantPlaylist?.tags?.let { playlist ->
+            playlist.filter { it.startsWith("#EXT-X-SESSION-DATA") }.forEach { line ->
+                val id = Regex("DATA-ID=\"(.+?)\"").find(line)?.groups?.get(1)?.value
+                if (id == "com.amazon.ivs.unavailable-media") {
+                    val value = Regex("VALUE=\"(.+?)\"").find(line)?.groups?.get(1)?.value
+                    if (value != null) {
+                        val bytes = try {
+                            Base64.decode(value, Base64.DEFAULT)
+                        } catch (e: IllegalArgumentException) {
+                            null
+                        }
+                        if (bytes != null) {
+                            val string = String(bytes)
+                            val array = try {
+                                JSONArray(string)
+                            } catch (e: JSONException) {
+                                null
+                            }
+                            if (array != null) {
+                                for (i in 0 until array.length()) {
+                                    val obj = array.optJSONObject(i)
+                                    if (obj != null) {
+                                        var skip = false
+                                        val filterReasons = obj.optJSONArray("FILTER_REASONS")
+                                        if (filterReasons != null) {
+                                            for (filterIndex in 0 until filterReasons.length()) {
+                                                val filter = filterReasons.optString(filterIndex)
+                                                if (filter.isNotEmpty()) {
+                                                    skip = true
+                                                    break
+                                                }
+                                            }
+                                        }
+                                        if (!skip) {
+                                            val newVariantId = obj.optString("STABLE-VARIANT-ID")
+                                            val resolution = obj.optString("RESOLUTION")
+                                            val frameRate = obj.optString("FRAME-RATE").toFloatOrNull()
+                                            val bitrate = obj.optInt("BANDWIDTH")
+                                            val codec = obj.optString("CODECS")
+                                            if (!newVariantId.isNullOrBlank()) {
+                                                stableVariantIds.add(VideoQuality(newVariantId, resolution.substringAfter('x').toIntOrNull(), frameRate, bitrate, codec))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return stableVariantIds
     }
 
     override fun showPlaylistTags(mediaPlaylist: Boolean) {
