@@ -389,9 +389,9 @@ class SettingsActivity : AppCompatActivity() {
                 findNavController().navigate(SettingsNavGraphDirections.actionGlobalCustomProxySettingsFragment())
                 true
             }
-            findPreference<Preference>("proxy_settings")?.setOnPreferenceClickListener {
+            findPreference<Preference>("stream_proxy_settings")?.setOnPreferenceClickListener {
                 requireActivity().findViewById<AppBarLayout>(R.id.appBar)?.setExpanded(true)
-                findNavController().navigate(SettingsNavGraphDirections.actionGlobalProxySettingsFragment())
+                findNavController().navigate(SettingsNavGraphDirections.actionGlobalStreamProxySettingsFragment())
                 true
             }
             findPreference<Preference>("playback_settings")?.setOnPreferenceClickListener {
@@ -1214,52 +1214,6 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    class ProxySettingsFragment : MaterialPreferenceFragment() {
-        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-            setPreferencesFromResource(R.xml.proxy_preferences, rootKey)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN &&
-                ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_LOCAL_NETWORK) != PackageManager.PERMISSION_GRANTED
-            ) {
-                findPreference<Preference>("request_local_network_permission")?.apply {
-                    isVisible = true
-                    setOnPreferenceClickListener {
-                        ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_LOCAL_NETWORK), 1)
-                        true
-                    }
-                }
-            }
-        }
-
-        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-            super.onViewCreated(view, savedInstanceState)
-            ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
-                val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-                listView.updatePadding(bottom = insets.bottom)
-                WindowInsetsCompat.CONSUMED
-            }
-            requireActivity().findViewById<AppBarLayout>(R.id.appBar)?.let { appBar ->
-                if (requireContext().prefs().getBoolean(C.UI_THEME_APPBAR_LIFT, true)) {
-                    listView.let {
-                        appBar.setLiftOnScrollTargetView(it)
-                        it.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                                super.onScrolled(recyclerView, dx, dy)
-                                appBar.isLifted = recyclerView.canScrollVertically(-1)
-                            }
-                        })
-                        it.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-                            appBar.isLifted = it.canScrollVertically(-1)
-                        }
-                    }
-                } else {
-                    appBar.setLiftable(false)
-                    appBar.background = null
-                }
-            }
-            (requireActivity() as? SettingsActivity)?.getSelectedSearchItem()?.let { scrollToPreference(it) }
-        }
-    }
-
     class PlaybackSettingsFragment : MaterialPreferenceFragment() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.playback_preferences, rootKey)
@@ -1624,7 +1578,6 @@ class SettingsActivity : AppCompatActivity() {
                     Triple(R.xml.player_button_preferences, SettingsNavGraphDirections.actionGlobalPlayerButtonSettingsFragment(), getString(R.string.player_buttons)),
                     Triple(R.xml.player_menu_preferences, SettingsNavGraphDirections.actionGlobalPlayerMenuSettingsFragment(), getString(R.string.player_menu_settings)),
                     Triple(R.xml.player_preferences, SettingsNavGraphDirections.actionGlobalPlayerSettingsFragment(), getString(R.string.player_settings)),
-                    Triple(R.xml.proxy_preferences, SettingsNavGraphDirections.actionGlobalProxySettingsFragment(), getString(R.string.proxy_settings)),
                     Triple(R.xml.root_preferences, SettingsNavGraphDirections.actionGlobalSettingsFragment(), null),
                     Triple(R.xml.theme_preferences, SettingsNavGraphDirections.actionGlobalThemeSettingsFragment(), getString(R.string.theme)),
                     Triple(R.xml.ui_preferences, SettingsNavGraphDirections.actionGlobalUiSettingsFragment(), getString(R.string.ui_settings)),

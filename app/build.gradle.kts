@@ -28,7 +28,7 @@ android {
         minSdk = 21
         targetSdk = 37
         versionCode = 121
-        versionName = "2.59.2"
+        versionName = "2.59.3"
     }
 
     buildTypes {
@@ -65,7 +65,9 @@ android {
     configurations.all {
         resolutionStrategy.force(listOf(
             "androidx.activity:activity:1.12.0-alpha05",
-            "androidx.core:core-ktx:1.17.0",
+            "androidx.appcompat:appcompat:1.7.1",
+            "androidx.core:core:1.17.0",
+            "androidx.fragment:fragment:1.8.9",
             "androidx.lifecycle:lifecycle-service:2.10.0-alpha01",
             "androidx.lifecycle:lifecycle-viewmodel:2.10.0-alpha01",
             "androidx.media3:media3-exoplayer:1.8.0",
@@ -89,6 +91,7 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.17.0")
+    implementation("androidx.fragment:fragment-ktx:1.8.9")
     compileOnly("com.google.j2objc:j2objc-annotations:3.0.0") // OkHttpDataSource SettableFuture
     implementation("com.google.android.gms:play-services-cronet:18.1.0")
     implementation("com.google.mlkit:language-id:17.0.6")
@@ -102,7 +105,8 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
     implementation(libs.coordinatorlayout)
-    implementation(libs.fragment.ktx)
+    implementation(libs.core)
+    implementation(libs.fragment)
     implementation(libs.lifecycle.service)
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.navigation.fragment)

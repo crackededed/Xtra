@@ -327,7 +327,6 @@
     <string name="resume_download">ダウンロードを再開</string>
     <string name="show_view_count_icon">視聴者数と経過時間にアイコンを表示</string>
     <string name="playback_speeds">再生速度</string>
-    <string name="use_custom_proxy">カスタムプロキシを使用</string>
     <string name="stream_headers">ストリームリクエストヘッダー</string>
     <string name="stream_headers_desc">JSON 形式を使用してください</string>
     <string name="follow">フォロー</string>
@@ -566,4 +565,6 @@
     <string name="offline">Offline</string>
     <string name="proxy_error">Proxy error. %s is offline</string>
     <string name="show_stream_notification_seekbar">Show seekbar on media notification when watching streams</string>
+    <string name="use_custom_proxies">Use custom proxies</string>
+    <string name="use_stream_proxies">Use HTTP proxies</string>
 </resources>

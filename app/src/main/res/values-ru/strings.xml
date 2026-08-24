@@ -327,7 +327,6 @@
     <string name="resume_download">Возобновить закачку</string>
     <string name="show_view_count_icon">Значки просмотров и времени в эфире</string>
     <string name="playback_speeds">Скорости воспроизведения</string>
-    <string name="use_custom_proxy">Использовать свой прокси</string>
     <string name="stream_headers">Заголовки потоковых запросов</string>
     <string name="stream_headers_desc">Использует формат JSON</string>
     <string name="follow">Отслеживать</string>
@@ -566,4 +565,6 @@
     <string name="offline">Offline</string>
     <string name="proxy_error">Proxy error. %s is offline</string>
     <string name="show_stream_notification_seekbar">Show seekbar on media notification when watching streams</string>
+    <string name="use_custom_proxies">Use custom proxies</string>
+    <string name="use_stream_proxies">Use HTTP proxies</string>
 </resources>
