@@ -153,7 +153,7 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
   private static final Pattern REGEX_CODECS = Pattern.compile("CODECS=\"(.+?)\"");
   private static final Pattern REGEX_RESOLUTION = Pattern.compile("RESOLUTION=(\\d+x\\d+)");
   private static final Pattern REGEX_FRAME_RATE = Pattern.compile("FRAME-RATE=([\\d\\.]+)\\b");
-  private static final Pattern REGEX_STABLE_VARIANT_ID = Pattern.compile("STABLE-VARIANT-ID=([\\d\\.]+)\\b"); // xtra: quality names
+  private static final Pattern REGEX_STABLE_VARIANT_ID = Pattern.compile("STABLE-VARIANT-ID=\"(.+?)\""); // xtra: quality names
   private static final Pattern REGEX_TARGET_DURATION =
       Pattern.compile(TAG_TARGET_DURATION + ":(\\d+)\\b");
   private static final Pattern REGEX_ATTR_DURATION = Pattern.compile("DURATION=([\\d\\.]+)\\b");
