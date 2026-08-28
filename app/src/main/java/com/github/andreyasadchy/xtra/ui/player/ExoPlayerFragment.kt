@@ -167,6 +167,10 @@ class ExoPlayerFragment : PlayerFragment() {
         val serviceListener = object : ExoPlayerService.Listener {
             override fun started() {
                 if (view != null) {
+                    if (playbackService?.restoreQuality == true) {
+                        playbackService?.restoreQuality = false
+                        changeQuality(playbackService?.previousQuality)
+                    }
                     if (!started) {
                         if (isInitialized || !enableNetworkCheck) {
                             started = true
@@ -174,10 +178,6 @@ class ExoPlayerFragment : PlayerFragment() {
                         }
                     } else {
                         chatFragment?.startReplayChatLoad()
-                        if (playbackService?.restoreQuality == true) {
-                            playbackService?.restoreQuality = false
-                            changeQuality(playbackService?.previousQuality)
-                        }
                     }
                 }
             }
@@ -280,6 +280,10 @@ class ExoPlayerFragment : PlayerFragment() {
                         }
                     }
                     if (playbackService?.started == true) {
+                        if (playbackService?.restoreQuality == true) {
+                            playbackService?.restoreQuality = false
+                            changeQuality(playbackService?.previousQuality)
+                        }
                         if (!started) {
                             if (isInitialized || !enableNetworkCheck) {
                                 started = true
@@ -287,10 +291,6 @@ class ExoPlayerFragment : PlayerFragment() {
                             }
                         } else {
                             chatFragment?.startReplayChatLoad()
-                            if (playbackService?.restoreQuality == true) {
-                                playbackService?.restoreQuality = false
-                                changeQuality(playbackService?.previousQuality)
-                            }
                         }
                     }
                     playbackService?.player?.let { player ->

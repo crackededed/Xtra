@@ -83,6 +83,10 @@ class MediaPlayerFragment : PlayerFragment() {
         val serviceListener = object : MediaPlayerService.Listener {
             override fun started() {
                 if (view != null) {
+                    if (playbackService?.restoreQuality == true) {
+                        playbackService?.restoreQuality = false
+                        changeQuality(playbackService?.previousQuality)
+                    }
                     if (!started) {
                         if (isInitialized || !enableNetworkCheck) {
                             started = true
@@ -90,10 +94,6 @@ class MediaPlayerFragment : PlayerFragment() {
                         }
                     } else {
                         chatFragment?.startReplayChatLoad()
-                        if (playbackService?.restoreQuality == true) {
-                            playbackService?.restoreQuality = false
-                            changeQuality(playbackService?.previousQuality)
-                        }
                     }
                 }
             }
@@ -225,6 +225,10 @@ class MediaPlayerFragment : PlayerFragment() {
                         }
                     }
                     if (playbackService?.started == true) {
+                        if (playbackService?.restoreQuality == true) {
+                            playbackService?.restoreQuality = false
+                            changeQuality(playbackService?.previousQuality)
+                        }
                         if (!started) {
                             if (isInitialized || !enableNetworkCheck) {
                                 started = true
@@ -232,10 +236,6 @@ class MediaPlayerFragment : PlayerFragment() {
                             }
                         } else {
                             chatFragment?.startReplayChatLoad()
-                            if (playbackService?.restoreQuality == true) {
-                                playbackService?.restoreQuality = false
-                                changeQuality(playbackService?.previousQuality)
-                            }
                         }
                     }
                     playbackService?.player?.let { player ->
