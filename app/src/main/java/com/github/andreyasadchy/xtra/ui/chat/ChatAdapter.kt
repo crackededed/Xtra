@@ -66,6 +66,8 @@ class ChatAdapter(
     private val messageTextSize: Float,
     private val emoteSize: Int,
     private val badgeSize: Int,
+    private val gifSize: Int,
+    private val showGifMessages: Boolean,
     private val emoteQuality: String,
     private val animateGifs: Boolean,
     private val enableOverlayEmotes: Boolean,
@@ -99,15 +101,15 @@ class ChatAdapter(
         val result = ChatAdapterUtils.prepareChatMessage(
             chatMessage, fragment.requireContext(), holder.textView, enableTimestamps, timestampFormat, firstMsgVisibility, firstChatMsg,
             redeemedChatMsg, redeemedNoMsg, rewardChatMsg, replyMessage, null, useRandomColors, random, useReadableColors, isLightTheme,
-            nameDisplay, useBoldNames, showNamePaints, namePaints, showSTVBadges, stvBadges, showPersonalEmotes, personalEmoteSets, stvUsers,
-            enableOverlayEmotes, showSystemMessageEmotes, loggedInUser, chatUrl, getEmoteBytes, userColors, savedColors, translateAllMessages,
+            nameDisplay, useBoldNames, showNamePaints, namePaints, showSTVBadges, stvBadges, showGifMessages, showPersonalEmotes, personalEmoteSets,
+            stvUsers, enableOverlayEmotes, showSystemMessageEmotes, loggedInUser, chatUrl, getEmoteBytes, userColors, savedColors, translateAllMessages,
             translateMessage, showLanguageDownloadDialog, true, localTwitchEmotes, thirdPartyEmotes, globalBadges, channelBadges, cheerEmotes,
             savedLocalTwitchEmotes, savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes
         )
         holder.bind(chatMessage, result.builder)
         ChatAdapterUtils.loadImages(
             fragment, holder.textView, { holder.bind(chatMessage, it) }, result.images, result.imagePaint, result.userName, result.userNameStartIndex,
-            backgroundColor, imageLibrary, result.builder, result.translated, emoteSize, badgeSize, emoteQuality, animateGifs, enableOverlayEmotes,
+            backgroundColor, imageLibrary, result.builder, result.translated, emoteSize, badgeSize, gifSize, emoteQuality, animateGifs, enableOverlayEmotes,
             chatMessage, savedColors, useReadableColors, isLightTheme, showLanguageDownloadDialog, true
         )
     }
@@ -137,8 +139,8 @@ class ChatAdapter(
             { url, name, format, isAnimated, source, thirdParty, emoteId -> imageClickListener?.invoke(url, name, format, isAnimated, source, thirdParty, emoteId) },
             useRandomColors, useReadableColors, isLightTheme, nameDisplay, useBoldNames, showNamePaints, showSTVBadges, showPersonalEmotes,
             showSystemMessageEmotes, chatUrl, getEmoteBytes, fragment, dialogBackgroundColor, imageLibrary, messageTextSize, emoteSize, badgeSize,
-            emoteQuality, animateGifs, enableOverlayEmotes, translateAllMessages, translateMessage, showLanguageDownloadDialog, random, userColors,
-            savedColors, savedLocalTwitchEmotes, savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes, loggedInUser, selectedMessage
+            gifSize, showGifMessages, emoteQuality, animateGifs, enableOverlayEmotes, translateAllMessages, translateMessage, showLanguageDownloadDialog,
+            random, userColors, savedColors, savedLocalTwitchEmotes, savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes, loggedInUser, selectedMessage
         )
     }
 
@@ -149,8 +151,8 @@ class ChatAdapter(
             { url, name, format, isAnimated, source, thirdParty, emoteId -> imageClickListener?.invoke(url, name, format, isAnimated, source, thirdParty, emoteId) },
             useRandomColors, useReadableColors, isLightTheme, nameDisplay, useBoldNames, showNamePaints, showSTVBadges, showPersonalEmotes,
             showSystemMessageEmotes, chatUrl, getEmoteBytes, fragment, dialogBackgroundColor, imageLibrary, messageTextSize, emoteSize, badgeSize,
-            emoteQuality, animateGifs, enableOverlayEmotes, translateAllMessages, translateMessage, showLanguageDownloadDialog, random, userColors,
-            savedColors, savedLocalTwitchEmotes, savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes, loggedInUser, selectedMessage
+            gifSize, showGifMessages, emoteQuality, animateGifs, enableOverlayEmotes, translateAllMessages, translateMessage, showLanguageDownloadDialog,
+            random, userColors, savedColors, savedLocalTwitchEmotes, savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes, loggedInUser, selectedMessage
         )
     }
 
