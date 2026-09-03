@@ -588,4 +588,6 @@
     <string name="add_item">Add item</string>
     <string name="delete_item_message">Are you sure you want to delete this item?</string>
     <string name="video_swap_active">Video swap active</string>
+    <string name="chat_gif_size">GIF size</string>
+    <string name="show_gif_messages">Show GIF messages</string>
 </resources>

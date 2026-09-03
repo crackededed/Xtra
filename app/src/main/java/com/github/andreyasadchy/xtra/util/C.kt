@@ -208,6 +208,8 @@ object C {
     const val CHAT_TEXT_SIZE = "chat_text_size"
     const val CHAT_EMOTE_SIZE = "chat_emote_size"
     const val CHAT_BADGE_SIZE = "chat_badge_size"
+    const val CHAT_SHOW_GIF_MESSAGES = "chat_show_gif_messages"
+    const val CHAT_GIF_SIZE = "chat_gif_size"
     const val CHAT_RANDOM_COLOR = "chat_randomcolor"
     const val CHAT_THEME_ADAPTED_USERNAME_COLOR = "chat_theme_adapted_username_color"
     const val CHAT_BOLD_NAMES = "chat_boldnames"
