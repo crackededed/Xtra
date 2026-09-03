@@ -68,6 +68,7 @@ import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.model.ui.CustomProxy
 import com.github.andreyasadchy.xtra.model.ui.StreamProxy
 import com.github.andreyasadchy.xtra.model.ui.Video
+import com.github.andreyasadchy.xtra.model.ui.VideoSwap
 import com.github.andreyasadchy.xtra.player.lowlatency.CronetDataSource
 import com.github.andreyasadchy.xtra.player.lowlatency.DefaultHlsPlaylistTracker
 import com.github.andreyasadchy.xtra.player.lowlatency.HlsPlaylistParser
@@ -92,7 +93,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import okhttp3.Credentials
 import okhttp3.Request
-import org.json.JSONObject
 import java.io.FileInputStream
 import java.io.IOException
 import java.net.InetSocketAddress
@@ -128,10 +128,17 @@ class ExoPlayerService : BasePlaybackService() {
 
     private var customProxyList: List<CustomProxy>? = null
     private var streamProxyList: List<StreamProxy>? = null
+    private var videoSwapList: List<VideoSwap>? = null
+    private var currentVideoSwapItem = 0
+    private var videoSwapPreviousQuality: String? = null
+    private var useVideoSwap = false
     private var playingAds = false
     private var proxyMediaPlaylist = false
     private var checkPlaylistJob: Job? = null
     private var stopProxy = false
+    private var videoSwapActive = false
+    private var videoSwapLoading = false
+    private var stopVideoSwap = false
     private var hidden = false
     private var backupQualities: List<String>? = null
     private var updateQualities = false
@@ -238,44 +245,129 @@ class ExoPlayerService : BasePlaybackService() {
                         }
                     }
                     if (type == STREAM) {
+                        val useProxy = useStreamProxy && !stopProxy && streamProxyList?.getOrNull(currentStreamProxy)?.proxyMediaPlaylist == true
+                        val useVideoSwap = useVideoSwap && !stopVideoSwap
                         val hideAds = prefs().getBoolean(C.PLAYER_HIDE_ADS, false)
-                        val useProxy = useStreamProxy && streamProxyList?.getOrNull(currentStreamProxy)?.proxyMediaPlaylist == true
-                        if (hideAds || useProxy) {
+                        if (useProxy || useVideoSwap || hideAds) {
                             val playlist = (player?.currentManifest as? HlsManifest)?.mediaPlaylist
                             val ads = playlist?.segments?.lastOrNull()?.let { segment ->
-                                listOf("Amazon", "Adform", "DCM").any { segment.title.contains(it) } ||
-                                        playlist.tags.lastOrNull() == "ads=true"
+                                segment.title == "Amazon"
+                                        || segment.title == "Adform"
+                                        || segment.title == "DCM"
+                                        || playlist.tags.lastOrNull() == "ads=true"
                             } == true
-                            val oldValue = playingAds
                             playingAds = ads
                             if (ads) {
-                                if (proxyMediaPlaylist) {
-                                    if (!stopProxy) {
-                                        proxyMediaPlaylist = false
-                                        stopProxy = true
-                                        checkPlaylistJob?.cancel()
-                                        checkPlaylistJob = null
+                                when {
+                                    proxyMediaPlaylist -> {
+                                        if (!stopProxy) {
+                                            proxyMediaPlaylist = false
+                                            stopProxy = true
+                                            checkPlaylistJob?.cancel()
+                                            checkPlaylistJob = null
+                                        }
                                     }
-                                } else {
-                                    if (!oldValue) {
-                                        val playlist = quality?.url
-                                        if (!stopProxy && !playlist.isNullOrBlank() && useProxy) {
-                                            proxyMediaPlaylist = true
-                                            checkPlaylistJob = lifecycleScope.launch {
-                                                for (i in 0 until 10) {
-                                                    delay(10.seconds)
-                                                    if (!checkPlaylist(prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), playlist)) {
-                                                        break
+                                    videoSwapActive -> {
+                                        if (!videoSwapLoading) {
+                                            videoSwapLoading = true
+                                            currentVideoSwapItem += 1
+                                            val playlist = quality?.url
+                                            if (videoSwapList?.getOrNull(currentVideoSwapItem) != null && !playlist.isNullOrBlank()) {
+                                                checkPlaylistJob?.cancel()
+                                                checkPlaylistJob = lifecycleScope.launch {
+                                                    for (i in 0 until 60) {
+                                                        delay(2.seconds)
+                                                        if (!checkPlaylist(prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), playlist)) {
+                                                            break
+                                                        }
                                                     }
+                                                    videoSwapLoading = true
+                                                    videoSwapActive = false
+                                                    if (prefs().getString(C.PLAYER_QUALITY, "720p60") != videoSwapPreviousQuality) {
+                                                        prefs().edit { putString(C.PLAYER_QUALITY, videoSwapPreviousQuality) }
+                                                    }
+                                                    restartPlayer()
+                                                    checkPlaylistJob = null
                                                 }
-                                                proxyMediaPlaylist = false
+                                            } else {
+                                                videoSwapActive = false
+                                                stopVideoSwap = true
+                                                checkPlaylistJob?.cancel()
                                                 checkPlaylistJob = null
                                             }
-                                        } else {
-                                            if (hideAds) {
+                                            if (prefs().getString(C.PLAYER_QUALITY, "720p60") != videoSwapPreviousQuality) {
+                                                prefs().edit { putString(C.PLAYER_QUALITY, videoSwapPreviousQuality) }
+                                            }
+                                            restartPlayer()
+                                        }
+                                    }
+                                    else -> {
+                                        val playlist = quality?.url
+                                        when {
+                                            useProxy && !playlist.isNullOrBlank() -> {
+                                                proxyMediaPlaylist = true
+                                                checkPlaylistJob?.cancel()
+                                                checkPlaylistJob = lifecycleScope.launch {
+                                                    for (i in 0 until 60) {
+                                                        delay(2.seconds)
+                                                        if (!checkPlaylist(prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), playlist)) {
+                                                            break
+                                                        }
+                                                    }
+                                                    proxyMediaPlaylist = false
+                                                    checkPlaylistJob = null
+                                                }
+                                            }
+                                            useVideoSwap && !playlist.isNullOrBlank() -> {
+                                                if (!videoSwapLoading) {
+                                                    videoSwapLoading = true
+                                                    videoSwapActive = true
+                                                    serviceListener?.toast(R.string.video_swap_active, Toast.LENGTH_SHORT)
+                                                    checkPlaylistJob?.cancel()
+                                                    checkPlaylistJob = lifecycleScope.launch {
+                                                        for (i in 0 until 60) {
+                                                            delay(2.seconds)
+                                                            if (!checkPlaylist(prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), playlist)) {
+                                                                break
+                                                            }
+                                                        }
+                                                        videoSwapLoading = true
+                                                        videoSwapActive = false
+                                                        if (prefs().getString(C.PLAYER_QUALITY, "720p60") != videoSwapPreviousQuality) {
+                                                            prefs().edit { putString(C.PLAYER_QUALITY, videoSwapPreviousQuality) }
+                                                        }
+                                                        restartPlayer()
+                                                        checkPlaylistJob = null
+                                                    }
+                                                    videoSwapPreviousQuality = prefs().getString(C.PLAYER_QUALITY, "720p60")
+                                                    restartPlayer()
+                                                }
+                                            }
+                                            hideAds && !hidden -> {
+                                                hidden = true
+                                                player?.let { player ->
+                                                    if (quality?.name != VideoQuality.AUDIO_ONLY_QUALITY) {
+                                                        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                                                            setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
+                                                        }.build()
+                                                    }
+                                                    player.volume = 0f
+                                                }
                                                 serviceListener?.toast(R.string.waiting_ads, Toast.LENGTH_LONG)
                                             }
                                         }
+                                    }
+                                }
+                            } else {
+                                if (hidden) {
+                                    hidden = false
+                                    player?.let { player ->
+                                        if (quality?.name != VideoQuality.AUDIO_ONLY_QUALITY) {
+                                            player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                                                setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
+                                            }.build()
+                                        }
+                                        player.volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
                                     }
                                 }
                             }
@@ -674,6 +766,12 @@ class ExoPlayerService : BasePlaybackService() {
                                     && (it.proxyPlaybackAccessToken || it.proxyMultivariantPlaylist || it.proxyMediaPlaylist)
                         }.sortedBy { it.position }
                     }
+                    useVideoSwap = !useCustomProxy && !useStreamProxy && prefs().getBoolean(C.PLAYER_USE_VIDEO_SWAP, false)
+                    if (useVideoSwap) {
+                        videoSwapList = xtraModule.playerRepository.getVideoSwapItems().filter {
+                            it.enabled && !it.platform.isNullOrBlank() && !it.playerType.isNullOrBlank()
+                        }.sortedBy { it.position }
+                    }
                     loadStream(restorePauseState)
                 }
                 VIDEO -> {
@@ -839,11 +937,11 @@ class ExoPlayerService : BasePlaybackService() {
                                 streamProxy = streamProxyList?.getOrNull(currentStreamProxy)
                                 if (streamProxy == null) {
                                     useStreamProxy = false
-                                    url = getStreamPlaylistUrl(channelLogin, null)
+                                    url = getStreamPlaylistUrl(channelLogin)
                                     break
                                 } else {
                                     if (!streamProxy.proxyPlaybackAccessToken) {
-                                        url = getStreamPlaylistUrl(channelLogin, null)
+                                        url = getStreamPlaylistUrl(channelLogin)
                                         break
                                     }
                                 }
@@ -851,11 +949,15 @@ class ExoPlayerService : BasePlaybackService() {
                         }
                         url
                     } else {
-                        getStreamPlaylistUrl(channelLogin, null)
+                        val videoSwap = if (videoSwapActive) {
+                            videoSwapList?.getOrNull(currentVideoSwapItem)
+                        } else null
+                        getStreamPlaylistUrl(channelLogin, videoSwap = videoSwap)
                     }
                     playlistUrl = url
                 }
             }
+            videoSwapLoading = false
             val url = playlistUrl
             if (url != null) {
                 player?.let { player ->
@@ -1055,22 +1157,6 @@ class ExoPlayerService : BasePlaybackService() {
                                         } else null
                                         OkHttpDataSource.Factory(multivariantPlaylistProxyClient ?: xtraModule.okHttpClient.value, mediaPlaylistProxyClient) { proxyMediaPlaylist }
                                     }
-                                }.apply {
-                                    prefs().getString(C.PLAYER_STREAM_HEADERS, null)?.let {
-                                        val headers = try {
-                                            val json = JSONObject(it)
-                                            hashMapOf<String, String>().apply {
-                                                json.keys().forEach { key ->
-                                                    put(key, json.optString(key))
-                                                }
-                                            }
-                                        } catch (e: Exception) {
-                                            null
-                                        }
-                                        if (headers != null) {
-                                            setDefaultRequestProperties(headers)
-                                        }
-                                    }
                                 }
                             )
                         ).apply {
@@ -1098,16 +1184,15 @@ class ExoPlayerService : BasePlaybackService() {
         }
     }
 
-    private suspend fun getStreamPlaylistUrl(channelLogin: String, streamProxy: StreamProxy?): String? {
+    private suspend fun getStreamPlaylistUrl(channelLogin: String, streamProxy: StreamProxy? = null, videoSwap: VideoSwap? = null): String? {
         return try {
             xtraModule.playerRepository.loadStreamPlaylistUrl(
                 context = this,
                 networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                 gqlHeaders = TwitchApiHelper.getGQLHeaders(this, prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, true)),
                 channelLogin = channelLogin,
-                randomDeviceId = prefs().getBoolean(C.TOKEN_RANDOM_DEVICE_ID, true),
-                xDeviceId = prefs().getString(C.TOKEN_X_DEVICE_ID, "twitch-web-wall-mason"),
-                playerType = prefs().getString(C.TOKEN_PLAYER_TYPE, "site"),
+                platform = videoSwap?.platform ?: prefs().getString(C.TOKEN_PLATFORM, "web"),
+                playerType = videoSwap?.playerType ?: prefs().getString(C.TOKEN_PLAYER_TYPE, "site"),
                 supportedCodecs = prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
                 proxyPlaybackAccessToken = streamProxy != null,
                 proxyHost = streamProxy?.host,
@@ -1137,7 +1222,6 @@ class ExoPlayerService : BasePlaybackService() {
                         networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                         gqlHeaders = TwitchApiHelper.getGQLHeaders(this@ExoPlayerService, prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_VIDEO, true)),
                         videoId = videoId,
-                        playerType = prefs().getString(C.TOKEN_PLAYER_TYPE_VIDEO, "channel_home_live"),
                         supportedCodecs = prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
                         enableIntegrity = prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                     )
@@ -1554,16 +1638,21 @@ class ExoPlayerService : BasePlaybackService() {
                 }
             }
             playlist.segments.lastOrNull()?.let { segment ->
-                segment.title?.let { it.contains("Amazon") || it.contains("Adform") || it.contains("DCM") } == true ||
+                segment.title == "Amazon"
+                        || segment.title == "Adform"
+                        || segment.title == "DCM"
+                        ||
                         segment.programDateTime?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }?.let { segmentStartTime ->
                             playlist.dateRanges.find { dateRange ->
-                                (dateRange.id.startsWith("stitched-ad-") || dateRange.rangeClass == "twitch-stitched-ad" || dateRange.ad) &&
-                                        dateRange.endDate?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }?.let { endTime ->
-                                            segmentStartTime < endTime
-                                        } == true ||
+                                (dateRange.id.startsWith("stitched-ad-")
+                                        || dateRange.rangeClass == "twitch-stitched-ad"
+                                        || dateRange.ad)
+                                        &&
                                         dateRange.startDate.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }?.let { startTime ->
-                                            (dateRange.duration ?: dateRange.plannedDuration)?.let { (it * 1000f).toLong() }?.let { duration ->
-                                                segmentStartTime < (startTime + duration)
+                                            (dateRange.endDate?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } }
+                                                ?: dateRange.duration?.let { startTime + (it * 1000f).toLong() }
+                                                ?: dateRange.plannedDuration?.let { startTime + (it * 1000f).toLong() })?.let { endTime ->
+                                                segmentStartTime in startTime..<endTime
                                             } == true
                                         } == true
                             } != null

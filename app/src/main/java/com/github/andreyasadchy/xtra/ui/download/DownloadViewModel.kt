@@ -48,7 +48,7 @@ class DownloadViewModel(
     var backupQualities: List<String>? = null
     var selectedQuality: String? = null
 
-    fun setStream(networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String?, qualities: List<VideoQuality>?, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, supportedCodecs: String?, enableIntegrity: Boolean) {
+    fun setStream(networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String?, qualities: List<VideoQuality>?, platform: String?, playerType: String?, supportedCodecs: String?, enableIntegrity: Boolean) {
         if (_qualities.value == null) {
             if (!qualities.isNullOrEmpty()) {
                 _qualities.value = qualities
@@ -57,7 +57,7 @@ class DownloadViewModel(
                     val default = listOf("source", "1080p60", "1080p30", "720p60", "720p30", "480p30", "360p30", "160p30", "audio_only")
                     try {
                         val list = if (!channelLogin.isNullOrBlank()) {
-                            val url = playerRepository.loadStreamPlaylistUrl(applicationContext, networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, false, null, null, null, null, enableIntegrity)
+                            val url = playerRepository.loadStreamPlaylistUrl(applicationContext, networkLibrary, gqlHeaders, channelLogin, platform, playerType, supportedCodecs, false, null, null, null, null, enableIntegrity)
                             val playlist = withContext(Dispatchers.IO) {
                                 when {
                                     networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
@@ -159,14 +159,14 @@ class DownloadViewModel(
         }
     }
 
-    fun setVideo(networkLibrary: String?, gqlHeaders: Map<String, String>, videoId: String?, animatedPreviewUrl: String?, videoType: String?, qualities: List<VideoQuality>?, playerType: String?, supportedCodecs: String?, enableIntegrity: Boolean) {
+    fun setVideo(networkLibrary: String?, gqlHeaders: Map<String, String>, videoId: String?, animatedPreviewUrl: String?, videoType: String?, qualities: List<VideoQuality>?, supportedCodecs: String?, enableIntegrity: Boolean) {
         if (_qualities.value == null) {
             if (!qualities.isNullOrEmpty()) {
                 _qualities.value = qualities
             } else {
                 viewModelScope.launch {
                     try {
-                        val result = playerRepository.loadVideoPlaylistUrl(networkLibrary, gqlHeaders, videoId, playerType, supportedCodecs, enableIntegrity)
+                        val result = playerRepository.loadVideoPlaylistUrl(networkLibrary, gqlHeaders, videoId, supportedCodecs, enableIntegrity)
                         val url = result.first
                         backupQualities = result.second
                         val playlist = withContext(Dispatchers.IO) {

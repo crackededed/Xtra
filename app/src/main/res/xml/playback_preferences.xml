@@ -3,6 +3,20 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="false"
+        android:key="player_use_video_swap"
+        android:summary="@string/use_video_swap_desc"
+        android:title="@string/use_video_swap"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <Preference
+        android:key="video_swap_settings"
+        android:title="@string/video_swap_settings"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
         android:key="player_hide_ads"
         android:title="@string/hide_during_ads"
         app:iconSpaceReserved="false"
@@ -16,31 +30,6 @@
         app:singleLineTitle="false"
         app:useSimpleSummaryProvider="true" />
 
-    <EditTextPreference
-        android:defaultValue="twitch-web-wall-mason"
-        android:dependency="token_random_deviceid"
-        android:key="token_xdeviceid"
-        android:title="@string/stream_device_id"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false"
-        app:useSimpleSummaryProvider="true" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="true"
-        android:disableDependentsState="true"
-        android:key="token_random_deviceid"
-        android:title="@string/token_random_deviceid"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <EditTextPreference
-        android:defaultValue="site"
-        android:key="token_playertype"
-        android:title="@string/stream_player_type"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false"
-        app:useSimpleSummaryProvider="true" />
-
     <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="token_include_token_stream"
@@ -48,21 +37,6 @@
         android:title="@string/include_gql_token_stream"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
-
-    <EditTextPreference
-        android:key="player_stream_headers"
-        android:summary="@string/stream_headers_desc"
-        android:title="@string/stream_headers"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <EditTextPreference
-        android:defaultValue="channel_home_live"
-        android:key="token_playertype_video"
-        android:title="@string/video_player_type"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false"
-        app:useSimpleSummaryProvider="true" />
 
     <SwitchPreferenceCompat
         android:defaultValue="true"

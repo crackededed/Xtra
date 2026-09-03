@@ -152,7 +152,6 @@
     <string name="player_doubletap">Double tap to toggle chat</string>
     <string name="player_channel">Show channel name</string>
     <string name="player_pause">Show pause button on livestreams</string>
-    <string name="token_random_deviceid">Random device ID</string>
     <string name="api_helix_client_id">Helix client ID</string>
     <string name="api_gql_client_id">GQL client ID</string>
     <string name="playback_speed">Playback speed</string>
@@ -345,8 +344,6 @@
     <string name="resume_download">Resume download</string>
     <string name="show_view_count_icon">Show view count and uptime icons</string>
     <string name="playback_speeds">Playback speeds</string>
-    <string name="stream_headers">Stream request headers</string>
-    <string name="stream_headers_desc">Uses JSON format</string>
     <string name="follow">Follow</string>
     <string name="unfollow">Unfollow</string>
     <string name="search_user">Get user by ID/login</string>
@@ -470,9 +467,6 @@
     <string name="chat_input_toggle">Chat input toggle</string>
     <string name="chat_toggle">Chat toggle</string>
     <string name="fullscreen">Fullscreen</string>
-    <string name="stream_device_id">Stream device ID</string>
-    <string name="stream_player_type">Stream player type</string>
-    <string name="video_player_type">Video player type</string>
     <string name="supported_codecs">Supported codecs</string>
     <string name="hide_during_ads">Hide player during ads</string>
     <string name="include_gql_token_stream">Include GQL token in stream requests</string>
@@ -585,4 +579,13 @@
     <string name="show_stream_notification_seekbar">Show seekbar on media notification when watching streams</string>
     <string name="use_custom_proxies">Use custom proxies</string>
     <string name="use_stream_proxies">Use HTTP proxies</string>
+    <string name="platform_param">Platform</string>
+    <string name="player_type_param">Player type</string>
+    <string name="use_video_swap">Use video swap</string>
+    <string name="use_video_swap_desc">Swaps playlist during ads</string>
+    <string name="video_swap_settings">Video swap settings</string>
+    <string name="default_values">Default values</string>
+    <string name="add_item">Add item</string>
+    <string name="delete_item_message">Are you sure you want to delete this item?</string>
+    <string name="video_swap_active">Video swap active</string>
 </resources>
