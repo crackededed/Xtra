@@ -134,7 +134,6 @@
     <string name="player_doubletap">ダブルタップしてチャットを切り替え</string>
     <string name="player_channel">チャンネル名の表示</string>
     <string name="player_pause">ライブ配信で一時停止ボタンの表示</string>
-    <string name="token_random_deviceid">ランダムデバイス ID</string>
     <string name="api_helix_client_id">Helix クライアント ID</string>
     <string name="api_gql_client_id">GQL クライアント ID</string>
     <string name="playback_speed">再生速度</string>
@@ -327,8 +326,6 @@
     <string name="resume_download">ダウンロードを再開</string>
     <string name="show_view_count_icon">視聴者数と経過時間にアイコンを表示</string>
     <string name="playback_speeds">再生速度</string>
-    <string name="stream_headers">ストリームリクエストヘッダー</string>
-    <string name="stream_headers_desc">JSON 形式を使用してください</string>
     <string name="follow">フォロー</string>
     <string name="unfollow">フォロー解除</string>
     <string name="search_user">ID/ログインによるユーザー取得</string>
@@ -452,9 +449,6 @@
     <string name="chat_input_toggle">チャット入力切り替え</string>
     <string name="chat_toggle">チャット切り替え</string>
     <string name="fullscreen">フルスクリーン</string>
-    <string name="stream_device_id">配信デバイスID</string>
-    <string name="stream_player_type">配信プレーヤータイプ</string>
-    <string name="video_player_type">動画プレーヤータイプ</string>
     <string name="supported_codecs">サポートされているコーデック</string>
     <string name="hide_during_ads">広告中にプレーヤーを非表示</string>
     <string name="include_gql_token_stream">ストリームリクエストにGQLトークンを含める</string>
@@ -567,4 +561,13 @@
     <string name="show_stream_notification_seekbar">Show seekbar on media notification when watching streams</string>
     <string name="use_custom_proxies">Use custom proxies</string>
     <string name="use_stream_proxies">Use HTTP proxies</string>
+    <string name="platform_param">Platform</string>
+    <string name="player_type_param">Player type</string>
+    <string name="use_video_swap">Use video swap</string>
+    <string name="use_video_swap_desc">Swaps playlist during ads</string>
+    <string name="video_swap_settings">Video swap settings</string>
+    <string name="default_values">Default values</string>
+    <string name="add_item">Add item</string>
+    <string name="delete_item_message">Are you sure you want to delete this item?</string>
+    <string name="video_swap_active">Video swap active</string>
 </resources>

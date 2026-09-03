@@ -203,8 +203,7 @@ class StreamDownloadService : LifecycleService() {
         val endWait = (prefs().getString(C.DOWNLOAD_STREAM_END_WAIT, "15")?.toLongOrNull())?.times(60000L)
         val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
         val gqlHeaders = TwitchApiHelper.getGQLHeaders(this@StreamDownloadService, prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, true))
-        val randomDeviceId = prefs().getBoolean(C.TOKEN_RANDOM_DEVICE_ID, true)
-        val xDeviceId = prefs().getString(C.TOKEN_X_DEVICE_ID, "twitch-web-wall-mason")
+        val platform = prefs().getString(C.TOKEN_PLATFORM, "web")
         val playerType = prefs().getString(C.TOKEN_PLAYER_TYPE, "site")
         val supportedCodecs = prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264")
         val useCustomProxy = prefs().getBoolean(C.PLAYER_USE_CUSTOM_PROXY, true)
@@ -228,7 +227,7 @@ class StreamDownloadService : LifecycleService() {
         val quality = offlineVideo.quality
         var startTime = System.currentTimeMillis()
         var endTime = startWait?.let { System.currentTimeMillis() + it }
-        var playlistUrl = xtraModule.playerRepository.loadStreamPlaylistUrl(this@StreamDownloadService, networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, false, null, null, null, null, false)
+        var playlistUrl = xtraModule.playerRepository.loadStreamPlaylistUrl(this@StreamDownloadService, networkLibrary, gqlHeaders, channelLogin, platform, playerType, supportedCodecs, false, null, null, null, null, false)
         while (true) {
             val playlist = when {
                 networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
@@ -357,7 +356,7 @@ class StreamDownloadService : LifecycleService() {
                             var result: String
                             while (true) {
                                 val newPlaylistUrl = try {
-                                    xtraModule.playerRepository.loadStreamPlaylistUrl(this@StreamDownloadService, networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, true, proxyHost, proxyPort, proxyUser, proxyPassword, false)
+                                    xtraModule.playerRepository.loadStreamPlaylistUrl(this@StreamDownloadService, networkLibrary, gqlHeaders, channelLogin, platform, playerType, supportedCodecs, true, proxyHost, proxyPort, proxyUser, proxyPassword, false)
                                 } catch (e: Exception) {
                                     null
                                 }
@@ -530,7 +529,7 @@ class StreamDownloadService : LifecycleService() {
                     }
                     endTime = endWait?.let { System.currentTimeMillis() + it }
                     if (continueDownloading) {
-                        playlistUrl = xtraModule.playerRepository.loadStreamPlaylistUrl(this@StreamDownloadService, networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, supportedCodecs, false, null, null, null, null, false)
+                        playlistUrl = xtraModule.playerRepository.loadStreamPlaylistUrl(this@StreamDownloadService, networkLibrary, gqlHeaders, channelLogin, platform, playerType, supportedCodecs, false, null, null, null, null, false)
                     }
                 }
             }

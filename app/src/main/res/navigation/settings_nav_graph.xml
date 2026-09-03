@@ -109,4 +109,11 @@
     <action
         android:id="@+id/action_global_streamProxySettingsFragment"
         app:destination="@id/streamProxySettingsFragment" />
+    <fragment
+        android:id="@+id/videoSwapSettingsFragment"
+        android:name="com.github.andreyasadchy.xtra.ui.settings.VideoSwapSettingsFragment"
+        android:label="@string/video_swap_settings" />
+    <action
+        android:id="@+id/action_global_videoSwapSettingsFragment"
+        app:destination="@id/videoSwapSettingsFragment" />
 </navigation>

@@ -135,7 +135,6 @@
     <string name="player_doubletap">Sohbeti açıp kapatmak için çift dokun</string>
     <string name="player_channel">Kanal adını göster</string>
     <string name="player_pause">Canlı yayınlarda duraklatma düğmesini göster</string>
-    <string name="token_random_deviceid">Rastgele cihaz kimliği</string>
     <string name="api_helix_client_id">Helix istemci kimliği</string>
     <string name="api_gql_client_id">GQL istemci kimliği</string>
     <string name="playback_speed">Oynatma hızı</string>
@@ -328,8 +327,6 @@
     <string name="resume_download">İndirmeye devam et</string>
     <string name="show_view_count_icon">İzleyici sayısı ve yayın süresi simgelerini göster</string>
     <string name="playback_speeds">Oynatma hızları</string>
-    <string name="stream_headers">Yayın isteği başlıkları</string>
-    <string name="stream_headers_desc">JSON formatını kullanır</string>
     <string name="follow">Takip Et</string>
     <string name="unfollow">Takipten Çık</string>
     <string name="search_user">Kimlik/giriş adına göre kullanıcı bul</string>
@@ -453,9 +450,6 @@
     <string name="chat_input_toggle">Sohbet girişi aç/kapat</string>
     <string name="chat_toggle">Sohbet aç/kapat</string>
     <string name="fullscreen">Tam Ekran</string>
-    <string name="stream_device_id">Yayın cihaz kimliği</string>
-    <string name="stream_player_type">Yayın oynatıcı türü</string>
-    <string name="video_player_type">Video oynatıcı türü</string>
     <string name="supported_codecs">Desteklenen kodekler</string>
     <string name="hide_during_ads">Reklamlar sırasında oynatıcıyı gizle</string>
     <string name="include_gql_token_stream">Yayın isteklerine GQL token\'ı ekle</string>
@@ -568,4 +562,13 @@
     <string name="show_stream_notification_seekbar">Show seekbar on media notification when watching streams</string>
     <string name="use_custom_proxies">Use custom proxies</string>
     <string name="use_stream_proxies">Use HTTP proxies</string>
+    <string name="platform_param">Platform</string>
+    <string name="player_type_param">Player type</string>
+    <string name="use_video_swap">Use video swap</string>
+    <string name="use_video_swap_desc">Swaps playlist during ads</string>
+    <string name="video_swap_settings">Video swap settings</string>
+    <string name="default_values">Default values</string>
+    <string name="add_item">Add item</string>
+    <string name="delete_item_message">Are you sure you want to delete this item?</string>
+    <string name="video_swap_active">Video swap active</string>
 </resources>
