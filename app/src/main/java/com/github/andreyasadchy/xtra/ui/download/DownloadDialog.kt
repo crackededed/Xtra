@@ -372,7 +372,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                 }
                 qualityMap.add(
                     if (qualityMap.find { it.first == name } != null) {
-                        "$name 2"
+                        "$name ${quality.bitrate?.div(1000)} Kbps"
                     } else {
                         name
                     } to quality
