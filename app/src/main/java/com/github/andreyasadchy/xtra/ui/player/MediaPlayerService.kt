@@ -852,8 +852,7 @@ class MediaPlayerService : BasePlaybackService() {
                 networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
                 gqlHeaders = TwitchApiHelper.getGQLHeaders(this, prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_STREAM, true)),
                 channelLogin = channelLogin,
-                randomDeviceId = prefs().getBoolean(C.TOKEN_RANDOM_DEVICE_ID, true),
-                xDeviceId = prefs().getString(C.TOKEN_X_DEVICE_ID, "twitch-web-wall-mason"),
+                platform = prefs().getString(C.TOKEN_PLATFORM, "web"),
                 playerType = prefs().getString(C.TOKEN_PLAYER_TYPE, "site"),
                 supportedCodecs = prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
                 proxyPlaybackAccessToken = streamProxy != null,
@@ -884,7 +883,6 @@ class MediaPlayerService : BasePlaybackService() {
                         networkLibrary = prefs().getString(C.NETWORK_LIBRARY, "OkHttp"),
                         gqlHeaders = TwitchApiHelper.getGQLHeaders(this@MediaPlayerService, prefs().getBoolean(C.TOKEN_INCLUDE_TOKEN_VIDEO, true)),
                         videoId = videoId,
-                        playerType = prefs().getString(C.TOKEN_PLAYER_TYPE_VIDEO, "channel_home_live"),
                         supportedCodecs = prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
                         enableIntegrity = prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                     )

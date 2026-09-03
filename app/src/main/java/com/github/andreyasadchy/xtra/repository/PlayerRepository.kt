@@ -18,6 +18,7 @@ import com.github.andreyasadchy.xtra.db.RecentEmotesDao
 import com.github.andreyasadchy.xtra.db.StreamProxiesDao
 import com.github.andreyasadchy.xtra.db.TranslatedChannelsDao
 import com.github.andreyasadchy.xtra.db.VideoPositionsDao
+import com.github.andreyasadchy.xtra.db.VideoSwapDao
 import com.github.andreyasadchy.xtra.graphql.StreamPlaybackAccessTokenQuery
 import com.github.andreyasadchy.xtra.graphql.type.BadgeImageSize
 import com.github.andreyasadchy.xtra.graphql.type.EmoteType
@@ -40,6 +41,7 @@ import com.github.andreyasadchy.xtra.model.misc.STVEmoteSetResponse
 import com.github.andreyasadchy.xtra.model.ui.CustomProxy
 import com.github.andreyasadchy.xtra.model.ui.StreamProxy
 import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
+import com.github.andreyasadchy.xtra.model.ui.VideoSwap
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
@@ -80,16 +82,19 @@ class PlayerRepository(
     private val translatedChannelsDao: TranslatedChannelsDao,
     private val customProxiesDao: CustomProxiesDao,
     private val streamProxiesDao: StreamProxiesDao,
+    private val videoSwapDao: VideoSwapDao,
     private val videoPositions: VideoPositionsDao,
     private val playbackStatesDao: PlaybackStatesDao,
     private val graphQLRepository: GraphQLRepository,
     private val helixRepository: HelixRepository,
 ) {
 
-    suspend fun loadStreamPlaylistUrl(context: Context, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, supportedCodecs: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): String = withContext(Dispatchers.IO) {
-        val accessToken = loadStreamPlaybackAccessToken(context, networkLibrary, gqlHeaders, channelLogin, randomDeviceId, xDeviceId, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity).let { token ->
+    suspend fun loadStreamPlaylistUrl(context: Context, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, platform: String?, playerType: String?, supportedCodecs: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): String = withContext(Dispatchers.IO) {
+        val platform = platform?.takeIf { it.isNotBlank() } ?: "web"
+        val playerType = playerType?.takeIf { it.isNotBlank() } ?: "site"
+        val accessToken = loadStreamPlaybackAccessToken(context, networkLibrary, gqlHeaders, channelLogin, platform, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity).let { token ->
             if (token.second?.contains("\"forbidden\":true") == true && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-                loadStreamPlaybackAccessToken(context, networkLibrary, gqlHeaders.filterNot { it.key == C.HEADER_TOKEN }, channelLogin, randomDeviceId, xDeviceId, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity)
+                loadStreamPlaybackAccessToken(context, networkLibrary, gqlHeaders.filterNot { it.key == C.HEADER_TOKEN }, channelLogin, platform, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity)
             } else token
         }
         val signature = accessToken.first
@@ -100,22 +105,28 @@ class PlayerRepository(
             appendQueryParameter("fast_bread", "true") // low latency
             appendQueryParameter("include_unavailable", "true")
             appendQueryParameter("p", Random.nextInt(9999999).toString())
-            if (supportedCodecs?.contains("av1", true) == true) {
-                appendQueryParameter("platform", "web")
-            }
+            appendQueryParameter("platform", platform)
             signature?.let { appendQueryParameter("sig", it) }
-            supportedCodecs?.let { appendQueryParameter("supported_codecs", it) }
+            if (!supportedCodecs.isNullOrBlank()) {
+                appendQueryParameter("supported_codecs", supportedCodecs)
+            }
             token?.let { appendQueryParameter("token", it) }
         }.build().toString()
     }
 
-    private suspend fun loadStreamPlaybackAccessToken(context: Context, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, randomDeviceId: Boolean?, xDeviceId: String?, playerType: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): Pair<String?, String?> = withContext(Dispatchers.IO) {
-        val accessTokenHeaders = getPlaybackAccessTokenHeaders(gqlHeaders, randomDeviceId, xDeviceId, enableIntegrity)
+    private suspend fun loadStreamPlaybackAccessToken(context: Context, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, platform: String, playerType: String, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): Pair<String?, String?> = withContext(Dispatchers.IO) {
+        val accessTokenHeaders = if (enableIntegrity) {
+            gqlHeaders
+        } else {
+            gqlHeaders.toMutableMap().apply {
+                put("X-Device-Id", Uuid.random().toHexString())
+            }
+        }
         val url = "https://gql.twitch.tv/gql"
-        val headers = accessTokenHeaders.filterKeys { it == C.HEADER_CLIENT_ID || it == "X-Device-Id" }
+        val proxyRequestHeaders = accessTokenHeaders.filterKeys { it == C.HEADER_CLIENT_ID || it == "X-Device-Id" }
         try {
-            val body = graphQLRepository.getPlaybackAccessTokenRequestBody(channelLogin, "", playerType)
             val response = if (proxyPlaybackAccessToken && !proxyHost.isNullOrBlank() && proxyPort != null) {
+                val body = graphQLRepository.getPlaybackAccessTokenRequestBody(channelLogin, "", platform, playerType)
                 when {
                     networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                         val proxyHeaders = if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
@@ -154,7 +165,7 @@ class PlayerRepository(
                                     cronetExecutor.value,
                                     NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                                 ).apply {
-                                    headers.forEach { addHeader(it.key, it.value) }
+                                    proxyRequestHeaders.forEach { addHeader(it.key, it.value) }
                                     addHeader("Content-Type", "application/json")
                                     setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                                 }.build()
@@ -178,7 +189,7 @@ class PlayerRepository(
                                 }
                             }.build().newCall(Request.Builder().apply {
                                 url(url)
-                                headers.forEach {
+                                proxyRequestHeaders.forEach {
                                     addHeader(it.key, it.value)
                                 }
                                 header("Content-Type", "application/json")
@@ -200,7 +211,7 @@ class PlayerRepository(
                             }
                         }.build().newCall(Request.Builder().apply {
                             url(url)
-                            headers.forEach {
+                            proxyRequestHeaders.forEach {
                                 addHeader(it.key, it.value)
                             }
                             header("Content-Type", "application/json")
@@ -221,7 +232,7 @@ class PlayerRepository(
                             }
                         }.build().newCall(Request.Builder().apply {
                             url(url)
-                            headers.forEach {
+                            proxyRequestHeaders.forEach {
                                 addHeader(it.key, it.value)
                             }
                             header("Content-Type", "application/json")
@@ -236,7 +247,8 @@ class PlayerRepository(
                     networkLibrary = networkLibrary,
                     headers = accessTokenHeaders,
                     login = channelLogin,
-                    playerType = playerType
+                    platform = platform,
+                    playerType = playerType,
                 )
             }
             if (enableIntegrity) {
@@ -248,7 +260,7 @@ class PlayerRepository(
         } catch (e: Exception) {
             if (e.message == C.FAILED_INTEGRITY_CHECK) throw e
             val response = if (proxyPlaybackAccessToken && !proxyHost.isNullOrBlank() && proxyPort != null) {
-                val query = StreamPlaybackAccessTokenQuery(channelLogin, "web", playerType ?: "")
+                val query = StreamPlaybackAccessTokenQuery(channelLogin, platform, playerType)
                 val body = buildJsonString {
                     query.apply {
                         writeObject {
@@ -299,7 +311,7 @@ class PlayerRepository(
                                     cronetExecutor.value,
                                     NetworkUtils.ByteArrayUrlCallback(continuation, timeout)
                                 ).apply {
-                                    headers.forEach { addHeader(it.key, it.value) }
+                                    proxyRequestHeaders.forEach { addHeader(it.key, it.value) }
                                     addHeader("Content-Type", "application/json")
                                     setUploadDataProvider(NetworkUtils.ByteArrayUploadProvider(body.toByteArray()), cronetExecutor.value)
                                 }.build()
@@ -325,7 +337,7 @@ class PlayerRepository(
                                 }
                             }.build().newCall(Request.Builder().apply {
                                 url(url)
-                                headers.forEach {
+                                proxyRequestHeaders.forEach {
                                     addHeader(it.key, it.value)
                                 }
                                 header("Content-Type", "application/json")
@@ -349,7 +361,7 @@ class PlayerRepository(
                             }
                         }.build().newCall(Request.Builder().apply {
                             url(url)
-                            headers.forEach {
+                            proxyRequestHeaders.forEach {
                                 addHeader(it.key, it.value)
                             }
                             header("Content-Type", "application/json")
@@ -372,7 +384,7 @@ class PlayerRepository(
                             }
                         }.build().newCall(Request.Builder().apply {
                             url(url)
-                            headers.forEach {
+                            proxyRequestHeaders.forEach {
                                 addHeader(it.key, it.value)
                             }
                             header("Content-Type", "application/json")
@@ -389,8 +401,8 @@ class PlayerRepository(
                     networkLibrary = networkLibrary,
                     headers = accessTokenHeaders,
                     login = channelLogin,
-                    platform = "web",
-                    playerType = playerType ?: ""
+                    platform = platform,
+                    playerType = playerType,
                 )
             }
             if (enableIntegrity) {
@@ -402,14 +414,21 @@ class PlayerRepository(
         }
     }
 
-    suspend fun loadVideoPlaylistUrl(networkLibrary: String?, gqlHeaders: Map<String, String>, videoId: String?, playerType: String?, supportedCodecs: String?, enableIntegrity: Boolean): Pair<String, List<String>> = withContext(Dispatchers.IO) {
-        val accessTokenHeaders = getPlaybackAccessTokenHeaders(gqlHeaders = gqlHeaders, randomDeviceId = true, enableIntegrity = enableIntegrity)
+    suspend fun loadVideoPlaylistUrl(networkLibrary: String?, gqlHeaders: Map<String, String>, videoId: String?, supportedCodecs: String?, enableIntegrity: Boolean): Pair<String, List<String>> = withContext(Dispatchers.IO) {
+        val accessTokenHeaders = if (enableIntegrity) {
+            gqlHeaders
+        } else {
+            gqlHeaders.toMutableMap().apply {
+                put("X-Device-Id", Uuid.random().toHexString())
+            }
+        }
         val accessToken = try {
             val response = graphQLRepository.loadPlaybackAccessToken(
                 networkLibrary = networkLibrary,
                 headers = accessTokenHeaders,
                 vodId = videoId,
-                playerType = playerType
+                platform = "web",
+                playerType = "site",
             )
             if (enableIntegrity) {
                 response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
@@ -424,7 +443,7 @@ class PlayerRepository(
                 headers = accessTokenHeaders,
                 videoId = videoId!!,
                 platform = "web",
-                playerType = playerType ?: ""
+                playerType = "site",
             )
             if (enableIntegrity) {
                 response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let { throw Exception(it.message) }
@@ -457,29 +476,14 @@ class PlayerRepository(
             appendQueryParameter("allow_audio_only", "true")
             appendQueryParameter("include_unavailable", "true")
             appendQueryParameter("p", Random.nextInt(9999999).toString())
-            if (supportedCodecs?.contains("av1", true) == true) {
-                appendQueryParameter("platform", "web")
-            }
+            appendQueryParameter("platform", "web")
             signature?.let { appendQueryParameter("sig", it) }
-            supportedCodecs?.let { appendQueryParameter("supported_codecs", it) }
+            if (!supportedCodecs.isNullOrBlank()) {
+                appendQueryParameter("supported_codecs", supportedCodecs)
+            }
             token?.let { appendQueryParameter("token", it) }
         }.build().toString()
         url to backupQualities
-    }
-
-    private fun getPlaybackAccessTokenHeaders(gqlHeaders: Map<String, String>, randomDeviceId: Boolean?, xDeviceId: String? = null, enableIntegrity: Boolean): Map<String, String> {
-        return if (enableIntegrity) {
-            gqlHeaders
-        } else {
-            gqlHeaders.toMutableMap().apply {
-                // X-Device-Id or Device-ID removes "commercial break in progress" (length 16 or 32)
-                if (randomDeviceId != false) {
-                    put("X-Device-Id", Uuid.random().toHexString())
-                } else {
-                    xDeviceId?.let { put("X-Device-Id", it) }
-                }
-            }
-        }
     }
 
     suspend fun loadClipQualities(networkLibrary: String?, gqlHeaders: Map<String, String>, clipId: String?, enableIntegrity: Boolean): List<VideoQuality>? = withContext(Dispatchers.IO) {
@@ -1890,6 +1894,30 @@ class PlayerRepository(
 
     suspend fun updateStreamProxy(item: StreamProxy) = withContext(Dispatchers.IO) {
         streamProxiesDao.update(item)
+    }
+
+    suspend fun getVideoSwapItems() = withContext(Dispatchers.IO) {
+        videoSwapDao.getAll()
+    }
+
+    suspend fun saveVideoSwapItems(items: List<VideoSwap>) = withContext(Dispatchers.IO) {
+        videoSwapDao.insertList(items)
+    }
+
+    suspend fun updateVideoSwapItems(items: List<VideoSwap>) = withContext(Dispatchers.IO) {
+        videoSwapDao.updateList(items)
+    }
+
+    suspend fun saveVideoSwap(item: VideoSwap): Long = withContext(Dispatchers.IO) {
+        videoSwapDao.insert(item)
+    }
+
+    suspend fun deleteVideoSwap(item: VideoSwap) = withContext(Dispatchers.IO) {
+        videoSwapDao.delete(item)
+    }
+
+    suspend fun updateVideoSwap(item: VideoSwap) = withContext(Dispatchers.IO) {
+        videoSwapDao.update(item)
     }
 
     fun loadVideoPositions() = videoPositions.getAll()

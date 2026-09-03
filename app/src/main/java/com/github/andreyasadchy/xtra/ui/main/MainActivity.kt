@@ -1418,5 +1418,11 @@ class MainActivity : AppCompatActivity() {
                 putInt(C.SETTINGS_VERSION, 16)
             }
         }
+        if (version < 17) {
+            viewModel.setDefaultVideoSwapItems()
+            prefs.edit {
+                putInt(C.SETTINGS_VERSION, 17)
+            }
+        }
     }
 }

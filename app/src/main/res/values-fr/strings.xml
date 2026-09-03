@@ -134,7 +134,6 @@
     <string name="player_doubletap">Appuyez deux fois pour afficher ou cacher le chat</string>
     <string name="player_channel">Afficher le nom de la chaîne</string>
     <string name="player_pause">Afficher le bouton de pause sur les diffusions en direct</string>
-    <string name="token_random_deviceid">ID de l\'appareil aléatoire</string>
     <string name="api_helix_client_id">Identifiant client Helix</string>
     <string name="api_gql_client_id">Identifiant client GQL</string>
     <string name="playback_speed">Vitesse de lecture</string>
@@ -327,8 +326,6 @@
     <string name="resume_download">Reprendre le téléchargement</string>
     <string name="show_view_count_icon">Afficher le nombre de vues et les icônes de durée du direct</string>
     <string name="playback_speeds">Vitesses de lecture</string>
-    <string name="stream_headers">En-têtes de requête du stream</string>
-    <string name="stream_headers_desc">Utilise le format JSON</string>
     <string name="follow">Suivre</string>
     <string name="unfollow">Ne plus suivre</string>
     <string name="search_user">Obtenir l\'utilisateur par ID/connexion</string>
@@ -452,9 +449,6 @@
     <string name="chat_input_toggle">Basculer l\'input du chat</string>
     <string name="chat_toggle">Afficher/Cacher le chat</string>
     <string name="fullscreen">Plein écran</string>
-    <string name="stream_device_id">ID de l\'appareil de streaming</string>
-    <string name="stream_player_type">Type de lecteur de streaming</string>
-    <string name="video_player_type">Type de lecteur vidéo</string>
     <string name="supported_codecs">Codecs pris en charge</string>
     <string name="hide_during_ads">Masquer le lecteur pendant les publicités</string>
     <string name="include_gql_token_stream">Inclure le token GQL dans les requêtes de streaming</string>
@@ -567,4 +561,13 @@
     <string name="show_stream_notification_seekbar">Show seekbar on media notification when watching streams</string>
     <string name="use_custom_proxies">Use custom proxies</string>
     <string name="use_stream_proxies">Use HTTP proxies</string>
+    <string name="platform_param">Platform</string>
+    <string name="player_type_param">Player type</string>
+    <string name="use_video_swap">Use video swap</string>
+    <string name="use_video_swap_desc">Swaps playlist during ads</string>
+    <string name="video_swap_settings">Video swap settings</string>
+    <string name="default_values">Default values</string>
+    <string name="add_item">Add item</string>
+    <string name="delete_item_message">Are you sure you want to delete this item?</string>
+    <string name="video_swap_active">Video swap active</string>
 </resources>
