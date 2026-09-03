@@ -881,6 +881,7 @@ class ExoPlayerService : BasePlaybackService() {
                         }
                     }
                 }
+                else -> stopSelf()
             }
         }
     }
