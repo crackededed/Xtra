@@ -1036,7 +1036,7 @@ class ChatViewModel(
             val gqlToken = gqlHeaders[C.HEADER_TOKEN]?.removePrefix("OAuth ")
             val helixToken = helixHeaders[C.HEADER_TOKEN]?.removePrefix("Bearer ")
             if (applicationContext.prefs().getBoolean(C.CHAT_USE_WEBSOCKET, true)) {
-                chatReadWebSocket = ChatReadWebSocket(channelLogin, trustManager, ChatReadListener(channelLogin, nameDisplay, showUserNotice, showClearMsg, showClearChat, usePubSub, networkLibrary, isLoggedIn, accountId, channelId))
+                chatReadWebSocket = ChatReadWebSocket(channelLogin, applicationContext.prefs().getBoolean(C.CHAT_SHOW_GIF_MESSAGES, true), trustManager, ChatReadListener(channelLogin, nameDisplay, showUserNotice, showClearMsg, showClearChat, usePubSub, networkLibrary, isLoggedIn, accountId, channelId))
                 chatReadJob = chatReadWebSocket?.connect(viewModelScope)
                 if (isLoggedIn && (!gqlToken.isNullOrBlank() || !helixHeaders[C.HEADER_TOKEN].isNullOrBlank() && !useApiChatMessages)) {
                     chatWriteWebSocket = ChatWriteWebSocket(
