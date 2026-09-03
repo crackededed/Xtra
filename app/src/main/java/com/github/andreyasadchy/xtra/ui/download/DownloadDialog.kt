@@ -227,8 +227,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                             }
                         }
                     },
-                    randomDeviceId = requireContext().prefs().getBoolean(C.TOKEN_RANDOM_DEVICE_ID, true),
-                    xDeviceId = requireContext().prefs().getString(C.TOKEN_X_DEVICE_ID, "twitch-web-wall-mason"),
+                    platform = requireContext().prefs().getString(C.TOKEN_PLATFORM, "web"),
                     playerType = requireContext().prefs().getString(C.TOKEN_PLAYER_TYPE, "site"),
                     supportedCodecs = requireContext().prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
                     enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
@@ -281,7 +280,6 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                             }
                         }
                     },
-                    playerType = requireContext().prefs().getString(C.TOKEN_PLAYER_TYPE_VIDEO, "channel_home_live"),
                     supportedCodecs = requireContext().prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
                     enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                 )
@@ -727,8 +725,7 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                             }
                         }
                     },
-                    randomDeviceId = requireContext().prefs().getBoolean(C.TOKEN_RANDOM_DEVICE_ID, true),
-                    xDeviceId = requireContext().prefs().getString(C.TOKEN_X_DEVICE_ID, "twitch-web-wall-mason"),
+                    platform = requireContext().prefs().getString(C.TOKEN_PLATFORM, "web"),
                     playerType = requireContext().prefs().getString(C.TOKEN_PLAYER_TYPE, "site"),
                     supportedCodecs = requireContext().prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
                     enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
@@ -756,7 +753,6 @@ class DownloadDialog : DialogFragment(), IntegrityDialog.Listener {
                             }
                         }
                     },
-                    playerType = requireContext().prefs().getString(C.TOKEN_PLAYER_TYPE_VIDEO, "channel_home_live"),
                     supportedCodecs = requireContext().prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
                     enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                 )

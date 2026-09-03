@@ -19,6 +19,7 @@ import com.github.andreyasadchy.xtra.model.ui.RecentSearch
 import com.github.andreyasadchy.xtra.model.ui.SavedFilter
 import com.github.andreyasadchy.xtra.model.ui.StreamProxy
 import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
+import com.github.andreyasadchy.xtra.model.ui.VideoSwap
 
 @Database(
     entities = [
@@ -39,8 +40,9 @@ import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
         PlaybackState::class,
         CustomProxy::class,
         StreamProxy::class,
+        VideoSwap::class,
     ],
-    version = 39,
+    version = 40,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -62,4 +64,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun playbackStates(): PlaybackStatesDao
     abstract fun customProxies(): CustomProxiesDao
     abstract fun streamProxies(): StreamProxiesDao
+    abstract fun videoSwap(): VideoSwapDao
 }

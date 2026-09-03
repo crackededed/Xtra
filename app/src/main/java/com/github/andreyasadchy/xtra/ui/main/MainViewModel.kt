@@ -30,6 +30,7 @@ import com.github.andreyasadchy.xtra.model.ui.StreamProxy
 import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.model.ui.User
 import com.github.andreyasadchy.xtra.model.ui.Video
+import com.github.andreyasadchy.xtra.model.ui.VideoSwap
 import com.github.andreyasadchy.xtra.repository.AuthRepository
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
@@ -1246,6 +1247,20 @@ class MainViewModel(
                     } else {
                         add(StreamProxy("firefox.api.cdn-perfprod.com", 2023, position = 0))
                     }
+                }
+            )
+        }
+    }
+
+    fun setDefaultVideoSwapItems() {
+        viewModelScope.launch(Dispatchers.IO) {
+            playerRepository.saveVideoSwapItems(
+                listOf(
+                    Triple("android", "autoplay", true),
+                    Triple("web", "embed", false),
+                    Triple("web", "popout", false),
+                ).mapIndexed { index, triple ->
+                    VideoSwap(triple.first, triple.second, index, triple.third)
                 }
             )
         }
