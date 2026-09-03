@@ -516,6 +516,7 @@ class MediaPlayerService : BasePlaybackService() {
                         }
                     }
                 }
+                else -> stopSelf()
             }
         }
     }
