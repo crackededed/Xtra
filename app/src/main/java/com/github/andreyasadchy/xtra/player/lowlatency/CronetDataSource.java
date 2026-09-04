@@ -119,8 +119,13 @@ public class CronetDataSource extends BaseDataSource implements HttpDataSource {
     private boolean handleSetCookieRequests;
     private boolean keepPostFor302Redirects;
 
-    @Nullable private final Call.Factory multivariantPlaylistProxyClient; // xtra: proxy
-    @Nullable private final Call.Factory mediaPlaylistProxyClient;
+    @Nullable private final String customProxyUrl; // xtra: proxy
+    private final int proxyTimeout;
+    private final boolean proxyMultivariantPlaylist;
+    private final boolean proxyMediaPlaylist;
+    @Nullable private final CronetEngine proxyClient;
+    @Nullable private final Call.Factory multivariantPlaylistProxyOkHttpClient;
+    @Nullable private final Call.Factory mediaPlaylistProxyOkHttpClient;
     private final Function0<Boolean> getProxyMediaPlaylist;
 
     /**
@@ -135,11 +140,16 @@ public class CronetDataSource extends BaseDataSource implements HttpDataSource {
      *     However, to avoid slowing down overall network performance, care must be taken to make
      *     sure response handling is a fast operation when using a direct executor.
      */
-    public Factory(CronetEngine cronetEngine, Executor executor, @Nullable Call.Factory multivariantPlaylistProxyClient, @Nullable Call.Factory mediaPlaylistProxyClient, Function0<Boolean> getProxyMediaPlaylist) {
+    public Factory(CronetEngine cronetEngine, Executor executor, @Nullable String customProxyUrl, int proxyTimeout, boolean proxyMultivariantPlaylist, boolean proxyMediaPlaylist, @Nullable CronetEngine proxyClient, @Nullable Call.Factory multivariantPlaylistProxyOkHttpClient, @Nullable Call.Factory mediaPlaylistProxyOkHttpClient, Function0<Boolean> getProxyMediaPlaylist) {
       this.cronetEngine = Assertions.checkNotNull(cronetEngine);
       this.executor = executor;
-      this.multivariantPlaylistProxyClient = multivariantPlaylistProxyClient; // xtra: proxy
-      this.mediaPlaylistProxyClient = mediaPlaylistProxyClient;
+      this.customProxyUrl = customProxyUrl; // xtra: proxy
+      this.proxyTimeout = proxyTimeout;
+      this.proxyMultivariantPlaylist = proxyMultivariantPlaylist;
+      this.proxyMediaPlaylist = proxyMediaPlaylist;
+      this.proxyClient = proxyClient;
+      this.multivariantPlaylistProxyOkHttpClient = multivariantPlaylistProxyOkHttpClient;
+      this.mediaPlaylistProxyOkHttpClient = mediaPlaylistProxyOkHttpClient;
       this.getProxyMediaPlaylist = getProxyMediaPlaylist;
       defaultRequestProperties = new RequestProperties();
       internalFallbackFactory = null;
@@ -320,8 +330,13 @@ public class CronetDataSource extends BaseDataSource implements HttpDataSource {
           new CronetDataSource(
               cronetEngine,
               executor,
-              multivariantPlaylistProxyClient, // xtra: proxy
-              mediaPlaylistProxyClient,
+              customProxyUrl, // xtra: proxy
+              proxyTimeout,
+              proxyMultivariantPlaylist,
+              proxyMediaPlaylist,
+              proxyClient,
+              multivariantPlaylistProxyOkHttpClient,
+              mediaPlaylistProxyOkHttpClient,
               getProxyMediaPlaylist,
               requestPriority,
               connectTimeoutMs,
@@ -441,9 +456,15 @@ public class CronetDataSource extends BaseDataSource implements HttpDataSource {
 
   private volatile long currentConnectTimeoutMs;
 
-  @Nullable private final Call.Factory multivariantPlaylistProxyClient; // xtra: proxy
-  @Nullable private final Call.Factory mediaPlaylistProxyClient;
+  @Nullable private final String customProxyUrl; // xtra: proxy
+  private final int proxyTimeout;
+  private final boolean proxyMultivariantPlaylist;
+  private final boolean proxyMediaPlaylist;
+  @Nullable private final CronetEngine proxyClient;
+  @Nullable private final Call.Factory multivariantPlaylistProxyOkHttpClient;
+  @Nullable private final Call.Factory mediaPlaylistProxyOkHttpClient;
   private final Function0<Boolean> getProxyMediaPlaylist;
+  private boolean useProxyTimeout;
   @Nullable private Response response;
   @Nullable private InputStream responseByteStream;
 
@@ -451,8 +472,13 @@ public class CronetDataSource extends BaseDataSource implements HttpDataSource {
   protected CronetDataSource(
       CronetEngine cronetEngine,
       Executor executor,
-      @Nullable Call.Factory multivariantPlaylistProxyClient, // xtra: proxy
-      @Nullable Call.Factory mediaPlaylistProxyClient,
+      @Nullable String customProxyUrl, // xtra: proxy
+      int proxyTimeout,
+      boolean proxyMultivariantPlaylist,
+      boolean proxyMediaPlaylist,
+      @Nullable CronetEngine proxyClient,
+      @Nullable Call.Factory multivariantPlaylistProxyOkHttpClient,
+      @Nullable Call.Factory mediaPlaylistProxyOkHttpClient,
       Function0<Boolean> getProxyMediaPlaylist,
       int requestPriority,
       int connectTimeoutMs,
@@ -466,8 +492,13 @@ public class CronetDataSource extends BaseDataSource implements HttpDataSource {
     super(/* isNetwork= */ true);
     this.cronetEngine = Assertions.checkNotNull(cronetEngine);
     this.executor = Assertions.checkNotNull(executor);
-    this.multivariantPlaylistProxyClient = multivariantPlaylistProxyClient; // xtra: proxy
-    this.mediaPlaylistProxyClient = mediaPlaylistProxyClient;
+    this.customProxyUrl = customProxyUrl; // xtra: proxy
+    this.proxyTimeout = proxyTimeout;
+    this.proxyMultivariantPlaylist = proxyMultivariantPlaylist;
+    this.proxyMediaPlaylist = proxyMediaPlaylist;
+    this.proxyClient = proxyClient;
+    this.multivariantPlaylistProxyOkHttpClient = multivariantPlaylistProxyOkHttpClient;
+    this.mediaPlaylistProxyOkHttpClient = mediaPlaylistProxyOkHttpClient;
     this.getProxyMediaPlaylist = getProxyMediaPlaylist;
     this.requestPriority = requestPriority;
     this.connectTimeoutMs = connectTimeoutMs;
@@ -538,7 +569,18 @@ public class CronetDataSource extends BaseDataSource implements HttpDataSource {
     Assertions.checkState(!opened);
 
     operation.close();
-    resetConnectTimeout();
+    String host = dataSpec.uri.getHost(); // xtra: proxy
+    useProxyTimeout = (customProxyUrl != null && dataSpec.uri.toString().equals(customProxyUrl)) ||
+            (proxyClient != null && host != null &&
+                    ((proxyMultivariantPlaylist && host.matches(ExoPlayerService.MULTIVARIANT_PLAYLIST_REGEX)) ||
+                            (proxyMediaPlaylist && host.matches(ExoPlayerService.MEDIA_PLAYLIST_REGEX) && getProxyMediaPlaylist.invoke())));
+    int timeout;
+    if (useProxyTimeout) {
+      timeout = proxyTimeout;
+    } else {
+      timeout = connectTimeoutMs;
+    }
+    resetConnectTimeout(timeout);
     currentDataSpec = dataSpec;
     UrlRequest urlRequest;
     try {
@@ -552,12 +594,11 @@ public class CronetDataSource extends BaseDataSource implements HttpDataSource {
             e, dataSpec, PlaybackException.ERROR_CODE_IO_UNSPECIFIED, Status.IDLE);
       }
     }
-    String host = dataSpec.uri.getHost(); // xtra: proxy
-    if (multivariantPlaylistProxyClient != null && host != null && host.matches(ExoPlayerService.MULTIVARIANT_PLAYLIST_REGEX)) {
-      return openOkHttp(dataSpec, multivariantPlaylistProxyClient);
+    if (multivariantPlaylistProxyOkHttpClient != null && host != null && host.matches(ExoPlayerService.MULTIVARIANT_PLAYLIST_REGEX)) { // xtra: proxy
+      return openOkHttp(dataSpec, multivariantPlaylistProxyOkHttpClient);
     }
-    if (mediaPlaylistProxyClient != null && host != null && host.matches(ExoPlayerService.MEDIA_PLAYLIST_REGEX) && getProxyMediaPlaylist.invoke()) {
-      return openOkHttp(dataSpec, mediaPlaylistProxyClient);
+    if (mediaPlaylistProxyOkHttpClient != null && host != null && host.matches(ExoPlayerService.MEDIA_PLAYLIST_REGEX) && getProxyMediaPlaylist.invoke()) {
+      return openOkHttp(dataSpec, mediaPlaylistProxyOkHttpClient);
     }
     urlRequest.start();
 
@@ -825,6 +866,16 @@ public class CronetDataSource extends BaseDataSource implements HttpDataSource {
 
   @UnstableApi
   protected UrlRequest.Builder buildRequestBuilder(DataSpec dataSpec) throws IOException {
+    CronetEngine cronetEngine; // xtra: proxy
+    String host = dataSpec.uri.getHost();
+    if (proxyClient != null && host != null &&
+            ((proxyMultivariantPlaylist && host.matches(ExoPlayerService.MULTIVARIANT_PLAYLIST_REGEX)) ||
+                    (proxyMediaPlaylist && host.matches(ExoPlayerService.MEDIA_PLAYLIST_REGEX) && getProxyMediaPlaylist.invoke()))
+    ) {
+      cronetEngine = proxyClient;
+    } else {
+      cronetEngine = this.cronetEngine;
+    }
     UrlRequest.Builder requestBuilder =
         cronetEngine
             .newUrlRequestBuilder(dataSpec.uri.toString(), urlRequestCallback, executor)
@@ -887,8 +938,8 @@ public class CronetDataSource extends BaseDataSource implements HttpDataSource {
     return opened;
   }
 
-  private void resetConnectTimeout() {
-    currentConnectTimeoutMs = clock.elapsedRealtime() + connectTimeoutMs;
+  private void resetConnectTimeout(int timeout) { // xtra: proxy
+    currentConnectTimeoutMs = clock.elapsedRealtime() + timeout;
   }
 
   /**
@@ -995,7 +1046,13 @@ public class CronetDataSource extends BaseDataSource implements HttpDataSource {
     }
     castNonNull(currentUrlRequest).read(buffer);
     try {
-      if (!operation.block(readTimeoutMs)) {
+      int timeout; // xtra: proxy
+      if (useProxyTimeout) {
+        timeout = proxyTimeout;
+      } else {
+        timeout = readTimeoutMs;
+      }
+      if (!operation.block(timeout)) {
         throw new SocketTimeoutException();
       }
     } catch (InterruptedException e) {
@@ -1287,7 +1344,13 @@ public class CronetDataSource extends BaseDataSource implements HttpDataSource {
         }
       }
       if (resetTimeoutOnRedirects) {
-        resetConnectTimeout();
+        int timeout; // xtra: proxy
+        if (useProxyTimeout) {
+          timeout = proxyTimeout;
+        } else {
+          timeout = connectTimeoutMs;
+        }
+        resetConnectTimeout(timeout);
       }
 
       boolean shouldKeepPost =
