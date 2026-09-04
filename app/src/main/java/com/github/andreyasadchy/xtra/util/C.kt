@@ -200,6 +200,7 @@ object C {
     const val PROXY_PORT = "proxy_port"
     const val PROXY_USER = "proxy_user"
     const val PROXY_PASSWORD = "proxy_password"
+    const val PROXY_TIMEOUT = "proxy_timeout"
     const val ANIMATED_EMOTES = "animatedGifEmotes"
     const val CHAT_IMAGE_LIBRARY = "chat_image_library"
     const val CHAT_USE_WEBP = "chat_use_webp"

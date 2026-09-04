@@ -88,7 +88,10 @@ public class OkHttpDataSource extends BaseDataSource implements HttpDataSource {
     @Nullable private CacheControl cacheControl;
     @Nullable private Predicate<String> contentTypePredicate;
 
-    @Nullable private final Call.Factory mediaPlaylistProxyClient; // xtra: proxy
+    @Nullable private final Call.Factory customProxyClient; // xtra: proxy
+    @Nullable private final String customProxyUrl;
+    @Nullable private final Call.Factory multivariantPlaylistProxyClient;
+    @Nullable private final Call.Factory mediaPlaylistProxyClient;
     private final Function0<Boolean> getProxyMediaPlaylist;
 
     /**
@@ -97,9 +100,12 @@ public class OkHttpDataSource extends BaseDataSource implements HttpDataSource {
      * @param callFactory A {@link Call.Factory} (typically an {@link OkHttpClient}) for use by the
      *     sources created by the factory.
      */
-    public Factory(Call.Factory callFactory, @Nullable Call.Factory mediaPlaylistProxyClient, Function0<Boolean> getProxyMediaPlaylist) {
+    public Factory(Call.Factory callFactory, @Nullable Call.Factory customProxyClient, @Nullable String customProxyUrl, @Nullable Call.Factory multivariantPlaylistProxyClient, @Nullable Call.Factory mediaPlaylistProxyClient, Function0<Boolean> getProxyMediaPlaylist) {
       this.callFactory = callFactory;
-      this.mediaPlaylistProxyClient = mediaPlaylistProxyClient; // xtra: proxy
+      this.customProxyClient = customProxyClient; // xtra: proxy
+      this.customProxyUrl = customProxyUrl;
+      this.multivariantPlaylistProxyClient = multivariantPlaylistProxyClient;
+      this.mediaPlaylistProxyClient = mediaPlaylistProxyClient;
       this.getProxyMediaPlaylist = getProxyMediaPlaylist;
       defaultRequestProperties = new RequestProperties();
     }
@@ -178,7 +184,7 @@ public class OkHttpDataSource extends BaseDataSource implements HttpDataSource {
     public OkHttpDataSource createDataSource() {
       OkHttpDataSource dataSource =
           new OkHttpDataSource( // xtra: proxy
-              callFactory, mediaPlaylistProxyClient, getProxyMediaPlaylist, userAgent, cacheControl, defaultRequestProperties, contentTypePredicate);
+              callFactory, customProxyClient, customProxyUrl, multivariantPlaylistProxyClient, mediaPlaylistProxyClient, getProxyMediaPlaylist, userAgent, cacheControl, defaultRequestProperties, contentTypePredicate);
       if (transferListener != null) {
         dataSource.addTransferListener(transferListener);
       }
@@ -201,12 +207,18 @@ public class OkHttpDataSource extends BaseDataSource implements HttpDataSource {
   private long bytesToRead;
   private long bytesRead;
 
-  @Nullable private final Call.Factory mediaPlaylistProxyClient; // xtra: proxy
+  @Nullable private final Call.Factory customProxyClient; // xtra: proxy
+  @Nullable private final String customProxyUrl;
+  @Nullable private final Call.Factory multivariantPlaylistProxyClient;
+  @Nullable private final Call.Factory mediaPlaylistProxyClient;
   private final Function0<Boolean> getProxyMediaPlaylist;
 
   private OkHttpDataSource(
       Call.Factory callFactory,
-      @Nullable Call.Factory mediaPlaylistProxyClient, // xtra: proxy
+      @Nullable Call.Factory customProxyClient, // xtra: proxy
+      @Nullable String customProxyUrl,
+      @Nullable Call.Factory multivariantPlaylistProxyClient,
+      @Nullable Call.Factory mediaPlaylistProxyClient,
       Function0<Boolean> getProxyMediaPlaylist,
       @Nullable String userAgent,
       @Nullable CacheControl cacheControl,
@@ -214,7 +226,10 @@ public class OkHttpDataSource extends BaseDataSource implements HttpDataSource {
       @Nullable Predicate<String> contentTypePredicate) {
     super(/* isNetwork= */ true);
     this.callFactory = Assertions.checkNotNull(callFactory);
-    this.mediaPlaylistProxyClient = mediaPlaylistProxyClient; // xtra: proxy
+    this.customProxyClient = customProxyClient; // xtra: proxy
+    this.customProxyUrl = customProxyUrl;
+    this.multivariantPlaylistProxyClient = multivariantPlaylistProxyClient;
+    this.mediaPlaylistProxyClient = mediaPlaylistProxyClient;
     this.getProxyMediaPlaylist = getProxyMediaPlaylist;
     this.userAgent = userAgent;
     this.cacheControl = cacheControl;
@@ -281,10 +296,19 @@ public class OkHttpDataSource extends BaseDataSource implements HttpDataSource {
     Response response;
     ResponseBody responseBody;
     Call call; // xtra: proxy
-    if (dataSpec.uri.getHost() != null && dataSpec.uri.getHost().matches(ExoPlayerService.MEDIA_PLAYLIST_REGEX) && mediaPlaylistProxyClient != null && getProxyMediaPlaylist.invoke()) {
-      call = mediaPlaylistProxyClient.newCall(request);
+    if (customProxyClient != null && customProxyUrl != null && dataSpec.uri.toString().equals(customProxyUrl)) {
+      call = customProxyClient.newCall(request);
     } else {
-      call = callFactory.newCall(request);
+      String host = dataSpec.uri.getHost();
+      if (multivariantPlaylistProxyClient != null && host != null && host.matches(ExoPlayerService.MULTIVARIANT_PLAYLIST_REGEX)) {
+        call = multivariantPlaylistProxyClient.newCall(request);
+      } else {
+        if (mediaPlaylistProxyClient != null && host != null && host.matches(ExoPlayerService.MEDIA_PLAYLIST_REGEX) && getProxyMediaPlaylist.invoke()) {
+          call = mediaPlaylistProxyClient.newCall(request);
+        } else {
+          call = callFactory.newCall(request);
+        }
+      }
     }
 
     try {
