@@ -573,4 +573,6 @@
     <string name="video_swap_active">Video swap active</string>
     <string name="chat_gif_size">GIF size</string>
     <string name="show_gif_messages">Show GIF messages</string>
+    <string name="proxy_timeout">Proxy timeout</string>
+    <string name="proxy_timeout_summary">Proxy timeout in milliseconds</string>
 </resources>

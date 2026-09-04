@@ -46,6 +46,7 @@ import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
+import androidx.media3.datasource.DataSourceException
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.HttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
@@ -99,6 +100,7 @@ import java.net.ProxySelector
 import java.net.SocketAddress
 import java.net.URI
 import java.util.Timer
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.schedule
 import kotlin.concurrent.scheduleAtFixedRate
 import kotlin.math.floor
@@ -269,6 +271,7 @@ class ExoPlayerService : BasePlaybackService() {
                                             } != null
                                         }
                             } == true
+                            val oldValue = playingAds
                             playingAds = ads
                             if (ads) {
                                 when {
@@ -315,27 +318,11 @@ class ExoPlayerService : BasePlaybackService() {
                                         }
                                     }
                                     else -> {
-                                        val playlist = quality?.url
-                                        when {
-                                            useProxy && !playlist.isNullOrBlank() -> {
-                                                proxyMediaPlaylist = true
-                                                checkPlaylistJob?.cancel()
-                                                checkPlaylistJob = lifecycleScope.launch {
-                                                    for (i in 0 until 60) {
-                                                        delay(2.seconds)
-                                                        if (!checkPlaylist(prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), playlist)) {
-                                                            break
-                                                        }
-                                                    }
-                                                    proxyMediaPlaylist = false
-                                                    checkPlaylistJob = null
-                                                }
-                                            }
-                                            useVideoSwap && !playlist.isNullOrBlank() -> {
-                                                if (!videoSwapLoading) {
-                                                    videoSwapLoading = true
-                                                    videoSwapActive = true
-                                                    serviceListener?.toast(R.string.video_swap_active, Toast.LENGTH_SHORT)
+                                        if (!oldValue) {
+                                            val playlist = quality?.url
+                                            when {
+                                                useProxy && !playlist.isNullOrBlank() -> {
+                                                    proxyMediaPlaylist = true
                                                     checkPlaylistJob?.cancel()
                                                     checkPlaylistJob = lifecycleScope.launch {
                                                         for (i in 0 until 60) {
@@ -344,29 +331,47 @@ class ExoPlayerService : BasePlaybackService() {
                                                                 break
                                                             }
                                                         }
-                                                        videoSwapLoading = true
-                                                        videoSwapActive = false
-                                                        if (prefs().getString(C.PLAYER_QUALITY, "720p60") != videoSwapPreviousQuality) {
-                                                            prefs().edit { putString(C.PLAYER_QUALITY, videoSwapPreviousQuality) }
-                                                        }
-                                                        restartPlayer()
+                                                        proxyMediaPlaylist = false
                                                         checkPlaylistJob = null
                                                     }
-                                                    videoSwapPreviousQuality = prefs().getString(C.PLAYER_QUALITY, "720p60")
-                                                    restartPlayer()
                                                 }
-                                            }
-                                            hideAds && !hidden -> {
-                                                hidden = true
-                                                player?.let { player ->
-                                                    if (quality?.name != VideoQuality.AUDIO_ONLY_QUALITY) {
-                                                        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
-                                                            setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
-                                                        }.build()
+                                                useVideoSwap && !playlist.isNullOrBlank() -> {
+                                                    if (!videoSwapLoading) {
+                                                        videoSwapLoading = true
+                                                        videoSwapActive = true
+                                                        serviceListener?.toast(R.string.video_swap_active, Toast.LENGTH_SHORT)
+                                                        checkPlaylistJob?.cancel()
+                                                        checkPlaylistJob = lifecycleScope.launch {
+                                                            for (i in 0 until 60) {
+                                                                delay(2.seconds)
+                                                                if (!checkPlaylist(prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP), playlist)) {
+                                                                    break
+                                                                }
+                                                            }
+                                                            videoSwapLoading = true
+                                                            videoSwapActive = false
+                                                            if (prefs().getString(C.PLAYER_QUALITY, "720p60") != videoSwapPreviousQuality) {
+                                                                prefs().edit { putString(C.PLAYER_QUALITY, videoSwapPreviousQuality) }
+                                                            }
+                                                            restartPlayer()
+                                                            checkPlaylistJob = null
+                                                        }
+                                                        videoSwapPreviousQuality = prefs().getString(C.PLAYER_QUALITY, "720p60")
+                                                        restartPlayer()
                                                     }
-                                                    player.volume = 0f
                                                 }
-                                                serviceListener?.toast(R.string.waiting_ads, Toast.LENGTH_LONG)
+                                                hideAds && !hidden -> {
+                                                    hidden = true
+                                                    player?.let { player ->
+                                                        if (quality?.name != VideoQuality.AUDIO_ONLY_QUALITY) {
+                                                            player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                                                                setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
+                                                            }.build()
+                                                        }
+                                                        player.volume = 0f
+                                                    }
+                                                    serviceListener?.toast(R.string.waiting_ads, Toast.LENGTH_LONG)
+                                                }
                                             }
                                         }
                                     }
@@ -397,6 +402,10 @@ class ExoPlayerService : BasePlaybackService() {
                     when (type) {
                         STREAM -> {
                             val responseCode = (player?.playerError?.cause as? HttpDataSource.InvalidResponseCodeException)?.responseCode ?: 0
+                            val timeout = (player?.playerError?.cause as? DataSourceException)?.reason?.let {
+                                it == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED
+                                        || it == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT
+                            } == true
                             val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
                             val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
                             val isNetworkAvailable = networkCapabilities != null
@@ -407,7 +416,7 @@ class ExoPlayerService : BasePlaybackService() {
                                     responseCode == 404 -> {
                                         serviceListener?.toast(R.string.stream_ended, Toast.LENGTH_LONG)
                                     }
-                                    useCustomProxy && responseCode >= 400 -> {
+                                    useCustomProxy && (responseCode >= 400 || timeout) -> {
                                         val host = customProxyList?.getOrNull(currentCustomProxy)?.url?.let {
                                             it.toUri().host ?: "https://$it".toUri().host
                                         }
@@ -420,7 +429,7 @@ class ExoPlayerService : BasePlaybackService() {
                                             restartPlayer()
                                         }
                                     }
-                                    useStreamProxy && responseCode >= 400 -> {
+                                    useStreamProxy && (responseCode >= 400 || timeout) -> {
                                         val host = streamProxyList?.getOrNull(currentStreamProxy)?.host
                                         currentStreamProxy += 1
                                         stopProxy = false
@@ -513,13 +522,13 @@ class ExoPlayerService : BasePlaybackService() {
                                                                 this@ExoPlayerService,
                                                                 when {
                                                                     networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
-                                                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, false, false, null, null, null) { false }
+                                                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, null, 0, false, false, null, null, null) { false }
                                                                     }
                                                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
-                                                                        CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, false, false, null, null, null) { false }
+                                                                        CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, null, 0, false, false, null, null, null) { false }
                                                                     }
                                                                     else -> {
-                                                                        OkHttpDataSource.Factory(xtraModule.okHttpClient.value, null) { false }
+                                                                        OkHttpDataSource.Factory(xtraModule.okHttpClient.value, null, null, null, null) { false }
                                                                     }
                                                                 }
                                                             )
@@ -805,13 +814,13 @@ class ExoPlayerService : BasePlaybackService() {
                                                 this@ExoPlayerService,
                                                 when {
                                                     networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
-                                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, false, false, null, null, null) { false }
+                                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, null, 0, false, false, null, null, null) { false }
                                                     }
                                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
-                                                        CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, false, false, null, null, null) { false }
+                                                        CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, null, 0, false, false, null, null, null) { false }
                                                     }
                                                     else -> {
-                                                        OkHttpDataSource.Factory(xtraModule.okHttpClient.value, null) { false }
+                                                        OkHttpDataSource.Factory(xtraModule.okHttpClient.value, null, null, null, null) { false }
                                                     }
                                                 }
                                             )
@@ -958,6 +967,10 @@ class ExoPlayerService : BasePlaybackService() {
                 player?.let { player ->
                     proxyMediaPlaylist = false
                     val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
+                    val customProxyUrl = if (useCustomProxy) {
+                        url
+                    } else null
+                    val proxyTimeout = prefs().getString(C.PROXY_TIMEOUT, "3000")?.toIntOrNull() ?: 3000
                     val proxyHost = streamProxy?.host
                     val proxyPort = streamProxy?.port
                     val proxyUser = streamProxy?.username
@@ -1000,8 +1013,12 @@ class ExoPlayerService : BasePlaybackService() {
                                                 null
                                             }?.build()
                                         } else null
-                                        val multivariantPlaylistProxyClient = if (proxyMultivariantPlaylist && proxyClient == null) {
+                                        val multivariantPlaylistProxyOkHttpClient = if (proxyMultivariantPlaylist && proxyClient == null) {
                                             xtraModule.okHttpClient.value.newBuilder().apply {
+                                                val proxyTimeout = proxyTimeout.toLong()
+                                                connectTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                                writeTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                                readTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
                                                 proxySelector(
                                                     object : ProxySelector() {
                                                         override fun select(u: URI): List<Proxy> {
@@ -1024,8 +1041,12 @@ class ExoPlayerService : BasePlaybackService() {
                                                 }
                                             }.build()
                                         } else null
-                                        val mediaPlaylistProxyClient = if (proxyMediaPlaylist && proxyClient == null) {
+                                        val mediaPlaylistProxyOkHttpClient = if (proxyMediaPlaylist && proxyClient == null) {
                                             xtraModule.okHttpClient.value.newBuilder().apply {
+                                                val proxyTimeout = proxyTimeout.toLong()
+                                                connectTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                                writeTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                                readTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
                                                 proxySelector(
                                                     object : ProxySelector() {
                                                         override fun select(u: URI): List<Proxy> {
@@ -1048,7 +1069,17 @@ class ExoPlayerService : BasePlaybackService() {
                                                 }
                                             }.build()
                                         } else null
-                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, proxyMultivariantPlaylist, proxyMediaPlaylist, proxyClient, multivariantPlaylistProxyClient, mediaPlaylistProxyClient) { proxyMediaPlaylist }
+                                        HttpEngineDataSource.Factory(
+                                            xtraModule.httpEngine.value,
+                                            xtraModule.cronetExecutor.value,
+                                            customProxyUrl,
+                                            proxyTimeout,
+                                            proxyMultivariantPlaylist,
+                                            proxyMediaPlaylist,
+                                            proxyClient,
+                                            multivariantPlaylistProxyOkHttpClient,
+                                            mediaPlaylistProxyOkHttpClient
+                                        ) { this.proxyMediaPlaylist }
                                     }
                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
                                         val proxyClient = if ((proxyMultivariantPlaylist || proxyMediaPlaylist) && CronetProvider.getAllProviders(application).any { it.isEnabled }) {
@@ -1086,8 +1117,12 @@ class ExoPlayerService : BasePlaybackService() {
                                                 null
                                             }?.build()
                                         } else null
-                                        val multivariantPlaylistProxyClient = if (proxyMultivariantPlaylist && proxyClient == null) {
+                                        val multivariantPlaylistProxyOkHttpClient = if (proxyMultivariantPlaylist && proxyClient == null) {
                                             xtraModule.okHttpClient.value.newBuilder().apply {
+                                                val proxyTimeout = proxyTimeout.toLong()
+                                                connectTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                                writeTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                                readTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
                                                 proxySelector(
                                                     object : ProxySelector() {
                                                         override fun select(u: URI): List<Proxy> {
@@ -1110,8 +1145,12 @@ class ExoPlayerService : BasePlaybackService() {
                                                 }
                                             }.build()
                                         } else null
-                                        val mediaPlaylistProxyClient = if (proxyMediaPlaylist && proxyClient == null) {
+                                        val mediaPlaylistProxyOkHttpClient = if (proxyMediaPlaylist && proxyClient == null) {
                                             xtraModule.okHttpClient.value.newBuilder().apply {
+                                                val proxyTimeout = proxyTimeout.toLong()
+                                                connectTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                                writeTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                                readTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
                                                 proxySelector(
                                                     object : ProxySelector() {
                                                         override fun select(u: URI): List<Proxy> {
@@ -1134,11 +1173,33 @@ class ExoPlayerService : BasePlaybackService() {
                                                 }
                                             }.build()
                                         } else null
-                                        CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, proxyMultivariantPlaylist, proxyMediaPlaylist, proxyClient, multivariantPlaylistProxyClient, mediaPlaylistProxyClient) { proxyMediaPlaylist }
+                                        CronetDataSource.Factory(
+                                            xtraModule.cronetEngine.value,
+                                            xtraModule.cronetExecutor.value,
+                                            customProxyUrl,
+                                            proxyTimeout,
+                                            proxyMultivariantPlaylist,
+                                            proxyMediaPlaylist,
+                                            proxyClient,
+                                            multivariantPlaylistProxyOkHttpClient,
+                                            mediaPlaylistProxyOkHttpClient
+                                        ) { this.proxyMediaPlaylist }
                                     }
                                     else -> {
+                                        val customProxyClient = if (customProxyUrl != null) {
+                                            xtraModule.okHttpClient.value.newBuilder().apply {
+                                                val proxyTimeout = proxyTimeout.toLong()
+                                                connectTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                                writeTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                                readTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                            }.build()
+                                        } else null
                                         val multivariantPlaylistProxyClient = if (proxyMultivariantPlaylist) {
                                             xtraModule.okHttpClient.value.newBuilder().apply {
+                                                val proxyTimeout = proxyTimeout.toLong()
+                                                connectTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                                writeTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                                readTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
                                                 proxySelector(
                                                     object : ProxySelector() {
                                                         override fun select(u: URI): List<Proxy> {
@@ -1163,6 +1224,10 @@ class ExoPlayerService : BasePlaybackService() {
                                         } else null
                                         val mediaPlaylistProxyClient = if (proxyMediaPlaylist) {
                                             xtraModule.okHttpClient.value.newBuilder().apply {
+                                                val proxyTimeout = proxyTimeout.toLong()
+                                                connectTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                                writeTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                                readTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
                                                 proxySelector(
                                                     object : ProxySelector() {
                                                         override fun select(u: URI): List<Proxy> {
@@ -1185,13 +1250,25 @@ class ExoPlayerService : BasePlaybackService() {
                                                 }
                                             }.build()
                                         } else null
-                                        OkHttpDataSource.Factory(multivariantPlaylistProxyClient ?: xtraModule.okHttpClient.value, mediaPlaylistProxyClient) { proxyMediaPlaylist }
+                                        OkHttpDataSource.Factory(
+                                            xtraModule.okHttpClient.value,
+                                            customProxyClient,
+                                            customProxyUrl,
+                                            multivariantPlaylistProxyClient,
+                                            mediaPlaylistProxyClient
+                                        ) { this.proxyMediaPlaylist }
                                     }
                                 }
                             )
                         ).apply {
                             setPlaylistParserFactory(CustomHlsPlaylistParserFactory())
-                            setLoadErrorHandlingPolicy(DefaultLoadErrorHandlingPolicy(6))
+                            setLoadErrorHandlingPolicy(DefaultLoadErrorHandlingPolicy(
+                                if (useCustomProxy || proxyMultivariantPlaylist) {
+                                    1
+                                } else {
+                                    6
+                                }
+                            ))
                         }.createMediaSource(
                             MediaItem.Builder().apply {
                                 setUri(url.toUri())
@@ -1279,13 +1356,13 @@ class ExoPlayerService : BasePlaybackService() {
                                 this@ExoPlayerService,
                                 when {
                                     networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
-                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, false, false, null, null, null) { false }
+                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, null, 0, false, false, null, null, null) { false }
                                     }
                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
-                                        CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, false, false, null, null, null) { false }
+                                        CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, null, 0, false, false, null, null, null) { false }
                                     }
                                     else -> {
-                                        OkHttpDataSource.Factory(xtraModule.okHttpClient.value, null) { false }
+                                        OkHttpDataSource.Factory(xtraModule.okHttpClient.value, null, null, null, null) { false }
                                     }
                                 }
                             )
@@ -1435,13 +1512,13 @@ class ExoPlayerService : BasePlaybackService() {
                                 this@ExoPlayerService,
                                 when {
                                     networkLibrary == C.HTTP_ENGINE && xtraModule.httpEngine.value != null -> @SuppressLint("NewApi") {
-                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, false, false, null, null, null) { false }
+                                        HttpEngineDataSource.Factory(xtraModule.httpEngine.value, xtraModule.cronetExecutor.value, null, 0, false, false, null, null, null) { false }
                                     }
                                     networkLibrary == C.CRONET && xtraModule.cronetEngine.value != null -> {
-                                        CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, false, false, null, null, null) { false }
+                                        CronetDataSource.Factory(xtraModule.cronetEngine.value, xtraModule.cronetExecutor.value, null, 0, false, false, null, null, null) { false }
                                     }
                                     else -> {
-                                        OkHttpDataSource.Factory(xtraModule.okHttpClient.value, null) { false }
+                                        OkHttpDataSource.Factory(xtraModule.okHttpClient.value, null, null, null, null) { false }
                                     }
                                 }
                             )

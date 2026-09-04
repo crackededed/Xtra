@@ -115,11 +115,13 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
     private boolean handleSetCookieRequests;
     private boolean keepPostFor302Redirects;
 
-    private final boolean proxyMultivariantPlaylist; // xtra: proxy
+    @Nullable private final String customProxyUrl; // xtra: proxy
+    private final int proxyTimeout;
+    private final boolean proxyMultivariantPlaylist;
     private final boolean proxyMediaPlaylist;
     @Nullable private final HttpEngine proxyClient;
-    @Nullable private final Call.Factory multivariantPlaylistProxyClient;
-    @Nullable private final Call.Factory mediaPlaylistProxyClient;
+    @Nullable private final Call.Factory multivariantPlaylistProxyOkHttpClient;
+    @Nullable private final Call.Factory mediaPlaylistProxyOkHttpClient;
     private final Function0<Boolean> getProxyMediaPlaylist;
 
     /**
@@ -132,14 +134,16 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
      *     However, to avoid slowing down overall network performance, care must be taken to make
      *     sure response handling is a fast operation when using a direct executor.
      */
-    public Factory(HttpEngine httpEngine, Executor executor, boolean proxyMultivariantPlaylist, boolean proxyMediaPlaylist, @Nullable HttpEngine proxyClient, @Nullable Call.Factory multivariantPlaylistProxyClient, @Nullable Call.Factory mediaPlaylistProxyClient, Function0<Boolean> getProxyMediaPlaylist) {
+    public Factory(HttpEngine httpEngine, Executor executor, @Nullable String customProxyUrl, int proxyTimeout, boolean proxyMultivariantPlaylist, boolean proxyMediaPlaylist, @Nullable HttpEngine proxyClient, @Nullable Call.Factory multivariantPlaylistProxyOkHttpClient, @Nullable Call.Factory mediaPlaylistProxyOkHttpClient, Function0<Boolean> getProxyMediaPlaylist) {
       this.httpEngine = checkNotNull(httpEngine);
       this.executor = executor;
-      this.proxyMultivariantPlaylist = proxyMultivariantPlaylist; // xtra: proxy
+      this.customProxyUrl = customProxyUrl; // xtra: proxy
+      this.proxyTimeout = proxyTimeout;
+      this.proxyMultivariantPlaylist = proxyMultivariantPlaylist;
       this.proxyMediaPlaylist = proxyMediaPlaylist;
       this.proxyClient = proxyClient;
-      this.multivariantPlaylistProxyClient = multivariantPlaylistProxyClient;
-      this.mediaPlaylistProxyClient = mediaPlaylistProxyClient;
+      this.multivariantPlaylistProxyOkHttpClient = multivariantPlaylistProxyOkHttpClient;
+      this.mediaPlaylistProxyOkHttpClient = mediaPlaylistProxyOkHttpClient;
       this.getProxyMediaPlaylist = getProxyMediaPlaylist;
       defaultRequestProperties = new RequestProperties();
       requestPriority = REQUEST_PRIORITY_MEDIUM;
@@ -292,11 +296,13 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
           new HttpEngineDataSource(
               httpEngine,
               executor,
-              proxyMultivariantPlaylist, // xtra: proxy
+              customProxyUrl, // xtra: proxy
+              proxyTimeout,
+              proxyMultivariantPlaylist,
               proxyMediaPlaylist,
               proxyClient,
-              multivariantPlaylistProxyClient,
-              mediaPlaylistProxyClient,
+              multivariantPlaylistProxyOkHttpClient,
+              mediaPlaylistProxyOkHttpClient,
               getProxyMediaPlaylist,
               requestPriority,
               connectTimeoutMs,
@@ -398,12 +404,15 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
 
   private volatile long currentConnectTimeoutMs;
 
-  private final boolean proxyMultivariantPlaylist; // xtra: proxy
+  @Nullable private final String customProxyUrl; // xtra: proxy
+  private final int proxyTimeout;
+  private final boolean proxyMultivariantPlaylist;
   private final boolean proxyMediaPlaylist;
   @Nullable private final HttpEngine proxyClient;
-  @Nullable private final Call.Factory multivariantPlaylistProxyClient;
-  @Nullable private final Call.Factory mediaPlaylistProxyClient;
+  @Nullable private final Call.Factory multivariantPlaylistProxyOkHttpClient;
+  @Nullable private final Call.Factory mediaPlaylistProxyOkHttpClient;
   private final Function0<Boolean> getProxyMediaPlaylist;
+  private boolean useProxyTimeout;
   @Nullable private Response response;
   @Nullable private InputStream responseByteStream;
 
@@ -411,11 +420,13 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
   /* package */ HttpEngineDataSource(
       HttpEngine httpEngine,
       Executor executor,
-      boolean proxyMultivariantPlaylist, // xtra: proxy
+      @Nullable String customProxyUrl, // xtra: proxy
+      int proxyTimeout,
+      boolean proxyMultivariantPlaylist,
       boolean proxyMediaPlaylist,
       @Nullable HttpEngine proxyClient,
-      @Nullable Call.Factory multivariantPlaylistProxyClient,
-      @Nullable Call.Factory mediaPlaylistProxyClient,
+      @Nullable Call.Factory multivariantPlaylistProxyOkHttpClient,
+      @Nullable Call.Factory mediaPlaylistProxyOkHttpClient,
       Function0<Boolean> getProxyMediaPlaylist,
       int requestPriority,
       int connectTimeoutMs,
@@ -429,11 +440,13 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
     super(/* isNetwork= */ true);
     this.httpEngine = checkNotNull(httpEngine);
     this.executor = checkNotNull(executor);
-    this.proxyMultivariantPlaylist = proxyMultivariantPlaylist; // xtra: proxy
+    this.customProxyUrl = customProxyUrl; // xtra: proxy
+    this.proxyTimeout = proxyTimeout;
+    this.proxyMultivariantPlaylist = proxyMultivariantPlaylist;
     this.proxyMediaPlaylist = proxyMediaPlaylist;
     this.proxyClient = proxyClient;
-    this.multivariantPlaylistProxyClient = multivariantPlaylistProxyClient;
-    this.mediaPlaylistProxyClient = mediaPlaylistProxyClient;
+    this.multivariantPlaylistProxyOkHttpClient = multivariantPlaylistProxyOkHttpClient;
+    this.mediaPlaylistProxyOkHttpClient = mediaPlaylistProxyOkHttpClient;
     this.getProxyMediaPlaylist = getProxyMediaPlaylist;
     this.requestPriority = requestPriority;
     this.connectTimeoutMs = connectTimeoutMs;
@@ -503,7 +516,18 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
     checkState(!transferStarted);
 
     operation.close();
-    resetConnectTimeout();
+    String host = dataSpec.uri.getHost(); // xtra: proxy
+    useProxyTimeout = (customProxyUrl != null && dataSpec.uri.toString().equals(customProxyUrl)) ||
+            (proxyClient != null && host != null &&
+                    ((proxyMultivariantPlaylist && host.matches(ExoPlayerService.MULTIVARIANT_PLAYLIST_REGEX)) ||
+                            (proxyMediaPlaylist && host.matches(ExoPlayerService.MEDIA_PLAYLIST_REGEX) && getProxyMediaPlaylist.invoke())));
+    int timeout;
+    if (useProxyTimeout) {
+      timeout = proxyTimeout;
+    } else {
+      timeout = connectTimeoutMs;
+    }
+    resetConnectTimeout(timeout);
     currentDataSpec = dataSpec;
     UrlRequestWrapper urlRequestWrapper;
     try {
@@ -517,12 +541,11 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
             e, dataSpec, PlaybackException.ERROR_CODE_IO_UNSPECIFIED, Status.IDLE);
       }
     }
-    String host = dataSpec.uri.getHost(); // xtra: proxy
-    if (multivariantPlaylistProxyClient != null && host != null && host.matches(ExoPlayerService.MULTIVARIANT_PLAYLIST_REGEX)) {
-      return openOkHttp(dataSpec, multivariantPlaylistProxyClient);
+    if (multivariantPlaylistProxyOkHttpClient != null && host != null && host.matches(ExoPlayerService.MULTIVARIANT_PLAYLIST_REGEX)) { // xtra: proxy
+      return openOkHttp(dataSpec, multivariantPlaylistProxyOkHttpClient);
     }
-    if (mediaPlaylistProxyClient != null && host != null && host.matches(ExoPlayerService.MEDIA_PLAYLIST_REGEX) && getProxyMediaPlaylist.invoke()) {
-      return openOkHttp(dataSpec, mediaPlaylistProxyClient);
+    if (mediaPlaylistProxyOkHttpClient != null && host != null && host.matches(ExoPlayerService.MEDIA_PLAYLIST_REGEX) && getProxyMediaPlaylist.invoke()) {
+      return openOkHttp(dataSpec, mediaPlaylistProxyOkHttpClient);
     }
     urlRequestWrapper.start();
 
@@ -862,8 +885,8 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
     return opened;
   }
 
-  private void resetConnectTimeout() {
-    currentConnectTimeoutMs = clock.elapsedRealtime() + connectTimeoutMs;
+  private void resetConnectTimeout(int timeout) { // xtra: proxy
+    currentConnectTimeoutMs = clock.elapsedRealtime() + timeout;
   }
 
   /**
@@ -970,7 +993,13 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
     }
     castNonNull(currentUrlRequestWrapper).read(buffer);
     try {
-      if (!operation.block(readTimeoutMs)) {
+      int timeout; // xtra: proxy
+      if (useProxyTimeout) {
+        timeout = proxyTimeout;
+      } else {
+        timeout = readTimeoutMs;
+      }
+      if (!operation.block(timeout)) {
         throw new SocketTimeoutException();
       }
     } catch (InterruptedException e) {
@@ -1286,7 +1315,13 @@ public final class HttpEngineDataSource extends BaseDataSource implements HttpDa
         }
       }
       if (resetTimeoutOnRedirects) {
-        resetConnectTimeout();
+        int timeout; // xtra: proxy
+        if (useProxyTimeout) {
+          timeout = proxyTimeout;
+        } else {
+          timeout = connectTimeoutMs;
+        }
+        resetConnectTimeout(timeout);
       }
 
       CookieHandler cookieHandler = CookieHandler.getDefault();

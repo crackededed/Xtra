@@ -1,6 +1,16 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <EditTextPreference
+        android:defaultValue="3000"
+        android:key="proxy_timeout"
+        android:singleLine="true"
+        android:title="@string/proxy_timeout"
+        app:dialogMessage="@string/proxy_timeout_summary"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false"
+        app:useSimpleSummaryProvider="true" />
+
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="player_use_video_swap"
