@@ -1796,11 +1796,12 @@ class ChatViewModel(
     }
 
     private fun addChatter(displayName: String?) {
-        if (displayName != null && !chatters.containsKey(displayName)) {
+        if (displayName != null) {
             val chatter = Chatter(displayName)
-            chatters[displayName] = chatter
-            synchronized(autoCompleteList) {
-                autoCompleteList.add(chatter)
+            if (chatters.putIfAbsent(displayName, chatter) == null) {
+                synchronized(autoCompleteList) {
+                    autoCompleteList.add(chatter)
+                }
             }
         }
     }
