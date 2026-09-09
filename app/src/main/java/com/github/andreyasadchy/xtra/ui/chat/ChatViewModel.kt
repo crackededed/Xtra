@@ -860,8 +860,9 @@ class ChatViewModel(
     }
 
     fun getEmoteBytes(chatUrl: String, localData: Pair<Long, Int>): ByteArray? {
-        return if (chatUrl.toUri().scheme == ContentResolver.SCHEME_CONTENT) {
-            applicationContext.contentResolver.openInputStream(chatUrl.toUri())?.bufferedReader()
+        val uri = chatUrl.toUri()
+        return if (uri.scheme == ContentResolver.SCHEME_CONTENT) {
+            applicationContext.contentResolver.openInputStream(uri)?.bufferedReader()
         } else {
             FileInputStream(File(chatUrl)).bufferedReader()
         }?.use { fileReader ->
