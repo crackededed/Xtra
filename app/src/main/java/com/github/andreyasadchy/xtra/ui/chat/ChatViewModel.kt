@@ -898,7 +898,7 @@ class ChatViewModel(
                                 if (applicationContext.prefs().getBoolean(C.CHAT_SHOW_CLEAR_MSG, true)) {
                                     val chatMessage = ChatUtils.parseClearMessage(ircMessage)
                                     val deletedMessage = chatMessage.targetMsgId?.let { targetId ->
-                                        list.find { it.id == targetId }
+                                        list.findLast { it.id == targetId }
                                     }
                                     getClearMessage(chatMessage, deletedMessage, applicationContext.prefs().getString(C.UI_NAME_DISPLAY, "0"))
                                 } else null
@@ -1252,7 +1252,7 @@ class ChatViewModel(
                 val chatMessage = ChatUtils.parseClearMessage(message)
                 val deletedMessage = chatMessage.targetMsgId?.let { targetId ->
                     synchronized(chatMessages) {
-                        chatMessages.find { it.id == targetId }
+                        chatMessages.findLast { it.id == targetId }
                     }
                 }
                 val clearMessage = getClearMessage(chatMessage, deletedMessage, nameDisplay)
@@ -2771,7 +2771,7 @@ class ChatViewModel(
                                                                 "CLEARMSG" -> {
                                                                     val chatMessage = ChatUtils.parseClearMessage(ircMessage)
                                                                     val deletedMessage = chatMessage.targetMsgId?.let { targetId ->
-                                                                        liveMessages.find { it.id == targetId }
+                                                                        liveMessages.findLast { it.id == targetId }
                                                                     }
                                                                     liveMessages.add(getClearMessage(chatMessage, deletedMessage, nameDisplay))
                                                                 }
