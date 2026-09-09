@@ -52,7 +52,6 @@ import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -1129,40 +1128,40 @@ class ChatViewModel(
         if (started) {
             started = false
             if (chatReadIRCSocket != null) {
-                MainScope().launch(Dispatchers.IO) {
+                viewModelScope.launch(Dispatchers.IO) {
                     chatReadIRCSocket?.disconnect(chatReadJob)
                 }
             } else {
                 if (chatReadWebSocket != null) {
-                    MainScope().launch(Dispatchers.IO) {
+                    viewModelScope.launch(Dispatchers.IO) {
                         chatReadWebSocket?.disconnect(chatReadJob)
                     }
                 } else {
                     if (eventSub != null) {
-                        MainScope().launch(Dispatchers.IO) {
+                        viewModelScope.launch(Dispatchers.IO) {
                             eventSub?.disconnect(chatReadJob)
                         }
                     }
                 }
             }
             if (chatWriteIRCSocket != null) {
-                MainScope().launch(Dispatchers.IO) {
+                viewModelScope.launch(Dispatchers.IO) {
                     chatWriteIRCSocket?.disconnect(chatWriteJob)
                 }
             } else {
                 if (chatWriteWebSocket != null) {
-                    MainScope().launch(Dispatchers.IO) {
+                    viewModelScope.launch(Dispatchers.IO) {
                         chatWriteWebSocket?.disconnect(chatWriteJob)
                     }
                 }
             }
             if (hermesWebSocket != null) {
-                MainScope().launch(Dispatchers.IO) {
+                viewModelScope.launch(Dispatchers.IO) {
                     hermesWebSocket?.disconnect(pubSubJob)
                 }
             }
             if (stvEventApi != null) {
-                MainScope().launch(Dispatchers.IO) {
+                viewModelScope.launch(Dispatchers.IO) {
                     stvEventApi?.disconnect(stvEventApiJob)
                 }
             }
