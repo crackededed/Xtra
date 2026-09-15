@@ -229,6 +229,15 @@
             app:tint="@android:color/white"
             tools:visibility="visible" />
 
+        <androidx.mediarouter.app.MediaRouteButton
+            android:id="@+id/castButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center_vertical"
+            android:contentDescription="@string/cast"
+            android:visibility="gone"
+            app:icon="@drawable/ic_cast" />
+
     </LinearLayout>
 
     <LinearLayout

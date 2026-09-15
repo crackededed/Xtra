@@ -509,6 +509,14 @@ class ExoPlayerFragment : PlayerFragment() {
         playbackService?.changeQuality(selectedQuality)
     }
 
+    override fun pauseLocalPlayback() {
+        playbackService?.player?.playWhenReady = false
+    }
+
+    override fun resumeLocalPlayback() {
+        playbackService?.player?.playWhenReady = true
+    }
+
     override fun startAudioOnly() {
         if (playbackService != null) {
             playbackService?.startAudioOnly()

@@ -394,6 +394,14 @@ class MediaPlayerFragment : PlayerFragment() {
         playbackService?.changeQuality(selectedQuality)
     }
 
+    override fun pauseLocalPlayback() {
+        playbackService?.player?.pause()
+    }
+
+    override fun resumeLocalPlayback() {
+        playbackService?.player?.start()
+    }
+
     override fun startAudioOnly() {
         if (playbackService != null) {
             playbackService?.startAudioOnly()

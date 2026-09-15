@@ -55,13 +55,17 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.TimeBar
+import androidx.mediarouter.media.MediaRouteSelector
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
+import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.databinding.FragmentPlayerBinding
 import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
+import com.github.andreyasadchy.xtra.ui.cast.CastManager
+import com.github.andreyasadchy.xtra.ui.cast.CastStreamController
 import com.github.andreyasadchy.xtra.ui.chat.ChatFragment
 import com.github.andreyasadchy.xtra.ui.common.BaseNetworkFragment
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
@@ -77,6 +81,9 @@ import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.isKeyboardShown
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
+import com.google.android.gms.cast.CastMediaControlIntent
+import com.google.android.gms.cast.framework.CastSession
+import com.google.android.gms.cast.framework.SessionManagerListener
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.timepicker.MaterialTimePicker
@@ -118,6 +125,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     private var isAnimating = false
     private var moveAnimation: ViewPropertyAnimator? = null
     protected var useController = true
+
+    // Cast session state; lifecycle-safe via addConnectionCallback/removeConnectionCallback
+    private var castSessionListener: SessionManagerListener<CastSession>? = null
+    private var castStreamController: CastStreamController? = null
     protected var controllerAutoHide = true
     private var controllerHideOnTouch = true
     private val controllerHideAction = Runnable { if (view != null) hideController() }
@@ -154,6 +165,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     open fun startAudioOnly() {}
     open fun close(deleteStates: Boolean = true) {}
     open fun retry(item: String) {}
+    open fun pauseLocalPlayback() {}
+    open fun resumeLocalPlayback() {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (arguments?.getBoolean(KEY_OFFLINE) == true) {
@@ -242,6 +255,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             aspectRatioFrameLayout.setAspectRatio(16f / 9f)
             initLayout()
             changePlayerMode()
+            setupCastButton()
             val viewConfiguration = ViewConfiguration.get(requireContext())
             val touchSlop = viewConfiguration.scaledTouchSlop
             val touchSlopRange = -touchSlop.toFloat()..touchSlop.toFloat()
@@ -2365,7 +2379,95 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         }
     }
 
+    /**
+     * Wires the cast button to the CastManager.
+     * The button uses the system MediaRouteButton which automatically opens
+     * the device picker when clicked. No media is loaded; this only manages
+     * session visibility and connection state callbacks.
+     */
+    private fun setupCastButton() {
+        try {
+            val castManager = (requireActivity().application as? XtraApp)?.xtraModule?.castManager ?: return
+            val routeSelector = MediaRouteSelector.Builder()
+                .addControlCategory(CastMediaControlIntent.categoryForCast(CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID))
+                .build()
+            binding.playerControls.castButton.routeSelector = routeSelector
+            binding.playerControls.castButton.visibility = View.VISIBLE
+            castStreamController = CastStreamController(castManager)
+            castStreamController?.setErrorListener {
+                // Stream error on receiver (e.g., expired URL). Local playback
+                // is unaffected; the user can reconnect to get a fresh URL.
+            }
+            val callback = CastManager.ConnectionCallback { connected ->
+                if (connected) {
+                    onCastConnected()
+                } else {
+                    onCastDisconnected()
+                }
+            }
+            castSessionListener = castManager.addConnectionCallback(callback)
+        } catch (_: Exception) {
+            // Cast is optional: ignore errors, local playback continues.
+        }
+    }
+
+    /**
+     * Called when a cast session is established. Pauses local playback and
+     * loads the current Twitch stream on the cast device.
+     *
+     * Uses a concrete (non-auto) quality URL because the Default Media
+     * Receiver cannot handle LL-HLS partial segments from auto/chunked.
+     */
+    private fun onCastConnected() {
+        pauseLocalPlayback()
+        val quality = playbackService?.quality
+        val url = if (quality?.name == VideoQuality.AUTO_QUALITY) {
+            playbackService?.qualities
+                ?.firstOrNull { it.name != VideoQuality.AUTO_QUALITY && it.name != VideoQuality.AUDIO_ONLY_QUALITY && it.name != VideoQuality.CHAT_ONLY_QUALITY }
+                ?.url
+        } else {
+            quality?.url
+        }
+        val service = playbackService ?: return
+        if (url.isNullOrBlank()) return
+        castStreamController?.play(
+            url,
+            CastStreamController.StreamMetadata(
+                title = service.title,
+                channelName = service.channelName,
+                thumbnail = service.thumbnail,
+            ),
+        )
+    }
+
+    /**
+     * Called when the cast session ends. Stops stream on the receiver and
+     * resumes local playback.
+     */
+    private fun onCastDisconnected() {
+        castStreamController?.stop()
+        resumeLocalPlayback()
+    }
+
+    /**
+     * Removes the cast session listener registered by [setupCastButton].
+     * Called from [onDestroyView] to avoid leaks when the view is destroyed.
+     */
+    private fun cleanupCast() {
+        try {
+            val listener = castSessionListener ?: return
+            val castManager = (requireActivity().application as? XtraApp)?.xtraModule?.castManager ?: return
+            castManager.removeConnectionCallback(listener)
+        } catch (_: Exception) {
+            // Cast is optional: ignore errors.
+        }
+        castSessionListener = null
+        castStreamController?.setErrorListener(null)
+        castStreamController = null
+    }
+
     override fun onDestroyView() {
+        cleanupCast()
         super.onDestroyView()
         _binding = null
     }

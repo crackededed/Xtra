@@ -31,6 +31,9 @@
         android:supportsRtl="true"
         android:theme="@style/DarkTheme"
         tools:ignore="UnusedAttribute">
+        <meta-data
+            android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
+            android:value="com.github.andreyasadchy.xtra.ui.cast.CastOptionsProvider" />
         <activity
             android:name=".ui.main.MainActivity"
             android:launchMode="singleTask"
