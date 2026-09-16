@@ -10,6 +10,7 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import androidx.appcompat.widget.AppCompatCheckBox
 import androidx.appcompat.widget.AppCompatRadioButton
 import androidx.core.content.res.use
 import androidx.core.view.setPadding
@@ -23,6 +24,8 @@ class RadioButtonDialogFragment : BottomSheetDialogFragment() {
 
     interface OnSortOptionChanged {
         fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: String?, tag2: String?)
+
+        fun onCheckedChange(requestCode: Int, checked: Boolean) {}
     }
 
     companion object {
@@ -32,8 +35,10 @@ class RadioButtonDialogFragment : BottomSheetDialogFragment() {
         private const val TAGS = "tags"
         private const val TAGS2 = "tags2"
         private const val CHECKED = "checked"
+        private const val CHECKBOX_LABEL = "checkboxLabel"
+        private const val CHECKBOX_CHECKED = "checkboxChecked"
 
-        fun newInstance(requestCode: Int, labels: Collection<CharSequence>, tags: Array<String>? = null, tags2: Array<String>? = null, checkedIndex: Int): RadioButtonDialogFragment {
+        fun newInstance(requestCode: Int, labels: Collection<CharSequence>, tags: Array<String>? = null, tags2: Array<String>? = null, checkedIndex: Int, checkboxLabel: CharSequence? = null, checkboxChecked: Boolean = false): RadioButtonDialogFragment {
             return RadioButtonDialogFragment().apply {
                 arguments = Bundle().apply {
                     putInt(REQUEST_CODE, requestCode)
@@ -41,6 +46,8 @@ class RadioButtonDialogFragment : BottomSheetDialogFragment() {
                     putStringArray(TAGS, tags)
                     putStringArray(TAGS2, tags2)
                     putInt(CHECKED, checkedIndex)
+                    putCharSequence(CHECKBOX_LABEL, checkboxLabel)
+                    putBoolean(CHECKBOX_CHECKED, checkboxChecked)
                 }
             }
         }
@@ -83,7 +90,33 @@ class RadioButtonDialogFragment : BottomSheetDialogFragment() {
             radioGroup.addView(button, params)
         }
         radioGroup.check(checkedId)
-        return NestedScrollView(context).apply { addView(radioGroup) }
+        val checkboxLabel = arguments.getCharSequence(CHECKBOX_LABEL)
+        return NestedScrollView(context).apply {
+            if (checkboxLabel != null) {
+                addView(
+                    LinearLayout(context).apply {
+                        orientation = LinearLayout.VERTICAL
+                        addView(radioGroup, params)
+                        addView(
+                            AppCompatCheckBox(context).apply {
+                                text = checkboxLabel
+                                isChecked = arguments.getBoolean(CHECKBOX_CHECKED)
+                                context.obtainStyledAttributes(intArrayOf(R.attr.dialogLayoutPadding)).use {
+                                    setPadding(it.getDimensionPixelSize(0, 0))
+                                }
+                                setOnClickListener { v ->
+                                    listenerSort.onCheckedChange(arguments.getInt(REQUEST_CODE), (v as AppCompatCheckBox).isChecked)
+                                }
+                            },
+                            params
+                        )
+                    },
+                    params
+                )
+            } else {
+                addView(radioGroup)
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

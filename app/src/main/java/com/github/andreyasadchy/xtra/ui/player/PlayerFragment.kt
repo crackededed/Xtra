@@ -130,6 +130,9 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     private var castSessionListener: SessionManagerListener<CastSession>? = null
     private var castManager: CastManager? = null
     private var castQuality: VideoQuality? = null
+    private var localVideoQuality: VideoQuality? = null
+    private var chatOnlyEnabled = false
+    private var chatOnlyEnabledByCast = false
     private var castStreamController: CastStreamController? = null
     protected var controllerAutoHide = true
     private var controllerHideOnTouch = true
@@ -779,11 +782,15 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                                 changeCastQuality(playbackService?.qualities?.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY })
                             }
                         } else {
+                            chatOnlyEnabled = false
+                            chatOnlyEnabledByCast = false
                             if (playbackService?.quality?.name == VideoQuality.AUDIO_ONLY_QUALITY) {
                                 changeQuality(playbackService?.previousQuality)
                             } else {
                                 changeQuality(playbackService?.qualities?.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY })
                             }
+                            localVideoQuality = playbackService?.quality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
+                                ?: localVideoQuality
                             changePlayerMode()
                         }
                     }
@@ -1380,20 +1387,43 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     }
 
     fun showQualityDialog() {
-        val qualities = getQualities()
+        val qualities = getQualities()?.filter { it.second.name != VideoQuality.CHAT_ONLY_QUALITY }
         if (!qualities.isNullOrEmpty()) {
-            val currentQuality = if (isCastConnected()) {
-                castQuality ?: playbackService?.quality
-            } else {
-                playbackService?.quality
-            }
+            val currentQuality = currentDialogQuality()
+            val checkedIndex = qualities.indexOfFirst {
+                it.second.name == currentQuality?.name && it.second.url == currentQuality?.url
+            }.takeIf { it >= 0 } ?: 0
             RadioButtonDialogFragment.newInstance(
                 REQUEST_CODE_QUALITY,
                 qualities.map { it.first },
                 qualities.map { it.second.name.toString() }.toTypedArray(),
                 qualities.map { it.second.url.toString() }.toTypedArray(),
-                qualities.indexOf(qualities.find { it.second.name == currentQuality?.name && it.second.url == currentQuality?.url })
+                checkedIndex,
+                getString(R.string.chat_only),
+                chatOnlyEnabled,
             ).show(childFragmentManager, "closeOnPip")
+        }
+    }
+
+    private fun validLocalVideoQuality(): VideoQuality? {
+        val service = playbackService
+        val qualities = service?.qualities
+        return localVideoQuality?.let { saved ->
+            qualities?.find { it.name == saved.name && it.url == saved.url }
+        } ?: service?.quality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
+            ?: service?.previousQuality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
+            ?: qualities?.firstOrNull { it.name != VideoQuality.CHAT_ONLY_QUALITY }
+    }
+
+    private fun currentDialogQuality(): VideoQuality? {
+        val qualities = getQualities()?.filter { it.second.name != VideoQuality.CHAT_ONLY_QUALITY }
+        return if (isCastConnected()) {
+            val remembered = castQuality?.let { selected ->
+                qualities?.find { it.second.name == selected.name && it.second.url == selected.url }?.second
+            }
+            remembered ?: validLocalVideoQuality()
+        } else {
+            validLocalVideoQuality()
         }
     }
 
@@ -1520,11 +1550,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     fun setQualityText() {
         (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.let { dialog ->
-            val currentQuality = if (isCastConnected()) {
-                castQuality ?: playbackService?.quality
-            } else {
-                playbackService?.quality
-            }
+            val currentQuality = currentDialogQuality()
             val label = getQualities()?.find { it.second == currentQuality }?.first
             dialog.setQuality(label)
         }
@@ -2305,6 +2331,18 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         (activity as? MainActivity)?.setSleepTimer(durationMs)
     }
 
+    override fun onCheckedChange(requestCode: Int, checked: Boolean) {
+        if (requestCode == REQUEST_CODE_QUALITY) {
+            if (checked) {
+                localVideoQuality = playbackService?.quality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
+                    ?: localVideoQuality
+            }
+            chatOnlyEnabled = checked
+            chatOnlyEnabledByCast = false
+            setLocalChatOnly(checked)
+        }
+    }
+
     override fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: String?, tag2: String?) {
         when (requestCode) {
             REQUEST_CODE_QUALITY -> {
@@ -2312,6 +2350,9 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 if (isCastConnected()) {
                     changeCastQuality(selectedQuality)
                 } else {
+                    selectedQuality?.let { localVideoQuality = it }
+                    chatOnlyEnabled = false
+                    chatOnlyEnabledByCast = false
                     changeQuality(selectedQuality)
                     changePlayerMode()
                     setQualityText()
@@ -2437,6 +2478,30 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         }
     }
 
+    private fun setLocalChatOnly(enabled: Boolean) {
+        if (enabled) {
+            if (playbackService?.quality?.name != VideoQuality.CHAT_ONLY_QUALITY) {
+                localVideoQuality = playbackService?.quality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
+                    ?: localVideoQuality
+                changeQuality(playbackService?.qualities?.find { it.name == VideoQuality.CHAT_ONLY_QUALITY })
+                changePlayerMode()
+                setQualityText()
+            }
+        } else {
+            if (playbackService?.quality?.name == VideoQuality.CHAT_ONLY_QUALITY) {
+                val restoreQuality = validLocalVideoQuality()
+                if (restoreQuality != null) {
+                    changeQuality(restoreQuality)
+                    changePlayerMode()
+                    setQualityText()
+                    if (!isCastConnected()) {
+                        resumeLocalPlayback()
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Called when a cast session is established. Pauses local playback and
      * loads the current Twitch stream on the cast device.
@@ -2447,10 +2512,12 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     private fun onCastConnected() {
         pauseLocalPlayback()
         val service = playbackService ?: return
+        localVideoQuality = service.quality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
+            ?: validLocalVideoQuality()
         val remembered = castQuality?.let { selected ->
             service.qualities?.find { it.name == selected.name && it.url == selected.url }
         }
-        val resolved = resolveCastQuality(remembered ?: service.quality) ?: return
+        val resolved = resolveCastQuality(remembered ?: localVideoQuality) ?: return
         val url = resolved.url ?: return
         castStreamController?.play(
             url,
@@ -2460,6 +2527,11 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 thumbnail = service.thumbnail,
             ),
         )
+        if (!chatOnlyEnabled) {
+            chatOnlyEnabled = true
+            chatOnlyEnabledByCast = true
+            setLocalChatOnly(true)
+        }
     }
 
     private fun changeCastQuality(selectedQuality: VideoQuality?) {
@@ -2506,6 +2578,11 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     private fun onCastDisconnected() {
         castQuality = null
+        if (chatOnlyEnabledByCast) {
+            chatOnlyEnabled = false
+            chatOnlyEnabledByCast = false
+            setLocalChatOnly(false)
+        }
         castStreamController?.stop()
         resumeLocalPlayback()
     }
