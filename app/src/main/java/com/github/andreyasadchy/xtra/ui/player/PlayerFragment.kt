@@ -128,6 +128,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     // Cast session state; lifecycle-safe via addConnectionCallback/removeConnectionCallback
     private var castSessionListener: SessionManagerListener<CastSession>? = null
+    private var castManager: CastManager? = null
+    private var castQuality: VideoQuality? = null
     private var castStreamController: CastStreamController? = null
     protected var controllerAutoHide = true
     private var controllerHideOnTouch = true
@@ -770,12 +772,20 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     audioOnly.visibility = View.VISIBLE
                     audioOnly.setOnClickListener {
                         showController(force = true)
-                        if (playbackService?.quality?.name == VideoQuality.AUDIO_ONLY_QUALITY) {
-                            changeQuality(playbackService?.previousQuality)
+                        if (isCastConnected()) {
+                            if (playbackService?.quality?.name == VideoQuality.AUDIO_ONLY_QUALITY) {
+                                changeCastQuality(playbackService?.previousQuality)
+                            } else {
+                                changeCastQuality(playbackService?.qualities?.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY })
+                            }
                         } else {
-                            changeQuality(playbackService?.qualities?.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY })
+                            if (playbackService?.quality?.name == VideoQuality.AUDIO_ONLY_QUALITY) {
+                                changeQuality(playbackService?.previousQuality)
+                            } else {
+                                changeQuality(playbackService?.qualities?.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY })
+                            }
+                            changePlayerMode()
                         }
-                        changePlayerMode()
                     }
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && requireContext().prefs().getBoolean(C.PLAYER_AUDIO_COMPRESSOR_BUTTON, true)) {
@@ -1372,12 +1382,17 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     fun showQualityDialog() {
         val qualities = getQualities()
         if (!qualities.isNullOrEmpty()) {
+            val currentQuality = if (isCastConnected()) {
+                castQuality ?: playbackService?.quality
+            } else {
+                playbackService?.quality
+            }
             RadioButtonDialogFragment.newInstance(
                 REQUEST_CODE_QUALITY,
                 qualities.map { it.first },
                 qualities.map { it.second.name.toString() }.toTypedArray(),
                 qualities.map { it.second.url.toString() }.toTypedArray(),
-                qualities.indexOf(qualities.find { it.second.name == playbackService?.quality?.name && it.second.url == playbackService?.quality?.url })
+                qualities.indexOf(qualities.find { it.second.name == currentQuality?.name && it.second.url == currentQuality?.url })
             ).show(childFragmentManager, "closeOnPip")
         }
     }
@@ -1505,7 +1520,12 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     fun setQualityText() {
         (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.let { dialog ->
-            val label = getQualities()?.find { it.second == playbackService?.quality }?.first
+            val currentQuality = if (isCastConnected()) {
+                castQuality ?: playbackService?.quality
+            } else {
+                playbackService?.quality
+            }
+            val label = getQualities()?.find { it.second == currentQuality }?.first
             dialog.setQuality(label)
         }
     }
@@ -2288,9 +2308,14 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     override fun onChange(requestCode: Int, index: Int, text: CharSequence, tag: String?, tag2: String?) {
         when (requestCode) {
             REQUEST_CODE_QUALITY -> {
-                changeQuality(playbackService?.qualities?.find { it.name == tag && it.url == tag2 })
-                changePlayerMode()
-                setQualityText()
+                val selectedQuality = playbackService?.qualities?.find { it.name == tag && it.url == tag2 }
+                if (isCastConnected()) {
+                    changeCastQuality(selectedQuality)
+                } else {
+                    changeQuality(selectedQuality)
+                    changePlayerMode()
+                    setQualityText()
+                }
             }
             REQUEST_CODE_SPEED -> {
                 requireContext().prefs().getString(C.PLAYER_SPEED_LIST, "0.25\n0.5\n0.75\n1.0\n1.25\n1.5\n1.75\n2.0\n3.0\n4.0\n8.0")?.split("\n")?.let { speeds ->
@@ -2387,13 +2412,14 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
      */
     private fun setupCastButton() {
         try {
-            val castManager = (requireActivity().application as? XtraApp)?.xtraModule?.castManager ?: return
+            val manager = (requireActivity().application as? XtraApp)?.xtraModule?.castManager ?: return
+            castManager = manager
             val routeSelector = MediaRouteSelector.Builder()
                 .addControlCategory(CastMediaControlIntent.categoryForCast(CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID))
                 .build()
             binding.playerControls.castButton.routeSelector = routeSelector
             binding.playerControls.castButton.visibility = View.VISIBLE
-            castStreamController = CastStreamController(castManager)
+            castStreamController = CastStreamController(manager)
             castStreamController?.setErrorListener {
                 // Stream error on receiver (e.g., expired URL). Local playback
                 // is unaffected; the user can reconnect to get a fresh URL.
@@ -2405,7 +2431,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     onCastDisconnected()
                 }
             }
-            castSessionListener = castManager.addConnectionCallback(callback)
+            castSessionListener = manager.addConnectionCallback(callback)
         } catch (_: Exception) {
             // Cast is optional: ignore errors, local playback continues.
         }
@@ -2420,16 +2446,12 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
      */
     private fun onCastConnected() {
         pauseLocalPlayback()
-        val quality = playbackService?.quality
-        val url = if (quality?.name == VideoQuality.AUTO_QUALITY) {
-            playbackService?.qualities
-                ?.firstOrNull { it.name != VideoQuality.AUTO_QUALITY && it.name != VideoQuality.AUDIO_ONLY_QUALITY && it.name != VideoQuality.CHAT_ONLY_QUALITY }
-                ?.url
-        } else {
-            quality?.url
-        }
         val service = playbackService ?: return
-        if (url.isNullOrBlank()) return
+        val remembered = castQuality?.let { selected ->
+            service.qualities?.find { it.name == selected.name && it.url == selected.url }
+        }
+        val resolved = resolveCastQuality(remembered ?: service.quality) ?: return
+        val url = resolved.url ?: return
         castStreamController?.play(
             url,
             CastStreamController.StreamMetadata(
@@ -2440,11 +2462,50 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         )
     }
 
-    /**
-     * Called when the cast session ends. Stops stream on the receiver and
-     * resumes local playback.
-     */
+    private fun changeCastQuality(selectedQuality: VideoQuality?) {
+        val service = playbackService ?: return
+        val resolved = resolveCastQuality(selectedQuality) ?: return
+        val url = resolved.url ?: return
+        castStreamController?.changeQuality(
+            url,
+            CastStreamController.StreamMetadata(
+                title = service.title,
+                channelName = service.channelName,
+                thumbnail = service.thumbnail,
+            ),
+            service.type != BasePlaybackService.STREAM,
+        ) { success ->
+            if (success && view != null) {
+                castQuality = resolved
+                setQualityText()
+            }
+        }
+    }
+
+    private fun resolveCastQuality(selectedQuality: VideoQuality?): VideoQuality? {
+        val qualities = playbackService?.qualities
+        return if (selectedQuality?.name == VideoQuality.AUTO_QUALITY) {
+            qualities?.firstOrNull {
+                it.name != VideoQuality.AUTO_QUALITY &&
+                    it.name != VideoQuality.AUDIO_ONLY_QUALITY &&
+                    it.name != VideoQuality.CHAT_ONLY_QUALITY &&
+                    !it.url.isNullOrBlank()
+            }
+        } else {
+            selectedQuality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY && !it.url.isNullOrBlank() }
+        }
+    }
+
+    private fun isCastConnected(): Boolean {
+        return try {
+            castManager?.isConnected == true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     private fun onCastDisconnected() {
+        castQuality = null
         castStreamController?.stop()
         resumeLocalPlayback()
     }
@@ -2454,14 +2515,15 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
      * Called from [onDestroyView] to avoid leaks when the view is destroyed.
      */
     private fun cleanupCast() {
+        castQuality = null
         try {
             val listener = castSessionListener ?: return
-            val castManager = (requireActivity().application as? XtraApp)?.xtraModule?.castManager ?: return
-            castManager.removeConnectionCallback(listener)
+            castManager?.removeConnectionCallback(listener)
         } catch (_: Exception) {
             // Cast is optional: ignore errors.
         }
         castSessionListener = null
+        castManager = null
         castStreamController?.setErrorListener(null)
         castStreamController = null
     }

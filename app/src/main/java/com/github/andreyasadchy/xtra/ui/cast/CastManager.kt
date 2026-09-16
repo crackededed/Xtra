@@ -55,6 +55,8 @@ class CastManager(private val appContext: android.content.Context) {
         title: String?,
         channelName: String?,
         thumbnail: String?,
+        currentTimeMs: Long? = null,
+        isLive: Boolean = true,
         onResult: (Boolean) -> Unit = {},
     ) {
         try {
@@ -70,15 +72,21 @@ class CastManager(private val appContext: android.content.Context) {
                 }
             }
             val mediaInfo = MediaInfo.Builder(hlsUrl)
-                .setStreamType(MediaInfo.STREAM_TYPE_LIVE)
+                .setStreamType(if (isLive) MediaInfo.STREAM_TYPE_LIVE else MediaInfo.STREAM_TYPE_BUFFERED)
                 .setContentType("application/x-mpegURL")
                 .setMetadata(metadata)
                 .build()
             val request = MediaLoadRequestData.Builder()
                 .setMediaInfo(mediaInfo)
+                .apply {
+                    if (currentTimeMs != null && currentTimeMs > 0) {
+                        setCurrentTime(currentTimeMs)
+                    }
+                }
                 .build()
-            client.load(request)
-            onResult(true)
+            client.load(request).setResultCallback { result ->
+                onResult(result.status.isSuccess)
+            }
         } catch (_: Exception) {
             // Cast is optional: ignore errors, local playback continues.
             onResult(false)

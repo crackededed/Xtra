@@ -40,7 +40,39 @@ class CastStreamController(private val castManager: CastManager) {
     }
 
     fun play(url: String, metadata: StreamMetadata, onResult: (Boolean) -> Unit = {}) {
-        castManager.loadStream(url, metadata.title, metadata.channelName, metadata.thumbnail, onResult)
+        castManager.loadStream(
+            url,
+            metadata.title,
+            metadata.channelName,
+            metadata.thumbnail,
+            onResult = onResult,
+        )
+    }
+
+    fun changeQuality(
+        url: String,
+        metadata: StreamMetadata,
+        keepPosition: Boolean,
+        onResult: (Boolean) -> Unit = {},
+    ) {
+        val currentTime = if (keepPosition) {
+            try {
+                castManager.remoteMediaClient?.approximateStreamPosition?.takeIf { it > 0 }
+            } catch (_: Exception) {
+                null
+            }
+        } else {
+            null
+        }
+        castManager.loadStream(
+            url,
+            metadata.title,
+            metadata.channelName,
+            metadata.thumbnail,
+            currentTime,
+            !keepPosition,
+            onResult,
+        )
     }
 
     fun stop() {
