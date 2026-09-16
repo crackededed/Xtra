@@ -366,17 +366,6 @@ class XtraModule(application: Application) {
         SavedFiltersRepository(database.savedFilters())
     }
 
-    /**
-     * Isolated cast layer (phase 0/1).
-     *
-     * Rationale for XtraModule instead of a new singleton: XtraModule is the
-     * existing central dependency-injection container (lazy repositories/clients)
-     * and is provided through XtraApp. Another global singleton would be
-     * redundant. Lazy initialization creates the CastManager only on demand
-     * with application context (no activity leak). The manager itself does not
-     * hold a CastContext and wraps all access in try/catch, so missing Play
-     * Services cannot affect the app.
-     */
     val castManager by lazy {
         CastManager(application.applicationContext)
     }

@@ -11,29 +11,12 @@ import com.google.android.gms.cast.framework.SessionManagerListener
 import com.google.android.gms.cast.framework.media.RemoteMediaClient
 import com.google.android.gms.common.images.WebImage
 
-/**
- * Minimal isolated cast layer (phase 0/1).
- *
- * Wraps [CastContext] / [SessionManager], detects session status,
- * reports connect/disconnect events, and exposes [RemoteMediaClient].
- * Deliberately does not load media (no MediaInfo, no twitch URL) and does
- * not alter local playback.
- *
- * All cast access is wrapped in try/catch so the app still launches normally
- * without Google Play Services or a cast device, and the local player is
- * unaffected.
- *
- * Usage (lifecycle-safe, e.g. in Activity/Fragment):
- * - call [addConnectionCallback] in onResume/onStart
- * - remove the returned listener in onPause/onStop via [removeConnectionCallback]
- */
 class CastManager(private val appContext: android.content.Context) {
 
     fun interface ConnectionCallback {
         fun onConnectionChanged(connected: Boolean)
     }
 
-    /** Starts cast discovery; errors are silently swallowed. */
     fun warmUp() {
         castContextOrNull()
     }
@@ -67,16 +50,6 @@ class CastManager(private val appContext: android.content.Context) {
             null
         }
 
-    /**
-     * Loads a live HLS stream on the connected cast device.
-     *
-     * The URL must be a complete signed Twitch HLS URL (sig+token in query).
-     * No custom HTTP headers are needed because Twitch authentication is
-     * entirely URL-based, so the Default Media Receiver can fetch directly.
-     *
-     * Callers must ensure the URL points to a concrete (non-auto) quality
-     * variant, because the receiver cannot handle LL-HLS partial segments.
-     */
     fun loadStream(
         hlsUrl: String,
         title: String?,
@@ -112,7 +85,6 @@ class CastManager(private val appContext: android.content.Context) {
         }
     }
 
-    /** Stops the current media on the cast device without ending the session. */
     fun stopStream() {
         try {
             remoteMediaClient?.stop()
@@ -121,7 +93,6 @@ class CastManager(private val appContext: android.content.Context) {
         }
     }
 
-    /** Registers a listener for RemoteMediaClient status updates (errors, idle). */
     fun addMediaStatusListener(listener: RemoteMediaClient.Listener) {
         try {
             remoteMediaClient?.addListener(listener)
@@ -130,7 +101,6 @@ class CastManager(private val appContext: android.content.Context) {
         }
     }
 
-    /** Removes a previously registered RemoteMediaClient status listener. */
     fun removeMediaStatusListener(listener: RemoteMediaClient.Listener) {
         try {
             remoteMediaClient?.removeListener(listener)
