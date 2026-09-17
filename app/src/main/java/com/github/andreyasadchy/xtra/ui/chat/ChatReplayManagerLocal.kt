@@ -26,6 +26,7 @@ class ChatReplayManagerLocal(
     private val list = mutableListOf<VideoChatMessage>()
     private var started = false
     private var isLoading = false
+    private var useOffsetSeconds = false
     private var loadJob: Job? = null
     private var messageJob: Job? = null
     private var lastCheckedPosition = 0L
@@ -94,9 +95,21 @@ class ChatReplayManagerLocal(
                     }
                 } else {
                     messages?.let { messages ->
+                        // VideoComment createdAt is wrong on highlights
+                        useOffsetSeconds = if (createdAt != null) {
+                            val first = messages.firstOrNull()
+                            val last = messages.lastOrNull()
+                            if (first != last && first?.createdAt != null && last?.createdAt != null) {
+                                if (first.offsetSeconds == null || last.offsetSeconds == null || first.offsetSeconds != last.offsetSeconds) {
+                                    val firstCreatedAt = Instant.parseOrNull(first.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                                    val lastCreatedAt = Instant.parseOrNull(last.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                                    firstCreatedAt == null || lastCreatedAt == null || firstCreatedAt == lastCreatedAt
+                                } else true
+                            } else true
+                        } else true
                         list.addAll(
                             messages.filter { message ->
-                                val messageOffset = if (createdAt != null && !message.createdAt.isNullOrBlank()) {
+                                val messageOffset = if (!useOffsetSeconds && createdAt != null && !message.createdAt.isNullOrBlank()) {
                                     Instant.parseOrNull(message.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.minus(createdAt)
                                 } else {
                                     null
@@ -133,7 +146,9 @@ class ChatReplayManagerLocal(
                                 currentPosition < messageOffset
                             }
                         ) {
-                            delay(max((messageOffset - currentPosition).div(playbackSpeed ?: 1f).toLong(), 0).milliseconds)
+                            val timeLeft = (messageOffset - currentPosition).div(playbackSpeed ?: 1f).toLong()
+                            val delay = max(timeLeft, 1) // ExoPlayer getCurrentPosition freezes the app if it's called too rapidly
+                            delay(delay.milliseconds)
                         }
                         if (!isActive) {
                             break
@@ -147,7 +162,7 @@ class ChatReplayManagerLocal(
                     liveList.remove(message)
                 } else {
                     val message = list.firstOrNull() ?: break
-                    val messageOffset = if (createdAt != null && !message.createdAt.isNullOrBlank()) {
+                    val messageOffset = if (!useOffsetSeconds && createdAt != null && !message.createdAt.isNullOrBlank()) {
                         Instant.parseOrNull(message.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.minus(createdAt)
                     } else {
                         null
@@ -161,7 +176,9 @@ class ChatReplayManagerLocal(
                                 currentPosition < messageOffset
                             }
                         ) {
-                            delay(max((messageOffset - currentPosition).div(playbackSpeed ?: 1f).toLong(), 0).milliseconds)
+                            val timeLeft = (messageOffset - currentPosition).div(playbackSpeed ?: 1f).toLong()
+                            val delay = max(timeLeft, 1) // ExoPlayer getCurrentPosition freezes the app if it's called too rapidly
+                            delay(delay.milliseconds)
                         }
                         if (!isActive) {
                             break
