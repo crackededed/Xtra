@@ -6,21 +6,21 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "bookmarks")
 class Bookmark(
     val videoId: String? = null,
-    val userId: String? = null,
+    var userId: String? = null,
     var userLogin: String? = null,
     var userName: String? = null,
     var userType: String? = null,
     var userBroadcasterType: String? = null,
     var userLogo: String? = null,
-    val gameId: String? = null,
-    val gameSlug: String? = null,
-    val gameName: String? = null,
-    val title: String? = null,
-    val createdAt: String? = null,
-    val thumbnail: String? = null,
-    val type: String? = null,
-    val duration: String? = null,
-    val animatedPreviewURL: String? = null,
+    var gameId: String? = null,
+    var gameSlug: String? = null,
+    var gameName: String? = null,
+    var title: String? = null,
+    var createdAt: String? = null,
+    var thumbnail: String? = null,
+    var type: String? = null,
+    var duration: String? = null,
+    var animatedPreviewURL: String? = null,
 ) {
 
     @PrimaryKey(autoGenerate = true)
