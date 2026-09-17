@@ -2502,6 +2502,19 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         }
     }
 
+    protected fun applyChatOnlyWhileCastingCurrent() {
+        if (!isCastingCurrentContent()) return
+        val service = playbackService ?: return
+        val qualityName = service.quality?.name
+        if (qualityName == VideoQuality.CHAT_ONLY_QUALITY || qualityName == VideoQuality.AUDIO_ONLY_QUALITY) return
+        if (!chatOnlyEnabled) {
+            chatOnlyEnabled = true
+            chatOnlyEnabledByCast = true
+        }
+        setLocalChatOnly(true)
+        pauseLocalPlayback()
+    }
+
     /**
      * Called when a cast session is established. Pauses local playback and
      * loads the current Twitch stream on the cast device, unless a different
