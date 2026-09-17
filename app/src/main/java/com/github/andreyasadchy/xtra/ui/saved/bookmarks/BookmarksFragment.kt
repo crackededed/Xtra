@@ -154,8 +154,8 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
                         when (viewModel.sort) {
                             BookmarksSortDialog.SORT_EXPIRES_AT -> list.sortedWith(compareBy(nullsLast()) {
                                 if (it.type?.lowercase() == "archive") {
-                                    if (it.createdAt != null) {
-                                        Instant.parseOrNull(it.createdAt)?.takeIf { time -> time.toEpochMilliseconds() > 0 }?.let { time ->
+                                    it.createdAt?.let { createdAt ->
+                                        Instant.parseOrNull(createdAt)?.takeIf { time -> time.toEpochMilliseconds() > 0 }?.let { time ->
                                             val userType = it.userType ?: it.userBroadcasterType
                                             val days = if (userType.isNullOrBlank()) {
                                                 7
@@ -170,7 +170,7 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
                                                 timeLeft.inWholeSeconds
                                             } else null
                                         }
-                                    } else null
+                                    }
                                 } else null
                             })
                             BookmarksSortDialog.SORT_CREATED_AT -> list.sortedWith(compareBy(nullsLast()) {
@@ -182,8 +182,8 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
                         when (viewModel.sort) {
                             BookmarksSortDialog.SORT_EXPIRES_AT -> list.sortedWith(compareByDescending(nullsFirst()) {
                                 if (it.type?.lowercase() == "archive") {
-                                    if (it.createdAt != null) {
-                                        Instant.parseOrNull(it.createdAt)?.takeIf { time -> time.toEpochMilliseconds() > 0 }?.let { time ->
+                                    it.createdAt?.let { createdAt ->
+                                        Instant.parseOrNull(createdAt)?.takeIf { time -> time.toEpochMilliseconds() > 0 }?.let { time ->
                                             val userType = it.userType ?: it.userBroadcasterType
                                             val days = if (userType.isNullOrBlank()) {
                                                 7
@@ -198,7 +198,7 @@ class BookmarksFragment : BaseNetworkFragment(), Scrollable, Sortable, Bookmarks
                                                 timeLeft.inWholeSeconds
                                             } else null
                                         }
-                                    } else null
+                                    }
                                 } else null
                             })
                             BookmarksSortDialog.SORT_CREATED_AT -> list.sortedWith(compareByDescending(nullsFirst()) {

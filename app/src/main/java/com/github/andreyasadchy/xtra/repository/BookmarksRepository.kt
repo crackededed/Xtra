@@ -41,7 +41,8 @@ class BookmarksRepository(
                 }
             }
         }
-        if (!item.userId.isNullOrBlank() && getByUserId(item.userId).none { it.id != item.id } && offlineVideosDao.getByUserId(item.userId).isEmpty()) {
+        val userId = item.userId
+        if (!userId.isNullOrBlank() && getByUserId(userId).none { it.id != item.id } && offlineVideosDao.getByUserId(userId).isEmpty()) {
             item.userLogo?.let {
                 if (it.isNotBlank()) {
                     File(it).delete()
