@@ -172,7 +172,7 @@ abstract class BasePlaybackService : LifecycleService() {
                 when (savedQuality) {
                     VideoQuality.AUTO_QUALITY -> qualities?.find { it.name == VideoQuality.AUTO_QUALITY }
                     VideoQuality.AUDIO_ONLY_QUALITY -> qualities?.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY }
-                    VideoQuality.CHAT_ONLY_QUALITY -> qualities?.find { it.name == VideoQuality.CHAT_ONLY_QUALITY }
+                    VideoQuality.CHAT_ONLY_QUALITY -> null
                     else -> findQuality(savedQuality)
                 }
             }
@@ -192,10 +192,18 @@ abstract class BasePlaybackService : LifecycleService() {
         }
     }
 
+    protected fun isCastingCurrentContent(): Boolean {
+        return try {
+            xtraModule.castManager.isCastingContent(type, channelId, videoId, clipId)
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     protected fun isCastActive(): Boolean {
         return try {
             val manager = xtraModule.castManager
-            manager.isConnected && manager.hasActiveMedia()
+            isCastingCurrentContent() && manager.hasActiveMedia()
         } catch (_: Exception) {
             false
         }
@@ -203,7 +211,7 @@ abstract class BasePlaybackService : LifecycleService() {
 
     protected fun isCastPlaying(): Boolean {
         return try {
-            xtraModule.castManager.isRemotePlaying()
+            isCastingCurrentContent() && xtraModule.castManager.isRemotePlaying()
         } catch (_: Exception) {
             false
         }
@@ -265,13 +273,13 @@ abstract class BasePlaybackService : LifecycleService() {
             castVolumeTarget = castVolumePercent()
             val provider = object : VolumeProvider(VolumeProvider.VOLUME_CONTROL_ABSOLUTE, 100, castVolumeTarget) {
                 override fun onSetVolumeTo(volume: Int) {
-                    if (isCastConnected()) {
+                    if (isCastingCurrentContent()) {
                         setCastVolumeTarget(volume)
                     }
                 }
 
                 override fun onAdjustVolume(direction: Int) {
-                    if (isCastConnected() && direction != 0) {
+                    if (isCastingCurrentContent() && direction != 0) {
                         setCastVolumeTarget(castVolumeTarget + direction)
                     }
                 }
@@ -327,10 +335,10 @@ abstract class BasePlaybackService : LifecycleService() {
             } catch (_: Exception) {
             }
         }
-        if (isCastConnected()) {
+        if (isCastingCurrentContent()) {
             xtraModule.castManager.attachVolumeListener()
         }
-        applyCastVolumeControl(isCastConnected())
+        applyCastVolumeControl(isCastingCurrentContent())
     }
 
     protected open fun onCastPlaybackStateChanged() {}

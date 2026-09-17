@@ -1738,7 +1738,9 @@ class ExoPlayerService : BasePlaybackService() {
                     val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
                     val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
                     val cellular = networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true
-                    if ((!cellular && prefs().getString(C.PLAYER_DEFAULT_QUALITY, "saved") == "saved") || (cellular && prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved")) {
+                    if (quality.name != VideoQuality.CHAT_ONLY_QUALITY &&
+                        ((!cellular && prefs().getString(C.PLAYER_DEFAULT_QUALITY, "saved") == "saved") || (cellular && prefs().getString(C.PLAYER_DEFAULT_CELLULAR_QUALITY, "saved") == "saved"))
+                    ) {
                         prefs().edit { putString(C.PLAYER_QUALITY, quality.name) }
                     }
                 }
@@ -1887,7 +1889,7 @@ class ExoPlayerService : BasePlaybackService() {
                 || (!isInPIPMode && !isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_LOCKED, true))
                 || (isInPIPMode && isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_CLOSED, false))
                 || (isInPIPMode && !isInteractive && prefs().getBoolean(C.PLAYER_BACKGROUND_AUDIO_PIP_LOCKED, true))) {
-                if (player.playWhenReady && quality?.name != VideoQuality.AUDIO_ONLY_QUALITY) {
+                if (player.playWhenReady && quality?.name != VideoQuality.AUDIO_ONLY_QUALITY && quality?.name != VideoQuality.CHAT_ONLY_QUALITY) {
                     restoreQuality = true
                     previousQuality = quality
                     quality = qualities?.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY }
@@ -2011,7 +2013,7 @@ class ExoPlayerService : BasePlaybackService() {
     }
 
     private fun updateMetadata() {
-        if (isCastConnected()) {
+        if (isCastingCurrentContent()) {
             return
         }
         val url = channelImage

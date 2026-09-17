@@ -54,6 +54,34 @@ class CastManager(private val appContext: android.content.Context) {
             null
         }
 
+    // Content this app last loaded onto the cast device, tracked app-wide so
+    // the player can tell whether the locally open item is the casted one.
+    private var castedType: String? = null
+    private var castedChannelId: String? = null
+    private var castedVideoId: String? = null
+    private var castedClipId: String? = null
+
+    fun setCastedContent(type: String?, channelId: String?, videoId: String?, clipId: String?) {
+        castedType = type
+        castedChannelId = channelId
+        castedVideoId = videoId
+        castedClipId = clipId
+    }
+
+    fun hasCastedContent(): Boolean = castedType != null
+
+    fun isCastingContent(type: String?, channelId: String?, videoId: String?, clipId: String?): Boolean {
+        if (!isConnected || castedType == null) return false
+        return castedType == type && castedChannelId == channelId && castedVideoId == videoId && castedClipId == clipId
+    }
+
+    fun clearCastedContent() {
+        castedType = null
+        castedChannelId = null
+        castedVideoId = null
+        castedClipId = null
+    }
+
     fun loadStream(
         hlsUrl: String,
         title: String?,
@@ -220,6 +248,7 @@ class CastManager(private val appContext: android.content.Context) {
         try {
             remoteMediaClient?.stop()
             sessionManagerOrNull()?.endCurrentSession(true)
+            clearCastedContent()
         } catch (_: Exception) {
             // Cast is optional: ignore errors.
         }

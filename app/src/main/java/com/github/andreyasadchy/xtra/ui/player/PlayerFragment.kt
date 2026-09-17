@@ -775,7 +775,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     audioOnly.visibility = View.VISIBLE
                     audioOnly.setOnClickListener {
                         showController(force = true)
-                        if (isCastConnected()) {
+                        if (isCastingCurrentContent()) {
                             if (playbackService?.quality?.name == VideoQuality.AUDIO_ONLY_QUALITY) {
                                 changeCastQuality(playbackService?.previousQuality)
                             } else {
@@ -1417,7 +1417,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     private fun currentDialogQuality(): VideoQuality? {
         val qualities = getQualities()?.filter { it.second.name != VideoQuality.CHAT_ONLY_QUALITY }
-        return if (isCastConnected()) {
+        return if (isCastingCurrentContent()) {
             val remembered = castQuality?.let { selected ->
                 qualities?.find { it.second.name == selected.name && it.second.url == selected.url }?.second
             }
@@ -2347,7 +2347,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         when (requestCode) {
             REQUEST_CODE_QUALITY -> {
                 val selectedQuality = playbackService?.qualities?.find { it.name == tag && it.url == tag2 }
-                if (isCastConnected()) {
+                if (isCastingCurrentContent()) {
                     changeCastQuality(selectedQuality)
                 } else {
                     selectedQuality?.let { localVideoQuality = it }
@@ -2504,30 +2504,39 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     /**
      * Called when a cast session is established. Pauses local playback and
-     * loads the current Twitch stream on the cast device.
+     * loads the current Twitch stream on the cast device, unless a different
+     * item is already playing on the cast device; then local playback keeps
+     * running and the remote stream is left untouched.
      *
      * Uses a concrete (non-auto) quality URL because the Default Media
      * Receiver cannot handle LL-HLS partial segments from auto/chunked.
      */
     private fun onCastConnected() {
+        val service = playbackService
+        if (service != null && castManager?.hasCastedContent() == true && !isCastingCurrentContent()) {
+            return
+        }
         castManager?.setControlsEnabled(true)
         pauseLocalPlayback()
-        val service = playbackService ?: return
-        localVideoQuality = service.quality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
+        val currentService = service ?: return
+        localVideoQuality = currentService.quality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
             ?: validLocalVideoQuality()
-        val remembered = castQuality?.let { selected ->
-            service.qualities?.find { it.name == selected.name && it.url == selected.url }
+        if (!isCastingCurrentContent()) {
+            val remembered = castQuality?.let { selected ->
+                currentService.qualities?.find { it.name == selected.name && it.url == selected.url }
+            }
+            val resolved = resolveCastQuality(remembered ?: localVideoQuality) ?: return
+            val url = resolved.url ?: return
+            castStreamController?.play(
+                url,
+                CastStreamController.StreamMetadata(
+                    title = currentService.title,
+                    channelName = currentService.channelName,
+                    thumbnail = currentService.thumbnail,
+                ),
+            )
+            castManager?.setCastedContent(currentService.type, currentService.channelId, currentService.videoId, currentService.clipId)
         }
-        val resolved = resolveCastQuality(remembered ?: localVideoQuality) ?: return
-        val url = resolved.url ?: return
-        castStreamController?.play(
-            url,
-            CastStreamController.StreamMetadata(
-                title = service.title,
-                channelName = service.channelName,
-                thumbnail = service.thumbnail,
-            ),
-        )
         if (!chatOnlyEnabled) {
             chatOnlyEnabled = true
             chatOnlyEnabledByCast = true
@@ -2577,15 +2586,32 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         }
     }
 
-    private fun onCastDisconnected() {
-        castQuality = null
-        if (chatOnlyEnabledByCast) {
-            chatOnlyEnabled = false
-            chatOnlyEnabledByCast = false
-            setLocalChatOnly(false)
+    private fun isCastingCurrentContent(): Boolean {
+        return try {
+            castManager?.isCastingContent(
+                playbackService?.type,
+                playbackService?.channelId,
+                playbackService?.videoId,
+                playbackService?.clipId,
+            ) == true
+        } catch (_: Exception) {
+            false
         }
+    }
+
+    private fun onCastDisconnected() {
+        val wasCastingCurrent = isCastingCurrentContent()
+        castQuality = null
+        castManager?.clearCastedContent()
         castManager?.setControlsEnabled(false)
-        resumeLocalPlayback()
+        if (wasCastingCurrent) {
+            if (chatOnlyEnabledByCast) {
+                chatOnlyEnabled = false
+                chatOnlyEnabledByCast = false
+                setLocalChatOnly(false)
+            }
+            resumeLocalPlayback()
+        }
     }
 
     /**
