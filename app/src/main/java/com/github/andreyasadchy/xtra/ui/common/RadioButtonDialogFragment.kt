@@ -98,15 +98,20 @@ class RadioButtonDialogFragment : BottomSheetDialogFragment() {
                         orientation = LinearLayout.VERTICAL
                         addView(radioGroup, params)
                         addView(
-                            AppCompatCheckBox(context).apply {
-                                text = checkboxLabel
-                                isChecked = arguments.getBoolean(CHECKBOX_CHECKED)
+                            LinearLayout(context).apply {
                                 context.obtainStyledAttributes(intArrayOf(R.attr.dialogLayoutPadding)).use {
                                     setPadding(it.getDimensionPixelSize(0, 0))
                                 }
-                                setOnClickListener { v ->
-                                    listenerSort.onCheckedChange(arguments.getInt(REQUEST_CODE), (v as AppCompatCheckBox).isChecked)
-                                }
+                                addView(
+                                    AppCompatCheckBox(context).apply {
+                                        text = checkboxLabel
+                                        isChecked = arguments.getBoolean(CHECKBOX_CHECKED)
+                                        setOnClickListener { v ->
+                                            listenerSort.onCheckedChange(arguments.getInt(REQUEST_CODE), (v as AppCompatCheckBox).isChecked)
+                                        }
+                                    },
+                                    params
+                                )
                             },
                             params
                         )
