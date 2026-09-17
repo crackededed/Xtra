@@ -136,8 +136,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         prefs = prefs()
-        // Phase 0/1: start cast discovery. Guarded: without Play Services
-        // or a cast device nothing happens, and the local player is unaffected.
         try {
             (application as? XtraApp)?.xtraModule?.castManager?.warmUp()
         } catch (_: Exception) {
