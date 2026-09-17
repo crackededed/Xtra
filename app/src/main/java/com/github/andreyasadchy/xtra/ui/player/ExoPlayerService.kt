@@ -595,7 +595,7 @@ class ExoPlayerService : BasePlaybackService() {
                         savePositionTimer?.cancel()
                         savePositionTimer = null
                         updateSavedPosition()
-                        if (stopServiceTimer == null && serviceListener == null) {
+                        if (stopServiceTimer == null && serviceListener == null && !isCastActive()) {
                             stopServiceTimer = Timer().apply {
                                 schedule(600000) {
                                     Handler(Looper.getMainLooper()).post {
@@ -621,11 +621,19 @@ class ExoPlayerService : BasePlaybackService() {
                 }
 
                 override fun onPlay() {
-                    Util.handlePlayPauseButtonAction(player)
+                    if (isCastActive()) {
+                        castTogglePlayPause()
+                    } else {
+                        Util.handlePlayPauseButtonAction(player)
+                    }
                 }
 
                 override fun onPause() {
-                    player?.pause()
+                    if (isCastActive()) {
+                        castPause()
+                    } else {
+                        player?.pause()
+                    }
                 }
 
                 override fun onSkipToNext() {
@@ -637,15 +645,29 @@ class ExoPlayerService : BasePlaybackService() {
                 }
 
                 override fun onFastForward() {
-                    player?.seekForward()
+                    if (isCastActive()) {
+                        val fastForwardMs = (prefs().getString(C.PLAYER_FORWARD, "10")?.toLongOrNull() ?: 10) * 1000
+                        castSeekRelative(fastForwardMs)
+                    } else {
+                        player?.seekForward()
+                    }
                 }
 
                 override fun onRewind() {
-                    player?.seekBack()
+                    if (isCastActive()) {
+                        val rewindMs = (prefs().getString(C.PLAYER_REWIND, "10")?.toLongOrNull() ?: 10) * 1000
+                        castSeekRelative(-rewindMs)
+                    } else {
+                        player?.seekBack()
+                    }
                 }
 
                 override fun onStop() {
-                    player?.stop()
+                    if (isCastActive()) {
+                        castStop()
+                    } else {
+                        player?.stop()
+                    }
                 }
 
                 override fun onSeekTo(pos: Long) {
@@ -741,6 +763,7 @@ class ExoPlayerService : BasePlaybackService() {
                     }
                 )
             }
+            setCastControlsEnabled(true)
             start(restorePauseState)
         }
     }
@@ -1844,12 +1867,15 @@ class ExoPlayerService : BasePlaybackService() {
     }
 
     private fun updatePlaybackState() {
+        val castPlaying = isCastPlaying()
         player?.let { player ->
-            val showSeekbar = showStreamNotificationSeekbar || !player.isCurrentMediaItemLive
+            val showSeekbar = !castPlaying && (showStreamNotificationSeekbar || !player.isCurrentMediaItemLive)
             session?.setPlaybackState(
                 PlaybackState.Builder().apply {
                     setState(
-                        when (player.playbackState) {
+                        if (castPlaying) {
+                            PlaybackState.STATE_PLAYING
+                        } else when (player.playbackState) {
                             Player.STATE_IDLE -> PlaybackState.STATE_NONE
                             Player.STATE_BUFFERING -> {
                                 if (Util.shouldShowPlayButton(player)) {
@@ -1887,13 +1913,17 @@ class ExoPlayerService : BasePlaybackService() {
                         }
                     )
                     setActions(
-                        (PlaybackState.ACTION_STOP
-                                or PlaybackState.ACTION_PAUSE
-                                or PlaybackState.ACTION_PLAY
-                                or PlaybackState.ACTION_REWIND
-                                or PlaybackState.ACTION_FAST_FORWARD
-                                or PlaybackState.ACTION_SET_RATING
-                                or PlaybackState.ACTION_PLAY_PAUSE).let {
+                        (if (castPlaying) {
+                            PlaybackState.ACTION_STOP
+                        } else {
+                            PlaybackState.ACTION_STOP or
+                                    PlaybackState.ACTION_PAUSE or
+                                    PlaybackState.ACTION_PLAY or
+                                    PlaybackState.ACTION_REWIND or
+                                    PlaybackState.ACTION_FAST_FORWARD or
+                                    PlaybackState.ACTION_SET_RATING or
+                                    PlaybackState.ACTION_PLAY_PAUSE
+                        }).let {
                             if (showSeekbar) {
                                 it or PlaybackState.ACTION_SEEK_TO
                             } else {
@@ -1913,14 +1943,19 @@ class ExoPlayerService : BasePlaybackService() {
                             }
                         }
                     )
-                    addCustomAction(INTENT_REWIND, ContextCompat.getString(this@ExoPlayerService, R.string.rewind), androidx.media3.session.R.drawable.media3_icon_rewind)
-                    addCustomAction(INTENT_FAST_FORWARD, ContextCompat.getString(this@ExoPlayerService, R.string.forward), androidx.media3.session.R.drawable.media3_icon_fast_forward)
+                    if (!castPlaying) {
+                        addCustomAction(INTENT_REWIND, ContextCompat.getString(this@ExoPlayerService, R.string.rewind), androidx.media3.session.R.drawable.media3_icon_rewind)
+                        addCustomAction(INTENT_FAST_FORWARD, ContextCompat.getString(this@ExoPlayerService, R.string.forward), androidx.media3.session.R.drawable.media3_icon_fast_forward)
+                    }
                 }.build()
             )
         }
     }
 
     private fun updateMetadata() {
+        if (isCastConnected()) {
+            return
+        }
         val url = channelImage
         val bitmap = if (!url.isNullOrBlank()) {
             if (url == artworkUri && cachedBitmap != null) {
@@ -2164,7 +2199,7 @@ class ExoPlayerService : BasePlaybackService() {
                         )
                     ).build()
                 )
-                if (Util.shouldShowPlayButton(player)) {
+                if (isCastPlaying() || Util.shouldShowPlayButton(player)) {
                     addAction(
                         Notification.Action.Builder(
                             Icon.createWithResource(this@ExoPlayerService, androidx.media3.session.R.drawable.media3_icon_play),
@@ -2240,7 +2275,7 @@ class ExoPlayerService : BasePlaybackService() {
 
     fun setStopServiceTimer(start: Boolean) {
         if (start) {
-            if (stopServiceTimer == null && player?.isPlaying == false) {
+            if (stopServiceTimer == null && player?.isPlaying == false && !isCastActive()) {
                 stopServiceTimer = Timer().apply {
                     schedule(600000) {
                         Handler(Looper.getMainLooper()).post {
@@ -2359,9 +2394,29 @@ class ExoPlayerService : BasePlaybackService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         when (intent?.action) {
-            INTENT_REWIND -> player?.seekBack()
-            INTENT_PLAY_PAUSE -> Util.handlePlayPauseButtonAction(player)
-            INTENT_FAST_FORWARD -> player?.seekForward()
+            INTENT_REWIND -> {
+                if (isCastActive()) {
+                    val rewindMs = (prefs().getString(C.PLAYER_REWIND, "10")?.toLongOrNull() ?: 10) * 1000
+                    castSeekRelative(-rewindMs)
+                } else {
+                    player?.seekBack()
+                }
+            }
+            INTENT_PLAY_PAUSE -> {
+                if (isCastActive()) {
+                    castTogglePlayPause()
+                } else {
+                    Util.handlePlayPauseButtonAction(player)
+                }
+            }
+            INTENT_FAST_FORWARD -> {
+                if (isCastActive()) {
+                    val fastForwardMs = (prefs().getString(C.PLAYER_FORWARD, "10")?.toLongOrNull() ?: 10) * 1000
+                    castSeekRelative(fastForwardMs)
+                } else {
+                    player?.seekForward()
+                }
+            }
             INTENT_START -> create(restorePauseState = true)
             Intent.ACTION_MEDIA_BUTTON -> create(restorePauseState = false)
         }
@@ -2385,6 +2440,7 @@ class ExoPlayerService : BasePlaybackService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        setCastControlsEnabled(false)
         player?.release()
         session?.release()
         bitmapLoadJob?.cancel()

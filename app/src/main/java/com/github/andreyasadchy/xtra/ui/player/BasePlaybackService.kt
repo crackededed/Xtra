@@ -178,6 +178,75 @@ abstract class BasePlaybackService : LifecycleService() {
         } ?: qualities?.firstOrNull()
     }
 
+    protected fun isCastConnected(): Boolean {
+        return try {
+            xtraModule.castManager.isConnected
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    protected fun isCastActive(): Boolean {
+        return try {
+            val manager = xtraModule.castManager
+            manager.isConnected && manager.hasActiveMedia()
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    protected fun isCastPlaying(): Boolean {
+        return try {
+            xtraModule.castManager.isRemotePlaying()
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    protected fun castTogglePlayPause() {
+        try {
+            val manager = xtraModule.castManager
+            if (manager.remoteMediaClient?.isPlaying == true) {
+                manager.pauseRemote()
+            } else {
+                manager.playRemote()
+            }
+        } catch (_: Exception) {
+        }
+    }
+
+    protected fun castPause() {
+        try {
+            xtraModule.castManager.pauseRemote()
+        } catch (_: Exception) {
+        }
+    }
+
+    protected fun castStop() {
+        try {
+            xtraModule.castManager.stopCasting()
+        } catch (_: Exception) {
+        }
+    }
+
+    protected fun castSeekRelative(deltaMs: Long) {
+        try {
+            val client = xtraModule.castManager.remoteMediaClient
+            val target = client?.approximateStreamPosition?.plus(deltaMs)
+            if (client != null && target != null && target >= 0) {
+                client.seek(target)
+            }
+        } catch (_: Exception) {
+        }
+    }
+
+    protected fun setCastControlsEnabled(enabled: Boolean) {
+        try {
+            xtraModule.castManager.setControlsEnabled(enabled)
+        } catch (_: Exception) {
+        }
+    }
+
     private fun findQuality(targetQualityString: String?): VideoQuality? {
         val targetQuality = targetQualityString?.split("p")
         return targetQuality?.getOrNull(0)?.takeWhile { it.isDigit() }?.toIntOrNull()?.let { targetResolution ->

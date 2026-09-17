@@ -1,9 +1,12 @@
 package com.github.andreyasadchy.xtra.ui.cast
 
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import com.google.android.gms.cast.MediaInfo
 import com.google.android.gms.cast.MediaLoadRequestData
 import com.google.android.gms.cast.MediaMetadata
+import com.google.android.gms.cast.MediaStatus
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.gms.cast.framework.CastSession
 import com.google.android.gms.cast.framework.SessionManager
@@ -96,6 +99,118 @@ class CastManager(private val appContext: android.content.Context) {
     fun stopStream() {
         try {
             remoteMediaClient?.stop()
+        } catch (_: Exception) {
+            // Cast is optional: ignore errors.
+        }
+    }
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var playPauseListener: RemoteMediaClient.Listener? = null
+    private var playPauseListenerClient: RemoteMediaClient? = null
+    private var castIsPlaying = false
+    private var castPollRunnable: Runnable? = null
+
+    fun setControlsEnabled(enabled: Boolean) {
+        try {
+            val client = remoteMediaClient
+            if (enabled) {
+                if (playPauseListener == null && client != null) {
+                    val listener = object : RemoteMediaClient.Listener {
+                        override fun onStatusUpdated() {
+                            try {
+                                castIsPlaying = remoteMediaClient?.isPlaying == true
+                            } catch (_: Exception) {
+                                castIsPlaying = false
+                            }
+                        }
+
+                        override fun onMetadataUpdated() = Unit
+                        override fun onQueueStatusUpdated() = Unit
+                        override fun onPreloadStatusUpdated() = Unit
+                        override fun onSendingRemoteMediaRequest() = Unit
+                        override fun onAdBreakStatusUpdated() = Unit
+                    }
+                    playPauseListener = listener
+                    playPauseListenerClient = client
+                    client.addListener(listener)
+                }
+                if (client != null) {
+                    castIsPlaying = client.isPlaying
+                } else if (castPollRunnable == null) {
+                    val poll = Runnable {
+                        castPollRunnable = null
+                        if (playPauseListener == null) {
+                            setControlsEnabled(true)
+                        }
+                    }
+                    castPollRunnable = poll
+                    mainHandler.postDelayed(poll, 5000)
+                }
+            } else {
+                castPollRunnable?.let { mainHandler.removeCallbacks(it) }
+                castPollRunnable = null
+                playPauseListener?.let { listener ->
+                    try {
+                        (playPauseListenerClient ?: client)?.removeListener(listener)
+                    } catch (_: Exception) {
+                    }
+                }
+                playPauseListener = null
+                playPauseListenerClient = null
+                castIsPlaying = false
+            }
+        } catch (_: Exception) {
+            // Cast is optional: ignore errors.
+        }
+    }
+
+    fun isRemotePlaying(): Boolean {
+        return try {
+            castIsPlaying
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    fun hasActiveMedia(): Boolean {
+        return try {
+            remoteMediaClient?.hasMediaSession() == true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    fun playRemote() {
+        try {
+            remoteMediaClient?.play()
+        } catch (_: Exception) {
+            // Cast is optional: ignore errors.
+        }
+    }
+
+    fun pauseRemote() {
+        try {
+            remoteMediaClient?.pause()
+        } catch (_: Exception) {
+            // Cast is optional: ignore errors.
+        }
+    }
+
+    fun remoteSeekTo(positionMs: Long) {
+        try {
+            val client = remoteMediaClient
+            if (client != null && positionMs >= 0) {
+                client.seek(positionMs)
+            }
+        } catch (_: Exception) {
+            // Cast is optional: ignore errors.
+        }
+    }
+
+    fun stopCasting() {
+        try {
+            remoteMediaClient?.stop()
+            sessionManagerOrNull()?.endCurrentSession(true)
         } catch (_: Exception) {
             // Cast is optional: ignore errors.
         }

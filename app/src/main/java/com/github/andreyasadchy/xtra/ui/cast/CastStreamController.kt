@@ -76,7 +76,7 @@ class CastStreamController(private val castManager: CastManager) {
     }
 
     fun stop() {
-        castManager.stopStream()
+        castManager.setControlsEnabled(false)
     }
 
     private fun checkForError() {

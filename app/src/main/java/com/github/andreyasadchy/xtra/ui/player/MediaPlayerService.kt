@@ -140,22 +140,30 @@ class MediaPlayerService : BasePlaybackService() {
                 }
 
                 override fun onPlay() {
-                    player?.let { player ->
-                        if (player.isPlaying) {
-                            player.pause()
-                        } else {
-                            player.start()
+                    if (isCastActive()) {
+                        castTogglePlayPause()
+                    } else {
+                        player?.let { player ->
+                            if (player.isPlaying) {
+                                player.pause()
+                            } else {
+                                player.start()
+                            }
+                            updatePlayingState()
+                            playerListener?.onIsPlayingChanged()
                         }
-                        updatePlayingState()
-                        playerListener?.onIsPlayingChanged()
                     }
                 }
 
                 override fun onPause() {
-                    player?.let { player ->
-                        player.pause()
-                        updatePlayingState()
-                        playerListener?.onIsPlayingChanged()
+                    if (isCastActive()) {
+                        castPause()
+                    } else {
+                        player?.let { player ->
+                            player.pause()
+                            updatePlayingState()
+                            playerListener?.onIsPlayingChanged()
+                        }
                     }
                 }
 
@@ -182,32 +190,44 @@ class MediaPlayerService : BasePlaybackService() {
                 }
 
                 override fun onFastForward() {
-                    player?.let { player ->
-                        val position = player.currentPosition + fastForwardMs
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
-                        } else {
-                            player.seekTo(position.toInt())
+                    if (isCastActive()) {
+                        castSeekRelative(fastForwardMs)
+                    } else {
+                        player?.let { player ->
+                            val position = player.currentPosition + fastForwardMs
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
+                            } else {
+                                player.seekTo(position.toInt())
+                            }
                         }
                     }
                 }
 
                 override fun onRewind() {
-                    player?.let { player ->
-                        val position = player.currentPosition - rewindMs
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
-                        } else {
-                            player.seekTo(position.toInt())
+                    if (isCastActive()) {
+                        castSeekRelative(-rewindMs)
+                    } else {
+                        player?.let { player ->
+                            val position = player.currentPosition - rewindMs
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
+                            } else {
+                                player.seekTo(position.toInt())
+                            }
                         }
                     }
                 }
 
                 override fun onStop() {
-                    player?.let { player ->
-                        player.stop()
-                        updatePlayingState()
-                        playerListener?.onIsPlayingChanged()
+                    if (isCastActive()) {
+                        castStop()
+                    } else {
+                        player?.let { player ->
+                            player.stop()
+                            updatePlayingState()
+                            playerListener?.onIsPlayingChanged()
+                        }
                     }
                 }
 
@@ -392,6 +412,7 @@ class MediaPlayerService : BasePlaybackService() {
                     }
                 )
             }
+            setCastControlsEnabled(true)
             start(restorePauseState)
         }
     }
@@ -1483,12 +1504,15 @@ class MediaPlayerService : BasePlaybackService() {
     }
 
     private fun updatePlaybackState(error: Boolean = false) {
+        val castPlaying = isCastPlaying()
         player?.let { player ->
-            val showSeekbar = showStreamNotificationSeekbar || error || player.duration != -1
+            val showSeekbar = !castPlaying && (showStreamNotificationSeekbar || error || player.duration != -1)
             session?.setPlaybackState(
                 PlaybackState.Builder().apply {
                     setState(
-                        if (!player.isPlaying) {
+                        if (castPlaying) {
+                            PlaybackState.STATE_PLAYING
+                        } else if (!player.isPlaying) {
                             PlaybackState.STATE_PAUSED
                         } else {
                             PlaybackState.STATE_PLAYING
@@ -1505,13 +1529,17 @@ class MediaPlayerService : BasePlaybackService() {
                         }
                     )
                     setActions(
-                        (PlaybackState.ACTION_STOP
-                                or PlaybackState.ACTION_PAUSE
-                                or PlaybackState.ACTION_PLAY
-                                or PlaybackState.ACTION_REWIND
-                                or PlaybackState.ACTION_FAST_FORWARD
-                                or PlaybackState.ACTION_SET_RATING
-                                or PlaybackState.ACTION_PLAY_PAUSE).let {
+                        (if (castPlaying) {
+                            PlaybackState.ACTION_STOP
+                        } else {
+                            PlaybackState.ACTION_STOP or
+                                    PlaybackState.ACTION_PAUSE or
+                                    PlaybackState.ACTION_PLAY or
+                                    PlaybackState.ACTION_REWIND or
+                                    PlaybackState.ACTION_FAST_FORWARD or
+                                    PlaybackState.ACTION_SET_RATING or
+                                    PlaybackState.ACTION_PLAY_PAUSE
+                        }).let {
                             if (showSeekbar) {
                                 it or PlaybackState.ACTION_SEEK_TO
                             } else {
@@ -1531,8 +1559,10 @@ class MediaPlayerService : BasePlaybackService() {
                             }
                         }
                     )
-                    addCustomAction(INTENT_REWIND, ContextCompat.getString(this@MediaPlayerService, R.string.rewind), androidx.media3.session.R.drawable.media3_icon_rewind)
-                    addCustomAction(INTENT_FAST_FORWARD, ContextCompat.getString(this@MediaPlayerService, R.string.forward), androidx.media3.session.R.drawable.media3_icon_fast_forward)
+                    if (!castPlaying) {
+                        addCustomAction(INTENT_REWIND, ContextCompat.getString(this@MediaPlayerService, R.string.rewind), androidx.media3.session.R.drawable.media3_icon_rewind)
+                        addCustomAction(INTENT_FAST_FORWARD, ContextCompat.getString(this@MediaPlayerService, R.string.forward), androidx.media3.session.R.drawable.media3_icon_fast_forward)
+                    }
                 }.build()
             )
         }
@@ -1775,7 +1805,7 @@ class MediaPlayerService : BasePlaybackService() {
                         )
                     ).build()
                 )
-                if (!player.isPlaying) {
+                if (!isCastPlaying() && !player.isPlaying) {
                     addAction(
                         Notification.Action.Builder(
                             Icon.createWithResource(this@MediaPlayerService, androidx.media3.session.R.drawable.media3_icon_play),
@@ -1955,7 +1985,7 @@ class MediaPlayerService : BasePlaybackService() {
                 savePositionTimer?.cancel()
                 savePositionTimer = null
                 updateSavedPosition()
-                if (stopServiceTimer == null && serviceListener == null) {
+                if (stopServiceTimer == null && serviceListener == null && !isCastActive()) {
                     stopServiceTimer = Timer().apply {
                         schedule(600000) {
                             Handler(Looper.getMainLooper()).post {
@@ -2005,35 +2035,49 @@ class MediaPlayerService : BasePlaybackService() {
         super.onStartCommand(intent, flags, startId)
         when (intent?.action) {
             INTENT_REWIND -> {
-                player?.let { player ->
+                if (isCastActive()) {
                     val rewindMs = (prefs().getString(C.PLAYER_REWIND, "10")?.toLongOrNull() ?: 10) * 1000
-                    val position = player.currentPosition - rewindMs
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
-                    } else {
-                        player.seekTo(position.toInt())
+                    castSeekRelative(-rewindMs)
+                } else {
+                    player?.let { player ->
+                        val rewindMs = (prefs().getString(C.PLAYER_REWIND, "10")?.toLongOrNull() ?: 10) * 1000
+                        val position = player.currentPosition - rewindMs
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
+                        } else {
+                            player.seekTo(position.toInt())
+                        }
                     }
                 }
             }
             INTENT_PLAY_PAUSE -> {
-                player?.let { player ->
-                    if (player.isPlaying) {
-                        player.pause()
-                    } else {
-                        player.start()
+                if (isCastActive()) {
+                    castTogglePlayPause()
+                } else {
+                    player?.let { player ->
+                        if (player.isPlaying) {
+                            player.pause()
+                        } else {
+                            player.start()
+                        }
+                        updatePlayingState()
+                        playerListener?.onIsPlayingChanged()
                     }
-                    updatePlayingState()
-                    playerListener?.onIsPlayingChanged()
                 }
             }
             INTENT_FAST_FORWARD -> {
-                player?.let { player ->
+                if (isCastActive()) {
                     val fastForwardMs = (prefs().getString(C.PLAYER_FORWARD, "10")?.toLongOrNull() ?: 10) * 1000
-                    val position = player.currentPosition + fastForwardMs
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
-                    } else {
-                        player.seekTo(position.toInt())
+                    castSeekRelative(fastForwardMs)
+                } else {
+                    player?.let { player ->
+                        val fastForwardMs = (prefs().getString(C.PLAYER_FORWARD, "10")?.toLongOrNull() ?: 10) * 1000
+                        val position = player.currentPosition + fastForwardMs
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            player.seekTo(position, MediaPlayer.SEEK_CLOSEST)
+                        } else {
+                            player.seekTo(position.toInt())
+                        }
                     }
                 }
             }
@@ -2062,6 +2106,7 @@ class MediaPlayerService : BasePlaybackService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        setCastControlsEnabled(false)
         wifiLock?.release()
         player?.release()
         session?.release()

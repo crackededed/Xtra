@@ -2510,6 +2510,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
      * Receiver cannot handle LL-HLS partial segments from auto/chunked.
      */
     private fun onCastConnected() {
+        castManager?.setControlsEnabled(true)
         pauseLocalPlayback()
         val service = playbackService ?: return
         localVideoQuality = service.quality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
@@ -2583,7 +2584,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             chatOnlyEnabledByCast = false
             setLocalChatOnly(false)
         }
-        castStreamController?.stop()
+        castManager?.setControlsEnabled(false)
         resumeLocalPlayback()
     }
 
