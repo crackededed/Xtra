@@ -1,13 +1,19 @@
 package com.github.andreyasadchy.xtra.ui.player
 
+import android.media.AudioAttributes
+import android.media.VolumeProvider
+import android.media.session.MediaSession
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.os.SystemClock
 import androidx.lifecycle.LifecycleService
 import com.github.andreyasadchy.xtra.XtraModule
 import com.github.andreyasadchy.xtra.model.PlaybackState
 import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
+import com.google.android.gms.cast.framework.CastSession
+import com.google.android.gms.cast.framework.SessionManagerListener
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.buildJsonArray
@@ -243,6 +249,156 @@ abstract class BasePlaybackService : LifecycleService() {
     protected fun setCastControlsEnabled(enabled: Boolean) {
         try {
             xtraModule.castManager.setControlsEnabled(enabled)
+        } catch (_: Exception) {
+        }
+    }
+
+    private var volumeSession: MediaSession? = null
+    private var castVolumeProvider: VolumeProvider? = null
+    private var castVolumeSessionListener: SessionManagerListener<CastSession>? = null
+    private var castVolumeTarget = 0
+    private var castVolumeLastLocalChange = 0L
+
+    protected fun setupCastVolumeControl(session: MediaSession) {
+        volumeSession = session
+        if (castVolumeProvider == null) {
+            castVolumeTarget = castVolumePercent()
+            val provider = object : VolumeProvider(VolumeProvider.VOLUME_CONTROL_ABSOLUTE, 100, castVolumeTarget) {
+                override fun onSetVolumeTo(volume: Int) {
+                    if (isCastConnected()) {
+                        setCastVolumeTarget(volume)
+                    }
+                }
+
+                override fun onAdjustVolume(direction: Int) {
+                    if (isCastConnected() && direction != 0) {
+                        setCastVolumeTarget(castVolumeTarget + direction)
+                    }
+                }
+            }
+            castVolumeProvider = provider
+            xtraModule.castManager.volumeChangedCallback = {
+                try {
+                    if (SystemClock.elapsedRealtime() - castVolumeLastLocalChange > 3000) {
+                        val deviceVolume = castVolumePercent()
+                        if (deviceVolume != castVolumeTarget) {
+                            castVolumeTarget = deviceVolume
+                            castVolumeProvider?.setCurrentVolume(deviceVolume)
+                        }
+                    }
+                } catch (_: Exception) {
+                }
+            }
+        }
+        xtraModule.castManager.playbackStateCallback = {
+            onCastPlaybackStateChanged()
+        }
+        if (castVolumeSessionListener == null) {
+            val listener = object : SessionManagerListener<CastSession> {
+                override fun onSessionStarted(session: CastSession, sessionId: String) {
+                    xtraModule.castManager.attachVolumeListener()
+                    applyCastVolumeControl(true)
+                }
+
+                override fun onSessionResumed(session: CastSession, wasSuspended: Boolean) {
+                    xtraModule.castManager.attachVolumeListener()
+                    applyCastVolumeControl(true)
+                }
+
+                override fun onSessionEnded(session: CastSession, error: Int) {
+                    xtraModule.castManager.detachVolumeListener()
+                    applyCastVolumeControl(false)
+                }
+
+                override fun onSessionSuspended(session: CastSession, reason: Int) {
+                    xtraModule.castManager.detachVolumeListener()
+                    applyCastVolumeControl(false)
+                }
+
+                override fun onSessionStarting(session: CastSession) = Unit
+                override fun onSessionResuming(session: CastSession, sessionId: String) = Unit
+                override fun onSessionEnding(session: CastSession) = Unit
+                override fun onSessionResumeFailed(session: CastSession, error: Int) = Unit
+                override fun onSessionStartFailed(session: CastSession, error: Int) = Unit
+            }
+            castVolumeSessionListener = listener
+            try {
+                xtraModule.castManager.addSessionListener(listener)
+            } catch (_: Exception) {
+            }
+        }
+        if (isCastConnected()) {
+            xtraModule.castManager.attachVolumeListener()
+        }
+        applyCastVolumeControl(isCastConnected())
+    }
+
+    protected open fun onCastPlaybackStateChanged() {}
+
+    protected fun teardownCastVolumeControl() {
+        castVolumeSessionListener?.let { listener ->
+            try {
+                xtraModule.castManager.removeSessionListener(listener)
+            } catch (_: Exception) {
+            }
+        }
+        castVolumeSessionListener = null
+        xtraModule.castManager.detachVolumeListener()
+        xtraModule.castManager.volumeChangedCallback = null
+        xtraModule.castManager.playbackStateCallback = null
+        castVolumeProvider = null
+        volumeSession = null
+    }
+
+    private fun applyCastVolumeControl(castConnected: Boolean) {
+        val session = volumeSession ?: return
+        val provider = castVolumeProvider ?: return
+        try {
+            if (castConnected) {
+                castVolumeTarget = castVolumePercent()
+                provider.setCurrentVolume(castVolumeTarget)
+                session.setPlaybackToRemote(provider)
+            } else {
+                session.setPlaybackToLocal(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build()
+                )
+            }
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun castVolumePercent(): Int {
+        return try {
+            Math.round(xtraModule.castManager.deviceVolume * 100).toInt().coerceIn(0, 100)
+        } catch (_: Exception) {
+            0
+        }
+    }
+
+    private fun setCastVolumeTarget(target: Int) {
+        val clamped = target.coerceIn(0, 100)
+        castVolumeTarget = clamped
+        castVolumeLastLocalChange = SystemClock.elapsedRealtime()
+        castVolumeProvider?.setCurrentVolume(clamped)
+        castSetVolume(clamped / 100.0)
+    }
+
+    protected fun castSeekTo(positionMs: Long) {
+        try {
+            val client = xtraModule.castManager.remoteMediaClient
+            if (client != null && positionMs >= 0) {
+                client.seek(positionMs)
+            }
+        } catch (_: Exception) {
+        }
+    }
+
+    protected fun castSetVolume(volume: Double) {
+        try {
+            xtraModule.castManager.setDeviceVolume(volume)
         } catch (_: Exception) {
         }
     }

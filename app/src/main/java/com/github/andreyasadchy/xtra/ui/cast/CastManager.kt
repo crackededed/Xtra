@@ -3,6 +3,7 @@ package com.github.andreyasadchy.xtra.ui.cast
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import com.google.android.gms.cast.Cast
 import com.google.android.gms.cast.MediaInfo
 import com.google.android.gms.cast.MediaLoadRequestData
 import com.google.android.gms.cast.MediaMetadata
@@ -105,6 +106,10 @@ class CastManager(private val appContext: android.content.Context) {
     }
 
     private val mainHandler = Handler(Looper.getMainLooper())
+    var volumeChangedCallback: (() -> Unit)? = null
+    var playbackStateCallback: (() -> Unit)? = null
+    private var volumeListener: Cast.Listener? = null
+    private var volumeListenerSession: CastSession? = null
     private var playPauseListener: RemoteMediaClient.Listener? = null
     private var playPauseListenerClient: RemoteMediaClient? = null
     private var castIsPlaying = false
@@ -121,6 +126,10 @@ class CastManager(private val appContext: android.content.Context) {
                                 castIsPlaying = remoteMediaClient?.isPlaying == true
                             } catch (_: Exception) {
                                 castIsPlaying = false
+                            }
+                            try {
+                                playbackStateCallback?.invoke()
+                            } catch (_: Exception) {
                             }
                         }
 
@@ -216,6 +225,54 @@ class CastManager(private val appContext: android.content.Context) {
         }
     }
 
+    val deviceVolume: Double
+        get() = try {
+            currentSession?.volume ?: 0.0
+        } catch (_: Exception) {
+            0.0
+        }
+
+    fun setDeviceVolume(volume: Double) {
+        try {
+            currentSession?.setVolume(volume.coerceIn(0.0, 1.0))
+        } catch (_: Exception) {
+            // Cast is optional: ignore errors.
+        }
+    }
+
+    fun attachVolumeListener() {
+        try {
+            if (volumeListener != null) {
+                return
+            }
+            val session = currentSession ?: return
+            val listener = object : Cast.Listener() {
+                override fun onVolumeChanged() {
+                    try {
+                        volumeChangedCallback?.invoke()
+                    } catch (_: Exception) {
+                    }
+                }
+            }
+            volumeListener = listener
+            volumeListenerSession = session
+            session.addCastListener(listener)
+        } catch (_: Exception) {
+            // Cast is optional: ignore errors.
+        }
+    }
+
+    fun detachVolumeListener() {
+        volumeListener?.let { listener ->
+            try {
+                (volumeListenerSession ?: currentSession)?.removeCastListener(listener)
+            } catch (_: Exception) {
+            }
+        }
+        volumeListener = null
+        volumeListenerSession = null
+    }
+
     fun addMediaStatusListener(listener: RemoteMediaClient.Listener) {
         try {
             remoteMediaClient?.addListener(listener)
@@ -277,7 +334,7 @@ class CastManager(private val appContext: android.content.Context) {
         removeSessionListener(listener)
     }
 
-    private fun removeSessionListener(listener: SessionManagerListener<CastSession>) {
+    fun removeSessionListener(listener: SessionManagerListener<CastSession>) {
         try {
             sessionManagerOrNull()?.removeSessionManagerListener(listener, CastSession::class.java)
         } catch (_: Exception) {

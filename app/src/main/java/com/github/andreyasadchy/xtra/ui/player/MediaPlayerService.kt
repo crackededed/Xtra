@@ -232,11 +232,15 @@ class MediaPlayerService : BasePlaybackService() {
                 }
 
                 override fun onSeekTo(pos: Long) {
-                    player?.let { player ->
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            player.seekTo(pos, MediaPlayer.SEEK_CLOSEST)
-                        } else {
-                            player.seekTo(pos.toInt())
+                    if (isCastActive()) {
+                        castSeekTo(pos)
+                    } else {
+                        player?.let { player ->
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                player.seekTo(pos, MediaPlayer.SEEK_CLOSEST)
+                            } else {
+                                player.seekTo(pos.toInt())
+                            }
                         }
                     }
                 }
@@ -397,6 +401,7 @@ class MediaPlayerService : BasePlaybackService() {
                 )
             }
             session.isActive = true
+            setupCastVolumeControl(session)
             notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val channelId = getString(R.string.notification_playback_channel_id)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager?.getNotificationChannel(channelId) == null) {
@@ -1975,6 +1980,10 @@ class MediaPlayerService : BasePlaybackService() {
         }
     }
 
+    override fun onCastPlaybackStateChanged() {
+        updatePlayingState()
+    }
+
     fun updatePlayingState() {
         updatePlaybackState()
         updateNotification()
@@ -2117,6 +2126,7 @@ class MediaPlayerService : BasePlaybackService() {
     override fun onDestroy() {
         super.onDestroy()
         setCastControlsEnabled(false)
+        teardownCastVolumeControl()
         wifiLock?.release()
         player?.release()
         session?.release()

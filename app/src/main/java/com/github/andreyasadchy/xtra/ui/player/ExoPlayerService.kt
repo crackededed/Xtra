@@ -678,7 +678,11 @@ class ExoPlayerService : BasePlaybackService() {
                 }
 
                 override fun onSeekTo(pos: Long) {
-                    player?.seekTo(pos)
+                    if (isCastActive()) {
+                        castSeekTo(pos)
+                    } else {
+                        player?.seekTo(pos)
+                    }
                 }
 
                 override fun onSetPlaybackSpeed(speed: Float) {
@@ -755,6 +759,7 @@ class ExoPlayerService : BasePlaybackService() {
                 )
             }
             session.isActive = true
+            setupCastVolumeControl(session)
             notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val channelId = getString(R.string.notification_playback_channel_id)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager?.getNotificationChannel(channelId) == null) {
@@ -2000,6 +2005,11 @@ class ExoPlayerService : BasePlaybackService() {
         }
     }
 
+    override fun onCastPlaybackStateChanged() {
+        updatePlaybackState()
+        updateNotification()
+    }
+
     private fun updateMetadata() {
         if (isCastConnected()) {
             return
@@ -2489,6 +2499,7 @@ class ExoPlayerService : BasePlaybackService() {
     override fun onDestroy() {
         super.onDestroy()
         setCastControlsEnabled(false)
+        teardownCastVolumeControl()
         player?.release()
         session?.release()
         bitmapLoadJob?.cancel()
