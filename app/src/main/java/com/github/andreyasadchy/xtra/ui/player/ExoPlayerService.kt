@@ -975,7 +975,11 @@ class ExoPlayerService : BasePlaybackService() {
                                 url = result
                                 break
                             } else {
+                                val host = streamProxy?.host
                                 currentStreamProxy += 1
+                                if (host != null) {
+                                    serviceListener?.toast(getString(R.string.proxy_error, host), Toast.LENGTH_LONG)
+                                }
                                 streamProxy = streamProxyList?.getOrNull(currentStreamProxy)
                                 if (streamProxy == null) {
                                     useStreamProxy = false
@@ -1343,6 +1347,7 @@ class ExoPlayerService : BasePlaybackService() {
                 proxyPort = streamProxy?.port,
                 proxyUser = streamProxy?.username,
                 proxyPassword = streamProxy?.password,
+                proxyTimeout = prefs().getString(C.PROXY_TIMEOUT, "3000")?.toIntOrNull() ?: 3000,
                 enableIntegrity = prefs().getBoolean(C.ENABLE_INTEGRITY, false) && streamProxy == null
             )
         } catch (e: Exception) {
