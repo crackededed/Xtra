@@ -144,6 +144,7 @@ class ExoPlayerService : BasePlaybackService() {
     private var hidden = false
     private var backupQualities: List<String>? = null
     private var updateQualities = false
+    private var ignorePlaylistUpdate = false
     private var created = false
 
     interface Listener {
@@ -205,7 +206,13 @@ class ExoPlayerService : BasePlaybackService() {
                     updateMetadata()
                     updateNotification()
                     if (reason == Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED && !timeline.isEmpty && qualities?.find { it.name == VideoQuality.AUTO_QUALITY } != null) {
-                        updateQualities = quality?.name != VideoQuality.AUDIO_ONLY_QUALITY
+                        if (ignorePlaylistUpdate) {
+                            ignorePlaylistUpdate = false
+                        } else {
+                            if (type == STREAM) {
+                                updateQualities = quality?.name != VideoQuality.AUDIO_ONLY_QUALITY
+                            }
+                        }
                     }
                     if (qualities.isNullOrEmpty() || updateQualities) {
                         val playlist = (player?.currentManifest as? HlsManifest)?.multivariantPlaylist
@@ -1540,6 +1547,7 @@ class ExoPlayerService : BasePlaybackService() {
                                 restorePlaylist = false
                                 playlistUrl?.let { uri ->
                                     if (mediaItem.localConfiguration?.uri != uri.toUri()) {
+                                        ignorePlaylistUpdate = true
                                         val position = player.currentPosition
                                         player.setMediaItem(mediaItem.buildUpon().setUri(uri).build())
                                         player.prepare()
@@ -1563,6 +1571,7 @@ class ExoPlayerService : BasePlaybackService() {
                                 val position = player.currentPosition
                                 if (qualities?.find { it.name == VideoQuality.AUTO_QUALITY } != null) {
                                     restorePlaylist = true
+                                    ignorePlaylistUpdate = true
                                 }
                                 player.setMediaItem(mediaItem.buildUpon().setUri(it).build())
                                 player.prepare()
@@ -1578,6 +1587,7 @@ class ExoPlayerService : BasePlaybackService() {
                                 if (restorePlaylist) {
                                     restorePlaylist = false
                                     playlistUrl?.let { uri ->
+                                        ignorePlaylistUpdate = true
                                         val position = player.currentPosition
                                         player.setMediaItem(mediaItem.buildUpon().setUri(uri).build())
                                         player.prepare()
@@ -1768,6 +1778,7 @@ class ExoPlayerService : BasePlaybackService() {
                                 val position = player.currentPosition
                                 if (qualities?.find { it.name == VideoQuality.AUTO_QUALITY } != null) {
                                     restorePlaylist = true
+                                    ignorePlaylistUpdate = true
                                 }
                                 player.setMediaItem(mediaItem.buildUpon().setUri(url).build())
                                 player.prepare()
@@ -1811,6 +1822,7 @@ class ExoPlayerService : BasePlaybackService() {
                                     val position = player.currentPosition
                                     if (qualities?.find { it.name == VideoQuality.AUTO_QUALITY } != null) {
                                         restorePlaylist = true
+                                        ignorePlaylistUpdate = true
                                     }
                                     player.setMediaItem(mediaItem.buildUpon().setUri(url).build())
                                     player.prepare()
