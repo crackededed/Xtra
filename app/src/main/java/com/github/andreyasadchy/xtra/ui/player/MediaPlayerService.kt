@@ -559,7 +559,10 @@ class MediaPlayerService : BasePlaybackService() {
                                     val source = uri.getQueryParameter("allow_source") == null
                                     val audio = uri.getQueryParameter("allow_audio_only") == null
                                     val lowLatency = uri.getQueryParameter("fast_bread") == null
-                                    if (source || audio || lowLatency) {
+                                    val unavailable = uri.getQueryParameter("include_unavailable") == null
+                                    val supportedCodecs = prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264")
+                                    val codecs = !supportedCodecs.isNullOrBlank() && uri.getQueryParameter("supported_codecs") == null
+                                    if (source || audio || lowLatency || unavailable || codecs) {
                                         uri.buildUpon().apply {
                                             if (source) {
                                                 appendQueryParameter("allow_source", "true")
@@ -569,6 +572,12 @@ class MediaPlayerService : BasePlaybackService() {
                                             }
                                             if (lowLatency) {
                                                 appendQueryParameter("fast_bread", "true")
+                                            }
+                                            if (unavailable) {
+                                                appendQueryParameter("include_unavailable", "true")
+                                            }
+                                            if (codecs) {
+                                                appendQueryParameter("supported_codecs", supportedCodecs)
                                             }
                                         }.build()
                                     } else uri
@@ -908,6 +917,7 @@ class MediaPlayerService : BasePlaybackService() {
                 proxyPort = streamProxy?.port,
                 proxyUser = streamProxy?.username,
                 proxyPassword = streamProxy?.password,
+                proxyTimeout = prefs().getString(C.PROXY_TIMEOUT, "3000")?.toIntOrNull() ?: 3000,
                 enableIntegrity = prefs().getBoolean(C.ENABLE_INTEGRITY, false) && streamProxy == null
             )
         } catch (e: Exception) {

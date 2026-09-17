@@ -56,7 +56,7 @@ class DownloadViewModel(
                     val default = listOf("source", "1080p60", "1080p30", "720p60", "720p30", "480p30", "360p30", "160p30", "audio_only")
                     try {
                         val list = if (!channelLogin.isNullOrBlank()) {
-                            val url = playerRepository.loadStreamPlaylistUrl(applicationContext, networkLibrary, gqlHeaders, channelLogin, platform, playerType, supportedCodecs, false, null, null, null, null, enableIntegrity)
+                            val url = playerRepository.loadStreamPlaylistUrl(applicationContext, networkLibrary, gqlHeaders, channelLogin, platform, playerType, supportedCodecs, false, null, null, null, null, null, enableIntegrity)
                             val playlist = withContext(Dispatchers.IO) {
                                 when {
                                     networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {

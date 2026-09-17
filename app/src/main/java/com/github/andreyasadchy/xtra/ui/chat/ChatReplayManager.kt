@@ -35,6 +35,7 @@ class ChatReplayManager(
     private val list = mutableListOf<VideoChatMessage>()
     private var started = false
     private var isLoading = false
+    private var useOffsetSeconds = false
     private var loadJob: Job? = null
     private var messageJob: Job? = null
     private var lastCheckedPosition = 0L
@@ -119,6 +120,18 @@ class ChatReplayManager(
                         }
                     }
                 }
+                // VideoComment createdAt is wrong on highlights
+                useOffsetSeconds = if (createdAt != null) {
+                    val first = messages.firstOrNull()
+                    val last = messages.lastOrNull()
+                    if (first != last && first?.createdAt != null && last?.createdAt != null) {
+                        if (first.offsetSeconds == null || last.offsetSeconds == null || first.offsetSeconds != last.offsetSeconds) {
+                            val firstCreatedAt = Instant.parseOrNull(first.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                            val lastCreatedAt = Instant.parseOrNull(last.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                            firstCreatedAt == null || lastCreatedAt == null || firstCreatedAt == lastCreatedAt
+                        } else true
+                    } else true
+                } else true
                 messageJob?.cancel()
                 list.addAll(messages)
                 cursor = if (comments.pageInfo?.hasNextPage != false) comments.edges.lastOrNull()?.cursor?.toString() else null
@@ -180,6 +193,17 @@ class ChatReplayManager(
                             }
                         }
                     }
+                    useOffsetSeconds = if (createdAt != null) {
+                        val first = messages.firstOrNull()
+                        val last = messages.lastOrNull()
+                        if (first != last && first?.createdAt != null && last?.createdAt != null) {
+                            if (first.offsetSeconds == null || last.offsetSeconds == null || first.offsetSeconds != last.offsetSeconds) {
+                                val firstCreatedAt = Instant.parseOrNull(first.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                                val lastCreatedAt = Instant.parseOrNull(last.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                                firstCreatedAt == null || lastCreatedAt == null || firstCreatedAt == lastCreatedAt
+                            } else true
+                        } else true
+                    } else true
                     messageJob?.cancel()
                     list.addAll(messages)
                     cursor = if (comments.pageInfo?.hasNextPage != false) comments.edges.lastOrNull()?.cursor else null
@@ -196,7 +220,7 @@ class ChatReplayManager(
         messageJob = coroutineScope.launch {
             while (isActive) {
                 val message = list.firstOrNull() ?: break
-                val messageOffset = if (createdAt != null && !message.createdAt.isNullOrBlank()) {
+                val messageOffset = if (!useOffsetSeconds && createdAt != null && !message.createdAt.isNullOrBlank()) {
                     Instant.parseOrNull(message.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.minus(createdAt)
                 } else {
                     null

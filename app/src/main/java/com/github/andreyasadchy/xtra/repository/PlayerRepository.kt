@@ -70,6 +70,7 @@ import org.json.JSONObject
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 import kotlin.random.Random
 import kotlin.uuid.Uuid
@@ -91,12 +92,12 @@ class PlayerRepository(
     private val helixRepository: HelixRepository,
 ) {
 
-    suspend fun loadStreamPlaylistUrl(context: Context, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, platform: String?, playerType: String?, supportedCodecs: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): String = withContext(Dispatchers.IO) {
+    suspend fun loadStreamPlaylistUrl(context: Context, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, platform: String?, playerType: String?, supportedCodecs: String?, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, proxyTimeout: Int?, enableIntegrity: Boolean): String = withContext(Dispatchers.IO) {
         val platform = platform?.takeIf { it.isNotBlank() } ?: "web"
         val playerType = playerType?.takeIf { it.isNotBlank() } ?: "site"
-        val accessToken = loadStreamPlaybackAccessToken(context, networkLibrary, gqlHeaders, channelLogin, platform, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity).let { token ->
+        val accessToken = loadStreamPlaybackAccessToken(context, networkLibrary, gqlHeaders, channelLogin, platform, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, proxyTimeout, enableIntegrity).let { token ->
             if (token.second?.contains("\"forbidden\":true") == true && !gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-                loadStreamPlaybackAccessToken(context, networkLibrary, gqlHeaders.filterNot { it.key == C.HEADER_TOKEN }, channelLogin, platform, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, enableIntegrity)
+                loadStreamPlaybackAccessToken(context, networkLibrary, gqlHeaders.filterNot { it.key == C.HEADER_TOKEN }, channelLogin, platform, playerType, proxyPlaybackAccessToken, proxyHost, proxyPort, proxyUser, proxyPassword, proxyTimeout, enableIntegrity)
             } else token
         }
         val signature = accessToken.first
@@ -116,7 +117,7 @@ class PlayerRepository(
         }.build().toString()
     }
 
-    private suspend fun loadStreamPlaybackAccessToken(context: Context, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, platform: String, playerType: String, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, enableIntegrity: Boolean): Pair<String?, String?> = withContext(Dispatchers.IO) {
+    private suspend fun loadStreamPlaybackAccessToken(context: Context, networkLibrary: String?, gqlHeaders: Map<String, String>, channelLogin: String, platform: String, playerType: String, proxyPlaybackAccessToken: Boolean, proxyHost: String?, proxyPort: Int?, proxyUser: String?, proxyPassword: String?, proxyTimeout: Int?, enableIntegrity: Boolean): Pair<String?, String?> = withContext(Dispatchers.IO) {
         val accessTokenHeaders = if (enableIntegrity) {
             gqlHeaders
         } else {
@@ -161,7 +162,7 @@ class PlayerRepository(
                         }?.build()
                         if (httpEngine != null) {
                             val response = suspendCancellableCoroutine { continuation ->
-                                val timeout = NetworkUtils.HttpEngineTimeout()
+                                val timeout = NetworkUtils.HttpEngineTimeout(proxyTimeout?.toLong() ?: 3000)
                                 val request = httpEngine.newUrlRequestBuilder(
                                     url,
                                     cronetExecutor.value,
@@ -181,6 +182,10 @@ class PlayerRepository(
                             json.decodeFromString<PlaybackAccessTokenResponse>(response.body.decodeToString())
                         } else {
                             okHttpClient.value.newBuilder().apply {
+                                val proxyTimeout = proxyTimeout?.toLong() ?: 3000
+                                connectTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                writeTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                readTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
                                 proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
                                 if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
                                     proxyAuthenticator { _, response ->
@@ -239,7 +244,7 @@ class PlayerRepository(
                         } else null
                         if (cronetEngine != null) {
                             val response = suspendCancellableCoroutine { continuation ->
-                                val timeout = NetworkUtils.CronetTimeout()
+                                val timeout = NetworkUtils.CronetTimeout(proxyTimeout?.toLong() ?: 3000)
                                 val request = cronetEngine.newUrlRequestBuilder(
                                     url,
                                     NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
@@ -259,6 +264,10 @@ class PlayerRepository(
                             json.decodeFromString<PlaybackAccessTokenResponse>(response.body.decodeToString())
                         } else {
                             okHttpClient.value.newBuilder().apply {
+                                val proxyTimeout = proxyTimeout?.toLong() ?: 3000
+                                connectTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                writeTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                readTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
                                 proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
                                 if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
                                     proxyAuthenticator { _, response ->
@@ -281,6 +290,10 @@ class PlayerRepository(
                     }
                     else -> {
                         okHttpClient.value.newBuilder().apply {
+                            val proxyTimeout = proxyTimeout?.toLong() ?: 3000
+                            connectTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                            writeTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                            readTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
                             proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
                             if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
                                 proxyAuthenticator { _, response ->
@@ -364,7 +377,7 @@ class PlayerRepository(
                         }?.build()
                         if (httpEngine != null) {
                             val response = suspendCancellableCoroutine { continuation ->
-                                val timeout = NetworkUtils.HttpEngineTimeout()
+                                val timeout = NetworkUtils.HttpEngineTimeout(proxyTimeout?.toLong() ?: 3000)
                                 val request = httpEngine.newUrlRequestBuilder(
                                     url,
                                     cronetExecutor.value,
@@ -386,6 +399,10 @@ class PlayerRepository(
                             }
                         } else {
                             okHttpClient.value.newBuilder().apply {
+                                val proxyTimeout = proxyTimeout?.toLong() ?: 3000
+                                connectTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                writeTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                readTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
                                 proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
                                 if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
                                     proxyAuthenticator { _, response ->
@@ -446,7 +463,7 @@ class PlayerRepository(
                         } else null
                         if (cronetEngine != null) {
                             val response = suspendCancellableCoroutine { continuation ->
-                                val timeout = NetworkUtils.CronetTimeout()
+                                val timeout = NetworkUtils.CronetTimeout(proxyTimeout?.toLong() ?: 3000)
                                 val request = cronetEngine.newUrlRequestBuilder(
                                     url,
                                     NetworkUtils.ByteArrayCronetCallback(continuation, timeout),
@@ -468,6 +485,10 @@ class PlayerRepository(
                             }
                         } else {
                             okHttpClient.value.newBuilder().apply {
+                                val proxyTimeout = proxyTimeout?.toLong() ?: 3000
+                                connectTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                writeTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                                readTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
                                 proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
                                 if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
                                     proxyAuthenticator { _, response ->
@@ -492,6 +513,10 @@ class PlayerRepository(
                     }
                     else -> {
                         okHttpClient.value.newBuilder().apply {
+                            val proxyTimeout = proxyTimeout?.toLong() ?: 3000
+                            connectTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                            writeTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
+                            readTimeout(proxyTimeout, TimeUnit.MILLISECONDS)
                             proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(proxyHost, proxyPort)))
                             if (!proxyUser.isNullOrBlank() && !proxyPassword.isNullOrBlank()) {
                                 proxyAuthenticator { _, response ->

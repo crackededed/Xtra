@@ -47,7 +47,8 @@ class BookmarksAdapter(
             oldItem.id == newItem.id
 
         override fun areContentsTheSame(oldItem: Bookmark, newItem: Bookmark): Boolean =
-            oldItem.title == newItem.title &&
+            oldItem.thumbnail == newItem.thumbnail &&
+                    oldItem.title == newItem.title &&
                     oldItem.duration == newItem.duration
     }) {
 
@@ -116,7 +117,6 @@ class BookmarksAdapter(
                     }
                     val durationSeconds = item.duration?.let { duration -> duration.toIntOrNull() ?: TwitchApiHelper.getDuration(duration) }
                     val position = item.videoId?.toLongOrNull()?.let { id -> positions?.find { it.id == id }?.position }
-                    val startFromBeginning = position != null && durationSeconds != null && durationSeconds > 0 && position >= (durationSeconds * 1000)
                     val ignore = ignored?.find { it.userId == item.userId } != null
                     root.setOnClickListener {
                         (fragment.activity as MainActivity).startVideo(
@@ -136,12 +136,8 @@ class BookmarksAdapter(
                                 type = item.type,
                                 animatedPreviewURL = item.animatedPreviewURL,
                             ),
-                            if (startFromBeginning) {
-                                0
-                            } else {
-                                position
-                            },
-                            startFromBeginning
+                            position,
+                            false
                         )
                     }
                     root.setOnLongClickListener {
@@ -157,8 +153,10 @@ class BookmarksAdapter(
                         }.build()
                     )
                     if (item.createdAt != null) {
-                        val text = Instant.parseOrNull(item.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.let {
-                            TwitchApiHelper.formatDate(context, it)
+                        val text = item.createdAt?.let { createdAt ->
+                            Instant.parseOrNull(createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }?.let {
+                                TwitchApiHelper.formatDate(context, it)
+                            }
                         }
                         if (text != null) {
                             date.visibility = View.VISIBLE
@@ -170,20 +168,22 @@ class BookmarksAdapter(
                         date.visibility = View.GONE
                     }
                     if (item.type?.lowercase() == "archive" && item.createdAt != null && context.prefs().getBoolean(C.UI_BOOKMARK_TIME_LEFT, true) && !ignore) {
-                        val text = Instant.parseOrNull(item.createdAt)?.takeIf { time -> time.toEpochMilliseconds() > 0 }?.let { createdAt ->
-                            val userType = item.userType ?: item.userBroadcasterType
-                            val days = if (userType.isNullOrBlank()) {
-                                7
-                            } else {
-                                when (userType.lowercase()) {
-                                    "affiliate" -> 14
-                                    else -> 60 // Partners, Prime, Turbo
+                        val text = item.createdAt?.let {
+                            Instant.parseOrNull(it)?.takeIf { time -> time.toEpochMilliseconds() > 0 }?.let { createdAt ->
+                                val userType = item.userType ?: item.userBroadcasterType
+                                val days = if (userType.isNullOrBlank()) {
+                                    7
+                                } else {
+                                    when (userType.lowercase()) {
+                                        "affiliate" -> 14
+                                        else -> 60 // Partners, Prime, Turbo
+                                    }
                                 }
+                                val timeLeft = (createdAt + days.days) - Clock.System.now()
+                                if (timeLeft.isPositive()) {
+                                    getDurationFromSeconds(context, timeLeft.inWholeSeconds.toString())
+                                } else null
                             }
-                            val timeLeft = (createdAt + days.days) - Clock.System.now()
-                            if (timeLeft.isPositive()) {
-                                getDurationFromSeconds(context, timeLeft.inWholeSeconds.toString())
-                            } else null
                         }
                         if (text != null) {
                             views.visibility = View.VISIBLE
@@ -249,9 +249,10 @@ class BookmarksAdapter(
                     } else {
                         progressBar.visibility = View.GONE
                     }
-                    if (!item.title.isNullOrBlank()) {
+                    val videoTitle = item.title
+                    if (!videoTitle.isNullOrBlank()) {
                         title.visibility = View.VISIBLE
-                        title.text = item.title.trim()
+                        title.text = videoTitle.trim()
                     } else {
                         title.visibility = View.GONE
                     }

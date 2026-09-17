@@ -86,6 +86,7 @@ class VideosAdapter(
                     val context = fragment.requireContext()
                     val position = item.id?.toLongOrNull()?.let { id -> positions?.find { it.id == id }?.position }
                     val startFromBeginning = position != null && item.durationSeconds != null && item.durationSeconds > 0 && position >= (item.durationSeconds * 1000)
+                            && item.thumbnail.let { it != null && !it.startsWith("https://vod-secure.twitch.tv/_404/404_processing") }
                     root.setOnClickListener {
                         (fragment.activity as MainActivity).startVideo(
                             item,

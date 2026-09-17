@@ -279,26 +279,20 @@ class BookmarksViewModel(
                             path
                         }
                     }
-                    bookmarksRepository.update(
-                        Bookmark(
-                            videoId = bookmark.videoId,
-                            userId = video.channelId ?: bookmark.userId,
-                            userLogin = video.channelLogin ?: bookmark.userLogin,
-                            userName = video.channelName ?: bookmark.userName,
-                            userType = bookmark.userType,
-                            userBroadcasterType = bookmark.userBroadcasterType,
-                            userLogo = bookmark.userLogo,
-                            gameId = video.gameId ?: bookmark.gameId,
-                            gameSlug = video.gameSlug ?: bookmark.gameSlug,
-                            gameName = video.gameName ?: bookmark.gameName,
-                            title = video.title ?: bookmark.title,
-                            createdAt = video.createdAt ?: bookmark.createdAt,
-                            thumbnail = downloadedThumbnail,
-                            type = video.type ?: bookmark.type,
-                            duration = video.durationSeconds?.toString() ?: bookmark.duration,
-                            animatedPreviewURL = video.animatedPreviewURL ?: bookmark.animatedPreviewURL
-                        )
-                    )
+                    bookmarksRepository.update(bookmark.apply {
+                        userId = video.channelId ?: bookmark.userId
+                        userLogin = video.channelLogin ?: bookmark.userLogin
+                        userName = video.channelName ?: bookmark.userName
+                        gameId = video.gameId ?: bookmark.gameId
+                        gameSlug = video.gameSlug ?: bookmark.gameSlug
+                        gameName = video.gameName ?: bookmark.gameName
+                        title = video.title ?: bookmark.title
+                        createdAt = video.createdAt ?: bookmark.createdAt
+                        thumbnail = downloadedThumbnail
+                        type = video.type ?: bookmark.type
+                        duration = video.durationSeconds?.toString() ?: bookmark.duration
+                        animatedPreviewURL = video.animatedPreviewURL ?: bookmark.animatedPreviewURL
+                    })
                 }
             }
         }
@@ -407,26 +401,17 @@ class BookmarksViewModel(
                                     }
                                     path
                                 }
-                                bookmarksRepository.update(
-                                    Bookmark(
-                                        videoId = bookmark.videoId,
-                                        userId = video.channelId ?: bookmark.userId,
-                                        userLogin = video.channelLogin ?: bookmark.userLogin,
-                                        userName = video.channelName ?: bookmark.userName,
-                                        userType = bookmark.userType,
-                                        userBroadcasterType = bookmark.userBroadcasterType,
-                                        userLogo = bookmark.userLogo,
-                                        gameId = bookmark.gameId,
-                                        gameSlug = bookmark.gameSlug,
-                                        gameName = bookmark.gameName,
-                                        title = video.title ?: bookmark.title,
-                                        createdAt = video.createdAt ?: bookmark.createdAt,
-                                        thumbnail = downloadedThumbnail,
-                                        type = video.type ?: bookmark.type,
-                                        duration = video.durationSeconds?.toString() ?: bookmark.duration,
-                                        animatedPreviewURL = video.animatedPreviewURL ?: bookmark.animatedPreviewURL
-                                    )
-                                )
+                                bookmarksRepository.update(bookmark.apply {
+                                    userId = video.channelId ?: bookmark.userId
+                                    userLogin = video.channelLogin ?: bookmark.userLogin
+                                    userName = video.channelName ?: bookmark.userName
+                                    title = video.title ?: bookmark.title
+                                    createdAt = video.createdAt ?: bookmark.createdAt
+                                    thumbnail = downloadedThumbnail
+                                    type = video.type ?: bookmark.type
+                                    duration = video.durationSeconds?.toString() ?: bookmark.duration
+                                    animatedPreviewURL = video.animatedPreviewURL ?: bookmark.animatedPreviewURL
+                                })
                             }
                         }
                     }
