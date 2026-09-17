@@ -64,6 +64,7 @@ import com.github.andreyasadchy.xtra.databinding.FragmentPlayerBinding
 import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
+import com.github.andreyasadchy.xtra.ui.cast.CastControllerDialogFactory
 import com.github.andreyasadchy.xtra.ui.cast.CastManager
 import com.github.andreyasadchy.xtra.ui.cast.CastStreamController
 import com.github.andreyasadchy.xtra.ui.chat.ChatFragment
@@ -134,6 +135,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     private var chatOnlyEnabled = false
     private var chatOnlyEnabledByCast = false
     private var castStreamController: CastStreamController? = null
+    private var castPlayInProgress = false
+    private val castPlayRequestAction: () -> Unit = { playCurrentStreamOnCastDevice() }
     protected var controllerAutoHide = true
     private var controllerHideOnTouch = true
     private val controllerHideAction = Runnable { if (view != null) hideController() }
@@ -2445,12 +2448,6 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         }
     }
 
-    /**
-     * Wires the cast button to the CastManager.
-     * The button uses the system MediaRouteButton which automatically opens
-     * the device picker when clicked. No media is loaded; this only manages
-     * session visibility and connection state callbacks.
-     */
     private fun setupCastButton() {
         try {
             val manager = (requireActivity().application as? XtraApp)?.xtraModule?.castManager ?: return
@@ -2461,10 +2458,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             binding.playerControls.castButton.routeSelector = routeSelector
             binding.playerControls.castButton.visibility = View.VISIBLE
             castStreamController = CastStreamController(manager)
-            castStreamController?.setErrorListener {
-                // Stream error on receiver (e.g., expired URL). Local playback
-                // is unaffected; the user can reconnect to get a fresh URL.
-            }
+            binding.playerControls.castButton.dialogFactory = CastControllerDialogFactory()
+            manager.playCurrentRequest = castPlayRequestAction
             val callback = CastManager.ConnectionCallback { connected ->
                 if (connected) {
                     onCastConnected()
@@ -2515,15 +2510,55 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         pauseLocalPlayback()
     }
 
-    /**
-     * Called when a cast session is established. Pauses local playback and
-     * loads the current Twitch stream on the cast device, unless a different
-     * item is already playing on the cast device; then local playback keeps
-     * running and the remote stream is left untouched.
-     *
-     * Uses a concrete (non-auto) quality URL because the Default Media
-     * Receiver cannot handle LL-HLS partial segments from auto/chunked.
-     */
+    private fun showCastToast(resId: Int) {
+        if (view != null) {
+            Toast.makeText(requireContext(), resId, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun playCurrentStreamOnCastDevice() {
+        if (castPlayInProgress) {
+            showCastToast(R.string.cast_play_stream_in_progress)
+            return
+        }
+        if (!isCastConnected()) {
+            showCastToast(R.string.cast_not_connected)
+            return
+        }
+        val service = playbackService
+        val resolved = service?.let { resolveCastQuality(validLocalVideoQuality()) }
+            ?: service?.qualities?.firstOrNull {
+                it.name != VideoQuality.AUTO_QUALITY &&
+                    it.name != VideoQuality.AUDIO_ONLY_QUALITY &&
+                    it.name != VideoQuality.CHAT_ONLY_QUALITY &&
+                    !it.url.isNullOrBlank()
+            }
+        val url = resolved?.url
+        if (service == null || resolved == null || url.isNullOrBlank()) {
+            showCastToast(R.string.cast_play_stream_not_ready)
+            return
+        }
+        castPlayInProgress = true
+        castStreamController?.play(
+            url,
+            CastStreamController.StreamMetadata(
+                title = service.title,
+                channelName = service.channelName,
+                thumbnail = service.thumbnail,
+            ),
+        ) { success ->
+            castPlayInProgress = false
+            if (success) {
+                castQuality = resolved
+                castManager?.setCastedContent(service.type, service.channelId, service.videoId, service.clipId)
+                applyChatOnlyWhileCastingCurrent()
+                setQualityText()
+            } else {
+                showCastToast(R.string.cast_play_stream_failed)
+            }
+        }
+    }
+
     private fun onCastConnected() {
         val service = playbackService
         if (service != null && castManager?.hasCastedContent() == true && !isCastingCurrentContent()) {
@@ -2633,9 +2668,12 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
      */
     private fun cleanupCast() {
         castQuality = null
+        val manager = castManager
+        if (manager?.playCurrentRequest === castPlayRequestAction) {
+            manager.playCurrentRequest = null
+        }
         try {
-            val listener = castSessionListener ?: return
-            castManager?.removeConnectionCallback(listener)
+            castSessionListener?.let { manager?.removeConnectionCallback(it) }
         } catch (_: Exception) {
             // Cast is optional: ignore errors.
         }

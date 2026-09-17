@@ -54,8 +54,6 @@ class CastManager(private val appContext: android.content.Context) {
             null
         }
 
-    // Content this app last loaded onto the cast device, tracked app-wide so
-    // the player can tell whether the locally open item is the casted one.
     private var castedType: String? = null
     private var castedChannelId: String? = null
     private var castedVideoId: String? = null
@@ -136,6 +134,7 @@ class CastManager(private val appContext: android.content.Context) {
     private val mainHandler = Handler(Looper.getMainLooper())
     var volumeChangedCallback: (() -> Unit)? = null
     var playbackStateCallback: (() -> Unit)? = null
+    var playCurrentRequest: (() -> Unit)? = null
     private var volumeListener: Cast.Listener? = null
     private var volumeListenerSession: CastSession? = null
     private var playPauseListener: RemoteMediaClient.Listener? = null

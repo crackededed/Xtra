@@ -574,4 +574,9 @@
     <string name="show_gif_messages">GIF-Nachrichten anzeigen</string>
     <string name="proxy_timeout">Proxy-Timeout</string>
     <string name="proxy_timeout_summary">Proxy-Timeout in Millisekunden</string>
+    <string name="play_current_stream">Stream abspielen</string>
+    <string name="cast_play_stream_failed">Stream konnte auf dem Cast-Gerät nicht abgespielt werden</string>
+    <string name="cast_play_stream_not_ready">Der Stream ist noch nicht bereit</string>
+    <string name="cast_play_stream_in_progress">Der Stream wird bereits an das Cast-Gerät gesendet</string>
+    <string name="cast_not_connected">Nicht mit einem Cast-Gerät verbunden</string>
 </resources>

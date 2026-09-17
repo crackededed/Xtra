@@ -593,4 +593,9 @@
     <string name="proxy_timeout">Proxy timeout</string>
     <string name="proxy_timeout_summary">Proxy timeout in milliseconds</string>
     <string name="cast">Cast</string>
+    <string name="play_current_stream">Play current stream</string>
+    <string name="cast_play_stream_failed">Could not play the stream on the cast device</string>
+    <string name="cast_play_stream_not_ready">The stream is not ready yet</string>
+    <string name="cast_play_stream_in_progress">The stream is already being sent to the cast device</string>
+    <string name="cast_not_connected">Not connected to a cast device</string>
 </resources>
