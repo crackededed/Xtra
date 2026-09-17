@@ -766,7 +766,16 @@ class ExoPlayerService : BasePlaybackService() {
                 STREAM -> {
                     started = true
                     serviceListener?.started()
-                    if (qualities.isNullOrEmpty()) {
+                    if (!qualities.isNullOrEmpty()) {
+                        if (quality?.name == VideoQuality.AUDIO_ONLY_QUALITY) {
+                            serviceListener?.changePlayerMode()
+                            player?.let { player ->
+                                player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                                    setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
+                                }.build()
+                            }
+                        }
+                    } else {
                         useCustomProxy = prefs().getBoolean(C.PLAYER_USE_CUSTOM_PROXY, true)
                         if (!useCustomProxy) {
                             useStreamProxy = prefs().getBoolean(C.PLAYER_USE_STREAM_PROXY, false)
@@ -795,6 +804,14 @@ class ExoPlayerService : BasePlaybackService() {
                     started = true
                     serviceListener?.started()
                     if (videoId != null) {
+                        if (!qualities.isNullOrEmpty() && quality?.name == VideoQuality.AUDIO_ONLY_QUALITY) {
+                            serviceListener?.changePlayerMode()
+                            player?.let { player ->
+                                player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                                    setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
+                                }.build()
+                            }
+                        }
                         loadVideo(restorePauseState)
                         if (title == null) {
                             updateVideoInfo()
@@ -821,6 +838,11 @@ class ExoPlayerService : BasePlaybackService() {
                             val url = quality?.url
                             if (url != null) {
                                 player?.let { player ->
+                                    if (quality?.name == VideoQuality.AUDIO_ONLY_QUALITY) {
+                                        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                                            setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
+                                        }.build()
+                                    }
                                     val networkLibrary = prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
                                     player.setMediaSource(
                                         HlsMediaSource.Factory(
