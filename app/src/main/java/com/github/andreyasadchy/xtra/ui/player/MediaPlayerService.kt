@@ -883,6 +883,7 @@ class MediaPlayerService : BasePlaybackService() {
                 proxyPort = streamProxy?.port,
                 proxyUser = streamProxy?.username,
                 proxyPassword = streamProxy?.password,
+                proxyTimeout = prefs().getString(C.PROXY_TIMEOUT, "3000")?.toIntOrNull() ?: 3000,
                 enableIntegrity = prefs().getBoolean(C.ENABLE_INTEGRITY, false) && streamProxy == null
             )
         } catch (e: Exception) {
