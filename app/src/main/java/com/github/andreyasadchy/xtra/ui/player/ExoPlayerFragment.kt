@@ -196,7 +196,7 @@ class ExoPlayerFragment : PlayerFragment() {
                         audioOnly.setColorFilter(Color.WHITE)
                         setQualityText()
                     }
-                    applyChatOnlyWhileCastingCurrent()
+                    onPlayerContentReady()
                 }
             }
 
@@ -306,7 +306,7 @@ class ExoPlayerFragment : PlayerFragment() {
                     playbackService?.player?.let { player ->
                         setPipActions(player.playbackState != Player.STATE_ENDED && player.playbackState != Player.STATE_IDLE && player.playWhenReady)
                     }
-                    applyChatOnlyWhileCastingCurrent()
+                    onPlayerContentReady()
                 }
             }
 

@@ -109,7 +109,7 @@ class MediaPlayerFragment : PlayerFragment() {
                         audioOnly.setColorFilter(Color.WHITE)
                         setQualityText()
                     }
-                    applyChatOnlyWhileCastingCurrent()
+                    onPlayerContentReady()
                 }
             }
 
@@ -248,7 +248,7 @@ class MediaPlayerFragment : PlayerFragment() {
                     playbackService?.player?.let { player ->
                         setPipActions(player.isPlaying)
                     }
-                    applyChatOnlyWhileCastingCurrent()
+                    onPlayerContentReady()
                 }
             }
 
