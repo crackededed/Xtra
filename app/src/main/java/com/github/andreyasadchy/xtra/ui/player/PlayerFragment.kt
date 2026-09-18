@@ -2467,6 +2467,20 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             castStreamController = CastStreamController(manager)
             binding.playerControls.castButton.dialogFactory = CastControllerDialogFactory()
             manager.playCurrentRequest = castPlayRequestAction
+
+            // Restore cast session state after app restart
+            if (manager.isConnected && !manager.hasCastedContent()) {
+                val service = playbackService
+                if (service != null) {
+                    manager.setCastedContent(
+                        service.type,
+                        service.channelId,
+                        service.videoId,
+                        service.clipId,
+                    )
+                }
+            }
+
             val callback = CastManager.ConnectionCallback { connected ->
                 if (connected) {
                     onCastConnected()
