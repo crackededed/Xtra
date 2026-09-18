@@ -101,8 +101,8 @@ class ChatReplayManagerLocal(
                             val last = messages.lastOrNull()
                             if (first != last && first?.createdAt != null && last?.createdAt != null) {
                                 if (first.offsetSeconds == null || last.offsetSeconds == null || first.offsetSeconds != last.offsetSeconds) {
-                                    val firstCreatedAt = Instant.parseOrNull(first.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
-                                    val lastCreatedAt = Instant.parseOrNull(last.createdAt)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 }
+                                    val firstCreatedAt = Instant.parseOrNull(first.createdAt)?.epochSeconds?.takeIf { it > 0 }
+                                    val lastCreatedAt = Instant.parseOrNull(last.createdAt)?.epochSeconds?.takeIf { it > 0 }
                                     firstCreatedAt == null || lastCreatedAt == null || firstCreatedAt == lastCreatedAt
                                 } else true
                             } else true
