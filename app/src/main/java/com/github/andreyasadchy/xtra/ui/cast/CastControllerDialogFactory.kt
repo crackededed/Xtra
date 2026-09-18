@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
@@ -21,6 +22,8 @@ import androidx.mediarouter.app.MediaRouteControllerDialogFragment
 import androidx.mediarouter.app.MediaRouteDialogFactory
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.XtraApp
+import com.github.andreyasadchy.xtra.util.C
+import com.github.andreyasadchy.xtra.util.prefs
 
 class CastControllerDialogFactory : MediaRouteDialogFactory() {
 
@@ -47,10 +50,6 @@ class CastControllerDialogFactory : MediaRouteDialogFactory() {
         private var playCurrentButton: Button? = null
         private var accentColor: Int? = null
         private var volumeBackgroundColor: Int? = null
-        private var titleView: View? = null
-        private var stopButton: Button? = null
-        private var titleBarView: View? = null
-        private var actionBarView: View? = null
 
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
@@ -88,9 +87,10 @@ class CastControllerDialogFactory : MediaRouteDialogFactory() {
             val accent = accentColor ?: resolveAccentColor()?.also { accentColor = it } ?: return
             val background = volumeBackgroundColor ?: resolveVolumeBackgroundColor().also { volumeBackgroundColor = it }
 
-            styleContainerBackgrounds(background)
-            styleTitleBar(accent, background)
-            styleActionBar(background)
+            applyDialogBackground(background)
+            findViewById<View>(androidx.mediarouter.R.id.mr_media_main_control)?.setBackgroundColor(Color.TRANSPARENT)
+            styleTitleBar(accent)
+            styleActionBar()
             stylePlayButton(accent)
         }
 
@@ -100,40 +100,50 @@ class CastControllerDialogFactory : MediaRouteDialogFactory() {
             }
         }
 
-        private fun styleContainerBackgrounds(background: Int) {
-            // Change background of the dialog area and main content area
-            findViewById<View>(androidx.mediarouter.R.id.mr_dialog_area)?.setBackgroundColor(background)
-            findViewById<View>(androidx.mediarouter.R.id.mr_media_main_control)?.setBackgroundColor(background)
-
-            // Also change background of any View that has a ColorDrawable background
-            window?.decorView?.let { decorView ->
-                changeBackgroundsOfSubviews(decorView, background)
+        private fun applyDialogBackground(background: Int) {
+            val radiusPx = resolveCornerRadiusPx()
+            window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            val dialogBackground = GradientDrawable().apply {
+                setColor(background)
+                cornerRadius = radiusPx
+            }
+            val dialogArea = findViewById<View>(androidx.mediarouter.R.id.mr_dialog_area)
+            if (dialogArea != null) {
+                dialogArea.background = dialogBackground
+            } else {
+                window?.setBackgroundDrawable(dialogBackground)
             }
         }
 
-        private fun changeBackgroundsOfSubviews(view: View, background: Int) {
-            if (view is ViewGroup) {
-                for (index in 0 until view.childCount) {
-                    val child = view.getChildAt(index)
-                    if (child.background is ColorDrawable) {
-                        (child.background as ColorDrawable).color = background
-                    }
-                    changeBackgroundsOfSubviews(child, background)
-                }
+        private fun resolveCornerRadiusPx(): Float {
+            val cornerPreference = try {
+                context.prefs().getString(C.UI_THEME_ROUNDED_CORNERS, "0")
+            } catch (_: Exception) {
+                "0"
             }
+            if (cornerPreference == "2") {
+                return 0f
+            }
+            val value = TypedValue()
+            if (context.theme.resolveAttribute(com.google.android.material.R.attr.shapeCornerSizeExtraLarge, value, true) &&
+                value.type == TypedValue.TYPE_DIMENSION
+            ) {
+                return TypedValue.complexToDimension(value.data, context.resources.displayMetrics)
+            }
+            return 28f * context.resources.displayMetrics.density
         }
 
-        private fun styleTitleBar(accent: Int, background: Int) {
+        private fun styleTitleBar(accent: Int) {
             val titleBar = findTitleBarView()
             titleBar?.let {
-                it.setBackgroundColor(background)
+                it.setBackgroundColor(Color.TRANSPARENT)
                 setTextViewColors(it, accent)
             }
         }
 
-        private fun styleActionBar(background: Int) {
+        private fun styleActionBar() {
             val actionBar = findActionBarView()
-            actionBar?.setBackgroundColor(background)
+            actionBar?.setBackgroundColor(Color.TRANSPARENT)
         }
 
         private fun findTitleBarView(): View? {
