@@ -1483,7 +1483,7 @@ class HelixRepository(
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
-                    null
+                    json.decodeFromString<JsonElement>(response.body.decodeToString()).jsonObject["data"]?.jsonArray?.firstOrNull()?.jsonObject?.get("color")?.jsonPrimitive?.contentOrNull
                 } else {
                     response.body.decodeToString()
                 }
@@ -1506,7 +1506,7 @@ class HelixRepository(
                     }
                 }
                 if (response.info.httpStatusCode in 200..299) {
-                    null
+                    json.decodeFromString<JsonElement>(response.body.decodeToString()).jsonObject["data"]?.jsonArray?.firstOrNull()?.jsonObject?.get("color")?.jsonPrimitive?.contentOrNull
                 } else {
                     response.body.decodeToString()
                 }
