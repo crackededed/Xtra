@@ -3,6 +3,7 @@ package com.github.andreyasadchy.xtra.ui.cast
 import android.app.Dialog
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.TypedValue
@@ -12,6 +13,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.SeekBar
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.widget.ImageViewCompat
 import androidx.mediarouter.app.MediaRouteControllerDialog
@@ -45,21 +47,205 @@ class CastControllerDialogFactory : MediaRouteDialogFactory() {
         private var playCurrentButton: Button? = null
         private var accentColor: Int? = null
         private var volumeBackgroundColor: Int? = null
+        private var titleView: View? = null
+        private var stopButton: Button? = null
+        private var titleBarView: View? = null
+        private var actionBarView: View? = null
 
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             styleVolumeControls()
+            styleTitleAndButtons()
+        }
+
+        private fun resolveThemeColor(attributeRes: Int): Int {
+            val value = TypedValue()
+            if (!context.theme.resolveAttribute(attributeRes, value, true)) {
+                return 0
+            }
+            return when {
+                value.type >= TypedValue.TYPE_FIRST_COLOR_INT && value.type <= TypedValue.TYPE_LAST_COLOR_INT -> value.data
+                value.resourceId != 0 -> ContextCompat.getColor(context, value.resourceId)
+                else -> 0
+            }
         }
 
         override fun onStart() {
             super.onStart()
             addPlayCurrentButton()
+            styleTitleAndButtons()
         }
 
         override fun onWindowFocusChanged(hasFocus: Boolean) {
             super.onWindowFocusChanged(hasFocus)
             if (hasFocus) {
                 styleVolumeControls()
+                styleTitleAndButtons()
+            }
+        }
+
+        private fun styleTitleAndButtons() {
+            val accent = accentColor ?: resolveAccentColor()?.also { accentColor = it } ?: return
+            val background = volumeBackgroundColor ?: resolveVolumeBackgroundColor().also { volumeBackgroundColor = it }
+
+            styleContainerBackgrounds(background)
+            styleTitleBar(accent, background)
+            styleActionBar(background)
+            stylePlayButton(accent)
+        }
+
+        private fun stylePlayButton(accent: Int) {
+            playCurrentButton?.let { button ->
+                (button as? TextView)?.setTextColor(ColorStateList.valueOf(accent))
+            }
+        }
+
+        private fun styleContainerBackgrounds(background: Int) {
+            // Change background of the dialog area and main content area
+            findViewById<View>(androidx.mediarouter.R.id.mr_dialog_area)?.setBackgroundColor(background)
+            findViewById<View>(androidx.mediarouter.R.id.mr_media_main_control)?.setBackgroundColor(background)
+
+            // Also change background of any View that has a ColorDrawable background
+            window?.decorView?.let { decorView ->
+                changeBackgroundsOfSubviews(decorView, background)
+            }
+        }
+
+        private fun changeBackgroundsOfSubviews(view: View, background: Int) {
+            if (view is ViewGroup) {
+                for (index in 0 until view.childCount) {
+                    val child = view.getChildAt(index)
+                    if (child.background is ColorDrawable) {
+                        (child.background as ColorDrawable).color = background
+                    }
+                    changeBackgroundsOfSubviews(child, background)
+                }
+            }
+        }
+
+        private fun styleTitleBar(accent: Int, background: Int) {
+            val titleBar = findTitleBarView()
+            titleBar?.let {
+                it.setBackgroundColor(background)
+                setTextViewColors(it, accent)
+            }
+        }
+
+        private fun styleActionBar(background: Int) {
+            val actionBar = findActionBarView()
+            actionBar?.setBackgroundColor(background)
+        }
+
+        private fun findTitleBarView(): View? {
+            val root = window?.decorView as? ViewGroup ?: return null
+            val stopText = context.getString(androidx.mediarouter.R.string.mr_controller_stop_casting)
+            val disconnectText = context.getString(androidx.mediarouter.R.string.mr_controller_disconnect)
+            
+            val queue = ArrayDeque<View>()
+            queue.add(root)
+            
+            while (queue.isNotEmpty()) {
+                val view = queue.removeFirst()
+                if (view is ViewGroup) {
+                    var hasDeviceName = false
+                    var hasActionButton = false
+                    
+                    for (index in 0 until view.childCount) {
+                        val child = view.getChildAt(index)
+                        when (child) {
+                            is TextView -> {
+                                val text = child.text?.toString() ?: continue
+                                if (text.isNotEmpty() && text != stopText && text != disconnectText) {
+                                    hasDeviceName = true
+                                }
+                            }
+                            is Button -> {
+                                if (child.visibility == View.VISIBLE &&
+                                    (child.text?.toString() == stopText || child.text?.toString() == disconnectText)) {
+                                    hasActionButton = true
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (hasDeviceName && !hasActionButton) {
+                        return view
+                    }
+                }
+                if (view is ViewGroup) {
+                    for (index in 0 until view.childCount) {
+                        queue.add(view.getChildAt(index))
+                    }
+                }
+            }
+            return null
+        }
+
+        private fun findActionBarView(): View? {
+            val root = window?.decorView as? ViewGroup ?: return null
+            val stopText = context.getString(androidx.mediarouter.R.string.mr_controller_stop_casting)
+            val disconnectText = context.getString(androidx.mediarouter.R.string.mr_controller_disconnect)
+            
+            val queue = ArrayDeque<View>()
+            queue.add(root)
+            
+            while (queue.isNotEmpty()) {
+                val view = queue.removeFirst()
+                if (view is ViewGroup) {
+                    for (index in 0 until view.childCount) {
+                        val child = view.getChildAt(index)
+                        if (child is Button && child.visibility == View.VISIBLE &&
+                            (child.text?.toString() == stopText || child.text?.toString() == disconnectText ||
+                             child.text?.toString() == context.getString(R.string.play_current_stream))) {
+                            return view
+                        }
+                    }
+                }
+                if (view is ViewGroup) {
+                    for (index in 0 until view.childCount) {
+                        queue.add(view.getChildAt(index))
+                    }
+                }
+            }
+            return null
+        }
+
+        private fun setTextViewColors(view: View, color: Int) {
+            if (view is TextView) {
+                view.setTextColor(color)
+            } else if (view is ViewGroup) {
+                for (index in 0 until view.childCount) {
+                    setTextViewColors(view.getChildAt(index), color)
+                }
+            }
+        }
+
+        private fun resolveAccentColor(): Int? {
+            val color = resolveThemeColor(androidx.appcompat.R.attr.colorPrimary)
+            return if (color != 0) color else null
+        }
+
+        private fun resolveVolumeBackgroundColor(): Int {
+            val surfaceColor = resolveThemeColor(com.google.android.material.R.attr.colorSurface)
+            if (surfaceColor != 0) return surfaceColor
+
+            val dialogArea = findViewById<View>(androidx.mediarouter.R.id.mr_dialog_area)
+            val background = dialogArea?.background
+            if (background is ColorDrawable) {
+                return background.color
+            }
+
+            val isLightTheme = try {
+                context.obtainStyledAttributes(intArrayOf(androidx.appcompat.R.attr.isLightTheme)).use {
+                    it.getBoolean(0, false)
+                }
+            } catch (_: Exception) {
+                false
+            }
+            return if (isLightTheme) {
+                ContextCompat.getColor(context, R.color.lightScrim)
+            } else {
+                ContextCompat.getColor(context, R.color.darkScrim)
             }
         }
 
@@ -90,23 +276,6 @@ class CastControllerDialogFactory : MediaRouteDialogFactory() {
             }
         }
 
-        private fun resolveAccentColor(): Int? {
-            val value = TypedValue()
-            if (!context.theme.resolveAttribute(androidx.appcompat.R.attr.colorPrimary, value, true)) {
-                return null
-            }
-            return when {
-                value.type >= TypedValue.TYPE_FIRST_COLOR_INT && value.type <= TypedValue.TYPE_LAST_COLOR_INT -> value.data
-                value.resourceId != 0 -> ContextCompat.getColor(context, value.resourceId)
-                else -> null
-            }
-        }
-
-        private fun resolveVolumeBackgroundColor(): Int {
-            return (findViewById<View>(androidx.mediarouter.R.id.mr_dialog_area)?.background as? ColorDrawable)?.color
-                ?: DEFAULT_VOLUME_BACKGROUND
-        }
-
         private fun addPlayCurrentButton() {
             if (playCurrentButton != null) return
             val castManager = (context.applicationContext as? XtraApp)?.xtraModule?.castManager ?: return
@@ -114,7 +283,6 @@ class CastControllerDialogFactory : MediaRouteDialogFactory() {
             val bar = reference.parent as? ViewGroup ?: return
             val button = Button(context, null, android.R.attr.borderlessButtonStyle).apply {
                 text = context.getText(R.string.play_current_stream)
-                setTextColor(reference.currentTextColor)
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, reference.textSize)
                 typeface = reference.typeface
                 transformationMethod = reference.transformationMethod
