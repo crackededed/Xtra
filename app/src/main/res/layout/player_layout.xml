@@ -167,7 +167,7 @@
             android:layout_gravity="center_vertical"
             android:contentDescription="@string/cast"
             android:visibility="gone"
-            app:icon="@drawable/ic_cast" />
+            app:mediaRouteButtonTint="@android:color/white" />
 
         <ImageButton
             android:id="@+id/download"
