@@ -288,4 +288,5 @@ object C {
     const val USE_WEBVIEW_INTEGRITY = "use_webview_integrity"
     const val GET_ALL_GQL_HEADERS = "get_all_gql_headers"
     const val CAST_BUTTON_VOD = "cast_button_vod"
+    const val PLAYER_SHOW_CAST_BUTTON = "player_show_cast_button"
 }

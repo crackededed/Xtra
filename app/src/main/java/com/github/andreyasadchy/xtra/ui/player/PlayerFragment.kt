@@ -2463,7 +2463,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 .addControlCategory(CastMediaControlIntent.categoryForCast(CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID))
                 .build()
             binding.playerControls.castButton.routeSelector = routeSelector
-            binding.playerControls.castButton.visibility = View.VISIBLE
+            binding.playerControls.castButton.visibility = if (requireContext().prefs().getBoolean(C.PLAYER_SHOW_CAST_BUTTON, true)) View.VISIBLE else View.GONE
             castStreamController = CastStreamController(manager)
             binding.playerControls.castButton.dialogFactory = CastControllerDialogFactory()
             manager.playCurrentRequest = castPlayRequestAction
@@ -2744,7 +2744,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     protected fun updateCastButtonVisibility() {
         val isLiveStream = playbackService?.type == BasePlaybackService.STREAM
         val showCastForVod = requireContext().prefs().getBoolean(C.CAST_BUTTON_VOD, false)
-        binding.playerControls.castButton.visibility = if (isLiveStream || showCastForVod) View.VISIBLE else View.GONE
+        val showCastButton = requireContext().prefs().getBoolean(C.PLAYER_SHOW_CAST_BUTTON, true)
+        binding.playerControls.castButton.visibility = if (showCastButton && (isLiveStream || showCastForVod)) View.VISIBLE else View.GONE
     }
 
     /**

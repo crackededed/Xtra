@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
@@ -6,6 +7,13 @@
         android:key="player_minimize"
         android:title="@string/minimize"
         android:icon="@drawable/baseline_expand_more_black_24"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_show_cast_button"
+        android:title="@string/cast_button_show_title"
+        android:icon="@drawable/quantum_ic_cast_connected_white_24"
         app:singleLineTitle="false" />
 
     <SwitchPreferenceCompat
