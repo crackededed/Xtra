@@ -2674,6 +2674,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         val service = playbackService ?: return
         val resolved = resolveCastQuality(selectedQuality) ?: return
         val url = resolved.url ?: return
+        val isLive = service.type == BasePlaybackService.STREAM
+        val durationMs = if (isLive) null else playbackService?.durationSeconds?.toLong()?.times(1000)
         castStreamController?.changeQuality(
             url,
             CastStreamController.StreamMetadata(
@@ -2681,7 +2683,9 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 channelName = service.channelName,
                 thumbnail = service.thumbnail,
             ),
-            service.type != BasePlaybackService.STREAM,
+            keepPosition = !isLive,
+            isLive = isLive,
+            durationMs = durationMs,
         ) { success ->
             if (success && view != null) {
                 castQuality = resolved

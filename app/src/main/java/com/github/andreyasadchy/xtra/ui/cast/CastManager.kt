@@ -127,7 +127,6 @@ class CastManager(private val appContext: android.content.Context) {
                 onResult(result.status.isSuccess)
             }
         } catch (_: Exception) {
-            // Cast is optional: ignore errors, local playback continues.
             onResult(false)
         }
     }
@@ -136,7 +135,6 @@ class CastManager(private val appContext: android.content.Context) {
         try {
             remoteMediaClient?.stop()
         } catch (_: Exception) {
-            // Cast is optional: ignore errors.
         }
     }
 
@@ -205,17 +203,10 @@ class CastManager(private val appContext: android.content.Context) {
                 castIsPlaying = false
             }
         } catch (_: Exception) {
-            // Cast is optional: ignore errors.
         }
     }
 
-    fun isRemotePlaying(): Boolean {
-        return try {
-            castIsPlaying
-        } catch (_: Exception) {
-            false
-        }
-    }
+    fun isRemotePlaying(): Boolean = castIsPlaying
 
     fun hasActiveMedia(): Boolean {
         return try {
@@ -229,7 +220,6 @@ class CastManager(private val appContext: android.content.Context) {
         try {
             remoteMediaClient?.play()
         } catch (_: Exception) {
-            // Cast is optional: ignore errors.
         }
     }
 
@@ -237,7 +227,6 @@ class CastManager(private val appContext: android.content.Context) {
         try {
             remoteMediaClient?.pause()
         } catch (_: Exception) {
-            // Cast is optional: ignore errors.
         }
     }
 
@@ -248,7 +237,6 @@ class CastManager(private val appContext: android.content.Context) {
                 client.seek(positionMs)
             }
         } catch (_: Exception) {
-            // Cast is optional: ignore errors.
         }
     }
 
@@ -258,7 +246,6 @@ class CastManager(private val appContext: android.content.Context) {
             sessionManagerOrNull()?.endCurrentSession(true)
             clearCastedContent()
         } catch (_: Exception) {
-            // Cast is optional: ignore errors.
         }
     }
 
@@ -273,7 +260,6 @@ class CastManager(private val appContext: android.content.Context) {
         try {
             currentSession?.setVolume(volume.coerceIn(0.0, 1.0))
         } catch (_: Exception) {
-            // Cast is optional: ignore errors.
         }
     }
 
@@ -295,7 +281,6 @@ class CastManager(private val appContext: android.content.Context) {
             volumeListenerSession = session
             session.addCastListener(listener)
         } catch (_: Exception) {
-            // Cast is optional: ignore errors.
         }
     }
 
@@ -314,7 +299,6 @@ class CastManager(private val appContext: android.content.Context) {
         try {
             remoteMediaClient?.addListener(listener)
         } catch (_: Exception) {
-            // Cast is optional: ignore errors.
         }
     }
 
@@ -322,7 +306,6 @@ class CastManager(private val appContext: android.content.Context) {
         try {
             remoteMediaClient?.removeListener(listener)
         } catch (_: Exception) {
-            // Cast is optional: ignore errors.
         }
     }
 
@@ -330,7 +313,6 @@ class CastManager(private val appContext: android.content.Context) {
         try {
             sessionManagerOrNull()?.addSessionManagerListener(listener, CastSession::class.java)
         } catch (_: Exception) {
-            // Cast is optional: ignore errors, local playback continues.
         }
     }
 
@@ -362,7 +344,6 @@ class CastManager(private val appContext: android.content.Context) {
         try {
             callback.onConnectionChanged(isConnected)
         } catch (_: Exception) {
-            // Cast is optional: ignore errors, local playback continues.
         }
         return listener
     }
@@ -375,7 +356,6 @@ class CastManager(private val appContext: android.content.Context) {
         try {
             sessionManagerOrNull()?.removeSessionManagerListener(listener, CastSession::class.java)
         } catch (_: Exception) {
-            // Cast is optional: ignore errors, local playback continues.
         }
     }
 

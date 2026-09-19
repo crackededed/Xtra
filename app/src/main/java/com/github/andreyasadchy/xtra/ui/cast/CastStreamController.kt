@@ -62,6 +62,8 @@ class CastStreamController(private val castManager: CastManager) {
         url: String,
         metadata: StreamMetadata,
         keepPosition: Boolean,
+        isLive: Boolean = true,
+        durationMs: Long? = null,
         onResult: (Boolean) -> Unit = {},
     ) {
         val currentTime = if (keepPosition) {
@@ -79,8 +81,8 @@ class CastStreamController(private val castManager: CastManager) {
             metadata.channelName,
             metadata.thumbnail,
             currentTime,
-            !keepPosition,
-            durationMs = null,
+            isLive,
+            durationMs,
             onResult,
         )
     }
