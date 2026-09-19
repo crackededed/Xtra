@@ -1867,6 +1867,20 @@ class MediaPlayerService : BasePlaybackService() {
                         )
                     ).build()
                 )
+                addAction(
+                    Notification.Action.Builder(
+                        Icon.createWithResource(this@MediaPlayerService, androidx.media3.session.R.drawable.media3_icon_stop),
+                        ContextCompat.getString(this@MediaPlayerService, R.string.stop),
+                        PendingIntent.getService(
+                            this@MediaPlayerService,
+                            REQUEST_CODE_STOP,
+                            Intent(this@MediaPlayerService, MediaPlayerService::class.java).apply {
+                                action = INTENT_STOP
+                            },
+                            PendingIntent.FLAG_IMMUTABLE
+                        )
+                    ).build()
+                )
             }.build()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
@@ -2102,6 +2116,18 @@ class MediaPlayerService : BasePlaybackService() {
                     }
                 }
             }
+            INTENT_STOP -> {
+                if (isCastActive()) {
+                    castStop()
+                    stopSelf()
+                } else {
+                    savePosition()
+                    player?.pause()
+                    updatePlayingState()
+                    playerListener?.onIsPlayingChanged()
+                    stopSelf()
+                }
+            }
             INTENT_START -> create(restorePauseState = true)
             Intent.ACTION_MEDIA_BUTTON -> create(restorePauseState = false)
         }
@@ -2144,10 +2170,12 @@ class MediaPlayerService : BasePlaybackService() {
         private const val REQUEST_CODE_REWIND = 1
         private const val REQUEST_CODE_PLAY_PAUSE = 2
         private const val REQUEST_CODE_FAST_FORWARD = 3
+        private const val REQUEST_CODE_STOP = 4
 
         private const val INTENT_REWIND = "com.github.andreyasadchy.xtra.REWIND"
         private const val INTENT_PLAY_PAUSE = "com.github.andreyasadchy.xtra.PLAY_PAUSE"
         private const val INTENT_FAST_FORWARD = "com.github.andreyasadchy.xtra.FAST_FORWARD"
+        private const val INTENT_STOP = "com.github.andreyasadchy.xtra.STOP"
         const val INTENT_START = "com.github.andreyasadchy.xtra.START_PLAYBACK_SERVICE"
     }
 }
