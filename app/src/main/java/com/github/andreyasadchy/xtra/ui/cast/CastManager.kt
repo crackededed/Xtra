@@ -7,6 +7,7 @@ import com.google.android.gms.cast.Cast
 import com.google.android.gms.cast.MediaInfo
 import com.google.android.gms.cast.MediaLoadRequestData
 import com.google.android.gms.cast.MediaMetadata
+import com.google.android.gms.cast.MediaSeekOptions
 import com.google.android.gms.cast.MediaStatus
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.gms.cast.framework.CastSession
@@ -210,7 +211,7 @@ class CastManager(private val appContext: android.content.Context) {
         try {
             val client = remoteMediaClient
             if (client != null && positionMs >= 0) {
-                client.seek(positionMs)
+                client.seek(MediaSeekOptions.Builder().setPosition(positionMs).setResumeState(MediaSeekOptions.RESUME_STATE_PLAY).build())
             }
         } catch (_: Exception) {
         }

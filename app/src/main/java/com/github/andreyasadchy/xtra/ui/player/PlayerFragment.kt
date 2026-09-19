@@ -124,12 +124,12 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     private var startTranslationX = 0f
     private var startTranslationY = 0f
     private var statusBarSwipe = false
+    private var systemUiListener: WindowInsetsControllerCompat.OnControllableInsetsChangedListener? = null
     private var chatStatusBarSwipe = false
     private var isAnimating = false
     private var moveAnimation: ViewPropertyAnimator? = null
     protected var useController = true
 
-    // Cast session state; lifecycle-safe via addConnectionCallback/removeConnectionCallback
     private var castSessionListener: SessionManagerListener<CastSession>? = null
     private var castManager: CastManager? = null
     private var castQuality: VideoQuality? = null
@@ -1170,7 +1170,13 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     private fun initLayout() {
         with(binding) {
             if (isPortrait) {
-                requireActivity().window.decorView.setOnSystemUiVisibilityChangeListener(null)
+                systemUiListener?.let {
+                    WindowCompat.getInsetsController(
+                        requireActivity().window,
+                        requireActivity().window.decorView
+                    ).removeOnControllableInsetsChangedListener(it)
+                    systemUiListener = null
+                }
                 showStatusBar()
                 playerLayout.updateLayoutParams<FrameLayout.LayoutParams> {
                     width = ViewGroup.LayoutParams.MATCH_PARENT
@@ -1220,11 +1226,15 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     toggleChat.visibility = View.GONE
                 }
             } else {
-                requireActivity().window.decorView.setOnSystemUiVisibilityChangeListener {
+                systemUiListener = WindowInsetsControllerCompat.OnControllableInsetsChangedListener { _, _ ->
                     if (!isKeyboardShown && isMaximized && activity != null) {
                         hideStatusBar()
                     }
                 }
+                WindowCompat.getInsetsController(
+                    requireActivity().window,
+                    requireActivity().window.decorView
+                ).addOnControllableInsetsChangedListener(systemUiListener!!)
                 if (isMaximized) {
                     hideStatusBar()
                     val chatWidth = if (isChatOpen) chatWidthLandscape else 0

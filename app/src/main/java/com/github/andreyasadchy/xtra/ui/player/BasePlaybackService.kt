@@ -13,6 +13,7 @@ import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.prefs
 import com.google.android.gms.cast.framework.CastSession
+import com.google.android.gms.cast.MediaSeekOptions
 import com.google.android.gms.cast.framework.SessionManagerListener
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.serialization.json.JsonArray
@@ -248,7 +249,7 @@ abstract class BasePlaybackService : LifecycleService() {
             val client = xtraModule.castManager.remoteMediaClient
             val target = client?.approximateStreamPosition?.plus(deltaMs)
             if (client != null && target != null && target >= 0) {
-                client.seek(target)
+                client.seek(MediaSeekOptions.Builder().setPosition(target).setResumeState(MediaSeekOptions.RESUME_STATE_PLAY).build())
             }
         } catch (_: Exception) {
         }
@@ -400,7 +401,7 @@ abstract class BasePlaybackService : LifecycleService() {
         try {
             val client = xtraModule.castManager.remoteMediaClient
             if (client != null && positionMs >= 0) {
-                client.seek(positionMs)
+                client.seek(MediaSeekOptions.Builder().setPosition(positionMs).setResumeState(MediaSeekOptions.RESUME_STATE_PLAY).build())
             }
         } catch (_: Exception) {
         }
