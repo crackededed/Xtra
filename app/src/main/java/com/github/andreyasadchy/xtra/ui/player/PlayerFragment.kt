@@ -2490,7 +2490,6 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             }
             castSessionListener = manager.addConnectionCallback(callback)
         } catch (_: Exception) {
-            // Cast is optional: ignore errors, local playback continues.
         }
     }
 
@@ -2765,7 +2764,6 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         try {
             castSessionListener?.let { manager?.removeConnectionCallback(it) }
         } catch (_: Exception) {
-            // Cast is optional: ignore errors.
         }
         castSessionListener = null
         castManager = null
