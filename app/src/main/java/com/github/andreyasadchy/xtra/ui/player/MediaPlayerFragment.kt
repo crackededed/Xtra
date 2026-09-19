@@ -86,7 +86,7 @@ class MediaPlayerFragment : PlayerFragment() {
                     if (!started) {
                         if (isInitialized || !enableNetworkCheck) {
                             started = true
-                            updateCastButtonVisibility()
+                            castController.updateButtonVisibility()
                             start()
                         }
                     } else {
@@ -110,7 +110,7 @@ class MediaPlayerFragment : PlayerFragment() {
                         audioOnly.setColorFilter(Color.WHITE)
                         setQualityText()
                     }
-                    onPlayerContentReady()
+                    castController.onLocalContentReady()
                 }
             }
 
@@ -249,7 +249,7 @@ class MediaPlayerFragment : PlayerFragment() {
                     playbackService?.player?.let { player ->
                         setPipActions(player.isPlaying)
                     }
-                    onPlayerContentReady()
+                    castController.onLocalContentReady()
                 }
             }
 

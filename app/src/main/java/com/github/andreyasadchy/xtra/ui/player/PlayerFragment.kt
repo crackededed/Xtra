@@ -57,7 +57,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.TimeBar
-import androidx.mediarouter.media.MediaRouteSelector
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
@@ -67,8 +66,7 @@ import com.github.andreyasadchy.xtra.model.VideoQuality
 import com.github.andreyasadchy.xtra.model.ui.Video
 import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.cast.CastControllerDialogFactory
-import com.github.andreyasadchy.xtra.ui.cast.CastManager
-import com.github.andreyasadchy.xtra.ui.cast.CastStreamController
+import com.github.andreyasadchy.xtra.ui.cast.PlayerCastController
 import com.github.andreyasadchy.xtra.ui.chat.ChatFragment
 import com.github.andreyasadchy.xtra.ui.common.BaseNetworkFragment
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
@@ -84,9 +82,6 @@ import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.isKeyboardShown
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
-import com.google.android.gms.cast.CastMediaControlIntent
-import com.google.android.gms.cast.framework.CastSession
-import com.google.android.gms.cast.framework.SessionManagerListener
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.timepicker.MaterialTimePicker
@@ -105,7 +100,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     protected val binding get() = _binding!!
     protected val viewModel: PlayerViewModel by viewModels { PlayerViewModelFactory }
     protected var chatFragment: ChatFragment? = null
-    protected open val playbackService: BasePlaybackService? = null
+    internal open val playbackService: BasePlaybackService? = null
     protected var started = false
 
     private var isPortrait = false
@@ -130,20 +125,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     private var moveAnimation: ViewPropertyAnimator? = null
     protected var useController = true
 
-    private var castSessionListener: SessionManagerListener<CastSession>? = null
-    private var castManager: CastManager? = null
-    private var castQuality: VideoQuality? = null
-    private var localVideoQuality: VideoQuality? = null
-    private var chatOnlyEnabled = false
-    private var chatOnlyEnabledByCast = false
-    private var castStreamController: CastStreamController? = null
-    private var castPlayInProgress = false
-    private var castPendingTarget: CastTarget? = null
-    private var castPendingOnConnect = false
-    private var castRetryCount = 0
-    private val castRetryHandler = Handler(Looper.getMainLooper())
-    private val castRetryAction = Runnable { retryPendingCast() }
-    private val castPlayRequestAction: () -> Unit = { playCurrentStreamOnCastDevice() }
+    protected lateinit var castController: PlayerCastController
     protected var controllerAutoHide = true
     private var controllerHideOnTouch = true
     private val controllerHideAction = Runnable { if (view != null) hideController() }
@@ -204,6 +186,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        castController = PlayerCastController(this)
         with(binding) {
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -270,7 +253,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             aspectRatioFrameLayout.setAspectRatio(16f / 9f)
             initLayout()
             changePlayerMode()
-            setupCastButton()
+            castController.setup()
             val viewConfiguration = ViewConfiguration.get(requireContext())
             val touchSlop = viewConfiguration.scaledTouchSlop
             val touchSlopRange = -touchSlop.toFloat()..touchSlop.toFloat()
@@ -785,22 +768,18 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     audioOnly.visibility = View.VISIBLE
                     audioOnly.setOnClickListener {
                         showController(force = true)
-                        if (isCastingCurrentContent()) {
+                        if (castController.isCastingCurrentContent()) {
                             if (playbackService?.quality?.name == VideoQuality.AUDIO_ONLY_QUALITY) {
-                                changeCastQuality(playbackService?.previousQuality)
+                                castController.changeQuality(playbackService?.previousQuality)
                             } else {
-                                changeCastQuality(playbackService?.qualities?.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY })
+                                castController.changeQuality(playbackService?.qualities?.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY })
                             }
                         } else {
-                            chatOnlyEnabled = false
-                            chatOnlyEnabledByCast = false
                             if (playbackService?.quality?.name == VideoQuality.AUDIO_ONLY_QUALITY) {
                                 changeQuality(playbackService?.previousQuality)
                             } else {
                                 changeQuality(playbackService?.qualities?.find { it.name == VideoQuality.AUDIO_ONLY_QUALITY })
                             }
-                            localVideoQuality = playbackService?.quality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
-                                ?: localVideoQuality
                             changePlayerMode()
                         }
                     }
@@ -1165,6 +1144,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 chatFragment = fragment
             }
         }
+        castController.updateButtonVisibility()
     }
 
     private fun initLayout() {
@@ -1420,15 +1400,15 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 qualities.map { it.second.url.toString() }.toTypedArray(),
                 checkedIndex,
                 getString(R.string.chat_only),
-                chatOnlyEnabled,
+                castController.chatOnlyEnabled,
             ).show(childFragmentManager, "closeOnPip")
         }
     }
 
-    private fun validLocalVideoQuality(): VideoQuality? {
+    internal fun validLocalVideoQuality(): VideoQuality? {
         val service = playbackService
         val qualities = service?.qualities
-        return localVideoQuality?.let { saved ->
+        return castController.localVideoQuality?.let { saved ->
             qualities?.find { it.name == saved.name && it.url == saved.url }
         } ?: service?.quality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
             ?: service?.previousQuality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
@@ -1437,8 +1417,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     private fun currentDialogQuality(): VideoQuality? {
         val qualities = getQualities()?.filter { it.second.name != VideoQuality.CHAT_ONLY_QUALITY }
-        return if (isCastingCurrentContent()) {
-            val remembered = castQuality?.let { selected ->
+        return if (castController.isCastingCurrentContent()) {
+            val remembered = castController.castQuality?.let { selected ->
                 qualities?.find { it.second.name == selected.name && it.second.url == selected.url }?.second
             }
             remembered ?: validLocalVideoQuality()
@@ -2354,12 +2334,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     override fun onCheckedChange(requestCode: Int, checked: Boolean) {
         if (requestCode == REQUEST_CODE_QUALITY) {
             if (checked) {
-                localVideoQuality = playbackService?.quality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
-                    ?: localVideoQuality
+                // localVideoQuality is managed by the controller
             }
-            chatOnlyEnabled = checked
-            chatOnlyEnabledByCast = false
-            setLocalChatOnly(checked)
+            // chatOnlyEnabled is managed by the controller
+            castController.setLocalChatOnly(checked)
         }
     }
 
@@ -2367,12 +2345,11 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         when (requestCode) {
             REQUEST_CODE_QUALITY -> {
                 val selectedQuality = playbackService?.qualities?.find { it.name == tag && it.url == tag2 }
-                if (isCastingCurrentContent()) {
-                    changeCastQuality(selectedQuality)
+                if (castController.isCastingCurrentContent()) {
+                    castController.changeQuality(selectedQuality)
                 } else {
-                    selectedQuality?.let { localVideoQuality = it }
-                    chatOnlyEnabled = false
-                    chatOnlyEnabledByCast = false
+                    selectedQuality?.let { castController.localVideoQuality = it }
+                    // chatOnlyEnabled and chatOnlyEnabledByCast are managed by the controller
                     changeQuality(selectedQuality)
                     changePlayerMode()
                     setQualityText()
@@ -2465,342 +2442,11 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         }
     }
 
-    private fun setupCastButton() {
-        try {
-            val manager = (requireActivity().application as? XtraApp)?.xtraModule?.castManager ?: return
-            castManager = manager
-            val routeSelector = MediaRouteSelector.Builder()
-                .addControlCategory(CastMediaControlIntent.categoryForCast(CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID))
-                .build()
-            binding.playerControls.castButton.routeSelector = routeSelector
-            binding.playerControls.castButton.visibility = if (requireContext().prefs().getBoolean(C.PLAYER_SHOW_CAST_BUTTON, true)) View.VISIBLE else View.GONE
-            castStreamController = CastStreamController(manager)
-            binding.playerControls.castButton.dialogFactory = CastControllerDialogFactory()
-            manager.playCurrentRequest = castPlayRequestAction
-
-            // Restore cast session state after app restart
-            if (manager.isConnected && !manager.hasCastedContent()) {
-                val service = playbackService
-                if (service != null) {
-                    manager.setCastedContent(
-                        service.type,
-                        service.channelId,
-                        service.videoId,
-                        service.clipId,
-                    )
-                }
-            }
-
-            val callback = CastManager.ConnectionCallback { connected ->
-                if (connected) {
-                    onCastConnected()
-                } else {
-                    onCastDisconnected()
-                }
-            }
-            castSessionListener = manager.addConnectionCallback(callback)
-        } catch (_: Exception) {
-        }
-    }
-
-    private fun setLocalChatOnly(enabled: Boolean) {
-        if (enabled) {
-            if (playbackService?.quality?.name != VideoQuality.CHAT_ONLY_QUALITY) {
-                localVideoQuality = playbackService?.quality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
-                    ?: localVideoQuality
-                changeQuality(playbackService?.qualities?.find { it.name == VideoQuality.CHAT_ONLY_QUALITY })
-                changePlayerMode()
-                setQualityText()
-            }
-        } else {
-            if (playbackService?.quality?.name == VideoQuality.CHAT_ONLY_QUALITY) {
-                val restoreQuality = validLocalVideoQuality()
-                if (restoreQuality != null) {
-                    changeQuality(restoreQuality)
-                    changePlayerMode()
-                    setQualityText()
-                    if (!isCastConnected()) {
-                        resumeLocalPlayback()
-                    }
-                }
-            }
-        }
-    }
-
-    protected fun onPlayerContentReady() {
-        retryPendingCast()
-        if (!isCastingCurrentContent()) return
-        val service = playbackService ?: return
-        val qualityName = service.quality?.name
-        if (qualityName == VideoQuality.CHAT_ONLY_QUALITY || qualityName == VideoQuality.AUDIO_ONLY_QUALITY) return
-        if (!chatOnlyEnabled) {
-            chatOnlyEnabled = true
-            chatOnlyEnabledByCast = true
-        }
-        setLocalChatOnly(true)
-        pauseLocalPlayback()
-    }
-
-    private fun showCastToast(resId: Int) {
-        if (view != null) {
-            Toast.makeText(requireContext(), resId, Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun playCurrentStreamOnCastDevice() {
-        if (castPlayInProgress) {
-            showCastToast(R.string.cast_play_stream_in_progress)
-            return
-        }
-        if (!isCastConnected()) {
-            showCastToast(R.string.cast_not_connected)
-            return
-        }
-        if (!requestCastCurrentStream()) {
-            showCastToast(R.string.cast_play_stream_not_ready)
-        }
-    }
-
-    private fun requestCastCurrentStream(): Boolean {
-        val service = playbackService ?: return false
-        val controller = castStreamController ?: return false
-        val target = CastTarget(service.type, service.channelId, service.videoId, service.clipId)
-        castPendingOnConnect = false
-        val resolved = resolveCastableQuality()
-        val url = resolved?.url
-        if (resolved == null || url.isNullOrBlank()) {
-            if (castPendingTarget != target) {
-                castRetryCount = 0
-            }
-            castPendingTarget = target
-            scheduleCastRetry()
-            return false
-        }
-        castPendingTarget = null
-        castRetryCount = 0
-        if (castPlayInProgress) return true
-        castPlayInProgress = true
-        controller.play(
-            url,
-            CastStreamController.StreamMetadata(
-                title = service.title,
-                channelName = service.channelName,
-                thumbnail = service.thumbnail,
-            ),
-            isLive = service.type != BasePlaybackService.STREAM,
-            durationMs = playbackService?.durationSeconds?.toLong()?.times(1000),
-        ) { success ->
-            castPlayInProgress = false
-            if (success) {
-                castQuality = resolved
-                castManager?.setCastedContent(target.type, target.channelId, target.videoId, target.clipId)
-                onPlayerContentReady()
-                setQualityText()
-            } else {
-                showCastToast(R.string.cast_play_stream_failed)
-            }
-        }
-        return true
-    }
-
-    private fun resolveCastableQuality(): VideoQuality? {
-        return resolveCastQuality(validLocalVideoQuality())
-            ?: playbackService?.qualities?.firstOrNull {
-                it.name != VideoQuality.AUTO_QUALITY &&
-                    it.name != VideoQuality.AUDIO_ONLY_QUALITY &&
-                    it.name != VideoQuality.CHAT_ONLY_QUALITY &&
-                    !it.url.isNullOrBlank()
-            }
-    }
-
-    private fun scheduleCastRetry() {
-        castRetryHandler.removeCallbacks(castRetryAction)
-        if (castRetryCount >= CAST_RETRY_LIMIT) {
-            cancelPendingCast()
-            return
-        }
-        castRetryCount++
-        castRetryHandler.postDelayed(castRetryAction, CAST_RETRY_DELAY)
-    }
-
-    private fun retryPendingCast() {
-        if (castPlayInProgress) return
-        if (!isCastConnected()) {
-            cancelPendingCast()
-            return
-        }
-        if (castPendingOnConnect) {
-            if (castManager?.hasCastedContent() == true) {
-                cancelPendingCast()
-                return
-            }
-            if (playbackService == null || castStreamController == null) {
-                scheduleCastRetry()
-                return
-            }
-            requestCastCurrentStream()
-            return
-        }
-        val target = castPendingTarget ?: return
-        val service = playbackService ?: run {
-            scheduleCastRetry()
-            return
-        }
-        if (target != CastTarget(service.type, service.channelId, service.videoId, service.clipId)) {
-            cancelPendingCast()
-            return
-        }
-        requestCastCurrentStream()
-    }
-
-    private fun cancelPendingCast() {
-        castRetryHandler.removeCallbacks(castRetryAction)
-        castRetryCount = 0
-        castPendingTarget = null
-        castPendingOnConnect = false
-    }
-
-    private fun onCastConnected() {
-        castManager?.setControlsEnabled(true)
-        val service = playbackService
-        if (castManager?.hasCastedContent() == true) {
-            if (service != null && isCastingCurrentContent()) {
-                onPlayerContentReady()
-            }
-            return
-        }
-        if (service == null) {
-            castPendingOnConnect = true
-            scheduleCastRetry()
-            return
-        }
-        localVideoQuality = service.quality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
-            ?: validLocalVideoQuality()
-        requestCastCurrentStream()
-    }
-
-    private fun changeCastQuality(selectedQuality: VideoQuality?) {
-        val service = playbackService ?: return
-        val resolved = resolveCastQuality(selectedQuality) ?: return
-        val url = resolved.url ?: return
-        val isLive = service.type == BasePlaybackService.STREAM
-        val durationMs = if (isLive) null else playbackService?.durationSeconds?.toLong()?.times(1000)
-        castStreamController?.changeQuality(
-            url,
-            CastStreamController.StreamMetadata(
-                title = service.title,
-                channelName = service.channelName,
-                thumbnail = service.thumbnail,
-            ),
-            isLive = isLive,
-            durationMs = durationMs,
-        ) { success ->
-            if (success && view != null) {
-                castQuality = resolved
-                setQualityText()
-            }
-        }
-    }
-
-    private fun resolveCastQuality(selectedQuality: VideoQuality?): VideoQuality? {
-        val qualities = playbackService?.qualities
-        return if (selectedQuality?.name == VideoQuality.AUTO_QUALITY) {
-            qualities?.firstOrNull {
-                it.name != VideoQuality.AUTO_QUALITY &&
-                    it.name != VideoQuality.AUDIO_ONLY_QUALITY &&
-                    it.name != VideoQuality.CHAT_ONLY_QUALITY &&
-                    !it.url.isNullOrBlank()
-            }
-        } else {
-            selectedQuality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY && !it.url.isNullOrBlank() }
-        }
-    }
-
-    private fun isCastConnected(): Boolean {
-        return try {
-            castManager?.isConnected == true
-        } catch (_: Exception) {
-            false
-        }
-    }
-
-    private fun isCastingCurrentContent(): Boolean {
-        return try {
-            castManager?.isCastingContent(
-                playbackService?.type,
-                playbackService?.channelId,
-                playbackService?.videoId,
-                playbackService?.clipId,
-            ) == true
-        } catch (_: Exception) {
-            false
-        }
-    }
-
-    private fun onCastDisconnected() {
-        val wasCastingCurrent = isCastingCurrentContent()
-        cancelPendingCast()
-        castQuality = null
-        castManager?.clearCastedContent()
-        castManager?.setControlsEnabled(false)
-        if (wasCastingCurrent) {
-            if (chatOnlyEnabledByCast) {
-                chatOnlyEnabled = false
-                chatOnlyEnabledByCast = false
-                setLocalChatOnly(false)
-            }
-            resumeLocalPlayback()
-        }
-    }
-
-    protected fun updateCastButtonVisibility() {
-        val isLiveStream = playbackService?.type == BasePlaybackService.STREAM
-        val showCastForVod = requireContext().prefs().getBoolean(C.CAST_BUTTON_VOD, false)
-        val showCastButton = requireContext().prefs().getBoolean(C.PLAYER_SHOW_CAST_BUTTON, true)
-        binding.playerControls.castButton.visibility = if (showCastButton && (isLiveStream || showCastForVod)) View.VISIBLE else View.GONE
-    }
-
-    /**
-     * Removes the cast session listener registered by [setupCastButton].
-     * Called from [onDestroyView] to avoid leaks when the view is destroyed.
-     */
-    private fun cleanupCast() {
-        castQuality = null
-        cancelPendingCast()
-        val manager = castManager
-        if (manager?.playCurrentRequest === castPlayRequestAction) {
-            manager.playCurrentRequest = null
-        }
-        try {
-            castSessionListener?.let { manager?.removeConnectionCallback(it) }
-        } catch (_: Exception) {
-        }
-        castSessionListener = null
-        castManager = null
-        castStreamController?.setErrorListener(null)
-        castStreamController = null
-    }
-
-    override fun onDestroyView() {
-        cleanupCast()
-        super.onDestroyView()
-        _binding = null
-    }
-
     companion object {
         private const val REQUEST_CODE_QUALITY = 0
         private const val REQUEST_CODE_SPEED = 1
         private const val REQUEST_CODE_AUDIO_ONLY = 2
         private const val REQUEST_CODE_PLAY_PAUSE = 3
-        private const val CAST_RETRY_DELAY = 500L
-        private const val CAST_RETRY_LIMIT = 20
         const val KEY_OFFLINE = "offline"
     }
-
-    private data class CastTarget(
-        val type: String?,
-        val channelId: String?,
-        val videoId: String?,
-        val clipId: String?,
-    )
 }

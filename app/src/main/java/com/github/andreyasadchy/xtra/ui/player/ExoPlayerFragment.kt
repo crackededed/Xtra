@@ -173,7 +173,7 @@ class ExoPlayerFragment : PlayerFragment() {
                     if (!started) {
                         if (isInitialized || !enableNetworkCheck) {
                             started = true
-                            updateCastButtonVisibility()
+                            castController.updateButtonVisibility()
                             start()
                         }
                     } else {
@@ -197,7 +197,7 @@ class ExoPlayerFragment : PlayerFragment() {
                         audioOnly.setColorFilter(Color.WHITE)
                         setQualityText()
                     }
-                    onPlayerContentReady()
+                    castController.onLocalContentReady()
                 }
             }
 
@@ -307,7 +307,7 @@ class ExoPlayerFragment : PlayerFragment() {
                     playbackService?.player?.let { player ->
                         setPipActions(player.playbackState != Player.STATE_ENDED && player.playbackState != Player.STATE_IDLE && player.playWhenReady)
                     }
-                    onPlayerContentReady()
+                    castController.onLocalContentReady()
                 }
             }
 
