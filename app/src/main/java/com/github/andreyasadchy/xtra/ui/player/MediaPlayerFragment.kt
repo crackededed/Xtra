@@ -86,6 +86,7 @@ class MediaPlayerFragment : PlayerFragment() {
                     if (!started) {
                         if (isInitialized || !enableNetworkCheck) {
                             started = true
+                            updateCastButtonVisibility()
                             start()
                         }
                     } else {

@@ -173,6 +173,7 @@ class ExoPlayerFragment : PlayerFragment() {
                     if (!started) {
                         if (isInitialized || !enableNetworkCheck) {
                             started = true
+                            updateCastButtonVisibility()
                             start()
                         }
                     } else {

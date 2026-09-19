@@ -2739,6 +2739,12 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         }
     }
 
+    protected fun updateCastButtonVisibility() {
+        val isLiveStream = playbackService?.type == BasePlaybackService.STREAM
+        val showCastForVod = requireContext().prefs().getBoolean(C.CAST_BUTTON_VOD, false)
+        binding.playerControls.castButton.visibility = if (isLiveStream || showCastForVod) View.VISIBLE else View.GONE
+    }
+
     /**
      * Removes the cast session listener registered by [setupCastButton].
      * Called from [onDestroyView] to avoid leaks when the view is destroyed.

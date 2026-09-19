@@ -598,4 +598,5 @@
     <string name="cast_play_stream_not_ready">The stream is not ready yet</string>
     <string name="cast_play_stream_in_progress">The stream is already being sent to the cast device</string>
     <string name="cast_not_connected">Not connected to a cast device</string>
+    <string name="cast_button_vod_title">Show Cast Button for VODs</string>
 </resources>
