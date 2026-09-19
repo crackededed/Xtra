@@ -39,12 +39,21 @@ class CastStreamController(private val castManager: CastManager) {
         }
     }
 
-    fun play(url: String, metadata: StreamMetadata, onResult: (Boolean) -> Unit = {}) {
+    fun play(
+        url: String,
+        metadata: StreamMetadata,
+        isLive: Boolean = true,
+        durationMs: Long? = null,
+        onResult: (Boolean) -> Unit = {},
+    ) {
         castManager.loadStream(
             url,
             metadata.title,
             metadata.channelName,
             metadata.thumbnail,
+            currentTimeMs = null,
+            isLive = isLive,
+            durationMs = durationMs,
             onResult = onResult,
         )
     }
@@ -71,6 +80,7 @@ class CastStreamController(private val castManager: CastManager) {
             metadata.thumbnail,
             currentTime,
             !keepPosition,
+            durationMs = null,
             onResult,
         )
     }

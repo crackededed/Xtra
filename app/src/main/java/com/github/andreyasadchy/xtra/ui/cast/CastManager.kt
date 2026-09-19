@@ -87,6 +87,7 @@ class CastManager(private val appContext: android.content.Context) {
         thumbnail: String?,
         currentTimeMs: Long? = null,
         isLive: Boolean = true,
+        durationMs: Long? = null,
         onResult: (Boolean) -> Unit = {},
     ) {
         try {
@@ -104,6 +105,11 @@ class CastManager(private val appContext: android.content.Context) {
             val mediaInfo = MediaInfo.Builder(hlsUrl)
                 .setStreamType(if (isLive) MediaInfo.STREAM_TYPE_LIVE else MediaInfo.STREAM_TYPE_BUFFERED)
                 .setContentType("application/x-mpegURL")
+                .apply {
+                    if (!isLive && durationMs != null && durationMs > 0) {
+                        setStreamDuration(durationMs)
+                    }
+                }
                 .setMetadata(metadata)
                 .build()
             val request = MediaLoadRequestData.Builder()
@@ -111,6 +117,9 @@ class CastManager(private val appContext: android.content.Context) {
                 .apply {
                     if (currentTimeMs != null && currentTimeMs > 0) {
                         setCurrentTime(currentTimeMs)
+                    }
+                    if (!isLive) {
+                        setAutoplay(true)
                     }
                 }
                 .build()

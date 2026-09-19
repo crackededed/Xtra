@@ -2578,6 +2578,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 channelName = service.channelName,
                 thumbnail = service.thumbnail,
             ),
+            isLive = service.type != BasePlaybackService.STREAM,
+            durationMs = playbackService?.durationSeconds?.toLong()?.times(1000),
         ) { success ->
             castPlayInProgress = false
             if (success) {
