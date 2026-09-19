@@ -25,34 +25,16 @@ class CastManager(private val appContext: android.content.Context) {
         castContextOrNull()
     }
 
-    fun sessionManagerOrNull(): SessionManager? {
-        return try {
-            castContextOrNull()?.sessionManager
-        } catch (_: Exception) {
-            null
-        }
-    }
+    fun sessionManagerOrNull(): SessionManager? = castContextOrNull()?.sessionManager
 
     val isConnected: Boolean
-        get() = try {
-            currentSession?.isConnected == true
-        } catch (_: Exception) {
-            false
-        }
+        get() = currentSession?.isConnected == true
 
     val currentSession: CastSession?
-        get() = try {
-            sessionManagerOrNull()?.currentCastSession
-        } catch (_: Exception) {
-            null
-        }
+        get() = sessionManagerOrNull()?.currentCastSession
 
     val remoteMediaClient: RemoteMediaClient?
-        get() = try {
-            currentSession?.remoteMediaClient
-        } catch (_: Exception) {
-            null
-        }
+        get() = currentSession?.remoteMediaClient
 
     private var castedType: String? = null
     private var castedChannelId: String? = null
@@ -208,13 +190,7 @@ class CastManager(private val appContext: android.content.Context) {
 
     fun isRemotePlaying(): Boolean = castIsPlaying
 
-    fun hasActiveMedia(): Boolean {
-        return try {
-            remoteMediaClient?.hasMediaSession() == true
-        } catch (_: Exception) {
-            false
-        }
-    }
+    fun hasActiveMedia(): Boolean = remoteMediaClient?.hasMediaSession() == true
 
     fun playRemote() {
         try {
@@ -250,11 +226,7 @@ class CastManager(private val appContext: android.content.Context) {
     }
 
     val deviceVolume: Double
-        get() = try {
-            currentSession?.volume ?: 0.0
-        } catch (_: Exception) {
-            0.0
-        }
+        get() = currentSession?.volume ?: 0.0
 
     fun setDeviceVolume(volume: Double) {
         try {

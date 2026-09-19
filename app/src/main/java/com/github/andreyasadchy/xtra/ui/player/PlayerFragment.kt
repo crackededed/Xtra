@@ -2683,7 +2683,6 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 channelName = service.channelName,
                 thumbnail = service.thumbnail,
             ),
-            keepPosition = !isLive,
             isLive = isLive,
             durationMs = durationMs,
         ) { success ->

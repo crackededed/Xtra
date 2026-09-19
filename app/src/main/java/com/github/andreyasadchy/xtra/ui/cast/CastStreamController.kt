@@ -61,12 +61,11 @@ class CastStreamController(private val castManager: CastManager) {
     fun changeQuality(
         url: String,
         metadata: StreamMetadata,
-        keepPosition: Boolean,
         isLive: Boolean = true,
         durationMs: Long? = null,
         onResult: (Boolean) -> Unit = {},
     ) {
-        val currentTime = if (keepPosition) {
+        val currentTime = if (!isLive) {
             try {
                 castManager.remoteMediaClient?.approximateStreamPosition?.takeIf { it > 0 }
             } catch (_: Exception) {
@@ -100,7 +99,6 @@ class CastStreamController(private val castManager: CastManager) {
                 errorListener?.onStreamError()
             }
         } catch (_: Exception) {
-            // Cast is optional: ignore errors.
         }
     }
 }
