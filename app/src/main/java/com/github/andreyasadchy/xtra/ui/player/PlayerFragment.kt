@@ -2349,8 +2349,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                     castController.changeQuality(selectedQuality)
                 } else {
                     selectedQuality?.let { castController.localVideoQuality = it }
-                    // chatOnlyEnabled and chatOnlyEnabledByCast are managed by the controller
                     changeQuality(selectedQuality)
+                    castController.setLocalChatOnly(false)
                     changePlayerMode()
                     setQualityText()
                 }

@@ -21,6 +21,8 @@ class PlayerCastController(private val fragment: PlayerFragment) {
     private var _localVideoQuality: VideoQuality? = null
     private var _chatOnlyEnabled = false
     private var _chatOnlyEnabledByCast = false
+    private var _chatOnlyUserOverride: Boolean? = null
+    private var _castCurrentContentActive = false
     private var castStreamController: CastStreamController? = null
 
     val castQuality: VideoQuality?
@@ -115,6 +117,10 @@ class PlayerCastController(private val fragment: PlayerFragment) {
 
     fun cleanup() {
         _castQuality = null
+        _chatOnlyEnabled = false
+        _chatOnlyEnabledByCast = false
+        _chatOnlyUserOverride = null
+        _castCurrentContentActive = false
         cancelPendingCast()
         val manager = castManager
         if (manager?.playCurrentRequest === castPlayRequestAction) {
@@ -143,14 +149,12 @@ class PlayerCastController(private val fragment: PlayerFragment) {
     fun onLocalContentReady() {
         retryPendingCast()
         if (!isCastingCurrentContent()) return
+        _castCurrentContentActive = true
         val service = fragment.playbackService ?: return
         val qualityName = service.quality?.name
         if (qualityName == VideoQuality.CHAT_ONLY_QUALITY || qualityName == VideoQuality.AUDIO_ONLY_QUALITY) return
-        if (!_chatOnlyEnabled) {
-            _chatOnlyEnabled = true
-            _chatOnlyEnabledByCast = true
-        }
-        setLocalChatOnly(true)
+        if (_chatOnlyUserOverride == false) return
+        setLocalChatOnly(true, userOverride = _chatOnlyUserOverride)
         fragment.pauseLocalPlayback()
     }
 
@@ -201,6 +205,7 @@ class PlayerCastController(private val fragment: PlayerFragment) {
             if (success) {
                 _castQuality = resolved
                 castManager?.setCastedContent(target.type, target.channelId, target.videoId, target.clipId)
+                _castCurrentContentActive = true
                 onLocalContentReady()
                 fragment.setQualityText()
             } else {
@@ -268,6 +273,7 @@ class PlayerCastController(private val fragment: PlayerFragment) {
     }
 
     private fun onCastConnected() {
+        _chatOnlyUserOverride = null
         castManager?.setControlsEnabled(true)
         val service = fragment.playbackService
         if (castManager?.hasCastedContent() == true) {
@@ -322,27 +328,38 @@ class PlayerCastController(private val fragment: PlayerFragment) {
     }
 
     private fun onCastDisconnected() {
-        val wasCastingCurrent = isCastingCurrentContent()
+        val wasCastingCurrent = _castCurrentContentActive || isCastingCurrentContent()
+        val shouldRestoreChatOnly = _chatOnlyEnabledByCast && _chatOnlyUserOverride != false
+        _castCurrentContentActive = false
+        _chatOnlyUserOverride = null
         cancelPendingCast()
         _castQuality = null
         castManager?.clearCastedContent()
         castManager?.setControlsEnabled(false)
         if (wasCastingCurrent) {
-            if (_chatOnlyEnabledByCast) {
+            if (shouldRestoreChatOnly) {
                 _chatOnlyEnabled = false
                 _chatOnlyEnabledByCast = false
-                setLocalChatOnly(false)
+                setLocalChatOnly(false, userOverride = null)
             }
             fragment.resumeLocalPlayback()
         }
     }
 
     fun setLocalChatOnly(enabled: Boolean) {
+        setLocalChatOnly(enabled, userOverride = if (isCastingCurrentContent()) enabled else null)
+    }
+
+    private fun setLocalChatOnly(enabled: Boolean, userOverride: Boolean?) {
+        _chatOnlyEnabled = enabled
+        _chatOnlyEnabledByCast = enabled && userOverride == null
+        _chatOnlyUserOverride = userOverride
         if (enabled) {
             if (fragment.playbackService?.quality?.name != VideoQuality.CHAT_ONLY_QUALITY) {
                 _localVideoQuality = fragment.playbackService?.quality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
                     ?: _localVideoQuality
                 fragment.changeQuality(fragment.playbackService?.qualities?.find { it.name == VideoQuality.CHAT_ONLY_QUALITY })
+                fragment.changePlayerMode()
                 fragment.setQualityText()
             }
         } else {
@@ -350,6 +367,7 @@ class PlayerCastController(private val fragment: PlayerFragment) {
                 val restoreQuality = fragment.validLocalVideoQuality()
                 if (restoreQuality != null) {
                     fragment.changeQuality(restoreQuality)
+                    fragment.changePlayerMode()
                     fragment.setQualityText()
                     if (!isCastConnected()) {
                         fragment.resumeLocalPlayback()
