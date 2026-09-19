@@ -579,6 +579,6 @@
     <string name="cast_play_stream_not_ready">Der Stream ist noch nicht bereit</string>
     <string name="cast_play_stream_in_progress">Der Stream wird bereits an das Cast-Gerät gesendet</string>
     <string name="cast_not_connected">Nicht mit einem Cast-Gerät verbunden</string>
-    <string name="cast_button_vod_title">Cast Button für VODs anzeigen</string>
-    <string name="cast_button_show_title">Cast</string>
+    <string name="cast_button_vod_title">Übertragen Button für VODs anzeigen</string>
+    <string name="cast_button_show_title">Übertragen</string>
 </resources>
