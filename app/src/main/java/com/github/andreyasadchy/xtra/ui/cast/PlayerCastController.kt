@@ -12,6 +12,7 @@ import com.github.andreyasadchy.xtra.util.prefs
 import com.google.android.gms.cast.CastMediaControlIntent
 import com.google.android.gms.cast.framework.CastSession
 import com.google.android.gms.cast.framework.SessionManagerListener
+import java.util.concurrent.atomic.AtomicBoolean
 
 class PlayerCastController(private val fragment: PlayerFragment) {
 
@@ -36,7 +37,7 @@ class PlayerCastController(private val fragment: PlayerFragment) {
 
     val chatOnlyEnabled: Boolean
         get() = _chatOnlyEnabled
-    private var castPlayInProgress = false
+    private val castPlayInProgress = AtomicBoolean(false)
     private var castPendingTarget: CastTarget? = null
     private var castPendingOnConnect = false
     private var castRetryCount = 0
@@ -121,6 +122,7 @@ class PlayerCastController(private val fragment: PlayerFragment) {
         _chatOnlyEnabledByCast = false
         _chatOnlyUserOverride = null
         _castCurrentContentActive = false
+        castPlayInProgress.set(false)
         cancelPendingCast()
         val manager = castManager
         if (manager?.playCurrentRequest === castPlayRequestAction) {
@@ -159,7 +161,7 @@ class PlayerCastController(private val fragment: PlayerFragment) {
     }
 
     private fun playCurrentStreamOnCastDevice() {
-        if (castPlayInProgress) {
+        if (castPlayInProgress.get()) {
             showCastToast(com.github.andreyasadchy.xtra.R.string.cast_play_stream_in_progress)
             return
         }
@@ -189,8 +191,8 @@ class PlayerCastController(private val fragment: PlayerFragment) {
         }
         castPendingTarget = null
         castRetryCount = 0
-        if (castPlayInProgress) return true
-        castPlayInProgress = true
+        if (castPlayInProgress.get()) return true
+        castPlayInProgress.set(true)
         controller.play(
             url,
             CastStreamController.StreamMetadata(
@@ -198,10 +200,10 @@ class PlayerCastController(private val fragment: PlayerFragment) {
                 channelName = service.channelName,
                 thumbnail = service.thumbnail,
             ),
-            isLive = service.type != BasePlaybackService.STREAM,
+            isLive = service.type == BasePlaybackService.STREAM,
             durationMs = fragment.playbackService?.durationSeconds?.toLong()?.times(1000),
         ) { success ->
-            castPlayInProgress = false
+            castPlayInProgress.set(false)
             if (success) {
                 _castQuality = resolved
                 castManager?.setCastedContent(target.type, target.channelId, target.videoId, target.clipId)
@@ -236,7 +238,7 @@ class PlayerCastController(private val fragment: PlayerFragment) {
     }
 
     private fun retryPendingCast() {
-        if (castPlayInProgress) return
+        if (castPlayInProgress.get()) return
         if (!isCastConnected()) {
             cancelPendingCast()
             return
@@ -273,12 +275,14 @@ class PlayerCastController(private val fragment: PlayerFragment) {
     }
 
     private fun onCastConnected() {
-        _chatOnlyUserOverride = null
         castManager?.setControlsEnabled(true)
         val service = fragment.playbackService
         if (castManager?.hasCastedContent() == true) {
             if (service != null && isCastingCurrentContent()) {
                 onLocalContentReady()
+            } else if (service != null) {
+                _localVideoQuality = service.quality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY }
+                    ?: fragment.validLocalVideoQuality()
             }
             return
         }
@@ -331,7 +335,6 @@ class PlayerCastController(private val fragment: PlayerFragment) {
         val wasCastingCurrent = _castCurrentContentActive || isCastingCurrentContent()
         val shouldRestoreChatOnly = _chatOnlyEnabledByCast && _chatOnlyUserOverride != false
         _castCurrentContentActive = false
-        _chatOnlyUserOverride = null
         cancelPendingCast()
         _castQuality = null
         castManager?.clearCastedContent()
