@@ -335,10 +335,12 @@ abstract class BasePlaybackService : LifecycleService() {
             } catch (_: Exception) {
             }
         }
-        if (isCastingCurrentContent()) {
+        if (xtraModule.castManager.isConnected) {
             xtraModule.castManager.attachVolumeListener()
+            applyCastVolumeControl(true)
+        } else {
+            applyCastVolumeControl(false)
         }
-        applyCastVolumeControl(isCastingCurrentContent())
     }
 
     protected open fun onCastPlaybackStateChanged() {}
