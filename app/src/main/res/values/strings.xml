@@ -309,6 +309,8 @@
     <string name="stream_proxy_url_desc">\"$channel\" will be replaced with channel login</string>
     <string name="show_subtitles">Show subtitles</string>
     <string name="hide_subtitles">Hide subtitles</string>
+    <string name="skip_silence">Skip silence</string>
+    <string name="stop_skip_silence">Stop skipping silence</string>
     <string name="toggle_subtitles">Toggle subtitles</string>
     <string name="enable_stv">Enable 7TV emotes</string>
     <string name="enable_bttv">Enable BTTV emotes</string>

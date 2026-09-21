@@ -712,6 +712,7 @@ class ExoPlayerService : BasePlaybackService() {
                 )
                 setAudioAttributes(AudioAttributes.DEFAULT, prefs().getBoolean(C.PLAYER_AUDIO_FOCUS, false))
                 setHandleAudioBecomingNoisy(prefs().getBoolean(C.PLAYER_HANDLE_AUDIO_BECOMING_NOISY, true))
+                setSkipSilenceEnabled(type != STREAM && prefs().getBoolean(C.PLAYER_SKIP_SILENCE, false))
                 setSeekBackIncrementMs((prefs().getString(C.PLAYER_REWIND, "10")?.toLongOrNull() ?: 10) * 1000)
                 setSeekForwardIncrementMs((prefs().getString(C.PLAYER_FORWARD, "10")?.toLongOrNull() ?: 10) * 1000)
             }.build()
@@ -1734,6 +1735,10 @@ class ExoPlayerService : BasePlaybackService() {
                     .build()
             }
         }
+    }
+
+    fun toggleSkipSilence(enabled: Boolean) {
+        player?.skipSilenceEnabled = enabled
     }
 
     suspend fun checkPlaylist(networkLibrary: String?, url: String): Boolean = withContext(Dispatchers.IO) {

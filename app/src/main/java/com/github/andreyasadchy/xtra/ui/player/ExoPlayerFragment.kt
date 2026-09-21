@@ -261,6 +261,9 @@ class ExoPlayerFragment : PlayerFragment() {
                     playbackService?.player?.setVideoSurfaceView(binding.playerSurface)
                     playbackService?.player?.addListener(listener)
                     playerListener = listener
+                    playbackService?.let {
+                        it.toggleSkipSilence(it.type != BasePlaybackService.STREAM && requireContext().prefs().getBoolean(C.PLAYER_SKIP_SILENCE, false))
+                    }
                     val endTime = playbackService?.setSleepTimer(-1)
                     if (endTime != null && endTime > 0L) {
                         val duration = endTime - System.currentTimeMillis()
@@ -421,6 +424,10 @@ class ExoPlayerFragment : PlayerFragment() {
 
     override fun toggleSubtitles(enabled: Boolean) {
         playbackService?.toggleSubtitles(enabled)
+    }
+
+    override fun toggleSkipSilence(enabled: Boolean) {
+        playbackService?.toggleSkipSilence(enabled)
     }
 
     override fun getUnavailableQualities(): List<VideoQuality> {

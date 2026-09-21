@@ -211,6 +211,19 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                     }
                 }
             }
+            if (type != BasePlaybackService.STREAM &&
+                requireContext().prefs().getBoolean(C.PLAYER_MENU_SKIP_SILENCE, true) &&
+                requireContext().prefs().getString(C.PLAYER, C.EXOPLAYER) != C.MEDIA_PLAYER
+            ) {
+                menuSkipSilence.visibility = View.VISIBLE
+                setSkipSilenceText(requireContext().prefs().getBoolean(C.PLAYER_SKIP_SILENCE, false))
+                menuSkipSilence.setOnClickListener {
+                    val enabled = !requireContext().prefs().getBoolean(C.PLAYER_SKIP_SILENCE, false)
+                    (parentFragment as? PlayerFragment)?.toggleSkipSilence(enabled)
+                    requireContext().prefs().edit { putBoolean(C.PLAYER_SKIP_SILENCE, enabled) }
+                    setSkipSilenceText(enabled)
+                }
+            }
             (parentFragment as? PlayerFragment)?.setSubtitlesButton()
             if ((type == BasePlaybackService.STREAM || type == BasePlaybackService.VIDEO) &&
                 !requireContext().prefs().getBoolean(C.CHAT_DISABLE, false) &&
@@ -293,6 +306,10 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                 menuSubtitles.visibility = View.GONE
             }
         }
+    }
+
+    private fun setSkipSilenceText(enabled: Boolean) {
+        binding.menuSkipSilence.text = getString(if (enabled) R.string.stop_skip_silence else R.string.skip_silence)
     }
 
     override fun onDestroyView() {

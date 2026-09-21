@@ -86,6 +86,13 @@
         app:singleLineTitle="false" />
 
     <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="player_menu_skip_silence"
+        android:title="@string/skip_silence"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="player_menu_restart"
         android:title="@string/restart_player"
