@@ -24,7 +24,16 @@ class PlayerCastController(private val fragment: PlayerFragment) {
     private var _chatOnlyEnabledByCast = false
     private var _chatOnlyUserOverride: Boolean? = null
     private var _castCurrentContentActive = false
-    private var castStreamController: CastStreamController? = null
+    private val castPlayInProgress = AtomicBoolean(false)
+    private var castPendingOnConnect = false
+    private var castRetryCount = 0
+    private val castRetryHandler = Handler(Looper.getMainLooper())
+    private val castRetryAction = Runnable { retryPendingCast() }
+    private val castPlayRequestAction: () -> Unit = { playCurrentStreamOnCastDevice() }
+    private var castPendingType: String? = null
+    private var castPendingChannelId: String? = null
+    private var castPendingVideoId: String? = null
+    private var castPendingClipId: String? = null
 
     val castQuality: VideoQuality?
         get() = _castQuality
@@ -37,13 +46,6 @@ class PlayerCastController(private val fragment: PlayerFragment) {
 
     val chatOnlyEnabled: Boolean
         get() = _chatOnlyEnabled
-    private val castPlayInProgress = AtomicBoolean(false)
-    private var castPendingTarget: CastTarget? = null
-    private var castPendingOnConnect = false
-    private var castRetryCount = 0
-    private val castRetryHandler = Handler(Looper.getMainLooper())
-    private val castRetryAction = Runnable { retryPendingCast() }
-    private val castPlayRequestAction: () -> Unit = { playCurrentStreamOnCastDevice() }
 
     companion object {
         private const val CAST_RETRY_DELAY = 500L
@@ -62,7 +64,6 @@ class PlayerCastController(private val fragment: PlayerFragment) {
                 castButton.routeSelector = routeSelector
                 castButton.visibility = if (fragment.requireContext().prefs().getBoolean(C.PLAYER_SHOW_CAST_BUTTON, true)) android.view.View.VISIBLE else android.view.View.GONE
             }
-            castStreamController = CastStreamController(manager)
             fragment.view?.let { view ->
                 val castButton = view.findViewById<androidx.mediarouter.app.MediaRouteButton>(com.github.andreyasadchy.xtra.R.id.castButton)
                 castButton.dialogFactory = CastControllerDialogFactory()
@@ -99,21 +100,30 @@ class PlayerCastController(private val fragment: PlayerFragment) {
         val url = resolved.url ?: return
         val isLive = service.type == BasePlaybackService.STREAM
         val durationMs = if (isLive) null else fragment.playbackService?.durationSeconds?.toLong()?.times(1000)
-        castStreamController?.changeQuality(
+        val currentTime = if (!isLive) {
+            try {
+                castManager?.remoteMediaClient?.approximateStreamPosition?.takeIf { it > 0 }
+            } catch (_: Exception) {
+                null
+            }
+        } else {
+            null
+        }
+        castManager?.loadStream(
             url,
-            CastStreamController.StreamMetadata(
-                title = service.title,
-                channelName = service.channelName,
-                thumbnail = service.thumbnail,
-            ),
+            service.title,
+            service.channelName,
+            service.thumbnail,
+            currentTimeMs = currentTime,
             isLive = isLive,
             durationMs = durationMs,
-        ) { success ->
-            if (success && fragment.view != null) {
-                _castQuality = resolved
-                fragment.setQualityText()
+            onResult = { success ->
+                if (success && fragment.view != null) {
+                    _castQuality = resolved
+                    fragment.setQualityText()
+                }
             }
-        }
+        )
     }
 
     fun updateButtonVisibility() {
@@ -154,37 +164,44 @@ class PlayerCastController(private val fragment: PlayerFragment) {
 
     private fun requestCastCurrentStream(): Boolean {
         val service = fragment.playbackService ?: return false
-        val controller = castStreamController ?: return false
-        val target = CastTarget(service.type, service.channelId, service.videoId, service.clipId)
+        val targetType = service.type
+        val targetChannelId = service.channelId
+        val targetVideoId = service.videoId
+        val targetClipId = service.clipId
         castPendingOnConnect = false
         val resolved = resolveCastableQuality()
         val url = resolved?.url
         if (resolved == null || url.isNullOrBlank()) {
-            if (castPendingTarget != target) {
+            if (castPendingType != targetType || castPendingChannelId != targetChannelId ||
+                castPendingVideoId != targetVideoId || castPendingClipId != targetClipId) {
                 castRetryCount = 0
             }
-            castPendingTarget = target
+            castPendingType = targetType
+            castPendingChannelId = targetChannelId
+            castPendingVideoId = targetVideoId
+            castPendingClipId = targetClipId
             scheduleCastRetry()
             return false
         }
-        castPendingTarget = null
-        castRetryCount = 0
+        castPendingType = null
+        castPendingChannelId = null
+        castPendingVideoId = null
+        castPendingClipId = null
         if (castPlayInProgress.get()) return true
         castPlayInProgress.set(true)
-        controller.play(
+        castManager?.loadStream(
             url,
-            CastStreamController.StreamMetadata(
-                title = service.title,
-                channelName = service.channelName,
-                thumbnail = service.thumbnail,
-            ),
+            service.title,
+            service.channelName,
+            service.thumbnail,
+            currentTimeMs = null,
             isLive = service.type == BasePlaybackService.STREAM,
             durationMs = fragment.playbackService?.durationSeconds?.toLong()?.times(1000),
         ) { success ->
             castPlayInProgress.set(false)
             if (success) {
                 _castQuality = resolved
-                castManager?.setCastedContent(target.type, target.channelId, target.videoId, target.clipId)
+                castManager?.setCastedContent(targetType, targetChannelId, targetVideoId, targetClipId)
                 _castCurrentContentActive = true
                 onLocalContentReady()
                 fragment.setQualityText()
@@ -197,12 +214,7 @@ class PlayerCastController(private val fragment: PlayerFragment) {
 
     private fun resolveCastableQuality(): VideoQuality? {
         return resolveCastQuality(fragment.validLocalVideoQuality())
-            ?: fragment.playbackService?.qualities?.firstOrNull {
-                it.name != VideoQuality.AUTO_QUALITY &&
-                    it.name != VideoQuality.AUDIO_ONLY_QUALITY &&
-                    it.name != VideoQuality.CHAT_ONLY_QUALITY &&
-                    !it.url.isNullOrBlank()
-            }
+            ?: fragment.playbackService?.qualities?.firstOrNull(::validCastQuality)
     }
 
     private fun scheduleCastRetry() {
@@ -226,19 +238,20 @@ class PlayerCastController(private val fragment: PlayerFragment) {
                 cancelPendingCast()
                 return
             }
-            if (fragment.playbackService == null || castStreamController == null) {
+            if (fragment.playbackService == null) {
                 scheduleCastRetry()
                 return
             }
             requestCastCurrentStream()
             return
         }
-        val target = castPendingTarget ?: return
+        if (castPendingType == null) return
         val service = fragment.playbackService ?: run {
             scheduleCastRetry()
             return
         }
-        if (target != CastTarget(service.type, service.channelId, service.videoId, service.clipId)) {
+        if (castPendingType != service.type || castPendingChannelId != service.channelId ||
+            castPendingVideoId != service.videoId || castPendingClipId != service.clipId) {
             cancelPendingCast()
             return
         }
@@ -248,7 +261,10 @@ class PlayerCastController(private val fragment: PlayerFragment) {
     private fun cancelPendingCast() {
         castRetryHandler.removeCallbacks(castRetryAction)
         castRetryCount = 0
-        castPendingTarget = null
+        castPendingType = null
+        castPendingChannelId = null
+        castPendingVideoId = null
+        castPendingClipId = null
         castPendingOnConnect = false
     }
 
@@ -277,16 +293,17 @@ class PlayerCastController(private val fragment: PlayerFragment) {
     private fun resolveCastQuality(selectedQuality: VideoQuality?): VideoQuality? {
         val qualities = fragment.playbackService?.qualities
         return if (selectedQuality?.name == VideoQuality.AUTO_QUALITY) {
-            qualities?.firstOrNull {
-                it.name != VideoQuality.AUTO_QUALITY &&
-                    it.name != VideoQuality.AUDIO_ONLY_QUALITY &&
-                    it.name != VideoQuality.CHAT_ONLY_QUALITY &&
-                    !it.url.isNullOrBlank()
-            }
+            qualities?.firstOrNull(::validCastQuality)
         } else {
             selectedQuality?.takeIf { it.name != VideoQuality.CHAT_ONLY_QUALITY && !it.url.isNullOrBlank() }
         }
     }
+
+    private fun validCastQuality(q: VideoQuality): Boolean =
+        q.name != VideoQuality.AUTO_QUALITY &&
+            q.name != VideoQuality.AUDIO_ONLY_QUALITY &&
+            q.name != VideoQuality.CHAT_ONLY_QUALITY &&
+            !q.url.isNullOrBlank()
 
     private fun isCastConnected(): Boolean {
         return try {
@@ -363,11 +380,4 @@ class PlayerCastController(private val fragment: PlayerFragment) {
             Toast.makeText(fragment.requireContext(), resId, Toast.LENGTH_SHORT).show()
         }
     }
-
-    private data class CastTarget(
-        val type: String?,
-        val channelId: String?,
-        val videoId: String?,
-        val clipId: String?,
-    )
 }

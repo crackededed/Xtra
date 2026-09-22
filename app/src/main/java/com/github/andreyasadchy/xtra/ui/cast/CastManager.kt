@@ -17,6 +17,8 @@ import com.google.android.gms.common.images.WebImage
 
 class CastManager(private val appContext: android.content.Context) {
 
+    private inline fun <T> safe(block: () -> T): T? = try { block() } catch (_: Exception) { null }
+
     fun interface ConnectionCallback {
         fun onConnectionChanged(connected: Boolean)
     }
@@ -186,25 +188,18 @@ class CastManager(private val appContext: android.content.Context) {
     fun hasActiveMedia(): Boolean = remoteMediaClient?.hasMediaSession() == true
 
     fun playRemote() {
-        try {
-            remoteMediaClient?.play()
-        } catch (_: Exception) {
-        }
+        safe { remoteMediaClient?.play() }
     }
 
     fun pauseRemote() {
-        try {
-            remoteMediaClient?.pause()
-        } catch (_: Exception) {
-        }
+        safe { remoteMediaClient?.pause() }
     }
 
     fun stopCasting() {
-        try {
+        safe {
             remoteMediaClient?.stop()
             sessionManagerOrNull()?.endCurrentSession(true)
             clearCastedContent()
-        } catch (_: Exception) {
         }
     }
 
@@ -212,49 +207,34 @@ class CastManager(private val appContext: android.content.Context) {
         get() = currentSession?.volume ?: 0.0
 
     fun setDeviceVolume(volume: Double) {
-        try {
-            currentSession?.setVolume(volume.coerceIn(0.0, 1.0))
-        } catch (_: Exception) {
-        }
+        safe { currentSession?.setVolume(volume.coerceIn(0.0, 1.0)) }
     }
 
     fun attachVolumeListener() {
-        try {
-            if (volumeListener != null) {
-                return
+        if (volumeListener != null) return
+        val session = currentSession ?: return
+        val listener = object : Cast.Listener() {
+            override fun onVolumeChanged() {
+                safe { volumeChangedCallback?.invoke() }
             }
-            val session = currentSession ?: return
-            val listener = object : Cast.Listener() {
-                override fun onVolumeChanged() {
-                    try {
-                        volumeChangedCallback?.invoke()
-                    } catch (_: Exception) {
-                    }
-                }
-            }
+        }
+        safe {
             volumeListener = listener
             volumeListenerSession = session
             session.addCastListener(listener)
-        } catch (_: Exception) {
         }
     }
 
     fun detachVolumeListener() {
         volumeListener?.let { listener ->
-            try {
-                (volumeListenerSession ?: currentSession)?.removeCastListener(listener)
-            } catch (_: Exception) {
-            }
+            safe { (volumeListenerSession ?: currentSession)?.removeCastListener(listener) }
         }
         volumeListener = null
         volumeListenerSession = null
     }
 
     fun addSessionListener(listener: SessionManagerListener<CastSession>) {
-        try {
-            sessionManagerOrNull()?.addSessionManagerListener(listener, CastSession::class.java)
-        } catch (_: Exception) {
-        }
+        safe { sessionManagerOrNull()?.addSessionManagerListener(listener, CastSession::class.java) }
     }
 
     fun addConnectionCallback(callback: ConnectionCallback): SessionManagerListener<CastSession> {
@@ -282,10 +262,7 @@ class CastManager(private val appContext: android.content.Context) {
             override fun onSessionStartFailed(session: CastSession, error: Int) = Unit
         }
         addSessionListener(listener)
-        try {
-            callback.onConnectionChanged(isConnected)
-        } catch (_: Exception) {
-        }
+        safe { callback.onConnectionChanged(isConnected) }
         return listener
     }
 
@@ -294,17 +271,10 @@ class CastManager(private val appContext: android.content.Context) {
     }
 
     fun removeSessionListener(listener: SessionManagerListener<CastSession>) {
-        try {
-            sessionManagerOrNull()?.removeSessionManagerListener(listener, CastSession::class.java)
-        } catch (_: Exception) {
-        }
+        safe { sessionManagerOrNull()?.removeSessionManagerListener(listener, CastSession::class.java) }
     }
 
     private fun castContextOrNull(): CastContext? {
-        return try {
-            CastContext.getSharedInstance(appContext)
-        } catch (_: Exception) {
-            null
-        }
+        return safe { CastContext.getSharedInstance(appContext) }
     }
 }

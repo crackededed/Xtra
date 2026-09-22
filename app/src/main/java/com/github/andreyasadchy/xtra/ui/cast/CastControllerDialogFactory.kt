@@ -124,43 +124,16 @@ class CastControllerDialogFactory : MediaRouteDialogFactory() {
             actionBar?.setBackgroundColor(Color.TRANSPARENT)
         }
 
-        private fun findTitleBarView(): View? {
-            val root = window?.decorView as? ViewGroup ?: return null
-            val stopText = context.getString(androidx.mediarouter.R.string.mr_controller_stop_casting)
-            val disconnectText = context.getString(androidx.mediarouter.R.string.mr_controller_disconnect)
-
+        private fun findContainer(
+            root: ViewGroup,
+            predicate: (ViewGroup) -> Boolean,
+        ): ViewGroup? {
             val queue = ArrayDeque<View>()
             queue.add(root)
-
             while (queue.isNotEmpty()) {
                 val view = queue.removeFirst()
                 if (view is ViewGroup) {
-                    var hasDeviceName = false
-                    var hasActionButton = false
-
-                    for (index in 0 until view.childCount) {
-                        val child = view.getChildAt(index)
-                        when (child) {
-                            is TextView -> {
-                                val text = child.text?.toString() ?: continue
-                                if (text.isNotEmpty() && text != stopText && text != disconnectText) {
-                                    hasDeviceName = true
-                                }
-                            }
-                            is Button -> {
-                                if (child.visibility == View.VISIBLE &&
-                                    (child.text?.toString() == stopText || child.text?.toString() == disconnectText)) {
-                                    hasActionButton = true
-                                }
-                            }
-                        }
-                    }
-
-                    if (hasDeviceName && !hasActionButton) {
-                        return view
-                    }
-                }
-                if (view is ViewGroup) {
+                    if (predicate(view)) return view
                     for (index in 0 until view.childCount) {
                         queue.add(view.getChildAt(index))
                     }
@@ -169,33 +142,49 @@ class CastControllerDialogFactory : MediaRouteDialogFactory() {
             return null
         }
 
+        private fun findTitleBarView(): View? {
+            val root = window?.decorView as? ViewGroup ?: return null
+            val stopText = context.getString(androidx.mediarouter.R.string.mr_controller_stop_casting)
+            val disconnectText = context.getString(androidx.mediarouter.R.string.mr_controller_disconnect)
+            return findContainer(root) { group ->
+                var hasDeviceName = false
+                var hasActionButton = false
+                for (index in 0 until group.childCount) {
+                    val child = group.getChildAt(index)
+                    when (child) {
+                        is TextView -> {
+                            val text = child.text?.toString() ?: continue
+                            if (text.isNotEmpty() && text != stopText && text != disconnectText) {
+                                hasDeviceName = true
+                            }
+                        }
+                        is Button -> {
+                            if (child.visibility == View.VISIBLE &&
+                                (child.text?.toString() == stopText || child.text?.toString() == disconnectText)) {
+                                hasActionButton = true
+                            }
+                        }
+                    }
+                }
+                hasDeviceName && !hasActionButton
+            }
+        }
+
         private fun findActionBarView(): View? {
             val root = window?.decorView as? ViewGroup ?: return null
             val stopText = context.getString(androidx.mediarouter.R.string.mr_controller_stop_casting)
             val disconnectText = context.getString(androidx.mediarouter.R.string.mr_controller_disconnect)
-
-            val queue = ArrayDeque<View>()
-            queue.add(root)
-
-            while (queue.isNotEmpty()) {
-                val view = queue.removeFirst()
-                if (view is ViewGroup) {
-                    for (index in 0 until view.childCount) {
-                        val child = view.getChildAt(index)
-                        if (child is Button && child.visibility == View.VISIBLE &&
-                            (child.text?.toString() == stopText || child.text?.toString() == disconnectText ||
-                             child.text?.toString() == context.getString(R.string.play_current_stream))) {
-                            return view
-                        }
+            return findContainer(root) { group ->
+                for (index in 0 until group.childCount) {
+                    val child = group.getChildAt(index)
+                    if (child is Button && child.visibility == View.VISIBLE &&
+                        (child.text?.toString() == stopText || child.text?.toString() == disconnectText ||
+                         child.text?.toString() == context.getString(R.string.play_current_stream))) {
+                        return@findContainer true
                     }
                 }
-                if (view is ViewGroup) {
-                    for (index in 0 until view.childCount) {
-                        queue.add(view.getChildAt(index))
-                    }
-                }
+                false
             }
-            return null
         }
 
         private fun styleVolumeControls() {
