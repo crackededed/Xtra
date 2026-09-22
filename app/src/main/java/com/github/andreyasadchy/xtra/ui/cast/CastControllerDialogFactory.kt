@@ -102,7 +102,7 @@ class CastControllerDialogFactory : MediaRouteDialogFactory() {
 
             CastControllerDialogFactory.applyDialogBackground(this, background)
             findViewById<View>(androidx.mediarouter.R.id.mr_media_main_control)?.setBackgroundColor(Color.TRANSPARENT)
-            styleTitleBar(accent)
+            styleTitleBar()
             styleActionBar()
         }
 
@@ -112,11 +112,10 @@ class CastControllerDialogFactory : MediaRouteDialogFactory() {
             }
         }
 
-        private fun styleTitleBar(accent: Int) {
+        private fun styleTitleBar() {
             val titleBar = findTitleBarView()
             titleBar?.let {
                 it.setBackgroundColor(Color.TRANSPARENT)
-                setTextViewColors(it, accent)
             }
         }
 
@@ -197,16 +196,6 @@ class CastControllerDialogFactory : MediaRouteDialogFactory() {
                 }
             }
             return null
-        }
-
-        private fun setTextViewColors(view: View, color: Int) {
-            if (view is TextView) {
-                view.setTextColor(color)
-            } else if (view is ViewGroup) {
-                for (index in 0 until view.childCount) {
-                    setTextViewColors(view.getChildAt(index), color)
-                }
-            }
         }
 
         private fun styleVolumeControls() {

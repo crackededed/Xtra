@@ -116,27 +116,6 @@ class PlayerCastController(private val fragment: PlayerFragment) {
         }
     }
 
-    fun cleanup() {
-        _castQuality = null
-        _chatOnlyEnabled = false
-        _chatOnlyEnabledByCast = false
-        _chatOnlyUserOverride = null
-        _castCurrentContentActive = false
-        castPlayInProgress.set(false)
-        cancelPendingCast()
-        val manager = castManager
-        if (manager?.playCurrentRequest === castPlayRequestAction) {
-            manager.playCurrentRequest = null
-        }
-        try {
-            castSessionListener?.let { manager?.removeConnectionCallback(it) }
-        } catch (_: Exception) {
-        }
-        castSessionListener = null
-        castManager = null
-        castStreamController = null
-    }
-
     fun updateButtonVisibility() {
         val isLiveStream = fragment.playbackService?.type == BasePlaybackService.STREAM
         val showCastForVod = fragment.requireContext().prefs().getBoolean(com.github.andreyasadchy.xtra.util.C.CAST_BUTTON_VOD, false)
@@ -309,7 +288,7 @@ class PlayerCastController(private val fragment: PlayerFragment) {
         }
     }
 
-    fun isCastConnected(): Boolean {
+    private fun isCastConnected(): Boolean {
         return try {
             castManager?.isConnected == true
         } catch (_: Exception) {
