@@ -1943,7 +1943,7 @@ class ChatViewModel(
                     if (replyId == null && message.startsWith("/")) {
                         sendCommand(message, networkLibrary, gqlHeaders, helixHeaders, accountId, channelId, channelLogin, useApiChatMessages, enableIntegrity)
                     } else {
-                        sendMessage(message, networkLibrary, gqlHeaders, helixHeaders, accountId, channelId, useApiChatMessages, enableIntegrity)
+                        sendMessage(message, networkLibrary, gqlHeaders, helixHeaders, accountId, channelId, useApiChatMessages, enableIntegrity, replyId)
                     }
                 } catch (e: Exception) {
 
@@ -1955,7 +1955,7 @@ class ChatViewModel(
             } else {
                 viewModelScope.launch {
                     try {
-                        sendMessage(message, networkLibrary, gqlHeaders, helixHeaders, accountId, channelId, useApiChatMessages, enableIntegrity)
+                        sendMessage(message, networkLibrary, gqlHeaders, helixHeaders, accountId, channelId, useApiChatMessages, enableIntegrity, replyId)
                     } catch (e: Exception) {
 
                     }
