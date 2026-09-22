@@ -219,29 +219,20 @@ abstract class BasePlaybackService : LifecycleService() {
     }
 
     protected fun castTogglePlayPause() {
-        try {
-            val manager = xtraModule.castManager
-            if (manager.remoteMediaClient?.isPlaying == true) {
-                manager.pauseRemote()
-            } else {
-                manager.playRemote()
-            }
-        } catch (_: Exception) {
+        val manager = xtraModule.castManager
+        if (manager.remoteMediaClient?.isPlaying == true) {
+            manager.pauseRemote()
+        } else {
+            manager.playRemote()
         }
     }
 
     protected fun castPause() {
-        try {
-            xtraModule.castManager.pauseRemote()
-        } catch (_: Exception) {
-        }
+        xtraModule.castManager.pauseRemote()
     }
 
     protected fun castStop() {
-        try {
-            xtraModule.castManager.stopCasting()
-        } catch (_: Exception) {
-        }
+        xtraModule.castManager.stopCasting()
     }
 
     protected fun castSeekRelative(deltaMs: Long) {
@@ -256,10 +247,7 @@ abstract class BasePlaybackService : LifecycleService() {
     }
 
     protected fun setCastControlsEnabled(enabled: Boolean) {
-        try {
-            xtraModule.castManager.setControlsEnabled(enabled)
-        } catch (_: Exception) {
-        }
+        xtraModule.castManager.setControlsEnabled(enabled)
     }
 
     private var volumeSession: MediaSession? = null
@@ -381,13 +369,8 @@ abstract class BasePlaybackService : LifecycleService() {
         }
     }
 
-    private fun castVolumePercent(): Int {
-        return try {
-            Math.round(xtraModule.castManager.deviceVolume * 100).toInt().coerceIn(0, 100)
-        } catch (_: Exception) {
-            0
-        }
-    }
+    private fun castVolumePercent(): Int =
+        Math.round(xtraModule.castManager.deviceVolume * 100).toInt().coerceIn(0, 100)
 
     private fun setCastVolumeTarget(target: Int) {
         val clamped = target.coerceIn(0, 100)
@@ -408,10 +391,7 @@ abstract class BasePlaybackService : LifecycleService() {
     }
 
     protected fun castSetVolume(volume: Double) {
-        try {
-            xtraModule.castManager.setDeviceVolume(volume)
-        } catch (_: Exception) {
-        }
+        xtraModule.castManager.setDeviceVolume(volume)
     }
 
     private fun findQuality(targetQualityString: String?): VideoQuality? {

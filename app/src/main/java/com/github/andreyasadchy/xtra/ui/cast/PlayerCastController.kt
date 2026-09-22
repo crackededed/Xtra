@@ -63,9 +63,6 @@ class PlayerCastController(private val fragment: PlayerFragment) {
                 val castButton = view.findViewById<androidx.mediarouter.app.MediaRouteButton>(com.github.andreyasadchy.xtra.R.id.castButton)
                 castButton.routeSelector = routeSelector
                 castButton.visibility = if (fragment.requireContext().prefs().getBoolean(C.PLAYER_SHOW_CAST_BUTTON, true)) android.view.View.VISIBLE else android.view.View.GONE
-            }
-            fragment.view?.let { view ->
-                val castButton = view.findViewById<androidx.mediarouter.app.MediaRouteButton>(com.github.andreyasadchy.xtra.R.id.castButton)
                 castButton.dialogFactory = CastControllerDialogFactory()
             }
             manager.playCurrentRequest = castPlayRequestAction
@@ -305,26 +302,16 @@ class PlayerCastController(private val fragment: PlayerFragment) {
             q.name != VideoQuality.CHAT_ONLY_QUALITY &&
             !q.url.isNullOrBlank()
 
-    private fun isCastConnected(): Boolean {
-        return try {
-            castManager?.isConnected == true
-        } catch (_: Exception) {
-            false
-        }
-    }
+    private fun isCastConnected(): Boolean =
+        castManager?.isConnected == true
 
-    fun isCastingCurrentContent(): Boolean {
-        return try {
-            castManager?.isCastingContent(
-                fragment.playbackService?.type,
-                fragment.playbackService?.channelId,
-                fragment.playbackService?.videoId,
-                fragment.playbackService?.clipId,
-            ) == true
-        } catch (_: Exception) {
-            false
-        }
-    }
+    fun isCastingCurrentContent(): Boolean =
+        castManager?.isCastingContent(
+            fragment.playbackService?.type,
+            fragment.playbackService?.channelId,
+            fragment.playbackService?.videoId,
+            fragment.playbackService?.clipId,
+        ) == true
 
     private fun onCastDisconnected() {
         val wasCastingCurrent = _castCurrentContentActive || isCastingCurrentContent()
