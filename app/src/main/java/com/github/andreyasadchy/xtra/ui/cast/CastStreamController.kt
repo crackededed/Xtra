@@ -1,8 +1,5 @@
 package com.github.andreyasadchy.xtra.ui.cast
 
-import com.google.android.gms.cast.MediaStatus
-import com.google.android.gms.cast.framework.media.RemoteMediaClient
-
 class CastStreamController(private val castManager: CastManager) {
 
     data class StreamMetadata(
@@ -10,34 +7,6 @@ class CastStreamController(private val castManager: CastManager) {
         val channelName: String? = null,
         val thumbnail: String? = null,
     )
-
-    fun interface ErrorListener {
-        fun onStreamError()
-    }
-
-    private var errorListener: ErrorListener? = null
-    private var clientListener: RemoteMediaClient.Listener? = null
-
-    fun setErrorListener(listener: ErrorListener?) {
-        clientListener?.let { castManager.removeMediaStatusListener(it) }
-        clientListener = null
-        errorListener = listener
-        if (listener != null) {
-            val remoteListener = object : RemoteMediaClient.Listener {
-                override fun onStatusUpdated() {
-                    checkForError()
-                }
-
-                override fun onMetadataUpdated() = Unit
-                override fun onQueueStatusUpdated() = Unit
-                override fun onPreloadStatusUpdated() = Unit
-                override fun onSendingRemoteMediaRequest() = Unit
-                override fun onAdBreakStatusUpdated() = Unit
-            }
-            clientListener = remoteListener
-            castManager.addMediaStatusListener(remoteListener)
-        }
-    }
 
     fun play(
         url: String,
@@ -86,19 +55,4 @@ class CastStreamController(private val castManager: CastManager) {
         )
     }
 
-    fun stop() {
-        castManager.setControlsEnabled(false)
     }
-
-    private fun checkForError() {
-        try {
-            val status = castManager.remoteMediaClient?.mediaStatus ?: return
-            if (status.playerState == MediaStatus.PLAYER_STATE_IDLE &&
-                status.idleReason == MediaStatus.IDLE_REASON_ERROR
-            ) {
-                errorListener?.onStreamError()
-            }
-        } catch (_: Exception) {
-        }
-    }
-}

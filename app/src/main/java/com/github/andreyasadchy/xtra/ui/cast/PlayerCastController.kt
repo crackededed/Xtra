@@ -134,7 +134,6 @@ class PlayerCastController(private val fragment: PlayerFragment) {
         }
         castSessionListener = null
         castManager = null
-        castStreamController?.setErrorListener(null)
         castStreamController = null
     }
 
