@@ -1,10 +1,10 @@
-package com.github.andreyasadchy.xtra.model.helix.follows
+package com.github.andreyasadchy.xtra.model.helix.follower
 
 import com.github.andreyasadchy.xtra.model.helix.Pagination
 import kotlinx.serialization.Serializable
 
 @Serializable
-class FollowsResponse(
-    val data: List<Follow>,
+class FollowersResponse(
+    val data: List<Follower>,
     val pagination: Pagination? = null,
 )

@@ -57,6 +57,16 @@ class MessageClickedViewModel(
                                 ids = channelId?.let { listOf(it) },
                                 logins = if (channelId.isNullOrBlank()) channelLogin?.let { listOf(it) } else null
                             ).data.firstOrNull()?.let {
+                                val followedAt = try {
+                                    helixRepository.getUserFollowers(
+                                        networkLibrary = networkLibrary,
+                                        headers = helixHeaders,
+                                        userId = targetId,
+                                        targetId = it.id,
+                                    ).data.firstOrNull()?.followedAt
+                                } catch (e: Exception) {
+                                    null
+                                }
                                 User(
                                     id = it.id,
                                     login = it.login,
@@ -65,6 +75,7 @@ class MessageClickedViewModel(
                                     type = it.type,
                                     broadcasterType = it.broadcasterType,
                                     createdAt = it.createdAt,
+                                    followedAt = followedAt,
                                 )
                             }
                         } catch (e: Exception) {
