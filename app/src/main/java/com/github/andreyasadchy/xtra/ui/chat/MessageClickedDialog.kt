@@ -174,7 +174,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listen
                                 channelLogin = selectedMessage.userLogin,
                                 targetId = if (selectedMessage.userId != targetId) targetId else null,
                                 networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
-                                gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
+                                gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), true),
                                 helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext()),
                                 enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                             )
@@ -474,7 +474,7 @@ class MessageClickedDialog : BottomSheetDialogFragment(), IntegrityDialog.Listen
                         channelLogin = userLogin,
                         targetId = if (userId != targetId) targetId else null,
                         networkLibrary = requireContext().prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
-                        gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext()),
+                        gqlHeaders = TwitchApiHelper.getGQLHeaders(requireContext(), true),
                         helixHeaders = TwitchApiHelper.getHelixHeaders(requireContext()),
                         enableIntegrity = requireContext().prefs().getBoolean(C.ENABLE_INTEGRITY, false),
                     )

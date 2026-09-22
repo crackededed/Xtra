@@ -10,7 +10,8 @@ import com.github.andreyasadchy.xtra.model.helix.chat.CheerEmotesResponse
 import com.github.andreyasadchy.xtra.model.helix.chat.EmoteSetsResponse
 import com.github.andreyasadchy.xtra.model.helix.chat.UserEmotesResponse
 import com.github.andreyasadchy.xtra.model.helix.clip.ClipsResponse
-import com.github.andreyasadchy.xtra.model.helix.follows.FollowsResponse
+import com.github.andreyasadchy.xtra.model.helix.follow.FollowsResponse
+import com.github.andreyasadchy.xtra.model.helix.follower.FollowersResponse
 import com.github.andreyasadchy.xtra.model.helix.game.GamesResponse
 import com.github.andreyasadchy.xtra.model.helix.stream.StreamsResponse
 import com.github.andreyasadchy.xtra.model.helix.user.UsersResponse
@@ -618,7 +619,7 @@ class HelixRepository(
         }
     }
 
-    suspend fun getUserFollowers(networkLibrary: String?, headers: Map<String, String>, userId: String?, targetId: String? = null, limit: Int? = null, offset: String? = null): FollowsResponse = withContext(Dispatchers.IO) {
+    suspend fun getUserFollowers(networkLibrary: String?, headers: Map<String, String>, userId: String?, targetId: String? = null, limit: Int? = null, offset: String? = null): FollowersResponse = withContext(Dispatchers.IO) {
         val url = "https://api.twitch.tv/helix/channels/followers".toUri().buildUpon().apply {
             targetId?.let { appendQueryParameter("user_id", it) }
             userId?.let { appendQueryParameter("broadcaster_id", it) }
@@ -643,7 +644,7 @@ class HelixRepository(
                         timeout.stop()
                     }
                 }
-                json.decodeFromString<FollowsResponse>(response.body.decodeToString())
+                json.decodeFromString<FollowersResponse>(response.body.decodeToString())
             }
             networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
@@ -662,14 +663,14 @@ class HelixRepository(
                         timeout.stop()
                     }
                 }
-                json.decodeFromString<FollowsResponse>(response.body.decodeToString())
+                json.decodeFromString<FollowersResponse>(response.body.decodeToString())
             }
             else -> {
                 okHttpClient.value.newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
                 }.build()).executeAsync().use { response ->
-                    json.decodeFromString<FollowsResponse>(response.body.string())
+                    json.decodeFromString<FollowersResponse>(response.body.string())
                 }
             }
         }
