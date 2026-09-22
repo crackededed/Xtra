@@ -1,4 +1,4 @@
-package com.github.andreyasadchy.xtra.model.helix.follows
+package com.github.andreyasadchy.xtra.model.helix.follow
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
