@@ -250,20 +250,6 @@ class CastManager(private val appContext: android.content.Context) {
         volumeListenerSession = null
     }
 
-    fun addMediaStatusListener(listener: RemoteMediaClient.Listener) {
-        try {
-            remoteMediaClient?.addListener(listener)
-        } catch (_: Exception) {
-        }
-    }
-
-    fun removeMediaStatusListener(listener: RemoteMediaClient.Listener) {
-        try {
-            remoteMediaClient?.removeListener(listener)
-        } catch (_: Exception) {
-        }
-    }
-
     fun addSessionListener(listener: SessionManagerListener<CastSession>) {
         try {
             sessionManagerOrNull()?.addSessionManagerListener(listener, CastSession::class.java)

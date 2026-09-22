@@ -54,5 +54,4 @@ class CastStreamController(private val castManager: CastManager) {
             onResult,
         )
     }
-
-    }
+}

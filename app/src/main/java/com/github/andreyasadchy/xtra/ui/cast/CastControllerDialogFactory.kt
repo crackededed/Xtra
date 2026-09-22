@@ -83,6 +83,8 @@ class CastControllerDialogFactory : MediaRouteDialogFactory() {
         override fun onStart() {
             super.onStart()
             addPlayCurrentButton()
+            val accent = accentColor ?: CastControllerDialogFactory.resolveAccentColor(context)?.also { accentColor = it } ?: return
+            stylePlayButton(accent)
             styleTitleAndButtons()
         }
 
@@ -102,7 +104,6 @@ class CastControllerDialogFactory : MediaRouteDialogFactory() {
             findViewById<View>(androidx.mediarouter.R.id.mr_media_main_control)?.setBackgroundColor(Color.TRANSPARENT)
             styleTitleBar(accent)
             styleActionBar()
-            stylePlayButton(accent)
         }
 
         private fun stylePlayButton(accent: Int) {
