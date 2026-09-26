@@ -734,11 +734,9 @@ class StreamDownloadService : LifecycleService() {
             }
         }
         list
-            .sortedWith(
-                compareByDescending<VideoQuality> { it.bitrate }
-                    .thenByDescending { it.frameRate }
-                    .thenByDescending { it.resolution }
-            )
+            .sortedByDescending { it.bitrate }
+            .sortedByDescending { it.frameRate }
+            .sortedByDescending { it.resolution }
             .toMutableList().apply {
                 find { it.name.equals("source", true) }?.let { source ->
                     remove(source)
