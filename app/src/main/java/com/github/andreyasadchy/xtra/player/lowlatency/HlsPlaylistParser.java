@@ -19,7 +19,6 @@ import static androidx.media3.common.util.Assertions.checkNotNull;
 import static androidx.media3.common.util.Assertions.checkState;
 import static androidx.media3.common.util.Util.castNonNull;
 
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Base64;
@@ -49,9 +48,7 @@ import androidx.media3.exoplayer.hls.playlist.HlsMultivariantPlaylist.Variant;
 import androidx.media3.exoplayer.hls.playlist.HlsPlaylist;
 import androidx.media3.exoplayer.upstream.ParsingLoadable;
 import androidx.media3.extractor.mp4.PsshAtomUtil;
-import androidx.preference.PreferenceManager;
 
-import com.github.andreyasadchy.xtra.XtraApp;
 import com.google.common.collect.Iterables;
 
 import org.json.JSONArray;
@@ -772,11 +769,6 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
       LineIterator iterator,
       String baseUri)
       throws IOException {
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(XtraApp.INSTANCE.getApplicationContext()); // xtra: settings
-    boolean hideAds = prefs.getBoolean(com.github.andreyasadchy.xtra.util.C.PLAYER_HIDE_ADS, false);
-    @Nullable String proxyHost = prefs.getString(com.github.andreyasadchy.xtra.util.C.PROXY_HOST, null);
-    @Nullable String proxyPort = prefs.getString(com.github.andreyasadchy.xtra.util.C.PROXY_PORT, null);
-    boolean usingProxy = prefs.getBoolean(com.github.andreyasadchy.xtra.util.C.PROXY_MEDIA_PLAYLIST, true) && proxyHost != null && !proxyHost.isBlank() && proxyPort != null && !proxyPort.isBlank();
     List<DateRange> adRanges = new ArrayList<>(); // xtra: ad segments
     @HlsMediaPlaylist.PlaylistType int playlistType = HlsMediaPlaylist.PLAYLIST_TYPE_UNKNOWN;
     long startOffsetUs = C.TIME_UNSET;
@@ -998,26 +990,24 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
           playlistStartTimeUs = programDatetimeUs - segmentStartTimeUs;
         }
       } else if (line.startsWith("#EXT-X-DATERANGE")) { // xtra: ad segments
-        if (hideAds || usingProxy) {
-          String id = parseOptionalStringAttr(line, Pattern.compile("ID=\"(.+?)\""), variableDefinitions);
-          String classAttr = parseOptionalStringAttr(line, Pattern.compile("CLASS=\"(.+?)\""), variableDefinitions);
-          String ad = parseOptionalStringAttr(line, Pattern.compile("X-TV-TWITCH-AD-.+?=\"(.+?)\""), variableDefinitions);
-          if (id.startsWith("stitched-ad-") || classAttr.equals("twitch-stitched-ad") || ad != null) {
-            String startDate = parseOptionalStringAttr(line, Pattern.compile("START-DATE=\"(.+?)\""), variableDefinitions);
-            if (startDate != null) {
-              long startUs = Util.msToUs(Util.parseXsDateTime(startDate));
-              String endDate = parseOptionalStringAttr(line, Pattern.compile("END-DATE=\"(.+?)\""), variableDefinitions);
-              if (endDate != null) {
-                long endUs = Util.msToUs(Util.parseXsDateTime(endDate));
+        String id = parseOptionalStringAttr(line, Pattern.compile("ID=\"(.+?)\""), variableDefinitions);
+        String classAttr = parseOptionalStringAttr(line, Pattern.compile("CLASS=\"(.+?)\""), variableDefinitions);
+        String ad = parseOptionalStringAttr(line, Pattern.compile("X-TV-TWITCH-AD-.+?=\"(.+?)\""), variableDefinitions);
+        if (id.startsWith("stitched-ad-") || classAttr.equals("twitch-stitched-ad") || ad != null) {
+          String startDate = parseOptionalStringAttr(line, Pattern.compile("START-DATE=\"(.+?)\""), variableDefinitions);
+          if (startDate != null) {
+            long startUs = Util.msToUs(Util.parseXsDateTime(startDate));
+            String endDate = parseOptionalStringAttr(line, Pattern.compile("END-DATE=\"(.+?)\""), variableDefinitions);
+            if (endDate != null) {
+              long endUs = Util.msToUs(Util.parseXsDateTime(endDate));
+              adRanges.add(new DateRange(startUs, endUs));
+            } else {
+              String durationAttr = parseOptionalStringAttr(line, Pattern.compile("DURATION=([\\d.]+)\\b"), variableDefinitions);
+              String plannedDuration = parseOptionalStringAttr(line, Pattern.compile("PLANNED-DURATION=([\\d.]+)\\b"), variableDefinitions);
+              String duration = durationAttr != null ? durationAttr : plannedDuration;
+              if (duration != null) {
+                long endUs = startUs + (new BigDecimal(duration).multiply(new BigDecimal(C.MICROS_PER_SECOND)).longValue());
                 adRanges.add(new DateRange(startUs, endUs));
-              } else {
-                String durationAttr = parseOptionalStringAttr(line, Pattern.compile("DURATION=(.+?)"), variableDefinitions);
-                String plannedDuration = parseOptionalStringAttr(line, Pattern.compile("PLANNED-DURATION=(.+?)"), variableDefinitions);
-                String duration = durationAttr != null ? durationAttr : plannedDuration;
-                if (duration != null) {
-                  long endUs = startUs + (new BigDecimal(duration).multiply(new BigDecimal(C.MICROS_PER_SECOND)).longValue());
-                  adRanges.add(new DateRange(startUs, endUs));
-                }
               }
             }
           }
@@ -1140,19 +1130,6 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
         }
         String segmentUri = replaceVariableReferences(line, variableDefinitions)
                 .replace("-unmuted", "-muted"); // xtra: unmuted segments
-        if (hideAds) { // xtra: ad segments
-          if (segmentTitle.contains("Amazon") || segmentTitle.contains("Adform") || segmentTitle.contains("DCM")) {
-            segmentUri = null;
-          } else {
-            for (DateRange range : adRanges) {
-              long current = playlistStartTimeUs + segmentStartTimeUs;
-              if ((range.startDateUs <= current) && (current < range.endDateUs)) {
-                segmentUri = null;
-                break;
-              }
-            }
-          }
-        }
         @Nullable Segment inferredInitSegment = urlToInferredInitSegment.get(segmentUri);
         if (segmentByteRangeLength == C.LENGTH_UNSET) {
           // The segment has no byte range defined.
@@ -1233,20 +1210,21 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
 
     if (!segments.isEmpty()) { // xtra: ad segments
       HlsMediaPlaylist.Segment segment = segments.get(segments.size() - 1);
-      if (hideAds && segment.url == null) {
+      String title;
+      int index = segment.title.indexOf('|');
+      if (index != -1) {
+        title = segment.title.substring(0, index);
+      } else {
+        title = segment.title;
+      }
+      if (title.equals("Amazon") || title.equals("Adform") || title.equals("DCM")) {
         tags.add("ads=true");
       } else {
-        if (usingProxy) {
-          if (segment.title.contains("Amazon") || segment.title.contains("Adform") || segment.title.contains("DCM")) {
+        for (DateRange range : adRanges) {
+          long current = playlistStartTimeUs + segment.relativeStartTimeUs;
+          if ((range.startDateUs <= current) && (current < range.endDateUs)) {
             tags.add("ads=true");
-          } else {
-            for (DateRange range : adRanges) {
-              long current = playlistStartTimeUs + segment.relativeStartTimeUs;
-              if ((range.startDateUs <= current) && (current < range.endDateUs)) {
-                tags.add("ads=true");
-                break;
-              }
-            }
+            break;
           }
         }
       }

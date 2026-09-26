@@ -570,9 +570,12 @@
     <string name="default_values">Default values</string>
     <string name="add_item">Add item</string>
     <string name="delete_item_message">Are you sure you want to delete this item?</string>
-    <string name="video_swap_active">Video swap active</string>
     <string name="chat_gif_size">GIF size</string>
     <string name="show_gif_messages">Show GIF messages</string>
     <string name="proxy_timeout">Proxy timeout</string>
     <string name="proxy_timeout_summary">Proxy timeout in milliseconds</string>
+    <string name="starting_video_swap">Starting video swap</string>
+    <string name="stopping_video_swap">Stopping video swap</string>
+    <string name="starting_proxy">Starting proxy</string>
+    <string name="stopping_proxy">Stopping proxy</string>
 </resources>
