@@ -224,11 +224,9 @@ class ExoPlayerService : BasePlaybackService() {
                         }
                         if (!list.isNullOrEmpty()) {
                             qualities = list
-                                .sortedWith(
-                                    compareByDescending<VideoQuality> { it.bitrate }
-                                        .thenByDescending { it.frameRate }
-                                        .thenByDescending { it.resolution }
-                                )
+                                .sortedByDescending { it.bitrate }
+                                .sortedByDescending { it.frameRate }
+                                .sortedByDescending { it.resolution }
                                 .toMutableList().apply {
                                     add(0, VideoQuality(VideoQuality.AUTO_QUALITY))
                                     find { it.name.equals("source", true) }?.let { source ->
@@ -439,11 +437,9 @@ class ExoPlayerService : BasePlaybackService() {
                                                 VideoQuality(name, resolution, frameRate.toFloat(), url = url)
                                             }
                                             qualities = list
-                                                .sortedWith(
-                                                    compareByDescending<VideoQuality> { it.bitrate }
-                                                        .thenByDescending { it.frameRate }
-                                                        .thenByDescending { it.resolution }
-                                                )
+                                                .sortedByDescending { it.bitrate }
+                                                .sortedByDescending { it.frameRate }
+                                                .sortedByDescending { it.resolution }
                                                 .toMutableList().apply {
                                                     find { it.name.equals("source", true) }?.let { source ->
                                                         remove(source)
@@ -765,11 +761,9 @@ class ExoPlayerService : BasePlaybackService() {
                     } else {
                         qualities?.let { list ->
                             qualities = list
-                                .sortedWith(
-                                    compareByDescending<VideoQuality> { it.bitrate }
-                                        .thenByDescending { it.frameRate }
-                                        .thenByDescending { it.resolution }
-                                )
+                                .sortedByDescending { it.bitrate }
+                                .sortedByDescending { it.frameRate }
+                                .sortedByDescending { it.resolution }
                                 .toMutableList().apply {
                                     find { it.name.equals("source", true) }?.let { source ->
                                         remove(source)
@@ -1358,11 +1352,9 @@ class ExoPlayerService : BasePlaybackService() {
                         }
                     }
                     qualities = filtered
-                        .sortedWith(
-                            compareByDescending<VideoQuality> { it.bitrate }
-                                .thenByDescending { it.frameRate }
-                                .thenByDescending { it.resolution }
-                        )
+                        .sortedByDescending { it.bitrate }
+                        .sortedByDescending { it.frameRate }
+                        .sortedByDescending { it.resolution }
                         .toMutableList().apply {
                             add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY))
                         }
@@ -1498,11 +1490,9 @@ class ExoPlayerService : BasePlaybackService() {
                                                         formats.add(i to trackGroup.mediaTrackGroup.getFormat(i))
                                                     }
                                                     val list = formats
-                                                        .sortedWith(
-                                                            compareByDescending<Pair<Int, Format>> { it.second.bitrate }
-                                                                .thenByDescending { it.second.frameRate }
-                                                                .thenByDescending { it.second.height }
-                                                        )
+                                                        .sortedByDescending { it.second.bitrate }
+                                                        .sortedByDescending { it.second.frameRate }
+                                                        .sortedByDescending { it.second.height }
                                                     list.find {
                                                         (quality.resolution == it.second.height
                                                                 && (quality.frameRate?.let { fps -> floor(fps) } ?: 30f) >= floor(it.second.frameRate)
@@ -1744,11 +1734,9 @@ class ExoPlayerService : BasePlaybackService() {
                             }
                         }
                         val qualities = list
-                            .sortedWith(
-                                compareByDescending<VideoQuality> { it.bitrate }
-                                    .thenByDescending { it.frameRate }
-                                    .thenByDescending { it.resolution }
-                            )
+                            .sortedByDescending { it.bitrate }
+                            .sortedByDescending { it.frameRate }
+                            .sortedByDescending { it.resolution }
                             .toMutableList().apply {
                                 find { it.name.equals("source", true) }?.let { source ->
                                     remove(source)
