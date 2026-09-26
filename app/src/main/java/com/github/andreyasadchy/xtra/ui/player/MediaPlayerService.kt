@@ -433,11 +433,9 @@ class MediaPlayerService : BasePlaybackService() {
                     } else {
                         qualities?.let { list ->
                             qualities = list
-                                .sortedWith(
-                                    compareByDescending<VideoQuality> { it.bitrate }
-                                        .thenByDescending { it.frameRate }
-                                        .thenByDescending { it.resolution }
-                                )
+                                .sortedByDescending { it.bitrate }
+                                .sortedByDescending { it.frameRate }
+                                .sortedByDescending { it.resolution }
                                 .toMutableList().apply {
                                     find { it.name.equals("source", true) }?.let { source ->
                                         remove(source)
@@ -843,11 +841,9 @@ class MediaPlayerService : BasePlaybackService() {
                             }
                         }
                         qualities = list
-                            .sortedWith(
-                                compareByDescending<VideoQuality> { it.bitrate }
-                                    .thenByDescending { it.frameRate }
-                                    .thenByDescending { it.resolution }
-                            )
+                            .sortedByDescending { it.bitrate }
+                            .sortedByDescending { it.frameRate }
+                            .sortedByDescending { it.resolution }
                             .toMutableList().apply {
                                 find { it.name.equals("source", true) }?.let { source ->
                                     remove(source)
@@ -1035,11 +1031,9 @@ class MediaPlayerService : BasePlaybackService() {
                                             VideoQuality(name, resolution, frameRate.toFloat(), url = url)
                                         }
                                         qualities = list
-                                            .sortedWith(
-                                                compareByDescending<VideoQuality> { it.bitrate }
-                                                    .thenByDescending { it.frameRate }
-                                                    .thenByDescending { it.resolution }
-                                            )
+                                            .sortedByDescending { it.bitrate }
+                                            .sortedByDescending { it.frameRate }
+                                            .sortedByDescending { it.resolution }
                                             .toMutableList().apply {
                                                 find { it.name.equals("source", true) }?.let { source ->
                                                     remove(source)
@@ -1176,11 +1170,9 @@ class MediaPlayerService : BasePlaybackService() {
                             }
                         }
                         qualities = list
-                            .sortedWith(
-                                compareByDescending<VideoQuality> { it.bitrate }
-                                    .thenByDescending { it.frameRate }
-                                    .thenByDescending { it.resolution }
-                            )
+                            .sortedByDescending { it.bitrate }
+                            .sortedByDescending { it.frameRate }
+                            .sortedByDescending { it.resolution }
                             .toMutableList().apply {
                                 find { it.name.equals("source", true) }?.let { source ->
                                     remove(source)
@@ -1317,11 +1309,9 @@ class MediaPlayerService : BasePlaybackService() {
                         }
                     }
                     qualities = filtered
-                        .sortedWith(
-                            compareByDescending<VideoQuality> { it.bitrate }
-                                .thenByDescending { it.frameRate }
-                                .thenByDescending { it.resolution }
-                        )
+                        .sortedByDescending { it.bitrate }
+                        .sortedByDescending { it.frameRate }
+                        .sortedByDescending { it.resolution }
                         .toMutableList().apply {
                             add(VideoQuality(VideoQuality.AUDIO_ONLY_QUALITY))
                         }
