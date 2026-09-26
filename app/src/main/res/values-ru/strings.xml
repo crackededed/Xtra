@@ -569,9 +569,12 @@
     <string name="default_values">Значения по умолчанию</string>
     <string name="add_item">Добавить элемент</string>
     <string name="delete_item_message">Вы уверены, что хотите удалить этот элемент?</string>
-    <string name="video_swap_active">Смена видео активна</string>
     <string name="chat_gif_size">Размер GIF</string>
     <string name="show_gif_messages">Показывать GIF-сообщения</string>
     <string name="proxy_timeout">Тайм-аут прокси</string>
     <string name="proxy_timeout_summary">Тайм-аут прокси в миллисекундах</string>
+    <string name="starting_video_swap">Starting video swap</string>
+    <string name="stopping_video_swap">Stopping video swap</string>
+    <string name="starting_proxy">Starting proxy</string>
+    <string name="stopping_proxy">Stopping proxy</string>
 </resources>
