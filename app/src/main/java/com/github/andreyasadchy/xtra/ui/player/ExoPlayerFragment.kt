@@ -251,6 +251,27 @@ class ExoPlayerFragment : PlayerFragment() {
                     }
                 }
             }
+
+            override fun setPlayerSurface(secondaryPlayer: Boolean) {
+                if (secondaryPlayer) {
+                    playbackService?.player?.setVideoSurfaceView(null)
+                    playbackService?.secondaryPlayer?.setVideoSurfaceView(binding.playerSurface)
+                    playerListener?.let {
+                        playbackService?.player?.removeListener(it)
+                        playbackService?.secondaryPlayer?.addListener(it)
+                    }
+                } else {
+                    playbackService?.secondaryPlayer?.setVideoSurfaceView(null)
+                    playbackService?.player?.setVideoSurfaceView(binding.playerSurface)
+                    playerListener?.let {
+                        playbackService?.secondaryPlayer?.removeListener(it)
+                        playbackService?.player?.addListener(it)
+                    }
+                }
+                if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
+                    requireView().keepScreenOn = playbackService?.player?.isPlaying == true
+                }
+            }
         }
         val connection = object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -258,8 +279,8 @@ class ExoPlayerFragment : PlayerFragment() {
                     val binder = service as ExoPlayerService.ServiceBinder
                     playbackService = binder.getService()
                     playbackService?.serviceListener = serviceListener
-                    playbackService?.player?.setVideoSurfaceView(binding.playerSurface)
-                    playbackService?.player?.addListener(listener)
+                    (playbackService?.secondaryPlayer ?: playbackService?.player)?.setVideoSurfaceView(binding.playerSurface)
+                    (playbackService?.secondaryPlayer ?: playbackService?.player)?.addListener(listener)
                     playerListener = listener
                     val endTime = playbackService?.setSleepTimer(-1)
                     if (endTime != null && endTime > 0L) {
@@ -273,7 +294,7 @@ class ExoPlayerFragment : PlayerFragment() {
                         }
                     }
                     playbackService?.setStopServiceTimer(false)
-                    playbackService?.player?.let { player ->
+                    (playbackService?.secondaryPlayer ?: playbackService?.player)?.let { player ->
                         if (!requireContext().prefs().getBoolean(C.PLAYER_KEEP_SCREEN_ON_WHEN_PAUSED, false) && canEnterPictureInPicture()) {
                             requireView().keepScreenOn = player.isPlaying
                         }
@@ -324,28 +345,30 @@ class ExoPlayerFragment : PlayerFragment() {
 
     override fun getCurrentSpeed() = playbackService?.player?.playbackParameters?.speed
 
-    override fun getCurrentVolume() = playbackService?.player?.volume
+    override fun getCurrentVolume(): Float? {
+        return playbackService?.getCurrentVolume()
+    }
 
     override fun getTotalDuration() = (playbackService?.player?.currentManifest as? HlsManifest)?.mediaPlaylist?.durationUs?.div(1000)
 
     override fun playPause() {
-        Util.handlePlayPauseButtonAction(playbackService?.player)
+        playbackService?.togglePause()
     }
 
     override fun rewind() {
-        playbackService?.player?.seekBack()
+        playbackService?.seekBack()
     }
 
     override fun fastForward() {
-        playbackService?.player?.seekForward()
+        playbackService?.seekForward()
     }
 
     override fun seek(position: Long) {
-        playbackService?.player?.seekTo(position)
+        playbackService?.seekTo(position)
     }
 
     override fun seekToLivePosition() {
-        playbackService?.player?.seekToDefaultPosition()
+        playbackService?.seekToDefaultPosition()
     }
 
     override fun setPlaybackSpeed(speed: Float) {
@@ -353,7 +376,7 @@ class ExoPlayerFragment : PlayerFragment() {
     }
 
     override fun changeVolume(volume: Float) {
-        playbackService?.player?.volume = volume
+        playbackService?.changeVolume(volume)
     }
 
     override fun updateProgress() {
@@ -480,11 +503,7 @@ class ExoPlayerFragment : PlayerFragment() {
     }
 
     override fun showPlaylistTags(mediaPlaylist: Boolean) {
-        val tags = if (mediaPlaylist) {
-            (playbackService?.player?.currentManifest as? HlsManifest)?.mediaPlaylist?.tags?.toTypedArray()
-        } else {
-            (playbackService?.player?.currentManifest as? HlsManifest)?.multivariantPlaylist?.tags?.toTypedArray()
-        }?.joinToString("\n")
+        val tags = playbackService?.getPlaylistTags(mediaPlaylist)
         if (!tags.isNullOrBlank()) {
             requireContext().getAlertDialogBuilder().apply {
                 setView(NestedScrollView(context).apply {
@@ -515,7 +534,7 @@ class ExoPlayerFragment : PlayerFragment() {
             playbackService?.setSleepTimer((activity as? MainActivity)?.getSleepTimerTimeLeft() ?: 0)
             playbackService?.setStopServiceTimer(true)
         }
-        playerListener?.let { playbackService?.player?.removeListener(it) }
+        playerListener?.let { (playbackService?.secondaryPlayer ?: playbackService?.player)?.removeListener(it) }
         playerListener = null
         playbackService?.serviceListener = null
         serviceConnection?.let { requireContext().unbindService(it) }
@@ -524,12 +543,12 @@ class ExoPlayerFragment : PlayerFragment() {
     }
 
     override fun close(deleteStates: Boolean) {
-        playbackService?.player?.pause()
-        playbackService?.player?.stop()
+        playbackService?.pause()
+        playbackService?.stop()
         if (deleteStates) {
             viewModel.deletePlaybackStates()
         }
-        playerListener?.let { playbackService?.player?.removeListener(it) }
+        playerListener?.let { (playbackService?.secondaryPlayer ?: playbackService?.player)?.removeListener(it) }
         playerListener = null
         playbackService?.serviceListener = null
         serviceConnection?.let { requireContext().unbindService(it) }
@@ -555,7 +574,7 @@ class ExoPlayerFragment : PlayerFragment() {
             playbackService?.setStopServiceTimer(true)
         }
         binding.playerControls.root.removeCallbacks(updateProgressAction)
-        playerListener?.let { playbackService?.player?.removeListener(it) }
+        playerListener?.let { (playbackService?.secondaryPlayer ?: playbackService?.player)?.removeListener(it) }
         playerListener = null
         playbackService?.serviceListener = null
         serviceConnection?.let { requireContext().unbindService(it) }
@@ -574,7 +593,7 @@ class ExoPlayerFragment : PlayerFragment() {
 
     override fun onNetworkLost() {
         if (playbackService?.type != BasePlaybackService.STREAM && isResumed) {
-            playbackService?.player?.stop()
+            playbackService?.stop()
         }
     }
 }
