@@ -2,7 +2,6 @@ package com.github.andreyasadchy.xtra.util.m3u8
 
 import java.io.InputStream
 import java.io.OutputStream
-import java.util.regex.Pattern
 
 object PlaylistUtils {
     fun parseMediaPlaylist(input: InputStream): MediaPlaylist {
@@ -18,23 +17,29 @@ object PlaylistUtils {
                 if (line.startsWith('#')) {
                     when {
                         line.startsWith("#EXT-X-TARGETDURATION") -> {
-                            val matcher = Pattern.compile("#EXT-X-TARGETDURATION:(\\d+)\\b").matcher(line)
-                            if (matcher.find()) {
-                                matcher.group(1)?.toIntOrNull()?.let { targetDuration = it }
+                            Regex("#EXT-X-TARGETDURATION:(\\d+)\\b").find(line)?.groups?.get(1)?.value?.toIntOrNull()?.let {
+                                targetDuration = it
                             }
                         }
                         line.startsWith("#EXT-X-DATERANGE") -> {
-                            val id = Pattern.compile("ID=\"(.+?)\"").matcher(line).let { if (it.find()) it.group(1) else null }
-                            val startDate = Pattern.compile("START-DATE=\"(.+?)\"").matcher(line).let { if (it.find()) it.group(1) else null }
+                            val id = Regex("ID=\"(.+?)\"").find(line)?.groups?.get(1)?.value
+                            val startDate = Regex("START-DATE=\"(.+?)\"").find(line)?.groups?.get(1)?.value
                             if (id != null && startDate != null) {
                                 dateRanges.add(DateRange(
                                     id = id,
-                                    rangeClass = Pattern.compile("CLASS=\"(.+?)\"").matcher(line).let { if (it.find()) it.group(1) else null },
+                                    className = Regex("CLASS=\"(.+?)\"").find(line)?.groups?.get(1)?.value,
                                     startDate = startDate,
-                                    endDate = Pattern.compile("END-DATE=\"(.+?)\"").matcher(line).let { if (it.find()) it.group(1) else null },
-                                    duration = Pattern.compile("DURATION=(.+?)").matcher(line).let { if (it.find()) it.group(1)?.toFloatOrNull() else null },
-                                    plannedDuration = Pattern.compile("PLANNED-DURATION=(.+?)").matcher(line).let { if (it.find()) it.group(1)?.toFloatOrNull() else null },
-                                    ad = Pattern.compile("X-TV-TWITCH-AD-.+?=\"(.+?)\"").matcher(line).let { if (it.find()) it.group(1) else null } != null
+                                    endDate = Regex("END-DATE=\"(.+?)\"").find(line)?.groups?.get(1)?.value,
+                                    duration = Regex("DURATION=([\\d.]+)\\b").find(line)?.groups?.get(1)?.value?.toFloatOrNull(),
+                                    plannedDuration = Regex("PLANNED-DURATION=([\\d.]+)\\b").find(line)?.groups?.get(1)?.value?.toFloatOrNull(),
+                                    clientAttributes = Regex("\\b(X-[A-Z0-9-]+)=").findAll(line).mapNotNull { result ->
+                                        val name = result.groups[1]?.value
+                                        val value = Regex("${name}=\"(.+?)\"").find(line)?.groups?.get(1)?.value
+                                            ?: Regex("${name}=([\\d.]+)\\b").find(line)?.groups?.get(1)?.value
+                                        if (name != null && value != null) {
+                                            name to value
+                                        } else null
+                                    }.toList()
                                 ))
                             }
                         }
@@ -42,21 +47,15 @@ object PlaylistUtils {
                             programDateTime = line.substringAfter("#EXT-X-PROGRAM-DATE-TIME:")
                         }
                         line.startsWith("#EXT-X-MAP") -> {
-                            val matcher = Pattern.compile("URI=\"(.+?)\"").matcher(line)
-                            if (matcher.find()) {
-                                matcher.group(1)?.let { initSegmentUri = it }
+                            Regex("URI=\"(.+?)\"").find(line)?.groups?.get(1)?.value?.let {
+                                initSegmentUri = it
                             }
                         }
                         line.startsWith("#EXTINF") -> {
-                            val durationMatcher = Pattern.compile("#EXTINF:([\\d.]+)\\b").matcher(line)
-                            if (durationMatcher.find()) {
-                                durationMatcher.group(1)?.toFloatOrNull()?.let { duration ->
-                                    val titleMatcher = Pattern.compile("#EXTINF:[\\d.]+\\b,(.+)").matcher(line)
-                                    val title = if (titleMatcher.find()) {
-                                        titleMatcher.group(1)
-                                    } else null
-                                    segmentInfo = Pair(duration, title)
-                                }
+                            val duration = Regex("#EXTINF:([\\d.]+)\\b").find(line)?.groups?.get(1)?.value?.toFloatOrNull()
+                            if (duration != null) {
+                                val title = Regex("#EXTINF:[\\d.]+\\b,(.+)").find(line)?.groups?.get(1)?.value
+                                segmentInfo = Pair(duration, title)
                             }
                         }
                         line.startsWith("#EXT-X-ENDLIST") -> {
