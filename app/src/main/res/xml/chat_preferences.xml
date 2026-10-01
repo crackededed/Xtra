@@ -353,6 +353,28 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="false"
+        android:key="chat_filter_enabled"
+        android:summary="@string/chat_filter_enabled_summary"
+        android:title="@string/chat_filter_enabled"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <EditTextPreference
+        android:key="chat_filter_words"
+        android:summary="@string/chat_filter_words_summary"
+        android:title="@string/chat_filter_words"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <EditTextPreference
+        android:key="chat_filter_usernames"
+        android:summary="@string/chat_filter_usernames_summary"
+        android:title="@string/chat_filter_usernames"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
         android:key="chat_disable"
         android:title="@string/disable_chat"
         app:iconSpaceReserved="false"

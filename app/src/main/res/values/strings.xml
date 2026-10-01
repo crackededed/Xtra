@@ -216,6 +216,12 @@
     <string name="sleep_timer_lock_permissions">Lock screen after (requires device admin permissions)</string>
     <string name="admin_settings">Enable/disable as device admin app</string>
     <string name="disable_chat">Disable chat</string>
+    <string name="chat_filter_enabled">Enable chat filter</string>
+    <string name="chat_filter_enabled_summary">Hide messages containing blocked words or sent by blocked users</string>
+    <string name="chat_filter_words">Blocked words</string>
+    <string name="chat_filter_words_summary">Messages containing these words will be hidden (one per line)</string>
+    <string name="chat_filter_usernames">Blocked usernames</string>
+    <string name="chat_filter_usernames_summary">Messages from these users will be hidden (one per line)</string>
     <string name="disconnected">Disconnected</string>
     <string name="other">Other</string>
     <string name="both">Both</string>

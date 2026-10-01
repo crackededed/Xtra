@@ -162,6 +162,10 @@ class ChatViewModel(
     val autoCompleteList = mutableListOf<Any?>()
     private val chatters = ConcurrentHashMap<String, Chatter>()
 
+    private var chatFilterEnabled = false
+    private var chatFilterWordRegex: Regex? = null
+    private var chatFilterUsernames = emptySet<String>()
+
     fun startLive(networkLibrary: String?, recentMessagesUrl: String?, channelId: String?, channelLogin: String?, channelName: String?, streamId: String?) {
         if (chatReadIRCSocket == null && chatReadWebSocket == null && eventSub == null && channelLogin != null) {
             messageLimit = applicationContext.prefs().getInt(C.CHAT_LIMIT, 600)
@@ -911,14 +915,16 @@ class ChatViewModel(
                             "NOTICE" -> ChatUtils.parseNotice(ircMessage)
                             else -> null
                         }?.let {
-                            if (it.reply?.message != null) {
-                                list.add(ChatMessage(
-                                    type = ChatMessage.REPLY_MESSAGE,
-                                    reply = it.reply,
-                                    replyParent = it,
-                                ))
+                            if (!isMessageFiltered(it)) {
+                                if (it.reply?.message != null) {
+                                    list.add(ChatMessage(
+                                        type = ChatMessage.REPLY_MESSAGE,
+                                        reply = it.reply,
+                                        replyParent = it,
+                                    ))
+                                }
+                                list.add(it)
                             }
-                            list.add(it)
                         }
                     }
                     if (list.isNotEmpty()) {
@@ -991,7 +997,59 @@ class ChatViewModel(
         )
     }
 
+    private fun loadChatFilter() {
+        chatFilterEnabled = applicationContext.prefs().getBoolean(C.CHAT_FILTER_ENABLED, false)
+        chatFilterWordRegex = applicationContext.prefs().getString(C.CHAT_FILTER_WORDS, null)
+            ?.split("\n")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { words ->
+                Regex("\\b(?:" + words.joinToString("|") { Regex.escape(it) } + ")\\b", RegexOption.IGNORE_CASE)
+            }
+        chatFilterUsernames = applicationContext.prefs().getString(C.CHAT_FILTER_USERNAMES, null)
+            ?.split("\n")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.map { it.lowercase() }
+            ?.toSet()
+            ?: emptySet()
+    }
+
+    private fun isMessageFiltered(message: ChatMessage): Boolean {
+        if (!chatFilterEnabled) {
+            return false
+        }
+        val parent = message.replyParent
+        return isBlocked(message) || (parent != null && isBlocked(parent))
+    }
+
+    private fun isBlocked(chatMessage: ChatMessage): Boolean {
+        val login = chatMessage.userLogin
+        val name = chatMessage.userName
+        if (login != null || name != null) {
+            for (blocked in chatFilterUsernames) {
+                if (blocked.equals(login, ignoreCase = true) || blocked.equals(name, ignoreCase = true)) {
+                    return true
+                }
+            }
+        }
+        val wordRegex = chatFilterWordRegex
+        if (wordRegex != null) {
+            val text = chatMessage.message
+            val system = chatMessage.systemMsg
+            if ((text != null && wordRegex.containsMatchIn(text)) ||
+                (system != null && wordRegex.containsMatchIn(system))) {
+                return true
+            }
+        }
+        return false
+    }
+
     suspend fun onMessage(message: ChatMessage) {
+        if (isMessageFiltered(message)) {
+            return
+        }
         synchronized(chatMessages) {
             chatMessages.add(message)
             val removeCount = if (chatMessages.size > messageLimit) {
@@ -1029,6 +1087,7 @@ class ChatViewModel(
         val nameDisplay = applicationContext.prefs().getString(C.UI_NAME_DISPLAY, "0")
         val useApiChatMessages = applicationContext.prefs().getBoolean(C.DEBUG_API_CHAT_MESSAGES, true)
         val showWebSocketDebugInfo = applicationContext.prefs().getBoolean(C.DEBUG_WEBSOCKET_INFO, false)
+        loadChatFilter()
         if (applicationContext.prefs().getBoolean(C.DEBUG_EVENT_SUB_CHAT, false) && !helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
             eventSub = EventSubWebSocket(trustManager, EventSubListener(helixHeaders, channelLogin, showUserNotice, showClearChat, usePubSub, networkLibrary, isLoggedIn, accountId, channelId))
             chatReadJob = eventSub?.connect(viewModelScope)
@@ -2604,6 +2663,7 @@ class ChatViewModel(
 
     fun startReplayChat(videoId: String?, createdAt: String?, startTime: Int, chatUrl: String?, getCurrentPosition: () -> Long?, getCurrentSpeed: () -> Float?, channelId: String?, channelLogin: String?) {
         stopReplayChat()
+        loadChatFilter()
         if (!chatUrl.isNullOrBlank()) {
             chatReplayManagerLocal = ChatReplayManagerLocal(
                 createdAt = createdAt?.toLongOrNull() ?: createdAt?.let { Instant.parseOrNull(it)?.toEpochMilliseconds()?.takeIf { ms -> ms > 0 } },
