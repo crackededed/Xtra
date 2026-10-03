@@ -7,14 +7,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Timer
-import javax.net.ssl.X509TrustManager
 import kotlin.concurrent.schedule
 
 class ChatWriteWebSocket(
     private val userLogin: String?,
     private val userToken: String?,
     private val channelLogin: String,
-    private val trustManager: Lazy<X509TrustManager>,
     private val listener: ChatReadWebSocket.Listener,
 ) {
     private var webSocket: WebSocket? = null
@@ -22,7 +20,7 @@ class ChatWriteWebSocket(
     private var pongTimer: Timer? = null
 
     fun connect(coroutineScope: CoroutineScope): Job {
-        webSocket = WebSocket("wss://irc-ws.chat.twitch.tv", trustManager, WebSocketListener())
+        webSocket = WebSocket("wss://irc-ws.chat.twitch.tv", WebSocketListener())
         webSocket?.coroutineScope = coroutineScope
         return coroutineScope.launch(Dispatchers.IO) {
             webSocket?.start()
