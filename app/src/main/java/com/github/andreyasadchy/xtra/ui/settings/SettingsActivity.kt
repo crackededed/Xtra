@@ -1019,9 +1019,22 @@ class SettingsActivity : AppCompatActivity() {
                     true
                 }
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Build.SUPPORTED_64_BIT_ABIS.firstOrNull() == "arm64-v8a") {
+            val translationLibSupported = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                Build.SUPPORTED_32_BIT_ABIS.firstOrNull() == "armeabi-v7a"
+            } else {
+                @Suppress("DEPRECATION")
+                Build.CPU_ABI == "armeabi-v7a"
+            }
+            if (translationLibSupported) {
                 val languages = TranslateLanguage.getAllLanguages()
-                val names = languages.map { Locale.forLanguageTag(it).displayLanguage }.toTypedArray()
+                val names = languages.map {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        Locale.forLanguageTag(it).displayLanguage
+                    } else {
+                        @Suppress("DEPRECATION")
+                        Locale(it).displayLanguage
+                    }
+                }.toTypedArray()
                 findPreference<Preference>("downloaded_languages")?.setOnPreferenceClickListener {
                     val modelManager = RemoteModelManager.getInstance()
                     modelManager.getDownloadedModels(TranslateRemoteModel::class.java)

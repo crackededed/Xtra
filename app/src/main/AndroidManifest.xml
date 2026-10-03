@@ -88,6 +88,11 @@
         <!-- ML Kit translation library -->
         <service
             android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
+            tools:node="remove"
+            tools:targetApi="21" />
+
+        <receiver
+            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"
             tools:node="remove" />
 
         <receiver

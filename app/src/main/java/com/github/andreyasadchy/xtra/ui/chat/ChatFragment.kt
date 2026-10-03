@@ -769,7 +769,13 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                             }
                         }
                     }
-                    if (requireContext().prefs().getBoolean(C.CHAT_TRANSLATE, false) && channelId != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Build.SUPPORTED_64_BIT_ABIS.firstOrNull() == "arm64-v8a") {
+                    val translationLibSupported = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        Build.SUPPORTED_32_BIT_ABIS.firstOrNull() == "armeabi-v7a"
+                    } else {
+                        @Suppress("DEPRECATION")
+                        Build.CPU_ABI == "armeabi-v7a"
+                    }
+                    if (requireContext().prefs().getBoolean(C.CHAT_TRANSLATE, false) && channelId != null && translationLibSupported) {
                         viewLifecycleOwner.lifecycleScope.launch {
                             repeatOnLifecycle(Lifecycle.State.STARTED) {
                                 viewModel.translateAllMessages.collectLatest {
@@ -1105,7 +1111,12 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                 }
                 translator.translate(message)
                     .addOnSuccessListener { text ->
-                        val languageName = Locale.forLanguageTag(sourceLanguage).displayLanguage
+                        val languageName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            Locale.forLanguageTag(sourceLanguage).displayLanguage
+                        } else {
+                            @Suppress("DEPRECATION")
+                            Locale(sourceLanguage).displayLanguage
+                        }
                         val previousTranslation = chatMessage.translatedMessage
                         chatMessage.translatedMessage = getString(R.string.translated_message, languageName, text)
                         chatMessage.translationFailed = false
@@ -1123,7 +1134,12 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         replyDialog?.updateTranslation(chatMessage, previousTranslation)
                     }
                     .addOnFailureListener {
-                        val languageName = Locale.forLanguageTag(sourceLanguage).displayLanguage
+                        val languageName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            Locale.forLanguageTag(sourceLanguage).displayLanguage
+                        } else {
+                            @Suppress("DEPRECATION")
+                            Locale(sourceLanguage).displayLanguage
+                        }
                         val previousTranslation = chatMessage.translatedMessage
                         chatMessage.translatedMessage = getString(R.string.translate_failed, languageName)
                         chatMessage.translationFailed = true
@@ -1161,7 +1177,12 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
     }
 
     private fun showLanguageDownloadDialog(chatMessage: ChatMessage, sourceLanguage: String) {
-        val languageName = Locale.forLanguageTag(sourceLanguage).displayLanguage
+        val languageName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Locale.forLanguageTag(sourceLanguage).displayLanguage
+        } else {
+            @Suppress("DEPRECATION")
+            Locale(sourceLanguage).displayLanguage
+        }
         requireContext().getAlertDialogBuilder()
             .setMessage(getString(R.string.download_language_model_message, languageName))
             .setNegativeButton(getString(R.string.no), null)
@@ -1186,7 +1207,12 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         if (message != null) {
                             translator.translate(message)
                                 .addOnSuccessListener { text ->
-                                    val languageName = Locale.forLanguageTag(sourceLanguage).displayLanguage
+                                    val languageName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                        Locale.forLanguageTag(sourceLanguage).displayLanguage
+                                    } else {
+                                        @Suppress("DEPRECATION")
+                                        Locale(sourceLanguage).displayLanguage
+                                    }
                                     val previousTranslation = chatMessage.translatedMessage
                                     chatMessage.translatedMessage = getString(R.string.translated_message, languageName, text)
                                     chatMessage.translationFailed = false

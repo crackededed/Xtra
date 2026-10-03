@@ -194,7 +194,13 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                     dismiss()
                 }
             }
-            if (requireContext().prefs().getBoolean(C.CHAT_TRANSLATE, false) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Build.SUPPORTED_64_BIT_ABIS.firstOrNull() == "arm64-v8a") {
+            val translationLibSupported = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                Build.SUPPORTED_32_BIT_ABIS.firstOrNull() == "armeabi-v7a"
+            } else {
+                @Suppress("DEPRECATION")
+                Build.CPU_ABI == "armeabi-v7a"
+            }
+            if (requireContext().prefs().getBoolean(C.CHAT_TRANSLATE, false) && translationLibSupported) {
                 val translateAll = (parentFragment as? PlayerFragment)?.getTranslateAllMessages()
                 if (translateAll != null) {
                     menuTranslateAll.visibility = View.VISIBLE

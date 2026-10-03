@@ -60,8 +60,8 @@ android {
         "lib/x86/liblanguage_id_l2c_jni.so",
         "lib/x86_64/libtranslate_jni.so",
         "lib/x86_64/liblanguage_id_l2c_jni.so",
-        "lib/armeabi-v7a/libtranslate_jni.so",
-        "lib/armeabi-v7a/liblanguage_id_l2c_jni.so",
+        "lib/arm64-v8a/libtranslate_jni.so",
+        "lib/arm64-v8a/liblanguage_id_l2c_jni.so",
     ))
     configurations.all {
         resolutionStrategy.force(listOf(

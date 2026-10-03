@@ -151,7 +151,13 @@ class ReplyClickedDialog : BottomSheetDialogFragment() {
                 clipboard?.setPrimaryClip(ClipData.newPlainText("label", chatMessage.fullMsg))
                 dismiss()
             }
-            if (requireContext().prefs().getBoolean(C.CHAT_TRANSLATE, false) && (chatMessage.message != null || chatMessage.systemMsg != null) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Build.SUPPORTED_64_BIT_ABIS.firstOrNull() == "arm64-v8a") {
+            val translationLibSupported = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                Build.SUPPORTED_32_BIT_ABIS.firstOrNull() == "armeabi-v7a"
+            } else {
+                @Suppress("DEPRECATION")
+                Build.CPU_ABI == "armeabi-v7a"
+            }
+            if (requireContext().prefs().getBoolean(C.CHAT_TRANSLATE, false) && (chatMessage.message != null || chatMessage.systemMsg != null) && translationLibSupported) {
                 translateMessage.visibility = View.VISIBLE
                 translateMessage.setOnClickListener {
                     listener.onTranslateMessageClicked(chatMessage, null)
@@ -159,7 +165,14 @@ class ReplyClickedDialog : BottomSheetDialogFragment() {
                 translateMessageSelectLanguage.visibility = View.VISIBLE
                 translateMessageSelectLanguage.setOnClickListener {
                     val languages = TranslateLanguage.getAllLanguages()
-                    val names = languages.map { Locale.forLanguageTag(it).displayName }.toTypedArray()
+                    val names = languages.map {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            Locale.forLanguageTag(it).displayName
+                        } else {
+                            @Suppress("DEPRECATION")
+                            Locale(it).displayName
+                        }
+                    }.toTypedArray()
                     requireContext().getAlertDialogBuilder()
                         .setSingleChoiceItems(names, languages.indexOf(selectedLanguage)) { _, which ->
                             languages.getOrNull(which)?.let { language ->
