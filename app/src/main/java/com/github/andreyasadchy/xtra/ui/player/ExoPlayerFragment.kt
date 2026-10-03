@@ -254,6 +254,7 @@ class ExoPlayerFragment : PlayerFragment() {
 
             override fun setPlayerSurface(secondaryPlayer: Boolean) {
                 if (secondaryPlayer) {
+                    binding.playerSurface.visibility = View.VISIBLE
                     playbackService?.player?.setVideoSurfaceView(null)
                     playbackService?.secondaryPlayer?.setVideoSurfaceView(binding.playerSurface)
                     playerListener?.let {
