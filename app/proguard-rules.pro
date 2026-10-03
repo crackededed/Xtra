@@ -27,6 +27,12 @@
     public static *** v(...);
 }
 
+-keep class com.github.andreyasadchy.xtra.util.PlayServicesCronetProvider { *; }
+-keep public class org.chromium.net.* {
+    !private *;
+    *;
+}
+
 # AGP 9
 -keep class com.google.mlkit.nl.languageid.** { *; }
 -keep class com.google.mlkit.nl.translate.NaturalLanguageTranslateRegistrar { *; }
