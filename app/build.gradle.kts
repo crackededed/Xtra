@@ -25,10 +25,10 @@ android {
 
     defaultConfig {
         applicationId = "com.github.andreyasadchy.xtra"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 37
         versionCode = 121
-        versionName = "2.60.5"
+        versionName = "2.60.6"
     }
 
     buildTypes {

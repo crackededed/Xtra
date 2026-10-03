@@ -28,12 +28,7 @@ import org.chromium.net.CronetEngine
 import org.chromium.net.CronetProvider
 import org.chromium.net.QuicOptions
 import org.chromium.net.RequestFinishedInfo
-import java.security.KeyStore
-import java.security.cert.CertificateFactory
 import java.util.concurrent.Executors
-import javax.net.ssl.SSLContext
-import javax.net.ssl.TrustManagerFactory
-import javax.net.ssl.X509TrustManager
 
 class XtraModule(application: Application) {
 
@@ -91,34 +86,7 @@ class XtraModule(application: Application) {
             if (BuildConfig.DEBUG) {
                 addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY })
             }
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                val sslContext = SSLContext.getInstance("TLSv1.3")
-                sslContext.init(null, arrayOf(trustManager.value), null)
-                sslSocketFactory(sslContext.socketFactory, trustManager.value)
-            }
         }.build()
-    }
-
-    val trustManager = lazy {
-        val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
-        keyStore.load(null, null)
-        var count = 0
-        val certificateFactory = CertificateFactory.getInstance("X.509")
-        application.resources.openRawResource(R.raw.isrgrootx1).use {
-            val certificate = certificateFactory.generateCertificate(it)
-            keyStore.setCertificateEntry("cert_0", certificate)
-            count += 1
-        }
-        val defaultTrustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
-        defaultTrustManagerFactory.init(null as KeyStore?)
-        val defaultTrustManager = defaultTrustManagerFactory.trustManagers.first() as X509TrustManager
-        defaultTrustManager.acceptedIssuers.forEach {
-            keyStore.setCertificateEntry("cert_$count", it)
-            count += 1
-        }
-        val trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
-        trustManagerFactory.init(keyStore)
-        trustManagerFactory.trustManagers.first() as X509TrustManager
     }
 
     val json by lazy {

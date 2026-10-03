@@ -1511,20 +1511,15 @@ class MediaPlayerService : BasePlaybackService() {
                                 or PlaybackState.ACTION_REWIND
                                 or PlaybackState.ACTION_FAST_FORWARD
                                 or PlaybackState.ACTION_SET_RATING
-                                or PlaybackState.ACTION_PLAY_PAUSE).let {
+                                or PlaybackState.ACTION_PLAY_PAUSE
+                                or PlaybackState.ACTION_PREPARE).let {
                             if (showSeekbar) {
                                 it or PlaybackState.ACTION_SEEK_TO
                             } else {
                                 it
                             }.let {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                    (it or PlaybackState.ACTION_PREPARE).let {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                            it or PlaybackState.ACTION_SET_PLAYBACK_SPEED
-                                        } else {
-                                            it
-                                        }
-                                    }
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    it or PlaybackState.ACTION_SET_PLAYBACK_SPEED
                                 } else {
                                     it
                                 }
