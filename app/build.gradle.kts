@@ -28,7 +28,7 @@ android {
         minSdk = 21
         targetSdk = 37
         versionCode = 121
-        versionName = "2.60.5"
+        versionName = "2.60.6"
     }
 
     buildTypes {
@@ -74,6 +74,8 @@ android {
             "androidx.media3:media3-exoplayer-hls:1.8.0",
             "androidx.media3:media3-session:1.8.0",
             "androidx.media3:media3-ui:1.8.0",
+            "androidx.navigation:navigation-fragment:2.9.8",
+            "androidx.navigation:navigation-ui:2.9.8",
             "androidx.paging:paging-runtime:3.4.0-alpha02",
             "androidx.room:room-compiler:2.8.0-rc01",
             "androidx.room:room-paging:2.8.0-rc01",
