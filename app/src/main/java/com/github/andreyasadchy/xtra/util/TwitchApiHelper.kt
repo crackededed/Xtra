@@ -204,38 +204,18 @@ object TwitchApiHelper {
 
     fun formatCount(count: Int, compact: Boolean): String {
         return if (compact) {
-            when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
-                    NumberFormatter.withLocale(Locale.getDefault())
-                        .notation(Notation.compactShort())
-                        .precision(Precision.maxFraction(1))
-                        .roundingMode(RoundingMode.DOWN)
-                        .format(count)
-                        .toString()
-                }
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> {
-                    val format = CompactDecimalFormat.getInstance(Locale.getDefault(), CompactDecimalFormat.CompactStyle.SHORT)
-                    format.maximumFractionDigits = 1
-                    format.roundingMode = RoundingMode.DOWN.ordinal
-                    format.format(count)
-                }
-                else -> {
-                    if (count > 1000) {
-                        val divider: Int
-                        val suffix = if (count.toString().length < 7) {
-                            divider = 1000
-                            "K"
-                        } else {
-                            divider = 1_000_000
-                            "M"
-                        }
-                        val truncated = count / (divider / 10)
-                        val hasDecimal = truncated / 10.0 != (truncated / 10).toDouble()
-                        if (hasDecimal) "${truncated / 10.0}$suffix" else "${truncated / 10}$suffix"
-                    } else {
-                        count.toString()
-                    }
-                }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                NumberFormatter.withLocale(Locale.getDefault())
+                    .notation(Notation.compactShort())
+                    .precision(Precision.maxFraction(1))
+                    .roundingMode(RoundingMode.DOWN)
+                    .format(count)
+                    .toString()
+            } else {
+                val format = CompactDecimalFormat.getInstance(Locale.getDefault(), CompactDecimalFormat.CompactStyle.SHORT)
+                format.maximumFractionDigits = 1
+                format.roundingMode = RoundingMode.DOWN.ordinal
+                format.format(count)
             }
         } else {
             NumberFormat.getInstance().format(count)

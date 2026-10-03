@@ -129,6 +129,7 @@ class ExoPlayerService : BasePlaybackService() {
     private var videoSwapList: List<VideoSwap>? = null
     var secondaryPlayer: ExoPlayer? = null
     private var secondaryPlayerTimerJob: Job? = null
+    private var adDelayJob: Job? = null
     private var playingAds = false
     private var proxyMediaPlaylist = false
     private var stopProxy = false
@@ -192,7 +193,7 @@ class ExoPlayerService : BasePlaybackService() {
                             serviceListener?.loaded()
                             toggleSubtitles(prefs().getBoolean(C.PLAYER_SUBTITLES_ENABLED, false))
                         }
-                        if (qualities?.find { it.name == VideoQuality.AUTO_QUALITY } != null && quality?.name != VideoQuality.AUDIO_ONLY_QUALITY && !hidden) {
+                        if (qualities?.find { it.name == VideoQuality.AUTO_QUALITY } != null && quality?.name != VideoQuality.AUDIO_ONLY_QUALITY) {
                             changeQuality(quality)
                         }
                     }
@@ -264,6 +265,14 @@ class ExoPlayerService : BasePlaybackService() {
                                             if (!proxyMediaPlaylist) {
                                                 proxyMediaPlaylist = true
                                                 serviceListener?.toast(R.string.starting_proxy, Toast.LENGTH_SHORT)
+                                                player?.let { player ->
+                                                    if (quality?.name != VideoQuality.AUDIO_ONLY_QUALITY) {
+                                                        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                                                            setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
+                                                        }.build()
+                                                    }
+                                                    player.volume = 0f
+                                                }
                                                 secondaryPlayerTimerJob?.cancel()
                                                 secondaryPlayerTimerJob = lifecycleScope.launch {
                                                     delay(3.minutes)
@@ -279,6 +288,14 @@ class ExoPlayerService : BasePlaybackService() {
                                             if (!videoSwapActive) {
                                                 videoSwapActive = true
                                                 serviceListener?.toast(R.string.starting_video_swap, Toast.LENGTH_SHORT)
+                                                player?.let { player ->
+                                                    if (quality?.name != VideoQuality.AUDIO_ONLY_QUALITY) {
+                                                        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                                                            setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true)
+                                                        }.build()
+                                                    }
+                                                    player.volume = 0f
+                                                }
                                                 secondaryPlayerTimerJob?.cancel()
                                                 secondaryPlayerTimerJob = lifecycleScope.launch {
                                                     delay(3.minutes)
@@ -293,6 +310,7 @@ class ExoPlayerService : BasePlaybackService() {
                                         else -> {
                                             if (!hidden) {
                                                 hidden = true
+                                                serviceListener?.toast(R.string.waiting_ads, Toast.LENGTH_LONG)
                                                 player?.let { player ->
                                                     if (quality?.name != VideoQuality.AUDIO_ONLY_QUALITY) {
                                                         player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
@@ -301,7 +319,6 @@ class ExoPlayerService : BasePlaybackService() {
                                                     }
                                                     player.volume = 0f
                                                 }
-                                                serviceListener?.toast(R.string.waiting_ads, Toast.LENGTH_LONG)
                                             }
                                         }
                                     }
@@ -309,22 +326,62 @@ class ExoPlayerService : BasePlaybackService() {
                             } else {
                                 when {
                                     proxyMediaPlaylist -> {
-                                        serviceListener?.toast(R.string.stopping_proxy, Toast.LENGTH_SHORT)
-                                        stopSecondaryPlayer()
+                                        if (adDelayJob == null) {
+                                            adDelayJob = lifecycleScope.launch {
+                                                val delay = player?.let { player ->
+                                                    playlist?.segments?.lastOrNull()?.let { segment ->
+                                                        // This seems to be too much delay but at least it should hide the ad
+                                                        (segment.relativeStartTimeUs / 1000) - player.currentPosition
+                                                    }
+                                                } ?: 0
+                                                delay(delay.milliseconds)
+                                                if (proxyMediaPlaylist) {
+                                                    serviceListener?.toast(R.string.stopping_proxy, Toast.LENGTH_SHORT)
+                                                    stopSecondaryPlayer()
+                                                }
+                                                adDelayJob = null
+                                            }
+                                        }
                                     }
                                     videoSwapActive -> {
-                                        serviceListener?.toast(R.string.stopping_video_swap, Toast.LENGTH_SHORT)
-                                        stopSecondaryPlayer()
+                                        if (adDelayJob == null) {
+                                            adDelayJob = lifecycleScope.launch {
+                                                val delay = player?.let { player ->
+                                                    playlist?.segments?.lastOrNull()?.let { segment ->
+                                                        (segment.relativeStartTimeUs / 1000) - player.currentPosition
+                                                    }
+                                                } ?: 0
+                                                delay(delay.milliseconds)
+                                                if (videoSwapActive) {
+                                                    serviceListener?.toast(R.string.stopping_video_swap, Toast.LENGTH_SHORT)
+                                                    stopSecondaryPlayer()
+                                                }
+                                                adDelayJob = null
+                                            }
+                                        }
                                     }
                                     hidden -> {
-                                        hidden = false
-                                        player?.let { player ->
-                                            if (quality?.name != VideoQuality.AUDIO_ONLY_QUALITY) {
-                                                player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
-                                                    setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
-                                                }.build()
+                                        if (adDelayJob == null) {
+                                            adDelayJob = lifecycleScope.launch {
+                                                val delay = player?.let { player ->
+                                                    playlist?.segments?.lastOrNull()?.let { segment ->
+                                                        (segment.relativeStartTimeUs / 1000) - player.currentPosition
+                                                    }
+                                                } ?: 0
+                                                delay(delay.milliseconds)
+                                                if (hidden) {
+                                                    hidden = false
+                                                    player?.let { player ->
+                                                        if (quality?.name != VideoQuality.AUDIO_ONLY_QUALITY) {
+                                                            player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                                                                setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
+                                                            }.build()
+                                                        }
+                                                        player.volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
+                                                    }
+                                                }
+                                                adDelayJob = null
                                             }
-                                            player.volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
                                         }
                                     }
                                 }
@@ -1998,7 +2055,6 @@ class ExoPlayerService : BasePlaybackService() {
                 player.prepare()
                 player.playWhenReady = true
                 secondaryPlayer = player
-                this@ExoPlayerService.player?.volume = 0f
                 serviceListener?.setPlayerSurface(true)
             } else {
                 stopSecondaryPlayer()
@@ -2017,7 +2073,14 @@ class ExoPlayerService : BasePlaybackService() {
     private fun stopSecondaryPlayer2() {
         secondaryPlayer?.playWhenReady = false
         serviceListener?.setPlayerSurface(false)
-        player?.volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
+        player?.let { player ->
+            if (quality?.name != VideoQuality.AUDIO_ONLY_QUALITY) {
+                player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                    setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
+                }.build()
+            }
+            player.volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
+        }
         secondaryPlayer?.release()
         secondaryPlayer = null
     }
@@ -2226,20 +2289,15 @@ class ExoPlayerService : BasePlaybackService() {
                                 or PlaybackState.ACTION_REWIND
                                 or PlaybackState.ACTION_FAST_FORWARD
                                 or PlaybackState.ACTION_SET_RATING
-                                or PlaybackState.ACTION_PLAY_PAUSE).let {
+                                or PlaybackState.ACTION_PLAY_PAUSE
+                                or PlaybackState.ACTION_PREPARE).let {
                             if (showSeekbar) {
                                 it or PlaybackState.ACTION_SEEK_TO
                             } else {
                                 it
                             }.let {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                    (it or PlaybackState.ACTION_PREPARE).let {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                            it or PlaybackState.ACTION_SET_PLAYBACK_SPEED
-                                        } else {
-                                            it
-                                        }
-                                    }
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    it or PlaybackState.ACTION_SET_PLAYBACK_SPEED
                                 } else {
                                     it
                                 }

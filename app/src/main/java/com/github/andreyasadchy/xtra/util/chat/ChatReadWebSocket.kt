@@ -7,14 +7,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Timer
-import javax.net.ssl.X509TrustManager
 import kotlin.concurrent.schedule
 import kotlin.random.Random
 
 class ChatReadWebSocket(
     private val channelLogin: String,
-    private val showGifMessages: Boolean,
-    private val trustManager: Lazy<X509TrustManager>,
     private val listener: Listener,
 ) {
     private var webSocket: WebSocket? = null
@@ -22,14 +19,7 @@ class ChatReadWebSocket(
     private var pongTimer: Timer? = null
 
     fun connect(coroutineScope: CoroutineScope): Job {
-        webSocket = WebSocket(
-            url = "wss://irc-ws.chat.twitch.tv",
-            trustManager = trustManager,
-            listener = WebSocketListener(),
-            headers = if (showGifMessages) {
-                mapOf("Cookie" to "experiment_overrides={%22experiments%22:{}%2C%22disabled%22:[]}")
-            } else null,
-        )
+        webSocket = WebSocket("wss://irc-ws.chat.twitch.tv", WebSocketListener())
         webSocket?.coroutineScope = coroutineScope
         return coroutineScope.launch(Dispatchers.IO) {
             webSocket?.start()

@@ -27,6 +27,12 @@
     public static *** v(...);
 }
 
+-keep class com.github.andreyasadchy.xtra.util.PlayServicesCronetProvider { *; }
+-keep public class org.chromium.net.* {
+    !private *;
+    *;
+}
+
 # AGP 9
 -keep class com.google.mlkit.nl.languageid.** { *; }
 -keep class com.google.mlkit.nl.translate.NaturalLanguageTranslateRegistrar { *; }
@@ -38,9 +44,4 @@
 
 -keep class androidx.work.OverwritingInputMerger {
     <init>();
-}
-
-# Needed for Android 6 when using AGP 9
--keep class androidx.navigation.fragment.NavHostFragment {
-    *;
 }

@@ -78,14 +78,12 @@ class LiveNotificationWorker(
                 }.build()
                 notificationManager.notify(it.channelId.hashCode(), notification)
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                val notification = NotificationCompat.Builder(context, channelId).apply {
-                    setGroup(GROUP_KEY)
-                    setSmallIcon(R.drawable.notification_icon)
-                    setGroupSummary(true)
-                }.build()
-                notificationManager.notify(0, notification)
-            }
+            val notification = NotificationCompat.Builder(context, channelId).apply {
+                setGroup(GROUP_KEY)
+                setSmallIcon(R.drawable.notification_icon)
+                setGroupSummary(true)
+            }.build()
+            notificationManager.notify(0, notification)
         }
         return Result.success()
     }

@@ -4,6 +4,7 @@
     <string name="notification_downloads_channel_id" translatable="false">xtra_downloads_channel</string>
     <string name="notification_live_channel_id" translatable="false">xtra_live_channel</string>
     <string name="notification_playback_channel_id" translatable="false">xtra_playback_channel</string>
+    <string name="CronetProviderClassName" translatable="false">com.github.andreyasadchy.xtra.util.PlayServicesCronetProvider</string>
     <string name="lang_de" translatable="false">Deutsch</string>
     <string name="lang_en" translatable="false">English</string>
     <string name="lang_es" translatable="false">Español</string>

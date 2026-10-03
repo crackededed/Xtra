@@ -8,11 +8,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import javax.net.ssl.X509TrustManager
 
 class STVEventApiWebSocket(
     private val channelId: String,
-    private val trustManager: Lazy<X509TrustManager>,
     private val listener: Listener,
 ) {
     private var webSocket: WebSocket? = null
@@ -20,7 +18,6 @@ class STVEventApiWebSocket(
     fun connect(coroutineScope: CoroutineScope): Job {
         webSocket = WebSocket(
             url = "wss://events.7tv.io/v3",
-            trustManager = trustManager,
             listener = WebSocketListener(),
             headers = mapOf("User-Agent" to "Xtra/" + BuildConfig.VERSION_NAME)
         )

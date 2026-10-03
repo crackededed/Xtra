@@ -25,10 +25,10 @@ android {
 
     defaultConfig {
         applicationId = "com.github.andreyasadchy.xtra"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 37
         versionCode = 121
-        versionName = "2.60.5"
+        versionName = "2.60.6"
     }
 
     buildTypes {
@@ -66,7 +66,6 @@ android {
 
 dependencies {
     compileOnly("com.google.j2objc:j2objc-annotations:3.0.0") // OkHttpDataSource SettableFuture
-    implementation("com.google.android.gms:play-services-cronet:18.1.0")
     implementation("com.google.mlkit:language-id:17.0.6")
     implementation("com.google.mlkit:translate:17.0.3")
 

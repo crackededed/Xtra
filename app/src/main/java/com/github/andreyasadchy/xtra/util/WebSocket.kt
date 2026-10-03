@@ -27,7 +27,6 @@ import java.util.zip.InflaterOutputStream
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLHandshakeException
 import javax.net.ssl.SSLSocketFactory
-import javax.net.ssl.X509TrustManager
 import kotlin.concurrent.schedule
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.random.Random
@@ -36,7 +35,6 @@ import kotlin.time.Duration.Companion.seconds
 
 class WebSocket(
     private val url: String,
-    private val trustManager: Lazy<X509TrustManager>,
     private val listener: Listener,
     private val headers: Map<String, String>? = null,
     private val sendPings: Boolean = false,
@@ -95,14 +93,10 @@ class WebSocket(
         val urlWithoutScheme = url.substringAfter("://")
         val host = urlWithoutScheme.substringBefore("/")
         val path = urlWithoutScheme.substringAfter('/', "")
-        val socketFactory = when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> SSLSocketFactory.getDefault()
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> SSLContext.getDefault().socketFactory
-            else -> {
-                val sslContext = SSLContext.getInstance("TLSv1.3")
-                sslContext.init(null, arrayOf(trustManager.value), null)
-                sslContext.socketFactory
-            }
+        val socketFactory = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            SSLSocketFactory.getDefault()
+        } else {
+            SSLContext.getDefault().socketFactory
         }
         socket = socketFactory.createSocket(host, 443)
         inputStream = socket?.inputStream
