@@ -1,15 +1,13 @@
 query ClipUrls($slug: ID!) {
     clip(slug: $slug) {
         assets {
+            aspectRatio
             videoQualities {
                 bitrate
                 codecs
                 frameRate
                 quality
                 sourceURL
-            }
-            portraitMetadata {
-                portraitClipLayout
             }
         }
         playbackAccessToken(params: { platform: "web", playerType: "site" }) {

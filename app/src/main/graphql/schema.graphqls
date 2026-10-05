@@ -111,6 +111,7 @@ type Clip {
 }
 
 type ClipAsset {
+    aspectRatio: Float,
     videoQualities: [ClipVideoQuality]
     portraitMetadata: PortraitClipCropping
 }
