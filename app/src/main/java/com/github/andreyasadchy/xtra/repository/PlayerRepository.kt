@@ -651,7 +651,7 @@ class PlayerRepository(
             }
             val accessToken = response.data?.clip?.playbackAccessToken
             response.data!!.clip.assets.let { assets ->
-                (assets.find { it.portraitMetadata?.portraitClipLayout.isNullOrBlank() } ?: assets.firstOrNull())?.videoQualities?.mapIndexedNotNull { index, quality ->
+                (assets.maxByOrNull { it.aspectRatio ?: 0f } ?: assets.firstOrNull())?.videoQualities?.mapIndexedNotNull { index, quality ->
                     if (quality.sourceURL.isNotBlank()) {
                         val name = if (!quality.quality.isNullOrBlank()) {
                             val frameRate = quality.frameRate?.roundToInt() ?: ""
@@ -675,7 +675,7 @@ class PlayerRepository(
             }
             val accessToken = response.data?.clip?.playbackAccessToken
             response.data?.clip?.assets?.let { assets ->
-                (assets.find { it?.portraitMetadata?.portraitClipLayout.isNullOrBlank() } ?: assets.firstOrNull())?.videoQualities?.mapIndexedNotNull { index, quality ->
+                (assets.maxByOrNull { it?.aspectRatio ?: 0.0 } ?: assets.firstOrNull())?.videoQualities?.mapIndexedNotNull { index, quality ->
                     if (!quality?.sourceURL.isNullOrBlank()) {
                         val name = if (!quality.quality.isNullOrBlank()) {
                             val frameRate = quality.frameRate?.roundToInt() ?: ""
