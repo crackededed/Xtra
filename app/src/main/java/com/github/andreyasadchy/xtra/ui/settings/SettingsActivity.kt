@@ -168,8 +168,21 @@ class SettingsActivity : AppCompatActivity() {
         val itemTouchHelper = ItemTouchHelper(
             object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
                 override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-                    Collections.swap(list, viewHolder.bindingAdapterPosition, target.bindingAdapterPosition)
-                    listAdapter.notifyItemMoved(viewHolder.bindingAdapterPosition, target.bindingAdapterPosition)
+                    val fromPosition = viewHolder.bindingAdapterPosition
+                    val toPosition = target.bindingAdapterPosition
+                    if (fromPosition < toPosition) {
+                        for (from in fromPosition until toPosition) {
+                            val to = from + 1
+                            Collections.swap(list, from, to)
+                            listAdapter.notifyItemMoved(from, to)
+                        }
+                    } else {
+                        for (to in (toPosition until fromPosition).reversed()) {
+                            val from = to + 1
+                            Collections.swap(list, from, to)
+                            listAdapter.notifyItemMoved(from, to)
+                        }
+                    }
                     return true
                 }
 
