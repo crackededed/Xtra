@@ -752,11 +752,11 @@ class GraphQLRepository(
         json.decodeFromString<PlaybackAccessTokenResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
-    suspend fun loadClipUrls(networkLibrary: String?, headers: Map<String, String>, slug: String?): ClipUrlsResponse = withContext(Dispatchers.IO) {
+    suspend fun loadClipUrls(networkLibrary: String?, headers: Map<String, String>, slug: String?, supportedCodecs: List<String>): ClipUrlsResponse = withContext(Dispatchers.IO) {
         val body = buildJsonObject {
             putJsonObject("extensions") {
                 putJsonObject("persistedQuery") {
-                    put("sha256Hash", "993d9a5131f15a37bd16f32342c44ed1e0b1a9b968c6afdb662d2cddd595f6c5")
+                    put("sha256Hash", "c5ca7c4143e42f257b91b97b37fbb19206460f42f564a02095bb504fd0a31af8")
                     put("version", 1)
                 }
             }
@@ -764,6 +764,11 @@ class GraphQLRepository(
             putJsonObject("variables") {
                 put("slug", slug)
                 put("platform", "web")
+                putJsonArray("supportedCodecs") {
+                    supportedCodecs.forEach {
+                        add(it)
+                    }
+                }
             }
         }.toString()
         json.decodeFromString<ClipUrlsResponse>(sendPersistedQuery(networkLibrary, headers, body))

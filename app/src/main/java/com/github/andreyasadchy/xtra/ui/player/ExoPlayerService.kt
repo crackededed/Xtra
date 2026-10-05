@@ -1393,6 +1393,7 @@ class ExoPlayerService : BasePlaybackService() {
                         networkLibrary = networkLibrary,
                         gqlHeaders = TwitchApiHelper.getGQLHeaders(this@ExoPlayerService),
                         clipId = clipId,
+                        supportedCodecs = prefs().getString(C.TOKEN_SUPPORTED_CODECS, "av1,h265,h264"),
                         enableIntegrity = prefs().getBoolean(C.ENABLE_INTEGRITY, false)
                     )
                 } catch (e: Exception) {

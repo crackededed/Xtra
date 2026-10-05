@@ -373,14 +373,14 @@ class DownloadViewModel(
         }
     }
 
-    fun setClip(networkLibrary: String?, gqlHeaders: Map<String, String>, clipId: String?, qualities: List<VideoQuality>?, enableIntegrity: Boolean) {
+    fun setClip(networkLibrary: String?, gqlHeaders: Map<String, String>, clipId: String?, qualities: List<VideoQuality>?, supportedCodecs: String?, enableIntegrity: Boolean) {
         if (_qualities.value == null) {
             if (!qualities.isNullOrEmpty()) {
                 _qualities.value = qualities
             } else {
                 viewModelScope.launch {
                     try {
-                        val list = playerRepository.loadClipQualities(networkLibrary, gqlHeaders, clipId, enableIntegrity)
+                        val list = playerRepository.loadClipQualities(networkLibrary, gqlHeaders, clipId, supportedCodecs, enableIntegrity)
                         if (list != null) {
                             _qualities.value = list
                                 .sortedByDescending { it.bitrate }
