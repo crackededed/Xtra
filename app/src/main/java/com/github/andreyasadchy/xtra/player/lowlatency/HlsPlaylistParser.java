@@ -562,7 +562,9 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
                   if (filterReasons != null) {
                     for (int filterIndex = 0; filterIndex < filterReasons.length(); filterIndex++) {
                       String filter = filterReasons.optString(filterIndex);
-                      if (filter.equals("FR_CODEC_NOT_REQUESTED")) {
+                      if (filter.equals("FR_CODEC_NOT_REQUESTED")
+                              || filter.equals("FR_DUALFORMAT_INCOMPATIBLE") // portrait
+                      ) {
                         skip = true;
                         break;
                       }
@@ -574,61 +576,63 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
                     String newCodecsString = obj.optString("CODECS");
                     String newResolutionString = obj.optString("RESOLUTION");
                     String newFrameRateString = obj.optString("FRAME-RATE");
-                    float newFrameRate;
-                    if (!newFrameRateString.isBlank()) {
-                      newFrameRate = Float.parseFloat(newFrameRateString);
-                    } else {
-                      newFrameRate = 0;
-                    }
-                    int newWidth;
-                    int newHeight;
-                    if (!newResolutionString.isBlank()) {
-                      String[] widthAndHeight = Util.split(newResolutionString, "x");
-                      newWidth = Integer.parseInt(widthAndHeight[0]);
-                      newHeight = Integer.parseInt(widthAndHeight[1]);
-                      if (newWidth <= 0 || newHeight <= 0) {
-                        // Resolution string is invalid.
+                    if (!newStableVariantId.isBlank() && !newStableVariantId.contains("-portrait")) {
+                      float newFrameRate;
+                      if (!newFrameRateString.isBlank()) {
+                        newFrameRate = Float.parseFloat(newFrameRateString);
+                      } else {
+                        newFrameRate = 0;
+                      }
+                      int newWidth;
+                      int newHeight;
+                      if (!newResolutionString.isBlank()) {
+                        String[] widthAndHeight = Util.split(newResolutionString, "x");
+                        newWidth = Integer.parseInt(widthAndHeight[0]);
+                        newHeight = Integer.parseInt(widthAndHeight[1]);
+                        if (newWidth <= 0 || newHeight <= 0) {
+                          // Resolution string is invalid.
+                          newWidth = Format.NO_VALUE;
+                          newHeight = Format.NO_VALUE;
+                        }
+                      } else {
                         newWidth = Format.NO_VALUE;
                         newHeight = Format.NO_VALUE;
                       }
-                    } else {
-                      newWidth = Format.NO_VALUE;
-                      newHeight = Format.NO_VALUE;
+                      Uri newUri = Uri.parse(uri.toString().replace(
+                              stableVariantId + "/index-",
+                              ((variants.isEmpty() && !newStableVariantId.equals("audio_only")) ? "chunked" : newStableVariantId) + "/index-"
+                      ));
+                      Format format =
+                              new Format.Builder()
+                                      .setId(variants.size())
+                                      .setLabel(newStableVariantId)
+                                      .setContainerMimeType(MimeTypes.APPLICATION_M3U8)
+                                      .setCodecs(newCodecsString)
+                                      .setAverageBitrate(-1)
+                                      .setPeakBitrate(newPeakBitrate)
+                                      .setWidth(newWidth)
+                                      .setHeight(newHeight)
+                                      .setFrameRate(newFrameRate)
+                                      .setRoleFlags(0)
+                                      .build();
+                      Variant variant =
+                              new Variant(
+                                      newUri, format, null, null, null, null);
+                      variants.add(variant);
+                      @Nullable ArrayList<VariantInfo> variantInfosForUrl = urlToVariantInfos.get(newUri);
+                      if (variantInfosForUrl == null) {
+                        variantInfosForUrl = new ArrayList<>();
+                        urlToVariantInfos.put(newUri, variantInfosForUrl);
+                      }
+                      variantInfosForUrl.add(
+                              new VariantInfo(
+                                      -1,
+                                      newPeakBitrate,
+                                      null,
+                                      null,
+                                      null,
+                                      null));
                     }
-                    Uri newUri = Uri.parse(uri.toString().replace(
-                            stableVariantId + "/index-",
-                            ((variants.isEmpty() && !newStableVariantId.equals("audio_only")) ? "chunked" : newStableVariantId) + "/index-"
-                    ));
-                    Format format =
-                            new Format.Builder()
-                                    .setId(variants.size())
-                                    .setLabel(newStableVariantId)
-                                    .setContainerMimeType(MimeTypes.APPLICATION_M3U8)
-                                    .setCodecs(newCodecsString)
-                                    .setAverageBitrate(-1)
-                                    .setPeakBitrate(newPeakBitrate)
-                                    .setWidth(newWidth)
-                                    .setHeight(newHeight)
-                                    .setFrameRate(newFrameRate)
-                                    .setRoleFlags(0)
-                                    .build();
-                    Variant variant =
-                            new Variant(
-                                    newUri, format, null, null, null, null);
-                    variants.add(variant);
-                    @Nullable ArrayList<VariantInfo> variantInfosForUrl = urlToVariantInfos.get(newUri);
-                    if (variantInfosForUrl == null) {
-                      variantInfosForUrl = new ArrayList<>();
-                      urlToVariantInfos.put(newUri, variantInfosForUrl);
-                    }
-                    variantInfosForUrl.add(
-                            new VariantInfo(
-                                    -1,
-                                    newPeakBitrate,
-                                    null,
-                                    null,
-                                    null,
-                                    null));
                   }
                 }
               }

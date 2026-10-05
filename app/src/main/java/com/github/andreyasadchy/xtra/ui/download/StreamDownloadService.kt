@@ -730,7 +730,9 @@ class StreamDownloadService : LifecycleService() {
         val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toList()
         val list = stableVariantIds.mapIndexedNotNull { index, variantId ->
             urls.getOrNull(index)?.let { url ->
-                VideoQuality(variantId, resolutions.getOrNull(index)?.substringAfter('x')?.toIntOrNull(), frameRates.getOrNull(index), bitrates.getOrNull(index), codecs.getOrNull(index), url)
+                if (!variantId.endsWith("-portrait")) {
+                    VideoQuality(variantId, resolutions.getOrNull(index)?.substringAfter('x')?.toIntOrNull(), frameRates.getOrNull(index), bitrates.getOrNull(index), codecs.getOrNull(index), url)
+                } else null
             }
         }
         list

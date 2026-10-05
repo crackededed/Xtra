@@ -809,7 +809,9 @@ class MediaPlayerService : BasePlaybackService() {
                         val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toList()
                         val list = stableVariantIds.mapIndexedNotNull { index, variantId ->
                             urls.getOrNull(index)?.let { url ->
-                                VideoQuality(variantId, resolutions.getOrNull(index)?.substringAfter('x')?.toIntOrNull(), frameRates.getOrNull(index), bitrates.getOrNull(index), codecs.getOrNull(index), url)
+                                if (!variantId.endsWith("-portrait")) {
+                                    VideoQuality(variantId, resolutions.getOrNull(index)?.substringAfter('x')?.toIntOrNull(), frameRates.getOrNull(index), bitrates.getOrNull(index), codecs.getOrNull(index), url)
+                                } else null
                             }
                         }
                         qualities = list
@@ -1070,7 +1072,9 @@ class MediaPlayerService : BasePlaybackService() {
                         val urls = Regex("https://.*\\.m3u8").findAll(playlist).map(MatchResult::value).toList()
                         val list = stableVariantIds.mapIndexedNotNull { index, variantId ->
                             urls.getOrNull(index)?.let { url ->
-                                VideoQuality(variantId, resolutions.getOrNull(index)?.substringAfter('x')?.toIntOrNull(), frameRates.getOrNull(index), bitrates.getOrNull(index), codecs.getOrNull(index), url)
+                                if (!variantId.endsWith("-portrait")) {
+                                    VideoQuality(variantId, resolutions.getOrNull(index)?.substringAfter('x')?.toIntOrNull(), frameRates.getOrNull(index), bitrates.getOrNull(index), codecs.getOrNull(index), url)
+                                } else null
                             }
                         }.toMutableList()
                         playlist.lines().filter { it.startsWith("#EXT-X-SESSION-DATA") }.let { lines ->
@@ -1104,7 +1108,9 @@ class MediaPlayerService : BasePlaybackService() {
                                                                 if (filterReasons != null) {
                                                                     for (filterIndex in 0 until filterReasons.length()) {
                                                                         val filter = filterReasons.optString(filterIndex)
-                                                                        if (filter == "FR_CODEC_NOT_REQUESTED") {
+                                                                        if (filter == "FR_CODEC_NOT_REQUESTED"
+                                                                            || filter == "FR_DUALFORMAT_INCOMPATIBLE" // portrait
+                                                                        ) {
                                                                             skip = true
                                                                             break
                                                                         }
@@ -1116,7 +1122,7 @@ class MediaPlayerService : BasePlaybackService() {
                                                                     val frameRate = obj.optString("FRAME-RATE").toFloatOrNull()
                                                                     val bitrate = obj.optInt("BANDWIDTH")
                                                                     val codec = obj.optString("CODECS")
-                                                                    if (!newVariantId.isNullOrBlank()) {
+                                                                    if (!newVariantId.isNullOrBlank() && !newVariantId.endsWith("-portrait")) {
                                                                         list.add(
                                                                             VideoQuality(
                                                                                 name = newVariantId,
