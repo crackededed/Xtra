@@ -1466,13 +1466,17 @@ class GraphQLRepository(
         val body = buildJsonObject {
             putJsonObject("extensions") {
                 putJsonObject("persistedQuery") {
-                    put("sha256Hash", "374314de591e69925fce3ddc2bcf085796f56ebb8cad67a0daa3165c03adc345")
+                    put("sha256Hash", "33884dcfeab64eb44c2d61255145643cf69ea993e0c6c2ecb0fa46238586a111")
                     put("version", 1)
                 }
             }
             put("operationName", "ChannelPointsContext")
             putJsonObject("variables") {
                 put("channelLogin", channelLogin)
+                putJsonArray("includeGoalTypes") {
+                    add("CREATOR")
+                    add("BOOST")
+                }
             }
         }.toString()
         json.decodeFromString<ChannelPointContextResponse>(sendPersistedQuery(networkLibrary, headers, body))
