@@ -1798,17 +1798,21 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     }
 
     private fun showStatusBar() {
-        WindowCompat.getInsetsController(
-            requireActivity().window,
-            requireActivity().window.decorView
-        ).show(WindowInsetsCompat.Type.systemBars())
+        if (isAdded) {
+            WindowCompat.getInsetsController(
+                requireActivity().window,
+                requireActivity().window.decorView
+            ).show(WindowInsetsCompat.Type.systemBars())
+        }
     }
 
     private fun hideStatusBar() {
-        WindowCompat.getInsetsController(
-            requireActivity().window,
-            requireActivity().window.decorView
-        ).hide(WindowInsetsCompat.Type.systemBars())
+        if (isAdded) {
+            WindowCompat.getInsetsController(
+                requireActivity().window,
+                requireActivity().window.decorView
+            ).hide(WindowInsetsCompat.Type.systemBars())
+        }
     }
 
     private fun enableBackground() {
