@@ -476,7 +476,9 @@ class ExoPlayerFragment : PlayerFragment() {
                                         if (filterReasons != null) {
                                             for (filterIndex in 0 until filterReasons.length()) {
                                                 val filter = filterReasons.optString(filterIndex)
-                                                if (filter.isNotEmpty()) {
+                                                if (filter == "FR_CODEC_NOT_REQUESTED"
+                                                    || filter == "FR_DUALFORMAT_INCOMPATIBLE" // portrait
+                                                ) {
                                                     skip = true
                                                     break
                                                 }
@@ -489,7 +491,13 @@ class ExoPlayerFragment : PlayerFragment() {
                                             val bitrate = obj.optInt("BANDWIDTH")
                                             val codec = obj.optString("CODECS")
                                             if (!newVariantId.isNullOrBlank()) {
-                                                stableVariantIds.add(VideoQuality(newVariantId, resolution.substringAfter('x').toIntOrNull(), frameRate, bitrate, codec))
+                                                stableVariantIds.add(VideoQuality(
+                                                    name = newVariantId,
+                                                    resolution = resolution.takeIf { !it.isNullOrBlank() }?.substringAfter('x')?.toIntOrNull(),
+                                                    frameRate = frameRate.takeIf { it != null && it > 0 },
+                                                    bitrate = bitrate.takeIf { it > 0 },
+                                                    codecs = codec.takeIf { !it.isNullOrBlank() },
+                                                ))
                                             }
                                         }
                                     }
