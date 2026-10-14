@@ -2136,17 +2136,16 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             mutableListOf<VideoQuality>().apply {
                 playbackService?.qualities?.filter { !it.url.isNullOrBlank() }?.let { addAll(it) }
                 addAll(unavailableQualities)
-                sortWith(
-                    compareByDescending<VideoQuality> { it.bitrate }
-                        .thenByDescending { it.frameRate }
-                        .thenByDescending { it.resolution }
-                )
-                val audio = find { it.name?.startsWith("audio", true) == true }
-                audio?.let {
-                    remove(it)
-                    add(it)
-                }
             }
+                .sortedByDescending { it.bitrate }
+                .sortedByDescending { it.frameRate }
+                .sortedByDescending { it.resolution }
+                .toMutableList().apply {
+                    find { it.name?.startsWith("audio", true) == true }?.let { audio ->
+                        remove(audio)
+                        add(audio)
+                    }
+                }
         } else {
             playbackService?.qualities?.filter { !it.url.isNullOrBlank() }
         }
