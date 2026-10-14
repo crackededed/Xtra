@@ -1834,10 +1834,12 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     private fun showStatusBar() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            WindowCompat.getInsetsController(
-                requireActivity().window,
-                requireActivity().window.decorView
-            ).show(WindowInsetsCompat.Type.systemBars())
+            if (isAdded) {
+                WindowCompat.getInsetsController(
+                    requireActivity().window,
+                    requireActivity().window.decorView
+                ).show(WindowInsetsCompat.Type.systemBars())
+            }
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 if (isAdded) {
@@ -1850,10 +1852,12 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     private fun hideStatusBar() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            WindowCompat.getInsetsController(
-                requireActivity().window,
-                requireActivity().window.decorView
-            ).hide(WindowInsetsCompat.Type.systemBars())
+            if (isAdded) {
+                WindowCompat.getInsetsController(
+                    requireActivity().window,
+                    requireActivity().window.decorView
+                ).hide(WindowInsetsCompat.Type.systemBars())
+            }
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 if (isAdded) {
