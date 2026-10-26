@@ -1239,14 +1239,14 @@ class HelixRepository(
         }
     }
 
-    suspend fun banUser(networkLibrary: String?, headers: Map<String, String>, channelId: String?, userId: String?, targetId: String?, duration: String? = null, reason: String?): String? = withContext(Dispatchers.IO) {
+    suspend fun banUser(networkLibrary: String?, headers: Map<String, String>, channelId: String?, userId: String?, targetId: String?, duration: Int? = null, reason: String?): String? = withContext(Dispatchers.IO) {
         val url = "https://api.twitch.tv/helix/moderation/bans".toUri().buildUpon().apply {
             channelId?.let { appendQueryParameter("broadcaster_id", it) }
             userId?.let { appendQueryParameter("moderator_id", it) }
         }.build().toString()
         val body = buildJsonObject {
             putJsonObject("data") {
-                duration?.toIntOrNull()?.let { put("duration", it) }
+                duration?.let { put("duration", it) }
                 put("reason", reason)
                 put("user_id", targetId)
             }

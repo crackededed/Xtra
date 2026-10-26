@@ -2459,7 +2459,18 @@ class ChatViewModel(
                                 headers = helixHeaders,
                                 logins = listOf(targetLogin)
                             ).data.firstOrNull()?.id
-                            helixRepository.banUser(networkLibrary, helixHeaders, channelId, accountId, targetId, duration ?: "600", reason)
+                            val durationSeconds = duration?.lastOrNull()?.takeIf { it.isLetter() }?.let { char ->
+                                duration.substringBefore(char).toIntOrNull()?.let { input ->
+                                    when (char.lowercaseChar()) {
+                                        's' -> input
+                                        'm' -> input * 60
+                                        'h' -> input * 3600
+                                        'd' -> input * 86400
+                                        else -> null
+                                    }
+                                }
+                            }
+                            helixRepository.banUser(networkLibrary, helixHeaders, channelId, accountId, targetId, durationSeconds ?: 600, reason)
                         } else null
                     }?.let {
                         onMessage(ChatMessage(systemMsg = it))
