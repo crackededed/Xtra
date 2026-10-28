@@ -271,8 +271,8 @@
     <string name="image_quality">Qualidade da imagem</string>
     <string name="lang_auto">Padrão do sistema</string>
     <string name="save_default">Salvar como padrão</string>
-    <string name="viewers_high">Mais espectadores primeiro</string>
-    <string name="viewers_low">Menos espectadores primeiro</string>
+    <string name="viewers_high">Mais espectadores</string>
+    <string name="viewers_low">Menos espectadores</string>
     <string name="points_earned">Você recebeu %d pontos do canal</string>
     <string name="points_notify">Notificar ao ganhar pontos de canal</string>
     <string name="points_collect">Coletar pontos de canal automaticamente</string>
@@ -505,8 +505,8 @@
     <string name="suggestions">Sugestões</string>
     <string name="languages">Idiomas</string>
     <string name="recent">Mais recentes</string>
-    <string name="top_sort_viewers_high_short">Mais espectadores ↓</string>
-    <string name="top_sort_viewers_low_short">Menos espectadores ↑</string>
+    <string name="top_sort_viewers_high_short">Mais espectadores</string>
+    <string name="top_sort_viewers_low_short">Menos espectadores</string>
     <string name="change_sorting">Alterar ordenação e filtros</string>
     <string name="filters">Filtros</string>
     <string name="sort_by">Ordenar por: %1$s</string>
