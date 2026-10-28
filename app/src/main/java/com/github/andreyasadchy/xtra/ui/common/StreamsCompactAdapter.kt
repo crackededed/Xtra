@@ -1,12 +1,15 @@
 package com.github.andreyasadchy.xtra.ui.common
 
 import android.text.format.DateUtils
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.constraintlayout.helper.widget.Flow
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.res.use
+import androidx.core.widget.TextViewCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingDataAdapter
@@ -177,8 +180,6 @@ class StreamsCompactAdapter(
                                 endToEnd = tagsLayout.id
                             }
                             setWrapMode(Flow.WRAP_CHAIN)
-                            setHorizontalGap((4 * context.resources.displayMetrics.density).toInt())
-                            setVerticalGap((4 * context.resources.displayMetrics.density).toInt())
                         }
                         tagsLayout.addView(tagsFlowLayout)
                         val ids = mutableListOf<Int>()
@@ -188,10 +189,14 @@ class StreamsCompactAdapter(
                             text.id = id
                             ids.add(id)
                             text.text = tag
-                            styleStreamTag(text)
+                            context.obtainStyledAttributes(intArrayOf(com.google.android.material.R.attr.textAppearanceBodyMedium)).use {
+                                TextViewCompat.setTextAppearance(text, it.getResourceId(0, 0))
+                            }
                             text.setOnClickListener {
                                 selectTag(tag)
                             }
+                            val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5f, context.resources.displayMetrics).toInt()
+                            text.setPadding(padding, 0, padding, 0)
                             tagsLayout.addView(text)
                         }
                         tagsFlowLayout.referencedIds = ids.toIntArray()
