@@ -32,7 +32,12 @@ jobs:
         path: app/build/outputs/apk/release/*.apk
 
     - name: Generate release notes
-      run: git log refs/tags/latest..HEAD --oneline --decorate=no > notes.txt
+      run: |
+        if git rev-parse --verify --quiet refs/tags/latest >/dev/null; then
+          git log refs/tags/latest..HEAD --oneline --decorate=no > notes.txt
+        else
+          git log -n 20 HEAD --oneline --decorate=no > notes.txt
+        fi
 
     - name: Update tag
       run: |
