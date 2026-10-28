@@ -2,29 +2,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory
-        android:title="@string/settings_category_general"
+        android:title="@string/settings_category_account"
         app:iconSpaceReserved="false">
-        <ListPreference
-            android:defaultValue="auto"
-            android:entries="@array/languageEntries"
-            android:entryValues="@array/language"
-            android:key="ui_language"
-            android:summary="%s"
-            android:title="@string/language"
-            app:iconSpaceReserved="false"
-            app:singleLineTitle="false" />
-
-        <SwitchPreferenceCompat
-            android:defaultValue="false"
-            android:key="ui_draw_behind_cutouts"
-            android:title="@string/draw_behind_cutouts"
-            app:iconSpaceReserved="false"
-            app:singleLineTitle="false" />
-
-        <SwitchPreferenceCompat
-            android:defaultValue="false"
-            android:key="live_notifications_enabled"
-            android:title="@string/live_notifications"
+        <Preference
+            android:key="api_token_settings"
+            android:title="@string/api_token_settings"
+            android:summary="@string/settings_summary_account"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
     </PreferenceCategory>
@@ -35,24 +18,18 @@
         <Preference
             android:key="theme_settings"
             android:title="@string/theme"
+            android:summary="@string/settings_summary_appearance"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
         <Preference
             android:key="ui_settings"
             android:title="@string/ui_settings"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
-        <Preference
-            android:key="chat_settings"
-            android:title="@string/chat_settings"
-            app:iconSpaceReserved="false"
-            app:singleLineTitle="false" />
     </PreferenceCategory>
 
     <PreferenceCategory
-        android:title="@string/settings_category_player"
+        android:title="@string/settings_category_video_audio"
         app:iconSpaceReserved="false">
         <SwitchPreferenceCompat
             android:defaultValue="true"
@@ -60,39 +37,34 @@
             android:title="@string/picture_in_picture"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
         <SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="player_background_audio"
             android:title="@string/use_background_audio"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
         <SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="player_background_audio_locked"
             android:title="@string/use_background_audio_locked"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
         <Preference
             android:key="player_settings"
             android:title="@string/player_settings"
+            android:summary="@string/settings_summary_video_audio"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
         <Preference
             android:key="player_button_settings"
             android:title="@string/player_buttons"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
         <Preference
             android:key="buffer_settings"
             android:title="@string/buffer_settings"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
         <Preference
             android:key="playback_settings"
             android:title="@string/playback_settings"
@@ -101,40 +73,79 @@
     </PreferenceCategory>
 
     <PreferenceCategory
-        android:title="@string/settings_category_connection"
+        android:title="@string/settings_category_chat"
         app:iconSpaceReserved="false">
+        <Preference
+            android:key="chat_settings"
+            android:title="@string/chat_settings"
+            android:summary="@string/settings_summary_chat"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/settings_category_notifications"
+        app:iconSpaceReserved="false">
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="live_notifications_enabled"
+            android:title="@string/live_notifications"
+            android:summary="@string/settings_summary_notifications"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/settings_category_downloads"
+        app:iconSpaceReserved="false">
+        <Preference
+            android:key="download_settings"
+            android:title="@string/download_settings"
+            android:summary="@string/settings_summary_downloads"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/settings_category_system"
+        app:iconSpaceReserved="false">
+        <ListPreference
+            android:defaultValue="auto"
+            android:entries="@array/languageEntries"
+            android:entryValues="@array/language"
+            android:key="ui_language"
+            android:summary="%s"
+            android:title="@string/language"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="ui_draw_behind_cutouts"
+            android:title="@string/draw_behind_cutouts"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
         <SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="player_use_custom_proxy"
             android:title="@string/use_custom_proxies"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
         <Preference
             android:key="custom_proxy_settings"
             android:title="@string/custom_proxy_settings"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
         <SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="player_use_stream_proxy"
             android:title="@string/use_stream_proxies"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
         <Preference
             android:key="stream_proxy_settings"
             android:title="@string/proxy_settings"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
-        <Preference
-            android:key="api_token_settings"
-            android:title="@string/api_token_settings"
-            app:iconSpaceReserved="false"
-            app:singleLineTitle="false" />
-
         <ListPreference
             android:defaultValue="OkHttp"
             android:entries="@array/networkLibraryEntries"
@@ -144,41 +155,26 @@
             android:title="@string/network_library"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        android:title="@string/settings_category_maintenance"
-        app:iconSpaceReserved="false">
-        <Preference
-            android:key="download_settings"
-            android:title="@string/download_settings"
-            app:iconSpaceReserved="false"
-            app:singleLineTitle="false" />
-
         <Preference
             android:key="check_updates"
             android:title="@string/check_updates"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
         <Preference
             android:key="update_settings"
             android:title="@string/update_settings"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
         <Preference
             android:key="backup_settings"
             android:title="@string/backup_settings"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
         <Preference
             android:key="restore_settings"
             android:title="@string/restore_settings"
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
-
         <Preference
             android:key="debug_settings"
             android:title="@string/debug_settings"
