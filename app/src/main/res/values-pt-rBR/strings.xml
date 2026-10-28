@@ -3,7 +3,7 @@
     <string name="games">Jogos</string>
     <string name="popular">Populares</string>
     <string name="following">Seguindo</string>
-    <string name="downloads">Baixados</string>
+    <string name="downloads">Downloads</string>
     <string name="connection_error">Erro ao conectar ao servidor. Tente novamente.</string>
     <string name="sort">Ordenar</string>
     <string name="upload_date">Data de upload</string>
@@ -47,7 +47,7 @@
     <string name="token_expired">Sua sessão expirou. Entre novamente.</string>
     <string name="no_connection">Sem conexão com a internet</string>
     <string name="connection_restored">Conexão restaurada</string>
-    <string name="notification_downloads_channel_title">Baixados</string>
+    <string name="notification_downloads_channel_title">Downloads</string>
     <string name="storage_permission_title">O aplicativo precisa de permissão de armazenamento</string>
     <string name="storage_permission_message">A permissão de armazenamento é necessária para baixar vídeos.</string>
     <string name="permission_denied">As permissões necessárias foram negadas.</string>
@@ -64,7 +64,7 @@
     <string name="settings_category_appearance">Aparência</string>
     <string name="settings_category_player">Reprodução</string>
     <string name="settings_category_connection">Conexão</string>
-    <string name="settings_category_maintenance">Downloads e manutenção</string>
+    <string name="settings_category_maintenance">Downloads e Manutenção</string>
     <string name="landscape_chat_width">Largura do chat em modo paisagem</string>
     <string name="portrait_column_count">Número de colunas no modo retrato</string>
     <string name="landscape_column_count">Número de colunas no modo paisagem</string>
