@@ -29,6 +29,7 @@ import com.github.andreyasadchy.xtra.model.ui.Tag
 import com.github.andreyasadchy.xtra.ui.common.GamesAdapter
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
+import com.github.andreyasadchy.xtra.ui.common.showXtraBrand
 import com.github.andreyasadchy.xtra.ui.games.GamesViewModel.Companion.GamesViewModelFactory
 import com.github.andreyasadchy.xtra.ui.login.LoginActivity
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
@@ -64,6 +65,7 @@ class GamesFragment : PagedListFragment(), Scrollable, GamesSortDialog.OnFilter 
             val navController = findNavController()
             val appBarConfiguration = AppBarConfiguration(setOf(R.id.rootGamesFragment, R.id.rootTopFragment, R.id.followPagerFragment, R.id.followMediaFragment, R.id.savedPagerFragment, R.id.savedMediaFragment))
             toolbar.setupWithNavController(navController, appBarConfiguration)
+            toolbar.showXtraBrand()
             toolbar.menu.findItem(R.id.login).title = if (isLoggedIn) getString(R.string.log_out) else getString(R.string.log_in)
             toolbar.setOnMenuItemClickListener { menuItem ->
                 when (menuItem.itemId) {

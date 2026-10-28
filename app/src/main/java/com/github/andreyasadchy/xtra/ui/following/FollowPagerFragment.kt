@@ -20,6 +20,7 @@ import com.github.andreyasadchy.xtra.databinding.FragmentMediaPagerBinding
 import com.github.andreyasadchy.xtra.ui.common.FragmentHost
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.common.Sortable
+import com.github.andreyasadchy.xtra.ui.common.showXtraBrand
 import com.github.andreyasadchy.xtra.ui.login.LoginActivity
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
 import com.github.andreyasadchy.xtra.ui.search.SearchPagerFragmentDirections
@@ -61,6 +62,7 @@ class FollowPagerFragment : Fragment(), Scrollable, FragmentHost {
             val isLoggedIn = !TwitchApiHelper.getGQLHeaders(requireContext(), true)[C.HEADER_TOKEN].isNullOrBlank() ||
                     !TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank()
             toolbar.setupWithNavController(navController, appBarConfiguration)
+            toolbar.showXtraBrand()
             toolbar.menu.findItem(R.id.login).title = if (isLoggedIn) getString(R.string.log_out) else getString(R.string.log_in)
             toolbar.setOnMenuItemClickListener { menuItem ->
                 when (menuItem.itemId) {

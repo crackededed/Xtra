@@ -35,6 +35,7 @@ import com.github.andreyasadchy.xtra.ui.common.StreamsSortDialog
 import com.github.andreyasadchy.xtra.ui.common.StreamsSortDialog.Companion.RECENT
 import com.github.andreyasadchy.xtra.ui.common.StreamsSortDialog.Companion.SORT_VIEWERS
 import com.github.andreyasadchy.xtra.ui.common.StreamsSortDialog.Companion.SORT_VIEWERS_ASC
+import com.github.andreyasadchy.xtra.ui.common.showXtraBrand
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentArgs
 import com.github.andreyasadchy.xtra.ui.login.LoginActivity
 import com.github.andreyasadchy.xtra.ui.main.MainActivity
@@ -71,6 +72,7 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
             val navController = findNavController()
             val appBarConfiguration = AppBarConfiguration(setOf(R.id.rootGamesFragment, R.id.rootTopFragment, R.id.followPagerFragment, R.id.followMediaFragment, R.id.savedPagerFragment, R.id.savedMediaFragment))
             toolbar.setupWithNavController(navController, appBarConfiguration)
+            toolbar.showXtraBrand()
             toolbar.menu.findItem(R.id.login).title = if (isLoggedIn) getString(R.string.log_out) else getString(R.string.log_in)
             toolbar.setOnMenuItemClickListener { menuItem ->
                 when (menuItem.itemId) {
@@ -144,17 +146,7 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
                     tags = args.tags ?: sortValues?.streamTags?.split(',')?.toTypedArray(),
                     languages = args.languages ?: sortValues?.streamLanguages?.split(',')?.toTypedArray(),
                 )
-                viewModel.sortText.value = getString(
-                    R.string.sort_by,
-                    getString(
-                        when (viewModel.sort) {
-                            SORT_VIEWERS -> R.string.viewers_high
-                            SORT_VIEWERS_ASC -> R.string.viewers_low
-                            RECENT -> R.string.recent
-                            else -> R.string.viewers_high
-                        }
-                    )
-                )
+                viewModel.sortText.value = getSortLabel(viewModel.sort)
                 viewModel.filtersText.value = if (viewModel.tags.isNotEmpty() || viewModel.languages.isNotEmpty()) {
                     buildString {
                         if (viewModel.tags.isNotEmpty()) {
@@ -197,6 +189,7 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
         }
         with(binding) {
             sortBar.root.visibility = View.VISIBLE
+            sortBar.root.contentDescription = getString(R.string.change_sorting)
             sortBar.root.setOnClickListener {
                 StreamsSortDialog.newInstance(
                     sort = viewModel.sort,
@@ -257,12 +250,21 @@ class TopStreamsFragment : PagedListFragment(), Scrollable, StreamsSortDialog.On
         }
     }
 
+    private fun getSortLabel(sort: String): String = getString(
+        when (sort) {
+            SORT_VIEWERS -> R.string.top_sort_viewers_high_short
+            SORT_VIEWERS_ASC -> R.string.top_sort_viewers_low_short
+            RECENT -> R.string.recent
+            else -> R.string.top_sort_viewers_high_short
+        }
+    )
+
     override fun onChange(sort: String, sortText: CharSequence, tags: Array<String>, languages: Array<String>, changed: Boolean, saveFilters: Boolean, saveSort: Boolean, saveDefault: Boolean) {
         viewLifecycleOwner.lifecycleScope.launch {
             if (changed) {
                 pagingAdapter.submitData(PagingData.empty())
                 viewModel.setFilter(sort, tags, languages)
-                viewModel.sortText.value = getString(R.string.sort_by, sortText)
+                viewModel.sortText.value = getSortLabel(sort)
                 viewModel.filtersText.value = if (viewModel.tags.isNotEmpty() || viewModel.languages.isNotEmpty()) {
                     buildString {
                         if (viewModel.tags.isNotEmpty()) {

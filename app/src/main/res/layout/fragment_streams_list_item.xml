@@ -29,7 +29,12 @@
                 android:id="@+id/viewers"
                 style="@style/ThumbnailItem"
                 android:layout_marginStart="5dp"
-                android:layout_marginBottom="5dp"
+                android:layout_marginBottom="7dp"
+                android:background="@drawable/thumbnail_info_badge"
+                android:paddingStart="6dp"
+                android:paddingTop="3dp"
+                android:paddingEnd="6dp"
+                android:paddingBottom="3dp"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="@+id/thumbnail"
                 app:layout_constraintStart_toStartOf="parent"
@@ -40,7 +45,12 @@
                 android:id="@+id/uptime"
                 style="@style/ThumbnailItem"
                 android:layout_marginEnd="5dp"
-                android:layout_marginBottom="5dp"
+                android:layout_marginBottom="7dp"
+                android:background="@drawable/thumbnail_info_badge"
+                android:paddingStart="6dp"
+                android:paddingTop="3dp"
+                android:paddingEnd="6dp"
+                android:paddingBottom="3dp"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="@+id/thumbnail"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -76,32 +86,36 @@
 
                 <TextView
                     android:id="@+id/title"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAppearance="?attr/textAppearanceTitleMedium"
                     android:visibility="gone"
                     android:ellipsize="end"
-                    android:maxLines="3"
+                    android:maxLines="2"
                     tools:text="@sample/streams.json/streams/channel/status"
                     tools:visibility="visible" />
 
                 <TextView
                     android:id="@+id/username"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:textColor="?android:attr/textColorSecondary"
                     android:visibility="gone"
+                    android:ellipsize="end"
+                    android:maxLines="1"
                     tools:text="@sample/streams.json/streams/channel/name"
                     tools:visibility="visible" />
 
                 <TextView
                     android:id="@+id/gameName"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:textColor="?android:attr/textColorSecondary"
                     android:visibility="gone"
+                    android:ellipsize="end"
+                    android:maxLines="1"
                     tools:text="@sample/games.json/top/game/name"
                     tools:visibility="visible" />
             </LinearLayout>
