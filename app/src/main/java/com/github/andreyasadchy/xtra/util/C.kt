@@ -272,6 +272,7 @@ object C {
     const val VALIDATE_TOKENS = "validate_tokens"
     const val UPDATE_LAST_CHECKED = "update_last_checked"
     const val UPDATE_URL = "update_url"
+    const val UPDATE_CHECK_MIGRATION = "update_check_migration"
     const val UPDATE_CHECK_ENABLED = "update_check_enabled"
     const val UPDATE_CHECK_FREQUENCY = "update_check_frequency"
     const val UPDATE_USE_BROWSER = "update_use_browser"

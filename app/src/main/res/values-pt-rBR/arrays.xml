@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="gqlUserLanguageEntries">
+        <item>العربية</item>
+        <item>Língua de sinais americana</item>
+        <item>Български</item>
+        <item>Catalão</item>
+        <item>čeština</item>
+        <item>Dansk</item>
+        <item>Deutsch</item>
+        <item>Eλληνικά</item>
+        <item>Inglês</item>
+        <item>Español</item>
+        <item>Suomi</item>
+        <item>Français</item>
+        <item>Híndi</item>
+        <item>Magyar</item>
+        <item>Indonésio</item>
+        <item>Italiano</item>
+        <item>日本語</item>
+        <item>한국어</item>
+        <item>Malaio</item>
+        <item>Nederlands</item>
+        <item>Norsk</item>
+        <item>Polski</item>
+        <item>Português</item>
+        <item>Română</item>
+        <item>Pусский</item>
+        <item>Slovenčina</item>
+        <item>Svenska</item>
+        <item>ภาษาไทย</item>
+        <item>Tagalog</item>
+        <item>Türkçe</item>
+        <item>Ucraniano</item>
+        <item>Tiếng việt</item>
+        <item>中文</item>
+        <item>Chinês (Hong Kong)</item>
+        <item>@string/other</item>
+    </string-array>
+</resources>

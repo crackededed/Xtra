@@ -136,9 +136,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         prefs = prefs()
         migrateSettings()
-        if (tokenPrefs().getLong(C.UPDATE_LAST_CHECKED, 0) <= 0L) {
+        val forkUpdateUrlFromPreviousBuild = "https://api.github.com/repos/odbsalt/Xtra/releases/tags/latest"
+        if (prefs.getString(C.UPDATE_URL, null) == forkUpdateUrlFromPreviousBuild) {
+            prefs.edit {
+                putString(C.UPDATE_URL, "https://api.github.com/repos/crackededed/xtra/releases/tags/latest")
+            }
+        }
+        if (!tokenPrefs().getBoolean(C.UPDATE_CHECK_MIGRATION, false)) {
             tokenPrefs().edit {
-                putLong(C.UPDATE_LAST_CHECKED, System.currentTimeMillis())
+                putLong(C.UPDATE_LAST_CHECKED, 0L)
+                putBoolean(C.UPDATE_CHECK_MIGRATION, true)
             }
         }
         lifecycleScope.launch {

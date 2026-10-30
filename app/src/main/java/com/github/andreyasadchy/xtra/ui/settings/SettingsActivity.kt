@@ -49,7 +49,9 @@ import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
+import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
+import androidx.preference.PreferenceScreen
 import androidx.preference.SeekBarPreference
 import androidx.preference.SwitchPreferenceCompat
 import androidx.preference.forEach
@@ -63,6 +65,7 @@ import com.github.andreyasadchy.xtra.databinding.DialogUpdateDownloadBinding
 import com.github.andreyasadchy.xtra.model.ui.SettingsDragListItem
 import com.github.andreyasadchy.xtra.model.ui.SettingsSearchItem
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
+import com.github.andreyasadchy.xtra.ui.login.LoginActivity
 import com.github.andreyasadchy.xtra.ui.settings.SettingsViewModel.Companion.SettingsViewModelFactory
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
@@ -260,16 +263,50 @@ class SettingsActivity : AppCompatActivity() {
         const val KEY_CHANGED = "changed"
     }
 
-    class SettingsFragment : MaterialPreferenceFragment() {
+    class SettingsFragment : MaterialPreferenceFragment(), PreferenceFragmentCompat.OnPreferenceStartScreenCallback {
 
         private val viewModel: SettingsViewModel by activityViewModels { SettingsViewModelFactory }
         private var backupResultLauncher: ActivityResultLauncher<Intent>? = null
         private var restoreResultLauncher: ActivityResultLauncher<Intent>? = null
+        private var loginResultLauncher: ActivityResultLauncher<Intent>? = null
+        private var logoutResultLauncher: ActivityResultLauncher<Intent>? = null
         private var updateDownloadDialogBinding: DialogUpdateDownloadBinding? = null
         private var updateDownloadDialog: AlertDialog? = null
 
+        override fun onPreferenceStartScreen(caller: PreferenceFragmentCompat, pref: PreferenceScreen): Boolean {
+            when (pref.key) {
+                "settings_chat" -> {
+                    findNavController().navigate(SettingsNavGraphDirections.actionGlobalChatSettingsFragment())
+                    return true
+                }
+                "settings_downloads" -> {
+                    findNavController().navigate(SettingsNavGraphDirections.actionGlobalDownloadSettingsFragment())
+                    return true
+                }
+            }
+            val title = pref.title?.toString() ?: return false
+            findNavController().navigate(
+                R.id.action_settingsFragment_to_settingsCategoryFragment,
+                Bundle().apply {
+                    putString(PreferenceFragmentCompat.ARG_PREFERENCE_ROOT, pref.key)
+                    putString("categoryTitle", title)
+                }
+            )
+            return true
+        }
+
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
+            loginResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == RESULT_OK) {
+                    requireActivity().setResult(RESULT_OK)
+                    requireActivity().finish()
+                }
+            }
+            logoutResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+                requireActivity().setResult(RESULT_OK)
+                requireActivity().finish()
+            }
             backupResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == RESULT_OK) {
                     result.data?.data?.let {
@@ -300,8 +337,27 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
+        override fun onResume() {
+            super.onResume()
+            updateAccountPreference()
+        }
+
+        private fun isLoggedIn(): Boolean {
+            return !TwitchApiHelper.getGQLHeaders(requireContext(), true)[C.HEADER_TOKEN].isNullOrBlank() ||
+                    !TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank()
+        }
+
+        private fun updateAccountPreference() {
+            findPreference<Preference>("account_login")?.apply {
+                val loggedIn = isLoggedIn()
+                title = getString(if (loggedIn) R.string.log_out else R.string.log_in)
+                summary = if (loggedIn) requireContext().tokenPrefs().getString(C.USERNAME, null) else null
+            }
+        }
+
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
+            updateAccountPreference()
             findPreference<ListPreference>(C.UI_LANGUAGE)?.apply {
                 val lang = AppCompatDelegate.getApplicationLocales()
                 if (lang.isEmpty) {
@@ -415,6 +471,23 @@ class SettingsActivity : AppCompatActivity() {
             findPreference<Preference>("api_token_settings")?.setOnPreferenceClickListener {
                 requireActivity().findViewById<AppBarLayout>(R.id.appBar)?.setExpanded(true)
                 findNavController().navigate(SettingsNavGraphDirections.actionGlobalApiTokenSettingsFragment())
+                true
+            }
+            findPreference<Preference>("account_login")?.setOnPreferenceClickListener {
+                if (isLoggedIn()) {
+                    requireActivity().getAlertDialogBuilder().apply {
+                        setTitle(getString(R.string.logout_title))
+                        requireContext().tokenPrefs().getString(C.USERNAME, null)?.let {
+                            setMessage(getString(R.string.logout_msg, it))
+                        }
+                        setNegativeButton(getString(R.string.no), null)
+                        setPositiveButton(getString(R.string.yes)) { _, _ ->
+                            logoutResultLauncher?.launch(Intent(requireActivity(), LoginActivity::class.java))
+                        }
+                    }.show()
+                } else {
+                    loginResultLauncher?.launch(Intent(requireActivity(), LoginActivity::class.java))
+                }
                 true
             }
             val httpEngine = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7
@@ -1355,6 +1428,7 @@ class SettingsActivity : AppCompatActivity() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.download_preferences, rootKey)
             findPreference<Preference>("import_app_downloads")?.setOnPreferenceClickListener {
+                Toast.makeText(requireContext(), R.string.import_app_downloads_started, Toast.LENGTH_SHORT).show()
                 viewModel.importDownloads()
                 true
             }
@@ -1362,6 +1436,19 @@ class SettingsActivity : AppCompatActivity() {
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
+            viewLifecycleOwner.lifecycleScope.launch {
+                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.importDownloadsResult.collectLatest { result ->
+                        val message = when {
+                            result.failed && result.importedCount > 0 -> getString(R.string.import_app_downloads_partial_error, result.importedCount)
+                            result.failed -> getString(R.string.import_app_downloads_error)
+                            result.importedCount == 0 -> getString(R.string.import_app_downloads_none)
+                            else -> getString(R.string.import_app_downloads_success, result.importedCount)
+                        }
+                        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
             ViewCompat.setOnApplyWindowInsetsListener(view) { _, windowInsets ->
                 val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
                 listView.updatePadding(bottom = insets.bottom)

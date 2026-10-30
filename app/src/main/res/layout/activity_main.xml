@@ -25,14 +25,12 @@
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <com.google.android.material.divider.MaterialDivider
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/navBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="?attr/colorSurface"
+            android:elevation="0dp"
             android:minHeight="?attr/bottomNavigationHeight"
             app:labelVisibilityMode="labeled" />
     </LinearLayout>

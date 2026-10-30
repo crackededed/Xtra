@@ -210,20 +210,6 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
-        android:key="chat_points_collect"
-        android:title="@string/points_collect"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="chat_points_notify"
-        android:title="@string/points_notify"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="true"
         android:key="chat_raids_show"
         android:title="@string/show_raids"
         app:iconSpaceReserved="false"

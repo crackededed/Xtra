@@ -30,6 +30,7 @@
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingBottom="20dp"
             android:clipToPadding="false"
             tools:listitem="@layout/fragment_downloads_list_item" />
 

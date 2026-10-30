@@ -8,6 +8,7 @@ import android.content.pm.PackageInstaller
 import android.net.Uri
 import android.net.http.HttpEngine
 import android.provider.DocumentsContract
+import android.util.Log
 import android.util.JsonReader
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.net.toUri
@@ -37,6 +38,7 @@ import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import com.github.andreyasadchy.xtra.util.m3u8.Segment
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -81,6 +83,8 @@ class SettingsViewModel(
     var updateJob: Job? = null
     val updateProgress = MutableSharedFlow<Int>()
     val closeUpdateDialog = MutableSharedFlow<Boolean>()
+    data class ImportDownloadsResult(val importedCount: Int, val failed: Boolean)
+    val importDownloadsResult = MutableSharedFlow<ImportDownloadsResult>(extraBufferCapacity = 1)
 
     fun deletePositions() {
         viewModelScope.launch {
@@ -97,6 +101,8 @@ class SettingsViewModel(
 
     fun importDownloads() {
         viewModelScope.launch(Dispatchers.IO) {
+            var importedCount = 0
+            try {
             val chatFiles = mutableMapOf<String, String>()
             applicationContext.getExternalFilesDirs(".downloads").forEach { storage ->
                 storage?.absolutePath?.let { directory ->
@@ -189,6 +195,7 @@ class SettingsViewModel(
                                                     chatUrl = chatFile
                                                 )
                                             )
+                                            importedCount++
                                         }
                                     }
                             } else if (file.isFile && (file.name.endsWith(".mp4") || file.name.endsWith(".ts"))) {
@@ -259,11 +266,19 @@ class SettingsViewModel(
                                             chatUrl = chatFile
                                         )
                                     )
+                                    importedCount++
                                 }
                             }
                         }
                     }
                 }
+            }
+                importDownloadsResult.emit(ImportDownloadsResult(importedCount, false))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e("SettingsViewModel", "Failed to import app-storage downloads", e)
+                importDownloadsResult.emit(ImportDownloadsResult(importedCount, true))
             }
         }
     }

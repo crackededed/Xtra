@@ -9,6 +9,20 @@
         android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$SettingsFragment"
         android:label="@string/settings" />
     <action
+        android:id="@+id/action_settingsFragment_to_settingsCategoryFragment"
+        app:destination="@id/settingsCategoryFragment" />
+    <fragment
+        android:id="@+id/settingsCategoryFragment"
+        android:name="com.github.andreyasadchy.xtra.ui.settings.SettingsActivity$SettingsFragment"
+        android:label="{categoryTitle}">
+        <argument
+            android:name="androidx.preference.PreferenceFragmentCompat.PREFERENCE_ROOT"
+            app:argType="string" />
+        <argument
+            android:name="categoryTitle"
+            app:argType="string" />
+    </fragment>
+    <action
         android:id="@+id/action_global_settingsFragment"
         app:destination="@id/settingsFragment" />
     <fragment
