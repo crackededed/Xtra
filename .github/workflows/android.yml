@@ -22,6 +22,8 @@ jobs:
       uses: gradle/actions/setup-gradle@v6
       with:
         cache-provider: 'basic'
+    - name: Fix Gradle wrapper permissions
+      run: chmod +x gradlew
     - name: Build with Gradle
       run: ./gradlew assembleRelease
 
