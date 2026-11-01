@@ -16,11 +16,13 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import com.github.andreyasadchy.xtra.XtraApp
+import com.github.andreyasadchy.xtra.model.ui.DownloadProgress
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.repository.OfflineVideosRepository
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
 import com.github.andreyasadchy.xtra.util.m3u8.Segment
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileInputStream
@@ -33,6 +35,7 @@ class DownloadsViewModel(
 ) : ViewModel() {
 
     var selectedVideo: OfflineVideo? = null
+    val videoDownloadProgress = MutableStateFlow<DownloadProgress?>(null)
     private val videosInUse = mutableListOf<OfflineVideo>()
 
     val flow = Pager(

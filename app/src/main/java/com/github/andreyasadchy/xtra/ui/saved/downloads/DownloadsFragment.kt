@@ -368,21 +368,34 @@ class DownloadsFragment : PagedListFragment(), Scrollable {
             }
         }
         initializeAdapter(binding, pagingAdapter, enableSwipeRefresh = false, enableScrollTopButton = false)
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.videoDownloadProgress.collectLatest { downloadProgress ->
+                    if (downloadProgress != null) {
+                        val list = pagingAdapter.snapshot()
+                        val item = list.find { it?.id == downloadProgress.id }
+                        if (item != null) {
+                            val index = list.indexOf(item)
+                            val itemView = (binding.recyclerView.layoutManager?.findViewByPosition(index) as? MaterialCardView)
+                            if (itemView != null) {
+                                val binding = FragmentDownloadsListItemBinding.bind(itemView)
+                                (pagingAdapter as? DownloadsAdapter)?.updateStatus(binding, requireContext(), item, downloadProgress)
+                            } else {
+                                pagingAdapter.notifyItemChanged(index)
+                            }
+                        }
+                        viewModel.videoDownloadProgress.value = null
+                    }
+                }
+            }
+        }
     }
 
     fun bindVideoDownloadService(started: Boolean = false) {
         if (videoDownloadServiceConnection == null) {
             val listener = object : VideoDownloadService.Listener {
                 override fun update(downloadProgress: DownloadProgress) {
-                    val list = pagingAdapter.snapshot()
-                    val item = list.find { it?.id == downloadProgress.id }
-                    if (item != null) {
-                        val index = list.indexOf(item)
-                        (binding.recyclerView.layoutManager?.findViewByPosition(index) as? MaterialCardView)?.let {
-                            val binding = FragmentDownloadsListItemBinding.bind(it)
-                            (pagingAdapter as? DownloadsAdapter)?.updateStatus(binding, requireContext(), item, downloadProgress)
-                        } ?: pagingAdapter.notifyItemChanged(index)
-                    }
+                    viewModel.videoDownloadProgress.value = downloadProgress
                 }
 
                 override fun unbind() {
