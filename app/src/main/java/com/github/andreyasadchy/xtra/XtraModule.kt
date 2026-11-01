@@ -276,7 +276,10 @@ class XtraModule(application: Application) {
                 },
                 Migration(39, 40) { db ->
                     db.execSQL("CREATE TABLE IF NOT EXISTS video_swap (platform TEXT, playerType TEXT, position INTEGER NOT NULL, enabled INTEGER NOT NULL, id INTEGER NOT NULL, PRIMARY KEY (id))")
-                }
+                },
+                Migration(40, 41) { db ->
+                    db.execSQL("UPDATE videos SET lastSegmentUrl = NULL")
+                },
             )
         }.build()
     }
