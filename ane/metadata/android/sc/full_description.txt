@@ -1,0 +1,8 @@
+<i>Xtra pro Twitch</i> est unu cliente pro <a href='https://en.wikipedia.org/wiki/Twitch_(service)' target='_blank'>Twitch</a> pensadu pro dare sa mègius esperièntzia pro abbistare e tzarrare in sos dispositivos mòbiles:
+
+* Suportu pro sas emotes populares cun sas estensiones BetterTTV e FrankerFaceZ
+* Abbista sos VOD e sos estratos cun sa tzarrada registrada
+* Iscàrriga sos VOD pro los abbistare chene connessione
+* Sighi a abbistare in foras de s'aplicatzione cun sa modalidade Immàgine in s'immàgine
+* Temporizadore de suspensione pro firmare sa trasmissione in automàticu
+* Interfache personalizàbile cun 3 temas de colore diferentes
