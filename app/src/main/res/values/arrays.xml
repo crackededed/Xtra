@@ -184,6 +184,7 @@
         <item>@string/lang_pt_br</item>
         <item>@string/lang_tr</item>
         <item>@string/lang_ru</item>
+        <item>@string/lang_sc</item>
         <item>@string/lang_ar</item>
         <item>@string/lang_ja</item>
         <item>@string/lang_zh_tw</item>
@@ -202,6 +203,7 @@
         <item>pt-BR</item>
         <item>tr</item>
         <item>ru</item>
+        <item>sc</item>
         <item>ar</item>
         <item>ja</item>
         <item>zh-TW</item>
@@ -280,6 +282,7 @@
         <item>Português</item>
         <item>Română</item>
         <item>Pусский</item>
+        <item>Sardu</item>
         <item>Slovenčina</item>
         <item>Svenska</item>
         <item>ภาษาไทย</item>
@@ -318,6 +321,7 @@
         <item>PT</item>
         <item>RO</item>
         <item>RU</item>
+        <item>SC</item>
         <item>SK</item>
         <item>SV</item>
         <item>TH</item>
