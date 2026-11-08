@@ -182,6 +182,7 @@
         <item>@string/lang_in</item>
         <item>@string/lang_it</item>
         <item>@string/lang_pt_br</item>
+        <item>@string/lang_sc</item>
         <item>@string/lang_tr</item>
         <item>@string/lang_ru</item>
         <item>@string/lang_ar</item>
@@ -200,6 +201,7 @@
         <item>in</item>
         <item>it</item>
         <item>pt-BR</item>
+        <item>sc</item>
         <item>tr</item>
         <item>ru</item>
         <item>ar</item>
