@@ -341,4 +341,9 @@
         <item>followed</item>
         <item>disabled</item>
     </string-array>
+    <string-array name="chat_proxy_protocols" translatable="false">
+        <item>SOCKS5</item>
+        <item>HTTP</item>
+        <item>HTTPS</item>
+    </string-array>
 </resources>

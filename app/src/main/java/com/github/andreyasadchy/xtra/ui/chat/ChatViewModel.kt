@@ -16,6 +16,8 @@ import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.XtraApp
 import com.github.andreyasadchy.xtra.model.chat.Badge
 import com.github.andreyasadchy.xtra.model.chat.ChannelPointReward
+import com.github.andreyasadchy.xtra.model.gql.Error
+import com.github.andreyasadchy.xtra.model.gql.chat.ChannelRewardsResponse
 import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.chat.Chatter
 import com.github.andreyasadchy.xtra.model.chat.CheerEmote
@@ -33,10 +35,12 @@ import com.github.andreyasadchy.xtra.model.chat.TwitchEmote
 import com.github.andreyasadchy.xtra.model.chat.VideoChatMessage
 import com.github.andreyasadchy.xtra.model.ui.TranslatedChannel
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
+import com.github.andreyasadchy.xtra.repository.ChatterinoPlusRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.repository.PlayerRepository
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
+import com.github.andreyasadchy.xtra.util.chat.ChatProxyPreferences
 import com.github.andreyasadchy.xtra.util.chat.ChatReadIRCSocket
 import com.github.andreyasadchy.xtra.util.chat.ChatReadWebSocket
 import com.github.andreyasadchy.xtra.util.chat.ChatUtils
@@ -50,6 +54,7 @@ import com.github.andreyasadchy.xtra.util.chat.STVEventApiUtils
 import com.github.andreyasadchy.xtra.util.chat.STVEventApiWebSocket
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
@@ -58,12 +63,16 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import okhttp3.OkHttpClient
+import java.io.IOException
 import java.util.Timer
 import java.util.concurrent.ConcurrentHashMap
 import java.util.zip.DeflaterOutputStream
@@ -78,15 +87,22 @@ class ChatViewModel(
     private val helixRepository: HelixRepository,
     private val playerRepository: PlayerRepository,
     private val json: Json,
+    private val okHttpClient: Lazy<OkHttpClient>,
+    val chatterinoPlus: ChatterinoPlusRepository,
 ) : ViewModel() {
 
     val integrity = MutableSharedFlow<String?>()
+    private val pointsBalance = MutableStateFlow<Int?>(null)
+    val channelPointsBalance: StateFlow<Int?> = pointsBalance
+    private val redemptionLock = Mutex()
+    private var pointsRefresh: Job? = null
 
     private var chatReadIRCSocket: ChatReadIRCSocket? = null
     private var chatWriteIRCSocket: ChatWriteIRCSocket? = null
     private var chatReadWebSocket: ChatReadWebSocket? = null
     private var chatWriteWebSocket: ChatWriteWebSocket? = null
     private var chatReadJob: Job? = null
+    private var chatProxyClient: Result<OkHttpClient?> = Result.success(null)
     private var chatWriteJob: Job? = null
     private var eventSub: EventSubWebSocket? = null
     private var hermesWebSocket: HermesWebSocket? = null
@@ -883,7 +899,7 @@ class ChatViewModel(
             viewModelScope.launch {
                 try {
                     val list = mutableListOf<ChatMessage>()
-                    playerRepository.loadRecentMessages(networkLibrary, recentMessagesUrl, channelLogin, applicationContext.prefs().getInt(C.CHAT_RECENT_LIMIT, 100).toString()).messages.forEach { message ->
+                    playerRepository.loadRecentMessages(networkLibrary, recentMessagesUrl, channelLogin, applicationContext.prefs().getInt(C.CHAT_RECENT_LIMIT, 100).toString(), chatProxyClient.getOrThrow()).messages.forEach { message ->
                         val ircMessage = ChatUtils.parseIRCMessage(message)
                         when (ircMessage.command) {
                             "PRIVMSG" -> ChatUtils.parseChatMessage(ircMessage)
@@ -1012,7 +1028,16 @@ class ChatViewModel(
 
     fun startLiveChat(channelId: String?, channelLogin: String) {
         stopLiveChat()
+        pointsBalance.value = null
+        val proxy = runCatching { ChatProxyPreferences.read(applicationContext) }
+        chatProxyClient = proxy.mapCatching { it?.client(okHttpClient.value) }
+        chatProxyClient.exceptionOrNull()?.let { error ->
+            viewModelScope.launch { onMessage(ChatMessage(systemMsg = error.message ?: error.toString())) }
+            return
+        }
+        val chatProxy = proxy.getOrThrow()
         started = true
+        refreshChannelPointsBalance(channelLogin)
         val gqlHeaders = TwitchApiHelper.getGQLHeaders(applicationContext, true)
         val helixHeaders = TwitchApiHelper.getHelixHeaders(applicationContext)
         val networkLibrary = applicationContext.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP)
@@ -1028,40 +1053,40 @@ class ChatViewModel(
         val useApiChatMessages = applicationContext.prefs().getBoolean(C.DEBUG_API_CHAT_MESSAGES, true)
         val showWebSocketDebugInfo = applicationContext.prefs().getBoolean(C.DEBUG_WEBSOCKET_INFO, false)
         if (applicationContext.prefs().getBoolean(C.DEBUG_EVENT_SUB_CHAT, false) && !helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-            eventSub = EventSubWebSocket(EventSubListener(helixHeaders, channelLogin, showUserNotice, showClearChat, usePubSub, networkLibrary, isLoggedIn, accountId, channelId))
+            eventSub = EventSubWebSocket(EventSubListener(helixHeaders, channelLogin, showUserNotice, showClearChat, usePubSub, networkLibrary, isLoggedIn, accountId, channelId, chatProxyClient.getOrThrow()), proxy = chatProxy)
             chatReadJob = eventSub?.connect(viewModelScope)
         } else {
             val gqlToken = gqlHeaders[C.HEADER_TOKEN]?.removePrefix("OAuth ")
             val helixToken = helixHeaders[C.HEADER_TOKEN]?.removePrefix("Bearer ")
             if (applicationContext.prefs().getBoolean(C.CHAT_USE_WEBSOCKET, true)) {
-                chatReadWebSocket = ChatReadWebSocket(channelLogin, ChatReadListener(channelLogin, nameDisplay, showUserNotice, showClearMsg, showClearChat, usePubSub, networkLibrary, isLoggedIn, accountId, channelId))
+                chatReadWebSocket = ChatReadWebSocket(channelLogin, ChatReadListener(channelLogin, nameDisplay, showUserNotice, showClearMsg, showClearChat, usePubSub, networkLibrary, isLoggedIn, accountId, channelId), proxy = chatProxy)
                 chatReadJob = chatReadWebSocket?.connect(viewModelScope)
                 if (isLoggedIn && (!gqlToken.isNullOrBlank() || !helixHeaders[C.HEADER_TOKEN].isNullOrBlank() && !useApiChatMessages)) {
                     chatWriteWebSocket = ChatWriteWebSocket(
                         userLogin = accountLogin,
                         userToken = gqlToken?.takeIf { it.isNotBlank() } ?: helixToken,
                         channelLogin = channelLogin,
-                        listener = ChatWriteListener(channelId, showWebSocketDebugInfo)
+                        listener = ChatWriteListener(channelId, showWebSocketDebugInfo),
+                        proxy = chatProxy,
                     )
                     chatWriteJob = chatWriteWebSocket?.connect(viewModelScope)
                 }
             } else {
                 val useSSL = applicationContext.prefs().getBoolean(C.CHAT_USE_SSL, true)
-                chatReadIRCSocket = ChatReadIRCSocket(useSSL, channelLogin, ChatReadListener(channelLogin, nameDisplay, showUserNotice, showClearMsg, showClearChat, usePubSub, networkLibrary, isLoggedIn, accountId, channelId))
-                chatReadJob = viewModelScope.launch(Dispatchers.IO) {
-                    chatReadIRCSocket?.start()
-                }
+                val ircReader = ChatReadIRCSocket(useSSL, channelLogin, ChatReadListener(channelLogin, nameDisplay, showUserNotice, showClearMsg, showClearChat, usePubSub, networkLibrary, isLoggedIn, accountId, channelId), proxy = chatProxy)
+                chatReadIRCSocket = ircReader
+                chatReadJob = viewModelScope.launch(Dispatchers.IO) { ircReader.start() }
                 if (isLoggedIn && (!gqlToken.isNullOrBlank() || !helixHeaders[C.HEADER_TOKEN].isNullOrBlank() && !useApiChatMessages)) {
-                    chatWriteIRCSocket = ChatWriteIRCSocket(
+                    val ircWriter = ChatWriteIRCSocket(
                         useSSL = useSSL,
                         userLogin = accountLogin,
                         userToken = gqlToken?.takeIf { it.isNotBlank() } ?: helixToken,
                         channelLogin = channelLogin,
-                        listener = ChatWriteListener(channelId, showWebSocketDebugInfo)
+                        listener = ChatWriteListener(channelId, showWebSocketDebugInfo),
+                        proxy = chatProxy,
                     )
-                    chatWriteJob = viewModelScope.launch(Dispatchers.IO) {
-                        chatWriteIRCSocket?.start()
-                    }
+                    chatWriteIRCSocket = ircWriter
+                    chatWriteJob = viewModelScope.launch(Dispatchers.IO) { ircWriter.start() }
                 }
             }
         }
@@ -1092,7 +1117,8 @@ class ChatViewModel(
                 showRaids = applicationContext.prefs().getBoolean(C.CHAT_RAIDS_SHOW, true),
                 showPolls = applicationContext.prefs().getBoolean(C.CHAT_POLLS_SHOW, true),
                 showPredictions = applicationContext.prefs().getBoolean(C.CHAT_PREDICTIONS_SHOW, true),
-                listener = PubSubListener(channelLogin, collectPoints, notifyPoints, showRaids, showPolls, showPredictions, networkLibrary, gqlHeaders, isLoggedIn, accountId, channelId, enableIntegrity, showWebSocketDebugInfo)
+                listener = PubSubListener(channelLogin, collectPoints, notifyPoints, showRaids, showPolls, showPredictions, networkLibrary, gqlHeaders, isLoggedIn, accountId, channelId, enableIntegrity, showWebSocketDebugInfo),
+                proxy = chatProxy,
             )
             pubSubJob = hermesWebSocket?.connect(viewModelScope)
         }
@@ -1120,52 +1146,148 @@ class ChatViewModel(
     }
 
     fun stopLiveChat() {
-        if (started) {
-            started = false
-            if (chatReadIRCSocket != null) {
-                MainScope().launch(Dispatchers.IO) {
-                    chatReadIRCSocket?.disconnect(chatReadJob)
-                }
-            } else {
-                if (chatReadWebSocket != null) {
-                    MainScope().launch(Dispatchers.IO) {
-                        chatReadWebSocket?.disconnect(chatReadJob)
-                    }
-                } else {
-                    if (eventSub != null) {
-                        MainScope().launch(Dispatchers.IO) {
-                            eventSub?.disconnect(chatReadJob)
-                        }
-                    }
-                }
-            }
-            if (chatWriteIRCSocket != null) {
-                MainScope().launch(Dispatchers.IO) {
-                    chatWriteIRCSocket?.disconnect(chatWriteJob)
-                }
-            } else {
-                if (chatWriteWebSocket != null) {
-                    MainScope().launch(Dispatchers.IO) {
-                        chatWriteWebSocket?.disconnect(chatWriteJob)
-                    }
-                }
-            }
-            if (hermesWebSocket != null) {
-                MainScope().launch(Dispatchers.IO) {
-                    hermesWebSocket?.disconnect(pubSubJob)
-                }
-            }
-            if (stvEventApi != null) {
-                MainScope().launch(Dispatchers.IO) {
-                    stvEventApi?.disconnect(stvEventApiJob)
-                }
-            }
+        if (!started) return
+        started = false
+        pointsRefresh?.cancel()
+        pointsRefresh = null
+        val readJob = chatReadJob
+        val writeJob = chatWriteJob
+        val pointsJob = pubSubJob
+        val emotesJob = stvEventApiJob
+        val ircReader = chatReadIRCSocket
+        val webSocketReader = chatReadWebSocket
+        val eventSubReader = eventSub
+        val ircWriter = chatWriteIRCSocket
+        val webSocketWriter = chatWriteWebSocket
+        val hermes = hermesWebSocket
+        val emotes = stvEventApi
+        chatReadIRCSocket = null
+        chatReadWebSocket = null
+        eventSub = null
+        chatWriteIRCSocket = null
+        chatWriteWebSocket = null
+        hermesWebSocket = null
+        stvEventApi = null
+        // resumeLive checks the previous read job when the player returns to the foreground.
+        readJob?.cancel()
+        chatWriteJob = null
+        pubSubJob = null
+        stvEventApiJob = null
+
+        MainScope().launch(Dispatchers.IO) {
+            ircReader?.disconnect(readJob)
+            webSocketReader?.disconnect(readJob)
+            eventSubReader?.disconnect(readJob)
+            ircWriter?.disconnect(writeJob)
+            webSocketWriter?.disconnect(writeJob)
+            hermes?.disconnect(pointsJob)
+            emotes?.disconnect(emotesJob)
         }
     }
 
     fun isActive(): Boolean? {
         return chatReadJob?.isActive
     }
+
+    private fun refreshChannelPointsBalance(channelLogin: String) {
+        if (pointsRefresh?.isActive == true || redemptionLock.isLocked) return
+        val headers = TwitchApiHelper.getGQLHeaders(applicationContext, true)
+        if (headers[C.HEADER_TOKEN].isNullOrBlank()) return
+        pointsRefresh = viewModelScope.launch {
+            try {
+                val response = graphQLRepository.loadChannelRewards(
+                    applicationContext.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
+                    headers,
+                    channelLogin,
+                    chatProxyClient.getOrThrow(),
+                    includeRewards = false,
+                )
+                if (response.errors.isNullOrEmpty()) {
+                    val channel = response.data?.community?.channel
+                    pointsBalance.value = channel?.takeIf { it.communityPointsSettings?.isEnabled == true }
+                        ?.self?.communityPoints?.balance
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Opening the rewards dialog shows a detailed loading error and allows retry.
+            }
+        }
+    }
+
+    suspend fun loadRewards(channelLogin: String): RewardCatalog {
+        pointsRefresh?.cancel()
+        val response = graphQLRepository.loadChannelRewards(
+            applicationContext.prefs().getString(C.NETWORK_LIBRARY, C.OKHTTP),
+            channelPointsHeaders(),
+            channelLogin,
+            chatProxyClient.getOrThrow(),
+        )
+        checkChannelPointsErrors(response.errors)
+        val community = response.data?.community ?: throw channelPointsError(R.string.channel_points_load_error)
+        val channel = community.channel ?: throw channelPointsError(R.string.channel_points_unavailable)
+        val settings = channel.communityPointsSettings?.takeIf { it.isEnabled }
+            ?: throw channelPointsError(R.string.channel_points_unavailable)
+        val balance = channel.self?.communityPoints?.balance
+            ?: throw channelPointsError(R.string.channel_points_sign_in)
+        pointsBalance.value = balance
+        val rewards = settings.customRewards.orEmpty().filterNotNull().filter {
+            it.isEnabled && it.pricingType == "POINTS" && it.cost != null
+        }.sortedBy { it.cost }
+        return RewardCatalog(channel.id, balance, community.self?.subscriptionBenefit != null, rewards)
+    }
+
+    suspend fun redeemReward(channelId: String, reward: ChannelRewardsResponse.Reward, text: String?) {
+        if (!redemptionLock.tryLock()) throw channelPointsError(R.string.channel_points_busy)
+        try {
+            pointsRefresh?.cancel()
+            val response = graphQLRepository.redeemChannelReward(
+                channelPointsHeaders(),
+                channelId,
+                reward,
+                text,
+                chatProxyClient.getOrThrow(),
+            )
+            val result = response.data?.redeemCommunityPointsCustomReward
+            if (result == null) {
+                checkChannelPointsErrors(response.errors, R.string.channel_points_redeem_unknown)
+                throw channelPointsError(R.string.channel_points_redeem_unknown)
+            }
+            result.error?.let {
+                throw ChannelPointsException(applicationContext.getString(
+                    R.string.channel_points_redeem_denied, it.code ?: "—"
+                ))
+            }
+            pointsBalance.value = null
+        } finally {
+            redemptionLock.unlock()
+        }
+    }
+
+    private fun channelPointsHeaders(): Map<String, String> =
+        TwitchApiHelper.getGQLHeaders(applicationContext, true).also {
+            if (it[C.HEADER_TOKEN].isNullOrBlank()) throw channelPointsError(R.string.channel_points_sign_in)
+        }
+
+    private suspend fun checkChannelPointsErrors(errors: List<Error>?, fallback: Int = R.string.channel_points_load_error) {
+        if (errors.isNullOrEmpty()) return
+        if (errors.any { it.message == C.FAILED_INTEGRITY_CHECK }) {
+            integrity.emit("refresh")
+            throw channelPointsError(R.string.channel_points_session_refresh)
+        }
+        throw channelPointsError(fallback)
+    }
+
+    private fun channelPointsError(message: Int) = ChannelPointsException(applicationContext.getString(message))
+
+    class ChannelPointsException(message: String) : Exception(message)
+
+    data class RewardCatalog(
+        val channelId: String,
+        val balance: Int,
+        val subscribed: Boolean,
+        val rewards: List<ChannelRewardsResponse.Reward>,
+    )
 
     fun disconnect() {
         stopLiveChat()
@@ -1328,6 +1450,7 @@ class ChatViewModel(
         private val isLoggedIn: Boolean,
         private val accountId: String?,
         private val channelId: String?,
+        private val chatProxyClient: OkHttpClient?,
     ) : EventSubWebSocket.Listener {
         override suspend fun onConnect() {
             onMessage(ChatMessage(systemMsg = ContextCompat.getString(applicationContext, R.string.chat_join).format(channelLogin)))
@@ -1342,7 +1465,7 @@ class ChatViewModel(
             ).forEach {
                 viewModelScope.launch {
                     try {
-                        helixRepository.createEventSubSubscription(networkLibrary, helixHeaders, accountId, channelId, it, sessionId)?.let {
+                        helixRepository.createEventSubSubscription(networkLibrary, helixHeaders, accountId, channelId, it, sessionId, chatProxyClient)?.let {
                             onMessage(ChatMessage(systemMsg = it))
                         }
                     } catch (e: Exception) {
@@ -1440,11 +1563,12 @@ class ChatViewModel(
         }
 
         override suspend fun onPointsEarned(message: JSONObject) {
-            if (notifyPoints) {
-                val result = PubSubUtils.parsePointsEarned(message)
-                val points = result.first
-                val messageChannelId = result.second
-                if (channelId == messageChannelId) {
+            val (points, messageChannelId) = PubSubUtils.parsePointsEarned(message)
+            if (channelId == messageChannelId) {
+                withContext(Dispatchers.Main) {
+                    if (started) refreshChannelPointsBalance(channelLogin)
+                }
+                if (notifyPoints) {
                     onMessage(ChatMessage(
                         type = ChatMessage.NOTICE_MESSAGE,
                         systemMsg = ContextCompat.getString(applicationContext, R.string.points_earned).format(points.pointsGained),
@@ -1960,21 +2084,28 @@ class ChatViewModel(
 
     private suspend fun sendMessage(message: CharSequence, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, accountId: String?, channelId: String?, useApiChatMessages: Boolean, enableIntegrity: Boolean, replyId: String? = null) {
         if (useApiChatMessages) {
-            if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-                graphQLRepository.sendMessage(networkLibrary, gqlHeaders, channelId, message.toString(), replyId).also { response ->
-                    if (enableIntegrity) {
-                        response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
-                            integrity.emit("refresh")
-                            return
+            val client = chatProxyClient.getOrThrow()
+            try {
+                if (!gqlHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                    graphQLRepository.sendMessage(networkLibrary, gqlHeaders, channelId, message.toString(), replyId, client).also { response ->
+                        if (enableIntegrity) {
+                            response.errors?.find { it.message == C.FAILED_INTEGRITY_CHECK }?.let {
+                                integrity.emit("refresh")
+                                return
+                            }
                         }
-                    }
-                }.takeIf { !it.errors.isNullOrEmpty() }?.toString()
-            } else {
-                if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
-                    helixRepository.sendMessage(networkLibrary, helixHeaders, accountId, channelId, message.toString(), replyId)
-                } else null
-            }?.let {
-                onMessage(ChatMessage(systemMsg = it))
+                    }.takeIf { !it.errors.isNullOrEmpty() }?.toString()
+                } else {
+                    if (!helixHeaders[C.HEADER_TOKEN].isNullOrBlank()) {
+                        helixRepository.sendMessage(networkLibrary, helixHeaders, accountId, channelId, message.toString(), replyId, client)
+                    } else null
+                }?.let {
+                    onMessage(ChatMessage(systemMsg = it))
+                }
+            } catch (e: IOException) {
+                if (client == null) throw e
+                onMessage(ChatMessage(systemMsg = e.message ?: e.toString()))
+                return
             }
         } else {
             chatWriteIRCSocket?.send(message, replyId) ?: chatWriteWebSocket?.send(message, replyId)
@@ -3150,7 +3281,7 @@ class ChatViewModel(
             initializer {
                 val application = (this[APPLICATION_KEY] as XtraApp)
                 val xtraModule = application.xtraModule
-                ChatViewModel(application.applicationContext, xtraModule.graphQLRepository, xtraModule.helixRepository, xtraModule.playerRepository, xtraModule.json)
+                ChatViewModel(application.applicationContext, xtraModule.graphQLRepository, xtraModule.helixRepository, xtraModule.playerRepository, xtraModule.json, xtraModule.okHttpClient, xtraModule.chatterinoPlusRepository)
             }
         }
     }

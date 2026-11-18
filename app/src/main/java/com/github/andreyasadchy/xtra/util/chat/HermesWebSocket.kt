@@ -23,6 +23,7 @@ class HermesWebSocket(
     private val showPolls: Boolean,
     private val showPredictions: Boolean,
     private val listener: Listener,
+    private val proxy: ChatProxy? = null,
 ) {
     private var webSocket: WebSocket? = null
     private var pongTimer: Timer? = null
@@ -32,7 +33,7 @@ class HermesWebSocket(
     private val handledMessageIds = mutableListOf<String>()
 
     fun connect(coroutineScope: CoroutineScope): Job {
-        webSocket = WebSocket("wss://hermes.twitch.tv/v1?clientId=${gqlClientId}", WebSocketListener())
+        webSocket = WebSocket("wss://hermes.twitch.tv/v1?clientId=${gqlClientId}", WebSocketListener(), proxy = proxy)
         webSocket?.coroutineScope = coroutineScope
         return coroutineScope.launch(Dispatchers.IO) {
             webSocket?.start()
@@ -48,7 +49,7 @@ class HermesWebSocket(
     }
 
     private suspend fun subscribe() = withContext(Dispatchers.IO) {
-        if (!userId.isNullOrBlank() && !gqlToken.isNullOrBlank() && collectPoints) {
+        if (!userId.isNullOrBlank() && !gqlToken.isNullOrBlank()) {
             val authenticate = JSONObject().apply {
                 put("id", Uuid.random().toHexString().substring(0, 21))
                 put("type", "authenticate")
@@ -73,9 +74,7 @@ class HermesWebSocket(
                 put(Uuid.random().toHexString().substring(0, 21), "predictions-channel-v1.$channelId")
             }
             if (!userId.isNullOrBlank() && !gqlToken.isNullOrBlank()) {
-                if (collectPoints) {
-                    put(Uuid.random().toHexString().substring(0, 21), "community-points-user-v1.$userId")
-                }
+                put(Uuid.random().toHexString().substring(0, 21), "community-points-user-v1.$userId")
             }
         }
         topics.forEach {

@@ -4,6 +4,7 @@ import android.os.Build
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
@@ -20,6 +21,7 @@ class ChatReadIRCSocket(
     private val useSSL: Boolean,
     private val channelLogin: String,
     private val listener: ChatReadWebSocket.Listener,
+    private val proxy: ChatProxy? = null,
 ) {
     private var socket: Socket? = null
     private var reader: BufferedReader? = null
@@ -59,7 +61,7 @@ class ChatReadIRCSocket(
     }
 
     private suspend fun connect() = withContext(Dispatchers.IO) {
-        socket = if (useSSL) {
+        socket = proxy?.openSocket("irc.twitch.tv", 6697, tls = true) ?: if (useSSL) {
             val socketFactory = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 SSLSocketFactory.getDefault()
             } else {
@@ -68,6 +70,10 @@ class ChatReadIRCSocket(
             socketFactory.createSocket("irc.twitch.tv", 6697)
         } else {
             Socket("irc.twitch.tv", 6667)
+        }
+        if (!isActive) {
+            socket?.close()
+            ensureActive()
         }
         reader = BufferedReader(InputStreamReader(socket?.inputStream))
         writer = BufferedWriter(OutputStreamWriter(socket?.outputStream))

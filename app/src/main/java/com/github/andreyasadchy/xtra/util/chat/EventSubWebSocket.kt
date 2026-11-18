@@ -12,6 +12,7 @@ import kotlin.concurrent.schedule
 
 class EventSubWebSocket(
     private val listener: Listener,
+    private val proxy: ChatProxy? = null,
 ) {
     private var webSocket: WebSocket? = null
     private var pongTimer: Timer? = null
@@ -19,7 +20,7 @@ class EventSubWebSocket(
     private val handledMessageIds = mutableListOf<String>()
 
     fun connect(coroutineScope: CoroutineScope): Job {
-        webSocket = WebSocket("wss://eventsub.wss.twitch.tv/ws", WebSocketListener())
+        webSocket = WebSocket("wss://eventsub.wss.twitch.tv/ws", WebSocketListener(), proxy = proxy)
         webSocket?.coroutineScope = coroutineScope
         return coroutineScope.launch(Dispatchers.IO) {
             webSocket?.start()

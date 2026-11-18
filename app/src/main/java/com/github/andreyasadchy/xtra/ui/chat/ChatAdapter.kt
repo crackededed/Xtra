@@ -21,6 +21,7 @@ import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.chat.CheerEmote
 import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.model.chat.NamePaint
+import com.github.andreyasadchy.xtra.repository.ChatterinoPlusRepository
 import com.github.andreyasadchy.xtra.model.chat.STVBadge
 import com.github.andreyasadchy.xtra.model.chat.STVUser
 import com.github.andreyasadchy.xtra.model.chat.TwitchBadge
@@ -38,6 +39,7 @@ class ChatAdapter(
     private val cheerEmotes: List<CheerEmote>,
     private val namePaints: List<NamePaint>,
     private val stvBadges: List<STVBadge>,
+    private val plusCosmetics: (ChatMessage) -> ChatterinoPlusRepository.Cosmetics?,
     private val personalEmoteSets: Map<String, List<Emote>>,
     private val stvUsers: List<STVUser>,
     private val enableTimestamps: Boolean,
@@ -104,7 +106,7 @@ class ChatAdapter(
             nameDisplay, useBoldNames, showNamePaints, namePaints, showSTVBadges, stvBadges, showGifMessages, showPersonalEmotes, personalEmoteSets,
             stvUsers, enableOverlayEmotes, showSystemMessageEmotes, loggedInUser, chatUrl, getEmoteBytes, userColors, savedColors, translateAllMessages,
             translateMessage, showLanguageDownloadDialog, true, localTwitchEmotes, thirdPartyEmotes, globalBadges, channelBadges, cheerEmotes,
-            savedLocalTwitchEmotes, savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes
+            savedLocalTwitchEmotes, savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes, plusCosmetics(chatMessage), animateGifs
         )
         holder.bind(chatMessage, result.builder)
         ChatAdapterUtils.loadImages(
@@ -133,7 +135,7 @@ class ChatAdapter(
 
     fun createMessageClickedChatAdapter(): MessageClickedChatAdapter {
         return MessageClickedChatAdapter(
-            messages, localTwitchEmotes, thirdPartyEmotes, globalBadges, channelBadges, cheerEmotes, namePaints, stvBadges, personalEmoteSets,
+            messages, localTwitchEmotes, thirdPartyEmotes, globalBadges, channelBadges, cheerEmotes, namePaints, stvBadges, plusCosmetics, personalEmoteSets,
             stvUsers, enableTimestamps, timestampFormat, firstMsgVisibility, firstChatMsg, redeemedChatMsg, redeemedNoMsg, rewardChatMsg, replyMessage,
             { chatMessage -> selectedMessage = chatMessage; replyClickListener?.invoke() },
             { url, name, format, isAnimated, source, thirdParty, emoteId -> imageClickListener?.invoke(url, name, format, isAnimated, source, thirdParty, emoteId) },
@@ -146,7 +148,7 @@ class ChatAdapter(
 
     fun createReplyClickedChatAdapter(): ReplyClickedChatAdapter {
         return ReplyClickedChatAdapter(
-            messages, localTwitchEmotes, thirdPartyEmotes, globalBadges, channelBadges, cheerEmotes, namePaints, stvBadges, personalEmoteSets,
+            messages, localTwitchEmotes, thirdPartyEmotes, globalBadges, channelBadges, cheerEmotes, namePaints, stvBadges, plusCosmetics, personalEmoteSets,
             stvUsers, enableTimestamps, timestampFormat, firstMsgVisibility, firstChatMsg, redeemedChatMsg, redeemedNoMsg, rewardChatMsg, replyMessage,
             { url, name, format, isAnimated, source, thirdParty, emoteId -> imageClickListener?.invoke(url, name, format, isAnimated, source, thirdParty, emoteId) },
             useRandomColors, useReadableColors, isLightTheme, nameDisplay, useBoldNames, showNamePaints, showSTVBadges, showPersonalEmotes,

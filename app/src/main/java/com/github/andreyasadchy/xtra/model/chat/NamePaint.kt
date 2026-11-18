@@ -9,7 +9,12 @@ class NamePaint(
     val angle: Int? = null,
     val repeat: Boolean? = null,
     val shadows: List<Shadow>? = null,
+    val imageFit: String? = null,
+    val tiles: Int? = null,
+    val animation: Animation? = null,
 ) {
+
+    class Animation(val kind: String, val durationMs: Int)
 
     class Shadow(
         val xOffset: Float,

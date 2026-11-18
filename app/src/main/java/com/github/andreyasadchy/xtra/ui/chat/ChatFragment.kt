@@ -62,7 +62,9 @@ import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
@@ -124,8 +126,46 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                                 !TwitchApiHelper.getHelixHeaders(requireContext())[C.HEADER_TOKEN].isNullOrBlank())
                 val chatUrl = args.getString(KEY_CHAT_URL)
                 if (isLive || (args.getString(KEY_VIDEO_ID) != null && args.getInt(KEY_START_TIME) != -1) || chatUrl != null) {
+                    if (isLive && isLoggedIn && !channelLogin.isNullOrBlank()) {
+                        channelPoints.isVisible = true
+                        channelPoints.setOnClickListener {
+                            if (!childFragmentManager.isStateSaved &&
+                                childFragmentManager.findFragmentByTag(ChannelRewardsDialog.TAG) == null
+                            ) {
+                                ChannelRewardsDialog.newInstance(channelLogin).showNow(
+                                    childFragmentManager, ChannelRewardsDialog.TAG
+                                )
+                            }
+                        }
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                                viewModel.channelPointsBalance.collectLatest { balance ->
+                                    channelPoints.text = if (balance != null) {
+                                        getString(R.string.channel_points_button_balance, balance)
+                                    } else getString(R.string.channel_points)
+                                }
+                            }
+                        }
+                    }
                     val enableMessaging = isLive && isLoggedIn
                     val sizeModifier = (requireContext().prefs().getInt(C.CHAT_SIZE_MODIFIER, 100).toFloat() / 100f)
+                    val showPlusPaints = requireContext().prefs().getBoolean(C.CHAT_SHOW_PLUS_PAINTS, true)
+                    val showPlusBadges = requireContext().prefs().getBoolean(C.CHAT_SHOW_PLUS_BADGES, true)
+                    if (showPlusPaints || showPlusBadges) {
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                                launch {
+                                    viewModel.chatterinoPlus.cosmetics.collectLatest {
+                                        viewModel.reloadMessages.value = true
+                                    }
+                                }
+                                while (isActive) {
+                                    viewModel.chatterinoPlus.refresh()
+                                    delay(5 * 60_000L)
+                                }
+                            }
+                        }
+                    }
                     adapter = ChatAdapter(
                         messages = viewModel.chatMessages,
                         localTwitchEmotes = viewModel.localTwitchEmotes,
@@ -135,6 +175,13 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         cheerEmotes = viewModel.cheerEmotes,
                         namePaints = viewModel.namePaints,
                         stvBadges = viewModel.stvBadges,
+                        plusCosmetics = { message ->
+                            if (!showPlusPaints && !showPlusBadges) null else {
+                                viewModel.chatterinoPlus.cosmetics.value.find(message.userId, message.userLogin)?.let {
+                                    it.copy(paint = it.paint.takeIf { showPlusPaints }, badge = it.badge.takeIf { showPlusBadges })
+                                }
+                            }
+                        },
                         personalEmoteSets = viewModel.personalEmoteSets,
                         stvUsers = viewModel.stvUsers,
                         enableTimestamps = requireContext().prefs().getBoolean(C.CHAT_TIMESTAMPS, false),

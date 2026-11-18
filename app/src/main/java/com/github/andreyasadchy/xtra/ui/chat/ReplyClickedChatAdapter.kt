@@ -23,6 +23,7 @@ import com.github.andreyasadchy.xtra.model.chat.ChatMessage
 import com.github.andreyasadchy.xtra.model.chat.CheerEmote
 import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.model.chat.NamePaint
+import com.github.andreyasadchy.xtra.repository.ChatterinoPlusRepository
 import com.github.andreyasadchy.xtra.model.chat.STVBadge
 import com.github.andreyasadchy.xtra.model.chat.STVUser
 import com.github.andreyasadchy.xtra.model.chat.TwitchBadge
@@ -40,6 +41,7 @@ class ReplyClickedChatAdapter(
     private val cheerEmotes: List<CheerEmote>,
     private val namePaints: List<NamePaint>,
     private val stvBadges: List<STVBadge>,
+    private val plusCosmetics: (ChatMessage) -> ChatterinoPlusRepository.Cosmetics?,
     private val personalEmoteSets: Map<String, List<Emote>>,
     private val stvUsers: List<STVUser>,
     private val enableTimestamps: Boolean,
@@ -112,7 +114,7 @@ class ReplyClickedChatAdapter(
             useRandomColors, random, useReadableColors, isLightTheme, nameDisplay, useBoldNames, showNamePaints, namePaints, showSTVBadges,
             stvBadges, showGifMessages, showPersonalEmotes, personalEmoteSets, stvUsers, showSystemMessageEmotes, enableOverlayEmotes, loggedInUser, chatUrl,
             getEmoteBytes, userColors, savedColors, translateAllMessages, translateMessage, showLanguageDownloadDialog, false, localTwitchEmotes,
-            thirdPartyEmotes, globalBadges, channelBadges, cheerEmotes, savedLocalTwitchEmotes, savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes
+            thirdPartyEmotes, globalBadges, channelBadges, cheerEmotes, savedLocalTwitchEmotes, savedLocalBadges, savedLocalCheerEmotes, savedLocalEmotes, plusCosmetics(chatMessage), animateGifs
         )
         if (chatMessage == selectedMessage) {
             holder.textView.setBackgroundResource(R.color.chatMessageSelected)

@@ -11,6 +11,7 @@ import com.github.andreyasadchy.xtra.db.AppDatabase
 import com.github.andreyasadchy.xtra.repository.AuthRepository
 import com.github.andreyasadchy.xtra.repository.BookmarksRepository
 import com.github.andreyasadchy.xtra.repository.ChannelSortRepository
+import com.github.andreyasadchy.xtra.repository.ChatterinoPlusRepository
 import com.github.andreyasadchy.xtra.repository.GameSortRepository
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
@@ -92,6 +93,8 @@ class XtraModule(application: Application) {
     val json by lazy {
         Json { ignoreUnknownKeys = true }
     }
+
+    val chatterinoPlusRepository by lazy { ChatterinoPlusRepository(okHttpClient) }
 
     val database by lazy {
         Room.databaseBuilder(application, AppDatabase::class.java, "database").apply {

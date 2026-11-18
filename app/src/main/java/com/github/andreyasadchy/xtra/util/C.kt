@@ -242,6 +242,8 @@ object C {
     const val CHAT_PREDICTIONS_SHOW = "chat_predictions_show"
     const val CHAT_SYSTEM_MESSAGE_EMOTES = "chat_system_message_emotes"
     const val CHAT_SHOW_PAINTS = "chat_show_paints"
+    const val CHAT_SHOW_PLUS_PAINTS = "chat_show_plus_paints"
+    const val CHAT_SHOW_PLUS_BADGES = "chat_show_plus_badges"
     const val CHAT_SHOW_STV_BADGES = "chat_show_stv_badges"
     const val CHAT_SHOW_PERSONAL_EMOTES = "chat_show_personal_emotes"
     const val CHAT_STV_LIVE_UPDATES = "chat_stv_live_updates"

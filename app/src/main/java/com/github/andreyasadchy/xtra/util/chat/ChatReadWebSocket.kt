@@ -13,13 +13,14 @@ import kotlin.random.Random
 class ChatReadWebSocket(
     private val channelLogin: String,
     private val listener: Listener,
+    private val proxy: ChatProxy? = null,
 ) {
     private var webSocket: WebSocket? = null
     private var pingTimer: Timer? = null
     private var pongTimer: Timer? = null
 
     fun connect(coroutineScope: CoroutineScope): Job {
-        webSocket = WebSocket("wss://irc-ws.chat.twitch.tv", WebSocketListener())
+        webSocket = WebSocket("wss://irc-ws.chat.twitch.tv", WebSocketListener(), proxy = proxy)
         webSocket?.coroutineScope = coroutineScope
         return coroutineScope.launch(Dispatchers.IO) {
             webSocket?.start()

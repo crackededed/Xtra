@@ -1003,7 +1003,7 @@ class HelixRepository(
         }
     }
 
-    suspend fun createEventSubSubscription(networkLibrary: String?, headers: Map<String, String>, userId: String?, channelId: String?, type: String?, sessionId: String?): String? = withContext(Dispatchers.IO) {
+    suspend fun createEventSubSubscription(networkLibrary: String?, headers: Map<String, String>, userId: String?, channelId: String?, type: String?, sessionId: String?, chatProxyClient: OkHttpClient? = null): String? = withContext(Dispatchers.IO) {
         val url = "https://api.twitch.tv/helix/eventsub/subscriptions"
         val body = buildJsonObject {
             put("type", type)
@@ -1018,7 +1018,7 @@ class HelixRepository(
             }
         }.toString()
         when {
-            networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
+            chatProxyClient == null && networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
                     val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
@@ -1043,7 +1043,7 @@ class HelixRepository(
                     response.body.decodeToString()
                 }
             }
-            networkLibrary == C.CRONET && cronetEngine.value != null -> {
+            chatProxyClient == null && networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
@@ -1069,7 +1069,7 @@ class HelixRepository(
                 }
             }
             else -> {
-                okHttpClient.value.newCall(Request.Builder().apply {
+                (chatProxyClient ?: okHttpClient.value).newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
                     header("Content-Type", "application/json")
@@ -1085,7 +1085,7 @@ class HelixRepository(
         }
     }
 
-    suspend fun sendMessage(networkLibrary: String?, headers: Map<String, String>, userId: String?, channelId: String?, message: String?, replyId: String?): String? = withContext(Dispatchers.IO) {
+    suspend fun sendMessage(networkLibrary: String?, headers: Map<String, String>, userId: String?, channelId: String?, message: String?, replyId: String?, chatProxyClient: OkHttpClient? = null): String? = withContext(Dispatchers.IO) {
         val url = "https://api.twitch.tv/helix/chat/messages"
         val body = buildJsonObject {
             put("broadcaster_id", channelId)
@@ -1094,7 +1094,7 @@ class HelixRepository(
             replyId?.let { put("reply_parent_message_id", it) }
         }.toString()
         when {
-            networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
+            chatProxyClient == null && networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
                     val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
@@ -1119,7 +1119,7 @@ class HelixRepository(
                     response.body.decodeToString()
                 }
             }
-            networkLibrary == C.CRONET && cronetEngine.value != null -> {
+            chatProxyClient == null && networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
@@ -1145,7 +1145,7 @@ class HelixRepository(
                 }
             }
             else -> {
-                okHttpClient.value.newCall(Request.Builder().apply {
+                (chatProxyClient ?: okHttpClient.value).newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
                     header("Content-Type", "application/json")

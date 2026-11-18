@@ -1,6 +1,59 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:key="chat_proxy"
+        android:title="@string/chat_proxy"
+        app:iconSpaceReserved="false">
+
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="chat_proxy_enabled"
+            android:summary="@string/chat_proxy_summary"
+            android:title="@string/chat_proxy_enabled"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
+        <ListPreference
+            android:defaultValue="SOCKS5"
+            android:entries="@array/chat_proxy_protocols"
+            android:entryValues="@array/chat_proxy_protocols"
+            android:key="chat_proxy_type"
+            android:title="@string/chat_proxy_type"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:key="chat_proxy_host"
+            android:title="@string/proxy_host"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:key="chat_proxy_port"
+            android:title="@string/proxy_port"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:key="chat_proxy_username"
+            android:title="@string/proxy_user"
+            app:iconSpaceReserved="false" />
+
+        <EditTextPreference
+            android:key="chat_proxy_password"
+            android:title="@string/proxy_password"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="chat_proxy_local_network"
+            android:summary="@string/access_local_network_desc"
+            android:title="@string/access_local_network_title"
+            app:iconSpaceReserved="false"
+            app:isPreferenceVisible="false"
+            app:singleLineTitle="false" />
+    </PreferenceCategory>
+
     <SwitchPreferenceCompat
         android:defaultValue="false"
         android:key="chat_boldnames"
@@ -254,6 +307,20 @@
         android:defaultValue="true"
         android:key="chat_show_paints"
         android:title="@string/show_name_paints"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="chat_show_plus_paints"
+        android:title="@string/show_plus_paints"
+        app:iconSpaceReserved="false"
+        app:singleLineTitle="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="chat_show_plus_badges"
+        android:title="@string/show_plus_badges"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 

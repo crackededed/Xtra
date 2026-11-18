@@ -38,6 +38,18 @@
                 tools:visibility="visible" />
         </FrameLayout>
 
+        <Button
+            android:id="@+id/channelPoints"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:layout_marginStart="4dp"
+            android:minWidth="0dp"
+            android:singleLine="true"
+            android:text="@string/channel_points"
+            android:visibility="gone" />
+
         <LinearLayout
             android:id="@+id/replyView"
             android:layout_width="match_parent"

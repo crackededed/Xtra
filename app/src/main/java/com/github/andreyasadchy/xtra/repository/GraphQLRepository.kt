@@ -71,6 +71,8 @@ import com.github.andreyasadchy.xtra.model.gql.channel.ChannelViewerListResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.BadgesResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.ChannelCheerEmotesResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.ChannelPointContextResponse
+import com.github.andreyasadchy.xtra.model.gql.chat.ChannelRewardsResponse
+import com.github.andreyasadchy.xtra.model.gql.chat.RedeemChannelRewardResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.EmoteCardResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.GlobalCheerEmotesResponse
 import com.github.andreyasadchy.xtra.model.gql.chat.ModeratorsResponse
@@ -205,10 +207,10 @@ class GraphQLRepository(
         }
     }
 
-    private suspend fun sendPersistedQuery(networkLibrary: String?, headers: Map<String, String>, body: String): String = withContext(Dispatchers.IO) {
+    private suspend fun sendPersistedQuery(networkLibrary: String?, headers: Map<String, String>, body: String, requestClient: OkHttpClient? = null): String = withContext(Dispatchers.IO) {
         val url = "https://gql.twitch.tv/gql"
         when {
-            networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
+            requestClient == null && networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
                     val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
@@ -229,7 +231,7 @@ class GraphQLRepository(
                 }
                 response.body.decodeToString()
             }
-            networkLibrary == C.CRONET && cronetEngine.value != null -> {
+            requestClient == null && networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
@@ -251,7 +253,7 @@ class GraphQLRepository(
                 response.body.decodeToString()
             }
             else -> {
-                okHttpClient.value.newCall(Request.Builder().apply {
+                (requestClient ?: okHttpClient.value).newCall(Request.Builder().apply {
                     url(url)
                     headers(headers.toHeaders())
                     header("Content-Type", "application/json")
@@ -1461,6 +1463,77 @@ class GraphQLRepository(
         json.decodeFromString<ErrorResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
+    suspend fun loadChannelRewards(
+        networkLibrary: String?,
+        headers: Map<String, String>,
+        channelLogin: String,
+        proxyClient: OkHttpClient?,
+        includeRewards: Boolean = true,
+    ): ChannelRewardsResponse {
+        val body = buildJsonObject {
+            put("operationName", "XtraChannelRewards")
+            put("query", """
+                query XtraChannelRewards(${'$'}channelLogin: String!, ${'$'}includeRewards: Boolean!) {
+                    community: user(login: ${'$'}channelLogin) {
+                        channel {
+                            id
+                            communityPointsSettings {
+                                isEnabled
+                                customRewards @include(if: ${'$'}includeRewards) {
+                                    id title prompt cost pricingType
+                                    isEnabled isPaused isInStock isSubOnly isUserInputRequired cooldownExpiresAt
+                                }
+                            }
+                            self { communityPoints { balance } }
+                        }
+                        self @include(if: ${'$'}includeRewards) { subscriptionBenefit { id } }
+                    }
+                }
+            """.trimIndent())
+            putJsonObject("variables") {
+                put("channelLogin", channelLogin)
+                put("includeRewards", includeRewards)
+            }
+        }.toString()
+        return json.decodeFromString(sendPersistedQuery(networkLibrary, headers, body, proxyClient))
+    }
+
+    suspend fun redeemChannelReward(
+        headers: Map<String, String>,
+        channelId: String,
+        reward: ChannelRewardsResponse.Reward,
+        text: String?,
+        proxyClient: OkHttpClient?,
+    ): RedeemChannelRewardResponse {
+        require(reward.pricingType == "POINTS" && reward.cost != null)
+        val body = buildJsonObject {
+            put("operationName", "RedeemCustomReward")
+            put("query", """
+                mutation RedeemCustomReward(${'$'}input: RedeemCommunityPointsCustomRewardInput!) {
+                    redeemCommunityPointsCustomReward(input: ${'$'}input) { error { code } }
+                }
+            """.trimIndent())
+            putJsonObject("variables") {
+                putJsonObject("input") {
+                    put("channelID", channelId)
+                    put("rewardID", reward.id)
+                    put("title", reward.title)
+                    put("prompt", reward.prompt)
+                    put("cost", reward.cost)
+                    put("pricingType", "POINTS")
+                    put("transactionID", java.util.UUID.randomUUID().toString())
+                    text?.let { put("textInput", it) }
+                }
+            }
+        }.toString()
+        // A network failure may occur after Twitch processes the redemption.
+        val client = (proxyClient ?: okHttpClient.value).newBuilder()
+            .retryOnConnectionFailure(false)
+            .followRedirects(false)
+            .build()
+        return json.decodeFromString(sendPersistedQuery(C.OKHTTP, headers, body, client))
+    }
+
     suspend fun loadChannelPointsContext(networkLibrary: String?, headers: Map<String, String>, channelLogin: String?): ChannelPointContextResponse = withContext(Dispatchers.IO) {
         val body = buildJsonObject {
             putJsonObject("extensions") {
@@ -1537,7 +1610,7 @@ class GraphQLRepository(
         json.decodeFromString<UserEmotesResponse>(sendPersistedQuery(networkLibrary, headers, body))
     }
 
-    suspend fun sendMessage(networkLibrary: String?, headers: Map<String, String>, channelId: String?, message: String?, replyId: String?): ErrorResponse = withContext(Dispatchers.IO) {
+    suspend fun sendMessage(networkLibrary: String?, headers: Map<String, String>, channelId: String?, message: String?, replyId: String?, chatProxyClient: OkHttpClient? = null): ErrorResponse = withContext(Dispatchers.IO) {
         val body = buildJsonObject {
             putJsonObject("extensions") {
                 putJsonObject("persistedQuery") {
@@ -1554,7 +1627,7 @@ class GraphQLRepository(
                 }
             }
         }.toString()
-        json.decodeFromString<ErrorResponse>(sendPersistedQuery(networkLibrary, headers, body))
+        json.decodeFromString<ErrorResponse>(sendPersistedQuery(networkLibrary, headers, body, chatProxyClient))
     }
 
     suspend fun sendAnnouncement(networkLibrary: String?, headers: Map<String, String>, channelId: String?, message: String?, color: String?): ErrorResponse = withContext(Dispatchers.IO) {

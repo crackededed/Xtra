@@ -49,6 +49,7 @@ import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
+import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceManager
 import androidx.preference.SeekBarPreference
 import androidx.preference.SwitchPreferenceCompat
@@ -67,6 +68,7 @@ import com.github.andreyasadchy.xtra.ui.settings.SettingsViewModel.Companion.Set
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.applyTheme
+import com.github.andreyasadchy.xtra.util.chat.ChatProxyPreferences
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
@@ -920,8 +922,44 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     class ChatSettingsFragment : MaterialPreferenceFragment() {
+        private val requestLocalNetwork = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) findPreference<Preference>("chat_proxy_local_network")?.isVisible = false
+        }
+
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.chat_preferences, rootKey)
+            findPreference<Preference>("chat_proxy_local_network")?.apply {
+                isVisible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN &&
+                    ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_LOCAL_NETWORK) != PackageManager.PERMISSION_GRANTED
+                setOnPreferenceClickListener {
+                    requestLocalNetwork.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
+                    true
+                }
+            }
+            findPreference<EditTextPreference>(ChatProxyPreferences.PORT)?.setOnBindEditTextListener {
+                it.inputType = InputType.TYPE_CLASS_NUMBER
+            }
+            findPreference<EditTextPreference>(ChatProxyPreferences.PASSWORD)?.apply {
+                val credentials = requireContext().tokenPrefs()
+                preferenceDataStore = object : PreferenceDataStore() {
+                    override fun getString(key: String, defValue: String?): String? = credentials.getString(key, defValue)
+
+                    override fun putString(key: String, value: String?) {
+                        credentials.edit { putString(key, value) }
+                    }
+                }
+                text = credentials.getString(ChatProxyPreferences.PASSWORD, null)
+                setOnBindEditTextListener {
+                    it.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                }
+            }
+            findPreference<SwitchPreferenceCompat>(ChatProxyPreferences.ENABLED)?.setOnPreferenceChangeListener { _, enabled ->
+                val valid = enabled != true || ChatProxyPreferences.configuration(requireContext()) != null
+                if (!valid) {
+                    Toast.makeText(requireContext(), R.string.chat_proxy_invalid, Toast.LENGTH_LONG).show()
+                }
+                valid
+            }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
                 findPreference<ListPreference>(C.CHAT_IMAGE_LIBRARY)?.apply {
                     setEntries(R.array.imageLibraryEntriesNoWebp)

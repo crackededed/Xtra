@@ -41,6 +41,7 @@ import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.NetworkUtils
 import com.github.andreyasadchy.xtra.util.NetworkUtils.executeAsync
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
+import com.github.andreyasadchy.xtra.util.chat.ChatProxyPreferences
 import com.github.andreyasadchy.xtra.util.chat.ChatReadWebSocket
 import com.github.andreyasadchy.xtra.util.chat.ChatUtils
 import com.github.andreyasadchy.xtra.util.m3u8.PlaylistUtils
@@ -70,6 +71,7 @@ import org.chromium.net.QuicOptions
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.concurrent.TimeUnit
@@ -1413,6 +1415,11 @@ class StreamDownloadService : LifecycleService() {
     }
 
     private suspend fun startChatJob(offlineVideo: OfflineVideo, downloadProgress: DownloadProgress, downloadJob: DownloadJob, channelLogin: String, path: String, downloadDate: Long, streamStartTime: String, networkLibrary: String?) = withContext(Dispatchers.IO) {
+        val chatProxy = try {
+            ChatProxyPreferences.read(this@StreamDownloadService)
+        } catch (_: IOException) {
+            return@withContext
+        }
         val isShared = path.toUri().scheme == ContentResolver.SCHEME_CONTENT
         val resumed = !offlineVideo.chatUrl.isNullOrBlank() && downloadProgress.chatBytes > 0
         val fileUri = if (resumed) {
@@ -1718,6 +1725,7 @@ class StreamDownloadService : LifecycleService() {
         downloadProgress.chatBytes = position
         downloadJob.chatReadWebSocket = ChatReadWebSocket(
             channelLogin = channelLogin,
+            proxy = chatProxy,
             listener = object : ChatReadWebSocket.Listener {
                 override suspend fun onChatMessage(message: ChatUtils.IRCMessage, userNotice: Boolean) {
                     saveMessage(offlineVideo, downloadProgress, message, isShared, fileUri, downloadEmotes, networkLibrary, emoteQuality, savedTwitchEmotes, savedBadges, savedEmotes, globalBadgeList, channelBadgeList, cheerEmoteList, emoteList)

@@ -2,6 +2,7 @@ package com.github.andreyasadchy.xtra.util
 
 import android.os.Build
 import android.util.Base64
+import com.github.andreyasadchy.xtra.util.chat.ChatProxy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -38,6 +39,7 @@ class WebSocket(
     private val listener: Listener,
     private val headers: Map<String, String>? = null,
     private val sendPings: Boolean = false,
+    private val proxy: ChatProxy? = null,
 ) {
     private var socket: Socket? = null
     private var inputStream: InputStream? = null
@@ -98,7 +100,11 @@ class WebSocket(
         } else {
             SSLContext.getDefault().socketFactory
         }
-        socket = socketFactory.createSocket(host, 443)
+        socket = proxy?.openSocket(host, 443, tls = true) ?: socketFactory.createSocket(host, 443)
+        if (!isActive) {
+            socket?.close()
+            ensureActive()
+        }
         inputStream = socket?.inputStream
         outputStream = socket?.outputStream
         val reader = BufferedReader(InputStreamReader(inputStream))

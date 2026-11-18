@@ -14,13 +14,14 @@ class ChatWriteWebSocket(
     private val userToken: String?,
     private val channelLogin: String,
     private val listener: ChatReadWebSocket.Listener,
+    private val proxy: ChatProxy? = null,
 ) {
     private var webSocket: WebSocket? = null
     private var pingTimer: Timer? = null
     private var pongTimer: Timer? = null
 
     fun connect(coroutineScope: CoroutineScope): Job {
-        webSocket = WebSocket("wss://irc-ws.chat.twitch.tv", WebSocketListener())
+        webSocket = WebSocket("wss://irc-ws.chat.twitch.tv", WebSocketListener(), proxy = proxy)
         webSocket?.coroutineScope = coroutineScope
         return coroutineScope.launch(Dispatchers.IO) {
             webSocket?.start()

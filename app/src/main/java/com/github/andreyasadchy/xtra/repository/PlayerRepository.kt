@@ -851,10 +851,10 @@ class PlayerRepository(
         }
     }
 
-    suspend fun loadRecentMessages(networkLibrary: String?, recentMessagesUrl: String, channelLogin: String, limit: String): RecentMessagesResponse = withContext(Dispatchers.IO) {
+    suspend fun loadRecentMessages(networkLibrary: String?, recentMessagesUrl: String, channelLogin: String, limit: String, chatProxyClient: OkHttpClient? = null): RecentMessagesResponse = withContext(Dispatchers.IO) {
         val url = recentMessagesUrl.replace("\$channel", channelLogin) + "?limit=${limit}"
         when {
-            networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
+            chatProxyClient == null && networkLibrary == C.HTTP_ENGINE && httpEngine.value != null -> @SuppressLint("NewApi") {
                 val response = suspendCancellableCoroutine { continuation ->
                     val timeout = NetworkUtils.HttpEngineTimeout()
                     val request = httpEngine.value!!.newUrlRequestBuilder(
@@ -873,7 +873,7 @@ class PlayerRepository(
                 }
                 json.decodeFromString<RecentMessagesResponse>(response.body.decodeToString())
             }
-            networkLibrary == C.CRONET && cronetEngine.value != null -> {
+            chatProxyClient == null && networkLibrary == C.CRONET && cronetEngine.value != null -> {
                 val response = suspendCancellableCoroutine { continuation ->
                     val timeout = NetworkUtils.CronetTimeout()
                     val request = cronetEngine.value!!.newUrlRequestBuilder(
@@ -893,7 +893,7 @@ class PlayerRepository(
                 json.decodeFromString<RecentMessagesResponse>(response.body.decodeToString())
             }
             else -> {
-                okHttpClient.value.newCall(Request.Builder().apply {
+                (chatProxyClient ?: okHttpClient.value).newCall(Request.Builder().apply {
                     url(url)
                     header("User-Agent", "Xtra/" + BuildConfig.VERSION_NAME)
                 }.build()).executeAsync().use { response ->

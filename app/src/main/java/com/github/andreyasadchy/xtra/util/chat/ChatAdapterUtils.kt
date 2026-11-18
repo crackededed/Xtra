@@ -35,6 +35,7 @@ import com.github.andreyasadchy.xtra.model.chat.CheerEmote
 import com.github.andreyasadchy.xtra.model.chat.Emote
 import com.github.andreyasadchy.xtra.model.chat.Image
 import com.github.andreyasadchy.xtra.model.chat.NamePaint
+import com.github.andreyasadchy.xtra.repository.ChatterinoPlusRepository
 import com.github.andreyasadchy.xtra.model.chat.STVBadge
 import com.github.andreyasadchy.xtra.model.chat.STVUser
 import com.github.andreyasadchy.xtra.model.chat.TwitchBadge
@@ -57,7 +58,7 @@ object ChatAdapterUtils {
     private const val PI_DEGREES = 180f
     private const val TWO_PI_DEGREES = 360f
 
-    fun prepareChatMessage(chatMessage: ChatMessage, context: Context, itemView: View, enableTimestamps: Boolean, timestampFormat: String?, firstMsgVisibility: Int, firstChatMsg: String, redeemedChatMsg: String, redeemedNoMsg: String, rewardChatMsg: String, replyMessage: String, imageClick: ((String?, String?, String?, Boolean?, Int?, Boolean?, String?) -> Unit)?, useRandomColors: Boolean, random: Random, useReadableColors: Boolean, isLightTheme: Boolean, nameDisplay: String?, useBoldNames: Boolean, showNamePaints: Boolean, namePaints: List<NamePaint>, showSTVBadges: Boolean, stvBadges: List<STVBadge>, showGifMessages: Boolean, showPersonalEmotes: Boolean, personalEmoteSets: Map<String, List<Emote>>, stvUsers: List<STVUser>, enableOverlayEmotes: Boolean, showSystemMessageEmotes: Boolean, loggedInUser: String?, chatUrl: String?, getEmoteBytes: ((String, Pair<Long, Int>) -> ByteArray?)?, userColors: HashMap<String, Int>, savedColors: HashMap<String, Int>, translateAllMessages: Boolean, translateMessage: (ChatMessage, String?) -> Unit, showLanguageDownloadDialog: (ChatMessage, String) -> Unit, hideErrors: Boolean, localTwitchEmotes: List<TwitchEmote>, thirdPartyEmotes: List<Emote>, globalBadges: List<TwitchBadge>, channelBadges: List<TwitchBadge>, cheerEmotes: List<CheerEmote>, savedLocalTwitchEmotes: MutableMap<String, ByteArray>, savedLocalBadges: MutableMap<String, ByteArray>, savedLocalCheerEmotes: MutableMap<String, ByteArray>, savedLocalEmotes: MutableMap<String, ByteArray>): MessageResult {
+    fun prepareChatMessage(chatMessage: ChatMessage, context: Context, itemView: View, enableTimestamps: Boolean, timestampFormat: String?, firstMsgVisibility: Int, firstChatMsg: String, redeemedChatMsg: String, redeemedNoMsg: String, rewardChatMsg: String, replyMessage: String, imageClick: ((String?, String?, String?, Boolean?, Int?, Boolean?, String?) -> Unit)?, useRandomColors: Boolean, random: Random, useReadableColors: Boolean, isLightTheme: Boolean, nameDisplay: String?, useBoldNames: Boolean, showNamePaints: Boolean, namePaints: List<NamePaint>, showSTVBadges: Boolean, stvBadges: List<STVBadge>, showGifMessages: Boolean, showPersonalEmotes: Boolean, personalEmoteSets: Map<String, List<Emote>>, stvUsers: List<STVUser>, enableOverlayEmotes: Boolean, showSystemMessageEmotes: Boolean, loggedInUser: String?, chatUrl: String?, getEmoteBytes: ((String, Pair<Long, Int>) -> ByteArray?)?, userColors: HashMap<String, Int>, savedColors: HashMap<String, Int>, translateAllMessages: Boolean, translateMessage: (ChatMessage, String?) -> Unit, showLanguageDownloadDialog: (ChatMessage, String) -> Unit, hideErrors: Boolean, localTwitchEmotes: List<TwitchEmote>, thirdPartyEmotes: List<Emote>, globalBadges: List<TwitchBadge>, channelBadges: List<TwitchBadge>, cheerEmotes: List<CheerEmote>, savedLocalTwitchEmotes: MutableMap<String, ByteArray>, savedLocalBadges: MutableMap<String, ByteArray>, savedLocalCheerEmotes: MutableMap<String, ByteArray>, savedLocalEmotes: MutableMap<String, ByteArray>, plusCosmetics: ChatterinoPlusRepository.Cosmetics?, animatePaints: Boolean): MessageResult {
         val builder = SpannableStringBuilder()
         val images = ArrayList<Image>()
         var imagePaint: NamePaint? = null
@@ -273,6 +274,32 @@ object ChatAdapterUtils {
                         ))
                     }
                 }
+                plusCosmetics?.badge?.let { badge ->
+                    val urls = if (isLightTheme) badge.light ?: badge.dark else badge.dark
+                    val language = androidx.core.os.ConfigurationCompat.getLocales(context.resources.configuration)[0]?.language
+                    val title = if (language == "ru") badge.title else badge.englishTitle ?: badge.title
+                    builder.append(". ")
+                    builder.setSpan(ForegroundColorSpan(Color.TRANSPARENT), builderIndex, builderIndex + 1, SPAN_EXCLUSIVE_EXCLUSIVE)
+                    if (imageClick != null) {
+                        builder.setSpan(object : ClickableSpan() {
+                            override fun onClick(widget: View) {
+                                imageClick(urls.four ?: urls.two ?: urls.one, title, "png", false, null, true, null)
+                            }
+
+                            override fun updateDrawState(ds: TextPaint) {}
+                        }, builderIndex, builderIndex + 1, SPAN_EXCLUSIVE_EXCLUSIVE)
+                    }
+                    images.add(Image(
+                        url1x = urls.one,
+                        url2x = urls.two,
+                        url4x = urls.four,
+                        format = "png",
+                        size = Image.IMAGE_SIZE_BADGE,
+                        thirdParty = true,
+                        start = builderIndex++,
+                        end = builderIndex++,
+                    ))
+                }
                 val color = if (chatMessage.color != null) {
                     getSavedColor(chatMessage.color, savedColors, useReadableColors, isLightTheme)
                 } else {
@@ -303,36 +330,40 @@ object ChatAdapterUtils {
                     if (useBoldNames) {
                         builder.setSpan(StyleSpan(Typeface.BOLD), builderIndex, builderIndex + userName.length, SPAN_EXCLUSIVE_EXCLUSIVE)
                     }
-                    if (showNamePaints && !chatMessage.userId.isNullOrBlank()) {
+                    val selectedPaint = plusCosmetics?.paint ?: if (showNamePaints) {
                         stvUser?.paintId?.let { paintId ->
                             synchronized(namePaints) {
                                 namePaints.find { it.id == paintId }
                             }
-                        }?.let { paint ->
-                            when (paint.type) {
-                                "LINEAR_GRADIENT", "RADIAL_GRADIENT" -> {
-                                    if (paint.colors != null && paint.colorPositions != null) {
-                                        builder.setSpan(
-                                            NamePaintSpan(
-                                                userName,
-                                                paint.type,
-                                                paint.colors,
-                                                paint.colorPositions,
-                                                paint.angle,
-                                                paint.repeat,
-                                                paint.shadows
-                                            ),
-                                            builderIndex,
-                                            builderIndex + userName.length,
-                                            SPAN_EXCLUSIVE_EXCLUSIVE
-                                        )
-                                    }
+                        }
+                    } else null
+                    selectedPaint?.let { paint ->
+                        when (paint.type) {
+                            "LINEAR_GRADIENT", "RADIAL_GRADIENT" -> {
+                                if (paint.colors != null && paint.colorPositions != null) {
+                                    builder.setSpan(
+                                        NamePaintSpan(
+                                            userName,
+                                            paint.type,
+                                            paint.colors,
+                                            paint.colorPositions,
+                                            paint.angle,
+                                            paint.repeat,
+                                            paint.shadows,
+                                            paint.tiles,
+                                            paint.animation.takeIf { animatePaints },
+                                            itemView,
+                                        ),
+                                        builderIndex,
+                                        builderIndex + userName.length,
+                                        SPAN_EXCLUSIVE_EXCLUSIVE
+                                    )
                                 }
-                                "URL" -> {
-                                    if (!paint.imageUrl.isNullOrBlank()) {
-                                        imagePaint = paint
-                                        userNameStartIndex = builderIndex
-                                    }
+                            }
+                            "URL" -> {
+                                if (!paint.imageUrl.isNullOrBlank()) {
+                                    imagePaint = paint
+                                    userNameStartIndex = builderIndex
                                 }
                             }
                         }
@@ -754,7 +785,8 @@ object ChatAdapterUtils {
                                                 imagePaint.shadows,
                                                 (itemView.background as? ColorDrawable)?.color,
                                                 backgroundColor,
-                                                result
+                                                result,
+                                                imagePaint.imageFit,
                                             ),
                                             userNameStartIndex!!,
                                             userNameStartIndex + userName.length,
@@ -800,7 +832,8 @@ object ChatAdapterUtils {
                                         imagePaint.shadows,
                                         (itemView.background as? ColorDrawable)?.color,
                                         backgroundColor,
-                                        resource
+                                        resource,
+                                        imagePaint.imageFit,
                                     ),
                                     userNameStartIndex!!,
                                     userNameStartIndex + userName.length,
