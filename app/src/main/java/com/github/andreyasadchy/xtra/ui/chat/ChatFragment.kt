@@ -790,7 +790,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                             channelLogin = channelLogin,
                             chatUrl = chatUrl,
                             createdAt = args.getString(KEY_CREATED_AT),
-                            getCurrentPosition = (parentFragment as PlayerFragment)::getCurrentPosition,
+                            getCurrentPosition = (parentFragment as PlayerFragment)::getChatCurrentPosition,
                             getCurrentSpeed = (parentFragment as PlayerFragment)::getCurrentSpeed
                         )
                     }
@@ -836,7 +836,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                         videoId = videoId,
                         createdAt = args.getString(KEY_CREATED_AT),
                         startTime = startTime,
-                        getCurrentPosition = (parentFragment as PlayerFragment)::getCurrentPosition,
+                        getCurrentPosition = (parentFragment as PlayerFragment)::getChatCurrentPosition,
                         getCurrentSpeed = (parentFragment as PlayerFragment)::getCurrentSpeed
                     )
                 }
@@ -859,7 +859,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                 videoId = args.getString(KEY_VIDEO_ID),
                 createdAt = args.getString(KEY_CREATED_AT),
                 startTime = args.getInt(KEY_START_TIME),
-                getCurrentPosition = (parentFragment as PlayerFragment)::getCurrentPosition,
+                getCurrentPosition = (parentFragment as PlayerFragment)::getChatCurrentPosition,
                 getCurrentSpeed = (parentFragment as PlayerFragment)::getCurrentSpeed
             )
         }
@@ -1227,7 +1227,7 @@ class ChatFragment : BaseNetworkFragment(), MessageClickedDialog.OnButtonClickLi
                     videoId = args.getString(KEY_VIDEO_ID),
                     createdAt = args.getString(KEY_CREATED_AT),
                     startTime = args.getInt(KEY_START_TIME),
-                    getCurrentPosition = (parentFragment as PlayerFragment)::getCurrentPosition,
+                    getCurrentPosition = (parentFragment as PlayerFragment)::getChatCurrentPosition,
                     getCurrentSpeed = (parentFragment as PlayerFragment)::getCurrentSpeed
                 )
             }

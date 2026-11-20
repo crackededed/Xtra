@@ -45,3 +45,7 @@
 -keep class androidx.work.OverwritingInputMerger {
     <init>();
 }
+
+-keepclassmembers class com.github.andreyasadchy.xtra.ui.player.KickVodDialog$KickJsBridge {
+    @android.webkit.JavascriptInterface <methods>;
+}

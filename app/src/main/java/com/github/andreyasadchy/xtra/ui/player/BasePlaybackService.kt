@@ -60,6 +60,12 @@ abstract class BasePlaybackService : LifecycleService() {
     var started = false
     var loaded = false
 
+    var isKickVodActive = false
+    var kickVodUrl: String? = null
+    var kickVodCookie: String? = null
+    var chatOffsetMs: Long = 0L
+    var originalTwitchPlaylistUrl: String? = null
+
     protected suspend fun restorePlaybackState() {
         val savedState = xtraModule.playerRepository.getPlaybackStates().firstOrNull()
         xtraModule.playerRepository.deletePlaybackStates()

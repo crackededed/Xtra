@@ -137,6 +137,19 @@ class PlayerSettingsDialog : BottomSheetDialogFragment() {
                 if (arguments.getBoolean(VOD_GAMES)) {
                     setVodGames()
                 }
+                menuKickVod.visibility = View.VISIBLE
+                val playerFrag = parentFragment as? PlayerFragment
+                if (playerFrag?.isKickVodActive() == true) {
+                    kickVodValue.visibility = View.VISIBLE
+                    kickVodValue.text = getString(
+                        R.string.kick_menu_active_summary,
+                        KickVodDialog.formatOffset(playerFrag.getChatOffsetMs())
+                    )
+                }
+                menuKickVod.setOnClickListener {
+                    (parentFragment as? PlayerFragment)?.showKickVodDialog()
+                    dismiss()
+                }
                 if (requireContext().prefs().getBoolean(C.PLAYER_MENU_BOOKMARK, true)) {
                     (parentFragment as? PlayerFragment)?.checkBookmark()
                 }

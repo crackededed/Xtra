@@ -88,6 +88,34 @@
             android:visibility="gone"
             tools:visibility="visible" />
 
+        <LinearLayout
+            android:id="@+id/menuKickVod"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/kick_vod_title"
+                android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+            <TextView
+                android:id="@+id/kickVodValue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?android:attr/textColorSecondary"
+                android:visibility="gone"
+                tools:text="Active • Offset +00:01:12"
+                tools:visibility="visible" />
+
+        </LinearLayout>
+
         <TextView
             android:id="@+id/menuDownload"
             android:layout_width="match_parent"

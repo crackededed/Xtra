@@ -596,4 +596,27 @@
     <string name="stopping_video_swap">Stopping video swap</string>
     <string name="starting_proxy">Starting proxy</string>
     <string name="stopping_proxy">Stopping proxy</string>
+    <string name="kick_vod_title">Kick VOD + Twitch chat</string>
+    <string name="kick_status_twitch">Currently playing Twitch VOD video</string>
+    <string name="kick_status_active">Kick VOD video active (Twitch chat synced)</string>
+    <string name="kick_find_vods_label">Find Kick VOD by channel</string>
+    <string name="kick_channel_hint">Kick channel (e.g. xqc)</string>
+    <string name="kick_find_vods_button">Find VODs</string>
+    <string name="kick_paste_url_label">Or paste Kick VOD link / .m3u8 URL</string>
+    <string name="kick_url_hint">https://kick.com/xqc/videos/… or .m3u8</string>
+    <string name="kick_load_button">Load</string>
+    <string name="kick_chat_sync_label">Twitch chat sync offset</string>
+    <string name="kick_chat_offset_value">Chat offset: %s</string>
+    <string name="kick_switch_back_twitch">Switch back to Twitch video</string>
+    <string name="kick_enter_channel_toast">Enter a Kick channel name</string>
+    <string name="kick_enter_url_toast">Paste a Kick VOD or .m3u8 URL</string>
+    <string name="kick_fetching_vods">Fetching Kick VODs for %s…</string>
+    <string name="kick_resolving_stream">Resolving Kick VOD stream…</string>
+    <string name="kick_no_vods_found">No Kick VODs found for this channel</string>
+    <string name="kick_parse_error">Could not parse Kick VOD list. Try pasting the Kick VOD URL below.</string>
+    <string name="kick_cloudflare_retry_hint">Kick blocked the request (Cloudflare). Tap Find VODs again or paste the VOD/.m3u8 link below.</string>
+    <string name="kick_switched_toast">Switched to Kick VOD video</string>
+    <string name="kick_switched_with_offset_toast">Switched to Kick VOD (auto chat offset %s)</string>
+    <string name="kick_switched_back_toast">Switched back to Twitch VOD video</string>
+    <string name="kick_menu_active_summary">Active • Offset %s</string>
 </resources>

@@ -48,6 +48,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DataSourceException
 import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.HttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
@@ -56,6 +57,7 @@ import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.hls.playlist.HlsMediaPlaylist
 import androidx.media3.exoplayer.hls.playlist.HlsMultivariantPlaylist
 import androidx.media3.exoplayer.hls.playlist.HlsPlaylist
+import androidx.media3.exoplayer.hls.playlist.DefaultHlsPlaylistParserFactory
 import androidx.media3.exoplayer.hls.playlist.HlsPlaylistParserFactory
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
@@ -217,6 +219,10 @@ class ExoPlayerService : BasePlaybackService() {
                         val list = playlist?.variants?.mapNotNull { variant ->
                             val name = variant.stableVariantId?.takeIf { it.isNotBlank() }
                                 ?: playlist.videos.find { it.groupId == variant.videoGroupId }?.name?.takeIf { it.isNotBlank() }
+                                ?: if (isKickVodActive && variant.format.height > 0) {
+                                    val fps = if (variant.format.frameRate > 0f) variant.format.frameRate.toInt().toString() else ""
+                                    "${variant.format.height}p$fps"
+                                } else null
                             if (name != null) {
                                 VideoQuality(name, variant.format.height, variant.format.frameRate, variant.format.bitrate, variant.format.codecs, variant.url.toString())
                             } else null
@@ -456,6 +462,13 @@ class ExoPlayerService : BasePlaybackService() {
                                     && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                             if (isNetworkAvailable) {
                                 when {
+                                    isKickVodActive -> {
+                                        serviceListener?.toast(R.string.player_error, Toast.LENGTH_SHORT)
+                                        lifecycleScope.launch {
+                                            delay(1500.milliseconds)
+                                            player?.prepare()
+                                        }
+                                    }
                                     !skipAccessToken && responseCode != 0 && videoAnimatedPreviewURL != null -> {
                                         skipAccessToken = true
                                         videoAnimatedPreviewURL?.let { preview ->
@@ -1468,6 +1481,64 @@ class ExoPlayerService : BasePlaybackService() {
                     player.seekTo(savedPosition ?: 0)
                 }
             }
+        }
+    }
+
+    fun switchToKickVod(m3u8Url: String, cookie: String?, autoOffsetMs: Long?) {
+        if (originalTwitchPlaylistUrl == null && !isKickVodActive) {
+            originalTwitchPlaylistUrl = playlistUrl
+        }
+        isKickVodActive = true
+        kickVodUrl = m3u8Url
+        kickVodCookie = cookie
+        playlistUrl = m3u8Url
+        skipAccessToken = false
+        qualities = null
+        quality = null
+        updateQualities = true
+        if (autoOffsetMs != null) {
+            chatOffsetMs = autoOffsetMs
+        }
+        player?.let { player ->
+            val headers = mutableMapOf(
+                "Referer" to "https://kick.com/",
+                "Origin" to "https://kick.com",
+            )
+            if (!cookie.isNullOrBlank()) {
+                headers["Cookie"] = cookie
+            }
+            val httpFactory = DefaultHttpDataSource.Factory()
+                .setUserAgent(KickVodDialog.DESKTOP_USER_AGENT)
+                .setAllowCrossProtocolRedirects(true)
+                .setDefaultRequestProperties(headers)
+            player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().apply {
+                setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, false)
+                clearOverridesOfType(androidx.media3.common.C.TRACK_TYPE_VIDEO)
+            }.build()
+            player.setMediaSource(
+                HlsMediaSource.Factory(DefaultDataSource.Factory(this@ExoPlayerService, httpFactory))
+                    .setPlaylistParserFactory(DefaultHlsPlaylistParserFactory())
+                    .createMediaSource(MediaItem.fromUri(m3u8Url))
+            )
+            player.volume = prefs().getInt(C.PLAYER_VOLUME, 100) / 100f
+            player.setPlaybackSpeed(prefs().getFloat(C.PLAYER_SPEED, 1f))
+            player.prepare()
+            player.playWhenReady = true
+            player.seekTo(0L)
+        }
+    }
+
+    fun switchBackToTwitchVod() {
+        isKickVodActive = false
+        kickVodUrl = null
+        kickVodCookie = null
+        chatOffsetMs = 0L
+        qualities = null
+        quality = null
+        updateQualities = true
+        playlistUrl = originalTwitchPlaylistUrl
+        lifecycleScope.launch {
+            loadVideo(false)
         }
     }
 
