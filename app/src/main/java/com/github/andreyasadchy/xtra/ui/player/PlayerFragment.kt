@@ -133,6 +133,9 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     }
 
     open fun getCurrentPosition(): Long? = null
+    open fun getChatCurrentPosition(): Long? = getCurrentPosition()?.let { (it + (playbackService?.chatOffsetMs ?: 0L)).coerceAtLeast(0L) }
+    open fun switchToKickVod(m3u8Url: String, cookie: String?, kickCreatedAtMs: Long?) {}
+    open fun switchBackToTwitchVod() {}
     open fun getCurrentSpeed(): Float? = null
     open fun getCurrentVolume(): Float? = null
     open fun getTotalDuration(): Long? = null
@@ -1384,6 +1387,33 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     fun showVolumeDialog() {
         PlayerVolumeDialog.newInstance(getCurrentVolume()).show(childFragmentManager, "closeOnPip")
+    }
+
+    fun isKickVodActive(): Boolean = playbackService?.isKickVodActive == true
+
+    fun getChatOffsetMs(): Long = playbackService?.chatOffsetMs ?: 0L
+
+    fun adjustChatOffset(deltaMs: Long) {
+        val service = playbackService ?: return
+        service.chatOffsetMs += deltaMs
+        val targetPos = getChatCurrentPosition() ?: 0L
+        chatFragment?.updatePosition(targetPos)
+    }
+
+    fun resetChatOffset() {
+        val service = playbackService ?: return
+        service.chatOffsetMs = 0L
+        val targetPos = getChatCurrentPosition() ?: 0L
+        chatFragment?.updatePosition(targetPos)
+    }
+
+    fun showKickVodDialog() {
+        KickVodDialog.newInstance(
+            channelLogin = playbackService?.channelLogin,
+            twitchCreatedAt = playbackService?.createdAt,
+            isKickActive = playbackService?.isKickVodActive == true,
+            chatOffsetMs = playbackService?.chatOffsetMs ?: 0L,
+        ).show(childFragmentManager, "closeOnPip")
     }
 
     fun getTranslateAllMessages(): Boolean? {

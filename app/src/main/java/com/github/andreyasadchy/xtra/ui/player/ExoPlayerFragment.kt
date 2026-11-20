@@ -127,7 +127,8 @@ class ExoPlayerFragment : PlayerFragment() {
                 updateProgress()
                 if (reason == Player.DISCONTINUITY_REASON_SEEK) {
                     if (chatFragment?.context != null) { // TODO
-                        chatFragment?.updatePosition(newPosition.positionMs)
+                        val chatPos = (newPosition.positionMs + (playbackService?.chatOffsetMs ?: 0L)).coerceAtLeast(0L)
+                        chatFragment?.updatePosition(chatPos)
                     }
                 }
             }
@@ -535,6 +536,30 @@ class ExoPlayerFragment : PlayerFragment() {
 
     override fun changeQuality(selectedQuality: VideoQuality?) {
         playbackService?.changeQuality(selectedQuality)
+    }
+
+    override fun switchToKickVod(m3u8Url: String, cookie: String?, kickCreatedAtMs: Long?) {
+        val twitchCreatedAtMs = KickVodDialog.parseTimestampMs(playbackService?.createdAt)
+        val autoOffsetMs = if (kickCreatedAtMs != null && twitchCreatedAtMs != null) {
+            kickCreatedAtMs - twitchCreatedAtMs
+        } else {
+            null
+        }
+        playbackService?.switchToKickVod(m3u8Url, cookie, autoOffsetMs)
+        val chatPos = (autoOffsetMs ?: playbackService?.chatOffsetMs ?: 0L).coerceAtLeast(0L)
+        chatFragment?.updatePosition(chatPos)
+        val toastMsg = if (autoOffsetMs != null) {
+            getString(R.string.kick_switched_with_offset_toast, KickVodDialog.formatOffset(autoOffsetMs))
+        } else {
+            getString(R.string.kick_switched_toast)
+        }
+        Toast.makeText(requireContext(), toastMsg, Toast.LENGTH_LONG).show()
+    }
+
+    override fun switchBackToTwitchVod() {
+        playbackService?.switchBackToTwitchVod()
+        chatFragment?.updatePosition(getCurrentPosition() ?: 0L)
+        Toast.makeText(requireContext(), R.string.kick_switched_back_toast, Toast.LENGTH_SHORT).show()
     }
 
     override fun startAudioOnly() {
