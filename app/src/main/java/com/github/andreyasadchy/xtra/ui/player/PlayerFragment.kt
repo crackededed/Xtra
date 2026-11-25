@@ -96,6 +96,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     protected val viewModel: PlayerViewModel by viewModels { PlayerViewModelFactory }
     protected var chatFragment: ChatFragment? = null
     protected open val playbackService: BasePlaybackService? = null
+    protected open val supportsVideoZoom = false
+    private var videoZoom: VideoZoom? = null
     protected var started = false
 
     private var isPortrait = false
@@ -155,6 +157,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     open fun close(deleteStates: Boolean = true) {}
     open fun retry(item: String) {}
 
+    protected fun resetVideoZoom() {
+        videoZoom?.reset()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         if (arguments?.getBoolean(KEY_OFFLINE) == true) {
             enableNetworkCheck = false
@@ -177,6 +183,11 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         with(binding) {
+            if (supportsVideoZoom) {
+                playerSurface.visibility = View.GONE
+                playerTexture.visibility = View.VISIBLE
+                videoZoom = VideoZoom(playerLayout, aspectRatioFrameLayout)
+            }
             viewLifecycleOwner.lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
                     viewModel.integrity.collect {
@@ -447,9 +458,44 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 }
             }
 
+            var ownsZoomGesture = false
+            var canStartZoom = false
             dragView.setOnTouchListener { _, event ->
                 if (!isAnimating) {
-                    when (event.actionMasked) {
+                    val action = event.actionMasked
+                    if (action == MotionEvent.ACTION_DOWN) {
+                        ownsZoomGesture = false
+                        canStartZoom = isMaximized && useController && playerTexture.isVisible && playerTexture.isAvailable
+                    }
+                    val zoom = videoZoom
+                    if (zoom != null && canStartZoom) {
+                        if (ownsZoomGesture) {
+                            if (isMaximized && useController && playerTexture.isVisible) {
+                                zoom.onTouchEvent(event)
+                                if (!zoom.isZoomed && (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL)) {
+                                    zoom.reset()
+                                }
+                            }
+                            return@setOnTouchListener true
+                        }
+                        if (playerTexture.isVisible && !playerControls.progressBar.isPressed && slidingLayout.translationY in touchSlopRange) {
+                            val handled = zoom.onTouchEvent(event)
+                            if (action == MotionEvent.ACTION_POINTER_DOWN || handled) {
+                                // Give the whole gesture to zoom once it takes over, including the final finger lift.
+                                ownsZoomGesture = true
+                                val cancel = MotionEvent.obtain(event)
+                                cancel.action = MotionEvent.ACTION_CANCEL
+                                playerControls.root.dispatchTouchEvent(cancel)
+                                controllerTapDetector.onTouchEvent(cancel)
+                                cancel.recycle()
+                                slidingLayout.translationY = 0f
+                                activePointerId = -1
+                                if (!backgroundVisible) enableBackground()
+                                return@setOnTouchListener true
+                            }
+                        }
+                    }
+                    when (action) {
                         MotionEvent.ACTION_DOWN -> {
                             activePointerId = event.getPointerId(0)
                             val x = event.x
@@ -477,7 +523,9 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                         MotionEvent.ACTION_MOVE -> {
                             if (isMaximized) {
                                 playerControls.root.dispatchTouchEvent(event)
-                                if (!playerControls.progressBar.isPressed && !statusBarSwipe && activePointerId != -1) {
+                                if (!playerControls.progressBar.isPressed && !statusBarSwipe && activePointerId != -1 &&
+                                    !(canStartZoom && zoom?.isZoomed == true)
+                                ) {
                                     val pointerIndex = event.findPointerIndex(activePointerId)
                                     if (pointerIndex != -1) {
                                         val y = event.getY(pointerIndex)
@@ -1280,6 +1328,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     }
 
     fun setResizeMode() {
+        resetVideoZoom()
         resizeMode = (resizeMode + 1).let { if (it < 5) it else 0 }
         binding.aspectRatioFrameLayout.resizeMode = resizeMode
         requireContext().prefs().edit { putInt(C.ASPECT_RATIO_LANDSCAPE, resizeMode) }
@@ -1957,6 +2006,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        resetVideoZoom()
         with(binding) {
             isPortrait = newConfig.orientation == Configuration.ORIENTATION_PORTRAIT
             if (isMaximized) {
@@ -1981,6 +2031,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
         with(binding) {
             if (isInPictureInPictureMode) {
+                resetVideoZoom()
                 if (!isMaximized) {
                     isMaximized = true
                     requireActivity().onBackPressedDispatcher.addCallback(this@PlayerFragment, backPressedCallback)
@@ -2020,6 +2071,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     fun minimize() {
         with(binding) {
+            resetVideoZoom()
             isMaximized = false
             if (playbackService?.type == BasePlaybackService.STREAM && chatFragment?.emoteMenuIsVisible() == true) {
                 chatFragment?.toggleBackPressedCallback(false)
@@ -2370,6 +2422,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     override fun onDestroyView() {
         super.onDestroyView()
+        videoZoom = null
         _binding = null
     }
 

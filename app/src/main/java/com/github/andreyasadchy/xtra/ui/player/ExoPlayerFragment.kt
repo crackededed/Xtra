@@ -46,6 +46,7 @@ import org.json.JSONException
 class ExoPlayerFragment : PlayerFragment() {
 
     override var playbackService: ExoPlayerService? = null
+    override val supportsVideoZoom = true
     private var serviceConnection: ServiceConnection? = null
     private var playerListener: Player.Listener? = null
     private val updateProgressAction = Runnable { if (view != null) updateProgress() }
@@ -54,6 +55,7 @@ class ExoPlayerFragment : PlayerFragment() {
         super.onStart()
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playbackState == Player.STATE_ENDED) resetVideoZoom()
                 binding.bufferingIndicator.isVisible = playbackState == Player.STATE_BUFFERING
                 val showPlayButton = Util.shouldShowPlayButton(playbackService?.player)
                 if (showPlayButton) {
@@ -161,9 +163,10 @@ class ExoPlayerFragment : PlayerFragment() {
 
             override fun onTrackSelectionParametersChanged(parameters: TrackSelectionParameters) {
                 if (parameters.disabledTrackTypes.contains(androidx.media3.common.C.TRACK_TYPE_VIDEO)) {
-                    binding.playerSurface.visibility = View.GONE
+                    resetVideoZoom()
+                    binding.playerTexture.visibility = View.GONE
                 } else {
-                    binding.playerSurface.visibility = View.VISIBLE
+                    binding.playerTexture.visibility = View.VISIBLE
                 }
             }
         }
@@ -254,16 +257,16 @@ class ExoPlayerFragment : PlayerFragment() {
 
             override fun setPlayerSurface(secondaryPlayer: Boolean) {
                 if (secondaryPlayer) {
-                    binding.playerSurface.visibility = View.VISIBLE
-                    playbackService?.player?.setVideoSurfaceView(null)
-                    playbackService?.secondaryPlayer?.setVideoSurfaceView(binding.playerSurface)
+                    binding.playerTexture.visibility = View.VISIBLE
+                    playbackService?.player?.clearVideoTextureView(binding.playerTexture)
+                    playbackService?.secondaryPlayer?.setVideoTextureView(binding.playerTexture)
                     playerListener?.let {
                         playbackService?.player?.removeListener(it)
                         playbackService?.secondaryPlayer?.addListener(it)
                     }
                 } else {
-                    playbackService?.secondaryPlayer?.setVideoSurfaceView(null)
-                    playbackService?.player?.setVideoSurfaceView(binding.playerSurface)
+                    playbackService?.secondaryPlayer?.clearVideoTextureView(binding.playerTexture)
+                    playbackService?.player?.setVideoTextureView(binding.playerTexture)
                     playerListener?.let {
                         playbackService?.secondaryPlayer?.removeListener(it)
                         playbackService?.player?.addListener(it)
@@ -280,7 +283,7 @@ class ExoPlayerFragment : PlayerFragment() {
                     val binder = service as ExoPlayerService.ServiceBinder
                     playbackService = binder.getService()
                     playbackService?.serviceListener = serviceListener
-                    (playbackService?.secondaryPlayer ?: playbackService?.player)?.setVideoSurfaceView(binding.playerSurface)
+                    (playbackService?.secondaryPlayer ?: playbackService?.player)?.setVideoTextureView(binding.playerTexture)
                     (playbackService?.secondaryPlayer ?: playbackService?.player)?.addListener(listener)
                     playerListener = listener
                     val endTime = playbackService?.setSleepTimer(-1)
